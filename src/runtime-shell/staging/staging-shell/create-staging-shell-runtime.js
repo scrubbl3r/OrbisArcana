@@ -935,6 +935,7 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     detectorInputHeight: Math.round(Number(debug.detectorInputHeight) || 0),
     detectorBlobWeight: Math.round((Number(debug.detectorBlobWeight) || 0) * 10) / 10,
     detectorRawX01: Math.round((Number(debug.detectorRawX01) || 0) * 1000) / 1000,
+    detectorWeightedX01: Math.round((Number(debug.detectorWeightedX01) || 0) * 1000) / 1000,
     detectorOutputX01: Math.round((Number(debug.detectorOutputX01) || 0) * 1000) / 1000,
     detectorOutputCenterX01: Math.round((Number(debug.detectorOutputCenterX01) || 0) * 1000) / 1000,
     detectorOutputGain: Math.round((Number(debug.detectorOutputGain) || 0) * 100) / 100,
@@ -3264,7 +3265,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501f",
+  moduleCacheBustV = "20260501g",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

@@ -3,8 +3,8 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   videoWidth: 640,
   videoHeight: 480,
   videoFps: 30,
-  detectorWidth: 320,
-  detectorHeight: 240,
+  detectorWidth: 160,
+  detectorHeight: 120,
   minWeight: 60,
   minConfidence: 0.22,
   minPixelWeight: 0.06,
@@ -113,6 +113,8 @@ function analyzeFrame(imageData, background) {
   let weightedX = 0;
   let activePixels = 0;
   let maxWeight = 0;
+  let minX = width;
+  let maxX = -1;
 
   for (let y = 0; y < height; y += 1) {
     const rowOffset = y * width;
@@ -137,6 +139,8 @@ function analyzeFrame(imageData, background) {
       totalWeight += weight;
       weightedX += weight * (x + 0.5);
       if (weight > maxWeight) maxWeight = weight;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
     }
   }
 
@@ -151,7 +155,8 @@ function analyzeFrame(imageData, background) {
     confidence,
     totalWeight,
     activePixels,
-    x01: present ? clamp01(weightedX / Math.max(1, totalWeight) / width) : 0.5,
+    weightedX01: present ? clamp01(weightedX / Math.max(1, totalWeight) / width) : 0.5,
+    x01: present && maxX >= minX ? clamp01(((minX + maxX + 1) * 0.5) / width) : 0.5,
   };
 }
 
@@ -292,6 +297,7 @@ export function createOrbControlLiteTracker({
       detectorInputHeight: DEFAULT_TRACKER_CONFIG.detectorHeight,
       detectorBlobWeight: Math.round((Number(analysis.totalWeight) || 0) * 10) / 10,
       detectorRawX01: Math.round(rawScreenX01 * 1000) / 1000,
+      detectorWeightedX01: Math.round((analysis.present ? clamp01(1 - analysis.weightedX01) : 0.5) * 1000) / 1000,
       detectorOutputX01: Math.round(outputX01 * 1000) / 1000,
       detectorOutputCenterX01: DEFAULT_TRACKER_CONFIG.outputCenterX01,
       detectorOutputGain: DEFAULT_TRACKER_CONFIG.outputGain,

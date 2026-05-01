@@ -1,9 +1,9 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
-import { createInitialCameraInputState } from "./camera-input-state.js?v=20260501d";
+import { createInitialCameraInputState } from "./camera-input-state.js?v=20260501g";
 import { createCameraInputSteering } from "./camera-input-steering.js?v=20260420f";
 import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430h";
 import { createOrbControlTracker } from "./orb-control-tracker.js?v=20260430d";
-import { createOrbControlLiteTracker } from "./orb-control-lite-tracker.js?v=20260501f";
+import { createOrbControlLiteTracker } from "./orb-control-lite-tracker.js?v=20260501g";
 import { createOrbControlWorkerTracker } from "./orb-control-worker-tracker.js?v=20260430a";
 
 const OBSERVATION_PUBLISH_FPS = 30;
@@ -145,6 +145,7 @@ export function createCameraInputRuntime({
         detectorInputHeight: Number(observation.detectorInputHeight) || 0,
         detectorBlobWeight: Number(observation.detectorBlobWeight) || 0,
         detectorRawX01: Number(observation.detectorRawX01) || 0.5,
+        detectorWeightedX01: Number(observation.detectorWeightedX01) || 0.5,
         detectorOutputX01: Number(observation.detectorOutputX01) || 0.5,
         detectorOutputCenterX01: Number(observation.detectorOutputCenterX01) || 0.5,
         detectorOutputGain: Number(observation.detectorOutputGain) || 1,

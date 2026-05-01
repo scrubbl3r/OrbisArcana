@@ -49,6 +49,7 @@ export function createInitialCameraInputState({
       detectorInputHeight: 0,
       detectorBlobWeight: 0,
       detectorRawX01: 0.5,
+      detectorWeightedX01: 0.5,
       detectorOutputX01: 0.5,
       detectorOutputCenterX01: 0.5,
       detectorOutputGain: 1,
