@@ -7,11 +7,11 @@ function clamp01(value) {
 }
 
 export function createCameraInputSteering({
-  smoothingAlpha = 0.25,
-  holdMissingMs = 220,
+  smoothingAlpha = 1,
+  holdMissingMs = 0,
   holdConfidenceFloor = 0.56,
 } = {}) {
-  const alpha = clamp01(smoothingAlpha) || 0.25;
+  const alpha = clamp01(smoothingAlpha) || 1;
   const holdMs = Math.max(0, Number(holdMissingMs) || 0);
   const holdFloor = clamp01(holdConfidenceFloor);
   let filteredX01 = 0.5;
@@ -48,7 +48,7 @@ export function createCameraInputSteering({
       }
       const observedAtMs = Number(observation.observedAtMs) || 0;
       const holdAgeMs = lastHandAtMs && observedAtMs ? observedAtMs - lastHandAtMs : Infinity;
-      if (kind === "missing" && lastHandednessScore >= 0.55 && holdAgeMs >= 0 && holdAgeMs <= holdMs) {
+      if (holdMs > 0 && kind === "missing" && lastHandednessScore >= 0.55 && holdAgeMs >= 0 && holdAgeMs <= holdMs) {
         const holdProgress = holdMs > 0 ? Math.min(1, holdAgeMs / holdMs) : 1;
         const confidence = Math.max(holdFloor, lastHandednessScore * (1 - holdProgress * 0.35));
         return {
