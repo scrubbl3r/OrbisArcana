@@ -871,9 +871,22 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
   const scratch = runtime.perfCameraTrace || (runtime.perfCameraTrace = {
     handPresent,
     missingFrames: 0,
+    detectorMissingBurstFrames: 0,
+    detectorMissingBurstStartedAtMs: 0,
     staleFrames: 0,
     runtimeMarked: false,
   });
+  const detectorMissing = String(debug.detectorResultReason || "") === "no_landmarks";
+  if (detectorMissing) {
+    if (!scratch.detectorMissingBurstStartedAtMs) scratch.detectorMissingBurstStartedAtMs = nowMs;
+    scratch.detectorMissingBurstFrames += 1;
+  } else {
+    scratch.detectorMissingBurstStartedAtMs = 0;
+    scratch.detectorMissingBurstFrames = 0;
+  }
+  const detectorMissingBurstMs = scratch.detectorMissingBurstStartedAtMs
+    ? Math.max(0, nowMs - scratch.detectorMissingBurstStartedAtMs)
+    : 0;
   if (!scratch.runtimeMarked && typeof perfTrace.mark === "function") {
     scratch.runtimeMarked = true;
     perfTrace.mark("camera.runtime", {
@@ -936,6 +949,8 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
         detectorBestScore: Math.round((Number(debug.detectorBestScore) || 0) * 1000) / 1000,
         detectorLandmarkGroups: Math.round(Number(debug.detectorLandmarkGroups) || 0),
         detectorBestLandmarks: Math.round(Number(debug.detectorBestLandmarks) || 0),
+        detectorMissingBurstFrames: scratch.detectorMissingBurstFrames,
+        detectorMissingBurstMs: Math.round(detectorMissingBurstMs),
       });
     }
   }
@@ -986,6 +1001,8 @@ function traceShellCameraInput(shellContext, nowMs = performance.now()) {
     detectorPalmCameraX01: Math.round((Number(debug.detectorPalmCameraX01) || 0) * 1000) / 1000,
     detectorPalmScreenX01: Math.round((Number(debug.detectorPalmScreenX01) || 0) * 1000) / 1000,
     detectorDetectedHandedness: String(debug.detectorDetectedHandedness || ""),
+    detectorMissingBurstFrames: scratch.detectorMissingBurstFrames,
+    detectorMissingBurstMs: Math.round(detectorMissingBurstMs * 10) / 10,
     trackWidth: Math.round(Number(debug.trackWidth) || 0),
     trackHeight: Math.round(Number(debug.trackHeight) || 0),
     trackFrameRate: Math.round((Number(debug.trackFrameRate) || 0) * 10) / 10,
@@ -3314,7 +3331,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501s",
+  moduleCacheBustV = "20260501t",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

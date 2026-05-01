@@ -86,7 +86,7 @@ export function createOrbControlWorkerTracker({
   now = () => performance.now(),
   modelAssetUrl = new URL("../../../assets/camera-input/models/hand_landmarker.task", import.meta.url).toString(),
   wasmRootUrl = new URL("../../../vendor/mediapipe/tasks-vision/wasm/", import.meta.url).toString(),
-  workerUrl = new URL("./orb-control-detector-worker.js?v=20260501s", import.meta.url).toString(),
+  workerUrl = new URL("./orb-control-detector-worker.js?v=20260501t", import.meta.url).toString(),
   onObservation = () => {},
 } = {}) {
   let worker = null;
