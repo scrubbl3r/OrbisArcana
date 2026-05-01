@@ -9,6 +9,7 @@ const DEFAULT_TRACKER_CONFIG = Object.freeze({
   minConfidence: 0.22,
   minPixelWeight: 0.06,
   minComponentPixels: 8,
+  coreWindowPx: 28,
   motionFloor: 10,
   motionScale: 54,
   skinMotionBoost: 0.55,
@@ -116,6 +117,7 @@ function createAnalysisScratch(width, height) {
     visited: new Uint8Array(size),
     weights: new Float32Array(size),
     stack: new Int32Array(size),
+    columns: new Float32Array(width),
   };
 }
 
@@ -131,7 +133,44 @@ function scoreComponent(component, frameWidth, frameHeight) {
   return component.weight * Math.max(0.18, compactness) * Math.max(0.2, aspectPenalty) * Math.max(0.2, hugePenalty);
 }
 
-function analyzeComponents(mask, weights, visited, stack, width, height) {
+function resolveComponentCore(component, columns, width) {
+  const boxW = Math.max(1, component.maxX - component.minX + 1);
+  const coreWindowPx = Math.max(1, Math.min(boxW, DEFAULT_TRACKER_CONFIG.coreWindowPx));
+  let windowWeight = 0;
+  for (let x = component.minX; x < component.minX + coreWindowPx; x += 1) {
+    windowWeight += columns[x] || 0;
+  }
+
+  let bestStart = component.minX;
+  let bestWeight = windowWeight;
+  const lastStart = component.maxX - coreWindowPx + 1;
+  for (let startX = component.minX + 1; startX <= lastStart; startX += 1) {
+    windowWeight += (columns[startX + coreWindowPx - 1] || 0) - (columns[startX - 1] || 0);
+    if (windowWeight > bestWeight) {
+      bestWeight = windowWeight;
+      bestStart = startX;
+    }
+  }
+
+  let weightedX = 0;
+  let totalWeight = 0;
+  const endX = bestStart + coreWindowPx - 1;
+  for (let x = bestStart; x <= endX; x += 1) {
+    const weight = columns[x] || 0;
+    totalWeight += weight;
+    weightedX += weight * (x + 0.5);
+  }
+
+  return {
+    coreWidthPx: coreWindowPx,
+    coreWeight: bestWeight,
+    coreX01: totalWeight > 0
+      ? clamp01(weightedX / totalWeight / width)
+      : clamp01((bestStart + (coreWindowPx * 0.5)) / width),
+  };
+}
+
+function analyzeComponents(mask, weights, visited, stack, columns, width, height) {
   visited.fill(0);
   let componentCount = 0;
   let best = null;
@@ -153,6 +192,7 @@ function analyzeComponents(mask, weights, visited, stack, width, height) {
     let maxX = -1;
     let minY = height;
     let maxY = -1;
+    columns.fill(0);
 
     while (top > 0) {
       top -= 1;
@@ -164,6 +204,7 @@ function analyzeComponents(mask, weights, visited, stack, width, height) {
       pixels += 1;
       weight += pixelWeight;
       weightedX += pixelWeight * (x + 0.5);
+      columns[x] += pixelWeight;
       if (x < minX) minX = x;
       if (x > maxX) maxX = x;
       if (y < minY) minY = y;
@@ -197,6 +238,7 @@ function analyzeComponents(mask, weights, visited, stack, width, height) {
 
     if (pixels < DEFAULT_TRACKER_CONFIG.minComponentPixels || weight <= 0) continue;
     const component = { pixels, weight, weightedX, minX, maxX, minY, maxY };
+    Object.assign(component, resolveComponentCore(component, columns, width));
     const score = scoreComponent(component, width, height);
     if (score > bestScore) {
       bestScore = score;
@@ -212,6 +254,8 @@ function analyzeComponents(mask, weights, visited, stack, width, height) {
       score: 0,
       widthPx: 0,
       heightPx: 0,
+      coreWidthPx: 0,
+      coreWeight: 0,
       x01: 0.5,
       weightedX01: 0.5,
     };
@@ -226,7 +270,9 @@ function analyzeComponents(mask, weights, visited, stack, width, height) {
     score: bestScore,
     widthPx,
     heightPx,
-    x01: clamp01(((best.minX + best.maxX + 1) * 0.5) / width),
+    coreWidthPx: best.coreWidthPx,
+    coreWeight: best.coreWeight,
+    x01: best.coreX01,
     weightedX01: clamp01(best.weightedX / Math.max(1, best.weight) / width),
   };
 }
@@ -278,7 +324,7 @@ function analyzeFrame(imageData, background, scratch) {
   const confidence = clamp01((coverage * 9) + (density * 0.55) + (maxWeight * 0.18));
   const present = totalWeight >= DEFAULT_TRACKER_CONFIG.minWeight &&
     confidence >= DEFAULT_TRACKER_CONFIG.minConfidence;
-  const component = analyzeComponents(mask, weights, scratch.visited, scratch.stack, width, height);
+  const component = analyzeComponents(mask, weights, scratch.visited, scratch.stack, scratch.columns, width, height);
   const selectedX01 = component.pixels > 0 ? component.x01 : 0.5;
 
   return {
@@ -436,6 +482,7 @@ export function createOrbControlLiteTracker({
       detectorComponentPixels: Number(analysis.component && analysis.component.pixels) || 0,
       detectorComponentWidthPx: Number(analysis.component && analysis.component.widthPx) || 0,
       detectorComponentHeightPx: Number(analysis.component && analysis.component.heightPx) || 0,
+      detectorCoreWidthPx: Number(analysis.component && analysis.component.coreWidthPx) || 0,
       detectorComponentScore: Math.round((Number(analysis.component && analysis.component.score) || 0) * 10) / 10,
       detectorOutputX01: Math.round(outputX01 * 1000) / 1000,
       detectorOutputCenterX01: DEFAULT_TRACKER_CONFIG.outputCenterX01,
