@@ -800,6 +800,22 @@ export function buildSvgPropInstances({
         y: clampNumber(rect && rect.y, 0) + (clampNumber(rect && rect.height, 0) * 0.5),
       });
       const authoredAnchor = resolveRectPropAnchor(rect, config.anchor);
+      const worldTopLeft = scaleAuthoringPointToWorld({
+        x: clampNumber(rect && rect.x, 0),
+        y: clampNumber(rect && rect.y, 0),
+      }, {
+        viewBox,
+        worldWidthPx,
+        worldHeightPx,
+      });
+      const worldBottomRight = scaleAuthoringPointToWorld({
+        x: clampNumber(rect && rect.x, 0) + clampNumber(rect && rect.width, 0),
+        y: clampNumber(rect && rect.y, 0) + clampNumber(rect && rect.height, 0),
+      }, {
+        viewBox,
+        worldWidthPx,
+        worldHeightPx,
+      });
       props.push(Object.freeze({
         id,
         kind: inferPropKind(id),
@@ -827,6 +843,12 @@ export function buildSvgPropInstances({
           y: clampNumber(rect && rect.y, 0),
           width: clampNumber(rect && rect.width, 0),
           height: clampNumber(rect && rect.height, 0),
+        }),
+        worldBox: Object.freeze({
+          xW: clampNumber(worldTopLeft.xW, 0),
+          yW: clampNumber(worldTopLeft.yW, 0),
+          width: Math.abs(clampNumber(worldBottomRight.xW, 0) - clampNumber(worldTopLeft.xW, 0)),
+          height: Math.abs(clampNumber(worldBottomRight.yW, 0) - clampNumber(worldTopLeft.yW, 0)),
         }),
         sourceId: rawId,
         sourceLabel: rawLabel,
