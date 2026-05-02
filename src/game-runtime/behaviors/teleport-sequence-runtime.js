@@ -52,6 +52,7 @@ export function createTeleportSequenceRuntime({
     const config = resolveConfig();
     const sourceState = getOrbRuntime();
     const sourceYW = readOrbY(sourceState, 0);
+    let spawnIdleActivated = false;
     engageHold(sourceYW);
 
     const result = playVisual({
@@ -67,7 +68,16 @@ export function createTeleportSequenceRuntime({
 
         const destinationState = getOrbRuntime();
         const destinationYW = readOrbY(destinationState, sourceYW);
-        engageHold(destinationYW);
+        if (config.completionMode === "spawn_idle") {
+          const spawnResult = activateOrbSpawnIdleRuntime({
+            getOrbRuntime,
+            patchOrbRuntime,
+            nowMs: typeof now === "function" ? now() : performance.now(),
+          });
+          spawnIdleActivated = !!(spawnResult && spawnResult.handled);
+        } else {
+          engageHold(destinationYW);
+        }
 
         const durationMs = Math.max(0, Number(config.cameraTravelMs) || 0);
         if (
@@ -89,8 +99,10 @@ export function createTeleportSequenceRuntime({
       },
       onComplete: () => {
         const state = getOrbRuntime();
-        releaseHold(readOrbY(state, sourceYW));
-        if (config.completionMode === "spawn_idle") {
+        if (config.completionMode !== "spawn_idle") {
+          releaseHold(readOrbY(state, sourceYW));
+        } else if (!spawnIdleActivated) {
+          releaseHold(readOrbY(state, sourceYW));
           activateOrbSpawnIdleRuntime({
             getOrbRuntime,
             patchOrbRuntime,
