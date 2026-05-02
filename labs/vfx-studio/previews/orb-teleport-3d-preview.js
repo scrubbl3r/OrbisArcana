@@ -21,21 +21,19 @@ function buildFlickerMask(elapsedMs, onMs, offMs) {
   return phaseMs < Number(onMs) ? 1 : 0;
 }
 
-function frameCameraToSsotOrbSize(inspector, root, bo) {
+function frameCamera(inspector, root, bo) {
   if (!inspector || !inspector.camera || !root) return;
   const bounds = root.getBoundingClientRect();
-  const viewportHeight = Math.max(1, Number(bounds.height) || 1);
+  const height = Math.max(1, Number(bounds.height) || 1);
   const camera = inspector.camera;
-  const fovRadians = (Number(camera.fov) || 45) * Math.PI / 180;
-  const distance = viewportHeight / (2 * Math.tan(fovRadians * 0.5));
-  camera.position.set(bo * 0.72, bo * 0.2, distance);
+  const fov = (Number(camera.fov) || 45) * Math.PI / 180;
+  const distance = height / (2 * Math.tan(fov * 0.5));
+  camera.position.set(0, 0, distance);
   camera.near = Math.max(0.1, bo * 0.05);
   camera.far = Math.max(2000, distance + (bo * 20));
   camera.updateProjectionMatrix();
   if (inspector.controls) {
     inspector.controls.target.set(0, 0, 0);
-    inspector.controls.minDistance = Math.max(bo * 0.75, distance * 0.35);
-    inspector.controls.maxDistance = Math.max(bo * 12, distance * 3);
     inspector.controls.update();
   }
 }
@@ -95,7 +93,7 @@ export function createOrbTeleport3dPreview({
       root: els.previewRoot,
       bo,
       canvasClassName: "orbTeleport3dCanvas",
-      cameraPositionBo: Object.freeze({ x: 0.72, y: 0.2, z: 3.25 }),
+      cameraPositionBo: Object.freeze({ x: 0, y: 0, z: 3.15 }),
       minDistanceBo: 0.85,
       maxDistanceBo: 28,
       bloom: ORB_BLOOM_CONFIG.enabled ? ORB_BLOOM_CONFIG : null,
@@ -106,7 +104,7 @@ export function createOrbTeleport3dPreview({
       },
     });
     if (!inspector) return;
-    frameCameraToSsotOrbSize(inspector, els.previewRoot, bo);
+    frameCamera(inspector, els.previewRoot, bo);
 
     shellMaterial = createOpalescentOrbShellMaterial(activeConfig);
     const created = createOrbModel({
@@ -131,7 +129,7 @@ export function createOrbTeleport3dPreview({
     if (!model) return;
     const bo = readBo();
     model.visible = true;
-    model.position.set(-bo * 0.9, 0, 0);
+    model.position.set(0, 0, 0);
     model.scale.setScalar(1);
     model.traverse((child) => {
       if (child && child.material) child.material.opacity = 1;
@@ -158,7 +156,6 @@ export function createOrbTeleport3dPreview({
 
   function renderFrame(cfg, elapsedMs) {
     if (!model) return false;
-    const bo = readBo();
     const fadeOutEnd = cfg.fadeOutMs;
     const travelEnd = fadeOutEnd + cfg.cameraTravelMs;
     const totalEnd = travelEnd + cfg.fadeInMs;
@@ -166,13 +163,13 @@ export function createOrbTeleport3dPreview({
     if (elapsedMs <= fadeOutEnd) {
       const progress = Math.max(0, Math.min(1, elapsedMs / Math.max(1, cfg.fadeOutMs)));
       const flicker = buildFlickerMask(elapsedMs, cfg.flickerOnMs, cfg.flickerOffMs);
-      model.position.set(-bo * 0.9, 0, 0);
+      model.position.set(0, 0, 0);
       setOpacity((1 - progress) * flicker);
       return true;
     }
 
     if (elapsedMs < travelEnd) {
-      model.position.set(bo * 0.9, 0, 0);
+      model.position.set(0, 0, 0);
       setOpacity(0);
       return true;
     }
@@ -180,7 +177,7 @@ export function createOrbTeleport3dPreview({
     const fadeInElapsedMs = elapsedMs - travelEnd;
     const progress = Math.max(0, Math.min(1, fadeInElapsedMs / Math.max(1, cfg.fadeInMs)));
     const flicker = buildFlickerMask(fadeInElapsedMs, cfg.flickerOnMs, cfg.flickerOffMs);
-    model.position.set(bo * 0.9, 0, 0);
+    model.position.set(0, 0, 0);
     setOpacity(progress * flicker);
 
     if (elapsedMs >= totalEnd) {
