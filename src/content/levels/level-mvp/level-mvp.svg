@@ -123,7 +123,7 @@
        id="rect2"
        width="41"
        height="80"
-       x="520.34814"
+       x="518.34814"
        y="1840.1136"
        inkscape:label="id: plinth_01  z:orb,  anchor:bottom" />
   </g>
@@ -135,8 +135,8 @@
     <circle
        style="fill:#ff0000;stroke:none;stroke-width:1.48875"
        id="path2-9"
-       cx="540.84814"
-       cy="1795.9618"
+       cx="534.84814"
+       cy="1789.9618"
        r="18.5"
        inkscape:label="id: spawn_01, z:orb" />
   </g>
