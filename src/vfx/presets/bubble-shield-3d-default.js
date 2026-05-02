@@ -6,7 +6,7 @@ export const BUBBLE_SHIELD_3D_PRESET_DEFAULT = Object.freeze({
   pulseMin: 0.10,
   pulseMax: 1.00,
   maxCracks: 10,
-  crackColor: 0x6496ff,
+  crackColor: 0x32aaff,
   crackAlpha: 0.60,
   crackWidthPx: 3.00,
   crackLiftBO: 0.000,
@@ -18,5 +18,5 @@ export const BUBBLE_SHIELD_3D_PRESET_DEFAULT = Object.freeze({
   edgeBrightness: 0.00,
   cellDarkness: 1.00,
   cellSharpness: 0.90,
-  detailEmergence: 6.00,
+  detailEmergence: 1.00,
 });
