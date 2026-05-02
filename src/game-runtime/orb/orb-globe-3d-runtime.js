@@ -210,8 +210,8 @@ export function createOrbGlobe3dRuntime({
     for (const entry of state.orbiting) {
       if (!entry || !entry.model) continue;
       const speed = clampNumber(entry.speed, 0.25);
-      const angle = entry.phase + (timeSec * speed * Math.PI * 2);
-      const driftAngle = entry.phase + (timeSec * Math.max(0.01, entry.drift) * Math.PI * 2);
+      const angle = entry.phase + (timeSec * speed);
+      const driftAngle = entry.phase + (timeSec * Math.max(0.01, entry.drift));
       const y = Math.sin(driftAngle) * radius * 0.35;
       const z = Math.cos(angle + entry.tilt) * radius * 0.72;
       const x = Math.sin(angle) * radius;
