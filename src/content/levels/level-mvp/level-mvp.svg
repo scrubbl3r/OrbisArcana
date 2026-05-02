@@ -24,14 +24,14 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.0069031"
-     inkscape:cx="1242.4234"
-     inkscape:cy="1599.9553"
+     inkscape:cx="654.48204"
+     inkscape:cy="1659.544"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="1"
-     inkscape:window-y="56"
+     inkscape:window-y="34"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg1"
+     inkscape:current-layer="layer2"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -123,7 +123,7 @@
        id="rect2"
        width="41"
        height="56"
-       x="528.34814"
+       x="520.34814"
        y="1864.1136"
        inkscape:label="id: plinth_01  z:orb,  anchor:bottom" />
   </g>
@@ -135,8 +135,8 @@
     <circle
        style="fill:#ff0000;stroke:none;stroke-width:1.48875"
        id="path2-9"
-       cx="548.84814"
-       cy="1801.9618"
+       cx="536.84814"
+       cy="1795.9618"
        r="18.5"
        inkscape:label="id: spawn_01, z:orb" />
   </g>
