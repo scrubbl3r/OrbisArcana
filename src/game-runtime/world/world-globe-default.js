@@ -21,23 +21,23 @@ export const WORLD_GLOBE_VISUAL_DEFAULTS = Object.freeze({
     pulseHz: 0.90,
   }),
   collected: Object.freeze({
-    diameterRatio: 0.17,
+    diameterRatio: 0.08,
     fillRgb: Object.freeze({
       r: 255,
       g: 255,
       b: 255,
     }),
-    fillAlpha: 0.42,
+    fillAlpha: 0.88,
     strokeRgb: Object.freeze({
       r: 255,
       g: 255,
       b: 255,
     }),
-    strokeAlpha: 0.96,
+    strokeAlpha: 0.88,
     strokeWidthRatio: 0.020,
   }),
   consumed: Object.freeze({
-    diameterRatio: 0.10,
+    diameterRatio: 0.05,
     fillRgb: Object.freeze({
       r: 255,
       g: 255,
