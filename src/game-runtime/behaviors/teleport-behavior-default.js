@@ -3,5 +3,6 @@ export const TELEPORT_BEHAVIOR_DEFAULT = Object.freeze({
   cameraEasing: "easeInOutExpo",
   freezeDuringTeleport: true,
   teleportAfterFadeOut: true,
-  grantGraceOnComplete: true,
+  completionMode: "spawn_idle",
+  grantGraceOnComplete: false,
 });

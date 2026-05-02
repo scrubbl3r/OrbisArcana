@@ -12,7 +12,7 @@ import {
 import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260425w";
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260501b";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260501c";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";

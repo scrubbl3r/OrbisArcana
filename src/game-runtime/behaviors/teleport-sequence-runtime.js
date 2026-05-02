@@ -1,4 +1,5 @@
-import { buildTeleportBehaviorConfig } from "./teleport-behavior-state.js";
+import { buildTeleportBehaviorConfig } from "./teleport-behavior-state.js?v=20260501a";
+import { activateOrbSpawnIdleRuntime } from "./orb-spawn-idle-runtime.js?v=20260501a";
 
 function readOrbY(state = null, fallback = 0) {
   const y = Number(state && state.yW);
@@ -16,6 +17,7 @@ export function createTeleportSequenceRuntime({
   cancelCameraTravel = null,
   getConfig = () => Object.create(null),
   playVisual = null,
+  now = () => performance.now(),
 } = {}) {
   function resolveConfig() {
     const raw = typeof getConfig === "function" ? getConfig() : null;
@@ -88,6 +90,13 @@ export function createTeleportSequenceRuntime({
       onComplete: () => {
         const state = getOrbRuntime();
         releaseHold(readOrbY(state, sourceYW));
+        if (config.completionMode === "spawn_idle") {
+          activateOrbSpawnIdleRuntime({
+            getOrbRuntime,
+            patchOrbRuntime,
+            nowMs: typeof now === "function" ? now() : performance.now(),
+          });
+        }
         if (typeof payload.onComplete === "function") {
           try {
             payload.onComplete();

@@ -2,9 +2,9 @@ import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js";
 import { createOrbNod3dDomFallbackRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-dom-fallback-runtime.js";
 import { createOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-runtime.js";
 import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runtime.js";
-import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js";
-import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/teleport-behavior-state.js";
-import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501a";
+import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js?v=20260501a";
+import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/teleport-behavior-state.js?v=20260501a";
+import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501b";
 import {
   resolveBubbleShieldGeometry,
   resolveElectricAoeGeometry,

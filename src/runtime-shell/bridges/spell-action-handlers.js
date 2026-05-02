@@ -67,11 +67,6 @@ export function createSpellActionHandlers({
         playTeleport,
         teleportOrbToSpawnNeutralizePhysics,
         aboveGroundPx: domusTeleportAboveGroundPx,
-        onComplete: () => {
-          if (context && typeof context.grantResolvedGrace === "function") {
-            context.grantResolvedGrace();
-          }
-        },
       });
     },
     trigger_shockwave(payload = {}) {

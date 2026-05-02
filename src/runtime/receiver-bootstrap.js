@@ -321,7 +321,7 @@ export async function loadReceiverInitModules() {
     import(`../voice/kws/openwakeword-browser-backend.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import(`../game-runtime/triggers/spell-dispatch-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import(`../game-runtime/triggers/rule-engine-preview-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
-    import("../runtime-shell/bridges/spell-action-handlers.js"),
+    import(`../runtime-shell/bridges/spell-action-handlers.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../runtime-effects/aoe-electric.js"),
     import("../runtime-effects/aoe-flame.js"),
     import("../runtime-effects/aoe-frost.js"),
