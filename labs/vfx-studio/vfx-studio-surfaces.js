@@ -350,7 +350,7 @@ export function deriveLabSurfaceMaps({ surfaces, buildLivePresetModuleForBaseEff
   return Object.freeze({
     studioBaseEffectByRegistryId: Object.freeze(
       Object.fromEntries(Object.entries(labEffectSurfaces).flatMap(([baseEffect, surface]) => (
-        Array.isArray(surface.registryIds) ? surface.registryIds.map((registryId) => [String(registryId), baseEffect]) : []
+        !surface.builtinOption && Array.isArray(surface.registryIds) ? surface.registryIds.map((registryId) => [String(registryId), baseEffect]) : []
       )))
     ),
     studioOmitRegistryIds: Object.freeze(
