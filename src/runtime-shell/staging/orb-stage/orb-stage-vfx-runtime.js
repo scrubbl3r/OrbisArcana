@@ -5,6 +5,7 @@ import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runt
 import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js?v=20260501a";
 import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/teleport-behavior-state.js?v=20260501a";
 import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501b";
+import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260501a";
 import {
   resolveBubbleShieldGeometry,
   resolveElectricAoeGeometry,
@@ -24,6 +25,7 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
       pulseMin: 0.3,
       pulseMax: 1.0,
     },
+    shield3d: BUBBLE_SHIELD_3D_PRESET_DEFAULT,
     shock: {
       color: { r: 255, g: 255, b: 255, a: 0.65 },
       startRatio: 0.43,
@@ -99,6 +101,7 @@ export function initOrbStageReceiverVfxRuntime({
   triggerShockwaveRuntime = null,
   playOrbNod3dRuntime = null,
   playOrbTeleport3dRuntime = null,
+  playBubbleShield3dRuntime = null,
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
   clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
   evenPx = (value) => value,
@@ -321,6 +324,15 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function directActivateBubbleShield({ durationMs } = {}) {
+    if (typeof playBubbleShield3dRuntime === "function") {
+      const result = playBubbleShield3dRuntime({
+        ...(vfxDefaults && vfxDefaults.shield3d && typeof vfxDefaults.shield3d === "object"
+          ? vfxDefaults.shield3d
+          : Object.create(null)),
+        durationMs: Math.max(150, Number(durationMs) || Number(vfxDefaults.shield.durationMs) || 8000),
+      });
+      if (result && result.handled) return result;
+    }
     if (stageVfx.bubbleShieldRuntime && typeof stageVfx.bubbleShieldRuntime.activate === "function") {
       stageVfx.bubbleShieldRuntime.activate({
         durationMs: Math.max(150, Number(durationMs) || Number(vfxDefaults.shield.durationMs) || 8000),

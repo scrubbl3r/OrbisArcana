@@ -101,6 +101,10 @@ function hexLiteral(v, fallback = 0xffffff) {
   return `0x${n.toString(16).padStart(6, "0")}`;
 }
 
+function colorHexValue(v, fallback = 0xffffff) {
+  return hexLiteral(v, fallback);
+}
+
 export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricDefaults) {
   const p = params && typeof params === "object" ? params : {};
   switch (String(baseEffect || "")) {
@@ -128,6 +132,32 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `  pulseMs: ${Math.round(toNum(p.pulseMs, 80))},`,
         `  pulseMin: ${toNum(p.pulseMin, 0.3).toFixed(2)},`,
         `  pulseMax: ${toNum(p.pulseMax, 1).toFixed(2)},`,
+        "});",
+        "",
+      ].join("\n");
+    case "bubble-shield-3d":
+      return [
+        "export const BUBBLE_SHIELD_3D_PRESET_DEFAULT = Object.freeze({",
+        `  durationMs: ${Math.round(toNum(p.durationMs, p.shield3dMs || 5000))},`,
+        `  diameterRatio: ${toNum(p.diameterRatio, p.shield3dDiameterRatio || 1.24).toFixed(2)},`,
+        `  alpha: ${toNum(p.alpha, p.shield3dAlpha || 1).toFixed(2)},`,
+        `  pulseMs: ${Math.round(toNum(p.pulseMs, p.shield3dPulseMs || 80))},`,
+        `  pulseMin: ${toNum(p.pulseMin, p.shield3dPulseMin || 0.3).toFixed(2)},`,
+        `  pulseMax: ${toNum(p.pulseMax, p.shield3dPulseMax || 1).toFixed(2)},`,
+        `  maxCracks: ${Math.round(toNum(p.maxCracks, p.shield3dCrackTotal || 8))},`,
+        `  crackColor: ${colorHexValue(p.crackColor, 0xf8fdff)},`,
+        `  crackAlpha: ${toNum(p.crackAlpha, p.shield3dCrackAlpha || 0.6).toFixed(2)},`,
+        `  crackWidthPx: ${toNum(p.crackWidthPx, p.shield3dCrackStroke || 1).toFixed(2)},`,
+        `  crackLiftBO: ${toNum(p.crackLiftBO, p.shield3dCrackLift || 0).toFixed(3)},`,
+        `  criticalGlow: ${toNum(p.criticalGlow, p.shield3dCriticalGlow || 1.35).toFixed(2)},`,
+        `  energyColor: ${colorHexValue(p.energyColor, 0x94b8c2)},`,
+        `  mutationSpeed: ${toNum(p.mutationSpeed, p.shield3dMutationSpeed || 2).toFixed(2)},`,
+        `  mutationAmount: ${toNum(p.mutationAmount, p.shield3dMutationAmount || 1.5).toFixed(2)},`,
+        `  diffuseWash: ${toNum(p.diffuseWash, p.shield3dDiffuseWash || 1).toFixed(2)},`,
+        `  edgeBrightness: ${toNum(p.edgeBrightness, p.shield3dEdgeBrightness || 1).toFixed(2)},`,
+        `  cellDarkness: ${toNum(p.cellDarkness, p.shield3dCellDarkness || 1).toFixed(2)},`,
+        `  cellSharpness: ${toNum(p.cellSharpness, p.shield3dCellSharpness || 1.1).toFixed(2)},`,
+        `  detailEmergence: ${toNum(p.detailEmergence, p.shield3dDetailEmergence || 1).toFixed(2)},`,
         "});",
         "",
       ].join("\n");

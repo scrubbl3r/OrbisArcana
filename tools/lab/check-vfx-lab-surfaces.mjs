@@ -44,6 +44,7 @@ function createSentinelAdapter(name) {
 
 const surfaces = createLabEffectSurfaces({
   buildTeleportBehaviorModule,
+  createBubbleShield3dAuthoringAdapter: createSentinelAdapter("bubble-shield-3d"),
   createBubbleShieldAuthoringAdapter: createSentinelAdapter("bubble-shield"),
   createElectricAoeAuthoringAdapter: createSentinelAdapter("electric-aoe"),
   createFlameAoeAuthoringAdapter: createSentinelAdapter("flame-aoe"),
@@ -58,6 +59,7 @@ const surfaces = createLabEffectSurfaces({
   createOrbSpawnAuthoringAdapter: createSentinelAdapter("orb-spawn"),
   createShockwaveAuthoringAdapter: createSentinelAdapter("shockwave"),
   createTeleportAuthoringAdapter: createSentinelAdapter("teleport"),
+  createTeleport3dAuthoringAdapter: createSentinelAdapter("teleport-3d"),
   createWorldGlobe3dAuthoringAdapter: createSentinelAdapter("world-globe-3d"),
   createWorldGlobeAuthoringAdapter: createSentinelAdapter("world-globe"),
 });

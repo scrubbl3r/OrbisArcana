@@ -1,4 +1,5 @@
 import { createShieldPreview } from "./previews/shield-preview.js?v=20260425d";
+import { createBubbleShield3dPreview } from "./previews/bubble-shield-3d-preview.js?v=20260501a";
 import { createShockwavePreview } from "./previews/shockwave-preview.js?v=20260425d";
 import { createFlameAoePreview } from "./previews/flame-aoe-preview.js?v=20260425d";
 import { createElectricAoePreview } from "./previews/electric-aoe-preview.js?v=20260425d";
@@ -49,6 +50,16 @@ export function createStudioPreviewRegistry({
   actions.shieldOffNow = shieldPreview.clear;
   actions.playShield = shieldPreview.play;
   shieldPreview.wire();
+
+  const bubbleShield3dPreview = createBubbleShield3dPreview({
+    els: previewEls.bubbleShield3d,
+    getOrbBaseVisualState,
+    getOrb3dVisualSettings: getOrb3dVisualSettings || (() => readOrb3dPreviewConfig(previewEls.orb3d)),
+  });
+  actions.applyBubbleShield3d = bubbleShield3dPreview.apply;
+  actions.clearBubbleShield3d = bubbleShield3dPreview.clear;
+  actions.playBubbleShield3d = bubbleShield3dPreview.play;
+  bubbleShield3dPreview.wire();
 
   const shockwavePreview = createShockwavePreview({
     els: previewEls.shock,

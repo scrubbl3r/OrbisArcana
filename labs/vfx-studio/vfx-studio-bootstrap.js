@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260501a";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260501b";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -54,6 +54,10 @@ export function createStudioBootstrap({
       previewRoot: els.shieldPreviewRoot,
       shield: getElementById("shieldLaneShield"),
       orb: getElementById("shieldLaneOrb"),
+    }),
+    bubbleShield3d: Object.freeze({
+      ...els,
+      previewRoot: els.bubbleShield3dPreviewRoot,
     }),
     shock: Object.freeze({
       ...els,

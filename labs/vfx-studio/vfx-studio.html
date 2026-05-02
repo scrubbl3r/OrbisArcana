@@ -449,6 +449,7 @@
       display:none;
     }
     .previewLane.orb3dPreviewLane,
+    .previewLane.bubbleShield3dPreviewLane,
     .previewLane.orbSpawnPreviewLane,
     .previewLane.orbNod3dPreviewLane,
     .previewLane.orbLifecycle3dPreviewLane,
@@ -473,6 +474,7 @@
       top:50%;
     }
     .orb3dCanvas,
+    .bubbleShield3dCanvas,
     .orbSpawnCanvas,
     .orbNod3dCanvas,
     .orbLifecycle3dCanvas,
@@ -486,6 +488,7 @@
       touch-action:none;
     }
     .orb3dCanvas:active,
+    .bubbleShield3dCanvas:active,
     .orbSpawnCanvas:active,
     .orbNod3dCanvas:active,
     .orbLifecycle3dCanvas:active,
@@ -849,6 +852,7 @@
           <div class="shield atOrigin" id="shieldLaneShield"></div>
           <div class="orb atOrigin" id="shieldLaneOrb"></div>
         </div>
+        <div class="previewLane bubbleShield3dPreviewLane" id="bubbleShield3dPreviewRoot" data-preview-root hidden aria-hidden="true"></div>
         <div class="previewLane" id="shockPreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="shockLayer" id="shockLaneLayer"></div>
           <div class="orb atOrigin" id="shockLaneOrb"></div>
@@ -979,6 +983,34 @@
             <input id="shieldB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
             <button id="shieldApplyColorBtn" class="toolBtn" type="button">Apply</button>
           </div>
+        </div>
+      </div>
+
+      <div class="section" data-effect="bubble-shield-3d" hidden>
+        <div class="row">
+          <button id="previewBubbleShield3d" class="toolBtn" type="button">Preview</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow"><label for="shield3dMs">Duration ms</label><input id="shield3dMs" class="paramFieldInput" type="number" min="80" max="120000" step="10" value="5000" /><button id="shield3dApplyDurationBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dDiameterRatio">Diameter ratio</label><input id="shield3dDiameterRatio" class="paramFieldInput" type="number" min="0.10" max="8" step="0.01" value="1.24" /><button id="shield3dApplyDiameterBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dAlpha">Opacity</label><input id="shield3dAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" /><button id="shield3dApplyAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dPulseMs">Pulse rate ms</label><input id="shield3dPulseMs" class="paramFieldInput" type="number" min="20" max="700" step="5" value="80" /><button id="shield3dApplyPulseMsBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dPulseMin">Pulse min alpha</label><input id="shield3dPulseMin" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.30" /><button id="shield3dApplyPulseMinBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dPulseMax">Pulse max alpha</label><input id="shield3dPulseMax" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" /><button id="shield3dApplyPulseMaxBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dCrackTotal">Voronoi cells</label><input id="shield3dCrackTotal" class="paramFieldInput" type="number" min="3" max="96" step="1" value="8" /><button id="shield3dApplyCrackTotalBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Crack RGB</span><label for="shield3dCrackR">r</label><input id="shield3dCrackR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="248" /><label for="shield3dCrackG">g</label><input id="shield3dCrackG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="253" /><label for="shield3dCrackB">b</label><input id="shield3dCrackB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" /><button id="shield3dApplyCrackColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dCrackAlpha">Crack alpha</label><input id="shield3dCrackAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.60" /><button id="shield3dApplyCrackAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dCrackStroke">Crack width</label><input id="shield3dCrackStroke" class="paramFieldInput" type="number" min="0.25" max="12" step="0.25" value="1.00" /><button id="shield3dApplyCrackStrokeBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dCrackLift">Crack lift BO</label><input id="shield3dCrackLift" class="paramFieldInput" type="number" min="0" max="0.2" step="0.001" value="0.000" /><button id="shield3dApplyCrackLiftBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dCriticalGlow">Critical glow</label><input id="shield3dCriticalGlow" class="paramFieldInput" type="number" min="0" max="4" step="0.05" value="1.35" /><button id="shield3dApplyCriticalGlowBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="rgbaParamRow"><span class="rgbaLabel">Energy RGB</span><label for="shield3dEnergyR">r</label><input id="shield3dEnergyR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="148" /><label for="shield3dEnergyG">g</label><input id="shield3dEnergyG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="184" /><label for="shield3dEnergyB">b</label><input id="shield3dEnergyB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="194" /><button id="shield3dApplyEnergyColorBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dMutationSpeed">Mutation speed</label><input id="shield3dMutationSpeed" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="2.00" /><button id="shield3dApplyMutationSpeedBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dMutationAmount">Mutation amount</label><input id="shield3dMutationAmount" class="paramFieldInput" type="number" min="0" max="1.5" step="0.01" value="1.50" /><button id="shield3dApplyMutationAmountBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dDiffuseWash">Diffuse wash</label><input id="shield3dDiffuseWash" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="1.00" /><button id="shield3dApplyDiffuseWashBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dEdgeBrightness">Edge brightness</label><input id="shield3dEdgeBrightness" class="paramFieldInput" type="number" min="0" max="3" step="0.01" value="1.00" /><button id="shield3dApplyEdgeBrightnessBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dCellDarkness">Cell darkness</label><input id="shield3dCellDarkness" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="1.00" /><button id="shield3dApplyCellDarknessBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dCellSharpness">Cell sharpness</label><input id="shield3dCellSharpness" class="paramFieldInput" type="number" min="0" max="3" step="0.01" value="1.10" /><button id="shield3dApplyCellSharpnessBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramFieldRow"><label for="shield3dDetailEmergence">Detail emergence</label><input id="shield3dDetailEmergence" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" /><button id="shield3dApplyDetailEmergenceBtn" class="toolBtn" type="button">Apply</button></div>
         </div>
       </div>
 
@@ -1924,18 +1956,19 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260501a"),
+      import("./vfx-studio-bootstrap.js?v=20260501b"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
-      import("./vfx-studio-surfaces.js?v=20260501a"),
-      import("./vfx-studio-theme-publish.js?v=20260430a"),
+      import("./vfx-studio-surfaces.js?v=20260501b"),
+      import("./vfx-studio-theme-publish.js?v=20260501a"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
     });
+    import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260501a";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
@@ -1960,9 +1993,10 @@
       ELECTRIC_AOE_PRESET_DEFAULT,
       ORB_NOD_3D_PRESET_DEFAULT,
       ORB_NOD_PRESET_DEFAULT,
+      BUBBLE_SHIELD_3D_PRESET_DEFAULT,
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260429a";
+    } from "../../src/vfx/presets/index.js?v=20260501a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
@@ -1988,6 +2022,7 @@
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
       buildTeleportBehaviorModule,
+      createBubbleShield3dAuthoringAdapter,
       createBubbleShieldAuthoringAdapter,
       createElectricAoeAuthoringAdapter,
       createFlameAoeAuthoringAdapter,
@@ -2028,6 +2063,7 @@
     const els = {
       stage: $("stage"),
       shieldPreviewRoot: $("shieldPreviewRoot"),
+      bubbleShield3dPreviewRoot: $("bubbleShield3dPreviewRoot"),
       shockPreviewRoot: $("shockPreviewRoot"),
       flamePreviewRoot: $("flamePreviewRoot"),
       electricPreviewRoot: $("electricPreviewRoot"),
@@ -2090,6 +2126,51 @@
       shieldG: $("shieldG"),
       shieldB: $("shieldB"),
       shieldApplyColorBtn: $("shieldApplyColorBtn"),
+      previewBubbleShield3d: $("previewBubbleShield3d"),
+      shield3dMs: $("shield3dMs"),
+      shield3dApplyDurationBtn: $("shield3dApplyDurationBtn"),
+      shield3dDiameterRatio: $("shield3dDiameterRatio"),
+      shield3dApplyDiameterBtn: $("shield3dApplyDiameterBtn"),
+      shield3dAlpha: $("shield3dAlpha"),
+      shield3dApplyAlphaBtn: $("shield3dApplyAlphaBtn"),
+      shield3dPulseMs: $("shield3dPulseMs"),
+      shield3dApplyPulseMsBtn: $("shield3dApplyPulseMsBtn"),
+      shield3dPulseMin: $("shield3dPulseMin"),
+      shield3dApplyPulseMinBtn: $("shield3dApplyPulseMinBtn"),
+      shield3dPulseMax: $("shield3dPulseMax"),
+      shield3dApplyPulseMaxBtn: $("shield3dApplyPulseMaxBtn"),
+      shield3dCrackTotal: $("shield3dCrackTotal"),
+      shield3dApplyCrackTotalBtn: $("shield3dApplyCrackTotalBtn"),
+      shield3dCrackR: $("shield3dCrackR"),
+      shield3dCrackG: $("shield3dCrackG"),
+      shield3dCrackB: $("shield3dCrackB"),
+      shield3dApplyCrackColorBtn: $("shield3dApplyCrackColorBtn"),
+      shield3dCrackAlpha: $("shield3dCrackAlpha"),
+      shield3dApplyCrackAlphaBtn: $("shield3dApplyCrackAlphaBtn"),
+      shield3dCrackStroke: $("shield3dCrackStroke"),
+      shield3dApplyCrackStrokeBtn: $("shield3dApplyCrackStrokeBtn"),
+      shield3dCrackLift: $("shield3dCrackLift"),
+      shield3dApplyCrackLiftBtn: $("shield3dApplyCrackLiftBtn"),
+      shield3dCriticalGlow: $("shield3dCriticalGlow"),
+      shield3dApplyCriticalGlowBtn: $("shield3dApplyCriticalGlowBtn"),
+      shield3dEnergyR: $("shield3dEnergyR"),
+      shield3dEnergyG: $("shield3dEnergyG"),
+      shield3dEnergyB: $("shield3dEnergyB"),
+      shield3dApplyEnergyColorBtn: $("shield3dApplyEnergyColorBtn"),
+      shield3dMutationSpeed: $("shield3dMutationSpeed"),
+      shield3dApplyMutationSpeedBtn: $("shield3dApplyMutationSpeedBtn"),
+      shield3dMutationAmount: $("shield3dMutationAmount"),
+      shield3dApplyMutationAmountBtn: $("shield3dApplyMutationAmountBtn"),
+      shield3dDiffuseWash: $("shield3dDiffuseWash"),
+      shield3dApplyDiffuseWashBtn: $("shield3dApplyDiffuseWashBtn"),
+      shield3dEdgeBrightness: $("shield3dEdgeBrightness"),
+      shield3dApplyEdgeBrightnessBtn: $("shield3dApplyEdgeBrightnessBtn"),
+      shield3dCellDarkness: $("shield3dCellDarkness"),
+      shield3dApplyCellDarknessBtn: $("shield3dApplyCellDarknessBtn"),
+      shield3dCellSharpness: $("shield3dCellSharpness"),
+      shield3dApplyCellSharpnessBtn: $("shield3dApplyCellSharpnessBtn"),
+      shield3dDetailEmergence: $("shield3dDetailEmergence"),
+      shield3dApplyDetailEmergenceBtn: $("shield3dApplyDetailEmergenceBtn"),
 
       pulseMs: $("pulseMs"),
       shieldApplyPulseMsBtn: $("shieldApplyPulseMsBtn"),
@@ -2362,6 +2443,7 @@
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
       bubbleShieldPresetDefault: BUBBLE_SHIELD_PRESET_DEFAULT,
+      bubbleShield3dPresetDefault: BUBBLE_SHIELD_3D_PRESET_DEFAULT,
       electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
       flameAoePresetDefault: FLAME_AOE_PRESET_DEFAULT,
       shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
@@ -2947,6 +3029,7 @@
       applyOrbLaneSsot(els.worldGlobe3dPreviewRoot, { includeGlobe: true });
       applyOrbLaneSsot(els.orbTeleportPreviewRoot);
       applyOrbLaneSsot(els.orbTeleport3dPreviewRoot);
+      applyOrbLaneSsot(els.bubbleShield3dPreviewRoot);
     }
     applyGeometryVars();
 

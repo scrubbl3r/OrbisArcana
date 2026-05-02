@@ -12,7 +12,7 @@ import {
 import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260425w";
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260501c";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260501d";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260501e";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260501f";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -1939,6 +1939,12 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
         ? activeAdapter.playOrbTeleport3d(payload)
         : { handled: false, skipped: "active_stage_orb_teleport3d_missing" };
     },
+    playBubbleShield3dRuntime: (payload = {}) => {
+      const activeAdapter = getActiveShellStageAdapter(shellContext);
+      return activeAdapter && typeof activeAdapter.playBubbleShield3d === "function"
+        ? activeAdapter.playBubbleShield3d(payload)
+        : { handled: false, skipped: "active_stage_bubble_shield3d_missing" };
+    },
     clamp,
     clamp01,
     evenPx,
@@ -2993,6 +2999,7 @@ async function initShellKwsRuntime(shellContext) {
     grantOrbGraceRuntime,
     hydrateReceiverVfxDefaults,
     BUBBLE_SHIELD_PRESET_DEFAULT,
+    BUBBLE_SHIELD_3D_PRESET_DEFAULT,
     SHOCKWAVE_PRESET_DEFAULT,
     FLAME_AOE_PRESET_DEFAULT,
     ELECTRIC_AOE_PRESET_DEFAULT,
@@ -3056,6 +3063,7 @@ async function initShellKwsRuntime(shellContext) {
   if (typeof hydrateReceiverVfxDefaults === "function") {
     hydrateReceiverVfxDefaults(vfxDefaults, {
       bubbleShield: BUBBLE_SHIELD_PRESET_DEFAULT,
+      bubbleShield3d: BUBBLE_SHIELD_3D_PRESET_DEFAULT,
       shockwave: SHOCKWAVE_PRESET_DEFAULT,
       flameAoe: FLAME_AOE_PRESET_DEFAULT,
       electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,

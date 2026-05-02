@@ -286,7 +286,7 @@ export async function loadReceiverInitModules() {
     { applyDevConsoleThemeCssVars },
     { buildInputHudViewModel: buildInputHudViewModelImported },
     { runInputFramePipeline: runInputFramePipelineImported },
-    { BUBBLE_SHIELD_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, TELEPORT_PRESET_DEFAULT, ORB_NOD_PRESET_DEFAULT, ORB_NOD_3D_PRESET_DEFAULT, ORB_SPAWN_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
+    { BUBBLE_SHIELD_PRESET_DEFAULT, BUBBLE_SHIELD_3D_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, TELEPORT_PRESET_DEFAULT, ORB_NOD_PRESET_DEFAULT, ORB_NOD_3D_PRESET_DEFAULT, ORB_SPAWN_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
     { INPUT_GESTURE_CONFIG_DEFAULT },
     { INPUT_DYNAMICS_CONFIG_DEFAULT },
     { CAST_ACTION_REGISTRY_BY_ID },
@@ -676,6 +676,7 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   if (typeof hydrateReceiverVfxDefaults === "function" && vfxDefaults) {
     hydrateReceiverVfxDefaults(vfxDefaults, {
       bubbleShield: BUBBLE_SHIELD_PRESET_DEFAULT,
+      bubbleShield3d: BUBBLE_SHIELD_3D_PRESET_DEFAULT,
       shockwave: SHOCKWAVE_PRESET_DEFAULT,
       flameAoe: FLAME_AOE_PRESET_DEFAULT,
       electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
