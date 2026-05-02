@@ -1,4 +1,4 @@
-import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260501b";
+import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260501c";
 import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
   LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
@@ -372,6 +372,17 @@ export function createLevelStageDepth3dLayer({
         return { handled: false, skipped: "orb_nod3d_runtime_missing" };
       }
       const result = orb3dActorRuntime.playNod(payload);
+      if (result && result.handled) {
+        renderLoop.scheduleAnimation();
+        renderLoop.renderFrame(renderLoop.getLastFrame() || {});
+      }
+      return result || { handled: false };
+    },
+    playOrbTeleport3d(payload = {}) {
+      if (disposed) {
+        return { handled: false, skipped: "orb_teleport3d_runtime_missing" };
+      }
+      const result = orb3dActorRuntime.playTeleport(payload);
       if (result && result.handled) {
         renderLoop.scheduleAnimation();
         renderLoop.renderFrame(renderLoop.getLastFrame() || {});

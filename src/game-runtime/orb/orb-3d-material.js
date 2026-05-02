@@ -22,6 +22,7 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
     side: THREE.FrontSide,
     uniforms: {
       uTime: { value: 0 },
+      uOpacity: { value: 1 },
       uBase: { value: new THREE.Color(config.shellBaseColor) },
       uCyan: { value: new THREE.Color(config.shellCyanColor) },
       uViolet: { value: new THREE.Color(config.shellVioletColor) },
@@ -72,6 +73,7 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
     `,
     fragmentShader: `
       uniform float uTime;
+      uniform float uOpacity;
       uniform vec3 uBase;
       uniform vec3 uCyan;
       uniform vec3 uViolet;
@@ -91,7 +93,7 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
         pastel = mix(pastel, uGold, driftB * ${Number(config.goldMix).toFixed(3)});
         vec3 pearl = mix(uBase, pastel, ${Number(config.shellPastelMix).toFixed(3)} + fresnel * ${Number(config.shellRimPastelMix).toFixed(3)} + driftC * ${Number(config.shellDriftPastelMix).toFixed(3)});
         float alpha = ${Number(config.shellCenterAlpha).toFixed(4)} + pow(fresnel, ${Number(config.shellRimAlphaPower).toFixed(3)}) * ${Number(config.shellRimAlpha).toFixed(3)};
-        gl_FragColor = vec4(pearl * ${Number(config.shellLuminanceBoost).toFixed(3)}, alpha);
+        gl_FragColor = vec4(pearl * ${Number(config.shellLuminanceBoost).toFixed(3)}, alpha * uOpacity);
       }
     `,
   });
@@ -105,6 +107,7 @@ function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS) {
     side: THREE.FrontSide,
     uniforms: {
       uTime: { value: 0 },
+      uOpacity: { value: 1 },
       uBase: { value: new THREE.Color(config.shellBaseColor) },
       uCyan: { value: new THREE.Color(config.shellCyanColor) },
       uViolet: { value: new THREE.Color(config.shellVioletColor) },
@@ -126,6 +129,7 @@ function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS) {
     `,
     fragmentShader: `
       uniform float uTime;
+      uniform float uOpacity;
       uniform vec3 uBase;
       uniform vec3 uCyan;
       uniform vec3 uViolet;
@@ -145,7 +149,7 @@ function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS) {
         pastel = mix(pastel, uGold, driftB * ${Number(config.goldMix).toFixed(3)});
         vec3 pearl = mix(uBase, pastel, ${Number(config.shellPastelMix).toFixed(3)} + fresnel * ${Number(config.shellRimPastelMix).toFixed(3)} + driftC * ${Number(config.shellDriftPastelMix).toFixed(3)});
         float alpha = ${Number(config.shellCenterAlpha).toFixed(4)} + pow(fresnel, ${Number(config.shellRimAlphaPower).toFixed(3)}) * ${Number(config.shellRimAlpha).toFixed(3)};
-        gl_FragColor = vec4(pearl * ${Number(config.shellLuminanceBoost).toFixed(3)}, alpha);
+        gl_FragColor = vec4(pearl * ${Number(config.shellLuminanceBoost).toFixed(3)}, alpha * uOpacity);
       }
     `,
   });

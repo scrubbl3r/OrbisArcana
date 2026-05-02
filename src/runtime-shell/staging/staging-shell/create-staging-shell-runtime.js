@@ -1933,6 +1933,12 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
         ? activeAdapter.playOrbNod3d(payload)
         : { handled: false, skipped: "active_stage_orb_nod3d_missing" };
     },
+    playOrbTeleport3dRuntime: (payload = {}) => {
+      const activeAdapter = getActiveShellStageAdapter(shellContext);
+      return activeAdapter && typeof activeAdapter.playOrbTeleport3d === "function"
+        ? activeAdapter.playOrbTeleport3d(payload)
+        : { handled: false, skipped: "active_stage_orb_teleport3d_missing" };
+    },
     clamp,
     clamp01,
     evenPx,

@@ -5,7 +5,7 @@ import {
   createOrbPointLight,
   createOrbShadowSpotLight,
   updateOrbPointLight,
-} from "./orb-3d-material.js";
+} from "./orb-3d-material.js?v=20260501a";
 import { ORB_3D_VISUAL_DEFAULTS } from "./orb-3d-default.js";
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
 
@@ -46,6 +46,7 @@ export function createOrb3dRuntime({
   const pointLight = createOrbPointLight({ bo, config });
   updateOrbPointLight(pointLight, 0, config);
   model.add(pointLight);
+  const basePointLightIntensity = pointLight ? Number(pointLight.intensity) || 0 : 0;
 
   const shadowSpot = createOrbShadowSpotLight({ bo, config });
   const baseShellColors = {
@@ -119,6 +120,16 @@ export function createOrb3dRuntime({
     model.scale.setScalar(resolved);
   }
 
+  function setOpacity(alpha = 1) {
+    if (disposed) return;
+    const value = clamp01(alpha);
+    model.visible = value > 0.001;
+    if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uOpacity) {
+      shellMaterial.uniforms.uOpacity.value = value;
+    }
+    if (pointLight) pointLight.intensity = basePointLightIntensity * value;
+  }
+
   function applySpinColor(color = {}) {
     if (disposed) return;
     spinColorState.targetColor.copy(colorFrom01(color, config.lightColor));
@@ -154,6 +165,7 @@ export function createOrb3dRuntime({
     setTime,
     setPosition,
     setScale,
+    setOpacity,
     applySpinColor,
     clearSpinColor,
     isSpinColorActive,

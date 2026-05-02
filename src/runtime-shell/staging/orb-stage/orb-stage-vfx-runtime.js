@@ -97,6 +97,7 @@ export function initOrbStageReceiverVfxRuntime({
   playFlameAoeRuntime = null,
   triggerShockwaveRuntime = null,
   playOrbNod3dRuntime = null,
+  playOrbTeleport3dRuntime = null,
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
   clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
   evenPx = (value) => value,
@@ -326,6 +327,26 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function directPlayTeleport(payload = {}) {
+    if (typeof playOrbTeleport3dRuntime === "function") {
+      playOrbTeleport3dRuntime({
+        ...payload,
+        config: {
+          ...(
+            vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object"
+              ? vfxDefaults.teleport
+              : Object.create(null)
+          ),
+          ...buildTeleportBehaviorConfig(
+            vfxDefaults &&
+            vfxDefaults.behaviors &&
+            vfxDefaults.behaviors.teleport &&
+            typeof vfxDefaults.behaviors.teleport === "object"
+              ? vfxDefaults.behaviors.teleport
+              : Object.create(null)
+          ),
+        },
+      });
+    }
     if (stageVfx.teleportRuntime && typeof stageVfx.teleportRuntime.play === "function") {
       return stageVfx.teleportRuntime.play(payload);
     }
