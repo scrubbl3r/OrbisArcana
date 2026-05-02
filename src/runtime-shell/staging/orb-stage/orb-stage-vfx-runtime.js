@@ -327,24 +327,101 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function directPlayTeleport(payload = {}) {
+    const teleportConfig = {
+      ...(
+        vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object"
+          ? vfxDefaults.teleport
+          : Object.create(null)
+      ),
+      ...buildTeleportBehaviorConfig(
+        vfxDefaults &&
+        vfxDefaults.behaviors &&
+        vfxDefaults.behaviors.teleport &&
+        typeof vfxDefaults.behaviors.teleport === "object"
+          ? vfxDefaults.behaviors.teleport
+          : Object.create(null)
+      ),
+    };
     if (typeof playOrbTeleport3dRuntime === "function") {
-      playOrbTeleport3dRuntime({
+      const getOrbRuntime = () => (
+        runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.get === "function"
+          ? runtime.stage.orbRuntimeState.get()
+          : null
+      );
+      const patchOrbRuntime = (patch = {}) => (
+        runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.patch === "function"
+          ? runtime.stage.orbRuntimeState.patch(patch)
+          : null
+      );
+      const sourceState = getOrbRuntime();
+      const sourceYW = Number.isFinite(Number(sourceState && sourceState.yW)) ? Number(sourceState.yW) : 0;
+      const sourceAnchorY = sourceYW;
+      patchOrbRuntime({
+        teleportHoldActive: true,
+        teleportHoldAnchorY: sourceAnchorY,
+        v: 0,
+        onGround: false,
+        descendMs: 0,
+        shieldDescentBlocked: false,
+      });
+      const result = playOrbTeleport3dRuntime({
         ...payload,
-        config: {
-          ...(
-            vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object"
-              ? vfxDefaults.teleport
-              : Object.create(null)
-          ),
-          ...buildTeleportBehaviorConfig(
-            vfxDefaults &&
-            vfxDefaults.behaviors &&
-            vfxDefaults.behaviors.teleport &&
-            typeof vfxDefaults.behaviors.teleport === "object"
-              ? vfxDefaults.behaviors.teleport
-              : Object.create(null)
-          ),
+        config: teleportConfig,
+        onTeleport: () => {
+          let teleportResult = null;
+          if (typeof payload.onTeleport === "function") {
+            try {
+              teleportResult = payload.onTeleport();
+            } catch (_) {}
+          }
+          const destinationState = getOrbRuntime();
+          const destinationYW = Number.isFinite(Number(destinationState && destinationState.yW))
+            ? Number(destinationState.yW)
+            : sourceYW;
+          patchOrbRuntime({
+            teleportHoldActive: true,
+            teleportHoldAnchorY: destinationYW,
+            v: 0,
+            onGround: false,
+          });
+          const durationMs = Math.max(0, Number(teleportConfig.cameraTravelMs) || 0);
+          if (
+            durationMs > 0 &&
+            typeof requestCameraTravel === "function" &&
+            Math.abs(destinationYW - sourceYW) > 1
+          ) {
+            try {
+              return requestCameraTravel({
+                fromYW: sourceYW,
+                toYW: destinationYW,
+                durationMs,
+                easing: teleportConfig.cameraEasing,
+              });
+            } catch (_) {}
+          }
+          void teleportResult;
+          return null;
         },
+        onComplete: () => {
+          const state = getOrbRuntime();
+          const anchorY = Number.isFinite(Number(state && state.yW)) ? Number(state.yW) : sourceAnchorY;
+          patchOrbRuntime({
+            teleportHoldActive: false,
+            teleportHoldAnchorY: anchorY,
+            v: 0,
+          });
+          if (typeof payload.onComplete === "function") {
+            try {
+              payload.onComplete();
+            } catch (_) {}
+          }
+        },
+      });
+      if (result && result.handled) return result;
+      patchOrbRuntime({
+        teleportHoldActive: false,
+        teleportHoldAnchorY: sourceAnchorY,
+        v: 0,
       });
     }
     if (stageVfx.teleportRuntime && typeof stageVfx.teleportRuntime.play === "function") {

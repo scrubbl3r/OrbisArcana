@@ -143,8 +143,10 @@ export function createOrb3dActorRuntime({
       flickerOnMs: Math.round(clampRange(raw.flickerOnMs ?? raw.orbTeleportFlickerOnMs, 10, 1000, 60)),
       flickerOffMs: Math.round(clampRange(raw.flickerOffMs ?? raw.orbTeleportFlickerOffMs, 10, 1000, 60)),
       fadeOutMs: Math.round(clampRange(raw.fadeOutMs ?? raw.orbTeleportFadeOutMs, 40, 4000, 280)),
-      cameraTravelMs: Math.round(clampRange(raw.cameraTravelMs ?? raw.orbTeleportCameraTravelMs, 0, 8000, 1500)),
+      cameraTravelMs: Math.round(clampRange(raw.cameraTravelMs ?? raw.orbTeleportCameraTravelMs, 0, 8000, 500)),
       fadeInMs: Math.round(clampRange(raw.fadeInMs ?? raw.orbTeleportFadeInMs, 40, 4000, 280)),
+      onTeleport: typeof raw.onTeleport === "function" ? raw.onTeleport : null,
+      onComplete: typeof raw.onComplete === "function" ? raw.onComplete : null,
     });
   }
 
@@ -173,8 +175,9 @@ export function createOrb3dActorRuntime({
       ...(payload && typeof payload === "object" ? payload : {}),
     });
     const startedAtMs = performance.now();
-    const travelEndMs = config.fadeOutMs + config.cameraTravelMs;
-    const totalEndMs = travelEndMs + config.fadeInMs;
+    let teleported = false;
+    let travelDoneAtMs = startedAtMs + config.fadeOutMs + config.cameraTravelMs;
+    let completed = false;
     function tick(nowMs) {
       if (token !== teleportPlayToken) return;
       const elapsedMs = Math.max(0, Number(nowMs) - startedAtMs);
@@ -182,17 +185,40 @@ export function createOrb3dActorRuntime({
         const progress = Math.max(0, Math.min(1, elapsedMs / Math.max(1, config.fadeOutMs)));
         const flicker = buildFlickerMask(elapsedMs, config.flickerOnMs, config.flickerOffMs);
         setOpacity((1 - progress) * flicker);
-      } else if (elapsedMs < travelEndMs) {
+      } else {
+        if (!teleported) {
+          teleported = true;
+          if (config.onTeleport) {
+            try {
+              const maybePromise = config.onTeleport();
+              if (maybePromise && typeof maybePromise.then === "function") {
+                travelDoneAtMs = Infinity;
+                maybePromise.finally(() => {
+                  if (token !== teleportPlayToken) return;
+                  travelDoneAtMs = performance.now();
+                });
+              }
+            } catch (_) {}
+          }
+        }
+      }
+      if (nowMs < travelDoneAtMs) {
         setOpacity(0);
       } else {
-        const fadeInElapsedMs = elapsedMs - travelEndMs;
+        const fadeInElapsedMs = Math.max(0, Number(nowMs) - travelDoneAtMs);
         const progress = Math.max(0, Math.min(1, fadeInElapsedMs / Math.max(1, config.fadeInMs)));
         const flicker = buildFlickerMask(fadeInElapsedMs, config.flickerOnMs, config.flickerOffMs);
         setOpacity(progress * flicker);
       }
-      if (elapsedMs >= totalEndMs) {
+      if (nowMs >= travelDoneAtMs + config.fadeInMs) {
         teleportRaf = 0;
         setOpacity(1);
+        if (!completed && config.onComplete) {
+          completed = true;
+          try {
+            config.onComplete();
+          } catch (_) {}
+        }
         return;
       }
       teleportRaf = requestAnimationFrame(tick);
