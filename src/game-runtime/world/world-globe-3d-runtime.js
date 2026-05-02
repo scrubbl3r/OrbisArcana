@@ -136,6 +136,16 @@ export function createWorldGlobe3dRuntime({
     requestFrame();
   }
 
+  function resetToIdle() {
+    for (const pickup of state.pickups) {
+      if (!pickup) continue;
+      pickup.active = true;
+      pickup.fadeInStartMs = 0;
+    }
+    publishActiveCount();
+    requestFrame();
+  }
+
   function update(timeSec = 0) {
     const nowMs = now();
     for (const pickup of state.pickups) {
@@ -185,6 +195,7 @@ export function createWorldGlobe3dRuntime({
     loadSpawns,
     collect,
     markSpent,
+    resetToIdle,
     update,
     hasActiveVisuals() {
       return state.pickups.some((pickup) => pickup && pickup.active);

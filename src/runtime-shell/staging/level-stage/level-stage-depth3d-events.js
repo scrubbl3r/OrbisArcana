@@ -66,6 +66,7 @@ export function createLevelStageDepth3dEventBindings({
       scheduleFrame();
     }));
     unsubs.push(eventBus.on(EVT_ORB_REVIVED, () => {
+      worldGlobe3dRuntime.resetToIdle();
       orbGlobe3dRuntime.revive();
       scheduleFrame();
     }));

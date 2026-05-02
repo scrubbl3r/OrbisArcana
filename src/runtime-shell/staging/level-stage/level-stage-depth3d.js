@@ -24,7 +24,7 @@ import {
 import { createWorldProps3dRuntime } from "../../../game-runtime/world/props/world-props-3d-runtime.js?v=20260430c";
 import { createRuntimeGlobe3dObject } from "../../../game-runtime/world/globe-3d-runtime-object.js?v=20260430c";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260502b";
-import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260502a";
+import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260502b";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260502c";
 import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260502d";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
@@ -32,7 +32,7 @@ import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifec
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260501a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260501a";
-import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260430a";
+import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260502a";
 import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430b";
 import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";
 import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetry.js?v=20260430b";
