@@ -30,7 +30,7 @@ import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interacti
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
 import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
-import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js";
+import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502a";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
 import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260501e";

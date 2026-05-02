@@ -8,12 +8,12 @@ function toColor01(rgb = {}) {
 
 export const ORB_SPIN_COLOR_MAP = Object.freeze({
   y: Object.freeze({
-    cw: toColor01({ r: 253 / 255, g: 78 / 255, b: 0 / 255 }),
+    cw: toColor01({ r: 255 / 255, g: 0 / 255, b: 0 / 255 }),
     ccw: toColor01({ r: 60 / 255, g: 214 / 255, b: 90 / 255 }),
   }),
   x: Object.freeze({
     cw: toColor01({ r: 0 / 255, g: 100 / 255, b: 253 / 255 }),
-    ccw: toColor01({ r: 255 / 255, g: 149 / 255, b: 0 / 255 }),
+    ccw: toColor01({ r: 255 / 255, g: 74 / 255, b: 0 / 255 }),
   }),
   z: Object.freeze({
     cw: toColor01({ r: 253 / 255, g: 241 / 255, b: 0 / 255 }),
