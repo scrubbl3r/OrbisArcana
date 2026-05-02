@@ -3234,7 +3234,7 @@ async function initShellKwsRuntime(shellContext) {
     activateBubbleShield: ({ durationMs } = {}) => shellActivateBubbleShield(shellContext, { durationMs }),
     applyColorize: (payload) => shellApplyColorize(shellContext, payload),
     clearColorize: () => shellClearColorize(shellContext),
-    domusTeleportAboveGroundPx: 300,
+    domusTeleportAboveGroundPx: 0,
     bubbleShieldMs: 8000,
   });
   const getShellDefaultGraceTtlMs = () => resolveOrbGraceDefaultTtlMs(

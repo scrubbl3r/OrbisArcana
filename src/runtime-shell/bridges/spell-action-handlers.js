@@ -20,7 +20,7 @@ export function createSpellActionHandlers({
   activateBubbleShield,
   applyColorize,
   clearColorize,
-  domusTeleportAboveGroundPx = 300,
+  domusTeleportAboveGroundPx = 0,
   bubbleShieldMs = 8000,
 } = {}){
   function normalizeSlot(slotRaw) {
@@ -63,10 +63,11 @@ export function createSpellActionHandlers({
       if (context && typeof context.deferGrace === "function" && payload && payload.grace) {
         context.deferGrace();
       }
+      const payloadAboveGroundPx = Number(payload && payload.aboveGroundPx);
       executeTeleport({
         playTeleport,
         teleportOrbToSpawnNeutralizePhysics,
-        aboveGroundPx: domusTeleportAboveGroundPx,
+        aboveGroundPx: Number.isFinite(payloadAboveGroundPx) ? payloadAboveGroundPx : domusTeleportAboveGroundPx,
       });
     },
     trigger_shockwave(payload = {}) {
