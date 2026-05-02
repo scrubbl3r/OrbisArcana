@@ -16,7 +16,7 @@ export const ORB_RUNTIME_CONFIG_DEFAULT = {
     maxDownSpeed: 2800,
   },
   impact: {
-    threshold: 500,
+    threshold: 750,
     model: {
       mass: 1.0,
       gravityExp: 0.5,

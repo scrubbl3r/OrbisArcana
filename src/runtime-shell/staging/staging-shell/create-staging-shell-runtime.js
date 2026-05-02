@@ -1263,7 +1263,7 @@ function forceShellShakeLampOff(shellContext) {
 
 function createShellReceiverConfigs() {
   return {
-    IMPACT_TH: 500,
+    IMPACT_TH: 750,
     ENERGY_BANK_CAP: 1000,
     ENERGY_SHAKE_COST: 100,
     ENERGY_CHARGE_RATE_PPS: 160,
