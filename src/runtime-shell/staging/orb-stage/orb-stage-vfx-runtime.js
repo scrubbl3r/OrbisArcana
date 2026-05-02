@@ -4,6 +4,7 @@ import { createOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-run
 import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runtime.js";
 import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js";
 import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/teleport-behavior-state.js";
+import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501a";
 import {
   resolveBubbleShieldGeometry,
   resolveElectricAoeGeometry,
@@ -232,6 +233,41 @@ export function initOrbStageReceiverVfxRuntime({
     flameAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.flameAoeRuntime,
     electricAoeRuntime: vfxRuntimesBundle && vfxRuntimesBundle.electricAoeRuntime,
   };
+  const getTeleportRuntimeConfig = () => ({
+    ...(
+      vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object"
+        ? vfxDefaults.teleport
+        : Object.create(null)
+    ),
+    ...buildTeleportBehaviorConfig(
+      vfxDefaults &&
+      vfxDefaults.behaviors &&
+      vfxDefaults.behaviors.teleport &&
+      typeof vfxDefaults.behaviors.teleport === "object"
+        ? vfxDefaults.behaviors.teleport
+        : Object.create(null)
+    ),
+  });
+  const teleport3dSequenceRuntime = createTeleportSequenceRuntime({
+    getOrbRuntime: () => (
+      runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.get === "function"
+        ? runtime.stage.orbRuntimeState.get()
+        : null
+    ),
+    patchOrbRuntime: (patch = {}) => (
+      runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.patch === "function"
+        ? runtime.stage.orbRuntimeState.patch(patch)
+        : null
+    ),
+    requestCameraTravel,
+    cancelCameraTravel,
+    getConfig: getTeleportRuntimeConfig,
+    playVisual: (payload = {}) => (
+      typeof playOrbTeleport3dRuntime === "function"
+        ? playOrbTeleport3dRuntime(payload)
+        : { handled: false }
+    ),
+  });
 
   function directPlayShock() {
     if (stageVfx.shockwaveRuntime && typeof stageVfx.shockwaveRuntime.play === "function") {
@@ -327,102 +363,9 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function directPlayTeleport(payload = {}) {
-    const teleportConfig = {
-      ...(
-        vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object"
-          ? vfxDefaults.teleport
-          : Object.create(null)
-      ),
-      ...buildTeleportBehaviorConfig(
-        vfxDefaults &&
-        vfxDefaults.behaviors &&
-        vfxDefaults.behaviors.teleport &&
-        typeof vfxDefaults.behaviors.teleport === "object"
-          ? vfxDefaults.behaviors.teleport
-          : Object.create(null)
-      ),
-    };
     if (typeof playOrbTeleport3dRuntime === "function") {
-      const getOrbRuntime = () => (
-        runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.get === "function"
-          ? runtime.stage.orbRuntimeState.get()
-          : null
-      );
-      const patchOrbRuntime = (patch = {}) => (
-        runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.patch === "function"
-          ? runtime.stage.orbRuntimeState.patch(patch)
-          : null
-      );
-      const sourceState = getOrbRuntime();
-      const sourceYW = Number.isFinite(Number(sourceState && sourceState.yW)) ? Number(sourceState.yW) : 0;
-      const sourceAnchorY = sourceYW;
-      patchOrbRuntime({
-        teleportHoldActive: true,
-        teleportHoldAnchorY: sourceAnchorY,
-        v: 0,
-        onGround: false,
-        descendMs: 0,
-        shieldDescentBlocked: false,
-      });
-      const result = playOrbTeleport3dRuntime({
-        ...payload,
-        config: teleportConfig,
-        onTeleport: () => {
-          let teleportResult = null;
-          if (typeof payload.onTeleport === "function") {
-            try {
-              teleportResult = payload.onTeleport();
-            } catch (_) {}
-          }
-          const destinationState = getOrbRuntime();
-          const destinationYW = Number.isFinite(Number(destinationState && destinationState.yW))
-            ? Number(destinationState.yW)
-            : sourceYW;
-          patchOrbRuntime({
-            teleportHoldActive: true,
-            teleportHoldAnchorY: destinationYW,
-            v: 0,
-            onGround: false,
-          });
-          const durationMs = Math.max(0, Number(teleportConfig.cameraTravelMs) || 0);
-          if (
-            durationMs > 0 &&
-            typeof requestCameraTravel === "function" &&
-            Math.abs(destinationYW - sourceYW) > 1
-          ) {
-            try {
-              return requestCameraTravel({
-                fromYW: sourceYW,
-                toYW: destinationYW,
-                durationMs,
-                easing: teleportConfig.cameraEasing,
-              });
-            } catch (_) {}
-          }
-          void teleportResult;
-          return null;
-        },
-        onComplete: () => {
-          const state = getOrbRuntime();
-          const anchorY = Number.isFinite(Number(state && state.yW)) ? Number(state.yW) : sourceAnchorY;
-          patchOrbRuntime({
-            teleportHoldActive: false,
-            teleportHoldAnchorY: anchorY,
-            v: 0,
-          });
-          if (typeof payload.onComplete === "function") {
-            try {
-              payload.onComplete();
-            } catch (_) {}
-          }
-        },
-      });
+      const result = teleport3dSequenceRuntime.play(payload);
       if (result && result.handled) return result;
-      patchOrbRuntime({
-        teleportHoldActive: false,
-        teleportHoldAnchorY: sourceAnchorY,
-        v: 0,
-      });
     }
     if (stageVfx.teleportRuntime && typeof stageVfx.teleportRuntime.play === "function") {
       return stageVfx.teleportRuntime.play(payload);

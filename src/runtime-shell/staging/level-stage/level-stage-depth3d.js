@@ -1,4 +1,4 @@
-import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260501d";
+import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260501e";
 import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
   LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
@@ -29,6 +29,7 @@ import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-glob
 import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260430a";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430b";
+import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260430a";
 import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430b";
 import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";
@@ -122,6 +123,10 @@ export function createLevelStageDepth3dLayer({
     onModelChanged: () => {
       orbLifecycle3dRuntime.attachOrbModel();
     },
+    onNeedsFrame: () => renderLoop.scheduleAnimation(),
+  });
+  const teleport3dRuntime = createTeleport3dRuntime({
+    setOpacity: (alpha = 1) => orb3dActorRuntime.setOpacity(alpha),
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
   const worldGlobe3dRuntime = createWorldGlobe3dRuntime({
@@ -224,6 +229,7 @@ export function createLevelStageDepth3dLayer({
       || orbLifecycle3dRuntime.hasActiveVisuals()
       || orb3dActorRuntime.isNodActive()
       || orb3dActorRuntime.isSpinColorActive()
+      || teleport3dRuntime.isActive()
     );
   }
 
@@ -379,10 +385,10 @@ export function createLevelStageDepth3dLayer({
       return result || { handled: false };
     },
     playOrbTeleport3d(payload = {}) {
-      if (disposed) {
+      if (disposed || !orb3dActorRuntime.hasModel()) {
         return { handled: false, skipped: "orb_teleport3d_runtime_missing" };
       }
-      const result = orb3dActorRuntime.playTeleport(payload);
+      const result = teleport3dRuntime.play(payload);
       if (result && result.handled) {
         renderLoop.scheduleAnimation();
         renderLoop.renderFrame(renderLoop.getLastFrame() || {});
@@ -406,6 +412,7 @@ export function createLevelStageDepth3dLayer({
       disposed = true;
       renderLoop.dispose();
       eventBindings.dispose();
+      teleport3dRuntime.destroy();
       orbLifecycle3dRuntime.dispose();
       clearGlobe3dObjects();
       orb3dActorRuntime.dispose();
