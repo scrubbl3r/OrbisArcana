@@ -8,10 +8,10 @@ export const WORLD_GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({
     pulseHz: 0.90,
   }),
   collected: Object.freeze({
-    diameterBO: 0.09,
+    diameterBO: 0.10,
   }),
   consumed: Object.freeze({
-    diameterBO: 0.06,
+    diameterBO: 0.08,
   }),
   material: Object.freeze({
     shellBaseColor: 0xfbfdff,
