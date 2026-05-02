@@ -19,6 +19,7 @@ import { createWorldGlobe3dPreview } from "./previews/world-globe-3d-preview.js?
 import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=20260425d";
 import { createOrbTeleportPreview } from "./previews/orb-teleport-preview.js?v=20260425d";
 import { createOrbTeleport3dPreview } from "./previews/orb-teleport-3d-preview.js?v=20260501a";
+import { createFlameAoe3dPreview } from "./previews/flame-aoe-3d-preview.js?v=20260502a";
 
 export function createStudioPreviewRegistry({
   els,
@@ -217,6 +218,16 @@ export function createStudioPreviewRegistry({
   actions.playOrbTeleport3d = orbTeleport3dPreview.play;
   orbTeleport3dPreview.wire();
 
+  const flameAoe3dPreview = createFlameAoe3dPreview({
+    els: previewEls.flameAoe3d,
+    getOrbBaseVisualState,
+    getOrb3dVisualSettings: getOrb3dVisualSettings || (() => readOrb3dPreviewConfig(previewEls.orb3d)),
+  });
+  actions.applyFlameAoe3d = flameAoe3dPreview.apply;
+  actions.clearFlameAoe3d = flameAoe3dPreview.clear;
+  actions.playFlameAoe3d = flameAoe3dPreview.play;
+  flameAoe3dPreview.wire();
+
   function stopAllStudioEffects() {
     if (typeof actions.shieldOffNow === "function") actions.shieldOffNow();
     if (typeof actions.clearShock === "function") actions.clearShock();
@@ -235,6 +246,7 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearWorldGlobe3d === "function") actions.clearWorldGlobe3d();
     if (typeof actions.clearOrbTeleport === "function") actions.clearOrbTeleport();
     if (typeof actions.clearOrbTeleport3d === "function") actions.clearOrbTeleport3d();
+    if (typeof actions.clearFlameAoe3d === "function") actions.clearFlameAoe3d();
     Object.values(previewRootsByEffect || {}).forEach((root) => {
       if (!root || typeof root.setAttribute !== "function") return;
       root.setAttribute("aria-hidden", "true");

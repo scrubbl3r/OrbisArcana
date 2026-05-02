@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260502c";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260502d";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -164,6 +164,11 @@ export function createStudioBootstrap({
       previewRoot: els.orbTeleport3dPreviewRoot,
       previewOrbTeleport3d: els.previewOrbTeleport3d,
     }),
+    flameAoe3d: Object.freeze({
+      ...els,
+      previewRoot: els.flameAoe3dPreviewRoot,
+      previewFlameAoe3d: els.previewFlameAoe3d,
+    }),
   });
 
   const studioPreviewRegistry = createStudioPreviewRegistry({
@@ -306,6 +311,7 @@ export function createStudioBootstrap({
       applyWorldGlobe3d: () => studioPreviewRegistry.actions.applyWorldGlobe3d(),
       applyOrbTeleport: () => studioPreviewRegistry.actions.applyOrbTeleport(),
       applyOrbTeleport3d: () => studioPreviewRegistry.actions.applyOrbTeleport3d(),
+      applyFlameAoe3d: () => studioPreviewRegistry.actions.applyFlameAoe3d(),
     }),
     selectedEffectOption,
     selectedBaseEffect,
