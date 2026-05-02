@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createOrb3dModel } from "./orb-3d-model.js?v=20260501a";
+import { createOrb3dModel } from "./orb-3d-model.js?v=20260501b";
 import {
   createOpalescentOrbShellMaterial,
   createOrbPointLight,
@@ -10,9 +10,9 @@ import { ORB_3D_VISUAL_DEFAULTS } from "./orb-3d-default.js";
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
 
 const SPIN_COLOR_EASE_RATE = 7;
-const SHELL_BASE_TINT_MIX = 0.62;
-const SHELL_PASTEL_TINT_MIX = 0.38;
-const LIGHT_TINT_MIX = 0.82;
+const SHELL_BASE_TINT_MIX = 0.96;
+const SHELL_PASTEL_TINT_MIX = 0.9;
+const LIGHT_TINT_MIX = 1;
 
 function clamp01(value) {
   const n = Number(value);
