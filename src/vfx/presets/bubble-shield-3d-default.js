@@ -1,10 +1,10 @@
 export const BUBBLE_SHIELD_3D_PRESET_DEFAULT = Object.freeze({
   durationMs: 5000,
   diameterRatio: 1.80,
-  alpha: 0.50,
+  alpha: 0.40,
   pulseMs: 20,
-  pulseMin: 0.05,
-  pulseMax: 0.40,
+  pulseMin: 0.10,
+  pulseMax: 1.00,
   maxCracks: 10,
   crackColor: 0x6496ff,
   crackAlpha: 0.60,
