@@ -2754,6 +2754,11 @@
       const opt = selectedEffectOption();
       if (!opt) return;
       const baseEffect = String(opt.dataset.baseEffect || selectedBaseEffect() || "");
+      const surface = LAB_EFFECT_SURFACES && LAB_EFFECT_SURFACES[baseEffect];
+      if (!isCustomEffectOption(opt) && surface && surface.livePreset) {
+        applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
+        return;
+      }
       const profile = draftStore.profilesByValue[String(opt.value || "")];
       if (!profile) {
         applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
@@ -3073,6 +3078,7 @@
       previewApplyMap: Object.freeze({
         "electric-aoe": () => applyElectricControls(),
         "bubble-shield": () => applyShield(),
+        "bubble-shield-3d": () => playBubbleShield3d(),
         shockwave: () => applyShock(),
         "flame-aoe": () => applyFlameControls(),
         "orb-base": () => applyOrbBase(),
@@ -3124,6 +3130,7 @@
       applyShield,
       applyPulse,
       playShield,
+      playBubbleShield3d,
       applyShock,
       clearShock,
       playShock,

@@ -261,6 +261,14 @@ export function createStudioBootstrap({
     const opt = selectedEffectOption();
     if (!opt) return;
     const baseEffect = String(opt.dataset.baseEffect || selectedBaseEffect() || "");
+    const isCustom = typeof defaults.isCustomEffectOption === "function"
+      ? defaults.isCustomEffectOption(opt)
+      : String((opt.dataset && opt.dataset.custom) || "") === "true" || String(opt.value || "").startsWith("custom:");
+    const surface = surfaces && surfaces[baseEffect];
+    if (!isCustom && surface && surface.livePreset) {
+      applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
+      return;
+    }
     const profile = draftStore.profilesByValue[String(opt.value || "")];
     if (!profile) {
       applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
@@ -292,6 +300,7 @@ export function createStudioBootstrap({
       playShock: () => studioPreviewRegistry.actions.playShock(),
       playFlame: () => studioPreviewRegistry.actions.playFlame(),
       playElectric: () => studioPreviewRegistry.actions.playElectric(),
+      playBubbleShield3d: () => studioPreviewRegistry.actions.playBubbleShield3d(),
       applyOrbBase: () => studioPreviewRegistry.actions.applyOrbBase(),
       applyOrbTemplate: () => studioPreviewRegistry.actions.applyOrbTemplate(),
       applyOrb3d: () => studioPreviewRegistry.actions.applyOrb3d(),
