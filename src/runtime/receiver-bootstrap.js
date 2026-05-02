@@ -20,7 +20,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260501b";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260502a";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -335,7 +335,7 @@ export async function loadReceiverInitModules() {
     import("../game-runtime/orb/orb-base-state.js"),
     import("../game-runtime/orb/orb-color-runtime.js"),
     import("../game-runtime/orb/orb-shatter-runtime.js"),
-    import("../content/orb/orb-runtime-config-default.js"),
+    import(`../content/orb/orb-runtime-config-default.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../content/orb/orb-status-config-default.js"),
     import("../content/theme/game-theme-default.js"),
     import("../ui/theme/apply-game-theme-css-vars.js"),

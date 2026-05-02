@@ -221,7 +221,7 @@ export function runOrbRuntimePipeline({
 
   let a = g - thrust;
 
-  const signedFallDrag = clamp(Number(phys.downDrag) || 0, -1, 1);
+  const signedFallDrag = clamp(Number(phys.downDrag) || 0, -5, 1);
   const drag = (state.v >= 0) ? signedFallDrag : phys.upDrag;
   a += (-drag * state.v);
 

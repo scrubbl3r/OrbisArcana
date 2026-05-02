@@ -91,8 +91,8 @@ const SHELL_STAGE_UI_DEFAULTS = Object.freeze({
   gravityMul: 0.34,
   gravityMin: 0,
   gravityMax: 3,
-  downDrag: -0.53,
-  downDragMin: -1,
+  downDrag: -1.7,
+  downDragMin: -5,
   downDragMax: 1,
 });
 
@@ -1127,7 +1127,11 @@ function computeShellImpactMetric(shellContext, rawImpactV) {
     : null;
   const v = Math.max(0, Number(rawImpactV) || 0);
   const gMul = Math.max(0.05, Number(orbState && orbState.gravityMul) || SHELL_STAGE_UI_DEFAULTS.gravityMul);
-  const fallDrag = clamp(Number(stage && stage.phys && stage.phys.downDrag) || 0, -1, 1);
+  const fallDrag = clamp(
+    Number(stage && stage.phys && stage.phys.downDrag) || 0,
+    SHELL_STAGE_UI_DEFAULTS.downDragMin,
+    SHELL_STAGE_UI_DEFAULTS.downDragMax
+  );
   const eLike = 0.5 * SHELL_IMPACT_MODEL.mass * v * v;
   const gravityTerm = Math.pow(gMul, SHELL_IMPACT_MODEL.gravityExp);
   const dragMirror = clamp(1 - (fallDrag * SHELL_IMPACT_MODEL.dragMirrorScale), 0.05, 2.0);
@@ -3364,7 +3368,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260501x",
+  moduleCacheBustV = "20260502a",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

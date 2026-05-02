@@ -1,6 +1,6 @@
 import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js";
 import { createInputHudPanelRefs } from "./input-hud-panel-refs.js";
-import { INPUT_HUD_PANEL_TEMPLATE } from "./input-hud-panel-template.js";
+import { INPUT_HUD_PANEL_TEMPLATE } from "./input-hud-panel-template.js?v=20260502a";
 
 export function mountInputHudPanel(host, { onRequestClose = null } = {}) {
   if (!host) return null;
