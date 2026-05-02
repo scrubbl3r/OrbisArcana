@@ -3,5 +3,5 @@ export const ORB_SPAWN_PRESET_DEFAULT = Object.freeze({
   bobSpeedHz: 0.10,
   driftRangeBO: 0.10,
   driftSpeedHz: 0.07,
-  liftReleaseThreshold01: 0.25,
+  liftReleaseThreshold01: 0.55,
 });
