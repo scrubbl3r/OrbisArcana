@@ -8,7 +8,7 @@ import {
   createOrb3dPreview,
   readOrb3dPreviewConfig,
 } from "./previews/orb-3d-preview.js?v=20260428a";
-import { createOrbSpawnPreview } from "./previews/orb-spawn-preview.js?v=20260429a";
+import { createOrbSpawnPreview } from "./previews/orb-spawn-preview.js?v=20260501a";
 import { createOrbNod3dPreview } from "./previews/orb-nod3d-preview.js?v=20260428b";
 import { createOrbLifecyclePreview } from "./previews/orb-lifecycle-preview.js?v=20260425d";
 import { createOrbLifecycle3dPreview } from "./previews/orb-lifecycle-3d-preview.js?v=20260430a";

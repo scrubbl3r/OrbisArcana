@@ -2,6 +2,8 @@ import { stepOrbLateralMotion } from "./orb-lateral-motion.js?v=20260420t";
 import { resolveCircleVsBoundarySegments } from "../collision/circle-boundary-collision.js?v=20260423g";
 import { resolveSphereVsExtrudedBoundarySegments } from "../collision/sphere-cavity-collision.js?v=20260428c";
 
+const SPAWN_DRIFT_START_PHASE_RAD = Math.PI;
+
 function clamp01(n){
   n = Number(n);
   if (!isFinite(n)) return 0;
@@ -151,7 +153,7 @@ export function runOrbRuntimePipeline({
       const driftHz = Math.max(0, Number(spawnConfig.driftSpeedHz) || 0);
       const bobRange = Math.max(0, Number(spawnConfig.bobRangeBO) || 0) * bo;
       const bobHz = Math.max(0, Number(spawnConfig.bobSpeedHz) || 0);
-      const targetX = anchorX + (Math.sin(t * Math.PI * 2 * driftHz) * driftRange);
+      const targetX = anchorX + (Math.sin((t * Math.PI * 2 * driftHz) + SPAWN_DRIFT_START_PHASE_RAD) * driftRange);
       const targetY = anchorY + (Math.sin(t * Math.PI * 2 * bobHz) * bobRange);
       const holdHz = Math.max(1, Number(spawnConfig.holdEaseHz) || 12);
       const alpha = 1 - Math.exp(-holdHz * dt);

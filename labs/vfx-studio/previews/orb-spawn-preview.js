@@ -9,6 +9,8 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 
+const SPAWN_DRIFT_START_PHASE_RAD = Math.PI;
+
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
@@ -102,7 +104,11 @@ export function createOrbSpawnPreview({
         }
         if (orbLight) updateOrbPointLight(orbLight, time, orbConfig);
         if (model && spawnConfig) {
-          const drift = Math.sin(time * Math.PI * 2 * spawnConfig.driftSpeedHz) * spawnConfig.driftRangeBO * bo;
+          const drift = (
+            Math.sin((time * Math.PI * 2 * spawnConfig.driftSpeedHz) + SPAWN_DRIFT_START_PHASE_RAD)
+            * spawnConfig.driftRangeBO
+            * bo
+          );
           const bob = Math.sin(time * Math.PI * 2 * spawnConfig.bobSpeedHz) * spawnConfig.bobRangeBO * bo;
           model.position.set(drift, bob, 0);
         }
