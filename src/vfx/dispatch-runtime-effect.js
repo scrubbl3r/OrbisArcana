@@ -48,6 +48,7 @@ export function dispatchRuntimeEffect({
         ? { ...(runtime.triggerShockwave(payload) || { handled: false }), binding }
         : { handled: false, skipped: "runtime_missing", binding };
     case "spell.shield_bubble":
+    case "spell.shield_bubble3d":
       return typeof runtime.activateBubbleShield === "function"
         ? { ...(runtime.activateBubbleShield(payload) || { handled: false }), binding }
         : { handled: false, skipped: "runtime_missing", binding };

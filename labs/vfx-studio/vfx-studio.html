@@ -1956,14 +1956,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260501c"),
+      import("./vfx-studio-bootstrap.js?v=20260501d"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
-      import("./vfx-studio-surfaces.js?v=20260501c"),
-      import("./vfx-studio-theme-publish.js?v=20260501b"),
+      import("./vfx-studio-surfaces.js?v=20260501e"),
+      import("./vfx-studio-theme-publish.js?v=20260501c"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -1986,28 +1986,17 @@
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260429a";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
-    const livePresetCacheBust = Date.now();
-    const [
-      { BUBBLE_SHIELD_PRESET_DEFAULT },
-      { BUBBLE_SHIELD_3D_PRESET_DEFAULT },
-      { SHOCKWAVE_PRESET_DEFAULT },
-      { FLAME_AOE_PRESET_DEFAULT },
-      { ELECTRIC_AOE_PRESET_DEFAULT },
-      { TELEPORT_PRESET_DEFAULT },
-      { ORB_NOD_PRESET_DEFAULT },
-      { ORB_NOD_3D_PRESET_DEFAULT },
-      { ORB_SPAWN_PRESET_DEFAULT },
-    ] = await Promise.all([
-      import(`../../src/vfx/presets/bubble-shield-default.js?v=${livePresetCacheBust}`),
-      import(`../../src/vfx/presets/bubble-shield-3d-default.js?v=${livePresetCacheBust}`),
-      import(`../../src/vfx/presets/shockwave-default.js?v=${livePresetCacheBust}`),
-      import(`../../src/vfx/presets/flame-aoe-default.js?v=${livePresetCacheBust}`),
-      import(`../../src/vfx/presets/electric-aoe-default.js?v=${livePresetCacheBust}`),
-      import(`../../src/vfx/presets/teleport-default.js?v=${livePresetCacheBust}`),
-      import(`../../src/vfx/presets/orb-nod-default.js?v=${livePresetCacheBust}`),
-      import(`../../src/vfx/presets/orb-nod3d-default.js?v=${livePresetCacheBust}`),
-      import(`../../src/vfx/presets/orb-spawn-default.js?v=${livePresetCacheBust}`),
-    ]);
+    import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
+    import {
+      SHOCKWAVE_PRESET_DEFAULT,
+      ELECTRIC_AOE_PRESET_DEFAULT,
+      ORB_NOD_3D_PRESET_DEFAULT,
+      ORB_NOD_PRESET_DEFAULT,
+      BUBBLE_SHIELD_PRESET_DEFAULT,
+      BUBBLE_SHIELD_3D_PRESET_DEFAULT,
+      ORB_SPAWN_PRESET_DEFAULT,
+      TELEPORT_PRESET_DEFAULT
+    } from "../../src/vfx/presets/index.js?v=20260501a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
@@ -2025,7 +2014,6 @@
     const $ = (id) => document.getElementById(id);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
     const draftStore = createDraftStore();
-    const studioBootedAtMs = Date.now();
     let draftHydrationDone = false;
     let suspendDraftApply = false;
     const lastSelectedEffectValueRef = { value: "" };
@@ -2767,11 +2755,6 @@
       if (!opt) return;
       const baseEffect = String(opt.dataset.baseEffect || selectedBaseEffect() || "");
       const profile = draftStore.profilesByValue[String(opt.value || "")];
-      const surface = LAB_EFFECT_SURFACES && LAB_EFFECT_SURFACES[baseEffect];
-      if (!isCustomEffectOption(opt) && surface && surface.livePreset && (!profile || Number(profile.savedAtMs) < studioBootedAtMs)) {
-        applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
-        return;
-      }
       if (!profile) {
         applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
         return;

@@ -42,6 +42,15 @@ export const VFX_EFFECT_REGISTRY = Object.freeze([
     publishTargets: ["preset", "binding"],
   }),
   Object.freeze({
+    id: "spell.shield_bubble3d",
+    label: "Bubble Shield 3D",
+    category: "spell",
+    runtimeModuleId: "bubble_shield3d_runtime",
+    defaultPresetId: "preset.bubble_shield3d.default",
+    supportedContexts: ["lab", "receiver"],
+    publishTargets: ["preset", "binding"],
+  }),
+  Object.freeze({
     id: "orb.shatter_voronoi",
     label: "Orb Shatter (Voronoi)",
     category: "orb",

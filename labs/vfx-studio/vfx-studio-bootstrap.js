@@ -34,7 +34,6 @@ export function createStudioBootstrap({
   requestAnimationFrame: requestAnimationFrameImpl = requestAnimationFrame,
 } = {}) {
   if (!els) throw new Error("createStudioBootstrap requires els");
-  const bootedAtMs = Date.now();
 
   if (els.orbBaseD) els.orbBaseD.value = String(Math.round(defaults.orbBaseVisualDefaults.diameterPx));
   if (els.orbBaseStroke) els.orbBaseStroke.value = String(Math.round(defaults.orbBaseVisualDefaults.strokeWidthPx));
@@ -263,14 +262,6 @@ export function createStudioBootstrap({
     if (!opt) return;
     const baseEffect = String(opt.dataset.baseEffect || selectedBaseEffect() || "");
     const profile = draftStore.profilesByValue[String(opt.value || "")];
-    const isCustom = typeof defaults.isCustomEffectOption === "function"
-      ? defaults.isCustomEffectOption(opt)
-      : String((opt.dataset && opt.dataset.custom) || "") === "true" || String(opt.value || "").startsWith("custom:");
-    const surface = surfaces && surfaces[baseEffect];
-    if (!isCustom && surface && surface.livePreset && (!profile || Number(profile.savedAtMs) < bootedAtMs)) {
-      applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
-      return;
-    }
     if (!profile) {
       applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
       return;
