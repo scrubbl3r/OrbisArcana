@@ -27,6 +27,10 @@ export async function connectProjectFolder({ showDirectoryPicker, onConnected, r
   try {
     const dirHandle = await showDirectoryPicker({ mode: "readwrite" });
     if (!dirHandle) return false;
+    if (!(await isConnectedProjectRoot(dirHandle))) {
+      window.alert("Choose the OrbisArcana repo root folder, the one that contains labs/ and src/.");
+      return false;
+    }
     onConnected(dirHandle);
     refreshProjectConnectUi();
     return true;
@@ -42,8 +46,31 @@ export async function getOrCreateSubdir(parentHandle, name) {
   return parentHandle.getDirectoryHandle(String(name || ""), { create: true });
 }
 
+async function hasProjectMarker(projectRootDirHandle, pathParts) {
+  if (!projectRootDirHandle || !Array.isArray(pathParts) || !pathParts.length) return false;
+  try {
+    let dir = projectRootDirHandle;
+    for (let i = 0; i < pathParts.length - 1; i += 1) {
+      dir = await dir.getDirectoryHandle(String(pathParts[i] || ""), { create: false });
+    }
+    await dir.getFileHandle(String(pathParts[pathParts.length - 1] || ""), { create: false });
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function isConnectedProjectRoot(projectRootDirHandle) {
+  return hasProjectMarker(projectRootDirHandle, ["labs", "vfx-studio", "vfx-studio.html"])
+    && hasProjectMarker(projectRootDirHandle, ["src", "vfx", "presets", "index.js"]);
+}
+
 export async function saveTextToConnectedProjectDrafts({ projectRootDirHandle, draftPathParts, filename, text }) {
   if (!projectRootDirHandle) return false;
+  if (!(await isConnectedProjectRoot(projectRootDirHandle))) {
+    window.alert("Connected Project is not the OrbisArcana repo root. Reconnect to the folder that contains labs/ and src/.");
+    return false;
+  }
   let dir = projectRootDirHandle;
   for (const part of draftPathParts) {
     dir = await getOrCreateSubdir(dir, part);
@@ -57,9 +84,13 @@ export async function saveTextToConnectedProjectDrafts({ projectRootDirHandle, d
 
 export async function saveTextToConnectedProjectPath({ projectRootDirHandle, pathParts, text }) {
   if (!projectRootDirHandle || !Array.isArray(pathParts) || !pathParts.length) return false;
+  if (!(await isConnectedProjectRoot(projectRootDirHandle))) {
+    window.alert("Connected Project is not the OrbisArcana repo root. Reconnect to the folder that contains labs/ and src/.");
+    return false;
+  }
   let dir = projectRootDirHandle;
   for (let i = 0; i < pathParts.length - 1; i += 1) {
-    dir = await getOrCreateSubdir(dir, pathParts[i]);
+    dir = await dir.getDirectoryHandle(String(pathParts[i] || ""), { create: false });
   }
   const fileName = String(pathParts[pathParts.length - 1] || "");
   if (!fileName) return false;

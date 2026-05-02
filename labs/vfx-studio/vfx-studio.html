@@ -2014,6 +2014,7 @@
     const $ = (id) => document.getElementById(id);
     const DRAFT_STORAGE_KEY = "orbis_arcana.vfx_studio_drafts.v1";
     const draftStore = createDraftStore();
+    const studioBootedAtMs = Date.now();
     let draftHydrationDone = false;
     let suspendDraftApply = false;
     const lastSelectedEffectValueRef = { value: "" };
@@ -2754,12 +2755,12 @@
       const opt = selectedEffectOption();
       if (!opt) return;
       const baseEffect = String(opt.dataset.baseEffect || selectedBaseEffect() || "");
+      const profile = draftStore.profilesByValue[String(opt.value || "")];
       const surface = LAB_EFFECT_SURFACES && LAB_EFFECT_SURFACES[baseEffect];
-      if (!isCustomEffectOption(opt) && surface && surface.livePreset) {
+      if (!isCustomEffectOption(opt) && surface && surface.livePreset && (!profile || Number(profile.savedAtMs) < studioBootedAtMs)) {
         applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
         return;
       }
-      const profile = draftStore.profilesByValue[String(opt.value || "")];
       if (!profile) {
         applyCurrentEffectSettings(baseEffect, defaultSettingsForBaseEffect(baseEffect));
         return;
