@@ -290,21 +290,33 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         const b = Math.round(toNum(p[`${prefix}B`], fallback & 255));
         return `0x${[r, g, b].map((channel) => Math.max(0, Math.min(255, channel)).toString(16).padStart(2, "0")).join("")}`;
       };
+      const boDistance = (value, fallback) => {
+        const n = toNum(value, fallback);
+        return n > 4 ? n / 150 : n;
+      };
+      const hz = (value, fallback) => {
+        const n = toNum(value, fallback);
+        return n > 5 ? n * 0.01 : n;
+      };
+      const boPerSec = (value, fallback) => {
+        const n = toNum(value, fallback);
+        return n > 20 ? n / 150 : n;
+      };
       return [
         "export const ORB_GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({",
-        `  orbitDistanceRatio: ${toNum(p.orbGlobe3dOrbitDistanceRatio, 1.1).toFixed(2)},`,
-        `  orbitDistanceMinPx: ${Math.round(toNum(p.orbGlobe3dOrbitDistanceMin, 14))},`,
-        `  orbitSpeedMin: ${toNum(p.orbGlobe3dSpeedMin, 1.8).toFixed(2)},`,
-        `  orbitSpeedMax: ${toNum(p.orbGlobe3dSpeedMax, 2.45).toFixed(2)},`,
-        `  orbitDriftMin: ${toNum(p.orbGlobe3dDriftMin, 0.03).toFixed(2)},`,
-        `  orbitDriftMax: ${toNum(p.orbGlobe3dDriftMax, 0.18).toFixed(2)},`,
-        `  innerSpeedMinPxPerSec: ${Math.round(toNum(p.orbGlobe3dInnerSpeedMin, 80))},`,
-        `  innerSpeedMaxPxPerSec: ${Math.round(toNum(p.orbGlobe3dInnerSpeedMax, 150))},`,
+        `  orbitDistanceBO: ${boDistance(p.orbGlobe3dOrbitDistanceRatio, 1.07).toFixed(2)},`,
+        `  orbitDistanceMinBO: ${boDistance(p.orbGlobe3dOrbitDistanceMin, 0.02).toFixed(2)},`,
+        `  orbitSpeedMinHz: ${hz(p.orbGlobe3dSpeedMin, 0.25).toFixed(2)},`,
+        `  orbitSpeedMaxHz: ${hz(p.orbGlobe3dSpeedMax, 0.30).toFixed(2)},`,
+        `  orbitDriftMinHz: ${toNum(p.orbGlobe3dDriftMin, 0.50).toFixed(2)},`,
+        `  orbitDriftMaxHz: ${toNum(p.orbGlobe3dDriftMax, 1.00).toFixed(2)},`,
+        `  innerSpeedMinBOPerSec: ${boPerSec(p.orbGlobe3dInnerSpeedMin, 3.67).toFixed(2)},`,
+        `  innerSpeedMaxBOPerSec: ${boPerSec(p.orbGlobe3dInnerSpeedMax, 4.53).toFixed(2)},`,
         `  innerDriftMin: ${toNum(p.orbGlobe3dInnerDriftMin, 0.08).toFixed(2)},`,
         `  innerDriftMax: ${toNum(p.orbGlobe3dInnerDriftMax, 0.28).toFixed(2)},`,
-        `  innerPaddingRatio: ${toNum(p.orbGlobe3dInnerPaddingRatio, 0.06).toFixed(2)},`,
-        `  loadedDiameterRatio: ${toNum(p.orbGlobe3dLoadedDiameterRatio, 0.17).toFixed(2)},`,
-        `  consumedDiameterRatio: ${toNum(p.orbGlobe3dConsumedDiameterRatio, 0.10).toFixed(2)},`,
+        `  innerPaddingBO: ${boDistance(p.orbGlobe3dInnerPaddingRatio, 0.11).toFixed(2)},`,
+        `  loadedDiameterBO: ${boDistance(p.orbGlobe3dLoadedDiameterRatio, 0.17).toFixed(2)},`,
+        `  consumedDiameterBO: ${boDistance(p.orbGlobe3dConsumedDiameterRatio, 0.10).toFixed(2)},`,
         "  material: Object.freeze({",
         `    shellBaseColor: ${colorHex("orbGlobe3dShellBase", 0xfbfdff)},`,
         `    shellCyanColor: ${colorHex("orbGlobe3dShellCyan", 0x9af5ff)},`,
@@ -462,18 +474,18 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
       return [
         "export const WORLD_GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({",
         "  idle: Object.freeze({",
-        `    diameterRatio: ${toNum(p.worldGlobe3dIdleDiameterRatio, 0.35).toFixed(2)},`,
-        `    driftRatio: ${toNum(p.worldGlobe3dIdleDriftRatio, 0.10).toFixed(2)},`,
-        `    bobRatio: ${toNum(p.worldGlobe3dIdleBobRatio, 0.07).toFixed(2)},`,
+        `    diameterBO: ${toNum(p.worldGlobe3dIdleDiameterRatio, 0.35).toFixed(2)},`,
+        `    driftRangeBO: ${toNum(p.worldGlobe3dIdleDriftRatio, 0.10).toFixed(2)},`,
+        `    bobRangeBO: ${toNum(p.worldGlobe3dIdleBobRatio, 0.07).toFixed(2)},`,
         `    bobHz: ${toNum(p.worldGlobe3dIdleBobHz, 0.65).toFixed(2)},`,
         `    pulseScale: ${toNum(p.worldGlobe3dIdlePulseScale, 0.045).toFixed(3)},`,
         `    pulseHz: ${toNum(p.worldGlobe3dIdlePulseHz, 0.9).toFixed(2)},`,
         "  }),",
         "  collected: Object.freeze({",
-        `    diameterRatio: ${toNum(p.worldGlobe3dCollectedDiameterRatio, 0.17).toFixed(2)},`,
+        `    diameterBO: ${toNum(p.worldGlobe3dCollectedDiameterRatio, 0.17).toFixed(2)},`,
         "  }),",
         "  consumed: Object.freeze({",
-        `    diameterRatio: ${toNum(p.worldGlobe3dConsumedDiameterRatio, 0.10).toFixed(2)},`,
+        `    diameterBO: ${toNum(p.worldGlobe3dConsumedDiameterRatio, 0.10).toFixed(2)},`,
         "  }),",
         "  material: Object.freeze({",
         `    shellBaseColor: ${colorHex("worldGlobe3dShellBase", 0xfbfdff)},`,

@@ -63,20 +63,29 @@ function colorChannels(color) {
   });
 }
 
+function readNumber(source, keys = [], fallback = 0) {
+  const object = source && typeof source === "object" ? source : {};
+  for (const key of keys) {
+    const value = Number(object[key]);
+    if (Number.isFinite(value)) return value;
+  }
+  return fallback;
+}
+
 function settingsFromDefaults(defaults = {}) {
   const material = defaults.material || {};
   const idle = defaults.idle || {};
   const collected = defaults.collected || {};
   const consumed = defaults.consumed || {};
   const settings = {
-    worldGlobe3dIdleDiameterRatio: fixedNumber(idle.diameterRatio, 2, 0.35),
-    worldGlobe3dIdleDriftRatio: fixedNumber(idle.driftRatio, 2, 0.10),
-    worldGlobe3dIdleBobRatio: fixedNumber(idle.bobRatio, 2, 0.07),
+    worldGlobe3dIdleDiameterRatio: fixedNumber(readNumber(idle, ["diameterBO", "diameterRatio"], 0.35), 2, 0.35),
+    worldGlobe3dIdleDriftRatio: fixedNumber(readNumber(idle, ["driftRangeBO", "driftRatio"], 0.10), 2, 0.10),
+    worldGlobe3dIdleBobRatio: fixedNumber(readNumber(idle, ["bobRangeBO", "bobRatio"], 0.07), 2, 0.07),
     worldGlobe3dIdleBobHz: fixedNumber(idle.bobHz, 2, 0.65),
     worldGlobe3dIdlePulseScale: fixedNumber(idle.pulseScale, 3, 0.045),
     worldGlobe3dIdlePulseHz: fixedNumber(idle.pulseHz, 2, 0.9),
-    worldGlobe3dCollectedDiameterRatio: fixedNumber(collected.diameterRatio, 2, 0.17),
-    worldGlobe3dConsumedDiameterRatio: fixedNumber(consumed.diameterRatio, 2, 0.10),
+    worldGlobe3dCollectedDiameterRatio: fixedNumber(readNumber(collected, ["diameterBO", "diameterRatio"], 0.17), 2, 0.17),
+    worldGlobe3dConsumedDiameterRatio: fixedNumber(readNumber(consumed, ["diameterBO", "diameterRatio"], 0.10), 2, 0.10),
   };
 
   Object.entries(WORLD_GLOBE_3D_NUMERIC_MAP).forEach(([fieldId, configKey]) => {

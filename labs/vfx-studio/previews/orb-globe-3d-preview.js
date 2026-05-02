@@ -8,14 +8,9 @@ import {
   createOrbPointLight,
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
-import {
-  buildOrbGlobeVisualState,
-  getInnerPaddingPx,
-  getOrbitDistancePx,
-} from "../../../src/game-runtime/orb/orb-globe-base-state.js?v=20260425d";
 import { createGlobeModel } from "../../../src/game-runtime/world/globe-3d-model.js?v=20260429a";
 import { createGlobeMaterial, createGlobePointLight } from "../../../src/game-runtime/world/globe-3d-material.js?v=20260429a";
-import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260429b";
+import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502a";
 
 const UP = new THREE.Vector3(0, 1, 0);
 const TMP_A = new THREE.Vector3();
@@ -58,26 +53,33 @@ function readRange(els, minId, maxId, min, max) {
   });
 }
 
+function readNumber(source, keys = [], fallback = 0) {
+  const object = source && typeof source === "object" ? source : {};
+  for (const key of keys) {
+    const value = Number(object[key]);
+    if (Number.isFinite(value)) return value;
+  }
+  return fallback;
+}
+
 export function readOrbGlobe3dPreviewConfig(els = {}) {
   const field = (id) => els[id] || document.getElementById(id);
   const defaults = ORB_GLOBE_3D_VISUAL_DEFAULTS;
   const materialDefaults = defaults.material || {};
   return Object.freeze({
-    visual: buildOrbGlobeVisualState({
-      orbitDistanceRatio: clampNumber(field("orbGlobe3dOrbitDistanceRatio") && field("orbGlobe3dOrbitDistanceRatio").value, 0.1, 3, defaults.orbitDistanceRatio),
-      orbitDistanceMinPx: clampNumber(field("orbGlobe3dOrbitDistanceMin") && field("orbGlobe3dOrbitDistanceMin").value, 0, 200, defaults.orbitDistanceMinPx),
-      orbitSpeedMin: clampNumber(field("orbGlobe3dSpeedMin") && field("orbGlobe3dSpeedMin").value, 0, 12, defaults.orbitSpeedMin),
-      orbitSpeedMax: clampNumber(field("orbGlobe3dSpeedMax") && field("orbGlobe3dSpeedMax").value, 0, 12, defaults.orbitSpeedMax),
-      orbitDriftMin: clampNumber(field("orbGlobe3dDriftMin") && field("orbGlobe3dDriftMin").value, 0, 2, defaults.orbitDriftMin),
-      orbitDriftMax: clampNumber(field("orbGlobe3dDriftMax") && field("orbGlobe3dDriftMax").value, 0, 2, defaults.orbitDriftMax),
-      innerSpeedMinPxPerSec: clampNumber(field("orbGlobe3dInnerSpeedMin") && field("orbGlobe3dInnerSpeedMin").value, 0, 600, defaults.innerSpeedMinPxPerSec),
-      innerSpeedMaxPxPerSec: clampNumber(field("orbGlobe3dInnerSpeedMax") && field("orbGlobe3dInnerSpeedMax").value, 0, 600, defaults.innerSpeedMaxPxPerSec),
-      innerDriftMin: clampNumber(field("orbGlobe3dInnerDriftMin") && field("orbGlobe3dInnerDriftMin").value, 0, 1.5, defaults.innerDriftMin),
-      innerDriftMax: clampNumber(field("orbGlobe3dInnerDriftMax") && field("orbGlobe3dInnerDriftMax").value, 0, 1.5, defaults.innerDriftMax),
-      innerPaddingRatio: clampNumber(field("orbGlobe3dInnerPaddingRatio") && field("orbGlobe3dInnerPaddingRatio").value, 0, 0.5, defaults.innerPaddingRatio),
-    }),
-    loadedDiameterRatio: clampNumber(field("orbGlobe3dLoadedDiameterRatio") && field("orbGlobe3dLoadedDiameterRatio").value, 0, 10, defaults.loadedDiameterRatio),
-    consumedDiameterRatio: clampNumber(field("orbGlobe3dConsumedDiameterRatio") && field("orbGlobe3dConsumedDiameterRatio").value, 0, 10, defaults.consumedDiameterRatio),
+    orbitDistanceBO: clampNumber(field("orbGlobe3dOrbitDistanceRatio") && field("orbGlobe3dOrbitDistanceRatio").value, 0.1, 10, readNumber(defaults, ["orbitDistanceBO", "orbitDistanceRatio"], 1.07)),
+    orbitDistanceMinBO: clampNumber(field("orbGlobe3dOrbitDistanceMin") && field("orbGlobe3dOrbitDistanceMin").value, 0, 10, readNumber(defaults, ["orbitDistanceMinBO"], 0.02)),
+    orbitSpeedMinHz: clampNumber(field("orbGlobe3dSpeedMin") && field("orbGlobe3dSpeedMin").value, 0, 12, readNumber(defaults, ["orbitSpeedMinHz"], 0.25)),
+    orbitSpeedMaxHz: clampNumber(field("orbGlobe3dSpeedMax") && field("orbGlobe3dSpeedMax").value, 0, 12, readNumber(defaults, ["orbitSpeedMaxHz"], 0.30)),
+    orbitDriftMinHz: clampNumber(field("orbGlobe3dDriftMin") && field("orbGlobe3dDriftMin").value, 0, 12, readNumber(defaults, ["orbitDriftMinHz", "orbitDriftMin"], 0.5)),
+    orbitDriftMaxHz: clampNumber(field("orbGlobe3dDriftMax") && field("orbGlobe3dDriftMax").value, 0, 12, readNumber(defaults, ["orbitDriftMaxHz", "orbitDriftMax"], 1)),
+    innerSpeedMinBOPerSec: clampNumber(field("orbGlobe3dInnerSpeedMin") && field("orbGlobe3dInnerSpeedMin").value, 0, 40, readNumber(defaults, ["innerSpeedMinBOPerSec"], 3.67)),
+    innerSpeedMaxBOPerSec: clampNumber(field("orbGlobe3dInnerSpeedMax") && field("orbGlobe3dInnerSpeedMax").value, 0, 40, readNumber(defaults, ["innerSpeedMaxBOPerSec"], 4.53)),
+    innerDriftMin: clampNumber(field("orbGlobe3dInnerDriftMin") && field("orbGlobe3dInnerDriftMin").value, 0, 1.5, defaults.innerDriftMin),
+    innerDriftMax: clampNumber(field("orbGlobe3dInnerDriftMax") && field("orbGlobe3dInnerDriftMax").value, 0, 1.5, defaults.innerDriftMax),
+    innerPaddingBO: clampNumber(field("orbGlobe3dInnerPaddingRatio") && field("orbGlobe3dInnerPaddingRatio").value, 0, 10, readNumber(defaults, ["innerPaddingBO"], 0.11)),
+    loadedDiameterBO: clampNumber(field("orbGlobe3dLoadedDiameterRatio") && field("orbGlobe3dLoadedDiameterRatio").value, 0, 10, readNumber(defaults, ["loadedDiameterBO", "loadedDiameterRatio"], 0.17)),
+    consumedDiameterBO: clampNumber(field("orbGlobe3dConsumedDiameterRatio") && field("orbGlobe3dConsumedDiameterRatio").value, 0, 10, readNumber(defaults, ["consumedDiameterBO", "consumedDiameterRatio"], 0.10)),
     material: Object.freeze({
       shellBaseColor: colorFromFields(els, "orbGlobe3dShellBase", materialDefaults.shellBaseColor),
       shellCyanColor: colorFromFields(els, "orbGlobe3dShellCyan", materialDefaults.shellCyanColor),
@@ -131,10 +133,11 @@ function makeGlobeMesh(diameter, materialConfig) {
 }
 
 function initializeInnerMotion(globe, config) {
-  const speeds = readRange(config.els, "orbGlobe3dInnerSpeedMin", "orbGlobe3dInnerSpeedMax", 80, 150);
+  const speeds = readRange(config.els, "orbGlobe3dInnerSpeedMin", "orbGlobe3dInnerSpeedMax", 3.67, 4.53);
   const drifts = readRange(config.els, "orbGlobe3dInnerDriftMin", "orbGlobe3dInnerDriftMax", 0.08, 0.28);
+  const bo = Math.max(1, Number(config.bo) || 72);
   const velocity = new THREE.Vector3(randomBetween(-1, 1), randomBetween(-1, 1), randomBetween(-1, 1)).normalize();
-  velocity.multiplyScalar(randomBetween(speeds.min, speeds.max));
+  velocity.multiplyScalar(randomBetween(speeds.min, speeds.max) * bo);
   globe.innerPos = new THREE.Vector3(0, 0, 0);
   globe.innerVelocity = velocity;
   globe.innerDriftMin = drifts.min;
@@ -226,7 +229,7 @@ export function createOrbGlobe3dPreview({
 
     samples.forEach((globe) => {
       const isBound = globe.state === "bound";
-      const diameter = bo * (isBound ? config.consumedDiameterRatio : config.loadedDiameterRatio);
+      const diameter = bo * (isBound ? config.consumedDiameterBO : config.loadedDiameterBO);
       globe.radius = diameter * 0.5;
       globe.model = makeGlobeMesh(diameter, config.material);
       if (isBound && (!globe.innerPos || !globe.innerVelocity)) initializeInnerMotion(globe, config);
@@ -240,8 +243,8 @@ export function createOrbGlobe3dPreview({
   function updateSamples(time, dt, bo) {
     if (!config) return;
     const orbRadius = bo * 0.5;
-    const orbitRadius = getOrbitDistancePx(orbRadius, config.visual);
-    const innerPadding = getInnerPaddingPx(orbRadius, config.visual);
+    const orbitRadius = Math.max(config.orbitDistanceBO * bo, config.orbitDistanceMinBO * bo);
+    const innerPadding = config.innerPaddingBO * bo;
     samples.forEach((globe) => {
       if (!globe.model) return;
       if (globe.state === "bound") {
@@ -264,8 +267,8 @@ export function createOrbGlobe3dPreview({
   }
 
   function addGlobe(overrides = {}, { render = true } = {}) {
-    const speeds = readRange(els, "orbGlobe3dSpeedMin", "orbGlobe3dSpeedMax", 1.8, 2.45);
-    const drifts = readRange(els, "orbGlobe3dDriftMin", "orbGlobe3dDriftMax", 0.03, 0.18);
+    const speeds = readRange(els, "orbGlobe3dSpeedMin", "orbGlobe3dSpeedMax", 0.25, 0.30);
+    const drifts = readRange(els, "orbGlobe3dDriftMin", "orbGlobe3dDriftMax", 0.50, 1.00);
     samples.push({
       id: nextId++,
       state: "loaded",
@@ -289,7 +292,7 @@ export function createOrbGlobe3dPreview({
     if (globe) {
       globe.state = "bound";
       globe.model = null;
-      initializeInnerMotion(globe, config || Object.freeze({ els }));
+      initializeInnerMotion(globe, Object.freeze({ ...(config || {}), els, bo: readBo() }));
     }
     if (render) rebuildScene();
   }

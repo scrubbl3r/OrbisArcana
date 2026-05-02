@@ -8,10 +8,39 @@ function clampNumber(value, fallback = 0) {
 }
 
 function randRange(min, max, fallback = 0) {
-  const lo = clampNumber(min, fallback);
-  const hi = clampNumber(max, lo);
+  const a = clampNumber(min, fallback);
+  const b = clampNumber(max, a);
+  const lo = Math.min(a, b);
+  const hi = Math.max(a, b);
   if (hi <= lo) return lo;
   return lo + (Math.random() * (hi - lo));
+}
+
+function readNumber(source, keys = [], fallback = 0) {
+  const object = source && typeof source === "object" ? source : {};
+  for (const key of keys) {
+    const value = Number(object[key]);
+    if (Number.isFinite(value)) return value;
+  }
+  return fallback;
+}
+
+function readSpeedBOPerSec(source, bo, newKey, legacyPxKey, fallback = 0) {
+  const object = source && typeof source === "object" ? source : {};
+  const authored = Number(object[newKey]);
+  if (Number.isFinite(authored)) return authored;
+  const legacyPx = Number(object[legacyPxKey]);
+  if (Number.isFinite(legacyPx)) return legacyPx / Math.max(1, Number(bo) || 1);
+  return fallback;
+}
+
+function readOrbitHz(source, newKey, legacyKey, fallback = 0) {
+  const object = source && typeof source === "object" ? source : {};
+  const authored = Number(object[newKey]);
+  if (Number.isFinite(authored)) return authored;
+  const legacy = Number(object[legacyKey]);
+  if (Number.isFinite(legacy)) return legacy * 0.01;
+  return fallback;
 }
 
 function normalizeGlobePayload(payload = {}) {
@@ -83,7 +112,9 @@ export function createOrbGlobe3dRuntime({
   function makeParticle(payload = {}, mode = "orbiting") {
     const globe = normalizeGlobePayload(payload);
     const config = currentConfig();
-    const bo = currentBo() * Math.max(0.01, clampNumber(config.loadedDiameterRatio, 0.17));
+    const baseOrb = currentBo();
+    const diameterBO = readNumber(config, ["loadedDiameterBO", "loadedDiameterRatio"], 0.17);
+    const bo = baseOrb * Math.max(0.01, diameterBO);
     const model = typeof createGlobeObject === "function"
       ? createGlobeObject({
         bo,
@@ -92,8 +123,12 @@ export function createOrbGlobe3dRuntime({
       })
       : null;
     if (model && group && typeof group.add === "function") group.add(model);
-    const speedMin = mode === "inner" ? config.innerSpeedMinPxPerSec : config.orbitSpeedMin;
-    const speedMax = mode === "inner" ? config.innerSpeedMaxPxPerSec : config.orbitSpeedMax;
+    const speedMin = mode === "inner"
+      ? readSpeedBOPerSec(config, baseOrb, "innerSpeedMinBOPerSec", "innerSpeedMinPxPerSec", 4.53)
+      : readOrbitHz(config, "orbitSpeedMinHz", "orbitSpeedMin", 0.25);
+    const speedMax = mode === "inner"
+      ? readSpeedBOPerSec(config, baseOrb, "innerSpeedMaxBOPerSec", "innerSpeedMaxPxPerSec", 3.67)
+      : readOrbitHz(config, "orbitSpeedMaxHz", "orbitSpeedMax", 0.30);
     return {
       ...globe,
       model,
@@ -101,8 +136,8 @@ export function createOrbGlobe3dRuntime({
       phase: Math.random() * Math.PI * 2,
       tilt: randRange(-0.85, 0.85, 0),
       drift: randRange(
-        mode === "inner" ? config.innerDriftMin : config.orbitDriftMin,
-        mode === "inner" ? config.innerDriftMax : config.orbitDriftMax,
+        mode === "inner" ? config.innerDriftMin : readNumber(config, ["orbitDriftMinHz", "orbitDriftMin"], 0.5),
+        mode === "inner" ? config.innerDriftMax : readNumber(config, ["orbitDriftMaxHz", "orbitDriftMax"], 1),
         0.2
       ),
       speed: randRange(speedMin, speedMax, speedMin),
@@ -164,8 +199,9 @@ export function createOrbGlobe3dRuntime({
     const config = currentConfig();
     const baseOrb = currentBo();
     const radius = Math.max(
-      baseOrb * Math.max(0.1, clampNumber(config.orbitDistanceRatio, 1.07)),
-      clampNumber(config.orbitDistanceMinPx, 3)
+      baseOrb * Math.max(0.1, readNumber(config, ["orbitDistanceBO", "orbitDistanceRatio"], 1.07)),
+      baseOrb * Math.max(0, readNumber(config, ["orbitDistanceMinBO"], 0.02)),
+      clampNumber(config.orbitDistanceMinPx, 0)
     );
     const center = typeof getCenterPosition === "function" ? (getCenterPosition() || {}) : {};
     const cx = Number(center.x) || 0;
@@ -173,7 +209,7 @@ export function createOrbGlobe3dRuntime({
     const cz = Number(center.z) || 0;
     for (const entry of state.orbiting) {
       if (!entry || !entry.model) continue;
-      const speed = clampNumber(entry.speed, 25) * 0.01;
+      const speed = clampNumber(entry.speed, 0.25);
       const angle = entry.phase + (timeSec * speed * Math.PI * 2);
       const driftAngle = entry.phase + (timeSec * Math.max(0.01, entry.drift) * Math.PI * 2);
       const y = Math.sin(driftAngle) * radius * 0.35;
@@ -188,7 +224,10 @@ export function createOrbGlobe3dRuntime({
     const config = currentConfig();
     const baseOrb = currentBo();
     const shellRadius = baseOrb * 0.5;
-    const padding = shellRadius * Math.max(0, clampNumber(config.innerPaddingRatio, 0.22));
+    const padding = baseOrb * Math.max(
+      0,
+      readNumber(config, ["innerPaddingBO"], readNumber(config, ["innerPaddingRatio"], 0.22) * 0.5)
+    );
     const bound = Math.max(1, shellRadius - padding);
     const center = typeof getCenterPosition === "function" ? (getCenterPosition() || {}) : {};
     const cx = Number(center.x) || 0;
@@ -196,7 +235,7 @@ export function createOrbGlobe3dRuntime({
     const cz = Number(center.z) || 0;
     for (const entry of state.inner) {
       if (!entry || !entry.model) continue;
-      const speed = Math.max(0, clampNumber(entry.speed, 80));
+      const speed = Math.max(0, clampNumber(entry.speed, 4.53)) * baseOrb;
       entry.offset.addScaledVector(entry.velocity, speed * dtSec);
       if (entry.offset.length() > bound) {
         entry.offset.setLength(bound);
@@ -233,4 +272,3 @@ export function createOrbGlobe3dRuntime({
     },
   });
 }
-

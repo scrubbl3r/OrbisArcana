@@ -53,12 +53,6 @@ function fixedNumber(value, digits, fallback = 0) {
   return Number((Number.isFinite(n) ? n : f).toFixed(digits));
 }
 
-function roundedNumber(value, fallback = 0) {
-  const n = Number(value);
-  const f = Number.isFinite(Number(fallback)) ? Number(fallback) : 0;
-  return Math.round(Number.isFinite(n) ? n : f);
-}
-
 function roundedByte(value, fallback = 255) {
   const n = Number(value);
   const f = Number.isFinite(Number(fallback)) ? Number(fallback) : 255;
@@ -74,22 +68,31 @@ function colorChannels(color) {
   });
 }
 
+function readNumber(source, keys = [], fallback = 0) {
+  const object = source && typeof source === "object" ? source : {};
+  for (const key of keys) {
+    const value = Number(object[key]);
+    if (Number.isFinite(value)) return value;
+  }
+  return fallback;
+}
+
 function settingsFromDefaults(defaults = {}) {
   const material = defaults.material || {};
   const settings = {
-    orbGlobe3dOrbitDistanceRatio: fixedNumber(defaults.orbitDistanceRatio, 2, 1.1),
-    orbGlobe3dOrbitDistanceMin: roundedNumber(defaults.orbitDistanceMinPx, 14),
-    orbGlobe3dSpeedMin: fixedNumber(defaults.orbitSpeedMin, 2, 1.8),
-    orbGlobe3dSpeedMax: fixedNumber(defaults.orbitSpeedMax, 2, 2.45),
-    orbGlobe3dDriftMin: fixedNumber(defaults.orbitDriftMin, 2, 0.03),
-    orbGlobe3dDriftMax: fixedNumber(defaults.orbitDriftMax, 2, 0.18),
-    orbGlobe3dInnerSpeedMin: roundedNumber(defaults.innerSpeedMinPxPerSec, 80),
-    orbGlobe3dInnerSpeedMax: roundedNumber(defaults.innerSpeedMaxPxPerSec, 150),
+    orbGlobe3dOrbitDistanceRatio: fixedNumber(readNumber(defaults, ["orbitDistanceBO", "orbitDistanceRatio"], 1.1), 2, 1.1),
+    orbGlobe3dOrbitDistanceMin: fixedNumber(readNumber(defaults, ["orbitDistanceMinBO"], 0.02), 2, 0.02),
+    orbGlobe3dSpeedMin: fixedNumber(readNumber(defaults, ["orbitSpeedMinHz"], readNumber(defaults, ["orbitSpeedMin"], 25) * 0.01), 2, 0.25),
+    orbGlobe3dSpeedMax: fixedNumber(readNumber(defaults, ["orbitSpeedMaxHz"], readNumber(defaults, ["orbitSpeedMax"], 30) * 0.01), 2, 0.30),
+    orbGlobe3dDriftMin: fixedNumber(readNumber(defaults, ["orbitDriftMinHz", "orbitDriftMin"], 0.50), 2, 0.50),
+    orbGlobe3dDriftMax: fixedNumber(readNumber(defaults, ["orbitDriftMaxHz", "orbitDriftMax"], 1.00), 2, 1.00),
+    orbGlobe3dInnerSpeedMin: fixedNumber(readNumber(defaults, ["innerSpeedMinBOPerSec"], 3.67), 2, 3.67),
+    orbGlobe3dInnerSpeedMax: fixedNumber(readNumber(defaults, ["innerSpeedMaxBOPerSec"], 4.53), 2, 4.53),
     orbGlobe3dInnerDriftMin: fixedNumber(defaults.innerDriftMin, 2, 0.08),
     orbGlobe3dInnerDriftMax: fixedNumber(defaults.innerDriftMax, 2, 0.28),
-    orbGlobe3dInnerPaddingRatio: fixedNumber(defaults.innerPaddingRatio, 2, 0.06),
-    orbGlobe3dLoadedDiameterRatio: fixedNumber(defaults.loadedDiameterRatio, 2, 0.17),
-    orbGlobe3dConsumedDiameterRatio: fixedNumber(defaults.consumedDiameterRatio, 2, 0.10),
+    orbGlobe3dInnerPaddingRatio: fixedNumber(readNumber(defaults, ["innerPaddingBO"], readNumber(defaults, ["innerPaddingRatio"], 0.22) * 0.5), 2, 0.11),
+    orbGlobe3dLoadedDiameterRatio: fixedNumber(readNumber(defaults, ["loadedDiameterBO", "loadedDiameterRatio"], 0.17), 2, 0.17),
+    orbGlobe3dConsumedDiameterRatio: fixedNumber(readNumber(defaults, ["consumedDiameterBO", "consumedDiameterRatio"], 0.10), 2, 0.10),
   };
   Object.entries(MATERIAL_NUMERIC_MAP).forEach(([fieldId, configKey]) => {
     settings[fieldId] = fixedNumber(material[configKey], 3, 0);

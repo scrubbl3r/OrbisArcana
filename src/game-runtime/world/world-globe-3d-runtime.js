@@ -7,6 +7,15 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function readNumber(source, keys = [], fallback = 0) {
+  const object = source && typeof source === "object" ? source : {};
+  for (const key of keys) {
+    const value = Number(object[key]);
+    if (Number.isFinite(value)) return value;
+  }
+  return fallback;
+}
+
 export function createWorldGlobe3dRuntime({
   group = null,
   createGlobeObject = null,
@@ -63,7 +72,7 @@ export function createWorldGlobe3dRuntime({
     const config = currentConfig();
     const idle = config.idle || {};
     const baseOrb = currentBo();
-    const bo = baseOrb * Math.max(0.01, clampNumber(idle.diameterRatio, 0.35));
+    const bo = baseOrb * Math.max(0.01, readNumber(idle, ["diameterBO", "diameterRatio"], 0.35));
     const renderOrder = resolveAuthoredRenderOrder(spawn, { fallback: 40, offset: 0.7 });
     const model = typeof createGlobeObject === "function"
       ? createGlobeObject({
@@ -86,8 +95,8 @@ export function createWorldGlobe3dRuntime({
       model,
       anchorXW: Number(anchor.x) || 0,
       anchorYW: Number(anchor.y) || 0,
-      driftAmp: baseOrb * Math.max(0, clampNumber(idle.driftRatio, 0.1)),
-      bobAmp: baseOrb * Math.max(0, clampNumber(idle.bobRatio, 0.07)),
+      driftAmp: baseOrb * Math.max(0, readNumber(idle, ["driftRangeBO", "driftRatio"], 0.1)),
+      bobAmp: baseOrb * Math.max(0, readNumber(idle, ["bobRangeBO", "bobRatio"], 0.07)),
       bobHz: Math.max(0, clampNumber(idle.bobHz, 0.65)),
       pulseScale: Math.max(0, clampNumber(idle.pulseScale, 0.045)),
       pulseHz: Math.max(0, clampNumber(idle.pulseHz, 0.9)),

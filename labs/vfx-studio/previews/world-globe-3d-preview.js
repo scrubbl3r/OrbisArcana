@@ -3,7 +3,7 @@ import { createWorldObjectInspector } from "../../world-workshop/inspectors/worl
 import { ORB_BLOOM_CONFIG } from "../../world-workshop/effects/bloom/bloom-config.js?v=20260426a";
 import { createGlobeModel } from "../../../src/game-runtime/world/globe-3d-model.js?v=20260429a";
 import { createGlobeMaterial, createGlobePointLight } from "../../../src/game-runtime/world/globe-3d-material.js?v=20260429a";
-import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/world-globe-3d-default.js?v=20260429a";
+import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/world-globe-3d-default.js?v=20260502a";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -25,24 +25,33 @@ function colorFromFields(els, prefix, fallback) {
   return ((r << 16) | (g << 8) | b) >>> 0;
 }
 
+function readNumber(source, keys = [], fallback = 0) {
+  const object = source && typeof source === "object" ? source : {};
+  for (const key of keys) {
+    const value = Number(object[key]);
+    if (Number.isFinite(value)) return value;
+  }
+  return fallback;
+}
+
 export function readWorldGlobe3dPreviewConfig(els = {}) {
   const field = (id) => els[id] || document.getElementById(id);
   const defaults = WORLD_GLOBE_3D_VISUAL_DEFAULTS;
   const materialDefaults = defaults.material;
   return Object.freeze({
     idle: Object.freeze({
-      diameterRatio: clampNumber(field("worldGlobe3dIdleDiameterRatio") && field("worldGlobe3dIdleDiameterRatio").value, 0, 10, defaults.idle.diameterRatio),
-      driftRatio: clampNumber(field("worldGlobe3dIdleDriftRatio") && field("worldGlobe3dIdleDriftRatio").value, 0, 10, defaults.idle.driftRatio),
-      bobRatio: clampNumber(field("worldGlobe3dIdleBobRatio") && field("worldGlobe3dIdleBobRatio").value, 0, 10, defaults.idle.bobRatio),
+      diameterBO: clampNumber(field("worldGlobe3dIdleDiameterRatio") && field("worldGlobe3dIdleDiameterRatio").value, 0, 10, readNumber(defaults.idle, ["diameterBO", "diameterRatio"], 0.35)),
+      driftRangeBO: clampNumber(field("worldGlobe3dIdleDriftRatio") && field("worldGlobe3dIdleDriftRatio").value, 0, 10, readNumber(defaults.idle, ["driftRangeBO", "driftRatio"], 0.10)),
+      bobRangeBO: clampNumber(field("worldGlobe3dIdleBobRatio") && field("worldGlobe3dIdleBobRatio").value, 0, 10, readNumber(defaults.idle, ["bobRangeBO", "bobRatio"], 0.07)),
       bobHz: clampNumber(field("worldGlobe3dIdleBobHz") && field("worldGlobe3dIdleBobHz").value, 0, 20, defaults.idle.bobHz),
       pulseScale: clampNumber(field("worldGlobe3dIdlePulseScale") && field("worldGlobe3dIdlePulseScale").value, 0, 1, defaults.idle.pulseScale),
       pulseHz: clampNumber(field("worldGlobe3dIdlePulseHz") && field("worldGlobe3dIdlePulseHz").value, 0, 20, defaults.idle.pulseHz),
     }),
     collected: Object.freeze({
-      diameterRatio: clampNumber(field("worldGlobe3dCollectedDiameterRatio") && field("worldGlobe3dCollectedDiameterRatio").value, 0, 10, defaults.collected.diameterRatio),
+      diameterBO: clampNumber(field("worldGlobe3dCollectedDiameterRatio") && field("worldGlobe3dCollectedDiameterRatio").value, 0, 10, readNumber(defaults.collected, ["diameterBO", "diameterRatio"], 0.14)),
     }),
     consumed: Object.freeze({
-      diameterRatio: clampNumber(field("worldGlobe3dConsumedDiameterRatio") && field("worldGlobe3dConsumedDiameterRatio").value, 0, 10, defaults.consumed.diameterRatio),
+      diameterBO: clampNumber(field("worldGlobe3dConsumedDiameterRatio") && field("worldGlobe3dConsumedDiameterRatio").value, 0, 10, readNumber(defaults.consumed, ["diameterBO", "diameterRatio"], 0.08)),
     }),
     material: Object.freeze({
       shellBaseColor: colorFromFields(els, "worldGlobe3dShellBase", materialDefaults.shellBaseColor),
@@ -113,8 +122,8 @@ export function createWorldGlobe3dPreview({ els = {} } = {}) {
         if (!samples.length || !activeConfig) return;
         const t = performance.now() / 1000;
         const idle = samples[0];
-        const drift = Math.sin((t * Math.PI * 2 * 0.23) + 0.5) * activeConfig.idle.driftRatio * orbDiameter;
-        const bob = Math.sin(t * Math.PI * 2 * activeConfig.idle.bobHz) * activeConfig.idle.bobRatio * orbDiameter;
+        const drift = Math.sin((t * Math.PI * 2 * 0.23) + 0.5) * activeConfig.idle.driftRangeBO * orbDiameter;
+        const bob = Math.sin(t * Math.PI * 2 * activeConfig.idle.bobHz) * activeConfig.idle.bobRangeBO * orbDiameter;
         const pulse = 1 + (Math.sin(t * Math.PI * 2 * activeConfig.idle.pulseHz) * activeConfig.idle.pulseScale);
         idle.position.x = (-orbDiameter * 0.68) + drift;
         idle.position.y = bob;
@@ -124,9 +133,9 @@ export function createWorldGlobe3dPreview({ els = {} } = {}) {
     if (!inspector) return null;
 
     samples = [
-      createSample({ label: "idle", diameter: activeConfig.idle.diameterRatio * orbDiameter, materialConfig: activeConfig.material }),
-      createSample({ label: "collected", diameter: activeConfig.collected.diameterRatio * orbDiameter, materialConfig: activeConfig.material }),
-      createSample({ label: "consumed", diameter: activeConfig.consumed.diameterRatio * orbDiameter, materialConfig: activeConfig.material }),
+      createSample({ label: "idle", diameter: activeConfig.idle.diameterBO * orbDiameter, materialConfig: activeConfig.material }),
+      createSample({ label: "collected", diameter: activeConfig.collected.diameterBO * orbDiameter, materialConfig: activeConfig.material }),
+      createSample({ label: "consumed", diameter: activeConfig.consumed.diameterBO * orbDiameter, materialConfig: activeConfig.material }),
     ];
     samples[0].position.x = -orbDiameter * 0.68;
     samples[1].position.x = 0;

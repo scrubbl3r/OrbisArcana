@@ -1,17 +1,17 @@
 export const WORLD_GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({
   idle: Object.freeze({
-    diameterRatio: 0.35,
-    driftRatio: 0.10,
-    bobRatio: 0.07,
+    diameterBO: 0.35,
+    driftRangeBO: 0.10,
+    bobRangeBO: 0.07,
     bobHz: 0.65,
     pulseScale: 0.045,
     pulseHz: 0.90,
   }),
   collected: Object.freeze({
-    diameterRatio: 0.14,
+    diameterBO: 0.14,
   }),
   consumed: Object.freeze({
-    diameterRatio: 0.08,
+    diameterBO: 0.08,
   }),
   material: Object.freeze({
     shellBaseColor: 0xfbfdff,
