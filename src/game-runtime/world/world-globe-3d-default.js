@@ -25,10 +25,5 @@ export const WORLD_GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({
     shellPastelMix: 0.720,
     shellRimPastelMix: 0.420,
     shellLuminanceBoost: 1.420,
-    lightColor: 0xdff600,
-    lightIntensity: 74.0,
-    lightDistanceBO: 7.00,
-    lightDecay: 1.45,
-    lightOffsetZBO: 0.55,
   }),
 });

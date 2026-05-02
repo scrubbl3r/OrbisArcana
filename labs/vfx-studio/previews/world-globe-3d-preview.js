@@ -2,8 +2,8 @@ import * as THREE from "three";
 import { createWorldObjectInspector } from "../../world-workshop/inspectors/world-object-inspector.js?v=20260426a";
 import { ORB_BLOOM_CONFIG } from "../../world-workshop/effects/bloom/bloom-config.js?v=20260426a";
 import { createGlobeModel } from "../../../src/game-runtime/world/globe-3d-model.js?v=20260429a";
-import { createGlobeMaterial, createGlobePointLight } from "../../../src/game-runtime/world/globe-3d-material.js?v=20260429a";
-import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/world-globe-3d-default.js?v=20260502b";
+import { createGlobeMaterial } from "../../../src/game-runtime/world/globe-3d-material.js?v=20260502b";
+import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/world-globe-3d-default.js?v=20260502c";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -65,11 +65,6 @@ export function readWorldGlobe3dPreviewConfig(els = {}) {
       shellPastelMix: clampNumber(field("worldGlobe3dShellPastelMix") && field("worldGlobe3dShellPastelMix").value, 0, 2, materialDefaults.shellPastelMix),
       shellRimPastelMix: clampNumber(field("worldGlobe3dShellRimPastelMix") && field("worldGlobe3dShellRimPastelMix").value, 0, 2, materialDefaults.shellRimPastelMix),
       shellLuminanceBoost: clampNumber(field("worldGlobe3dShellLuminanceBoost") && field("worldGlobe3dShellLuminanceBoost").value, 0, 4, materialDefaults.shellLuminanceBoost),
-      lightColor: colorFromFields(els, "worldGlobe3dLight", materialDefaults.lightColor),
-      lightIntensity: clampNumber(field("worldGlobe3dLightIntensity") && field("worldGlobe3dLightIntensity").value, 0, 1000, materialDefaults.lightIntensity),
-      lightDistanceBO: clampNumber(field("worldGlobe3dLightDistanceBO") && field("worldGlobe3dLightDistanceBO").value, 0, 40, materialDefaults.lightDistanceBO),
-      lightDecay: clampNumber(field("worldGlobe3dLightDecay") && field("worldGlobe3dLightDecay").value, 0, 4, materialDefaults.lightDecay),
-      lightOffsetZBO: clampNumber(field("worldGlobe3dLightOffsetZBO") && field("worldGlobe3dLightOffsetZBO").value, -4, 4, materialDefaults.lightOffsetZBO),
     }),
   });
 }
@@ -89,7 +84,6 @@ function createSample({ label, diameter, materialConfig }) {
     material: createGlobeMaterial(materialConfig),
     shellSegments: 32,
   });
-  model.add(createGlobePointLight({ bo: diameter, config: materialConfig }));
   group.add(model);
   return group;
 }

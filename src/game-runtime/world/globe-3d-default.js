@@ -10,9 +10,4 @@ export const GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({
   shellPastelMix: 0.72,
   shellRimPastelMix: 0.42,
   shellLuminanceBoost: 1.42,
-  lightColor: 0xdff6ff,
-  lightIntensity: 74.0,
-  lightDistanceBO: 7.0,
-  lightDecay: 1.45,
-  lightOffsetZBO: 0.55,
 });

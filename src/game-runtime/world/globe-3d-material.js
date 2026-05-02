@@ -54,18 +54,3 @@ export function createGlobeMaterial(config = GLOBE_3D_VISUAL_DEFAULTS) {
     `,
   });
 }
-
-export function createGlobePointLight({
-  bo = 72,
-  config = GLOBE_3D_VISUAL_DEFAULTS,
-} = {}) {
-  const baseOrb = Number(bo) || 72;
-  const light = new THREE.PointLight(
-    config.lightColor,
-    Number(config.lightIntensity) || 0,
-    baseOrb * (Number(config.lightDistanceBO) || 1),
-    Number(config.lightDecay) || 1
-  );
-  light.position.set(0, baseOrb * 0.12, baseOrb * (Number(config.lightOffsetZBO) || 0));
-  return light;
-}

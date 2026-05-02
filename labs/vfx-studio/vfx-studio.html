@@ -1738,11 +1738,6 @@
           <div class="paramField"><label for="worldGlobe3dShellPastelMix">Pastel mix</label><input id="worldGlobe3dShellPastelMix" class="paramFieldInput" type="number" min="0" max="2" value="0.72" step="0.01" /><button id="worldGlobe3dApplyShellPastelMixBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobe3dShellRimPastelMix">Rim pastel mix</label><input id="worldGlobe3dShellRimPastelMix" class="paramFieldInput" type="number" min="0" max="2" value="0.42" step="0.01" /><button id="worldGlobe3dApplyShellRimPastelMixBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="worldGlobe3dShellLuminanceBoost">Luminance boost</label><input id="worldGlobe3dShellLuminanceBoost" class="paramFieldInput" type="number" min="0" max="4" value="1.42" step="0.01" /><button id="worldGlobe3dApplyShellLuminanceBoostBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="rgbaParamRow"><span class="rgbaLabel">Light RGB</span><label for="worldGlobe3dLightR">r</label><input id="worldGlobe3dLightR" class="paramFieldInput" type="number" min="0" max="255" value="223" step="1" /><label for="worldGlobe3dLightG">g</label><input id="worldGlobe3dLightG" class="paramFieldInput" type="number" min="0" max="255" value="246" step="1" /><label for="worldGlobe3dLightB">b</label><input id="worldGlobe3dLightB" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" /><button id="worldGlobe3dApplyLightColorBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobe3dLightIntensity">Light intensity</label><input id="worldGlobe3dLightIntensity" class="paramFieldInput" type="number" min="0" max="1000" value="74" step="1" /><button id="worldGlobe3dApplyLightIntensityBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobe3dLightDistanceBO">Light distance BO</label><input id="worldGlobe3dLightDistanceBO" class="paramFieldInput" type="number" min="0" max="40" value="7" step="0.1" /><button id="worldGlobe3dApplyLightDistanceBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobe3dLightDecay">Light decay</label><input id="worldGlobe3dLightDecay" class="paramFieldInput" type="number" min="0" max="4" value="1.45" step="0.01" /><button id="worldGlobe3dApplyLightDecayBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="worldGlobe3dLightOffsetZBO">Light offset Z BO</label><input id="worldGlobe3dLightOffsetZBO" class="paramFieldInput" type="number" min="-4" max="4" value="0.55" step="0.05" /><button id="worldGlobe3dApplyLightOffsetZBtn" class="toolBtn" type="button">Apply</button></div>
         </div>
       </div>
       </div>
@@ -1935,14 +1930,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260502b"),
+      import("./vfx-studio-bootstrap.js?v=20260502c"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
       import("./vfx-studio-surfaces.js?v=20260501e"),
-      import("./vfx-studio-theme-publish.js?v=20260502d"),
+      import("./vfx-studio-theme-publish.js?v=20260502e"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -1963,7 +1958,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502a";
+    import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
     import {
@@ -1984,7 +1979,7 @@
     import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
     import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425d";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260425d";
-    import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-3d-default.js?v=20260502b";
+    import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-3d-default.js?v=20260502c";
     import { applyOrbBaseVisualCssVars, buildOrbBaseVisualState } from "../../src/game-runtime/orb/orb-base-state.js?v=20260411a";
     import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260425d";
 

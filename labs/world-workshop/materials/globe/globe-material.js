@@ -1,4 +1,3 @@
 export {
   createGlobeMaterial,
-  createGlobePointLight,
-} from "../../../../src/game-runtime/world/globe-3d-material.js?v=20260429a";
+} from "../../../../src/game-runtime/world/globe-3d-material.js?v=20260502b";

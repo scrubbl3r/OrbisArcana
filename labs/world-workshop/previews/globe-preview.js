@@ -2,7 +2,7 @@ import { createGlobeModel } from "../generators/globe-generator.js?v=20260429a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
 import { ORB_BLOOM_CONFIG } from "../effects/bloom/bloom-config.js?v=20260426a";
 import { GLOBE_MATERIAL_CONFIG } from "../materials/globe/globe-config.js?v=20260429a";
-import { createGlobeMaterial, createGlobePointLight } from "../materials/globe/globe-material.js?v=20260429a";
+import { createGlobeMaterial } from "../materials/globe/globe-material.js?v=20260429b";
 
 export function renderGlobePreview({
   root,
@@ -29,7 +29,6 @@ export function renderGlobePreview({
     shellSegments: 32,
   });
 
-  model.add(createGlobePointLight({ bo, config: GLOBE_MATERIAL_CONFIG }));
   inspector.scene.add(model);
   inspector.render();
   return metrics;

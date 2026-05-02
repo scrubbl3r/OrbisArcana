@@ -14,10 +14,6 @@ const WORLD_GLOBE_3D_NUMERIC_FIELDS = Object.freeze([
   "worldGlobe3dShellPastelMix",
   "worldGlobe3dShellRimPastelMix",
   "worldGlobe3dShellLuminanceBoost",
-  "worldGlobe3dLightIntensity",
-  "worldGlobe3dLightDistanceBO",
-  "worldGlobe3dLightDecay",
-  "worldGlobe3dLightOffsetZBO",
 ]);
 
 const WORLD_GLOBE_3D_COLOR_FIELDS = Object.freeze([
@@ -25,7 +21,6 @@ const WORLD_GLOBE_3D_COLOR_FIELDS = Object.freeze([
   ["shellCyanColor", "worldGlobe3dShellCyan"],
   ["shellVioletColor", "worldGlobe3dShellViolet"],
   ["shellGoldColor", "worldGlobe3dShellGold"],
-  ["lightColor", "worldGlobe3dLight"],
 ]);
 
 const WORLD_GLOBE_3D_NUMERIC_MAP = Object.freeze({
@@ -36,10 +31,6 @@ const WORLD_GLOBE_3D_NUMERIC_MAP = Object.freeze({
   worldGlobe3dShellPastelMix: "shellPastelMix",
   worldGlobe3dShellRimPastelMix: "shellRimPastelMix",
   worldGlobe3dShellLuminanceBoost: "shellLuminanceBoost",
-  worldGlobe3dLightIntensity: "lightIntensity",
-  worldGlobe3dLightDistanceBO: "lightDistanceBO",
-  worldGlobe3dLightDecay: "lightDecay",
-  worldGlobe3dLightOffsetZBO: "lightOffsetZBO",
 });
 
 function fixedNumber(value, digits, fallback = 0) {
