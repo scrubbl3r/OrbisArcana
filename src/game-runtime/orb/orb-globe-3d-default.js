@@ -10,8 +10,6 @@ export const ORB_GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({
   innerDriftMin: 0.10,
   innerDriftMax: 0.50,
   innerPaddingBO: 0.12,
-  loadedDiameterBO: 0.17,
-  consumedDiameterBO: 0.10,
   material: Object.freeze({
     shellBaseColor: 0xfbfdff,
     shellCyanColor: 0x9af5ff,

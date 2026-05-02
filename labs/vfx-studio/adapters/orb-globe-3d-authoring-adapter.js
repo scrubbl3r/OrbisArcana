@@ -10,8 +10,6 @@ const ORB_GLOBE_3D_NUMERIC_FIELDS = Object.freeze([
   "orbGlobe3dInnerDriftMin",
   "orbGlobe3dInnerDriftMax",
   "orbGlobe3dInnerPaddingRatio",
-  "orbGlobe3dLoadedDiameterRatio",
-  "orbGlobe3dConsumedDiameterRatio",
   "orbGlobe3dShellFresnelPower",
   "orbGlobe3dShellRimAlphaPower",
   "orbGlobe3dShellCenterAlpha",
@@ -91,8 +89,6 @@ function settingsFromDefaults(defaults = {}) {
     orbGlobe3dInnerDriftMin: fixedNumber(defaults.innerDriftMin, 2, 0.08),
     orbGlobe3dInnerDriftMax: fixedNumber(defaults.innerDriftMax, 2, 0.28),
     orbGlobe3dInnerPaddingRatio: fixedNumber(readNumber(defaults, ["innerPaddingBO"], readNumber(defaults, ["innerPaddingRatio"], 0.22) * 0.5), 2, 0.11),
-    orbGlobe3dLoadedDiameterRatio: fixedNumber(readNumber(defaults, ["loadedDiameterBO", "loadedDiameterRatio"], 0.17), 2, 0.17),
-    orbGlobe3dConsumedDiameterRatio: fixedNumber(readNumber(defaults, ["consumedDiameterBO", "consumedDiameterRatio"], 0.10), 2, 0.10),
   };
   Object.entries(MATERIAL_NUMERIC_MAP).forEach(([fieldId, configKey]) => {
     settings[fieldId] = fixedNumber(material[configKey], 3, 0);

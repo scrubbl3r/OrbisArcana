@@ -23,10 +23,10 @@ import {
 } from "../../../game-runtime/rendering/three/three-object-utils.js";
 import { createWorldProps3dRuntime } from "../../../game-runtime/world/props/world-props-3d-runtime.js?v=20260430c";
 import { createRuntimeGlobe3dObject } from "../../../game-runtime/world/globe-3d-runtime-object.js?v=20260430c";
-import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260502a";
+import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/world-globe-3d-default.js?v=20260502b";
 import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260502a";
-import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260502b";
-import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260502c";
+import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260502c";
+import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260502d";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
@@ -158,6 +158,7 @@ export function createLevelStageDepth3dLayer({
     getBo: () => baseOrbWorldUnits,
     getCenterPosition: () => orb3dActorRuntime.getPosition(),
     getConfig: () => ORB_GLOBE_3D_VISUAL_DEFAULTS,
+    getWorldGlobeConfig: () => WORLD_GLOBE_3D_VISUAL_DEFAULTS,
     onCountChange: telemetry.setOrbGlobeCount,
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });

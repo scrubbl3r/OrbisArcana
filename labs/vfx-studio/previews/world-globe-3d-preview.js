@@ -3,7 +3,7 @@ import { createWorldObjectInspector } from "../../world-workshop/inspectors/worl
 import { ORB_BLOOM_CONFIG } from "../../world-workshop/effects/bloom/bloom-config.js?v=20260426a";
 import { createGlobeModel } from "../../../src/game-runtime/world/globe-3d-model.js?v=20260429a";
 import { createGlobeMaterial, createGlobePointLight } from "../../../src/game-runtime/world/globe-3d-material.js?v=20260429a";
-import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/world-globe-3d-default.js?v=20260502a";
+import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/world-globe-3d-default.js?v=20260502b";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);

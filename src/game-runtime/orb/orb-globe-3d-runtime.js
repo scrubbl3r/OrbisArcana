@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
+import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../world/world-globe-3d-default.js";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "./orb-globe-3d-default.js";
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -78,6 +79,7 @@ export function createOrbGlobe3dRuntime({
   getBo = () => 72,
   getCenterPosition = () => ({ x: 0, y: 0, z: 0 }),
   getConfig = () => ORB_GLOBE_3D_VISUAL_DEFAULTS,
+  getWorldGlobeConfig = () => WORLD_GLOBE_3D_VISUAL_DEFAULTS,
   onCountChange = () => {},
   onNeedsFrame = () => {},
 } = {}) {
@@ -94,6 +96,18 @@ export function createOrbGlobe3dRuntime({
   function currentConfig() {
     const config = typeof getConfig === "function" ? getConfig() : null;
     return config && typeof config === "object" ? config : ORB_GLOBE_3D_VISUAL_DEFAULTS;
+  }
+
+  function currentWorldGlobeConfig() {
+    const config = typeof getWorldGlobeConfig === "function" ? getWorldGlobeConfig() : null;
+    return config && typeof config === "object" ? config : WORLD_GLOBE_3D_VISUAL_DEFAULTS;
+  }
+
+  function globeDiameterBOForMode(mode = "orbiting") {
+    const config = currentWorldGlobeConfig();
+    const stateConfig = mode === "inner" ? config.consumed : config.collected;
+    const fallback = mode === "inner" ? 0.10 : 0.17;
+    return Math.max(0.01, readNumber(stateConfig, ["diameterBO", "diameterRatio"], fallback));
   }
 
   function count() {
@@ -132,8 +146,7 @@ export function createOrbGlobe3dRuntime({
     const globe = normalizeGlobePayload(payload);
     const config = currentConfig();
     const baseOrb = currentBo();
-    const diameterBO = readNumber(config, ["loadedDiameterBO", "loadedDiameterRatio"], 0.17);
-    const bo = baseOrb * Math.max(0.01, diameterBO);
+    const bo = baseOrb * globeDiameterBOForMode(mode);
     const model = typeof createGlobeObject === "function"
       ? createGlobeObject({
         bo,

@@ -10,7 +10,8 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { createGlobeModel } from "../../../src/game-runtime/world/globe-3d-model.js?v=20260429a";
 import { createGlobeMaterial, createGlobePointLight } from "../../../src/game-runtime/world/globe-3d-material.js?v=20260429a";
-import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502b";
+import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502c";
+import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/world-globe-3d-default.js?v=20260502b";
 
 const UP = new THREE.Vector3(0, 1, 0);
 const TMP_A = new THREE.Vector3();
@@ -65,6 +66,7 @@ function readNumber(source, keys = [], fallback = 0) {
 export function readOrbGlobe3dPreviewConfig(els = {}) {
   const field = (id) => els[id] || document.getElementById(id);
   const defaults = ORB_GLOBE_3D_VISUAL_DEFAULTS;
+  const worldDefaults = WORLD_GLOBE_3D_VISUAL_DEFAULTS;
   const materialDefaults = defaults.material || {};
   return Object.freeze({
     orbitDistanceBO: clampNumber(field("orbGlobe3dOrbitDistanceRatio") && field("orbGlobe3dOrbitDistanceRatio").value, 0.1, 10, readNumber(defaults, ["orbitDistanceBO", "orbitDistanceRatio"], 1.07)),
@@ -78,8 +80,8 @@ export function readOrbGlobe3dPreviewConfig(els = {}) {
     innerDriftMin: clampNumber(field("orbGlobe3dInnerDriftMin") && field("orbGlobe3dInnerDriftMin").value, 0, 1.5, defaults.innerDriftMin),
     innerDriftMax: clampNumber(field("orbGlobe3dInnerDriftMax") && field("orbGlobe3dInnerDriftMax").value, 0, 1.5, defaults.innerDriftMax),
     innerPaddingBO: clampNumber(field("orbGlobe3dInnerPaddingRatio") && field("orbGlobe3dInnerPaddingRatio").value, 0, 10, readNumber(defaults, ["innerPaddingBO"], 0.11)),
-    loadedDiameterBO: clampNumber(field("orbGlobe3dLoadedDiameterRatio") && field("orbGlobe3dLoadedDiameterRatio").value, 0, 10, readNumber(defaults, ["loadedDiameterBO", "loadedDiameterRatio"], 0.17)),
-    consumedDiameterBO: clampNumber(field("orbGlobe3dConsumedDiameterRatio") && field("orbGlobe3dConsumedDiameterRatio").value, 0, 10, readNumber(defaults, ["consumedDiameterBO", "consumedDiameterRatio"], 0.10)),
+    worldCollectedDiameterBO: clampNumber(field("worldGlobe3dCollectedDiameterRatio") && field("worldGlobe3dCollectedDiameterRatio").value, 0.01, 10, readNumber(worldDefaults.collected, ["diameterBO", "diameterRatio"], 0.17)),
+    worldConsumedDiameterBO: clampNumber(field("worldGlobe3dConsumedDiameterRatio") && field("worldGlobe3dConsumedDiameterRatio").value, 0.01, 10, readNumber(worldDefaults.consumed, ["diameterBO", "diameterRatio"], 0.10)),
     material: Object.freeze({
       shellBaseColor: colorFromFields(els, "orbGlobe3dShellBase", materialDefaults.shellBaseColor),
       shellCyanColor: colorFromFields(els, "orbGlobe3dShellCyan", materialDefaults.shellCyanColor),
@@ -229,7 +231,7 @@ export function createOrbGlobe3dPreview({
 
     samples.forEach((globe) => {
       const isBound = globe.state === "bound";
-      const diameter = bo * (isBound ? config.consumedDiameterBO : config.loadedDiameterBO);
+      const diameter = bo * (isBound ? config.worldConsumedDiameterBO : config.worldCollectedDiameterBO);
       globe.radius = diameter * 0.5;
       globe.model = makeGlobeMesh(diameter, config.material);
       if (isBound && (!globe.innerPos || !globe.innerVelocity)) initializeInnerMotion(globe, config);

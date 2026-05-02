@@ -311,8 +311,6 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         `  innerDriftMin: ${toNum(p.orbGlobe3dInnerDriftMin, 0.08).toFixed(2)},`,
         `  innerDriftMax: ${toNum(p.orbGlobe3dInnerDriftMax, 0.28).toFixed(2)},`,
         `  innerPaddingBO: ${boDistance(p.orbGlobe3dInnerPaddingRatio, 0.11).toFixed(2)},`,
-        `  loadedDiameterBO: ${boDistance(p.orbGlobe3dLoadedDiameterRatio, 0.17).toFixed(2)},`,
-        `  consumedDiameterBO: ${boDistance(p.orbGlobe3dConsumedDiameterRatio, 0.10).toFixed(2)},`,
         "  material: Object.freeze({",
         `    shellBaseColor: ${colorHex("orbGlobe3dShellBase", 0xfbfdff)},`,
         `    shellCyanColor: ${colorHex("orbGlobe3dShellCyan", 0x9af5ff)},`,

@@ -1675,8 +1675,6 @@
           <div class="paramField"><label for="orbGlobe3dInnerDriftMin">Inner drift min</label><input id="orbGlobe3dInnerDriftMin" class="paramFieldInput" type="number" min="0" max="1.5" value="0.08" step="0.01" /><button id="orbGlobe3dApplyInnerDriftMinBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="orbGlobe3dInnerDriftMax">Inner drift max</label><input id="orbGlobe3dInnerDriftMax" class="paramFieldInput" type="number" min="0" max="1.5" value="0.28" step="0.01" /><button id="orbGlobe3dApplyInnerDriftMaxBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="orbGlobe3dInnerPaddingRatio">Inner padding BO</label><input id="orbGlobe3dInnerPaddingRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.11" step="0.01" /><button id="orbGlobe3dApplyInnerPaddingBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="orbGlobe3dLoadedDiameterRatio">Loaded diameter BO</label><input id="orbGlobe3dLoadedDiameterRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.17" step="0.01" /><button id="orbGlobe3dApplyLoadedDiameterRatioBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="orbGlobe3dConsumedDiameterRatio">Consumed diameter BO</label><input id="orbGlobe3dConsumedDiameterRatio" class="paramFieldInput" type="number" min="0" max="10" value="0.10" step="0.01" /><button id="orbGlobe3dApplyConsumedDiameterRatioBtn" class="toolBtn" type="button">Apply</button></div>
         </div>
         <div class="behaviorTitle">Globe Material</div>
         <div class="paramGrid">
@@ -1963,7 +1961,7 @@
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
       import("./vfx-studio-surfaces.js?v=20260501e"),
-      import("./vfx-studio-theme-publish.js?v=20260502b"),
+      import("./vfx-studio-theme-publish.js?v=20260502c"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2000,12 +1998,12 @@
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-    import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502b";
+    import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502c";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425d";
     import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
     import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425d";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260425d";
-    import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-3d-default.js?v=20260502a";
+    import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-3d-default.js?v=20260502b";
     import { applyOrbBaseVisualCssVars, buildOrbBaseVisualState } from "../../src/game-runtime/orb/orb-base-state.js?v=20260411a";
     import { applyOrbGlobeVisualCssVars, buildOrbGlobeVisualState } from "../../src/game-runtime/orb/orb-globe-base-state.js?v=20260425d";
 
