@@ -185,6 +185,8 @@ export function createOrb3dActorRuntime({
         const progress = Math.max(0, Math.min(1, elapsedMs / Math.max(1, config.fadeOutMs)));
         const flicker = buildFlickerMask(elapsedMs, config.flickerOnMs, config.flickerOffMs);
         setOpacity((1 - progress) * flicker);
+        teleportRaf = requestAnimationFrame(tick);
+        return;
       } else {
         if (!teleported) {
           teleported = true;
