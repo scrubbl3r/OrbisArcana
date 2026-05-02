@@ -137,6 +137,8 @@ export function runOrbRuntimePipeline({
       state.spawnHoldActive = false;
       state.v = 0;
       state.vx = 0;
+      state.steerIntentX = 0;
+      state.steerActive = false;
     } else {
       const bo = Math.max(1, (Number(phys.orbRadiusPx) || 0) * 2);
       const anchorX = Number.isFinite(Number(state.spawnHoldAnchorX))
@@ -178,13 +180,6 @@ export function runOrbRuntimePipeline({
     }
   }
 
-  stepOrbLateralMotion({
-    dt,
-    state,
-    steering: typeof getCameraSteeringState === "function" ? getCameraSteeringState() : null,
-    bounds: typeof getLateralBounds === "function" ? getLateralBounds() : null,
-  });
-
   if (state.teleportHoldActive) {
     const yFloor = (typeof groundCenterWorld === "function") ? Number(groundCenterWorld()) || 0 : 0;
     const yCeil  = (typeof getCeilingWorld === "function")
@@ -195,6 +190,9 @@ export function runOrbRuntimePipeline({
       : Number(state.yW || yFloor);
     state.yW = clamp(holdY, yCeil, yFloor);
     state.v = 0;
+    state.vx = 0;
+    state.steerIntentX = 0;
+    state.steerActive = false;
     state.onGround = false;
     state.descendMs = 0;
     state.shieldDescentBlocked = false;
@@ -208,6 +206,13 @@ export function runOrbRuntimePipeline({
     if (typeof updateDebugReadout === "function") updateDebugReadout();
     return;
   }
+
+  stepOrbLateralMotion({
+    dt,
+    state,
+    steering: typeof getCameraSteeringState === "function" ? getCameraSteeringState() : null,
+    bounds: typeof getLateralBounds === "function" ? getLateralBounds() : null,
+  });
 
   const g = phys.gBase * state.gravityMul;
   const thrust = (typeof liftToThrustAccel === "function")
