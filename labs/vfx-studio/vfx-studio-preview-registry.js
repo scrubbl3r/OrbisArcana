@@ -17,6 +17,7 @@ import { createOrbGlobePreview } from "./previews/orb-globe-preview.js?v=2026042
 import { createWorldGlobe3dPreview } from "./previews/world-globe-3d-preview.js?v=20260429a";
 import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=20260425d";
 import { createOrbTeleportPreview } from "./previews/orb-teleport-preview.js?v=20260425d";
+import { createOrbTeleport3dPreview } from "./previews/orb-teleport-3d-preview.js?v=20260501a";
 
 export function createStudioPreviewRegistry({
   els,
@@ -195,6 +196,16 @@ export function createStudioPreviewRegistry({
   actions.playOrbTeleport = orbTeleportPreview.play;
   orbTeleportPreview.wire();
 
+  const orbTeleport3dPreview = createOrbTeleport3dPreview({
+    els: previewEls.orbTeleport3d,
+    getOrbBaseVisualState,
+    getOrb3dVisualSettings: getOrb3dVisualSettings || (() => readOrb3dPreviewConfig(previewEls.orb3d)),
+  });
+  actions.applyOrbTeleport3d = orbTeleport3dPreview.apply;
+  actions.clearOrbTeleport3d = orbTeleport3dPreview.clear;
+  actions.playOrbTeleport3d = orbTeleport3dPreview.play;
+  orbTeleport3dPreview.wire();
+
   function stopAllStudioEffects() {
     if (typeof actions.shieldOffNow === "function") actions.shieldOffNow();
     if (typeof actions.clearShock === "function") actions.clearShock();
@@ -212,6 +223,7 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearWorldGlobe === "function") actions.clearWorldGlobe();
     if (typeof actions.clearWorldGlobe3d === "function") actions.clearWorldGlobe3d();
     if (typeof actions.clearOrbTeleport === "function") actions.clearOrbTeleport();
+    if (typeof actions.clearOrbTeleport3d === "function") actions.clearOrbTeleport3d();
     Object.values(previewRootsByEffect || {}).forEach((root) => {
       if (!root || typeof root.setAttribute !== "function") return;
       root.setAttribute("aria-hidden", "true");
@@ -236,6 +248,9 @@ export function createStudioPreviewRegistry({
       els.orbTeleportFadeOutMs,
       els.orbTeleportCameraTravelMs,
       els.orbTeleportFadeInMs,
+      els.orbTeleport3dFadeOutMs,
+      els.orbTeleport3dCameraTravelMs,
+      els.orbTeleport3dFadeInMs,
     ].forEach((field) => {
       if (field) field.addEventListener("input", updateTeleportBehaviorReadout);
     });
@@ -243,9 +258,24 @@ export function createStudioPreviewRegistry({
       els.orbTeleportApplyFadeOutBtn,
       els.orbTeleportApplyCameraTravelBtn,
       els.orbTeleportApplyFadeInBtn,
+      els.orbTeleport3dApplyFadeOutBtn,
+      els.orbTeleport3dApplyCameraTravelBtn,
+      els.orbTeleport3dApplyFadeInBtn,
     ].forEach((btn) => {
       if (btn) btn.addEventListener("click", updateTeleportBehaviorReadout);
     });
+    if (els.applyTeleport3dBehaviorBtn) {
+      els.applyTeleport3dBehaviorBtn.addEventListener("click", () => {
+        updateTeleportBehaviorReadout();
+        actions.applyOrbTeleport3d();
+      });
+    }
+    if (els.previewTeleport3dBehaviorBtn) {
+      els.previewTeleport3dBehaviorBtn.addEventListener("click", () => {
+        updateTeleportBehaviorReadout();
+        actions.playOrbTeleport3d();
+      });
+    }
   }
 
   return Object.freeze({

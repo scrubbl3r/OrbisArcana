@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260430a";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260501a";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -155,6 +155,11 @@ export function createStudioBootstrap({
       previewRoot: els.orbTeleportPreviewRoot,
       orb: getElementById("orbTeleportLaneOrb"),
     }),
+    orbTeleport3d: Object.freeze({
+      ...els,
+      previewRoot: els.orbTeleport3dPreviewRoot,
+      previewOrbTeleport3d: els.previewOrbTeleport3d,
+    }),
   });
 
   const studioPreviewRegistry = createStudioPreviewRegistry({
@@ -295,6 +300,7 @@ export function createStudioBootstrap({
       applyWorldGlobe: () => studioPreviewRegistry.actions.applyWorldGlobe(),
       applyWorldGlobe3d: () => studioPreviewRegistry.actions.applyWorldGlobe3d(),
       applyOrbTeleport: () => studioPreviewRegistry.actions.applyOrbTeleport(),
+      applyOrbTeleport3d: () => studioPreviewRegistry.actions.applyOrbTeleport3d(),
     }),
     selectedEffectOption,
     selectedBaseEffect,
@@ -309,6 +315,9 @@ export function createStudioBootstrap({
     refreshBindingPanel,
     updateBehaviorReadout: (effect) => {
       if (effect === "teleport") updateTeleportBehaviorReadout();
+      if (effect === "teleport-3d" && typeof defaults.updateTeleport3dBehaviorReadout === "function") {
+        defaults.updateTeleport3dBehaviorReadout();
+      }
     },
     requestAnimationFrame: requestAnimationFrameImpl,
   });

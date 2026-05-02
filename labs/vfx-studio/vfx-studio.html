@@ -879,6 +879,7 @@
         <div class="previewLane" id="orbTeleportPreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orb atOrigin" id="orbTeleportLaneOrb"></div>
         </div>
+        <div class="previewLane orb3dPreviewLane" id="orbTeleport3dPreviewRoot" data-preview-root hidden aria-hidden="true"></div>
       </div>
     </div>
 
@@ -1343,6 +1344,34 @@
         </div>
       </div>
 
+      <div class="section" data-effect="teleport-3d" hidden>
+        <div class="row">
+          <button id="previewOrbTeleport3d" class="toolBtn" type="button">Preview</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="orbTeleport3dFlickerOnMs">Flicker on (ms)</label>
+            <input id="orbTeleport3dFlickerOnMs" class="paramFieldInput" type="number" min="10" max="1000" step="5" value="60" />
+            <button id="orbTeleport3dApplyFlickerOnBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTeleport3dFlickerOffMs">Flicker off (ms)</label>
+            <input id="orbTeleport3dFlickerOffMs" class="paramFieldInput" type="number" min="10" max="1000" step="5" value="60" />
+            <button id="orbTeleport3dApplyFlickerOffBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTeleport3dFadeOutMs">Fade-out (ms)</label>
+            <input id="orbTeleport3dFadeOutMs" class="paramFieldInput" type="number" min="40" max="4000" step="10" value="280" />
+            <button id="orbTeleport3dApplyFadeOutBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+          <div class="paramFieldRow">
+            <label for="orbTeleport3dFadeInMs">Fade-in (ms)</label>
+            <input id="orbTeleport3dFadeInMs" class="paramFieldInput" type="number" min="40" max="4000" step="10" value="280" />
+            <button id="orbTeleport3dApplyFadeInBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
       <div class="section" data-effect="orb-lifecycle" hidden>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
@@ -1738,6 +1767,37 @@
           </div>
         </div>
 
+        <div class="behaviorSection" data-behavior-effect="teleport-3d" hidden>
+          <h3 class="behaviorTitle">Teleport 3D Behavior</h3>
+          <div class="row">
+            <button id="applyTeleport3dBehaviorBtn" class="toolBtn" type="button">Apply Behavior</button>
+            <button id="previewTeleport3dBehaviorBtn" class="toolBtn" type="button">Preview Behavior</button>
+          </div>
+          <div id="teleport3dBehaviorReadout" class="behaviorReadout" aria-live="polite"></div>
+          <div class="paramFieldRows">
+            <div class="paramFieldRow">
+              <label for="orbTeleport3dCameraTravelMs">Camera travel (ms)</label>
+              <input id="orbTeleport3dCameraTravelMs" class="paramFieldInput" type="number" min="0" max="8000" value="1500" step="10" />
+              <button id="orbTeleport3dApplyCameraTravelBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="teleport3dBehaviorEasing">Travel easing</label>
+              <input id="teleport3dBehaviorEasing" class="paramFieldInput" type="text" value="easeInOutExpo" readonly />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="teleport3dBehaviorFreeze">Freeze orb</label>
+              <input id="teleport3dBehaviorFreeze" class="paramFieldInput" type="text" value="true" readonly />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="teleport3dBehaviorGrace">Grace starts after travel</label>
+              <input id="teleport3dBehaviorGrace" class="paramFieldInput" type="text" value="true" readonly />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+          </div>
+        </div>
+
         <div class="behaviorSection" data-behavior-effect="default">
           <h3 class="behaviorTitle">No Behavior Surface</h3>
         </div>
@@ -1851,13 +1911,13 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260430a"),
+      import("./vfx-studio-bootstrap.js?v=20260501a"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
-      import("./vfx-studio-surfaces.js?v=20260430a"),
+      import("./vfx-studio-surfaces.js?v=20260501a"),
       import("./vfx-studio-theme-publish.js?v=20260430a"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
@@ -1876,6 +1936,7 @@
     import { createOrbNod3dAuthoringAdapter } from "./adapters/orb-nod3d-authoring-adapter.js?v=20260427a";
     import { createOrbSpawnAuthoringAdapter } from "./adapters/orb-spawn-authoring-adapter.js?v=20260429a";
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
+    import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260429a";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
@@ -1927,6 +1988,7 @@
       createOrbNod3dAuthoringAdapter,
       createOrbSpawnAuthoringAdapter,
       createShockwaveAuthoringAdapter,
+      createTeleport3dAuthoringAdapter,
       createTeleportAuthoringAdapter,
       createWorldGlobe3dAuthoringAdapter,
       createWorldGlobeAuthoringAdapter,
@@ -1969,6 +2031,7 @@
       worldGlobePreviewRoot: $("worldGlobePreviewRoot"),
       worldGlobe3dPreviewRoot: $("worldGlobe3dPreviewRoot"),
       orbTeleportPreviewRoot: $("orbTeleportPreviewRoot"),
+      orbTeleport3dPreviewRoot: $("orbTeleport3dPreviewRoot"),
       orbLifecyclePatternLayer: $("orbLifecyclePatternLayer"),
       orbLifecycleShatterLayer: $("orbLifecycleShatterLayer"),
 
@@ -2267,6 +2330,20 @@
       orbTeleportApplyCameraTravelBtn: $("orbTeleportApplyCameraTravelBtn"),
       orbTeleportFadeInMs: $("orbTeleportFadeInMs"),
       orbTeleportApplyFadeInBtn: $("orbTeleportApplyFadeInBtn"),
+      previewOrbTeleport3d: $("previewOrbTeleport3d"),
+      orbTeleport3dFlickerOnMs: $("orbTeleport3dFlickerOnMs"),
+      orbTeleport3dApplyFlickerOnBtn: $("orbTeleport3dApplyFlickerOnBtn"),
+      orbTeleport3dFlickerOffMs: $("orbTeleport3dFlickerOffMs"),
+      orbTeleport3dApplyFlickerOffBtn: $("orbTeleport3dApplyFlickerOffBtn"),
+      orbTeleport3dFadeOutMs: $("orbTeleport3dFadeOutMs"),
+      orbTeleport3dApplyFadeOutBtn: $("orbTeleport3dApplyFadeOutBtn"),
+      applyTeleport3dBehaviorBtn: $("applyTeleport3dBehaviorBtn"),
+      previewTeleport3dBehaviorBtn: $("previewTeleport3dBehaviorBtn"),
+      teleport3dBehaviorReadout: $("teleport3dBehaviorReadout"),
+      orbTeleport3dCameraTravelMs: $("orbTeleport3dCameraTravelMs"),
+      orbTeleport3dApplyCameraTravelBtn: $("orbTeleport3dApplyCameraTravelBtn"),
+      orbTeleport3dFadeInMs: $("orbTeleport3dFadeInMs"),
+      orbTeleport3dApplyFadeInBtn: $("orbTeleport3dApplyFadeInBtn"),
     };
     const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
@@ -2856,6 +2933,7 @@
       applyOrbLaneSsot(els.worldGlobePreviewRoot, { includeGlobe: true });
       applyOrbLaneSsot(els.worldGlobe3dPreviewRoot, { includeGlobe: true });
       applyOrbLaneSsot(els.orbTeleportPreviewRoot);
+      applyOrbLaneSsot(els.orbTeleport3dPreviewRoot);
     }
     applyGeometryVars();
 
@@ -2865,6 +2943,15 @@
 
     function updateTeleportBehaviorReadout(){
       authoringAdapterForBaseEffect("teleport").updateBehaviorReadout(els);
+      authoringAdapterForBaseEffect("teleport-3d").updateBehaviorReadout(els);
+    }
+
+    function readTeleport3dBehaviorPreviewConfig(){
+      return authoringAdapterForBaseEffect("teleport-3d").readBehaviorPreviewConfig(els);
+    }
+
+    function updateTeleport3dBehaviorReadout(){
+      authoringAdapterForBaseEffect("teleport-3d").updateBehaviorReadout(els);
     }
     const studioBootstrap = createStudioBootstrap({
       els,
@@ -2896,6 +2983,7 @@
         "orb-3d": () => applyOrb3d(),
         "orb-spawn": () => applyOrbSpawn(),
         teleport: () => applyOrbTeleport(),
+        "teleport-3d": () => applyOrbTeleport3d(),
         "orb-globe": () => applyOrbGlobe(),
         "orb-globe-3d": () => applyOrbGlobe3d(),
         "orb-lifecycle": () => applyOrbLifecycle(),
@@ -2915,6 +3003,7 @@
         electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
         orbNod3dPresetDefault: ORB_NOD_3D_PRESET_DEFAULT,
         orbSpawnPresetDefault: ORB_SPAWN_PRESET_DEFAULT,
+        updateTeleport3dBehaviorReadout,
         onOrbBaseVisualStateApplied: (visualState) => {
           currentLabOrbBaseVisualState = visualState || currentLabOrbBaseVisualState;
           GEOM.orbD = evenPx(visualState && visualState.diameterPx, 2, 2000);
@@ -2974,6 +3063,9 @@
       applyOrbTeleport,
       clearOrbTeleport,
       playOrbTeleport,
+      applyOrbTeleport3d,
+      clearOrbTeleport3d,
+      playOrbTeleport3d,
     } = studioBootstrap.actions;
     const stopAllStudioEffects = studioBootstrap.stopAllStudioEffects;
     const authoringAdapterForBaseEffect = studioBootstrap.authoringAdapterForBaseEffect;
@@ -2996,8 +3088,10 @@
       if (typeof applyOrbLifecycle3d === "function") applyOrbLifecycle3d();
       if (typeof applyOrbGlobe === "function") applyOrbGlobe();
       if (typeof applyWorldGlobe === "function") applyWorldGlobe();
+      if (typeof applyOrbTeleport3d === "function") applyOrbTeleport3d();
     });
     updateTeleportBehaviorReadout();
+    updateTeleport3dBehaviorReadout();
 
     bootStudioShell({
       effectSelect: els.effectSelect,
