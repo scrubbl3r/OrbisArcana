@@ -16,8 +16,11 @@ export function hydrateReceiverVfxDefaults(vfxDefaults, presets = {}) {
   if (bubbleShield && vfxDefaults.shield && typeof vfxDefaults.shield === "object") {
     Object.assign(vfxDefaults.shield, bubbleShield);
   }
-  if (bubbleShield3d && vfxDefaults.shield3d && typeof vfxDefaults.shield3d === "object") {
-    Object.assign(vfxDefaults.shield3d, bubbleShield3d);
+  if (bubbleShield3d) {
+    vfxDefaults.shield3d = {
+      ...(vfxDefaults.shield3d && typeof vfxDefaults.shield3d === "object" ? vfxDefaults.shield3d : {}),
+      ...bubbleShield3d,
+    };
   }
   if (shockwave && vfxDefaults.shock && typeof vfxDefaults.shock === "object") {
     Object.assign(vfxDefaults.shock, shockwave);

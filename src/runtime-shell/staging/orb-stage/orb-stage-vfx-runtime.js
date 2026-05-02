@@ -25,7 +25,7 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
       pulseMin: 0.3,
       pulseMax: 1.0,
     },
-    shield3d: BUBBLE_SHIELD_3D_PRESET_DEFAULT,
+    shield3d: { ...BUBBLE_SHIELD_3D_PRESET_DEFAULT },
     shock: {
       color: { r: 255, g: 255, b: 255, a: 0.65 },
       startRatio: 0.43,
