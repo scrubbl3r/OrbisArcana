@@ -10,7 +10,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { createGlobeModel } from "../../../src/game-runtime/world/globe-3d-model.js?v=20260429a";
 import { createGlobeMaterial, createGlobePointLight } from "../../../src/game-runtime/world/globe-3d-material.js?v=20260429a";
-import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502a";
+import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502b";
 
 const UP = new THREE.Vector3(0, 1, 0);
 const TMP_A = new THREE.Vector3();

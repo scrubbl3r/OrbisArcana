@@ -2,6 +2,11 @@ import * as THREE from "three";
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "./orb-globe-3d-default.js";
 
+const UP = new THREE.Vector3(0, 1, 0);
+const TMP_A = new THREE.Vector3();
+const TMP_B = new THREE.Vector3();
+const TMP_C = new THREE.Vector3();
+
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -41,6 +46,20 @@ function readOrbitHz(source, newKey, legacyKey, fallback = 0) {
   const legacy = Number(object[legacyKey]);
   if (Number.isFinite(legacy)) return legacy * 0.01;
   return fallback;
+}
+
+function createPlane() {
+  const normal = new THREE.Vector3(
+    randRange(-1, 1),
+    randRange(-0.65, 0.65),
+    randRange(-1, 1)
+  ).normalize();
+  if (!Number.isFinite(normal.x)) normal.set(0, 1, 0);
+  const u = new THREE.Vector3().crossVectors(normal, UP);
+  if (u.lengthSq() < 0.001) u.crossVectors(normal, new THREE.Vector3(1, 0, 0));
+  u.normalize();
+  const v = new THREE.Vector3().crossVectors(normal, u).normalize();
+  return { normal, u, v };
 }
 
 function normalizeGlobePayload(payload = {}) {
@@ -135,6 +154,9 @@ export function createOrbGlobe3dRuntime({
       mode,
       phase: Math.random() * Math.PI * 2,
       tilt: randRange(-0.85, 0.85, 0),
+      direction: Math.random() < 0.5 ? -1 : 1,
+      driftDirection: Math.random() < 0.5 ? -1 : 1,
+      plane: createPlane(),
       drift: randRange(
         mode === "inner" ? config.innerDriftMin : readNumber(config, ["orbitDriftMinHz", "orbitDriftMin"], 0.5),
         mode === "inner" ? config.innerDriftMax : readNumber(config, ["orbitDriftMaxHz", "orbitDriftMax"], 1),
@@ -209,14 +231,16 @@ export function createOrbGlobe3dRuntime({
     const cz = Number(center.z) || 0;
     for (const entry of state.orbiting) {
       if (!entry || !entry.model) continue;
+      const plane = entry.plane || (entry.plane = createPlane());
       const speed = clampNumber(entry.speed, 0.25);
-      const angle = entry.phase + (timeSec * speed);
-      const driftAngle = entry.phase + (timeSec * Math.max(0.01, entry.drift));
-      const y = Math.sin(driftAngle) * radius * 0.35;
-      const z = Math.cos(angle + entry.tilt) * radius * 0.72;
-      const x = Math.sin(angle) * radius;
+      const angle = entry.phase + (timeSec * speed * (entry.direction || 1));
+      const driftAngle = timeSec * Math.max(0.01, entry.drift) * (entry.driftDirection || 1);
+      TMP_A.copy(plane.u).applyAxisAngle(plane.normal, driftAngle);
+      TMP_B.copy(plane.v).applyAxisAngle(plane.normal, driftAngle);
+      TMP_C.copy(TMP_A).multiplyScalar(Math.cos(angle) * radius);
+      TMP_C.addScaledVector(TMP_B, Math.sin(angle) * radius);
       entry.model.visible = !state.dead;
-      entry.model.position.set(cx + x, cy + y, cz + z);
+      entry.model.position.set(cx + TMP_C.x, cy + TMP_C.y, cz + TMP_C.z);
     }
   }
 

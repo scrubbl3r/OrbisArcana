@@ -294,10 +294,6 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         const n = toNum(value, fallback);
         return n > 4 ? n / 150 : n;
       };
-      const hz = (value, fallback) => {
-        const n = toNum(value, fallback);
-        return n > 5 ? n * 0.01 : n;
-      };
       const boPerSec = (value, fallback) => {
         const n = toNum(value, fallback);
         return n > 20 ? n / 150 : n;
@@ -306,8 +302,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "export const ORB_GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({",
         `  orbitDistanceBO: ${boDistance(p.orbGlobe3dOrbitDistanceRatio, 1.07).toFixed(2)},`,
         `  orbitDistanceMinBO: ${boDistance(p.orbGlobe3dOrbitDistanceMin, 0.02).toFixed(2)},`,
-        `  orbitSpeedMinHz: ${hz(p.orbGlobe3dSpeedMin, 0.25).toFixed(2)},`,
-        `  orbitSpeedMaxHz: ${hz(p.orbGlobe3dSpeedMax, 0.30).toFixed(2)},`,
+        `  orbitSpeedMinHz: ${toNum(p.orbGlobe3dSpeedMin, 0.25).toFixed(2)},`,
+        `  orbitSpeedMaxHz: ${toNum(p.orbGlobe3dSpeedMax, 0.30).toFixed(2)},`,
         `  orbitDriftMinHz: ${toNum(p.orbGlobe3dDriftMin, 0.50).toFixed(2)},`,
         `  orbitDriftMaxHz: ${toNum(p.orbGlobe3dDriftMax, 1.00).toFixed(2)},`,
         `  innerSpeedMinBOPerSec: ${boPerSec(p.orbGlobe3dInnerSpeedMin, 3.67).toFixed(2)},`,

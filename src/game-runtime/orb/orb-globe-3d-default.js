@@ -1,8 +1,8 @@
 export const ORB_GLOBE_3D_VISUAL_DEFAULTS = Object.freeze({
   orbitDistanceBO: 0.70,
   orbitDistanceMinBO: 0.60,
-  orbitSpeedMinHz: 0.12,
-  orbitSpeedMaxHz: 0.20,
+  orbitSpeedMinHz: 12.00,
+  orbitSpeedMaxHz: 20.00,
   orbitDriftMinHz: 2.00,
   orbitDriftMaxHz: 8.00,
   innerSpeedMinBOPerSec: 9.00,
