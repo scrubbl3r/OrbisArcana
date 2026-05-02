@@ -73,6 +73,11 @@ export function createLevelStageRuntimeAdapter({
         ? depth3dRuntime.playOrbTeleport3d(payload)
         : { handled: false, skipped: "depth3d_runtime_missing" };
     },
+    playBubbleShield3d(payload = {}) {
+      return depth3dRuntime && typeof depth3dRuntime.playBubbleShield3d === "function"
+        ? depth3dRuntime.playBubbleShield3d(payload)
+        : { handled: false, skipped: "depth3d_runtime_missing" };
+    },
     applyOrbSpinColor(color = {}) {
       if (depth3dRuntime && typeof depth3dRuntime.applyOrbSpinColor === "function") {
         depth3dRuntime.applyOrbSpinColor(color);
