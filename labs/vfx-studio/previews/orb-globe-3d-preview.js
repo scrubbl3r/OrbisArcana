@@ -10,7 +10,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { createGlobeModel } from "../../../src/game-runtime/world/globe-3d-model.js?v=20260429a";
 import { createGlobeMaterial, createGlobePointLight } from "../../../src/game-runtime/world/globe-3d-material.js?v=20260429a";
-import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502c";
+import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502d";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/world-globe-3d-default.js?v=20260502b";
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -67,7 +67,7 @@ export function readOrbGlobe3dPreviewConfig(els = {}) {
   const field = (id) => els[id] || document.getElementById(id);
   const defaults = ORB_GLOBE_3D_VISUAL_DEFAULTS;
   const worldDefaults = WORLD_GLOBE_3D_VISUAL_DEFAULTS;
-  const materialDefaults = defaults.material || {};
+  const materialDefaults = worldDefaults.material || {};
   return Object.freeze({
     orbitDistanceBO: clampNumber(field("orbGlobe3dOrbitDistanceRatio") && field("orbGlobe3dOrbitDistanceRatio").value, 0.1, 10, readNumber(defaults, ["orbitDistanceBO", "orbitDistanceRatio"], 1.07)),
     orbitDistanceMinBO: clampNumber(field("orbGlobe3dOrbitDistanceMin") && field("orbGlobe3dOrbitDistanceMin").value, 0, 10, readNumber(defaults, ["orbitDistanceMinBO"], 0.02)),
@@ -83,22 +83,22 @@ export function readOrbGlobe3dPreviewConfig(els = {}) {
     worldCollectedDiameterBO: clampNumber(field("worldGlobe3dCollectedDiameterRatio") && field("worldGlobe3dCollectedDiameterRatio").value, 0.01, 10, readNumber(worldDefaults.collected, ["diameterBO", "diameterRatio"], 0.17)),
     worldConsumedDiameterBO: clampNumber(field("worldGlobe3dConsumedDiameterRatio") && field("worldGlobe3dConsumedDiameterRatio").value, 0.01, 10, readNumber(worldDefaults.consumed, ["diameterBO", "diameterRatio"], 0.10)),
     material: Object.freeze({
-      shellBaseColor: colorFromFields(els, "orbGlobe3dShellBase", materialDefaults.shellBaseColor),
-      shellCyanColor: colorFromFields(els, "orbGlobe3dShellCyan", materialDefaults.shellCyanColor),
-      shellVioletColor: colorFromFields(els, "orbGlobe3dShellViolet", materialDefaults.shellVioletColor),
-      shellGoldColor: colorFromFields(els, "orbGlobe3dShellGold", materialDefaults.shellGoldColor),
-      shellFresnelPower: clampNumber(field("orbGlobe3dShellFresnelPower") && field("orbGlobe3dShellFresnelPower").value, 0.1, 10, materialDefaults.shellFresnelPower),
-      shellRimAlphaPower: clampNumber(field("orbGlobe3dShellRimAlphaPower") && field("orbGlobe3dShellRimAlphaPower").value, 0.1, 8, materialDefaults.shellRimAlphaPower),
-      shellCenterAlpha: clampNumber(field("orbGlobe3dShellCenterAlpha") && field("orbGlobe3dShellCenterAlpha").value, 0, 1, materialDefaults.shellCenterAlpha),
-      shellRimAlpha: clampNumber(field("orbGlobe3dShellRimAlpha") && field("orbGlobe3dShellRimAlpha").value, 0, 1, materialDefaults.shellRimAlpha),
-      shellPastelMix: clampNumber(field("orbGlobe3dShellPastelMix") && field("orbGlobe3dShellPastelMix").value, 0, 2, materialDefaults.shellPastelMix),
-      shellRimPastelMix: clampNumber(field("orbGlobe3dShellRimPastelMix") && field("orbGlobe3dShellRimPastelMix").value, 0, 2, materialDefaults.shellRimPastelMix),
-      shellLuminanceBoost: clampNumber(field("orbGlobe3dShellLuminanceBoost") && field("orbGlobe3dShellLuminanceBoost").value, 0, 4, materialDefaults.shellLuminanceBoost),
-      lightColor: colorFromFields(els, "orbGlobe3dLight", materialDefaults.lightColor),
-      lightIntensity: clampNumber(field("orbGlobe3dLightIntensity") && field("orbGlobe3dLightIntensity").value, 0, 1000, materialDefaults.lightIntensity),
-      lightDistanceBO: clampNumber(field("orbGlobe3dLightDistanceBO") && field("orbGlobe3dLightDistanceBO").value, 0, 40, materialDefaults.lightDistanceBO),
-      lightDecay: clampNumber(field("orbGlobe3dLightDecay") && field("orbGlobe3dLightDecay").value, 0, 4, materialDefaults.lightDecay),
-      lightOffsetZBO: clampNumber(field("orbGlobe3dLightOffsetZBO") && field("orbGlobe3dLightOffsetZBO").value, -4, 4, materialDefaults.lightOffsetZBO),
+      shellBaseColor: colorFromFields(els, "worldGlobe3dShellBase", materialDefaults.shellBaseColor),
+      shellCyanColor: colorFromFields(els, "worldGlobe3dShellCyan", materialDefaults.shellCyanColor),
+      shellVioletColor: colorFromFields(els, "worldGlobe3dShellViolet", materialDefaults.shellVioletColor),
+      shellGoldColor: colorFromFields(els, "worldGlobe3dShellGold", materialDefaults.shellGoldColor),
+      shellFresnelPower: clampNumber(field("worldGlobe3dShellFresnelPower") && field("worldGlobe3dShellFresnelPower").value, 0.1, 10, materialDefaults.shellFresnelPower),
+      shellRimAlphaPower: clampNumber(field("worldGlobe3dShellRimAlphaPower") && field("worldGlobe3dShellRimAlphaPower").value, 0.1, 8, materialDefaults.shellRimAlphaPower),
+      shellCenterAlpha: clampNumber(field("worldGlobe3dShellCenterAlpha") && field("worldGlobe3dShellCenterAlpha").value, 0, 1, materialDefaults.shellCenterAlpha),
+      shellRimAlpha: clampNumber(field("worldGlobe3dShellRimAlpha") && field("worldGlobe3dShellRimAlpha").value, 0, 1, materialDefaults.shellRimAlpha),
+      shellPastelMix: clampNumber(field("worldGlobe3dShellPastelMix") && field("worldGlobe3dShellPastelMix").value, 0, 2, materialDefaults.shellPastelMix),
+      shellRimPastelMix: clampNumber(field("worldGlobe3dShellRimPastelMix") && field("worldGlobe3dShellRimPastelMix").value, 0, 2, materialDefaults.shellRimPastelMix),
+      shellLuminanceBoost: clampNumber(field("worldGlobe3dShellLuminanceBoost") && field("worldGlobe3dShellLuminanceBoost").value, 0, 4, materialDefaults.shellLuminanceBoost),
+      lightColor: colorFromFields(els, "worldGlobe3dLight", materialDefaults.lightColor),
+      lightIntensity: clampNumber(field("worldGlobe3dLightIntensity") && field("worldGlobe3dLightIntensity").value, 0, 1000, materialDefaults.lightIntensity),
+      lightDistanceBO: clampNumber(field("worldGlobe3dLightDistanceBO") && field("worldGlobe3dLightDistanceBO").value, 0, 40, materialDefaults.lightDistanceBO),
+      lightDecay: clampNumber(field("worldGlobe3dLightDecay") && field("worldGlobe3dLightDecay").value, 0, 4, materialDefaults.lightDecay),
+      lightOffsetZBO: clampNumber(field("worldGlobe3dLightOffsetZBO") && field("worldGlobe3dLightOffsetZBO").value, -4, 4, materialDefaults.lightOffsetZBO),
     }),
   });
 }

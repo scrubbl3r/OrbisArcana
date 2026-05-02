@@ -10,60 +10,12 @@ const ORB_GLOBE_3D_NUMERIC_FIELDS = Object.freeze([
   "orbGlobe3dInnerDriftMin",
   "orbGlobe3dInnerDriftMax",
   "orbGlobe3dInnerPaddingRatio",
-  "orbGlobe3dShellFresnelPower",
-  "orbGlobe3dShellRimAlphaPower",
-  "orbGlobe3dShellCenterAlpha",
-  "orbGlobe3dShellRimAlpha",
-  "orbGlobe3dShellPastelMix",
-  "orbGlobe3dShellRimPastelMix",
-  "orbGlobe3dShellLuminanceBoost",
-  "orbGlobe3dLightIntensity",
-  "orbGlobe3dLightDistanceBO",
-  "orbGlobe3dLightDecay",
-  "orbGlobe3dLightOffsetZBO",
 ]);
-
-const ORB_GLOBE_3D_COLOR_FIELDS = Object.freeze([
-  ["shellBaseColor", "orbGlobe3dShellBase"],
-  ["shellCyanColor", "orbGlobe3dShellCyan"],
-  ["shellVioletColor", "orbGlobe3dShellViolet"],
-  ["shellGoldColor", "orbGlobe3dShellGold"],
-  ["lightColor", "orbGlobe3dLight"],
-]);
-
-const MATERIAL_NUMERIC_MAP = Object.freeze({
-  orbGlobe3dShellFresnelPower: "shellFresnelPower",
-  orbGlobe3dShellRimAlphaPower: "shellRimAlphaPower",
-  orbGlobe3dShellCenterAlpha: "shellCenterAlpha",
-  orbGlobe3dShellRimAlpha: "shellRimAlpha",
-  orbGlobe3dShellPastelMix: "shellPastelMix",
-  orbGlobe3dShellRimPastelMix: "shellRimPastelMix",
-  orbGlobe3dShellLuminanceBoost: "shellLuminanceBoost",
-  orbGlobe3dLightIntensity: "lightIntensity",
-  orbGlobe3dLightDistanceBO: "lightDistanceBO",
-  orbGlobe3dLightDecay: "lightDecay",
-  orbGlobe3dLightOffsetZBO: "lightOffsetZBO",
-});
 
 function fixedNumber(value, digits, fallback = 0) {
   const n = Number(value);
   const f = Number.isFinite(Number(fallback)) ? Number(fallback) : 0;
   return Number((Number.isFinite(n) ? n : f).toFixed(digits));
-}
-
-function roundedByte(value, fallback = 255) {
-  const n = Number(value);
-  const f = Number.isFinite(Number(fallback)) ? Number(fallback) : 255;
-  return Math.max(0, Math.min(255, Math.round(Number.isFinite(n) ? n : f)));
-}
-
-function colorChannels(color) {
-  const c = Number(color) >>> 0;
-  return Object.freeze({
-    r: (c >> 16) & 255,
-    g: (c >> 8) & 255,
-    b: c & 255,
-  });
 }
 
 function readNumber(source, keys = [], fallback = 0) {
@@ -76,7 +28,6 @@ function readNumber(source, keys = [], fallback = 0) {
 }
 
 function settingsFromDefaults(defaults = {}) {
-  const material = defaults.material || {};
   const settings = {
     orbGlobe3dOrbitDistanceRatio: fixedNumber(readNumber(defaults, ["orbitDistanceBO", "orbitDistanceRatio"], 1.1), 2, 1.1),
     orbGlobe3dOrbitDistanceMin: fixedNumber(readNumber(defaults, ["orbitDistanceMinBO"], 0.02), 2, 0.02),
@@ -90,15 +41,6 @@ function settingsFromDefaults(defaults = {}) {
     orbGlobe3dInnerDriftMax: fixedNumber(defaults.innerDriftMax, 2, 0.28),
     orbGlobe3dInnerPaddingRatio: fixedNumber(readNumber(defaults, ["innerPaddingBO"], readNumber(defaults, ["innerPaddingRatio"], 0.22) * 0.5), 2, 0.11),
   };
-  Object.entries(MATERIAL_NUMERIC_MAP).forEach(([fieldId, configKey]) => {
-    settings[fieldId] = fixedNumber(material[configKey], 3, 0);
-  });
-  ORB_GLOBE_3D_COLOR_FIELDS.forEach(([configKey, prefix]) => {
-    const rgb = colorChannels(material[configKey]);
-    settings[`${prefix}R`] = rgb.r;
-    settings[`${prefix}G`] = rgb.g;
-    settings[`${prefix}B`] = rgb.b;
-  });
   return settings;
 }
 
@@ -113,11 +55,6 @@ export function createOrbGlobe3dAuthoringAdapter({
     ORB_GLOBE_3D_NUMERIC_FIELDS.forEach((id) => {
       settings[id] = Number(field(id) && field(id).value);
     });
-    ORB_GLOBE_3D_COLOR_FIELDS.forEach(([, prefix]) => {
-      settings[`${prefix}R`] = roundedByte(field(`${prefix}R`) && field(`${prefix}R`).value);
-      settings[`${prefix}G`] = roundedByte(field(`${prefix}G`) && field(`${prefix}G`).value);
-      settings[`${prefix}B`] = roundedByte(field(`${prefix}B`) && field(`${prefix}B`).value);
-    });
     return settings;
   }
 
@@ -126,13 +63,6 @@ export function createOrbGlobe3dAuthoringAdapter({
     ORB_GLOBE_3D_NUMERIC_FIELDS.forEach((id) => {
       const el = field(id);
       if (el && settings[id] != null) el.value = String(settings[id]);
-    });
-    ORB_GLOBE_3D_COLOR_FIELDS.forEach(([, prefix]) => {
-      ["R", "G", "B"].forEach((suffix) => {
-        const id = `${prefix}${suffix}`;
-        const el = field(id);
-        if (el && settings[id] != null) el.value = String(settings[id]);
-      });
     });
     if (typeof applyPreview === "function") applyPreview();
     return true;

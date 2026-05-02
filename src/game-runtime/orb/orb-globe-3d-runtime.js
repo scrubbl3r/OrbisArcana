@@ -145,12 +145,13 @@ export function createOrbGlobe3dRuntime({
   function makeParticle(payload = {}, mode = "orbiting") {
     const globe = normalizeGlobePayload(payload);
     const config = currentConfig();
+    const worldConfig = currentWorldGlobeConfig();
     const baseOrb = currentBo();
     const bo = baseOrb * globeDiameterBOForMode(mode);
     const model = typeof createGlobeObject === "function"
       ? createGlobeObject({
         bo,
-        materialConfig: config.material,
+        materialConfig: worldConfig.material,
         name: `orb_globe3d:${mode}:${globe.globeId || globe.slot || "globe"}`,
       })
       : null;
