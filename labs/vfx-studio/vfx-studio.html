@@ -1791,6 +1791,12 @@
         </div>
       </div>
 
+      <div class="section" data-effect="shockwave-3d" hidden>
+        <div class="row">
+          <button id="previewShockwave3d" class="toolBtn" type="button">Preview</button>
+        </div>
+      </div>
+
       <div class="section" data-effect="orb-lifecycle" hidden>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
@@ -2878,6 +2884,7 @@
       flameAoe3dSmokeB: $("flameAoe3dSmokeB"),
       flameAoe3dApplySmokeColorBtn: $("flameAoe3dApplySmokeColorBtn"),
       previewBankOrb3d: $("previewBankOrb3d"),
+      previewShockwave3d: $("previewShockwave3d"),
     };
 
     function initCollapsibleControlGroups(root = document) {
@@ -3539,6 +3546,7 @@
         "flame-aoe": () => applyFlameControls(),
         "flame-aoe-3d": () => applyFlameAoe3d(),
         "bank-orb-3d": () => applyBankOrb3d(),
+        "shockwave-3d": () => applyBankOrb3d(),
         "orb-base": () => applyOrbBase(),
         "orb-3d": () => applyOrb3d(),
         "orb-spawn": () => applyOrbSpawn(),
@@ -3643,6 +3651,9 @@
     const updateBehaviorSections = studioBootstrap.updateBehaviorSections;
     const updateEffectSections = studioBootstrap.updateEffectSections;
     const settleSelectedEffectState = studioBootstrap.settleSelectedEffectState;
+    if (els.previewShockwave3d) {
+      els.previewShockwave3d.addEventListener("click", () => applyBankOrb3d());
+    }
     requestAnimationFrame(() => {
       if (typeof applyShieldGeometry === "function") applyShieldGeometry();
       if (typeof applyShock === "function") applyShock();
