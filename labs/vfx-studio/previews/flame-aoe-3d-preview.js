@@ -66,12 +66,6 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSimplexLacunarity: 2.25,
   wakeSimplexGain: 0.48,
   wakeNoiseMix: 0.35,
-  wakeCloudsAmountBo: 0.08,
-  wakeCloudsMidlevel: 0.5,
-  wakeCloudsScale: 1.6,
-  wakeCloudsSpeed: 0.45,
-  wakeCloudsDetail: 4,
-  wakeCloudsSoftness: 0.35,
 });
 
 function clampNumber(value, min, max, fallback) {
@@ -140,12 +134,6 @@ function readFlameWakeConfig(els = {}) {
     wakeSimplexLacunarity: clampNumber(els.flameAoe3dWakeSimplexLacunarity && els.flameAoe3dWakeSimplexLacunarity.value, 1.1, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexLacunarity),
     wakeSimplexGain: clampNumber(els.flameAoe3dWakeSimplexGain && els.flameAoe3dWakeSimplexGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexGain),
     wakeNoiseMix: clampNumber(els.flameAoe3dWakeNoiseMix && els.flameAoe3dWakeNoiseMix.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseMix),
-    wakeCloudsAmountBo: clampNumber(els.flameAoe3dWakeCloudsAmountBo && els.flameAoe3dWakeCloudsAmountBo.value, 0, 0.8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeCloudsAmountBo),
-    wakeCloudsMidlevel: clampNumber(els.flameAoe3dWakeCloudsMidlevel && els.flameAoe3dWakeCloudsMidlevel.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeCloudsMidlevel),
-    wakeCloudsScale: clampNumber(els.flameAoe3dWakeCloudsScale && els.flameAoe3dWakeCloudsScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeCloudsScale),
-    wakeCloudsSpeed: clampNumber(els.flameAoe3dWakeCloudsSpeed && els.flameAoe3dWakeCloudsSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeCloudsSpeed),
-    wakeCloudsDetail: Math.round(clampNumber(els.flameAoe3dWakeCloudsDetail && els.flameAoe3dWakeCloudsDetail.value, 1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeCloudsDetail)),
-    wakeCloudsSoftness: clampNumber(els.flameAoe3dWakeCloudsSoftness && els.flameAoe3dWakeCloudsSoftness.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeCloudsSoftness),
   });
 }
 
@@ -201,12 +189,6 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSimplexLacunarity) els.flameAoe3dWakeSimplexLacunarity.value = String(Number(cfg.wakeSimplexLacunarity).toFixed(2));
   if (els.flameAoe3dWakeSimplexGain) els.flameAoe3dWakeSimplexGain.value = String(Number(cfg.wakeSimplexGain).toFixed(2));
   if (els.flameAoe3dWakeNoiseMix) els.flameAoe3dWakeNoiseMix.value = String(Number(cfg.wakeNoiseMix).toFixed(2));
-  if (els.flameAoe3dWakeCloudsAmountBo) els.flameAoe3dWakeCloudsAmountBo.value = String(Number(cfg.wakeCloudsAmountBo).toFixed(3));
-  if (els.flameAoe3dWakeCloudsMidlevel) els.flameAoe3dWakeCloudsMidlevel.value = String(Number(cfg.wakeCloudsMidlevel).toFixed(2));
-  if (els.flameAoe3dWakeCloudsScale) els.flameAoe3dWakeCloudsScale.value = String(Number(cfg.wakeCloudsScale).toFixed(2));
-  if (els.flameAoe3dWakeCloudsSpeed) els.flameAoe3dWakeCloudsSpeed.value = String(Number(cfg.wakeCloudsSpeed).toFixed(2));
-  if (els.flameAoe3dWakeCloudsDetail) els.flameAoe3dWakeCloudsDetail.value = String(Math.round(Number(cfg.wakeCloudsDetail)));
-  if (els.flameAoe3dWakeCloudsSoftness) els.flameAoe3dWakeCloudsSoftness.value = String(Number(cfg.wakeCloudsSoftness).toFixed(2));
 }
 
 function layerVisible(button) {
@@ -612,140 +594,17 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeSimplexLacunarity: { value: config.wakeSimplexLacunarity },
       uWakeSimplexGain: { value: config.wakeSimplexGain },
       uWakeNoiseMix: { value: config.wakeNoiseMix },
-      uWakeCloudsAmount: { value: config.wakeCloudsAmountPx || config.wakeCloudsAmountBo },
-      uWakeCloudsMidlevel: { value: config.wakeCloudsMidlevel },
-      uWakeCloudsScale: { value: config.wakeCloudsScale },
-      uWakeCloudsSpeed: { value: config.wakeCloudsSpeed },
-      uWakeCloudsDetail: { value: config.wakeCloudsDetail },
-      uWakeCloudsSoftness: { value: config.wakeCloudsSoftness },
     },
     vertexShader: `
       precision highp float;
-
-      uniform float uTime;
-      uniform float uWakeNoiseScale;
-      uniform float uWakeNoiseDensityBottom;
-      uniform float uWakeNoiseDensityTop;
-      uniform float uWakeNoiseContrast;
-      uniform float uWakeNoiseOctaves;
-      uniform float uWakeNoiseLacunarity;
-      uniform float uWakeNoiseGain;
-      uniform float uWakeSimplexScale;
-      uniform float uWakeSimplexSpeed;
-      uniform float uWakeSimplexDensityBottom;
-      uniform float uWakeSimplexDensityTop;
-      uniform float uWakeSimplexContrast;
-      uniform float uWakeSimplexOctaves;
-      uniform float uWakeSimplexLacunarity;
-      uniform float uWakeSimplexGain;
-      uniform float uWakeNoiseMix;
-      uniform float uWakeCloudsAmount;
-      uniform float uWakeCloudsMidlevel;
-      uniform float uWakeCloudsScale;
-      uniform float uWakeCloudsSpeed;
-      uniform float uWakeCloudsDetail;
-      uniform float uWakeCloudsSoftness;
 
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
       varying float vTail;
 
-      float hash31(vec3 p) {
-        p = fract(p * 0.1031);
-        p += dot(p, p.yzx + 33.33);
-        return fract((p.x + p.y) * p.z);
-      }
-
-      float noise(vec3 p) {
-        vec3 i = floor(p);
-        vec3 f = fract(p);
-        f = f * f * (3.0 - 2.0 * f);
-        return mix(
-          mix(
-            mix(hash31(i + vec3(0.0, 0.0, 0.0)), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
-            mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x),
-            f.y
-          ),
-          mix(
-            mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
-            mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x),
-            f.y
-          ),
-          f.z
-        );
-      }
-
-      float fbm(vec3 p) {
-        float value = 0.0;
-        float amp = 0.56;
-        float freq = 1.0;
-        for (int i = 0; i < 5; i += 1) {
-          value += noise(p * freq) * amp;
-          freq *= 2.08;
-          amp *= 0.52;
-          p += vec3(17.7, -11.3, 8.9);
-        }
-        return clamp(value, 0.0, 1.0);
-      }
-
-      float ridgedFbm(vec3 p) {
-        float value = 0.0;
-        float amp = 0.58;
-        float freq = 1.0;
-        for (int i = 0; i < 5; i += 1) {
-          float ridge = 1.0 - abs(noise(p * freq) * 2.0 - 1.0);
-          ridge *= ridge;
-          value += ridge * amp;
-          freq *= 2.16;
-          amp *= 0.48;
-          p += vec3(-6.4, 19.1, 12.8);
-        }
-        return clamp(value, 0.0, 1.0);
-      }
-
-      float musgraveBlobs(vec3 p) {
-        float base = fbm(p);
-        float ridge = ridgedFbm(p * 0.82 + vec3(3.4, -7.8, 2.1));
-        float broad = fbm(p * 0.46 + vec3(-11.2, 4.6, 9.3));
-        float mask = base * 0.46 + ridge * 0.34 + broad * 0.32;
-        return smoothstep(0.46, 0.61, mask);
-      }
-
-      float cloudsNoise(vec3 p) {
-        float value = 0.0;
-        float amp = 0.5;
-        float freq = 1.0;
-        for (int i = 0; i < 8; i += 1) {
-          if (float(i) >= uWakeCloudsDetail) break;
-          value += noise(p * freq) * amp;
-          freq *= 2.02;
-          amp *= 0.52;
-          p += vec3(9.7, -3.2, 14.8);
-        }
-        return clamp(value, 0.0, 1.0);
-      }
-
-      float cloudsField(vec3 p) {
-        float field = cloudsNoise(p);
-        field = mix(field, smoothstep(0.0, 1.0, field), clamp(uWakeCloudsSoftness, 0.0, 1.0));
-        return clamp(field, 0.0, 1.0);
-      }
-
       void main() {
         float tail = clamp(uv.y, 0.0, 1.0);
         vec3 local = position;
-        vec3 displacementNormal = normalize(normal);
-        float cloudsFrequency = 1.0 / max(0.1, uWakeCloudsScale);
-        vec3 cloudsFlow = vec3(
-          local.x * cloudsFrequency,
-          local.y * cloudsFrequency - uTime * uWakeCloudsSpeed,
-          local.z * cloudsFrequency
-        );
-        float clouds = cloudsField(cloudsFlow) - clamp(uWakeCloudsMidlevel, 0.0, 1.0);
-        float rootMask = smoothstep(0.06, 0.22, tail);
-        float tipMask = 1.0 - smoothstep(0.92, 1.0, tail);
-        local += displacementNormal * clouds * uWakeCloudsAmount * rootMask * tipMask;
-
         vec4 worldPos = modelMatrix * vec4(local, 1.0);
         vWorldPos = worldPos.xyz;
         vLocalPos = local;
@@ -1052,7 +911,6 @@ export function createFlameAoe3dPreview({
     wakeMaterial = createWakeMaterial({
       ...flameConfig,
       ...wakeConfig,
-      wakeCloudsAmountPx: bo * wakeConfig.wakeCloudsAmountBo,
     });
     wakeMesh = new THREE.Mesh(
       createWakeTeardropGeometry(
@@ -1146,12 +1004,6 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyWakeSimplexLacunarityBtn,
       els.flameAoe3dApplyWakeSimplexGainBtn,
       els.flameAoe3dApplyWakeNoiseMixBtn,
-      els.flameAoe3dApplyWakeCloudsAmountBtn,
-      els.flameAoe3dApplyWakeCloudsMidlevelBtn,
-      els.flameAoe3dApplyWakeCloudsScaleBtn,
-      els.flameAoe3dApplyWakeCloudsSpeedBtn,
-      els.flameAoe3dApplyWakeCloudsDetailBtn,
-      els.flameAoe3dApplyWakeCloudsSoftnessBtn,
       els.flameAoe3dApplyCoreColorBtn,
       els.flameAoe3dApplyHotColorBtn,
       els.flameAoe3dApplyRimColorBtn,
