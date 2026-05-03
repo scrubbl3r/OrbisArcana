@@ -46,6 +46,17 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   auraNoiseSpeed: 0.24,
   auraFresnelPower: 1.35,
   auraColor: 0xff6a18,
+  wakeAlpha: 0.46,
+  wakeLengthBo: 0.95,
+  wakeRadiusBo: 0.34,
+  wakeBend: 0.22,
+  wakeNoiseScale: 2.35,
+  wakeNoiseSpeed: 0.86,
+  wakeSoftness: 0.38,
+  wakeDirX: -0.85,
+  wakeDirY: 0.12,
+  wakeDirZ: 0.18,
+  wakeColor: 0xff7a12,
 });
 
 function clampNumber(value, min, max, fallback) {
@@ -92,6 +103,22 @@ function readFlameAuraConfig(els = {}) {
   });
 }
 
+function readFlameWakeConfig(els = {}) {
+  return Object.freeze({
+    wakeAlpha: clampNumber(els.flameAoe3dWakeAlpha && els.flameAoe3dWakeAlpha.value, 0, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeAlpha),
+    wakeLengthBo: clampNumber(els.flameAoe3dWakeLengthBo && els.flameAoe3dWakeLengthBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLengthBo),
+    wakeRadiusBo: clampNumber(els.flameAoe3dWakeRadiusBo && els.flameAoe3dWakeRadiusBo.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeRadiusBo),
+    wakeBend: clampNumber(els.flameAoe3dWakeBend && els.flameAoe3dWakeBend.value, -2, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeBend),
+    wakeNoiseScale: clampNumber(els.flameAoe3dWakeNoiseScale && els.flameAoe3dWakeNoiseScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseScale),
+    wakeNoiseSpeed: clampNumber(els.flameAoe3dWakeNoiseSpeed && els.flameAoe3dWakeNoiseSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseSpeed),
+    wakeSoftness: clampNumber(els.flameAoe3dWakeSoftness && els.flameAoe3dWakeSoftness.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSoftness),
+    wakeDirX: clampNumber(els.flameAoe3dWakeDirX && els.flameAoe3dWakeDirX.value, -1, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDirX),
+    wakeDirY: clampNumber(els.flameAoe3dWakeDirY && els.flameAoe3dWakeDirY.value, -1, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDirY),
+    wakeDirZ: clampNumber(els.flameAoe3dWakeDirZ && els.flameAoe3dWakeDirZ.value, -1, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDirZ),
+    wakeColor: rgbFromFields(els, "flameAoe3dWake", FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeColor),
+  });
+}
+
 function hydrateFlameShellFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dShellAlpha) els.flameAoe3dShellAlpha.value = String(Number(cfg.shellAlpha).toFixed(2));
   if (els.flameAoe3dDisplace) els.flameAoe3dDisplace.value = String(Number(cfg.displace).toFixed(3));
@@ -123,8 +150,30 @@ function hydrateFlameAuraFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dAuraB) els.flameAoe3dAuraB.value = String(cfg.auraColor & 255);
 }
 
+function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  if (els.flameAoe3dWakeAlpha) els.flameAoe3dWakeAlpha.value = String(Number(cfg.wakeAlpha).toFixed(2));
+  if (els.flameAoe3dWakeLengthBo) els.flameAoe3dWakeLengthBo.value = String(Number(cfg.wakeLengthBo).toFixed(2));
+  if (els.flameAoe3dWakeRadiusBo) els.flameAoe3dWakeRadiusBo.value = String(Number(cfg.wakeRadiusBo).toFixed(2));
+  if (els.flameAoe3dWakeBend) els.flameAoe3dWakeBend.value = String(Number(cfg.wakeBend).toFixed(2));
+  if (els.flameAoe3dWakeNoiseScale) els.flameAoe3dWakeNoiseScale.value = String(Number(cfg.wakeNoiseScale).toFixed(2));
+  if (els.flameAoe3dWakeNoiseSpeed) els.flameAoe3dWakeNoiseSpeed.value = String(Number(cfg.wakeNoiseSpeed).toFixed(2));
+  if (els.flameAoe3dWakeSoftness) els.flameAoe3dWakeSoftness.value = String(Number(cfg.wakeSoftness).toFixed(2));
+  if (els.flameAoe3dWakeDirX) els.flameAoe3dWakeDirX.value = String(Number(cfg.wakeDirX).toFixed(2));
+  if (els.flameAoe3dWakeDirY) els.flameAoe3dWakeDirY.value = String(Number(cfg.wakeDirY).toFixed(2));
+  if (els.flameAoe3dWakeDirZ) els.flameAoe3dWakeDirZ.value = String(Number(cfg.wakeDirZ).toFixed(2));
+  if (els.flameAoe3dWakeR) els.flameAoe3dWakeR.value = String((cfg.wakeColor >> 16) & 255);
+  if (els.flameAoe3dWakeG) els.flameAoe3dWakeG.value = String((cfg.wakeColor >> 8) & 255);
+  if (els.flameAoe3dWakeB) els.flameAoe3dWakeB.value = String(cfg.wakeColor & 255);
+}
+
 function layerVisible(button) {
   return !button || button.getAttribute("aria-pressed") !== "false";
+}
+
+function wakeDirection(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  const dir = new THREE.Vector3(config.wakeDirX, config.wakeDirY, config.wakeDirZ);
+  if (dir.lengthSq() < 0.0001) dir.set(-1, 0, 0);
+  return dir.normalize();
 }
 
 function createFlameShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
@@ -452,6 +501,141 @@ function createAuraShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   });
 }
 
+function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  return new THREE.ShaderMaterial({
+    name: "flame_aoe3d:directional_wake_material",
+    transparent: true,
+    depthWrite: false,
+    depthTest: true,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    uniforms: {
+      uTime: { value: 0 },
+      uWakeAlpha: { value: config.wakeAlpha },
+      uWakeBend: { value: config.wakeBend },
+      uWakeNoiseScale: { value: config.wakeNoiseScale },
+      uWakeNoiseSpeed: { value: config.wakeNoiseSpeed },
+      uWakeSoftness: { value: config.wakeSoftness },
+      uWakeColor: { value: new THREE.Color(config.wakeColor) },
+      uHotColor: { value: new THREE.Color(config.hotColor) },
+    },
+    vertexShader: `
+      precision highp float;
+
+      uniform float uTime;
+      uniform float uWakeBend;
+      uniform float uWakeNoiseScale;
+      uniform float uWakeNoiseSpeed;
+
+      varying vec3 vWorldPos;
+      varying vec3 vLocalPos;
+      varying float vTail;
+      varying float vNoise;
+
+      float hash31(vec3 p) {
+        p = fract(p * 0.1031);
+        p += dot(p, p.yzx + 33.33);
+        return fract((p.x + p.y) * p.z);
+      }
+
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 0.0)), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x),
+            f.y
+          ),
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x),
+            f.y
+          ),
+          f.z
+        );
+      }
+
+      void main() {
+        float tail = clamp(uv.y, 0.0, 1.0);
+        float time = uTime * uWakeNoiseSpeed;
+        vec3 local = position;
+        vec3 flow = vec3(position.xz * uWakeNoiseScale, tail * uWakeNoiseScale - time * 2.2);
+        float n = noise(flow) * 0.62 + noise(flow * 2.35 + vec3(7.1, -3.3, 4.9)) * 0.38;
+        float sideSway = sin(time * 2.1 + tail * 7.0 + n * 4.0) * uWakeBend;
+        local.x += sideSway * tail * tail * length(position);
+        local.z += cos(time * 1.5 + tail * 5.6 + n * 3.0) * uWakeBend * 0.42 * tail * tail * length(position);
+
+        vec4 worldPos = modelMatrix * vec4(local, 1.0);
+        vWorldPos = worldPos.xyz;
+        vLocalPos = local;
+        vTail = tail;
+        vNoise = n;
+        gl_Position = projectionMatrix * viewMatrix * worldPos;
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+
+      uniform float uTime;
+      uniform float uWakeAlpha;
+      uniform float uWakeNoiseScale;
+      uniform float uWakeNoiseSpeed;
+      uniform float uWakeSoftness;
+      uniform vec3 uWakeColor;
+      uniform vec3 uHotColor;
+
+      varying vec3 vWorldPos;
+      varying vec3 vLocalPos;
+      varying float vTail;
+      varying float vNoise;
+
+      float hash31(vec3 p) {
+        p = fract(p * 0.1031);
+        p += dot(p, p.yzx + 33.33);
+        return fract((p.x + p.y) * p.z);
+      }
+
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 0.0)), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x),
+            f.y
+          ),
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x),
+            f.y
+          ),
+          f.z
+        );
+      }
+
+      void main() {
+        float time = uTime * uWakeNoiseSpeed;
+        vec3 flow = vec3(vLocalPos.xz * uWakeNoiseScale, vTail * uWakeNoiseScale - time * 2.6);
+        float body = noise(flow) * 0.52 + noise(flow * 2.7 + vec3(2.9, 6.4, -8.1)) * 0.48;
+        float flame = clamp(vNoise * 0.56 + body * 0.64, 0.0, 1.0);
+        float root = 1.0 - smoothstep(0.0, 0.18, vTail);
+        float tailFade = 1.0 - smoothstep(max(0.02, 1.0 - uWakeSoftness), 1.0, vTail);
+        float erode = smoothstep(0.22, 0.92, flame + root * 0.18);
+        float flicker = 0.82 + 0.18 * sin(uTime * 10.0 + flame * 8.0 + vTail * 6.0);
+        vec3 color = mix(uWakeColor * 0.55, uHotColor, erode * (0.55 + root * 0.35));
+        color *= 0.82 + root * 0.78 + flame * 0.65;
+        float alpha = uWakeAlpha * flicker * tailFade * erode * (0.28 + root * 0.72);
+
+        if (alpha < 0.008) discard;
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+  });
+}
+
 export function createFlameAoe3dPreview({
   els = {},
   getOrbBaseVisualState = null,
@@ -461,14 +645,17 @@ export function createFlameAoe3dPreview({
   let shellMaterial = null;
   let flameShellMaterial = null;
   let auraShellMaterial = null;
+  let wakeMaterial = null;
   let flameShellMesh = null;
   let auraShellMesh = null;
+  let wakeMesh = null;
   let orbLight = null;
   let model = null;
   let createdAt = 0;
   let activeConfig = ORB_MATERIAL_CONFIG;
   let flameConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
   let auraConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
+  let wakeConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
 
   function readBo() {
     const visualState = typeof getOrbBaseVisualState === "function" ? getOrbBaseVisualState() : null;
@@ -481,8 +668,10 @@ export function createFlameAoe3dPreview({
     shellMaterial = null;
     flameShellMaterial = null;
     auraShellMaterial = null;
+    wakeMaterial = null;
     flameShellMesh = null;
     auraShellMesh = null;
+    wakeMesh = null;
     orbLight = null;
     model = null;
   }
@@ -494,8 +683,10 @@ export function createFlameAoe3dPreview({
     activeConfig = (typeof getOrb3dVisualSettings === "function" && getOrb3dVisualSettings()) || ORB_MATERIAL_CONFIG;
     flameConfig = readFlameShellConfig(els);
     auraConfig = readFlameAuraConfig(els);
+    wakeConfig = readFlameWakeConfig(els);
     hydrateFlameShellFields(els, flameConfig);
     hydrateFlameAuraFields(els, auraConfig);
+    hydrateFlameWakeFields(els, wakeConfig);
     inspector = createWorldObjectInspector({
       root: els.previewRoot,
       bo,
@@ -509,6 +700,7 @@ export function createFlameAoe3dPreview({
         if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = time;
         if (flameShellMaterial && flameShellMaterial.uniforms && flameShellMaterial.uniforms.uTime) flameShellMaterial.uniforms.uTime.value = time;
         if (auraShellMaterial && auraShellMaterial.uniforms && auraShellMaterial.uniforms.uTime) auraShellMaterial.uniforms.uTime.value = time;
+        if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uTime) wakeMaterial.uniforms.uTime.value = time;
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
       },
     });
@@ -545,6 +737,18 @@ export function createFlameAoe3dPreview({
     auraShellMesh.renderOrder = 8;
     auraShellMesh.visible = layerVisible(els.flameAoe3dAuraVisibleBtn);
     model.add(auraShellMesh);
+    wakeMaterial = createWakeMaterial({ ...flameConfig, ...wakeConfig });
+    wakeMesh = new THREE.Mesh(
+      new THREE.ConeGeometry(bo * wakeConfig.wakeRadiusBo, bo * wakeConfig.wakeLengthBo, 96, 32, true),
+      wakeMaterial
+    );
+    const wakeDir = wakeDirection(wakeConfig);
+    wakeMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), wakeDir);
+    wakeMesh.position.copy(wakeDir).multiplyScalar(bo * wakeConfig.wakeLengthBo * 0.5);
+    wakeMesh.name = "flame_aoe3d:directional_wake";
+    wakeMesh.renderOrder = 10;
+    wakeMesh.visible = layerVisible(els.flameAoe3dWakeVisibleBtn);
+    model.add(wakeMesh);
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
     model.add(orbLight);
@@ -556,6 +760,7 @@ export function createFlameAoe3dPreview({
   function applyLayerVisibility() {
     if (flameShellMesh) flameShellMesh.visible = layerVisible(els.flameAoe3dShellVisibleBtn);
     if (auraShellMesh) auraShellMesh.visible = layerVisible(els.flameAoe3dAuraVisibleBtn);
+    if (wakeMesh) wakeMesh.visible = layerVisible(els.flameAoe3dWakeVisibleBtn);
     if (inspector && typeof inspector.render === "function") inspector.render();
   }
 
@@ -569,11 +774,13 @@ export function createFlameAoe3dPreview({
   function apply() {
     flameConfig = readFlameShellConfig(els);
     auraConfig = readFlameAuraConfig(els);
+    wakeConfig = readFlameWakeConfig(els);
     hydrateFlameShellFields(els, flameConfig);
     hydrateFlameAuraFields(els, auraConfig);
+    hydrateFlameWakeFields(els, wakeConfig);
     destroyInspector();
     ensureScene();
-    return Object.freeze({ ...flameConfig, ...auraConfig });
+    return Object.freeze({ ...flameConfig, ...auraConfig, ...wakeConfig });
   }
 
   function clear() {
@@ -585,6 +792,7 @@ export function createFlameAoe3dPreview({
     if (els.previewFlameAoe3d) els.previewFlameAoe3d.addEventListener("click", apply);
     if (els.flameAoe3dShellVisibleBtn) els.flameAoe3dShellVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dShellVisibleBtn));
     if (els.flameAoe3dAuraVisibleBtn) els.flameAoe3dAuraVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dAuraVisibleBtn));
+    if (els.flameAoe3dWakeVisibleBtn) els.flameAoe3dWakeVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dWakeVisibleBtn));
     [
       els.flameAoe3dApplyShellAlphaBtn,
       els.flameAoe3dApplyDisplaceBtn,
@@ -599,6 +807,15 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyAuraNoiseSpeedBtn,
       els.flameAoe3dApplyAuraFresnelPowerBtn,
       els.flameAoe3dApplyAuraColorBtn,
+      els.flameAoe3dApplyWakeAlphaBtn,
+      els.flameAoe3dApplyWakeLengthBtn,
+      els.flameAoe3dApplyWakeRadiusBtn,
+      els.flameAoe3dApplyWakeBendBtn,
+      els.flameAoe3dApplyWakeNoiseScaleBtn,
+      els.flameAoe3dApplyWakeNoiseSpeedBtn,
+      els.flameAoe3dApplyWakeSoftnessBtn,
+      els.flameAoe3dApplyWakeDirectionBtn,
+      els.flameAoe3dApplyWakeColorBtn,
       els.flameAoe3dApplyCoreColorBtn,
       els.flameAoe3dApplyHotColorBtn,
       els.flameAoe3dApplyRimColorBtn,
