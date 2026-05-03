@@ -56,6 +56,15 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeNoiseOctaves: 5,
   wakeNoiseLacunarity: 2.08,
   wakeNoiseGain: 0.52,
+  wakeSimplexScale: 0.85,
+  wakeSimplexSpeed: 2.2,
+  wakeSimplexDensityBottom: 0.56,
+  wakeSimplexDensityTop: 0.32,
+  wakeSimplexContrast: 0.18,
+  wakeSimplexOctaves: 4,
+  wakeSimplexLacunarity: 2.25,
+  wakeSimplexGain: 0.48,
+  wakeNoiseMix: 0.35,
 });
 
 function clampNumber(value, min, max, fallback) {
@@ -114,6 +123,15 @@ function readFlameWakeConfig(els = {}) {
     wakeNoiseOctaves: Math.round(clampNumber(els.flameAoe3dWakeNoiseOctaves && els.flameAoe3dWakeNoiseOctaves.value, 1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseOctaves)),
     wakeNoiseLacunarity: clampNumber(els.flameAoe3dWakeNoiseLacunarity && els.flameAoe3dWakeNoiseLacunarity.value, 1.1, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseLacunarity),
     wakeNoiseGain: clampNumber(els.flameAoe3dWakeNoiseGain && els.flameAoe3dWakeNoiseGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseGain),
+    wakeSimplexScale: clampNumber(els.flameAoe3dWakeSimplexScale && els.flameAoe3dWakeSimplexScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexScale),
+    wakeSimplexSpeed: clampNumber(els.flameAoe3dWakeSimplexSpeed && els.flameAoe3dWakeSimplexSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexSpeed),
+    wakeSimplexDensityBottom: clampNumber(els.flameAoe3dWakeSimplexDensityBottom && els.flameAoe3dWakeSimplexDensityBottom.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexDensityBottom),
+    wakeSimplexDensityTop: clampNumber(els.flameAoe3dWakeSimplexDensityTop && els.flameAoe3dWakeSimplexDensityTop.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexDensityTop),
+    wakeSimplexContrast: clampNumber(els.flameAoe3dWakeSimplexContrast && els.flameAoe3dWakeSimplexContrast.value, 0.02, 0.6, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexContrast),
+    wakeSimplexOctaves: Math.round(clampNumber(els.flameAoe3dWakeSimplexOctaves && els.flameAoe3dWakeSimplexOctaves.value, 1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexOctaves)),
+    wakeSimplexLacunarity: clampNumber(els.flameAoe3dWakeSimplexLacunarity && els.flameAoe3dWakeSimplexLacunarity.value, 1.1, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexLacunarity),
+    wakeSimplexGain: clampNumber(els.flameAoe3dWakeSimplexGain && els.flameAoe3dWakeSimplexGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexGain),
+    wakeNoiseMix: clampNumber(els.flameAoe3dWakeNoiseMix && els.flameAoe3dWakeNoiseMix.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseMix),
   });
 }
 
@@ -159,6 +177,15 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeNoiseOctaves) els.flameAoe3dWakeNoiseOctaves.value = String(Math.round(Number(cfg.wakeNoiseOctaves)));
   if (els.flameAoe3dWakeNoiseLacunarity) els.flameAoe3dWakeNoiseLacunarity.value = String(Number(cfg.wakeNoiseLacunarity).toFixed(2));
   if (els.flameAoe3dWakeNoiseGain) els.flameAoe3dWakeNoiseGain.value = String(Number(cfg.wakeNoiseGain).toFixed(2));
+  if (els.flameAoe3dWakeSimplexScale) els.flameAoe3dWakeSimplexScale.value = String(Number(cfg.wakeSimplexScale).toFixed(2));
+  if (els.flameAoe3dWakeSimplexSpeed) els.flameAoe3dWakeSimplexSpeed.value = String(Number(cfg.wakeSimplexSpeed).toFixed(2));
+  if (els.flameAoe3dWakeSimplexDensityBottom) els.flameAoe3dWakeSimplexDensityBottom.value = String(Number(cfg.wakeSimplexDensityBottom).toFixed(2));
+  if (els.flameAoe3dWakeSimplexDensityTop) els.flameAoe3dWakeSimplexDensityTop.value = String(Number(cfg.wakeSimplexDensityTop).toFixed(2));
+  if (els.flameAoe3dWakeSimplexContrast) els.flameAoe3dWakeSimplexContrast.value = String(Number(cfg.wakeSimplexContrast).toFixed(2));
+  if (els.flameAoe3dWakeSimplexOctaves) els.flameAoe3dWakeSimplexOctaves.value = String(Math.round(Number(cfg.wakeSimplexOctaves)));
+  if (els.flameAoe3dWakeSimplexLacunarity) els.flameAoe3dWakeSimplexLacunarity.value = String(Number(cfg.wakeSimplexLacunarity).toFixed(2));
+  if (els.flameAoe3dWakeSimplexGain) els.flameAoe3dWakeSimplexGain.value = String(Number(cfg.wakeSimplexGain).toFixed(2));
+  if (els.flameAoe3dWakeNoiseMix) els.flameAoe3dWakeNoiseMix.value = String(Number(cfg.wakeNoiseMix).toFixed(2));
 }
 
 function layerVisible(button) {
@@ -555,6 +582,15 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeNoiseOctaves: { value: config.wakeNoiseOctaves },
       uWakeNoiseLacunarity: { value: config.wakeNoiseLacunarity },
       uWakeNoiseGain: { value: config.wakeNoiseGain },
+      uWakeSimplexScale: { value: config.wakeSimplexScale },
+      uWakeSimplexSpeed: { value: config.wakeSimplexSpeed },
+      uWakeSimplexDensityBottom: { value: config.wakeSimplexDensityBottom },
+      uWakeSimplexDensityTop: { value: config.wakeSimplexDensityTop },
+      uWakeSimplexContrast: { value: config.wakeSimplexContrast },
+      uWakeSimplexOctaves: { value: config.wakeSimplexOctaves },
+      uWakeSimplexLacunarity: { value: config.wakeSimplexLacunarity },
+      uWakeSimplexGain: { value: config.wakeSimplexGain },
+      uWakeNoiseMix: { value: config.wakeNoiseMix },
     },
     vertexShader: `
       precision highp float;
@@ -566,6 +602,15 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeNoiseOctaves;
       uniform float uWakeNoiseLacunarity;
       uniform float uWakeNoiseGain;
+      uniform float uWakeSimplexScale;
+      uniform float uWakeSimplexSpeed;
+      uniform float uWakeSimplexDensityBottom;
+      uniform float uWakeSimplexDensityTop;
+      uniform float uWakeSimplexContrast;
+      uniform float uWakeSimplexOctaves;
+      uniform float uWakeSimplexLacunarity;
+      uniform float uWakeSimplexGain;
+      uniform float uWakeNoiseMix;
 
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
@@ -725,17 +770,96 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         return smoothstep(center - edge * 0.5, center + edge * 0.5, mask);
       }
 
+      vec3 simplexGrad(vec3 p) {
+        float z = hash31(p) * 2.0 - 1.0;
+        float a = hash31(p + vec3(19.19, 7.31, 2.47)) * 6.28318530718;
+        float r = sqrt(max(0.0, 1.0 - z * z));
+        return vec3(r * cos(a), r * sin(a), z);
+      }
+
+      float simplexNoise(vec3 v) {
+        const float F3 = 0.33333333333;
+        const float G3 = 0.16666666667;
+        vec3 i = floor(v + dot(v, vec3(F3)));
+        vec3 x0 = v - i + dot(i, vec3(G3));
+        vec3 g = step(x0.yzx, x0.xyz);
+        vec3 l = 1.0 - g;
+        vec3 i1 = min(g.xyz, l.zxy);
+        vec3 i2 = max(g.xyz, l.zxy);
+        vec3 x1 = x0 - i1 + G3;
+        vec3 x2 = x0 - i2 + 2.0 * G3;
+        vec3 x3 = x0 - 1.0 + 3.0 * G3;
+        float n = 0.0;
+        float t0 = 0.6 - dot(x0, x0);
+        if (t0 > 0.0) {
+          t0 *= t0;
+          n += t0 * t0 * dot(simplexGrad(i), x0);
+        }
+        float t1 = 0.6 - dot(x1, x1);
+        if (t1 > 0.0) {
+          t1 *= t1;
+          n += t1 * t1 * dot(simplexGrad(i + i1), x1);
+        }
+        float t2 = 0.6 - dot(x2, x2);
+        if (t2 > 0.0) {
+          t2 *= t2;
+          n += t2 * t2 * dot(simplexGrad(i + i2), x2);
+        }
+        float t3 = 0.6 - dot(x3, x3);
+        if (t3 > 0.0) {
+          t3 *= t3;
+          n += t3 * t3 * dot(simplexGrad(i + vec3(1.0)), x3);
+        }
+        return clamp(n * 32.0 * 0.5 + 0.5, 0.0, 1.0);
+      }
+
+      float simplexFbm(vec3 p) {
+        float value = 0.0;
+        float amp = 0.56;
+        float freq = 1.0;
+        for (int i = 0; i < 8; i += 1) {
+          if (float(i) >= uWakeSimplexOctaves) break;
+          value += simplexNoise(p * freq) * amp;
+          freq *= uWakeSimplexLacunarity;
+          amp *= uWakeSimplexGain;
+          p += vec3(-13.1, 9.7, 21.4);
+        }
+        return clamp(value, 0.0, 1.0);
+      }
+
+      float simplexBlobs(vec3 p, float density) {
+        float fine = simplexFbm(p);
+        float ridged = 1.0 - abs(simplexFbm(p * 1.34 + vec3(4.1, -8.7, 6.3)) * 2.0 - 1.0);
+        float mask = fine * 0.62 + ridged * ridged * 0.38;
+        float edge = clamp(uWakeSimplexContrast, 0.02, 0.6);
+        float center = mix(0.74, 0.30, clamp(density, 0.0, 1.0));
+        return smoothstep(center - edge * 0.5, center + edge * 0.5, mask);
+      }
+
       void main() {
-        float time = uTime * uWakeNoiseSpeed;
-        float patternFrequency = 4.25 / max(0.1, uWakeNoiseScale);
         vec3 surface = normalize(vLocalPos + vec3(0.0, 0.001, 0.0));
-        vec3 flow = vec3(
-          surface.x * patternFrequency,
-          (vTail * 1.35 - time * 0.42) * patternFrequency,
-          surface.z * patternFrequency
+
+        float perlinTime = uTime * uWakeNoiseSpeed;
+        float perlinFrequency = 4.25 / max(0.1, uWakeNoiseScale);
+        vec3 perlinFlow = vec3(
+          surface.x * perlinFrequency,
+          (vTail * 1.35 - perlinTime * 0.42) * perlinFrequency,
+          surface.z * perlinFrequency
         );
-        float density = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, clamp(vTail, 0.0, 1.0));
-        float blobs = musgraveBlobs(flow, density);
+        float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, clamp(vTail, 0.0, 1.0));
+        float perlin = musgraveBlobs(perlinFlow, perlinDensity);
+
+        float simplexTime = uTime * uWakeSimplexSpeed;
+        float simplexFrequency = 4.25 / max(0.1, uWakeSimplexScale);
+        vec3 simplexFlow = vec3(
+          surface.x * simplexFrequency,
+          (vTail * 1.52 - simplexTime * 0.5) * simplexFrequency,
+          surface.z * simplexFrequency
+        );
+        float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, clamp(vTail, 0.0, 1.0));
+        float simplex = simplexBlobs(simplexFlow, simplexDensity);
+
+        float blobs = mix(perlin, simplex, clamp(uWakeNoiseMix, 0.0, 1.0));
         gl_FragColor = vec4(vec3(blobs), 1.0);
       }
     `,
@@ -926,6 +1050,14 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyWakeNoiseOctavesBtn,
       els.flameAoe3dApplyWakeNoiseLacunarityBtn,
       els.flameAoe3dApplyWakeNoiseGainBtn,
+      els.flameAoe3dApplyWakeSimplexScaleBtn,
+      els.flameAoe3dApplyWakeSimplexSpeedBtn,
+      els.flameAoe3dApplyWakeSimplexDensityBtn,
+      els.flameAoe3dApplyWakeSimplexContrastBtn,
+      els.flameAoe3dApplyWakeSimplexOctavesBtn,
+      els.flameAoe3dApplyWakeSimplexLacunarityBtn,
+      els.flameAoe3dApplyWakeSimplexGainBtn,
+      els.flameAoe3dApplyWakeNoiseMixBtn,
       els.flameAoe3dApplyCoreColorBtn,
       els.flameAoe3dApplyHotColorBtn,
       els.flameAoe3dApplyRimColorBtn,

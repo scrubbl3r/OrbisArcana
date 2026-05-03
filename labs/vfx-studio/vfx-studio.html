@@ -1693,6 +1693,49 @@
               <input id="flameAoe3dWakeNoiseGain" class="paramFieldInput" type="number" min="0.1" max="0.9" step="0.01" value="0.52" />
               <button id="flameAoe3dApplyWakeNoiseGainBtn" class="toolBtn" type="button">Apply</button>
             </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSimplexScale">Simplex scale</label>
+              <input id="flameAoe3dWakeSimplexScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="0.85" />
+              <button id="flameAoe3dApplyWakeSimplexScaleBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSimplexSpeed">Simplex speed</label>
+              <input id="flameAoe3dWakeSimplexSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="2.20" />
+              <button id="flameAoe3dApplyWakeSimplexSpeedBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">Simplex density</span>
+              <label for="flameAoe3dWakeSimplexDensityBottom">bottom</label>
+              <input id="flameAoe3dWakeSimplexDensityBottom" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.56" />
+              <label for="flameAoe3dWakeSimplexDensityTop">top</label>
+              <input id="flameAoe3dWakeSimplexDensityTop" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.32" />
+              <button id="flameAoe3dApplyWakeSimplexDensityBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSimplexContrast">Simplex contrast</label>
+              <input id="flameAoe3dWakeSimplexContrast" class="paramFieldInput" type="number" min="0.02" max="0.6" step="0.01" value="0.18" />
+              <button id="flameAoe3dApplyWakeSimplexContrastBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSimplexOctaves">Simplex octaves</label>
+              <input id="flameAoe3dWakeSimplexOctaves" class="paramFieldInput" type="number" min="1" max="8" step="1" value="4" />
+              <button id="flameAoe3dApplyWakeSimplexOctavesBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSimplexLacunarity">Simplex lacunarity</label>
+              <input id="flameAoe3dWakeSimplexLacunarity" class="paramFieldInput" type="number" min="1.1" max="4" step="0.01" value="2.25" />
+              <button id="flameAoe3dApplyWakeSimplexLacunarityBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSimplexGain">Simplex gain</label>
+              <input id="flameAoe3dWakeSimplexGain" class="paramFieldInput" type="number" min="0.1" max="0.9" step="0.01" value="0.48" />
+              <button id="flameAoe3dApplyWakeSimplexGainBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeNoiseMix">Noise mix</label>
+              <input id="flameAoe3dWakeNoiseMix" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.35" />
+              <button id="flameAoe3dApplyWakeNoiseMixBtn" class="toolBtn" type="button">Apply</button>
+            </div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -2277,7 +2320,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503f";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503g";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2800,6 +2843,23 @@
       flameAoe3dApplyWakeNoiseLacunarityBtn: $("flameAoe3dApplyWakeNoiseLacunarityBtn"),
       flameAoe3dWakeNoiseGain: $("flameAoe3dWakeNoiseGain"),
       flameAoe3dApplyWakeNoiseGainBtn: $("flameAoe3dApplyWakeNoiseGainBtn"),
+      flameAoe3dWakeSimplexScale: $("flameAoe3dWakeSimplexScale"),
+      flameAoe3dApplyWakeSimplexScaleBtn: $("flameAoe3dApplyWakeSimplexScaleBtn"),
+      flameAoe3dWakeSimplexSpeed: $("flameAoe3dWakeSimplexSpeed"),
+      flameAoe3dApplyWakeSimplexSpeedBtn: $("flameAoe3dApplyWakeSimplexSpeedBtn"),
+      flameAoe3dWakeSimplexDensityBottom: $("flameAoe3dWakeSimplexDensityBottom"),
+      flameAoe3dWakeSimplexDensityTop: $("flameAoe3dWakeSimplexDensityTop"),
+      flameAoe3dApplyWakeSimplexDensityBtn: $("flameAoe3dApplyWakeSimplexDensityBtn"),
+      flameAoe3dWakeSimplexContrast: $("flameAoe3dWakeSimplexContrast"),
+      flameAoe3dApplyWakeSimplexContrastBtn: $("flameAoe3dApplyWakeSimplexContrastBtn"),
+      flameAoe3dWakeSimplexOctaves: $("flameAoe3dWakeSimplexOctaves"),
+      flameAoe3dApplyWakeSimplexOctavesBtn: $("flameAoe3dApplyWakeSimplexOctavesBtn"),
+      flameAoe3dWakeSimplexLacunarity: $("flameAoe3dWakeSimplexLacunarity"),
+      flameAoe3dApplyWakeSimplexLacunarityBtn: $("flameAoe3dApplyWakeSimplexLacunarityBtn"),
+      flameAoe3dWakeSimplexGain: $("flameAoe3dWakeSimplexGain"),
+      flameAoe3dApplyWakeSimplexGainBtn: $("flameAoe3dApplyWakeSimplexGainBtn"),
+      flameAoe3dWakeNoiseMix: $("flameAoe3dWakeNoiseMix"),
+      flameAoe3dApplyWakeNoiseMixBtn: $("flameAoe3dApplyWakeNoiseMixBtn"),
       flameAoe3dWakeVisibleBtn: $("flameAoe3dWakeVisibleBtn"),
       flameAoe3dCoreR: $("flameAoe3dCoreR"),
       flameAoe3dCoreG: $("flameAoe3dCoreG"),

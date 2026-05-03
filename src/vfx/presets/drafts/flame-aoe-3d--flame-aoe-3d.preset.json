@@ -26,12 +26,21 @@
     "wakeRadiusBo": 0.5,
     "wakeNoiseScale": 1,
     "wakeNoiseSpeed": 4,
-    "wakeNoiseDensityBottom": 0.32,
-    "wakeNoiseDensityTop": 0.32,
+    "wakeNoiseDensityBottom": 0.8,
+    "wakeNoiseDensityTop": 0.12,
     "wakeNoiseContrast": 0.2,
     "wakeNoiseOctaves": 4,
     "wakeNoiseLacunarity": 1.1,
     "wakeNoiseGain": 0.3,
+    "wakeSimplexScale": 0.85,
+    "wakeSimplexSpeed": 2.2,
+    "wakeSimplexDensityBottom": 0.56,
+    "wakeSimplexDensityTop": 0.32,
+    "wakeSimplexContrast": 0.18,
+    "wakeSimplexOctaves": 4,
+    "wakeSimplexLacunarity": 2.25,
+    "wakeSimplexGain": 0.48,
+    "wakeNoiseMix": 0.35,
     "coreR": 255,
     "coreG": 42,
     "coreB": 5,
@@ -52,6 +61,6 @@
     "settingsKey": "flame-aoe-3d",
     "registryDefaultPresetId": "preset.flame_aoe.default"
   },
-  "savedAtMs": 1777842031492,
-  "exportedAtMs": 1777842031493
+  "savedAtMs": 1777843808639,
+  "exportedAtMs": 1777843808639
 }
