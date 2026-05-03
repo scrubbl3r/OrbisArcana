@@ -123,6 +123,10 @@ function hydrateFlameAuraFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dAuraB) els.flameAoe3dAuraB.value = String(cfg.auraColor & 255);
 }
 
+function layerVisible(button) {
+  return !button || button.getAttribute("aria-pressed") !== "false";
+}
+
 function createFlameShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:procedural_shell_material",
@@ -457,6 +461,8 @@ export function createFlameAoe3dPreview({
   let shellMaterial = null;
   let flameShellMaterial = null;
   let auraShellMaterial = null;
+  let flameShellMesh = null;
+  let auraShellMesh = null;
   let orbLight = null;
   let model = null;
   let createdAt = 0;
@@ -475,6 +481,8 @@ export function createFlameAoe3dPreview({
     shellMaterial = null;
     flameShellMaterial = null;
     auraShellMaterial = null;
+    flameShellMesh = null;
+    auraShellMesh = null;
     orbLight = null;
     model = null;
   }
@@ -520,27 +528,42 @@ export function createFlameAoe3dPreview({
     model = created.model;
     model.position.set(0, 0, 0);
     flameShellMaterial = createFlameShellMaterial(flameConfig);
-    const flameShell = new THREE.Mesh(
+    flameShellMesh = new THREE.Mesh(
       new THREE.SphereGeometry(bo * 0.58, 128, 64),
       flameShellMaterial
     );
-    flameShell.name = "flame_aoe3d:procedural_shell";
-    flameShell.renderOrder = 12;
-    model.add(flameShell);
+    flameShellMesh.name = "flame_aoe3d:procedural_shell";
+    flameShellMesh.renderOrder = 12;
+    flameShellMesh.visible = layerVisible(els.flameAoe3dShellVisibleBtn);
+    model.add(flameShellMesh);
     auraShellMaterial = createAuraShellMaterial(auraConfig);
-    const auraShell = new THREE.Mesh(
+    auraShellMesh = new THREE.Mesh(
       new THREE.SphereGeometry(bo * 0.5 * auraConfig.auraScale, 96, 48),
       auraShellMaterial
     );
-    auraShell.name = "flame_aoe3d:aura_shell";
-    auraShell.renderOrder = 8;
-    model.add(auraShell);
+    auraShellMesh.name = "flame_aoe3d:aura_shell";
+    auraShellMesh.renderOrder = 8;
+    auraShellMesh.visible = layerVisible(els.flameAoe3dAuraVisibleBtn);
+    model.add(auraShellMesh);
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
     model.add(orbLight);
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.035));
     inspector.scene.add(model);
     inspector.render();
+  }
+
+  function applyLayerVisibility() {
+    if (flameShellMesh) flameShellMesh.visible = layerVisible(els.flameAoe3dShellVisibleBtn);
+    if (auraShellMesh) auraShellMesh.visible = layerVisible(els.flameAoe3dAuraVisibleBtn);
+    if (inspector && typeof inspector.render === "function") inspector.render();
+  }
+
+  function toggleLayer(button) {
+    if (!button) return;
+    const visible = layerVisible(button);
+    button.setAttribute("aria-pressed", visible ? "false" : "true");
+    applyLayerVisibility();
   }
 
   function apply() {
@@ -560,6 +583,8 @@ export function createFlameAoe3dPreview({
   function wire() {
     apply();
     if (els.previewFlameAoe3d) els.previewFlameAoe3d.addEventListener("click", apply);
+    if (els.flameAoe3dShellVisibleBtn) els.flameAoe3dShellVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dShellVisibleBtn));
+    if (els.flameAoe3dAuraVisibleBtn) els.flameAoe3dAuraVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dAuraVisibleBtn));
     [
       els.flameAoe3dApplyShellAlphaBtn,
       els.flameAoe3dApplyDisplaceBtn,

@@ -430,6 +430,70 @@
     .controlGroupHeader[aria-expanded="false"]::after{
       content:"+";
     }
+    .controlGroupHeaderRow{
+      display:grid;
+      grid-template-columns: 1fr 42px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.055);
+    }
+    .controlGroupHeaderRow .controlGroupHeader{
+      min-height:42px;
+      border-bottom:0;
+      background: transparent;
+    }
+    .controlGroupHeaderRow .controlGroupHeader:hover,
+    .controlGroupHeaderRow:hover{
+      background: rgba(255,255,255,.085);
+    }
+    .controlGroupHeaderRow:has(.controlGroupHeader[aria-expanded="false"]){
+      border-bottom:0;
+    }
+    .controlGroupVisibilityBtn{
+      width:42px;
+      min-height:42px;
+      display:grid;
+      place-items:center;
+      border:0;
+      border-left:1px solid rgba(255,255,255,.08);
+      border-radius:0;
+      background: transparent;
+      color: var(--text-strong);
+      cursor:pointer;
+      position:relative;
+    }
+    .controlGroupVisibilityBtn::before{
+      content:"";
+      width:18px;
+      height:11px;
+      display:block;
+      border:2px solid currentColor;
+      border-radius:50%;
+      opacity:.92;
+      box-sizing:border-box;
+    }
+    .controlGroupVisibilityBtn::after{
+      content:"";
+      width:6px;
+      height:6px;
+      position:absolute;
+      border-radius:50%;
+      background: currentColor;
+      opacity:.92;
+    }
+    .controlGroupVisibilityBtn[aria-pressed="false"]{
+      color: var(--text-muted);
+    }
+    .controlGroupVisibilityBtn[aria-pressed="false"]::before{
+      opacity:.48;
+    }
+    .controlGroupVisibilityBtn[aria-pressed="false"]::after{
+      width:20px;
+      height:2px;
+      border-radius:999px;
+      background: currentColor;
+      transform:rotate(-36deg);
+      opacity:.82;
+    }
     .controlGroupBody{
       padding:10px;
     }
@@ -1480,7 +1544,10 @@
           <button id="previewFlameAoe3d" class="toolBtn" type="button">Preview</button>
         </div>
         <div class="controlGroup" data-control-group>
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dShellControls">Flame shell</button>
+          <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dShellControls">Flame shell</button>
+            <button id="flameAoe3dShellVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Flame shell visibility" title="Toggle Flame shell visibility"></button>
+          </div>
           <div id="flameAoe3dShellControls" class="controlGroupBody paramFieldRows">
             <div class="paramFieldRow">
               <label for="flameAoe3dShellAlpha">Shell alpha</label>
@@ -1515,7 +1582,10 @@
           </div>
         </div>
         <div class="controlGroup" data-control-group>
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dAuraControls">Aura shell</button>
+          <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dAuraControls">Aura shell</button>
+            <button id="flameAoe3dAuraVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Aura shell visibility" title="Toggle Aura shell visibility"></button>
+          </div>
           <div id="flameAoe3dAuraControls" class="controlGroupBody paramFieldRows">
             <div class="paramFieldRow">
               <label for="flameAoe3dAuraAlpha">Aura alpha</label>
@@ -2125,7 +2195,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260502i"),
+      import("./vfx-studio-bootstrap.js?v=20260502j"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2626,6 +2696,7 @@
       flameAoe3dApplyEdgeCutBtn: $("flameAoe3dApplyEdgeCutBtn"),
       flameAoe3dFresnelPower: $("flameAoe3dFresnelPower"),
       flameAoe3dApplyFresnelPowerBtn: $("flameAoe3dApplyFresnelPowerBtn"),
+      flameAoe3dShellVisibleBtn: $("flameAoe3dShellVisibleBtn"),
       flameAoe3dAuraAlpha: $("flameAoe3dAuraAlpha"),
       flameAoe3dApplyAuraAlphaBtn: $("flameAoe3dApplyAuraAlphaBtn"),
       flameAoe3dAuraScale: $("flameAoe3dAuraScale"),
@@ -2642,6 +2713,7 @@
       flameAoe3dAuraG: $("flameAoe3dAuraG"),
       flameAoe3dAuraB: $("flameAoe3dAuraB"),
       flameAoe3dApplyAuraColorBtn: $("flameAoe3dApplyAuraColorBtn"),
+      flameAoe3dAuraVisibleBtn: $("flameAoe3dAuraVisibleBtn"),
       flameAoe3dCoreR: $("flameAoe3dCoreR"),
       flameAoe3dCoreG: $("flameAoe3dCoreG"),
       flameAoe3dCoreB: $("flameAoe3dCoreB"),
