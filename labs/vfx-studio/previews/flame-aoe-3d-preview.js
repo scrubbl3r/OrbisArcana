@@ -48,7 +48,7 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   auraColor: 0xff6a18,
   wakeAlpha: 0.46,
   wakeLengthBo: 0.95,
-  wakeRadiusBo: 0.34,
+  wakeRadiusBo: 0.5,
   wakeBend: 0.22,
   wakeNoiseScale: 2.35,
   wakeNoiseSpeed: 0.86,
@@ -187,7 +187,7 @@ function createWakeTeardropGeometry(radius, length, radialSegments = 96, heightS
   for (let yIndex = 0; yIndex <= heightSegments; yIndex += 1) {
     const t = yIndex / heightSegments;
     const centerY = (t * length) - rootInset;
-    const rootBulge = Math.sin(Math.min(1, t * 1.55) * Math.PI * 0.5);
+    const rootBulge = 1 - (0.08 * smoothstep(0, 0.18, t));
     const tailTaper = Math.pow(Math.max(0, 1 - t), 1.72);
     const profile = radius * Math.max(0.012, rootBulge * tailTaper);
     for (let xIndex = 0; xIndex <= radialSegments; xIndex += 1) {

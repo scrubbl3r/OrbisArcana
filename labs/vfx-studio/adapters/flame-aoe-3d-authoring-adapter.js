@@ -59,7 +59,7 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
   auraB: 24,
   wakeAlpha: 0.46,
   wakeLengthBo: 0.95,
-  wakeRadiusBo: 0.34,
+  wakeRadiusBo: 0.5,
   wakeBend: 0.22,
   wakeNoiseScale: 2.35,
   wakeNoiseSpeed: 0.86,
