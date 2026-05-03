@@ -26,9 +26,9 @@
     "wakeLengthBo": 1.5,
     "wakeRadiusBo": 0.5,
     "wakeBend": 0,
-    "wakeNoiseScale": 0.1,
+    "wakeNoiseScale": 1,
     "wakeNoiseSpeed": 0.86,
-    "wakeSoftness": 1,
+    "wakeSoftness": 0.02,
     "wakeDirX": 0,
     "wakeDirY": 1,
     "wakeDirZ": 0,
@@ -55,6 +55,6 @@
     "settingsKey": "flame-aoe-3d",
     "registryDefaultPresetId": "preset.flame_aoe.default"
   },
-  "savedAtMs": 1777836597992,
-  "exportedAtMs": 1777836597992
+  "savedAtMs": 1777840753153,
+  "exportedAtMs": 1777840753153
 }
