@@ -534,6 +534,9 @@
     .rgbaParamRow.rgbParamRow{
       grid-template-columns: auto repeat(3, auto minmax(54px, 1fr)) auto;
     }
+    .rgbaParamRow.densityRangeRow{
+      grid-template-columns: auto auto minmax(86px, 1fr) auto minmax(86px, 1fr) auto;
+    }
     .rgbaParamRow .rgbaLabel,
     .rgbaParamRow label{
       font-size:12px;
@@ -1643,27 +1646,27 @@
           </div>
           <div id="flameAoe3dWakeControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeLengthBo">Wake length BO</label>
+              <label for="flameAoe3dWakeLengthBo">Length BO</label>
               <input id="flameAoe3dWakeLengthBo" class="paramFieldInput" type="number" min="0.05" max="4" step="0.01" value="0.95" />
               <button id="flameAoe3dApplyWakeLengthBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeRadiusBo">Wake radius BO</label>
+              <label for="flameAoe3dWakeRadiusBo">Radius BO</label>
               <input id="flameAoe3dWakeRadiusBo" class="paramFieldInput" type="number" min="0.02" max="2" step="0.01" value="0.50" />
               <button id="flameAoe3dApplyWakeRadiusBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeNoiseScale">Wake noise scale</label>
+              <label for="flameAoe3dWakeNoiseScale">Noise scale</label>
               <input id="flameAoe3dWakeNoiseScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="2.35" />
               <button id="flameAoe3dApplyWakeNoiseScaleBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeNoiseSpeed">Wake noise speed</label>
+              <label for="flameAoe3dWakeNoiseSpeed">Noise speed</label>
               <input id="flameAoe3dWakeNoiseSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0.86" />
               <button id="flameAoe3dApplyWakeNoiseSpeedBtn" class="toolBtn" type="button">Apply</button>
             </div>
-            <div class="rgbaParamRow">
-              <span class="rgbaLabel">Wake noise density</span>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">Noise density</span>
               <label for="flameAoe3dWakeNoiseDensityBottom">bottom</label>
               <input id="flameAoe3dWakeNoiseDensityBottom" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.52" />
               <label for="flameAoe3dWakeNoiseDensityTop">top</label>
@@ -1671,22 +1674,22 @@
               <button id="flameAoe3dApplyWakeNoiseDensityBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeNoiseContrast">Wake noise contrast</label>
+              <label for="flameAoe3dWakeNoiseContrast">Noise contrast</label>
               <input id="flameAoe3dWakeNoiseContrast" class="paramFieldInput" type="number" min="0.02" max="0.6" step="0.01" value="0.16" />
               <button id="flameAoe3dApplyWakeNoiseContrastBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeNoiseOctaves">Wake noise octaves</label>
+              <label for="flameAoe3dWakeNoiseOctaves">Noise octaves</label>
               <input id="flameAoe3dWakeNoiseOctaves" class="paramFieldInput" type="number" min="1" max="8" step="1" value="5" />
               <button id="flameAoe3dApplyWakeNoiseOctavesBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeNoiseLacunarity">Wake noise lacunarity</label>
+              <label for="flameAoe3dWakeNoiseLacunarity">Noise lacunarity</label>
               <input id="flameAoe3dWakeNoiseLacunarity" class="paramFieldInput" type="number" min="1.1" max="4" step="0.01" value="2.08" />
               <button id="flameAoe3dApplyWakeNoiseLacunarityBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeNoiseGain">Wake noise gain</label>
+              <label for="flameAoe3dWakeNoiseGain">Noise gain</label>
               <input id="flameAoe3dWakeNoiseGain" class="paramFieldInput" type="number" min="0.1" max="0.9" step="0.01" value="0.52" />
               <button id="flameAoe3dApplyWakeNoiseGainBtn" class="toolBtn" type="button">Apply</button>
             </div>
