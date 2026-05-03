@@ -7,13 +7,13 @@
   "baseEffect": "flame-aoe-3d",
   "presetId": "preset.spell-aoe-flame.flame-aoe-3d",
   "params": {
-    "shellAlpha": 0.82,
+    "shellAlpha": 0.12,
     "displace": 0.16,
     "noiseScale": 4.65,
     "noiseSpeed": 3.72,
     "edgeCut": 0.46,
     "fresnelPower": 2.2,
-    "auraAlpha": 0.1,
+    "auraAlpha": 0.8,
     "auraScale": 1,
     "auraPulse": 0.08,
     "auraNoiseScale": 1.55,
@@ -42,6 +42,6 @@
     "settingsKey": "flame-aoe-3d",
     "registryDefaultPresetId": "preset.flame_aoe.default"
   },
-  "savedAtMs": 1777773545298,
-  "exportedAtMs": 1777773545299
+  "savedAtMs": 1777820226984,
+  "exportedAtMs": 1777820226985
 }
