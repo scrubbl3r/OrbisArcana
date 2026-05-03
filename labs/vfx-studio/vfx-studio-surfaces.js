@@ -66,7 +66,7 @@ export function createLabEffectSurfaces({
       authoringAdapter: createFlameAoe3dAuthoringAdapter,
     }),
     "bank-orb-3d": Object.freeze({
-      label: "Bank Orb 3D",
+      label: "Blank Orb 3D",
       category: "spell",
       panes: Object.freeze(["vfx"]),
       settingsKey: "bank-orb-3d",
