@@ -700,6 +700,15 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeNoiseOctaves;
       uniform float uWakeNoiseLacunarity;
       uniform float uWakeNoiseGain;
+      uniform float uWakeSimplexScale;
+      uniform float uWakeSimplexSpeed;
+      uniform float uWakeSimplexDensityBottom;
+      uniform float uWakeSimplexDensityTop;
+      uniform float uWakeSimplexContrast;
+      uniform float uWakeSimplexOctaves;
+      uniform float uWakeSimplexLacunarity;
+      uniform float uWakeSimplexGain;
+      uniform float uWakeNoiseMix;
 
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
@@ -760,14 +769,11 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         return clamp(value, 0.0, 1.0);
       }
 
-      float musgraveBlobs(vec3 p, float density) {
+      float perlinMusgraveField(vec3 p) {
         float base = fbm(p);
         float ridge = ridgedFbm(p * 0.82 + vec3(3.4, -7.8, 2.1));
         float broad = fbm(p * 0.46 + vec3(-11.2, 4.6, 9.3));
-        float mask = base * 0.46 + ridge * 0.34 + broad * 0.32;
-        float edge = clamp(uWakeNoiseContrast, 0.02, 0.6);
-        float center = mix(0.72, 0.32, clamp(density, 0.0, 1.0));
-        return smoothstep(center - edge * 0.5, center + edge * 0.5, mask);
+        return clamp(base * 0.46 + ridge * 0.34 + broad * 0.32, 0.0, 1.0);
       }
 
       vec3 simplexGrad(vec3 p) {
@@ -827,13 +833,16 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         return clamp(value, 0.0, 1.0);
       }
 
-      float simplexBlobs(vec3 p, float density) {
+      float simplexGranularField(vec3 p) {
         float fine = simplexFbm(p);
         float ridged = 1.0 - abs(simplexFbm(p * 1.34 + vec3(4.1, -8.7, 6.3)) * 2.0 - 1.0);
-        float mask = fine * 0.62 + ridged * ridged * 0.38;
-        float edge = clamp(uWakeSimplexContrast, 0.02, 0.6);
-        float center = mix(0.74, 0.30, clamp(density, 0.0, 1.0));
-        return smoothstep(center - edge * 0.5, center + edge * 0.5, mask);
+        return clamp(fine * 0.62 + ridged * ridged * 0.38, 0.0, 1.0);
+      }
+
+      float colorRampMask(float field, float density, float contrast) {
+        float edge = clamp(contrast, 0.02, 0.6);
+        float center = mix(0.72, 0.30, clamp(density, 0.0, 1.0));
+        return smoothstep(center - edge * 0.5, center + edge * 0.5, field);
       }
 
       void main() {
@@ -847,7 +856,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
           surface.z * perlinFrequency
         );
         float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, clamp(vTail, 0.0, 1.0));
-        float perlin = musgraveBlobs(perlinFlow, perlinDensity);
+        float perlin = perlinMusgraveField(perlinFlow);
 
         float simplexTime = uTime * uWakeSimplexSpeed;
         float simplexFrequency = 4.25 / max(0.1, uWakeSimplexScale);
@@ -857,9 +866,13 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
           surface.z * simplexFrequency
         );
         float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, clamp(vTail, 0.0, 1.0));
-        float simplex = simplexBlobs(simplexFlow, simplexDensity);
+        float simplex = simplexGranularField(simplexFlow);
 
-        float blobs = mix(perlin, simplex, clamp(uWakeNoiseMix, 0.0, 1.0));
+        float noiseMix = clamp(uWakeNoiseMix, 0.0, 1.0);
+        float field = mix(perlin, simplex, noiseMix);
+        float density = mix(perlinDensity, simplexDensity, noiseMix);
+        float contrast = mix(uWakeNoiseContrast, uWakeSimplexContrast, noiseMix);
+        float blobs = colorRampMask(field, density, contrast);
         gl_FragColor = vec4(vec3(blobs), 1.0);
       }
     `,
