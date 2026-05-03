@@ -604,12 +604,42 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         );
       }
 
+      float fbm(vec3 p) {
+        float value = 0.0;
+        float amp = 0.56;
+        float freq = 1.0;
+        for (int i = 0; i < 5; i += 1) {
+          value += noise(p * freq) * amp;
+          freq *= 2.08;
+          amp *= 0.52;
+          p += vec3(17.7, -11.3, 8.9);
+        }
+        return clamp(value, 0.0, 1.0);
+      }
+
+      float ridgedFbm(vec3 p) {
+        float value = 0.0;
+        float amp = 0.58;
+        float freq = 1.0;
+        for (int i = 0; i < 5; i += 1) {
+          float ridge = 1.0 - abs(noise(p * freq) * 2.0 - 1.0);
+          ridge *= ridge;
+          value += ridge * amp;
+          freq *= 2.16;
+          amp *= 0.48;
+          p += vec3(-6.4, 19.1, 12.8);
+        }
+        return clamp(value, 0.0, 1.0);
+      }
+
       void main() {
         float tail = clamp(uv.y, 0.0, 1.0);
         float time = uTime * uWakeNoiseSpeed;
         vec3 local = position;
-        vec3 flow = vec3(position.xz * uWakeNoiseScale, tail * uWakeNoiseScale - time * 2.2);
-        float n = noise(flow) * 0.62 + noise(flow * 2.35 + vec3(7.1, -3.3, 4.9)) * 0.38;
+        vec3 flow = vec3(position.xz * uWakeNoiseScale, tail * uWakeNoiseScale - time * 1.35);
+        float cloud = fbm(flow + vec3(0.0, -time * 0.2, time * 0.12));
+        float ridge = ridgedFbm(flow * 0.72 + vec3(7.1, -3.3 - time * 0.34, 4.9));
+        float n = clamp(cloud * 0.62 + ridge * 0.48, 0.0, 1.0);
         float sideSway = sin(time * 2.1 + tail * 7.0 + n * 4.0) * uWakeBend;
         local.x += sideSway * tail * tail * length(position);
         local.z += cos(time * 1.5 + tail * 5.6 + n * 3.0) * uWakeBend * 0.42 * tail * tail * length(position);
@@ -663,14 +693,44 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         );
       }
 
+      float fbm(vec3 p) {
+        float value = 0.0;
+        float amp = 0.56;
+        float freq = 1.0;
+        for (int i = 0; i < 5; i += 1) {
+          value += noise(p * freq) * amp;
+          freq *= 2.08;
+          amp *= 0.52;
+          p += vec3(17.7, -11.3, 8.9);
+        }
+        return clamp(value, 0.0, 1.0);
+      }
+
+      float ridgedFbm(vec3 p) {
+        float value = 0.0;
+        float amp = 0.58;
+        float freq = 1.0;
+        for (int i = 0; i < 5; i += 1) {
+          float ridge = 1.0 - abs(noise(p * freq) * 2.0 - 1.0);
+          ridge *= ridge;
+          value += ridge * amp;
+          freq *= 2.16;
+          amp *= 0.48;
+          p += vec3(-6.4, 19.1, 12.8);
+        }
+        return clamp(value, 0.0, 1.0);
+      }
+
       void main() {
         float time = uTime * uWakeNoiseSpeed;
-        vec3 flow = vec3(vLocalPos.xz * uWakeNoiseScale, vTail * uWakeNoiseScale - time * 2.6);
-        float body = noise(flow) * 0.52 + noise(flow * 2.7 + vec3(2.9, 6.4, -8.1)) * 0.48;
-        float flame = clamp(vNoise * 0.56 + body * 0.64, 0.0, 1.0);
+        vec3 flow = vec3(vLocalPos.xz * uWakeNoiseScale, vTail * uWakeNoiseScale - time * 1.55);
+        float body = fbm(flow + vec3(2.9, 6.4 - time * 0.28, -8.1));
+        float veins = ridgedFbm(flow * 0.78 + vec3(-4.2, time * 0.22, 10.6));
+        float detail = fbm(flow * 2.55 + vec3(8.7, -1.9, time * 0.18));
+        float flame = clamp(vNoise * 0.34 + body * 0.5 + veins * 0.42 + detail * 0.14, 0.0, 1.0);
         float root = 1.0 - smoothstep(0.0, 0.18, vTail);
         float tailFade = 1.0 - smoothstep(max(0.02, 1.0 - uWakeSoftness), 1.0, vTail);
-        float erode = smoothstep(0.22, 0.92, flame + root * 0.18);
+        float erode = smoothstep(0.34, 0.86, flame + root * 0.2);
         float flicker = 0.82 + 0.18 * sin(uTime * 10.0 + flame * 8.0 + vTail * 6.0);
         vec3 color = mix(uWakeColor * 0.55, uHotColor, erode * (0.55 + root * 0.35));
         color *= 0.82 + root * 0.78 + flame * 0.65;
