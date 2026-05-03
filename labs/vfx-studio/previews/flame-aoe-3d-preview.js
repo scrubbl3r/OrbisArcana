@@ -28,7 +28,71 @@ function frameCameraToSsotOrbSize(inspector, root, bo) {
   }
 }
 
-function createFlameShellMaterial() {
+const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
+  shellAlpha: 0.82,
+  displace: 0.16,
+  noiseScale: 2.65,
+  noiseSpeed: 0.72,
+  edgeCut: 0.46,
+  fresnelPower: 2.2,
+  coreColor: 0xff2a05,
+  hotColor: 0xffb000,
+  rimColor: 0xfff1b5,
+  smokeColor: 0x2a0702,
+});
+
+function clampNumber(value, min, max, fallback) {
+  const n = Number(value);
+  const f = Number.isFinite(Number(fallback)) ? Number(fallback) : min;
+  return Math.max(min, Math.min(max, Number.isFinite(n) ? n : f));
+}
+
+function readByte(els, key, fallback) {
+  return Math.round(clampNumber(els && els[key] && els[key].value, 0, 255, fallback));
+}
+
+function rgbFromFields(els, prefix, fallback) {
+  const r = readByte(els, `${prefix}R`, (fallback >> 16) & 255);
+  const g = readByte(els, `${prefix}G`, (fallback >> 8) & 255);
+  const b = readByte(els, `${prefix}B`, fallback & 255);
+  return (r << 16) + (g << 8) + b;
+}
+
+function readFlameShellConfig(els = {}) {
+  return Object.freeze({
+    shellAlpha: clampNumber(els.flameAoe3dShellAlpha && els.flameAoe3dShellAlpha.value, 0, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.shellAlpha),
+    displace: clampNumber(els.flameAoe3dDisplace && els.flameAoe3dDisplace.value, 0, 0.8, FLAME_AOE_3D_PREVIEW_DEFAULTS.displace),
+    noiseScale: clampNumber(els.flameAoe3dNoiseScale && els.flameAoe3dNoiseScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.noiseScale),
+    noiseSpeed: clampNumber(els.flameAoe3dNoiseSpeed && els.flameAoe3dNoiseSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.noiseSpeed),
+    edgeCut: clampNumber(els.flameAoe3dEdgeCut && els.flameAoe3dEdgeCut.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.edgeCut),
+    fresnelPower: clampNumber(els.flameAoe3dFresnelPower && els.flameAoe3dFresnelPower.value, 0.1, 12, FLAME_AOE_3D_PREVIEW_DEFAULTS.fresnelPower),
+    coreColor: rgbFromFields(els, "flameAoe3dCore", FLAME_AOE_3D_PREVIEW_DEFAULTS.coreColor),
+    hotColor: rgbFromFields(els, "flameAoe3dHot", FLAME_AOE_3D_PREVIEW_DEFAULTS.hotColor),
+    rimColor: rgbFromFields(els, "flameAoe3dRim", FLAME_AOE_3D_PREVIEW_DEFAULTS.rimColor),
+    smokeColor: rgbFromFields(els, "flameAoe3dSmoke", FLAME_AOE_3D_PREVIEW_DEFAULTS.smokeColor),
+  });
+}
+
+function hydrateFlameShellFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  if (els.flameAoe3dShellAlpha) els.flameAoe3dShellAlpha.value = String(Number(cfg.shellAlpha).toFixed(2));
+  if (els.flameAoe3dDisplace) els.flameAoe3dDisplace.value = String(Number(cfg.displace).toFixed(3));
+  if (els.flameAoe3dNoiseScale) els.flameAoe3dNoiseScale.value = String(Number(cfg.noiseScale).toFixed(2));
+  if (els.flameAoe3dNoiseSpeed) els.flameAoe3dNoiseSpeed.value = String(Number(cfg.noiseSpeed).toFixed(2));
+  if (els.flameAoe3dEdgeCut) els.flameAoe3dEdgeCut.value = String(Number(cfg.edgeCut).toFixed(2));
+  if (els.flameAoe3dFresnelPower) els.flameAoe3dFresnelPower.value = String(Number(cfg.fresnelPower).toFixed(2));
+  [
+    ["flameAoe3dCore", cfg.coreColor],
+    ["flameAoe3dHot", cfg.hotColor],
+    ["flameAoe3dRim", cfg.rimColor],
+    ["flameAoe3dSmoke", cfg.smokeColor],
+  ].forEach(([prefix, color]) => {
+    if (els[`${prefix}R`]) els[`${prefix}R`].value = String((color >> 16) & 255);
+    if (els[`${prefix}G`]) els[`${prefix}G`].value = String((color >> 8) & 255);
+    if (els[`${prefix}B`]) els[`${prefix}B`].value = String(color & 255);
+  });
+}
+
+function createFlameShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:procedural_shell_material",
     transparent: true,
@@ -38,16 +102,16 @@ function createFlameShellMaterial() {
     side: THREE.DoubleSide,
     uniforms: {
       uTime: { value: 0 },
-      uShellAlpha: { value: 0.82 },
-      uDisplace: { value: 0.16 },
-      uNoiseScale: { value: 2.65 },
-      uNoiseSpeed: { value: 0.72 },
-      uEdgeCut: { value: 0.46 },
-      uFresnelPower: { value: 2.2 },
-      uCoreColor: { value: new THREE.Color(0xff2a05) },
-      uHotColor: { value: new THREE.Color(0xffb000) },
-      uRimColor: { value: new THREE.Color(0xfff1b5) },
-      uSmokeColor: { value: new THREE.Color(0x2a0702) },
+      uShellAlpha: { value: config.shellAlpha },
+      uDisplace: { value: config.displace },
+      uNoiseScale: { value: config.noiseScale },
+      uNoiseSpeed: { value: config.noiseSpeed },
+      uEdgeCut: { value: config.edgeCut },
+      uFresnelPower: { value: config.fresnelPower },
+      uCoreColor: { value: new THREE.Color(config.coreColor) },
+      uHotColor: { value: new THREE.Color(config.hotColor) },
+      uRimColor: { value: new THREE.Color(config.rimColor) },
+      uSmokeColor: { value: new THREE.Color(config.smokeColor) },
     },
     vertexShader: `
       precision highp float;
@@ -228,6 +292,7 @@ export function createFlameAoe3dPreview({
   let model = null;
   let createdAt = 0;
   let activeConfig = ORB_MATERIAL_CONFIG;
+  let flameConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
 
   function readBo() {
     const visualState = typeof getOrbBaseVisualState === "function" ? getOrbBaseVisualState() : null;
@@ -248,6 +313,8 @@ export function createFlameAoe3dPreview({
     const bo = readBo();
     createdAt = performance.now();
     activeConfig = (typeof getOrb3dVisualSettings === "function" && getOrb3dVisualSettings()) || ORB_MATERIAL_CONFIG;
+    flameConfig = readFlameShellConfig(els);
+    hydrateFlameShellFields(els, flameConfig);
     inspector = createWorldObjectInspector({
       root: els.previewRoot,
       bo,
@@ -278,7 +345,7 @@ export function createFlameAoe3dPreview({
     });
     model = created.model;
     model.position.set(0, 0, 0);
-    flameShellMaterial = createFlameShellMaterial();
+    flameShellMaterial = createFlameShellMaterial(flameConfig);
     const flameShell = new THREE.Mesh(
       new THREE.SphereGeometry(bo * 0.58, 128, 64),
       flameShellMaterial
@@ -295,9 +362,11 @@ export function createFlameAoe3dPreview({
   }
 
   function apply() {
+    flameConfig = readFlameShellConfig(els);
+    hydrateFlameShellFields(els, flameConfig);
     destroyInspector();
     ensureScene();
-    return {};
+    return flameConfig;
   }
 
   function clear() {
@@ -307,6 +376,20 @@ export function createFlameAoe3dPreview({
   function wire() {
     apply();
     if (els.previewFlameAoe3d) els.previewFlameAoe3d.addEventListener("click", apply);
+    [
+      els.flameAoe3dApplyShellAlphaBtn,
+      els.flameAoe3dApplyDisplaceBtn,
+      els.flameAoe3dApplyNoiseScaleBtn,
+      els.flameAoe3dApplyNoiseSpeedBtn,
+      els.flameAoe3dApplyEdgeCutBtn,
+      els.flameAoe3dApplyFresnelPowerBtn,
+      els.flameAoe3dApplyCoreColorBtn,
+      els.flameAoe3dApplyHotColorBtn,
+      els.flameAoe3dApplyRimColorBtn,
+      els.flameAoe3dApplySmokeColorBtn,
+    ].forEach((btn) => {
+      if (btn) btn.addEventListener("click", apply);
+    });
   }
 
   return Object.freeze({

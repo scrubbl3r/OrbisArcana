@@ -1,12 +1,100 @@
+const FLAME_AOE_3D_FIELDS = Object.freeze([
+  ["flameAoe3dShellAlpha", "shellAlpha"],
+  ["flameAoe3dDisplace", "displace"],
+  ["flameAoe3dNoiseScale", "noiseScale"],
+  ["flameAoe3dNoiseSpeed", "noiseSpeed"],
+  ["flameAoe3dEdgeCut", "edgeCut"],
+  ["flameAoe3dFresnelPower", "fresnelPower"],
+  ["flameAoe3dCoreR", "coreR"],
+  ["flameAoe3dCoreG", "coreG"],
+  ["flameAoe3dCoreB", "coreB"],
+  ["flameAoe3dHotR", "hotR"],
+  ["flameAoe3dHotG", "hotG"],
+  ["flameAoe3dHotB", "hotB"],
+  ["flameAoe3dRimR", "rimR"],
+  ["flameAoe3dRimG", "rimG"],
+  ["flameAoe3dRimB", "rimB"],
+  ["flameAoe3dSmokeR", "smokeR"],
+  ["flameAoe3dSmokeG", "smokeG"],
+  ["flameAoe3dSmokeB", "smokeB"],
+]);
+
+const FLAME_AOE_3D_DEFAULTS = Object.freeze({
+  shellAlpha: 0.82,
+  displace: 0.16,
+  noiseScale: 2.65,
+  noiseSpeed: 0.72,
+  edgeCut: 0.46,
+  fresnelPower: 2.2,
+  coreR: 255,
+  coreG: 42,
+  coreB: 5,
+  hotR: 255,
+  hotG: 176,
+  hotB: 0,
+  rimR: 255,
+  rimG: 241,
+  rimB: 181,
+  smokeR: 42,
+  smokeG: 7,
+  smokeB: 2,
+});
+
+function clampNumber(value, min, max, fallback) {
+  const n = Number(value);
+  const f = Number.isFinite(Number(fallback)) ? Number(fallback) : min;
+  return Math.max(min, Math.min(max, Number.isFinite(n) ? n : f));
+}
+
+function fixedNumber(value, digits, fallback = 0) {
+  return Number(clampNumber(value, -Infinity, Infinity, fallback).toFixed(digits));
+}
+
+function roundedByte(value, fallback = 0) {
+  return Math.round(clampNumber(value, 0, 255, fallback));
+}
+
 export function createFlameAoe3dAuthoringAdapter() {
+  function defaultSettings() {
+    return { ...FLAME_AOE_3D_DEFAULTS };
+  }
+
+  function capture(els) {
+    return Object.freeze({
+      shellAlpha: fixedNumber(els && els.flameAoe3dShellAlpha && els.flameAoe3dShellAlpha.value, 2, FLAME_AOE_3D_DEFAULTS.shellAlpha),
+      displace: fixedNumber(els && els.flameAoe3dDisplace && els.flameAoe3dDisplace.value, 3, FLAME_AOE_3D_DEFAULTS.displace),
+      noiseScale: fixedNumber(els && els.flameAoe3dNoiseScale && els.flameAoe3dNoiseScale.value, 2, FLAME_AOE_3D_DEFAULTS.noiseScale),
+      noiseSpeed: fixedNumber(els && els.flameAoe3dNoiseSpeed && els.flameAoe3dNoiseSpeed.value, 2, FLAME_AOE_3D_DEFAULTS.noiseSpeed),
+      edgeCut: fixedNumber(els && els.flameAoe3dEdgeCut && els.flameAoe3dEdgeCut.value, 2, FLAME_AOE_3D_DEFAULTS.edgeCut),
+      fresnelPower: fixedNumber(els && els.flameAoe3dFresnelPower && els.flameAoe3dFresnelPower.value, 2, FLAME_AOE_3D_DEFAULTS.fresnelPower),
+      coreR: roundedByte(els && els.flameAoe3dCoreR && els.flameAoe3dCoreR.value, FLAME_AOE_3D_DEFAULTS.coreR),
+      coreG: roundedByte(els && els.flameAoe3dCoreG && els.flameAoe3dCoreG.value, FLAME_AOE_3D_DEFAULTS.coreG),
+      coreB: roundedByte(els && els.flameAoe3dCoreB && els.flameAoe3dCoreB.value, FLAME_AOE_3D_DEFAULTS.coreB),
+      hotR: roundedByte(els && els.flameAoe3dHotR && els.flameAoe3dHotR.value, FLAME_AOE_3D_DEFAULTS.hotR),
+      hotG: roundedByte(els && els.flameAoe3dHotG && els.flameAoe3dHotG.value, FLAME_AOE_3D_DEFAULTS.hotG),
+      hotB: roundedByte(els && els.flameAoe3dHotB && els.flameAoe3dHotB.value, FLAME_AOE_3D_DEFAULTS.hotB),
+      rimR: roundedByte(els && els.flameAoe3dRimR && els.flameAoe3dRimR.value, FLAME_AOE_3D_DEFAULTS.rimR),
+      rimG: roundedByte(els && els.flameAoe3dRimG && els.flameAoe3dRimG.value, FLAME_AOE_3D_DEFAULTS.rimG),
+      rimB: roundedByte(els && els.flameAoe3dRimB && els.flameAoe3dRimB.value, FLAME_AOE_3D_DEFAULTS.rimB),
+      smokeR: roundedByte(els && els.flameAoe3dSmokeR && els.flameAoe3dSmokeR.value, FLAME_AOE_3D_DEFAULTS.smokeR),
+      smokeG: roundedByte(els && els.flameAoe3dSmokeG && els.flameAoe3dSmokeG.value, FLAME_AOE_3D_DEFAULTS.smokeG),
+      smokeB: roundedByte(els && els.flameAoe3dSmokeB && els.flameAoe3dSmokeB.value, FLAME_AOE_3D_DEFAULTS.smokeB),
+    });
+  }
+
   function apply(_els, _settings, { applyPreview = null } = {}) {
+    const els = _els || {};
+    const settings = _settings && typeof _settings === "object" ? _settings : FLAME_AOE_3D_DEFAULTS;
+    FLAME_AOE_3D_FIELDS.forEach(([fieldKey, settingsKey]) => {
+      if (els[fieldKey] && settings[settingsKey] != null) els[fieldKey].value = String(settings[settingsKey]);
+    });
     if (typeof applyPreview === "function") applyPreview();
     return true;
   }
 
   return Object.freeze({
-    defaultSettings: () => ({}),
-    capture: () => ({}),
+    defaultSettings,
+    capture,
     apply,
   });
 }
