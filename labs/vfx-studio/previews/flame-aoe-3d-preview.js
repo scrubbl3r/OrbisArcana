@@ -39,6 +39,13 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   hotColor: 0xffb000,
   rimColor: 0xfff1b5,
   smokeColor: 0x2a0702,
+  auraAlpha: 0.34,
+  auraScale: 1.34,
+  auraPulse: 0.08,
+  auraNoiseScale: 1.55,
+  auraNoiseSpeed: 0.24,
+  auraFresnelPower: 1.35,
+  auraColor: 0xff6a18,
 });
 
 function clampNumber(value, min, max, fallback) {
@@ -73,6 +80,18 @@ function readFlameShellConfig(els = {}) {
   });
 }
 
+function readFlameAuraConfig(els = {}) {
+  return Object.freeze({
+    auraAlpha: clampNumber(els.flameAoe3dAuraAlpha && els.flameAoe3dAuraAlpha.value, 0, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.auraAlpha),
+    auraScale: clampNumber(els.flameAoe3dAuraScale && els.flameAoe3dAuraScale.value, 0.5, 3, FLAME_AOE_3D_PREVIEW_DEFAULTS.auraScale),
+    auraPulse: clampNumber(els.flameAoe3dAuraPulse && els.flameAoe3dAuraPulse.value, 0, 0.4, FLAME_AOE_3D_PREVIEW_DEFAULTS.auraPulse),
+    auraNoiseScale: clampNumber(els.flameAoe3dAuraNoiseScale && els.flameAoe3dAuraNoiseScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.auraNoiseScale),
+    auraNoiseSpeed: clampNumber(els.flameAoe3dAuraNoiseSpeed && els.flameAoe3dAuraNoiseSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.auraNoiseSpeed),
+    auraFresnelPower: clampNumber(els.flameAoe3dAuraFresnelPower && els.flameAoe3dAuraFresnelPower.value, 0.1, 12, FLAME_AOE_3D_PREVIEW_DEFAULTS.auraFresnelPower),
+    auraColor: rgbFromFields(els, "flameAoe3dAura", FLAME_AOE_3D_PREVIEW_DEFAULTS.auraColor),
+  });
+}
+
 function hydrateFlameShellFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dShellAlpha) els.flameAoe3dShellAlpha.value = String(Number(cfg.shellAlpha).toFixed(2));
   if (els.flameAoe3dDisplace) els.flameAoe3dDisplace.value = String(Number(cfg.displace).toFixed(3));
@@ -90,6 +109,18 @@ function hydrateFlameShellFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) 
     if (els[`${prefix}G`]) els[`${prefix}G`].value = String((color >> 8) & 255);
     if (els[`${prefix}B`]) els[`${prefix}B`].value = String(color & 255);
   });
+}
+
+function hydrateFlameAuraFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  if (els.flameAoe3dAuraAlpha) els.flameAoe3dAuraAlpha.value = String(Number(cfg.auraAlpha).toFixed(2));
+  if (els.flameAoe3dAuraScale) els.flameAoe3dAuraScale.value = String(Number(cfg.auraScale).toFixed(2));
+  if (els.flameAoe3dAuraPulse) els.flameAoe3dAuraPulse.value = String(Number(cfg.auraPulse).toFixed(3));
+  if (els.flameAoe3dAuraNoiseScale) els.flameAoe3dAuraNoiseScale.value = String(Number(cfg.auraNoiseScale).toFixed(2));
+  if (els.flameAoe3dAuraNoiseSpeed) els.flameAoe3dAuraNoiseSpeed.value = String(Number(cfg.auraNoiseSpeed).toFixed(2));
+  if (els.flameAoe3dAuraFresnelPower) els.flameAoe3dAuraFresnelPower.value = String(Number(cfg.auraFresnelPower).toFixed(2));
+  if (els.flameAoe3dAuraR) els.flameAoe3dAuraR.value = String((cfg.auraColor >> 16) & 255);
+  if (els.flameAoe3dAuraG) els.flameAoe3dAuraG.value = String((cfg.auraColor >> 8) & 255);
+  if (els.flameAoe3dAuraB) els.flameAoe3dAuraB.value = String(cfg.auraColor & 255);
 }
 
 function createFlameShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
@@ -280,6 +311,143 @@ function createFlameShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   });
 }
 
+function createAuraShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  return new THREE.ShaderMaterial({
+    name: "flame_aoe3d:aura_shell_material",
+    transparent: true,
+    depthWrite: false,
+    depthTest: true,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    uniforms: {
+      uTime: { value: 0 },
+      uAuraAlpha: { value: config.auraAlpha },
+      uAuraPulse: { value: config.auraPulse },
+      uAuraNoiseScale: { value: config.auraNoiseScale },
+      uAuraNoiseSpeed: { value: config.auraNoiseSpeed },
+      uAuraFresnelPower: { value: config.auraFresnelPower },
+      uAuraColor: { value: new THREE.Color(config.auraColor) },
+    },
+    vertexShader: `
+      precision highp float;
+
+      uniform float uTime;
+      uniform float uAuraPulse;
+      uniform float uAuraNoiseScale;
+      uniform float uAuraNoiseSpeed;
+
+      varying vec3 vWorldPos;
+      varying vec3 vWorldNormal;
+      varying vec3 vObjectNormal;
+      varying float vAura;
+
+      float hash31(vec3 p) {
+        p = fract(p * 0.1031);
+        p += dot(p, p.yzx + 33.33);
+        return fract((p.x + p.y) * p.z);
+      }
+
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 0.0)), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x),
+            f.y
+          ),
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x),
+            f.y
+          ),
+          f.z
+        );
+      }
+
+      void main() {
+        vec3 objectNormal = normalize(normal);
+        float time = uTime * uAuraNoiseSpeed;
+        vec3 flow = objectNormal * uAuraNoiseScale;
+        flow.xz += vec2(sin(time * 0.9), cos(time * 0.7)) * 0.65;
+        flow.y -= time * 1.4;
+        float aura = noise(flow) * 0.62 + noise(flow * 2.1 + vec3(3.1, -5.2, 8.4)) * 0.38;
+        float breath = sin(uTime * 2.15 + objectNormal.y * 2.7 + aura * 5.0) * 0.5 + 0.5;
+        float displacement = uAuraPulse * (0.35 + aura * 0.8 + breath * 0.35);
+        vec3 displaced = position + objectNormal * displacement * length(position);
+
+        vec4 worldPos = modelMatrix * vec4(displaced, 1.0);
+        vWorldPos = worldPos.xyz;
+        vWorldNormal = normalize(mat3(modelMatrix) * objectNormal);
+        vObjectNormal = objectNormal;
+        vAura = aura;
+        gl_Position = projectionMatrix * viewMatrix * worldPos;
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+
+      uniform float uTime;
+      uniform float uAuraAlpha;
+      uniform float uAuraNoiseScale;
+      uniform float uAuraNoiseSpeed;
+      uniform float uAuraFresnelPower;
+      uniform vec3 uAuraColor;
+
+      varying vec3 vWorldPos;
+      varying vec3 vWorldNormal;
+      varying vec3 vObjectNormal;
+      varying float vAura;
+
+      float hash31(vec3 p) {
+        p = fract(p * 0.1031);
+        p += dot(p, p.yzx + 33.33);
+        return fract((p.x + p.y) * p.z);
+      }
+
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 0.0)), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x),
+            f.y
+          ),
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x),
+            f.y
+          ),
+          f.z
+        );
+      }
+
+      void main() {
+        vec3 normal = normalize(vWorldNormal);
+        vec3 viewDir = normalize(cameraPosition - vWorldPos);
+        vec3 objectNormal = normalize(vObjectNormal);
+        float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), uAuraFresnelPower);
+        float time = uTime * uAuraNoiseSpeed;
+        vec3 flow = objectNormal * uAuraNoiseScale;
+        flow.x += sin(time * 1.1 + objectNormal.z * 3.4) * 0.42;
+        flow.z += cos(time * 0.8 + objectNormal.x * 2.9) * 0.42;
+        flow.y -= time * 1.2;
+        float mist = noise(flow) * 0.58 + noise(flow * 2.35 + vec3(8.2, -4.9, 1.4)) * 0.42;
+        float pulse = 0.82 + 0.18 * sin(uTime * 3.4 + mist * 7.0);
+        float veil = smoothstep(0.18, 0.88, mist + fresnel * 0.22);
+        float alpha = uAuraAlpha * pulse * (fresnel * 0.72 + veil * 0.18);
+        vec3 color = uAuraColor * (0.72 + fresnel * 1.4 + veil * 0.38);
+
+        if (alpha < 0.006) discard;
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+  });
+}
+
 export function createFlameAoe3dPreview({
   els = {},
   getOrbBaseVisualState = null,
@@ -288,11 +456,13 @@ export function createFlameAoe3dPreview({
   let inspector = null;
   let shellMaterial = null;
   let flameShellMaterial = null;
+  let auraShellMaterial = null;
   let orbLight = null;
   let model = null;
   let createdAt = 0;
   let activeConfig = ORB_MATERIAL_CONFIG;
   let flameConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
+  let auraConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
 
   function readBo() {
     const visualState = typeof getOrbBaseVisualState === "function" ? getOrbBaseVisualState() : null;
@@ -304,6 +474,7 @@ export function createFlameAoe3dPreview({
     inspector = null;
     shellMaterial = null;
     flameShellMaterial = null;
+    auraShellMaterial = null;
     orbLight = null;
     model = null;
   }
@@ -314,7 +485,9 @@ export function createFlameAoe3dPreview({
     createdAt = performance.now();
     activeConfig = (typeof getOrb3dVisualSettings === "function" && getOrb3dVisualSettings()) || ORB_MATERIAL_CONFIG;
     flameConfig = readFlameShellConfig(els);
+    auraConfig = readFlameAuraConfig(els);
     hydrateFlameShellFields(els, flameConfig);
+    hydrateFlameAuraFields(els, auraConfig);
     inspector = createWorldObjectInspector({
       root: els.previewRoot,
       bo,
@@ -327,6 +500,7 @@ export function createFlameAoe3dPreview({
         const time = (performance.now() - createdAt) / 1000;
         if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = time;
         if (flameShellMaterial && flameShellMaterial.uniforms && flameShellMaterial.uniforms.uTime) flameShellMaterial.uniforms.uTime.value = time;
+        if (auraShellMaterial && auraShellMaterial.uniforms && auraShellMaterial.uniforms.uTime) auraShellMaterial.uniforms.uTime.value = time;
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
       },
     });
@@ -353,6 +527,14 @@ export function createFlameAoe3dPreview({
     flameShell.name = "flame_aoe3d:procedural_shell";
     flameShell.renderOrder = 12;
     model.add(flameShell);
+    auraShellMaterial = createAuraShellMaterial(auraConfig);
+    const auraShell = new THREE.Mesh(
+      new THREE.SphereGeometry(bo * 0.5 * auraConfig.auraScale, 96, 48),
+      auraShellMaterial
+    );
+    auraShell.name = "flame_aoe3d:aura_shell";
+    auraShell.renderOrder = 8;
+    model.add(auraShell);
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
     model.add(orbLight);
@@ -363,10 +545,12 @@ export function createFlameAoe3dPreview({
 
   function apply() {
     flameConfig = readFlameShellConfig(els);
+    auraConfig = readFlameAuraConfig(els);
     hydrateFlameShellFields(els, flameConfig);
+    hydrateFlameAuraFields(els, auraConfig);
     destroyInspector();
     ensureScene();
-    return flameConfig;
+    return Object.freeze({ ...flameConfig, ...auraConfig });
   }
 
   function clear() {
@@ -383,6 +567,13 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyNoiseSpeedBtn,
       els.flameAoe3dApplyEdgeCutBtn,
       els.flameAoe3dApplyFresnelPowerBtn,
+      els.flameAoe3dApplyAuraAlphaBtn,
+      els.flameAoe3dApplyAuraScaleBtn,
+      els.flameAoe3dApplyAuraPulseBtn,
+      els.flameAoe3dApplyAuraNoiseScaleBtn,
+      els.flameAoe3dApplyAuraNoiseSpeedBtn,
+      els.flameAoe3dApplyAuraFresnelPowerBtn,
+      els.flameAoe3dApplyAuraColorBtn,
       els.flameAoe3dApplyCoreColorBtn,
       els.flameAoe3dApplyHotColorBtn,
       els.flameAoe3dApplyRimColorBtn,

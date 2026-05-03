@@ -1515,6 +1515,51 @@
           </div>
         </div>
         <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dAuraControls">Aura shell</button>
+          <div id="flameAoe3dAuraControls" class="controlGroupBody paramFieldRows">
+            <div class="paramFieldRow">
+              <label for="flameAoe3dAuraAlpha">Aura alpha</label>
+              <input id="flameAoe3dAuraAlpha" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.34" />
+              <button id="flameAoe3dApplyAuraAlphaBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dAuraScale">Aura scale</label>
+              <input id="flameAoe3dAuraScale" class="paramFieldInput" type="number" min="0.5" max="3" step="0.01" value="1.34" />
+              <button id="flameAoe3dApplyAuraScaleBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dAuraPulse">Aura pulse</label>
+              <input id="flameAoe3dAuraPulse" class="paramFieldInput" type="number" min="0" max="0.4" step="0.005" value="0.080" />
+              <button id="flameAoe3dApplyAuraPulseBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dAuraNoiseScale">Aura noise scale</label>
+              <input id="flameAoe3dAuraNoiseScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="1.55" />
+              <button id="flameAoe3dApplyAuraNoiseScaleBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dAuraNoiseSpeed">Aura noise speed</label>
+              <input id="flameAoe3dAuraNoiseSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0.24" />
+              <button id="flameAoe3dApplyAuraNoiseSpeedBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dAuraFresnelPower">Aura fresnel power</label>
+              <input id="flameAoe3dAuraFresnelPower" class="paramFieldInput" type="number" min="0.1" max="12" step="0.05" value="1.35" />
+              <button id="flameAoe3dApplyAuraFresnelPowerBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">Aura RGB</span>
+              <label for="flameAoe3dAuraR">r</label>
+              <input id="flameAoe3dAuraR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+              <label for="flameAoe3dAuraG">g</label>
+              <input id="flameAoe3dAuraG" class="paramFieldInput" type="number" min="0" max="255" value="106" step="1" />
+              <label for="flameAoe3dAuraB">b</label>
+              <input id="flameAoe3dAuraB" class="paramFieldInput" type="number" min="0" max="255" value="24" step="1" />
+              <button id="flameAoe3dApplyAuraColorBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
           <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dColorControls">Flame colors</button>
           <div id="flameAoe3dColorControls" class="controlGroupBody paramFieldRows">
             <div class="rgbaParamRow">
@@ -2080,7 +2125,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260502h"),
+      import("./vfx-studio-bootstrap.js?v=20260502i"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2096,7 +2141,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260502b";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260502c";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2581,6 +2626,22 @@
       flameAoe3dApplyEdgeCutBtn: $("flameAoe3dApplyEdgeCutBtn"),
       flameAoe3dFresnelPower: $("flameAoe3dFresnelPower"),
       flameAoe3dApplyFresnelPowerBtn: $("flameAoe3dApplyFresnelPowerBtn"),
+      flameAoe3dAuraAlpha: $("flameAoe3dAuraAlpha"),
+      flameAoe3dApplyAuraAlphaBtn: $("flameAoe3dApplyAuraAlphaBtn"),
+      flameAoe3dAuraScale: $("flameAoe3dAuraScale"),
+      flameAoe3dApplyAuraScaleBtn: $("flameAoe3dApplyAuraScaleBtn"),
+      flameAoe3dAuraPulse: $("flameAoe3dAuraPulse"),
+      flameAoe3dApplyAuraPulseBtn: $("flameAoe3dApplyAuraPulseBtn"),
+      flameAoe3dAuraNoiseScale: $("flameAoe3dAuraNoiseScale"),
+      flameAoe3dApplyAuraNoiseScaleBtn: $("flameAoe3dApplyAuraNoiseScaleBtn"),
+      flameAoe3dAuraNoiseSpeed: $("flameAoe3dAuraNoiseSpeed"),
+      flameAoe3dApplyAuraNoiseSpeedBtn: $("flameAoe3dApplyAuraNoiseSpeedBtn"),
+      flameAoe3dAuraFresnelPower: $("flameAoe3dAuraFresnelPower"),
+      flameAoe3dApplyAuraFresnelPowerBtn: $("flameAoe3dApplyAuraFresnelPowerBtn"),
+      flameAoe3dAuraR: $("flameAoe3dAuraR"),
+      flameAoe3dAuraG: $("flameAoe3dAuraG"),
+      flameAoe3dAuraB: $("flameAoe3dAuraB"),
+      flameAoe3dApplyAuraColorBtn: $("flameAoe3dApplyAuraColorBtn"),
       flameAoe3dCoreR: $("flameAoe3dCoreR"),
       flameAoe3dCoreG: $("flameAoe3dCoreG"),
       flameAoe3dCoreB: $("flameAoe3dCoreB"),
