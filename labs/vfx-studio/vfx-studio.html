@@ -1545,6 +1545,13 @@
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dOrbControls">Orb</button>
+            <button id="flameAoe3dOrbVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Orb visibility" title="Toggle Orb visibility"></button>
+          </div>
+          <div id="flameAoe3dOrbControls" class="controlGroupBody paramFieldRows" hidden></div>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dShellControls">Flame shell</button>
             <button id="flameAoe3dShellVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Flame shell visibility" title="Toggle Flame shell visibility"></button>
           </div>
@@ -1636,11 +1643,6 @@
           </div>
           <div id="flameAoe3dWakeControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeAlpha">Wake alpha</label>
-              <input id="flameAoe3dWakeAlpha" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.46" />
-              <button id="flameAoe3dApplyWakeAlphaBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
               <label for="flameAoe3dWakeLengthBo">Wake length BO</label>
               <input id="flameAoe3dWakeLengthBo" class="paramFieldInput" type="number" min="0.05" max="4" step="0.01" value="0.95" />
               <button id="flameAoe3dApplyWakeLengthBtn" class="toolBtn" type="button">Apply</button>
@@ -1649,11 +1651,6 @@
               <label for="flameAoe3dWakeRadiusBo">Wake radius BO</label>
               <input id="flameAoe3dWakeRadiusBo" class="paramFieldInput" type="number" min="0.02" max="2" step="0.01" value="0.50" />
               <button id="flameAoe3dApplyWakeRadiusBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
-              <label for="flameAoe3dWakeBend">Wake bend</label>
-              <input id="flameAoe3dWakeBend" class="paramFieldInput" type="number" min="-2" max="2" step="0.01" value="0.22" />
-              <button id="flameAoe3dApplyWakeBendBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeNoiseScale">Wake noise scale</label>
@@ -1689,31 +1686,6 @@
               <label for="flameAoe3dWakeNoiseGain">Wake noise gain</label>
               <input id="flameAoe3dWakeNoiseGain" class="paramFieldInput" type="number" min="0.1" max="0.9" step="0.01" value="0.52" />
               <button id="flameAoe3dApplyWakeNoiseGainBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
-              <label for="flameAoe3dWakeSoftness">Wake softness</label>
-              <input id="flameAoe3dWakeSoftness" class="paramFieldInput" type="number" min="0.02" max="2" step="0.01" value="0.38" />
-              <button id="flameAoe3dApplyWakeSoftnessBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="rgbaParamRow">
-              <span class="rgbaLabel">Wake dir</span>
-              <label for="flameAoe3dWakeDirX">x</label>
-              <input id="flameAoe3dWakeDirX" class="paramFieldInput" type="number" min="-1" max="1" value="0" step="0.01" />
-              <label for="flameAoe3dWakeDirY">y</label>
-              <input id="flameAoe3dWakeDirY" class="paramFieldInput" type="number" min="-1" max="1" value="1" step="0.01" />
-              <label for="flameAoe3dWakeDirZ">z</label>
-              <input id="flameAoe3dWakeDirZ" class="paramFieldInput" type="number" min="-1" max="1" value="0" step="0.01" />
-              <button id="flameAoe3dApplyWakeDirectionBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="rgbaParamRow">
-              <span class="rgbaLabel">Wake RGB</span>
-              <label for="flameAoe3dWakeR">r</label>
-              <input id="flameAoe3dWakeR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
-              <label for="flameAoe3dWakeG">g</label>
-              <input id="flameAoe3dWakeG" class="paramFieldInput" type="number" min="0" max="255" value="122" step="1" />
-              <label for="flameAoe3dWakeB">b</label>
-              <input id="flameAoe3dWakeB" class="paramFieldInput" type="number" min="0" max="255" value="18" step="1" />
-              <button id="flameAoe3dApplyWakeColorBtn" class="toolBtn" type="button">Apply</button>
             </div>
           </div>
         </div>
@@ -2283,7 +2255,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260503k"),
+      import("./vfx-studio-bootstrap.js?v=20260503l"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2299,7 +2271,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503d";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503e";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2802,14 +2774,11 @@
       flameAoe3dAuraB: $("flameAoe3dAuraB"),
       flameAoe3dApplyAuraColorBtn: $("flameAoe3dApplyAuraColorBtn"),
       flameAoe3dAuraVisibleBtn: $("flameAoe3dAuraVisibleBtn"),
-      flameAoe3dWakeAlpha: $("flameAoe3dWakeAlpha"),
-      flameAoe3dApplyWakeAlphaBtn: $("flameAoe3dApplyWakeAlphaBtn"),
+      flameAoe3dOrbVisibleBtn: $("flameAoe3dOrbVisibleBtn"),
       flameAoe3dWakeLengthBo: $("flameAoe3dWakeLengthBo"),
       flameAoe3dApplyWakeLengthBtn: $("flameAoe3dApplyWakeLengthBtn"),
       flameAoe3dWakeRadiusBo: $("flameAoe3dWakeRadiusBo"),
       flameAoe3dApplyWakeRadiusBtn: $("flameAoe3dApplyWakeRadiusBtn"),
-      flameAoe3dWakeBend: $("flameAoe3dWakeBend"),
-      flameAoe3dApplyWakeBendBtn: $("flameAoe3dApplyWakeBendBtn"),
       flameAoe3dWakeNoiseScale: $("flameAoe3dWakeNoiseScale"),
       flameAoe3dApplyWakeNoiseScaleBtn: $("flameAoe3dApplyWakeNoiseScaleBtn"),
       flameAoe3dWakeNoiseSpeed: $("flameAoe3dWakeNoiseSpeed"),
@@ -2824,16 +2793,6 @@
       flameAoe3dApplyWakeNoiseLacunarityBtn: $("flameAoe3dApplyWakeNoiseLacunarityBtn"),
       flameAoe3dWakeNoiseGain: $("flameAoe3dWakeNoiseGain"),
       flameAoe3dApplyWakeNoiseGainBtn: $("flameAoe3dApplyWakeNoiseGainBtn"),
-      flameAoe3dWakeSoftness: $("flameAoe3dWakeSoftness"),
-      flameAoe3dApplyWakeSoftnessBtn: $("flameAoe3dApplyWakeSoftnessBtn"),
-      flameAoe3dWakeDirX: $("flameAoe3dWakeDirX"),
-      flameAoe3dWakeDirY: $("flameAoe3dWakeDirY"),
-      flameAoe3dWakeDirZ: $("flameAoe3dWakeDirZ"),
-      flameAoe3dApplyWakeDirectionBtn: $("flameAoe3dApplyWakeDirectionBtn"),
-      flameAoe3dWakeR: $("flameAoe3dWakeR"),
-      flameAoe3dWakeG: $("flameAoe3dWakeG"),
-      flameAoe3dWakeB: $("flameAoe3dWakeB"),
-      flameAoe3dApplyWakeColorBtn: $("flameAoe3dApplyWakeColorBtn"),
       flameAoe3dWakeVisibleBtn: $("flameAoe3dWakeVisibleBtn"),
       flameAoe3dCoreR: $("flameAoe3dCoreR"),
       flameAoe3dCoreG: $("flameAoe3dCoreG"),
