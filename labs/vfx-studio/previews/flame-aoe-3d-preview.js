@@ -551,10 +551,10 @@ function createAuraShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:directional_wake_material",
-    transparent: true,
-    depthWrite: false,
+    transparent: false,
+    depthWrite: true,
     depthTest: true,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
     side: THREE.DoubleSide,
     uniforms: {
       uTime: { value: 0 },
@@ -577,7 +577,6 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
       varying float vTail;
-      varying float vNoise;
 
       float hash31(vec3 p) {
         p = fract(p * 0.1031);
@@ -642,21 +641,12 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 
       void main() {
         float tail = clamp(uv.y, 0.0, 1.0);
-        float time = uTime * uWakeNoiseSpeed;
         vec3 local = position;
-        float patternFrequency = 4.25 / max(0.1, uWakeNoiseScale);
-        vec3 surface = normalize(position + vec3(0.0, 0.001, 0.0));
-        vec3 flow = vec3(surface.xz, tail * 1.2) * patternFrequency + vec3(0.0, -time * 0.22, time * 0.08);
-        float n = musgraveBlobs(flow);
-        float sideSway = sin(time * 2.1 + tail * 7.0 + n * 4.0) * uWakeBend;
-        local.x += sideSway * tail * tail * length(position);
-        local.z += cos(time * 1.5 + tail * 5.6 + n * 3.0) * uWakeBend * 0.42 * tail * tail * length(position);
 
         vec4 worldPos = modelMatrix * vec4(local, 1.0);
         vWorldPos = worldPos.xyz;
         vLocalPos = local;
         vTail = tail;
-        vNoise = n;
         gl_Position = projectionMatrix * viewMatrix * worldPos;
       }
     `,
@@ -674,7 +664,6 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
       varying float vTail;
-      varying float vNoise;
 
       float hash31(vec3 p) {
         p = fract(p * 0.1031);
@@ -741,20 +730,13 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float time = uTime * uWakeNoiseSpeed;
         float patternFrequency = 4.25 / max(0.1, uWakeNoiseScale);
         vec3 surface = normalize(vLocalPos + vec3(0.0, 0.001, 0.0));
-        vec3 flow = vec3(surface.xz, vTail * 1.2) * patternFrequency + vec3(0.0, -time * 0.28, time * 0.08);
+        vec3 flow = vec3(
+          surface.x * patternFrequency,
+          (vTail * 1.35 - time * 0.42) * patternFrequency,
+          surface.z * patternFrequency
+        );
         float blobs = musgraveBlobs(flow);
-        float softEdge = musgraveBlobs(flow + vec3(1.7, -2.9, 4.2));
-        float flame = clamp(blobs * 0.84 + softEdge * 0.22 + vNoise * 0.18, 0.0, 1.0);
-        float root = 1.0 - smoothstep(0.0, 0.18, vTail);
-        float tailFade = 1.0 - smoothstep(max(0.02, 1.0 - uWakeSoftness), 1.0, vTail);
-        float erode = smoothstep(0.46, 0.64, flame + root * 0.18);
-        float flicker = 0.82 + 0.18 * sin(uTime * 10.0 + flame * 8.0 + vTail * 6.0);
-        vec3 color = mix(uWakeColor * 0.55, uHotColor, erode * (0.55 + root * 0.35));
-        color *= 0.82 + root * 0.78 + flame * 0.65;
-        float alpha = uWakeAlpha * flicker * tailFade * erode * (0.28 + root * 0.72);
-
-        if (alpha < 0.008) discard;
-        gl_FragColor = vec4(color, alpha);
+        gl_FragColor = vec4(vec3(blobs), 1.0);
       }
     `,
   });
