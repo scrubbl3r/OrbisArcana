@@ -632,14 +632,22 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         return clamp(value, 0.0, 1.0);
       }
 
+      float musgraveBlobs(vec3 p) {
+        float base = fbm(p);
+        float ridge = ridgedFbm(p * 0.82 + vec3(3.4, -7.8, 2.1));
+        float broad = fbm(p * 0.46 + vec3(-11.2, 4.6, 9.3));
+        float mask = base * 0.46 + ridge * 0.34 + broad * 0.32;
+        return smoothstep(0.46, 0.61, mask);
+      }
+
       void main() {
         float tail = clamp(uv.y, 0.0, 1.0);
         float time = uTime * uWakeNoiseSpeed;
         vec3 local = position;
-        vec3 flow = vec3(position.xz * uWakeNoiseScale, tail * uWakeNoiseScale - time * 1.35);
-        float cloud = fbm(flow + vec3(0.0, -time * 0.2, time * 0.12));
-        float ridge = ridgedFbm(flow * 0.72 + vec3(7.1, -3.3 - time * 0.34, 4.9));
-        float n = clamp(cloud * 0.62 + ridge * 0.48, 0.0, 1.0);
+        float patternFrequency = 4.25 / max(0.1, uWakeNoiseScale);
+        vec3 surface = normalize(position + vec3(0.0, 0.001, 0.0));
+        vec3 flow = vec3(surface.xz, tail * 1.2) * patternFrequency + vec3(0.0, -time * 0.22, time * 0.08);
+        float n = musgraveBlobs(flow);
         float sideSway = sin(time * 2.1 + tail * 7.0 + n * 4.0) * uWakeBend;
         local.x += sideSway * tail * tail * length(position);
         local.z += cos(time * 1.5 + tail * 5.6 + n * 3.0) * uWakeBend * 0.42 * tail * tail * length(position);
@@ -721,16 +729,25 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         return clamp(value, 0.0, 1.0);
       }
 
+      float musgraveBlobs(vec3 p) {
+        float base = fbm(p);
+        float ridge = ridgedFbm(p * 0.82 + vec3(3.4, -7.8, 2.1));
+        float broad = fbm(p * 0.46 + vec3(-11.2, 4.6, 9.3));
+        float mask = base * 0.46 + ridge * 0.34 + broad * 0.32;
+        return smoothstep(0.46, 0.61, mask);
+      }
+
       void main() {
         float time = uTime * uWakeNoiseSpeed;
-        vec3 flow = vec3(vLocalPos.xz * uWakeNoiseScale, vTail * uWakeNoiseScale - time * 1.55);
-        float body = fbm(flow + vec3(2.9, 6.4 - time * 0.28, -8.1));
-        float veins = ridgedFbm(flow * 0.78 + vec3(-4.2, time * 0.22, 10.6));
-        float detail = fbm(flow * 2.55 + vec3(8.7, -1.9, time * 0.18));
-        float flame = clamp(vNoise * 0.34 + body * 0.5 + veins * 0.42 + detail * 0.14, 0.0, 1.0);
+        float patternFrequency = 4.25 / max(0.1, uWakeNoiseScale);
+        vec3 surface = normalize(vLocalPos + vec3(0.0, 0.001, 0.0));
+        vec3 flow = vec3(surface.xz, vTail * 1.2) * patternFrequency + vec3(0.0, -time * 0.28, time * 0.08);
+        float blobs = musgraveBlobs(flow);
+        float softEdge = musgraveBlobs(flow + vec3(1.7, -2.9, 4.2));
+        float flame = clamp(blobs * 0.84 + softEdge * 0.22 + vNoise * 0.18, 0.0, 1.0);
         float root = 1.0 - smoothstep(0.0, 0.18, vTail);
         float tailFade = 1.0 - smoothstep(max(0.02, 1.0 - uWakeSoftness), 1.0, vTail);
-        float erode = smoothstep(0.34, 0.86, flame + root * 0.2);
+        float erode = smoothstep(0.46, 0.64, flame + root * 0.18);
         float flicker = 0.82 + 0.18 * sin(uTime * 10.0 + flame * 8.0 + vTail * 6.0);
         vec3 color = mix(uWakeColor * 0.55, uHotColor, erode * (0.55 + root * 0.35));
         color *= 0.82 + root * 0.78 + flame * 0.65;
