@@ -49,6 +49,13 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeLengthBo: 0.95,
   wakeRadiusBo: 0.5,
   wakeSubdivisions: 64,
+  wakeDisplaceBo: 0.045,
+  wakeDisplaceScale: 2.4,
+  wakeDisplaceSpeed: 0.55,
+  wakeDisplaceOctaves: 3,
+  wakeDisplaceSoftness: 0.7,
+  wakeDisplaceInfluenceBottom: 0.2,
+  wakeDisplaceInfluenceTop: 0.65,
   wakeNoiseScale: 2.35,
   wakeNoiseSpeed: 0.86,
   wakeNoiseDensityBottom: 0.52,
@@ -117,6 +124,13 @@ function readFlameWakeConfig(els = {}) {
     wakeLengthBo: clampNumber(els.flameAoe3dWakeLengthBo && els.flameAoe3dWakeLengthBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLengthBo),
     wakeRadiusBo: clampNumber(els.flameAoe3dWakeRadiusBo && els.flameAoe3dWakeRadiusBo.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeRadiusBo),
     wakeSubdivisions: Math.round(clampNumber(els.flameAoe3dWakeSubdivisions && els.flameAoe3dWakeSubdivisions.value, 12, 192, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSubdivisions)),
+    wakeDisplaceBo: clampNumber(els.flameAoe3dWakeDisplaceBo && els.flameAoe3dWakeDisplaceBo.value, 0, 0.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceBo),
+    wakeDisplaceScale: clampNumber(els.flameAoe3dWakeDisplaceScale && els.flameAoe3dWakeDisplaceScale.value, 0.1, 12, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceScale),
+    wakeDisplaceSpeed: clampNumber(els.flameAoe3dWakeDisplaceSpeed && els.flameAoe3dWakeDisplaceSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceSpeed),
+    wakeDisplaceOctaves: Math.round(clampNumber(els.flameAoe3dWakeDisplaceOctaves && els.flameAoe3dWakeDisplaceOctaves.value, 1, 5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceOctaves)),
+    wakeDisplaceSoftness: clampNumber(els.flameAoe3dWakeDisplaceSoftness && els.flameAoe3dWakeDisplaceSoftness.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceSoftness),
+    wakeDisplaceInfluenceBottom: clampNumber(els.flameAoe3dWakeDisplaceInfluenceBottom && els.flameAoe3dWakeDisplaceInfluenceBottom.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceInfluenceBottom),
+    wakeDisplaceInfluenceTop: clampNumber(els.flameAoe3dWakeDisplaceInfluenceTop && els.flameAoe3dWakeDisplaceInfluenceTop.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceInfluenceTop),
     wakeNoiseScale: clampNumber(els.flameAoe3dWakeNoiseScale && els.flameAoe3dWakeNoiseScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseScale),
     wakeNoiseSpeed: clampNumber(els.flameAoe3dWakeNoiseSpeed && els.flameAoe3dWakeNoiseSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseSpeed),
     wakeNoiseDensityBottom: clampNumber(els.flameAoe3dWakeNoiseDensityBottom && els.flameAoe3dWakeNoiseDensityBottom.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseDensityBottom),
@@ -172,6 +186,13 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeLengthBo) els.flameAoe3dWakeLengthBo.value = String(Number(cfg.wakeLengthBo).toFixed(2));
   if (els.flameAoe3dWakeRadiusBo) els.flameAoe3dWakeRadiusBo.value = String(Number(cfg.wakeRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSubdivisions) els.flameAoe3dWakeSubdivisions.value = String(Math.round(Number(cfg.wakeSubdivisions)));
+  if (els.flameAoe3dWakeDisplaceBo) els.flameAoe3dWakeDisplaceBo.value = String(Number(cfg.wakeDisplaceBo).toFixed(3));
+  if (els.flameAoe3dWakeDisplaceScale) els.flameAoe3dWakeDisplaceScale.value = String(Number(cfg.wakeDisplaceScale).toFixed(2));
+  if (els.flameAoe3dWakeDisplaceSpeed) els.flameAoe3dWakeDisplaceSpeed.value = String(Number(cfg.wakeDisplaceSpeed).toFixed(2));
+  if (els.flameAoe3dWakeDisplaceOctaves) els.flameAoe3dWakeDisplaceOctaves.value = String(Math.round(Number(cfg.wakeDisplaceOctaves)));
+  if (els.flameAoe3dWakeDisplaceSoftness) els.flameAoe3dWakeDisplaceSoftness.value = String(Number(cfg.wakeDisplaceSoftness).toFixed(2));
+  if (els.flameAoe3dWakeDisplaceInfluenceBottom) els.flameAoe3dWakeDisplaceInfluenceBottom.value = String(Number(cfg.wakeDisplaceInfluenceBottom).toFixed(2));
+  if (els.flameAoe3dWakeDisplaceInfluenceTop) els.flameAoe3dWakeDisplaceInfluenceTop.value = String(Number(cfg.wakeDisplaceInfluenceTop).toFixed(2));
   if (els.flameAoe3dWakeNoiseScale) els.flameAoe3dWakeNoiseScale.value = String(Number(cfg.wakeNoiseScale).toFixed(2));
   if (els.flameAoe3dWakeNoiseSpeed) els.flameAoe3dWakeNoiseSpeed.value = String(Number(cfg.wakeNoiseSpeed).toFixed(2));
   if (els.flameAoe3dWakeNoiseDensityBottom) els.flameAoe3dWakeNoiseDensityBottom.value = String(Number(cfg.wakeNoiseDensityBottom).toFixed(2));
@@ -579,6 +600,13 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uTime: { value: 0 },
       uWakeNoiseScale: { value: config.wakeNoiseScale },
       uWakeNoiseSpeed: { value: config.wakeNoiseSpeed },
+      uWakeDisplaceDepth: { value: config.wakeDisplacePx || config.wakeDisplaceBo },
+      uWakeDisplaceScale: { value: config.wakeDisplaceScale },
+      uWakeDisplaceSpeed: { value: config.wakeDisplaceSpeed },
+      uWakeDisplaceOctaves: { value: config.wakeDisplaceOctaves },
+      uWakeDisplaceSoftness: { value: config.wakeDisplaceSoftness },
+      uWakeDisplaceInfluenceBottom: { value: config.wakeDisplaceInfluenceBottom },
+      uWakeDisplaceInfluenceTop: { value: config.wakeDisplaceInfluenceTop },
       uWakeNoiseDensityBottom: { value: config.wakeNoiseDensityBottom },
       uWakeNoiseDensityTop: { value: config.wakeNoiseDensityTop },
       uWakeNoiseContrast: { value: config.wakeNoiseContrast },
@@ -598,13 +626,75 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
     vertexShader: `
       precision highp float;
 
+      uniform float uTime;
+      uniform float uWakeDisplaceDepth;
+      uniform float uWakeDisplaceScale;
+      uniform float uWakeDisplaceSpeed;
+      uniform float uWakeDisplaceOctaves;
+      uniform float uWakeDisplaceSoftness;
+      uniform float uWakeDisplaceInfluenceBottom;
+      uniform float uWakeDisplaceInfluenceTop;
+
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
       varying float vTail;
 
+      float hash31(vec3 p) {
+        p = fract(p * 0.1031);
+        p += dot(p, p.yzx + 33.33);
+        return fract((p.x + p.y) * p.z);
+      }
+
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 0.0)), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x),
+            f.y
+          ),
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x),
+            f.y
+          ),
+          f.z
+        );
+      }
+
+      float displacementClouds(vec3 p) {
+        float value = 0.0;
+        float amp = 0.56;
+        float freq = 1.0;
+        for (int i = 0; i < 5; i += 1) {
+          if (float(i) >= uWakeDisplaceOctaves) break;
+          value += noise(p * freq) * amp;
+          freq *= 2.02;
+          amp *= 0.48;
+          p += vec3(11.7, -7.3, 5.9);
+        }
+        return clamp(value, 0.0, 1.0);
+      }
+
       void main() {
         float tail = clamp(uv.y, 0.0, 1.0);
         vec3 local = position;
+        vec3 n = normalize(normal);
+        float frequency = 2.2 / max(0.1, uWakeDisplaceScale);
+        vec3 flow = vec3(
+          local.x * frequency,
+          local.y * frequency - uTime * uWakeDisplaceSpeed,
+          local.z * frequency
+        );
+        float clouds = displacementClouds(flow);
+        clouds = mix(clouds, smoothstep(0.0, 1.0, clouds), clamp(uWakeDisplaceSoftness, 0.0, 1.0));
+        float centeredClouds = (clouds - 0.5) * 2.0;
+        float influence = mix(uWakeDisplaceInfluenceBottom, uWakeDisplaceInfluenceTop, tail);
+        float rootMask = smoothstep(0.04, 0.18, tail);
+        float tipMask = 1.0 - smoothstep(0.94, 1.0, tail);
+        local += n * centeredClouds * uWakeDisplaceDepth * influence * rootMask * tipMask;
         vec4 worldPos = modelMatrix * vec4(local, 1.0);
         vWorldPos = worldPos.xyz;
         vLocalPos = local;
@@ -911,6 +1001,7 @@ export function createFlameAoe3dPreview({
     wakeMaterial = createWakeMaterial({
       ...flameConfig,
       ...wakeConfig,
+      wakeDisplacePx: bo * wakeConfig.wakeDisplaceBo,
     });
     wakeMesh = new THREE.Mesh(
       createWakeTeardropGeometry(
@@ -989,6 +1080,12 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyWakeLengthBtn,
       els.flameAoe3dApplyWakeRadiusBtn,
       els.flameAoe3dApplyWakeSubdivisionsBtn,
+      els.flameAoe3dApplyWakeDisplaceBtn,
+      els.flameAoe3dApplyWakeDisplaceScaleBtn,
+      els.flameAoe3dApplyWakeDisplaceSpeedBtn,
+      els.flameAoe3dApplyWakeDisplaceOctavesBtn,
+      els.flameAoe3dApplyWakeDisplaceSoftnessBtn,
+      els.flameAoe3dApplyWakeDisplaceInfluenceBtn,
       els.flameAoe3dApplyWakeNoiseScaleBtn,
       els.flameAoe3dApplyWakeNoiseSpeedBtn,
       els.flameAoe3dApplyWakeNoiseDensityBtn,
