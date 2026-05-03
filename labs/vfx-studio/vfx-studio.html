@@ -1673,11 +1673,11 @@
             <div class="rgbaParamRow">
               <span class="rgbaLabel">Wake dir</span>
               <label for="flameAoe3dWakeDirX">x</label>
-              <input id="flameAoe3dWakeDirX" class="paramFieldInput" type="number" min="-1" max="1" value="-0.85" step="0.01" />
+              <input id="flameAoe3dWakeDirX" class="paramFieldInput" type="number" min="-1" max="1" value="0" step="0.01" />
               <label for="flameAoe3dWakeDirY">y</label>
-              <input id="flameAoe3dWakeDirY" class="paramFieldInput" type="number" min="-1" max="1" value="0.12" step="0.01" />
+              <input id="flameAoe3dWakeDirY" class="paramFieldInput" type="number" min="-1" max="1" value="1" step="0.01" />
               <label for="flameAoe3dWakeDirZ">z</label>
-              <input id="flameAoe3dWakeDirZ" class="paramFieldInput" type="number" min="-1" max="1" value="0.18" step="0.01" />
+              <input id="flameAoe3dWakeDirZ" class="paramFieldInput" type="number" min="-1" max="1" value="0" step="0.01" />
               <button id="flameAoe3dApplyWakeDirectionBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="rgbaParamRow">
@@ -2258,7 +2258,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260503a"),
+      import("./vfx-studio-bootstrap.js?v=20260503b"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2274,7 +2274,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503a";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503b";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";

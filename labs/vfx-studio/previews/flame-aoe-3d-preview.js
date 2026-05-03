@@ -53,9 +53,9 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeNoiseScale: 2.35,
   wakeNoiseSpeed: 0.86,
   wakeSoftness: 0.38,
-  wakeDirX: -0.85,
-  wakeDirY: 0.12,
-  wakeDirZ: 0.18,
+  wakeDirX: 0,
+  wakeDirY: 1,
+  wakeDirZ: 0,
   wakeColor: 0xff7a12,
 });
 
@@ -174,6 +174,51 @@ function wakeDirection(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   const dir = new THREE.Vector3(config.wakeDirX, config.wakeDirY, config.wakeDirZ);
   if (dir.lengthSq() < 0.0001) dir.set(-1, 0, 0);
   return dir.normalize();
+}
+
+function createWakeTeardropGeometry(radius, length, radialSegments = 96, heightSegments = 48) {
+  const geometry = new THREE.BufferGeometry();
+  const positions = [];
+  const normals = [];
+  const uvs = [];
+  const indices = [];
+  const rootInset = length * 0.08;
+
+  for (let yIndex = 0; yIndex <= heightSegments; yIndex += 1) {
+    const t = yIndex / heightSegments;
+    const centerY = (t * length) - rootInset;
+    const rootBulge = Math.sin(Math.min(1, t * 1.55) * Math.PI * 0.5);
+    const tailTaper = Math.pow(Math.max(0, 1 - t), 1.72);
+    const profile = radius * Math.max(0.012, rootBulge * tailTaper);
+    for (let xIndex = 0; xIndex <= radialSegments; xIndex += 1) {
+      const u = xIndex / radialSegments;
+      const angle = u * Math.PI * 2;
+      const x = Math.cos(angle) * profile;
+      const z = Math.sin(angle) * profile;
+      positions.push(x, centerY, z);
+      normals.push(x, radius * 0.28, z);
+      uvs.push(u, t);
+    }
+  }
+
+  const stride = radialSegments + 1;
+  for (let yIndex = 0; yIndex < heightSegments; yIndex += 1) {
+    for (let xIndex = 0; xIndex < radialSegments; xIndex += 1) {
+      const a = yIndex * stride + xIndex;
+      const b = a + 1;
+      const c = a + stride;
+      const d = c + 1;
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+
+  geometry.setIndex(indices);
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
+  return geometry;
 }
 
 function createFlameShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
@@ -739,7 +784,7 @@ export function createFlameAoe3dPreview({
     model.add(auraShellMesh);
     wakeMaterial = createWakeMaterial({ ...flameConfig, ...wakeConfig });
     wakeMesh = new THREE.Mesh(
-      new THREE.ConeGeometry(bo * wakeConfig.wakeRadiusBo, bo * wakeConfig.wakeLengthBo, 96, 32, true),
+      createWakeTeardropGeometry(bo * wakeConfig.wakeRadiusBo, bo * wakeConfig.wakeLengthBo),
       wakeMaterial
     );
     const wakeDir = wakeDirection(wakeConfig);
