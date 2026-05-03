@@ -65,6 +65,13 @@ function clampNumber(value, min, max, fallback) {
   return Math.max(min, Math.min(max, Number.isFinite(n) ? n : f));
 }
 
+function smoothstepNumber(edge0, edge1, value) {
+  const span = edge1 - edge0;
+  if (Math.abs(span) < 0.000001) return value < edge0 ? 0 : 1;
+  const t = Math.max(0, Math.min(1, (value - edge0) / span));
+  return t * t * (3 - (2 * t));
+}
+
 function readByte(els, key, fallback) {
   return Math.round(clampNumber(els && els[key] && els[key].value, 0, 255, fallback));
 }
@@ -187,7 +194,7 @@ function createWakeTeardropGeometry(radius, length, radialSegments = 96, heightS
   for (let yIndex = 0; yIndex <= heightSegments; yIndex += 1) {
     const t = yIndex / heightSegments;
     const centerY = (t * length) - rootInset;
-    const rootBulge = 1 - (0.08 * smoothstep(0, 0.18, t));
+    const rootBulge = 1 - (0.08 * smoothstepNumber(0, 0.18, t));
     const tailTaper = Math.pow(Math.max(0, 1 - t), 1.72);
     const profile = radius * Math.max(0.012, rootBulge * tailTaper);
     for (let xIndex = 0; xIndex <= radialSegments; xIndex += 1) {
