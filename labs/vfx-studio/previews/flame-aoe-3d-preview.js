@@ -50,7 +50,8 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeRadiusBo: 0.5,
   wakeNoiseScale: 2.35,
   wakeNoiseSpeed: 0.86,
-  wakeNoiseDensity: 0.52,
+  wakeNoiseDensityBottom: 0.52,
+  wakeNoiseDensityTop: 0.52,
   wakeNoiseContrast: 0.16,
   wakeNoiseOctaves: 5,
   wakeNoiseLacunarity: 2.08,
@@ -107,7 +108,8 @@ function readFlameWakeConfig(els = {}) {
     wakeRadiusBo: clampNumber(els.flameAoe3dWakeRadiusBo && els.flameAoe3dWakeRadiusBo.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeRadiusBo),
     wakeNoiseScale: clampNumber(els.flameAoe3dWakeNoiseScale && els.flameAoe3dWakeNoiseScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseScale),
     wakeNoiseSpeed: clampNumber(els.flameAoe3dWakeNoiseSpeed && els.flameAoe3dWakeNoiseSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseSpeed),
-    wakeNoiseDensity: clampNumber(els.flameAoe3dWakeNoiseDensity && els.flameAoe3dWakeNoiseDensity.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseDensity),
+    wakeNoiseDensityBottom: clampNumber(els.flameAoe3dWakeNoiseDensityBottom && els.flameAoe3dWakeNoiseDensityBottom.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseDensityBottom),
+    wakeNoiseDensityTop: clampNumber(els.flameAoe3dWakeNoiseDensityTop && els.flameAoe3dWakeNoiseDensityTop.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseDensityTop),
     wakeNoiseContrast: clampNumber(els.flameAoe3dWakeNoiseContrast && els.flameAoe3dWakeNoiseContrast.value, 0.02, 0.6, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseContrast),
     wakeNoiseOctaves: Math.round(clampNumber(els.flameAoe3dWakeNoiseOctaves && els.flameAoe3dWakeNoiseOctaves.value, 1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseOctaves)),
     wakeNoiseLacunarity: clampNumber(els.flameAoe3dWakeNoiseLacunarity && els.flameAoe3dWakeNoiseLacunarity.value, 1.1, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseLacunarity),
@@ -151,7 +153,8 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeRadiusBo) els.flameAoe3dWakeRadiusBo.value = String(Number(cfg.wakeRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeNoiseScale) els.flameAoe3dWakeNoiseScale.value = String(Number(cfg.wakeNoiseScale).toFixed(2));
   if (els.flameAoe3dWakeNoiseSpeed) els.flameAoe3dWakeNoiseSpeed.value = String(Number(cfg.wakeNoiseSpeed).toFixed(2));
-  if (els.flameAoe3dWakeNoiseDensity) els.flameAoe3dWakeNoiseDensity.value = String(Number(cfg.wakeNoiseDensity).toFixed(2));
+  if (els.flameAoe3dWakeNoiseDensityBottom) els.flameAoe3dWakeNoiseDensityBottom.value = String(Number(cfg.wakeNoiseDensityBottom).toFixed(2));
+  if (els.flameAoe3dWakeNoiseDensityTop) els.flameAoe3dWakeNoiseDensityTop.value = String(Number(cfg.wakeNoiseDensityTop).toFixed(2));
   if (els.flameAoe3dWakeNoiseContrast) els.flameAoe3dWakeNoiseContrast.value = String(Number(cfg.wakeNoiseContrast).toFixed(2));
   if (els.flameAoe3dWakeNoiseOctaves) els.flameAoe3dWakeNoiseOctaves.value = String(Math.round(Number(cfg.wakeNoiseOctaves)));
   if (els.flameAoe3dWakeNoiseLacunarity) els.flameAoe3dWakeNoiseLacunarity.value = String(Number(cfg.wakeNoiseLacunarity).toFixed(2));
@@ -546,7 +549,8 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uTime: { value: 0 },
       uWakeNoiseScale: { value: config.wakeNoiseScale },
       uWakeNoiseSpeed: { value: config.wakeNoiseSpeed },
-      uWakeNoiseDensity: { value: config.wakeNoiseDensity },
+      uWakeNoiseDensityBottom: { value: config.wakeNoiseDensityBottom },
+      uWakeNoiseDensityTop: { value: config.wakeNoiseDensityTop },
       uWakeNoiseContrast: { value: config.wakeNoiseContrast },
       uWakeNoiseOctaves: { value: config.wakeNoiseOctaves },
       uWakeNoiseLacunarity: { value: config.wakeNoiseLacunarity },
@@ -556,7 +560,8 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       precision highp float;
 
       uniform float uWakeNoiseScale;
-      uniform float uWakeNoiseDensity;
+      uniform float uWakeNoiseDensityBottom;
+      uniform float uWakeNoiseDensityTop;
       uniform float uWakeNoiseContrast;
       uniform float uWakeNoiseOctaves;
       uniform float uWakeNoiseLacunarity;
@@ -644,7 +649,8 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uTime;
       uniform float uWakeNoiseScale;
       uniform float uWakeNoiseSpeed;
-      uniform float uWakeNoiseDensity;
+      uniform float uWakeNoiseDensityBottom;
+      uniform float uWakeNoiseDensityTop;
       uniform float uWakeNoiseContrast;
       uniform float uWakeNoiseOctaves;
       uniform float uWakeNoiseLacunarity;
@@ -709,13 +715,13 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         return clamp(value, 0.0, 1.0);
       }
 
-      float musgraveBlobs(vec3 p) {
+      float musgraveBlobs(vec3 p, float density) {
         float base = fbm(p);
         float ridge = ridgedFbm(p * 0.82 + vec3(3.4, -7.8, 2.1));
         float broad = fbm(p * 0.46 + vec3(-11.2, 4.6, 9.3));
         float mask = base * 0.46 + ridge * 0.34 + broad * 0.32;
         float edge = clamp(uWakeNoiseContrast, 0.02, 0.6);
-        float center = mix(0.72, 0.32, clamp(uWakeNoiseDensity, 0.0, 1.0));
+        float center = mix(0.72, 0.32, clamp(density, 0.0, 1.0));
         return smoothstep(center - edge * 0.5, center + edge * 0.5, mask);
       }
 
@@ -728,7 +734,8 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
           (vTail * 1.35 - time * 0.42) * patternFrequency,
           surface.z * patternFrequency
         );
-        float blobs = musgraveBlobs(flow);
+        float density = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, clamp(vTail, 0.0, 1.0));
+        float blobs = musgraveBlobs(flow, density);
         gl_FragColor = vec4(vec3(blobs), 1.0);
       }
     `,

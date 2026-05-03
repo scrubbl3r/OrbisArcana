@@ -25,12 +25,13 @@
     "wakeLengthBo": 1.5,
     "wakeRadiusBo": 0.5,
     "wakeNoiseScale": 1,
-    "wakeNoiseSpeed": 0.86,
-    "wakeNoiseDensity": 0.1,
-    "wakeNoiseContrast": 0.16,
-    "wakeNoiseOctaves": 3,
+    "wakeNoiseSpeed": 4,
+    "wakeNoiseDensityBottom": 0.32,
+    "wakeNoiseDensityTop": 0.32,
+    "wakeNoiseContrast": 0.2,
+    "wakeNoiseOctaves": 4,
     "wakeNoiseLacunarity": 1.1,
-    "wakeNoiseGain": 0.52,
+    "wakeNoiseGain": 0.3,
     "coreR": 255,
     "coreG": 42,
     "coreB": 5,
@@ -51,6 +52,6 @@
     "settingsKey": "flame-aoe-3d",
     "registryDefaultPresetId": "preset.flame_aoe.default"
   },
-  "savedAtMs": 1777841259834,
-  "exportedAtMs": 1777841259835
+  "savedAtMs": 1777842031492,
+  "exportedAtMs": 1777842031493
 }

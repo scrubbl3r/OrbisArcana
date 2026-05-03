@@ -1662,9 +1662,12 @@
               <input id="flameAoe3dWakeNoiseSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0.86" />
               <button id="flameAoe3dApplyWakeNoiseSpeedBtn" class="toolBtn" type="button">Apply</button>
             </div>
-            <div class="paramFieldRow">
-              <label for="flameAoe3dWakeNoiseDensity">Wake noise density</label>
-              <input id="flameAoe3dWakeNoiseDensity" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.52" />
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">Wake noise density</span>
+              <label for="flameAoe3dWakeNoiseDensityBottom">bottom</label>
+              <input id="flameAoe3dWakeNoiseDensityBottom" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.52" />
+              <label for="flameAoe3dWakeNoiseDensityTop">top</label>
+              <input id="flameAoe3dWakeNoiseDensityTop" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.52" />
               <button id="flameAoe3dApplyWakeNoiseDensityBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
@@ -2255,7 +2258,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260503l"),
+      import("./vfx-studio-bootstrap.js?v=20260503m"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2271,7 +2274,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503e";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503f";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2783,7 +2786,8 @@
       flameAoe3dApplyWakeNoiseScaleBtn: $("flameAoe3dApplyWakeNoiseScaleBtn"),
       flameAoe3dWakeNoiseSpeed: $("flameAoe3dWakeNoiseSpeed"),
       flameAoe3dApplyWakeNoiseSpeedBtn: $("flameAoe3dApplyWakeNoiseSpeedBtn"),
-      flameAoe3dWakeNoiseDensity: $("flameAoe3dWakeNoiseDensity"),
+      flameAoe3dWakeNoiseDensityBottom: $("flameAoe3dWakeNoiseDensityBottom"),
+      flameAoe3dWakeNoiseDensityTop: $("flameAoe3dWakeNoiseDensityTop"),
       flameAoe3dApplyWakeNoiseDensityBtn: $("flameAoe3dApplyWakeNoiseDensityBtn"),
       flameAoe3dWakeNoiseContrast: $("flameAoe3dWakeNoiseContrast"),
       flameAoe3dApplyWakeNoiseContrastBtn: $("flameAoe3dApplyWakeNoiseContrastBtn"),
