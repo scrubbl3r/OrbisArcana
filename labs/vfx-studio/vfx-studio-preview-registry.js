@@ -20,6 +20,7 @@ import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=202
 import { createOrbTeleportPreview } from "./previews/orb-teleport-preview.js?v=20260425d";
 import { createOrbTeleport3dPreview } from "./previews/orb-teleport-3d-preview.js?v=20260501a";
 import { createFlameAoe3dPreview } from "./previews/flame-aoe-3d-preview.js?v=20260502a";
+import { createBankOrb3dPreview } from "./previews/bank-orb-3d-preview.js?v=20260502a";
 
 export function createStudioPreviewRegistry({
   els,
@@ -228,6 +229,16 @@ export function createStudioPreviewRegistry({
   actions.playFlameAoe3d = flameAoe3dPreview.play;
   flameAoe3dPreview.wire();
 
+  const bankOrb3dPreview = createBankOrb3dPreview({
+    els: previewEls.bankOrb3d,
+    getOrbBaseVisualState,
+    getOrb3dVisualSettings: getOrb3dVisualSettings || (() => readOrb3dPreviewConfig(previewEls.orb3d)),
+  });
+  actions.applyBankOrb3d = bankOrb3dPreview.apply;
+  actions.clearBankOrb3d = bankOrb3dPreview.clear;
+  actions.playBankOrb3d = bankOrb3dPreview.play;
+  bankOrb3dPreview.wire();
+
   function stopAllStudioEffects() {
     if (typeof actions.shieldOffNow === "function") actions.shieldOffNow();
     if (typeof actions.clearShock === "function") actions.clearShock();
@@ -247,6 +258,7 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearOrbTeleport === "function") actions.clearOrbTeleport();
     if (typeof actions.clearOrbTeleport3d === "function") actions.clearOrbTeleport3d();
     if (typeof actions.clearFlameAoe3d === "function") actions.clearFlameAoe3d();
+    if (typeof actions.clearBankOrb3d === "function") actions.clearBankOrb3d();
     Object.values(previewRootsByEffect || {}).forEach((root) => {
       if (!root || typeof root.setAttribute !== "function") return;
       root.setAttribute("aria-hidden", "true");

@@ -480,6 +480,7 @@
     .orbLifecycle3dCanvas,
     .orbTeleport3dCanvas,
     .flameAoe3dCanvas,
+    .bankOrb3dCanvas,
     .orbGlobe3dCanvas,
     .worldGlobe3dCanvas{
       width:100%;
@@ -495,6 +496,7 @@
     .orbLifecycle3dCanvas:active,
     .orbTeleport3dCanvas:active,
     .flameAoe3dCanvas:active,
+    .bankOrb3dCanvas:active,
     .orbGlobe3dCanvas:active,
     .worldGlobe3dCanvas:active{
       cursor:grabbing;
@@ -900,6 +902,7 @@
         </div>
         <div class="previewLane orb3dPreviewLane" id="orbTeleport3dPreviewRoot" data-preview-root hidden aria-hidden="true"></div>
         <div class="previewLane orb3dPreviewLane" id="flameAoe3dPreviewRoot" data-preview-root hidden aria-hidden="true"></div>
+        <div class="previewLane orb3dPreviewLane" id="bankOrb3dPreviewRoot" data-preview-root hidden aria-hidden="true"></div>
       </div>
     </div>
 
@@ -1426,6 +1429,12 @@
         </div>
       </div>
 
+      <div class="section" data-effect="bank-orb-3d" hidden>
+        <div class="row">
+          <button id="previewBankOrb3d" class="toolBtn" type="button">Preview</button>
+        </div>
+      </div>
+
       <div class="section" data-effect="orb-lifecycle" hidden>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
@@ -1939,13 +1948,13 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260502d"),
+      import("./vfx-studio-bootstrap.js?v=20260502e"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
-      import("./vfx-studio-surfaces.js?v=20260502a"),
+      import("./vfx-studio-surfaces.js?v=20260502b"),
       import("./vfx-studio-theme-publish.js?v=20260502e"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
@@ -1953,6 +1962,7 @@
     });
     import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260501a";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
+    import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
     import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260502a";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
@@ -2006,6 +2016,7 @@
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
       buildTeleportBehaviorModule,
+      createBankOrb3dAuthoringAdapter,
       createBubbleShield3dAuthoringAdapter,
       createBubbleShieldAuthoringAdapter,
       createElectricAoeAuthoringAdapter,
@@ -2067,6 +2078,7 @@
       orbTeleportPreviewRoot: $("orbTeleportPreviewRoot"),
       orbTeleport3dPreviewRoot: $("orbTeleport3dPreviewRoot"),
       flameAoe3dPreviewRoot: $("flameAoe3dPreviewRoot"),
+      bankOrb3dPreviewRoot: $("bankOrb3dPreviewRoot"),
       orbLifecyclePatternLayer: $("orbLifecyclePatternLayer"),
       orbLifecycleShatterLayer: $("orbLifecycleShatterLayer"),
 
@@ -2425,6 +2437,7 @@
       orbTeleport3dFadeInMs: $("orbTeleport3dFadeInMs"),
       orbTeleport3dApplyFadeInBtn: $("orbTeleport3dApplyFadeInBtn"),
       previewFlameAoe3d: $("previewFlameAoe3d"),
+      previewBankOrb3d: $("previewBankOrb3d"),
     };
     const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
@@ -3064,6 +3077,7 @@
         shockwave: () => applyShock(),
         "flame-aoe": () => applyFlameControls(),
         "flame-aoe-3d": () => applyFlameAoe3d(),
+        "bank-orb-3d": () => applyBankOrb3d(),
         "orb-base": () => applyOrbBase(),
         "orb-3d": () => applyOrb3d(),
         "orb-spawn": () => applyOrbSpawn(),
@@ -3155,6 +3169,9 @@
       applyFlameAoe3d,
       clearFlameAoe3d,
       playFlameAoe3d,
+      applyBankOrb3d,
+      clearBankOrb3d,
+      playBankOrb3d,
     } = studioBootstrap.actions;
     const stopAllStudioEffects = studioBootstrap.stopAllStudioEffects;
     const authoringAdapterForBaseEffect = studioBootstrap.authoringAdapterForBaseEffect;
@@ -3179,6 +3196,7 @@
       if (typeof applyWorldGlobe === "function") applyWorldGlobe();
       if (typeof applyOrbTeleport3d === "function") applyOrbTeleport3d();
       if (typeof applyFlameAoe3d === "function") applyFlameAoe3d();
+      if (typeof applyBankOrb3d === "function") applyBankOrb3d();
     });
     updateTeleportBehaviorReadout();
     updateTeleport3dBehaviorReadout();
