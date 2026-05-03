@@ -1545,10 +1545,10 @@
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
-            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dShellControls">Flame shell</button>
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dShellControls">Flame shell</button>
             <button id="flameAoe3dShellVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Flame shell visibility" title="Toggle Flame shell visibility"></button>
           </div>
-          <div id="flameAoe3dShellControls" class="controlGroupBody paramFieldRows">
+          <div id="flameAoe3dShellControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
               <label for="flameAoe3dShellAlpha">Shell alpha</label>
               <input id="flameAoe3dShellAlpha" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.82" />
@@ -1583,10 +1583,10 @@
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
-            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dAuraControls">Aura shell</button>
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dAuraControls">Aura shell</button>
             <button id="flameAoe3dAuraVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Aura shell visibility" title="Toggle Aura shell visibility"></button>
           </div>
-          <div id="flameAoe3dAuraControls" class="controlGroupBody paramFieldRows">
+          <div id="flameAoe3dAuraControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
               <label for="flameAoe3dAuraAlpha">Aura alpha</label>
               <input id="flameAoe3dAuraAlpha" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.34" />
@@ -1631,10 +1631,10 @@
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
-            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dWakeControls">Directional wake</button>
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeControls">Directional wake</button>
             <button id="flameAoe3dWakeVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Directional wake visibility" title="Toggle Directional wake visibility"></button>
           </div>
-          <div id="flameAoe3dWakeControls" class="controlGroupBody paramFieldRows">
+          <div id="flameAoe3dWakeControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeAlpha">Wake alpha</label>
               <input id="flameAoe3dWakeAlpha" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.46" />
@@ -1693,8 +1693,8 @@
           </div>
         </div>
         <div class="controlGroup" data-control-group>
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dColorControls">Flame colors</button>
-          <div id="flameAoe3dColorControls" class="controlGroupBody paramFieldRows">
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dColorControls">Flame colors</button>
+          <div id="flameAoe3dColorControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="rgbaParamRow">
               <span class="rgbaLabel">Core RGB</span>
               <label for="flameAoe3dCoreR">r</label>
@@ -2258,7 +2258,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260503e"),
+      import("./vfx-studio-bootstrap.js?v=20260503f"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),

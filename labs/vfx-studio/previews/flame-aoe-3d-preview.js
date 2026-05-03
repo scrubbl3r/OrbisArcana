@@ -176,27 +176,29 @@ function wakeDirection(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   return dir.normalize();
 }
 
-function createWakeTeardropGeometry(radius, length, radialSegments = 96, heightSegments = 48) {
+function createWakeTeardropGeometry(radius, length, radialSegments = 64, heightSegments = 32) {
   const geometry = new THREE.BufferGeometry();
   const positions = [];
   const normals = [];
   const uvs = [];
   const indices = [];
-  const rootInset = radius * 0.38;
+  const stretch = Math.max(0, length - (radius * 2));
 
   for (let yIndex = 0; yIndex <= heightSegments; yIndex += 1) {
     const t = yIndex / heightSegments;
-    const centerY = (t * length) - rootInset;
-    const sphereRise = Math.sin(Math.PI * Math.pow(t, 0.45));
-    const tailTaper = Math.pow(Math.max(0, 1 - t), 0.85);
-    const profile = radius * Math.min(1, Math.max(0.001, sphereRise * tailTaper * 1.22));
+    const phi = Math.PI * (1 - t);
+    const sphereY = Math.cos(phi) * radius;
+    const upper01 = Math.max(0, sphereY / radius);
+    const stretchAmount = Math.pow(upper01, 1.65) * stretch;
+    const centerY = sphereY + stretchAmount + radius;
+    const profile = Math.sin(phi) * radius;
     for (let xIndex = 0; xIndex <= radialSegments; xIndex += 1) {
       const u = xIndex / radialSegments;
       const angle = u * Math.PI * 2;
       const x = Math.cos(angle) * profile;
       const z = Math.sin(angle) * profile;
       positions.push(x, centerY, z);
-      normals.push(x, radius * 0.28, z);
+      normals.push(x, sphereY, z);
       uvs.push(u, t);
     }
   }
