@@ -384,6 +384,58 @@
       gap:10px;
       margin-top:10px;
     }
+    .controlGroup{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:10px;
+      overflow:hidden;
+      background: rgba(255,255,255,.025);
+    }
+    .section > .controlGroup{
+      margin-top:10px;
+    }
+    .controlGroup + .controlGroup{
+      margin-top:10px;
+    }
+    .controlGroupHeader{
+      width:100%;
+      min-height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border:0;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      border-radius:0;
+      background: rgba(255,255,255,.055);
+      color: var(--text-strong);
+      padding:9px 12px;
+      font: inherit;
+      font-size:12px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-align:left;
+      text-transform:uppercase;
+      cursor:pointer;
+    }
+    .controlGroupHeader:hover{
+      background: rgba(255,255,255,.085);
+    }
+    .controlGroupHeader::after{
+      content:"-";
+      color: var(--text-muted);
+      font-weight:950;
+    }
+    .controlGroupHeader[aria-expanded="false"]{
+      border-bottom:0;
+    }
+    .controlGroupHeader[aria-expanded="false"]::after{
+      content:"+";
+    }
+    .controlGroupBody{
+      padding:10px;
+    }
+    .controlGroupBody[hidden]{
+      display:none;
+    }
     .paramFieldRow,
     .paramField{
       display:grid;
@@ -1427,76 +1479,84 @@
         <div class="row">
           <button id="previewFlameAoe3d" class="toolBtn" type="button">Preview</button>
         </div>
-        <div class="paramFieldRows">
-          <div class="paramFieldRow">
-            <label for="flameAoe3dShellAlpha">Shell alpha</label>
-            <input id="flameAoe3dShellAlpha" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.82" />
-            <button id="flameAoe3dApplyShellAlphaBtn" class="toolBtn" type="button">Apply</button>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dShellControls">Flame shell</button>
+          <div id="flameAoe3dShellControls" class="controlGroupBody paramFieldRows">
+            <div class="paramFieldRow">
+              <label for="flameAoe3dShellAlpha">Shell alpha</label>
+              <input id="flameAoe3dShellAlpha" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.82" />
+              <button id="flameAoe3dApplyShellAlphaBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dDisplace">Displace</label>
+              <input id="flameAoe3dDisplace" class="paramFieldInput" type="number" min="0" max="0.8" step="0.005" value="0.160" />
+              <button id="flameAoe3dApplyDisplaceBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dNoiseScale">Noise scale</label>
+              <input id="flameAoe3dNoiseScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="2.65" />
+              <button id="flameAoe3dApplyNoiseScaleBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dNoiseSpeed">Noise speed</label>
+              <input id="flameAoe3dNoiseSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0.72" />
+              <button id="flameAoe3dApplyNoiseSpeedBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dEdgeCut">Edge cut</label>
+              <input id="flameAoe3dEdgeCut" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.46" />
+              <button id="flameAoe3dApplyEdgeCutBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dFresnelPower">Fresnel power</label>
+              <input id="flameAoe3dFresnelPower" class="paramFieldInput" type="number" min="0.1" max="12" step="0.05" value="2.20" />
+              <button id="flameAoe3dApplyFresnelPowerBtn" class="toolBtn" type="button">Apply</button>
+            </div>
           </div>
-          <div class="paramFieldRow">
-            <label for="flameAoe3dDisplace">Displace</label>
-            <input id="flameAoe3dDisplace" class="paramFieldInput" type="number" min="0" max="0.8" step="0.005" value="0.160" />
-            <button id="flameAoe3dApplyDisplaceBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="flameAoe3dNoiseScale">Noise scale</label>
-            <input id="flameAoe3dNoiseScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="2.65" />
-            <button id="flameAoe3dApplyNoiseScaleBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="flameAoe3dNoiseSpeed">Noise speed</label>
-            <input id="flameAoe3dNoiseSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0.72" />
-            <button id="flameAoe3dApplyNoiseSpeedBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="flameAoe3dEdgeCut">Edge cut</label>
-            <input id="flameAoe3dEdgeCut" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.46" />
-            <button id="flameAoe3dApplyEdgeCutBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="flameAoe3dFresnelPower">Fresnel power</label>
-            <input id="flameAoe3dFresnelPower" class="paramFieldInput" type="number" min="0.1" max="12" step="0.05" value="2.20" />
-            <button id="flameAoe3dApplyFresnelPowerBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="rgbaParamRow">
-            <span class="rgbaLabel">Core RGB</span>
-            <label for="flameAoe3dCoreR">r</label>
-            <input id="flameAoe3dCoreR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
-            <label for="flameAoe3dCoreG">g</label>
-            <input id="flameAoe3dCoreG" class="paramFieldInput" type="number" min="0" max="255" value="42" step="1" />
-            <label for="flameAoe3dCoreB">b</label>
-            <input id="flameAoe3dCoreB" class="paramFieldInput" type="number" min="0" max="255" value="5" step="1" />
-            <button id="flameAoe3dApplyCoreColorBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="rgbaParamRow">
-            <span class="rgbaLabel">Hot RGB</span>
-            <label for="flameAoe3dHotR">r</label>
-            <input id="flameAoe3dHotR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
-            <label for="flameAoe3dHotG">g</label>
-            <input id="flameAoe3dHotG" class="paramFieldInput" type="number" min="0" max="255" value="176" step="1" />
-            <label for="flameAoe3dHotB">b</label>
-            <input id="flameAoe3dHotB" class="paramFieldInput" type="number" min="0" max="255" value="0" step="1" />
-            <button id="flameAoe3dApplyHotColorBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="rgbaParamRow">
-            <span class="rgbaLabel">Rim RGB</span>
-            <label for="flameAoe3dRimR">r</label>
-            <input id="flameAoe3dRimR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
-            <label for="flameAoe3dRimG">g</label>
-            <input id="flameAoe3dRimG" class="paramFieldInput" type="number" min="0" max="255" value="241" step="1" />
-            <label for="flameAoe3dRimB">b</label>
-            <input id="flameAoe3dRimB" class="paramFieldInput" type="number" min="0" max="255" value="181" step="1" />
-            <button id="flameAoe3dApplyRimColorBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="rgbaParamRow">
-            <span class="rgbaLabel">Smoke RGB</span>
-            <label for="flameAoe3dSmokeR">r</label>
-            <input id="flameAoe3dSmokeR" class="paramFieldInput" type="number" min="0" max="255" value="42" step="1" />
-            <label for="flameAoe3dSmokeG">g</label>
-            <input id="flameAoe3dSmokeG" class="paramFieldInput" type="number" min="0" max="255" value="7" step="1" />
-            <label for="flameAoe3dSmokeB">b</label>
-            <input id="flameAoe3dSmokeB" class="paramFieldInput" type="number" min="0" max="255" value="2" step="1" />
-            <button id="flameAoe3dApplySmokeColorBtn" class="toolBtn" type="button">Apply</button>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="flameAoe3dColorControls">Flame colors</button>
+          <div id="flameAoe3dColorControls" class="controlGroupBody paramFieldRows">
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">Core RGB</span>
+              <label for="flameAoe3dCoreR">r</label>
+              <input id="flameAoe3dCoreR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+              <label for="flameAoe3dCoreG">g</label>
+              <input id="flameAoe3dCoreG" class="paramFieldInput" type="number" min="0" max="255" value="42" step="1" />
+              <label for="flameAoe3dCoreB">b</label>
+              <input id="flameAoe3dCoreB" class="paramFieldInput" type="number" min="0" max="255" value="5" step="1" />
+              <button id="flameAoe3dApplyCoreColorBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">Hot RGB</span>
+              <label for="flameAoe3dHotR">r</label>
+              <input id="flameAoe3dHotR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+              <label for="flameAoe3dHotG">g</label>
+              <input id="flameAoe3dHotG" class="paramFieldInput" type="number" min="0" max="255" value="176" step="1" />
+              <label for="flameAoe3dHotB">b</label>
+              <input id="flameAoe3dHotB" class="paramFieldInput" type="number" min="0" max="255" value="0" step="1" />
+              <button id="flameAoe3dApplyHotColorBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">Rim RGB</span>
+              <label for="flameAoe3dRimR">r</label>
+              <input id="flameAoe3dRimR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+              <label for="flameAoe3dRimG">g</label>
+              <input id="flameAoe3dRimG" class="paramFieldInput" type="number" min="0" max="255" value="241" step="1" />
+              <label for="flameAoe3dRimB">b</label>
+              <input id="flameAoe3dRimB" class="paramFieldInput" type="number" min="0" max="255" value="181" step="1" />
+              <button id="flameAoe3dApplyRimColorBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">Smoke RGB</span>
+              <label for="flameAoe3dSmokeR">r</label>
+              <input id="flameAoe3dSmokeR" class="paramFieldInput" type="number" min="0" max="255" value="42" step="1" />
+              <label for="flameAoe3dSmokeG">g</label>
+              <input id="flameAoe3dSmokeG" class="paramFieldInput" type="number" min="0" max="255" value="7" step="1" />
+              <label for="flameAoe3dSmokeB">b</label>
+              <input id="flameAoe3dSmokeB" class="paramFieldInput" type="number" min="0" max="255" value="2" step="1" />
+              <button id="flameAoe3dApplySmokeColorBtn" class="toolBtn" type="button">Apply</button>
+            </div>
           </div>
         </div>
       </div>
@@ -2539,6 +2599,27 @@
       flameAoe3dApplySmokeColorBtn: $("flameAoe3dApplySmokeColorBtn"),
       previewBankOrb3d: $("previewBankOrb3d"),
     };
+
+    function initCollapsibleControlGroups(root = document) {
+      root.querySelectorAll("[data-control-toggle]").forEach((toggle) => {
+        const controlsId = toggle.getAttribute("aria-controls");
+        const body = controlsId ? document.getElementById(controlsId) : null;
+        const expanded = toggle.getAttribute("aria-expanded") !== "false";
+        if (body) body.hidden = !expanded;
+      });
+      root.addEventListener("click", (event) => {
+        const toggle = event.target && event.target.closest ? event.target.closest("[data-control-toggle]") : null;
+        if (!toggle || !root.contains(toggle)) return;
+        const controlsId = toggle.getAttribute("aria-controls");
+        const body = controlsId ? document.getElementById(controlsId) : null;
+        const expanded = toggle.getAttribute("aria-expanded") !== "false";
+        toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+        if (body) body.hidden = expanded;
+      });
+    }
+
+    initCollapsibleControlGroups(els.vfxAuthoringPanel || document);
+
     const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
