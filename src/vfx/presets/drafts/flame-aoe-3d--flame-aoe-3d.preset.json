@@ -22,6 +22,19 @@
     "auraR": 255,
     "auraG": 106,
     "auraB": 24,
+    "wakeAlpha": 1,
+    "wakeLengthBo": 1.5,
+    "wakeRadiusBo": 0.5,
+    "wakeBend": 0,
+    "wakeNoiseScale": 0.1,
+    "wakeNoiseSpeed": 0.86,
+    "wakeSoftness": 1,
+    "wakeDirX": 0,
+    "wakeDirY": 1,
+    "wakeDirZ": 0,
+    "wakeR": 255,
+    "wakeG": 122,
+    "wakeB": 18,
     "coreR": 255,
     "coreG": 42,
     "coreB": 5,
@@ -42,6 +55,6 @@
     "settingsKey": "flame-aoe-3d",
     "registryDefaultPresetId": "preset.flame_aoe.default"
   },
-  "savedAtMs": 1777820226984,
-  "exportedAtMs": 1777820226985
+  "savedAtMs": 1777836597992,
+  "exportedAtMs": 1777836597992
 }
