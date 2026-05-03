@@ -48,6 +48,7 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   auraColor: 0xff6a18,
   wakeLengthBo: 0.95,
   wakeRadiusBo: 0.5,
+  wakeSubdivisions: 64,
   wakeNoiseScale: 2.35,
   wakeNoiseSpeed: 0.86,
   wakeNoiseDensityBottom: 0.52,
@@ -119,6 +120,7 @@ function readFlameWakeConfig(els = {}) {
   return Object.freeze({
     wakeLengthBo: clampNumber(els.flameAoe3dWakeLengthBo && els.flameAoe3dWakeLengthBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLengthBo),
     wakeRadiusBo: clampNumber(els.flameAoe3dWakeRadiusBo && els.flameAoe3dWakeRadiusBo.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeRadiusBo),
+    wakeSubdivisions: Math.round(clampNumber(els.flameAoe3dWakeSubdivisions && els.flameAoe3dWakeSubdivisions.value, 12, 192, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSubdivisions)),
     wakeNoiseScale: clampNumber(els.flameAoe3dWakeNoiseScale && els.flameAoe3dWakeNoiseScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseScale),
     wakeNoiseSpeed: clampNumber(els.flameAoe3dWakeNoiseSpeed && els.flameAoe3dWakeNoiseSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseSpeed),
     wakeNoiseDensityBottom: clampNumber(els.flameAoe3dWakeNoiseDensityBottom && els.flameAoe3dWakeNoiseDensityBottom.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseDensityBottom),
@@ -177,6 +179,7 @@ function hydrateFlameAuraFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeLengthBo) els.flameAoe3dWakeLengthBo.value = String(Number(cfg.wakeLengthBo).toFixed(2));
   if (els.flameAoe3dWakeRadiusBo) els.flameAoe3dWakeRadiusBo.value = String(Number(cfg.wakeRadiusBo).toFixed(2));
+  if (els.flameAoe3dWakeSubdivisions) els.flameAoe3dWakeSubdivisions.value = String(Math.round(Number(cfg.wakeSubdivisions)));
   if (els.flameAoe3dWakeNoiseScale) els.flameAoe3dWakeNoiseScale.value = String(Number(cfg.wakeNoiseScale).toFixed(2));
   if (els.flameAoe3dWakeNoiseSpeed) els.flameAoe3dWakeNoiseSpeed.value = String(Number(cfg.wakeNoiseSpeed).toFixed(2));
   if (els.flameAoe3dWakeNoiseDensityBottom) els.flameAoe3dWakeNoiseDensityBottom.value = String(Number(cfg.wakeNoiseDensityBottom).toFixed(2));
@@ -1036,7 +1039,12 @@ export function createFlameAoe3dPreview({
       wakeCloudsAmountPx: bo * wakeConfig.wakeCloudsAmountBo,
     });
     wakeMesh = new THREE.Mesh(
-      createWakeTeardropGeometry(bo * wakeConfig.wakeRadiusBo, bo * wakeConfig.wakeLengthBo),
+      createWakeTeardropGeometry(
+        bo * wakeConfig.wakeRadiusBo,
+        bo * wakeConfig.wakeLengthBo,
+        wakeConfig.wakeSubdivisions,
+        Math.max(8, Math.round(wakeConfig.wakeSubdivisions * 0.5))
+      ),
       wakeMaterial
     );
     wakeMesh.position.set(0, 0, 0);
@@ -1106,6 +1114,7 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyAuraColorBtn,
       els.flameAoe3dApplyWakeLengthBtn,
       els.flameAoe3dApplyWakeRadiusBtn,
+      els.flameAoe3dApplyWakeSubdivisionsBtn,
       els.flameAoe3dApplyWakeNoiseScaleBtn,
       els.flameAoe3dApplyWakeNoiseSpeedBtn,
       els.flameAoe3dApplyWakeNoiseDensityBtn,

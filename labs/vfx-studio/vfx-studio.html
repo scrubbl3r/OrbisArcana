@@ -1656,6 +1656,11 @@
               <button id="flameAoe3dApplyWakeRadiusBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSubdivisions">Subdivisions</label>
+              <input id="flameAoe3dWakeSubdivisions" class="paramFieldInput" type="number" min="12" max="192" step="1" value="64" />
+              <button id="flameAoe3dApplyWakeSubdivisionsBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
               <label for="flameAoe3dWakeNoiseScale">Perlin scale</label>
               <input id="flameAoe3dWakeNoiseScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="2.35" />
               <button id="flameAoe3dApplyWakeNoiseScaleBtn" class="toolBtn" type="button">Apply</button>
@@ -2346,7 +2351,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503h";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503i";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2854,6 +2859,8 @@
       flameAoe3dApplyWakeLengthBtn: $("flameAoe3dApplyWakeLengthBtn"),
       flameAoe3dWakeRadiusBo: $("flameAoe3dWakeRadiusBo"),
       flameAoe3dApplyWakeRadiusBtn: $("flameAoe3dApplyWakeRadiusBtn"),
+      flameAoe3dWakeSubdivisions: $("flameAoe3dWakeSubdivisions"),
+      flameAoe3dApplyWakeSubdivisionsBtn: $("flameAoe3dApplyWakeSubdivisionsBtn"),
       flameAoe3dWakeNoiseScale: $("flameAoe3dWakeNoiseScale"),
       flameAoe3dApplyWakeNoiseScaleBtn: $("flameAoe3dApplyWakeNoiseScaleBtn"),
       flameAoe3dWakeNoiseSpeed: $("flameAoe3dWakeNoiseSpeed"),
