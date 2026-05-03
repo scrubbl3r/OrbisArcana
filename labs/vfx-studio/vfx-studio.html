@@ -1747,6 +1747,11 @@
               <button id="flameAoe3dApplyWakeCloudsAmountBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
+              <label for="flameAoe3dWakeCloudsMidlevel">Clouds midlevel</label>
+              <input id="flameAoe3dWakeCloudsMidlevel" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.50" />
+              <button id="flameAoe3dApplyWakeCloudsMidlevelBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
               <label for="flameAoe3dWakeCloudsScale">Clouds scale</label>
               <input id="flameAoe3dWakeCloudsScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="1.60" />
               <button id="flameAoe3dApplyWakeCloudsScaleBtn" class="toolBtn" type="button">Apply</button>
@@ -1760,6 +1765,11 @@
               <label for="flameAoe3dWakeCloudsDetail">Clouds detail</label>
               <input id="flameAoe3dWakeCloudsDetail" class="paramFieldInput" type="number" min="1" max="8" step="1" value="4" />
               <button id="flameAoe3dApplyWakeCloudsDetailBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeCloudsSoftness">Clouds softness</label>
+              <input id="flameAoe3dWakeCloudsSoftness" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.35" />
+              <button id="flameAoe3dApplyWakeCloudsSoftnessBtn" class="toolBtn" type="button">Apply</button>
             </div>
           </div>
         </div>
@@ -2351,7 +2361,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503i";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503j";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2895,12 +2905,16 @@
       flameAoe3dApplyWakeNoiseMixBtn: $("flameAoe3dApplyWakeNoiseMixBtn"),
       flameAoe3dWakeCloudsAmountBo: $("flameAoe3dWakeCloudsAmountBo"),
       flameAoe3dApplyWakeCloudsAmountBtn: $("flameAoe3dApplyWakeCloudsAmountBtn"),
+      flameAoe3dWakeCloudsMidlevel: $("flameAoe3dWakeCloudsMidlevel"),
+      flameAoe3dApplyWakeCloudsMidlevelBtn: $("flameAoe3dApplyWakeCloudsMidlevelBtn"),
       flameAoe3dWakeCloudsScale: $("flameAoe3dWakeCloudsScale"),
       flameAoe3dApplyWakeCloudsScaleBtn: $("flameAoe3dApplyWakeCloudsScaleBtn"),
       flameAoe3dWakeCloudsSpeed: $("flameAoe3dWakeCloudsSpeed"),
       flameAoe3dApplyWakeCloudsSpeedBtn: $("flameAoe3dApplyWakeCloudsSpeedBtn"),
       flameAoe3dWakeCloudsDetail: $("flameAoe3dWakeCloudsDetail"),
       flameAoe3dApplyWakeCloudsDetailBtn: $("flameAoe3dApplyWakeCloudsDetailBtn"),
+      flameAoe3dWakeCloudsSoftness: $("flameAoe3dWakeCloudsSoftness"),
+      flameAoe3dApplyWakeCloudsSoftnessBtn: $("flameAoe3dApplyWakeCloudsSoftnessBtn"),
       flameAoe3dWakeVisibleBtn: $("flameAoe3dWakeVisibleBtn"),
       flameAoe3dCoreR: $("flameAoe3dCoreR"),
       flameAoe3dCoreG: $("flameAoe3dCoreG"),
