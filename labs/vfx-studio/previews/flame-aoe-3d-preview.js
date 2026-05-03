@@ -167,7 +167,7 @@ function createFlameShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float upward = objectNormal.y * 0.5 + 0.5;
         float time = uTime * uNoiseSpeed;
         vec3 flow = objectNormal * uNoiseScale;
-        flow.y += time * 2.2;
+        flow.y -= time * 2.2;
         flow.xz += vec2(
           sin(time * 1.7 + objectNormal.y * 4.4),
           cos(time * 1.35 + objectNormal.x * 3.7)
@@ -250,7 +250,7 @@ function createFlameShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 
         float time = uTime * uNoiseSpeed;
         vec3 flow = objectNormal * uNoiseScale;
-        flow.y += time * 2.55;
+        flow.y -= time * 2.55;
         flow.x += sin(time * 1.9 + objectNormal.z * 5.6) * 0.35;
         flow.z += cos(time * 1.45 + objectNormal.x * 4.1) * 0.35;
         float body = fbm(flow);
