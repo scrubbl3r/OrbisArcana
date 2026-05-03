@@ -65,13 +65,6 @@ function clampNumber(value, min, max, fallback) {
   return Math.max(min, Math.min(max, Number.isFinite(n) ? n : f));
 }
 
-function smoothstepNumber(edge0, edge1, value) {
-  const span = edge1 - edge0;
-  if (Math.abs(span) < 0.000001) return value < edge0 ? 0 : 1;
-  const t = Math.max(0, Math.min(1, (value - edge0) / span));
-  return t * t * (3 - (2 * t));
-}
-
 function readByte(els, key, fallback) {
   return Math.round(clampNumber(els && els[key] && els[key].value, 0, 255, fallback));
 }
@@ -179,7 +172,7 @@ function layerVisible(button) {
 
 function wakeDirection(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   const dir = new THREE.Vector3(config.wakeDirX, config.wakeDirY, config.wakeDirZ);
-  if (dir.lengthSq() < 0.0001) dir.set(-1, 0, 0);
+  if (dir.lengthSq() < 0.0001) dir.set(0, 1, 0);
   return dir.normalize();
 }
 
@@ -189,14 +182,14 @@ function createWakeTeardropGeometry(radius, length, radialSegments = 96, heightS
   const normals = [];
   const uvs = [];
   const indices = [];
-  const rootInset = length * 0.08;
+  const rootInset = radius * 0.38;
 
   for (let yIndex = 0; yIndex <= heightSegments; yIndex += 1) {
     const t = yIndex / heightSegments;
     const centerY = (t * length) - rootInset;
-    const rootBulge = 1 - (0.08 * smoothstepNumber(0, 0.18, t));
-    const tailTaper = Math.pow(Math.max(0, 1 - t), 1.72);
-    const profile = radius * Math.max(0.012, rootBulge * tailTaper);
+    const sphereRise = Math.sin(Math.PI * Math.pow(t, 0.45));
+    const tailTaper = Math.pow(Math.max(0, 1 - t), 0.85);
+    const profile = radius * Math.min(1, Math.max(0.001, sphereRise * tailTaper * 1.22));
     for (let xIndex = 0; xIndex <= radialSegments; xIndex += 1) {
       const u = xIndex / radialSegments;
       const angle = u * Math.PI * 2;
