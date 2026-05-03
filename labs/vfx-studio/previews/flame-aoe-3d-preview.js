@@ -190,7 +190,7 @@ function createWakeTeardropGeometry(radius, length, radialSegments = 64, heightS
     const sphereY = Math.cos(phi) * radius;
     const upper01 = Math.max(0, sphereY / radius);
     const stretchAmount = Math.pow(upper01, 1.65) * stretch;
-    const centerY = sphereY + stretchAmount + radius;
+    const centerY = sphereY + stretchAmount;
     const profile = Math.sin(phi) * radius;
     for (let xIndex = 0; xIndex <= radialSegments; xIndex += 1) {
       const u = xIndex / radialSegments;
@@ -791,7 +791,7 @@ export function createFlameAoe3dPreview({
     );
     const wakeDir = wakeDirection(wakeConfig);
     wakeMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), wakeDir);
-    wakeMesh.position.copy(wakeDir).multiplyScalar(bo * wakeConfig.wakeLengthBo * 0.5);
+    wakeMesh.position.set(0, 0, 0);
     wakeMesh.name = "flame_aoe3d:directional_wake";
     wakeMesh.renderOrder = 10;
     wakeMesh.visible = layerVisible(els.flameAoe3dWakeVisibleBtn);
