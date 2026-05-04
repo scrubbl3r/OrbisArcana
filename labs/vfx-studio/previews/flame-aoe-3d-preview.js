@@ -356,7 +356,7 @@ function createAuraShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:directional_wake_material",
-    transparent: false,
+    transparent: true,
     depthWrite: false,
     depthTest: true,
     blending: THREE.NormalBlending,
@@ -670,7 +670,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float density = mix(perlinDensity, simplexDensity, noiseMix);
         float contrast = mix(uWakeNoiseContrast, uWakeSimplexContrast, noiseMix);
         float blobs = colorRampMask(field, density, contrast);
-        gl_FragColor = vec4(vec3(blobs), 1.0);
+        gl_FragColor = vec4(vec3(blobs), blobs);
       }
     `,
   });
