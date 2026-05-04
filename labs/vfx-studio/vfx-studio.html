@@ -1555,44 +1555,6 @@
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
-            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dShellControls">Flame shell</button>
-            <button id="flameAoe3dShellVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Flame shell visibility" title="Toggle Flame shell visibility"></button>
-          </div>
-          <div id="flameAoe3dShellControls" class="controlGroupBody paramFieldRows" hidden>
-            <div class="paramFieldRow">
-              <label for="flameAoe3dShellAlpha">Shell alpha</label>
-              <input id="flameAoe3dShellAlpha" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.82" />
-              <button id="flameAoe3dApplyShellAlphaBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
-              <label for="flameAoe3dDisplace">Displace</label>
-              <input id="flameAoe3dDisplace" class="paramFieldInput" type="number" min="0" max="0.8" step="0.005" value="0.160" />
-              <button id="flameAoe3dApplyDisplaceBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
-              <label for="flameAoe3dNoiseScale">Noise scale</label>
-              <input id="flameAoe3dNoiseScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="2.65" />
-              <button id="flameAoe3dApplyNoiseScaleBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
-              <label for="flameAoe3dNoiseSpeed">Noise speed</label>
-              <input id="flameAoe3dNoiseSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0.72" />
-              <button id="flameAoe3dApplyNoiseSpeedBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
-              <label for="flameAoe3dEdgeCut">Edge cut</label>
-              <input id="flameAoe3dEdgeCut" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.46" />
-              <button id="flameAoe3dApplyEdgeCutBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
-              <label for="flameAoe3dFresnelPower">Fresnel power</label>
-              <input id="flameAoe3dFresnelPower" class="paramFieldInput" type="number" min="0.1" max="12" step="0.05" value="2.20" />
-              <button id="flameAoe3dApplyFresnelPowerBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-          </div>
-        </div>
-        <div class="controlGroup" data-control-group>
-          <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dAuraControls">Aura shell</button>
             <button id="flameAoe3dAuraVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Aura shell visibility" title="Toggle Aura shell visibility"></button>
           </div>
@@ -1641,10 +1603,10 @@
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
-            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeControls">Directional wake</button>
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeModelControls">Wake Model</button>
             <button id="flameAoe3dWakeVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Directional wake visibility" title="Toggle Directional wake visibility"></button>
           </div>
-          <div id="flameAoe3dWakeControls" class="controlGroupBody paramFieldRows" hidden>
+          <div id="flameAoe3dWakeModelControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeLengthBo">Length BO</label>
               <input id="flameAoe3dWakeLengthBo" class="paramFieldInput" type="number" min="0.05" max="4" step="0.01" value="0.95" />
@@ -1660,6 +1622,11 @@
               <input id="flameAoe3dWakeSubdivisions" class="paramFieldInput" type="number" min="12" max="192" step="1" value="64" />
               <button id="flameAoe3dApplyWakeSubdivisionsBtn" class="toolBtn" type="button">Apply</button>
             </div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeNoiseControls">Wake Noise</button>
+          <div id="flameAoe3dWakeNoiseControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeNoiseScale">Perlin scale</label>
               <input id="flameAoe3dWakeNoiseScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="2.35" />
@@ -1740,6 +1707,39 @@
               <label for="flameAoe3dWakeNoiseMix">Noise mix</label>
               <input id="flameAoe3dWakeNoiseMix" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.35" />
               <button id="flameAoe3dApplyWakeNoiseMixBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeDisplaceControls">Wake Displace</button>
+          <div id="flameAoe3dWakeDisplaceControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeDisplaceBo">Cloud strength BO</label>
+              <input id="flameAoe3dWakeDisplaceBo" class="paramFieldInput" type="number" min="0" max="0.5" step="0.005" value="0.020" />
+              <button id="flameAoe3dApplyWakeDisplaceBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeDisplaceScale">Cloud scale</label>
+              <input id="flameAoe3dWakeDisplaceScale" class="paramFieldInput" type="number" min="0.2" max="8" step="0.05" value="2.60" />
+              <button id="flameAoe3dApplyWakeDisplaceScaleBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeDisplaceSpeed">Cloud speed</label>
+              <input id="flameAoe3dWakeDisplaceSpeed" class="paramFieldInput" type="number" min="0" max="4" step="0.05" value="0.35" />
+              <button id="flameAoe3dApplyWakeDisplaceSpeedBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeDisplaceSoftness">Cloud softness</label>
+              <input id="flameAoe3dWakeDisplaceSoftness" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.75" />
+              <button id="flameAoe3dApplyWakeDisplaceSoftnessBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">Cloud influence</span>
+              <label for="flameAoe3dWakeDisplaceInfluenceBottom">bottom</label>
+              <input id="flameAoe3dWakeDisplaceInfluenceBottom" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.15" />
+              <label for="flameAoe3dWakeDisplaceInfluenceTop">top</label>
+              <input id="flameAoe3dWakeDisplaceInfluenceTop" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.55" />
+              <button id="flameAoe3dApplyWakeDisplaceInfluenceBtn" class="toolBtn" type="button">Apply</button>
             </div>
           </div>
         </div>
@@ -2331,7 +2331,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503k";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503m";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2804,19 +2804,6 @@
       orbTeleport3dFadeInMs: $("orbTeleport3dFadeInMs"),
       orbTeleport3dApplyFadeInBtn: $("orbTeleport3dApplyFadeInBtn"),
       previewFlameAoe3d: $("previewFlameAoe3d"),
-      flameAoe3dShellAlpha: $("flameAoe3dShellAlpha"),
-      flameAoe3dApplyShellAlphaBtn: $("flameAoe3dApplyShellAlphaBtn"),
-      flameAoe3dDisplace: $("flameAoe3dDisplace"),
-      flameAoe3dApplyDisplaceBtn: $("flameAoe3dApplyDisplaceBtn"),
-      flameAoe3dNoiseScale: $("flameAoe3dNoiseScale"),
-      flameAoe3dApplyNoiseScaleBtn: $("flameAoe3dApplyNoiseScaleBtn"),
-      flameAoe3dNoiseSpeed: $("flameAoe3dNoiseSpeed"),
-      flameAoe3dApplyNoiseSpeedBtn: $("flameAoe3dApplyNoiseSpeedBtn"),
-      flameAoe3dEdgeCut: $("flameAoe3dEdgeCut"),
-      flameAoe3dApplyEdgeCutBtn: $("flameAoe3dApplyEdgeCutBtn"),
-      flameAoe3dFresnelPower: $("flameAoe3dFresnelPower"),
-      flameAoe3dApplyFresnelPowerBtn: $("flameAoe3dApplyFresnelPowerBtn"),
-      flameAoe3dShellVisibleBtn: $("flameAoe3dShellVisibleBtn"),
       flameAoe3dAuraAlpha: $("flameAoe3dAuraAlpha"),
       flameAoe3dApplyAuraAlphaBtn: $("flameAoe3dApplyAuraAlphaBtn"),
       flameAoe3dAuraScale: $("flameAoe3dAuraScale"),
@@ -2841,6 +2828,17 @@
       flameAoe3dApplyWakeRadiusBtn: $("flameAoe3dApplyWakeRadiusBtn"),
       flameAoe3dWakeSubdivisions: $("flameAoe3dWakeSubdivisions"),
       flameAoe3dApplyWakeSubdivisionsBtn: $("flameAoe3dApplyWakeSubdivisionsBtn"),
+      flameAoe3dWakeDisplaceBo: $("flameAoe3dWakeDisplaceBo"),
+      flameAoe3dApplyWakeDisplaceBtn: $("flameAoe3dApplyWakeDisplaceBtn"),
+      flameAoe3dWakeDisplaceScale: $("flameAoe3dWakeDisplaceScale"),
+      flameAoe3dApplyWakeDisplaceScaleBtn: $("flameAoe3dApplyWakeDisplaceScaleBtn"),
+      flameAoe3dWakeDisplaceSpeed: $("flameAoe3dWakeDisplaceSpeed"),
+      flameAoe3dApplyWakeDisplaceSpeedBtn: $("flameAoe3dApplyWakeDisplaceSpeedBtn"),
+      flameAoe3dWakeDisplaceSoftness: $("flameAoe3dWakeDisplaceSoftness"),
+      flameAoe3dApplyWakeDisplaceSoftnessBtn: $("flameAoe3dApplyWakeDisplaceSoftnessBtn"),
+      flameAoe3dWakeDisplaceInfluenceBottom: $("flameAoe3dWakeDisplaceInfluenceBottom"),
+      flameAoe3dWakeDisplaceInfluenceTop: $("flameAoe3dWakeDisplaceInfluenceTop"),
+      flameAoe3dApplyWakeDisplaceInfluenceBtn: $("flameAoe3dApplyWakeDisplaceInfluenceBtn"),
       flameAoe3dWakeNoiseScale: $("flameAoe3dWakeNoiseScale"),
       flameAoe3dApplyWakeNoiseScaleBtn: $("flameAoe3dApplyWakeNoiseScaleBtn"),
       flameAoe3dWakeNoiseSpeed: $("flameAoe3dWakeNoiseSpeed"),
