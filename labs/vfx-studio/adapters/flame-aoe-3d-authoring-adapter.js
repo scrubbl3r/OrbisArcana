@@ -34,18 +34,6 @@ const FLAME_AOE_3D_FIELDS = Object.freeze([
   ["flameAoe3dWakeSimplexLacunarity", "wakeSimplexLacunarity"],
   ["flameAoe3dWakeSimplexGain", "wakeSimplexGain"],
   ["flameAoe3dWakeNoiseMix", "wakeNoiseMix"],
-  ["flameAoe3dCoreR", "coreR"],
-  ["flameAoe3dCoreG", "coreG"],
-  ["flameAoe3dCoreB", "coreB"],
-  ["flameAoe3dHotR", "hotR"],
-  ["flameAoe3dHotG", "hotG"],
-  ["flameAoe3dHotB", "hotB"],
-  ["flameAoe3dRimR", "rimR"],
-  ["flameAoe3dRimG", "rimG"],
-  ["flameAoe3dRimB", "rimB"],
-  ["flameAoe3dSmokeR", "smokeR"],
-  ["flameAoe3dSmokeG", "smokeG"],
-  ["flameAoe3dSmokeB", "smokeB"],
 ]);
 
 const FLAME_AOE_3D_DEFAULTS = Object.freeze({
@@ -84,18 +72,6 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
   wakeSimplexLacunarity: 2.25,
   wakeSimplexGain: 0.48,
   wakeNoiseMix: 0.35,
-  coreR: 255,
-  coreG: 42,
-  coreB: 5,
-  hotR: 255,
-  hotG: 176,
-  hotB: 0,
-  rimR: 255,
-  rimG: 241,
-  rimB: 181,
-  smokeR: 42,
-  smokeG: 7,
-  smokeB: 2,
 });
 
 function clampNumber(value, min, max, fallback) {
@@ -154,18 +130,6 @@ export function createFlameAoe3dAuthoringAdapter() {
       wakeSimplexLacunarity: fixedNumber(els && els.flameAoe3dWakeSimplexLacunarity && els.flameAoe3dWakeSimplexLacunarity.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSimplexLacunarity),
       wakeSimplexGain: fixedNumber(els && els.flameAoe3dWakeSimplexGain && els.flameAoe3dWakeSimplexGain.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSimplexGain),
       wakeNoiseMix: fixedNumber(els && els.flameAoe3dWakeNoiseMix && els.flameAoe3dWakeNoiseMix.value, 2, FLAME_AOE_3D_DEFAULTS.wakeNoiseMix),
-      coreR: roundedByte(els && els.flameAoe3dCoreR && els.flameAoe3dCoreR.value, FLAME_AOE_3D_DEFAULTS.coreR),
-      coreG: roundedByte(els && els.flameAoe3dCoreG && els.flameAoe3dCoreG.value, FLAME_AOE_3D_DEFAULTS.coreG),
-      coreB: roundedByte(els && els.flameAoe3dCoreB && els.flameAoe3dCoreB.value, FLAME_AOE_3D_DEFAULTS.coreB),
-      hotR: roundedByte(els && els.flameAoe3dHotR && els.flameAoe3dHotR.value, FLAME_AOE_3D_DEFAULTS.hotR),
-      hotG: roundedByte(els && els.flameAoe3dHotG && els.flameAoe3dHotG.value, FLAME_AOE_3D_DEFAULTS.hotG),
-      hotB: roundedByte(els && els.flameAoe3dHotB && els.flameAoe3dHotB.value, FLAME_AOE_3D_DEFAULTS.hotB),
-      rimR: roundedByte(els && els.flameAoe3dRimR && els.flameAoe3dRimR.value, FLAME_AOE_3D_DEFAULTS.rimR),
-      rimG: roundedByte(els && els.flameAoe3dRimG && els.flameAoe3dRimG.value, FLAME_AOE_3D_DEFAULTS.rimG),
-      rimB: roundedByte(els && els.flameAoe3dRimB && els.flameAoe3dRimB.value, FLAME_AOE_3D_DEFAULTS.rimB),
-      smokeR: roundedByte(els && els.flameAoe3dSmokeR && els.flameAoe3dSmokeR.value, FLAME_AOE_3D_DEFAULTS.smokeR),
-      smokeG: roundedByte(els && els.flameAoe3dSmokeG && els.flameAoe3dSmokeG.value, FLAME_AOE_3D_DEFAULTS.smokeG),
-      smokeB: roundedByte(els && els.flameAoe3dSmokeB && els.flameAoe3dSmokeB.value, FLAME_AOE_3D_DEFAULTS.smokeB),
     });
   }
 

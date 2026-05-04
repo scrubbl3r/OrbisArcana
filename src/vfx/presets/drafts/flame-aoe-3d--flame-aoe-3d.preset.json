@@ -41,19 +41,7 @@
     "wakeSimplexOctaves": 3,
     "wakeSimplexLacunarity": 1.1,
     "wakeSimplexGain": 0.1,
-    "wakeNoiseMix": 0.2,
-    "coreR": 255,
-    "coreG": 42,
-    "coreB": 5,
-    "hotR": 255,
-    "hotG": 176,
-    "hotB": 0,
-    "rimR": 255,
-    "rimG": 241,
-    "rimB": 181,
-    "smokeR": 42,
-    "smokeG": 7,
-    "smokeB": 2
+    "wakeNoiseMix": 0.2
   },
   "source": {
     "studio": "vfx-studio.html",

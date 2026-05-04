@@ -29,10 +29,6 @@ function frameCameraToSsotOrbSize(inspector, root, bo) {
 }
 
 const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
-  coreColor: 0xff2a05,
-  hotColor: 0xffb000,
-  rimColor: 0xfff1b5,
-  smokeColor: 0x2a0702,
   auraAlpha: 0.34,
   auraScale: 1.34,
   auraPulse: 0.08,
@@ -85,15 +81,6 @@ function rgbFromFields(els, prefix, fallback) {
   return (r << 16) + (g << 8) + b;
 }
 
-function readFlameColorConfig(els = {}) {
-  return Object.freeze({
-    coreColor: rgbFromFields(els, "flameAoe3dCore", FLAME_AOE_3D_PREVIEW_DEFAULTS.coreColor),
-    hotColor: rgbFromFields(els, "flameAoe3dHot", FLAME_AOE_3D_PREVIEW_DEFAULTS.hotColor),
-    rimColor: rgbFromFields(els, "flameAoe3dRim", FLAME_AOE_3D_PREVIEW_DEFAULTS.rimColor),
-    smokeColor: rgbFromFields(els, "flameAoe3dSmoke", FLAME_AOE_3D_PREVIEW_DEFAULTS.smokeColor),
-  });
-}
-
 function readFlameAuraConfig(els = {}) {
   return Object.freeze({
     auraAlpha: clampNumber(els.flameAoe3dAuraAlpha && els.flameAoe3dAuraAlpha.value, 0, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.auraAlpha),
@@ -134,19 +121,6 @@ function readFlameWakeConfig(els = {}) {
     wakeSimplexLacunarity: clampNumber(els.flameAoe3dWakeSimplexLacunarity && els.flameAoe3dWakeSimplexLacunarity.value, 1.1, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexLacunarity),
     wakeSimplexGain: clampNumber(els.flameAoe3dWakeSimplexGain && els.flameAoe3dWakeSimplexGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexGain),
     wakeNoiseMix: clampNumber(els.flameAoe3dWakeNoiseMix && els.flameAoe3dWakeNoiseMix.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseMix),
-  });
-}
-
-function hydrateFlameColorFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
-  [
-    ["flameAoe3dCore", cfg.coreColor],
-    ["flameAoe3dHot", cfg.hotColor],
-    ["flameAoe3dRim", cfg.rimColor],
-    ["flameAoe3dSmoke", cfg.smokeColor],
-  ].forEach(([prefix, color]) => {
-    if (els[`${prefix}R`]) els[`${prefix}R`].value = String((color >> 16) & 255);
-    if (els[`${prefix}G`]) els[`${prefix}G`].value = String((color >> 8) & 255);
-    if (els[`${prefix}B`]) els[`${prefix}B`].value = String(color & 255);
   });
 }
 
@@ -718,7 +692,6 @@ export function createFlameAoe3dPreview({
   let model = null;
   let createdAt = 0;
   let activeConfig = ORB_MATERIAL_CONFIG;
-  let colorConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
   let auraConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
   let wakeConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
 
@@ -745,10 +718,8 @@ export function createFlameAoe3dPreview({
     const bo = readBo();
     createdAt = performance.now();
     activeConfig = (typeof getOrb3dVisualSettings === "function" && getOrb3dVisualSettings()) || ORB_MATERIAL_CONFIG;
-    colorConfig = readFlameColorConfig(els);
     auraConfig = readFlameAuraConfig(els);
     wakeConfig = readFlameWakeConfig(els);
-    hydrateFlameColorFields(els, colorConfig);
     hydrateFlameAuraFields(els, auraConfig);
     hydrateFlameWakeFields(els, wakeConfig);
     inspector = createWorldObjectInspector({
@@ -794,7 +765,6 @@ export function createFlameAoe3dPreview({
     auraShellMesh.visible = layerVisible(els.flameAoe3dAuraVisibleBtn);
     model.add(auraShellMesh);
     wakeMaterial = createWakeMaterial({
-      ...colorConfig,
       ...wakeConfig,
       wakeDisplacePx: bo * wakeConfig.wakeDisplaceBo,
     });
@@ -835,15 +805,13 @@ export function createFlameAoe3dPreview({
   }
 
   function apply() {
-    colorConfig = readFlameColorConfig(els);
     auraConfig = readFlameAuraConfig(els);
     wakeConfig = readFlameWakeConfig(els);
-    hydrateFlameColorFields(els, colorConfig);
     hydrateFlameAuraFields(els, auraConfig);
     hydrateFlameWakeFields(els, wakeConfig);
     destroyInspector();
     ensureScene();
-    return Object.freeze({ ...colorConfig, ...auraConfig, ...wakeConfig });
+    return Object.freeze({ ...auraConfig, ...wakeConfig });
   }
 
   function clear() {
@@ -887,10 +855,6 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyWakeSimplexLacunarityBtn,
       els.flameAoe3dApplyWakeSimplexGainBtn,
       els.flameAoe3dApplyWakeNoiseMixBtn,
-      els.flameAoe3dApplyCoreColorBtn,
-      els.flameAoe3dApplyHotColorBtn,
-      els.flameAoe3dApplyRimColorBtn,
-      els.flameAoe3dApplySmokeColorBtn,
     ].forEach((btn) => {
       if (btn) btn.addEventListener("click", apply);
     });

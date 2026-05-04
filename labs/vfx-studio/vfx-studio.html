@@ -1743,51 +1743,6 @@
             </div>
           </div>
         </div>
-        <div class="controlGroup" data-control-group>
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dColorControls">Flame colors</button>
-          <div id="flameAoe3dColorControls" class="controlGroupBody paramFieldRows" hidden>
-            <div class="rgbaParamRow">
-              <span class="rgbaLabel">Core RGB</span>
-              <label for="flameAoe3dCoreR">r</label>
-              <input id="flameAoe3dCoreR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
-              <label for="flameAoe3dCoreG">g</label>
-              <input id="flameAoe3dCoreG" class="paramFieldInput" type="number" min="0" max="255" value="42" step="1" />
-              <label for="flameAoe3dCoreB">b</label>
-              <input id="flameAoe3dCoreB" class="paramFieldInput" type="number" min="0" max="255" value="5" step="1" />
-              <button id="flameAoe3dApplyCoreColorBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="rgbaParamRow">
-              <span class="rgbaLabel">Hot RGB</span>
-              <label for="flameAoe3dHotR">r</label>
-              <input id="flameAoe3dHotR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
-              <label for="flameAoe3dHotG">g</label>
-              <input id="flameAoe3dHotG" class="paramFieldInput" type="number" min="0" max="255" value="176" step="1" />
-              <label for="flameAoe3dHotB">b</label>
-              <input id="flameAoe3dHotB" class="paramFieldInput" type="number" min="0" max="255" value="0" step="1" />
-              <button id="flameAoe3dApplyHotColorBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="rgbaParamRow">
-              <span class="rgbaLabel">Rim RGB</span>
-              <label for="flameAoe3dRimR">r</label>
-              <input id="flameAoe3dRimR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
-              <label for="flameAoe3dRimG">g</label>
-              <input id="flameAoe3dRimG" class="paramFieldInput" type="number" min="0" max="255" value="241" step="1" />
-              <label for="flameAoe3dRimB">b</label>
-              <input id="flameAoe3dRimB" class="paramFieldInput" type="number" min="0" max="255" value="181" step="1" />
-              <button id="flameAoe3dApplyRimColorBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="rgbaParamRow">
-              <span class="rgbaLabel">Smoke RGB</span>
-              <label for="flameAoe3dSmokeR">r</label>
-              <input id="flameAoe3dSmokeR" class="paramFieldInput" type="number" min="0" max="255" value="42" step="1" />
-              <label for="flameAoe3dSmokeG">g</label>
-              <input id="flameAoe3dSmokeG" class="paramFieldInput" type="number" min="0" max="255" value="7" step="1" />
-              <label for="flameAoe3dSmokeB">b</label>
-              <input id="flameAoe3dSmokeB" class="paramFieldInput" type="number" min="0" max="255" value="2" step="1" />
-              <button id="flameAoe3dApplySmokeColorBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div class="section" data-effect="bank-orb-3d" hidden>
@@ -2331,7 +2286,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260503n";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260504a";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2872,22 +2827,6 @@
       flameAoe3dWakeNoiseMix: $("flameAoe3dWakeNoiseMix"),
       flameAoe3dApplyWakeNoiseMixBtn: $("flameAoe3dApplyWakeNoiseMixBtn"),
       flameAoe3dWakeVisibleBtn: $("flameAoe3dWakeVisibleBtn"),
-      flameAoe3dCoreR: $("flameAoe3dCoreR"),
-      flameAoe3dCoreG: $("flameAoe3dCoreG"),
-      flameAoe3dCoreB: $("flameAoe3dCoreB"),
-      flameAoe3dApplyCoreColorBtn: $("flameAoe3dApplyCoreColorBtn"),
-      flameAoe3dHotR: $("flameAoe3dHotR"),
-      flameAoe3dHotG: $("flameAoe3dHotG"),
-      flameAoe3dHotB: $("flameAoe3dHotB"),
-      flameAoe3dApplyHotColorBtn: $("flameAoe3dApplyHotColorBtn"),
-      flameAoe3dRimR: $("flameAoe3dRimR"),
-      flameAoe3dRimG: $("flameAoe3dRimG"),
-      flameAoe3dRimB: $("flameAoe3dRimB"),
-      flameAoe3dApplyRimColorBtn: $("flameAoe3dApplyRimColorBtn"),
-      flameAoe3dSmokeR: $("flameAoe3dSmokeR"),
-      flameAoe3dSmokeG: $("flameAoe3dSmokeG"),
-      flameAoe3dSmokeB: $("flameAoe3dSmokeB"),
-      flameAoe3dApplySmokeColorBtn: $("flameAoe3dApplySmokeColorBtn"),
       previewBankOrb3d: $("previewBankOrb3d"),
       previewShockwave3d: $("previewShockwave3d"),
     };
