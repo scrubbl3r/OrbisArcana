@@ -428,6 +428,44 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       varying vec3 vLocalPos;
       varying float vTail;
 
+      float hash31(vec3 p) {
+        p = fract(p * 0.1031);
+        p += dot(p, p.yzx + 33.33);
+        return fract((p.x + p.y) * p.z);
+      }
+
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 0.0)), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x),
+            f.y
+          ),
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x),
+            f.y
+          ),
+          f.z
+        );
+      }
+
+      float broadFbm(vec3 p) {
+        float value = 0.0;
+        float amp = 0.58;
+        float freq = 1.0;
+        for (int i = 0; i < 3; i += 1) {
+          value += noise(p * freq) * amp;
+          freq *= 1.82;
+          amp *= 0.42;
+          p += vec3(7.3, -11.9, 5.1);
+        }
+        return clamp(value, 0.0, 1.0);
+      }
+
       void main() {
         float tail = clamp(uv.y, 0.0, 1.0);
         vec3 local = position;
@@ -448,11 +486,22 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         bulge += tertiary * mix(0.18, 0.03, softness);
         bulge = clamp(bulge, -1.0, 1.0);
 
+        float blobFrequency = 1.25 / max(0.2, uWakeDisplaceScale);
+        vec3 blobFlow = vec3(
+          radialDir.x * blobFrequency,
+          tail * 2.4 * blobFrequency - uTime * uWakeDisplaceSpeed * 0.9,
+          radialDir.y * blobFrequency
+        );
+        float cloud = broadFbm(blobFlow);
+        float blob = smoothstep(mix(0.40, 0.52, softness), mix(0.82, 0.68, softness), cloud);
+        float blobWave = blob * 2.0 - 1.0;
+
         float influence = mix(uWakeDisplaceInfluenceBottom, uWakeDisplaceInfluenceTop, tail);
         float rootMask = smoothstep(0.02, 0.14, tail);
         float tipMask = 1.0 - smoothstep(0.94, 1.0, tail);
         float bodyMask = sin(tail * 3.14159265359);
-        float displacement = bulge * uWakeDisplaceDepth * influence * rootMask * tipMask * bodyMask;
+        float displacementField = mix(bulge, blobWave, 0.58);
+        float displacement = displacementField * uWakeDisplaceDepth * influence * rootMask * tipMask * bodyMask;
         local.xz += radialDir * displacement;
 
         vec4 worldPos = modelMatrix * vec4(local, 1.0);

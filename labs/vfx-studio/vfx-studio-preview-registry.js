@@ -19,7 +19,7 @@ import { createWorldGlobe3dPreview } from "./previews/world-globe-3d-preview.js?
 import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=20260425d";
 import { createOrbTeleportPreview } from "./previews/orb-teleport-preview.js?v=20260425d";
 import { createOrbTeleport3dPreview } from "./previews/orb-teleport-3d-preview.js?v=20260501a";
-import { createFlameAoe3dPreview } from "./previews/flame-aoe-3d-preview.js?v=20260503u";
+import { createFlameAoe3dPreview } from "./previews/flame-aoe-3d-preview.js?v=20260503v";
 import { createBankOrb3dPreview } from "./previews/bank-orb-3d-preview.js?v=20260502a";
 
 export function createStudioPreviewRegistry({
