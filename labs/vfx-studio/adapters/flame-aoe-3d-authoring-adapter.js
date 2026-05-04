@@ -34,6 +34,26 @@ const FLAME_AOE_3D_FIELDS = Object.freeze([
   ["flameAoe3dWakeSimplexLacunarity", "wakeSimplexLacunarity"],
   ["flameAoe3dWakeSimplexGain", "wakeSimplexGain"],
   ["flameAoe3dWakeNoiseMix", "wakeNoiseMix"],
+  ["flameAoe3dWakeGraph0Pct", "wakeGraph0Pct"],
+  ["flameAoe3dWakeGraph0R", "wakeGraph0R"],
+  ["flameAoe3dWakeGraph0G", "wakeGraph0G"],
+  ["flameAoe3dWakeGraph0B", "wakeGraph0B"],
+  ["flameAoe3dWakeGraph0A", "wakeGraph0A"],
+  ["flameAoe3dWakeGraph1Pct", "wakeGraph1Pct"],
+  ["flameAoe3dWakeGraph1R", "wakeGraph1R"],
+  ["flameAoe3dWakeGraph1G", "wakeGraph1G"],
+  ["flameAoe3dWakeGraph1B", "wakeGraph1B"],
+  ["flameAoe3dWakeGraph1A", "wakeGraph1A"],
+  ["flameAoe3dWakeGraph2Pct", "wakeGraph2Pct"],
+  ["flameAoe3dWakeGraph2R", "wakeGraph2R"],
+  ["flameAoe3dWakeGraph2G", "wakeGraph2G"],
+  ["flameAoe3dWakeGraph2B", "wakeGraph2B"],
+  ["flameAoe3dWakeGraph2A", "wakeGraph2A"],
+  ["flameAoe3dWakeGraph3Pct", "wakeGraph3Pct"],
+  ["flameAoe3dWakeGraph3R", "wakeGraph3R"],
+  ["flameAoe3dWakeGraph3G", "wakeGraph3G"],
+  ["flameAoe3dWakeGraph3B", "wakeGraph3B"],
+  ["flameAoe3dWakeGraph3A", "wakeGraph3A"],
 ]);
 
 const FLAME_AOE_3D_DEFAULTS = Object.freeze({
@@ -72,6 +92,26 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
   wakeSimplexLacunarity: 2.25,
   wakeSimplexGain: 0.48,
   wakeNoiseMix: 0.35,
+  wakeGraph0Pct: 0,
+  wakeGraph0R: 0,
+  wakeGraph0G: 0,
+  wakeGraph0B: 0,
+  wakeGraph0A: 0,
+  wakeGraph1Pct: 100,
+  wakeGraph1R: 255,
+  wakeGraph1G: 255,
+  wakeGraph1B: 255,
+  wakeGraph1A: 1,
+  wakeGraph2Pct: "",
+  wakeGraph2R: "",
+  wakeGraph2G: "",
+  wakeGraph2B: "",
+  wakeGraph2A: "",
+  wakeGraph3Pct: "",
+  wakeGraph3R: "",
+  wakeGraph3G: "",
+  wakeGraph3B: "",
+  wakeGraph3A: "",
 });
 
 function clampNumber(value, min, max, fallback) {
@@ -86,6 +126,13 @@ function fixedNumber(value, digits, fallback = 0) {
 
 function roundedByte(value, fallback = 0) {
   return Math.round(clampNumber(value, 0, 255, fallback));
+}
+
+function optionalNumber(value, min, max) {
+  if (value == null || String(value).trim() === "") return "";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "";
+  return Math.max(min, Math.min(max, n));
 }
 
 export function createFlameAoe3dAuthoringAdapter() {
@@ -130,6 +177,26 @@ export function createFlameAoe3dAuthoringAdapter() {
       wakeSimplexLacunarity: fixedNumber(els && els.flameAoe3dWakeSimplexLacunarity && els.flameAoe3dWakeSimplexLacunarity.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSimplexLacunarity),
       wakeSimplexGain: fixedNumber(els && els.flameAoe3dWakeSimplexGain && els.flameAoe3dWakeSimplexGain.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSimplexGain),
       wakeNoiseMix: fixedNumber(els && els.flameAoe3dWakeNoiseMix && els.flameAoe3dWakeNoiseMix.value, 2, FLAME_AOE_3D_DEFAULTS.wakeNoiseMix),
+      wakeGraph0Pct: optionalNumber(els && els.flameAoe3dWakeGraph0Pct && els.flameAoe3dWakeGraph0Pct.value, 0, 100),
+      wakeGraph0R: optionalNumber(els && els.flameAoe3dWakeGraph0R && els.flameAoe3dWakeGraph0R.value, 0, 255),
+      wakeGraph0G: optionalNumber(els && els.flameAoe3dWakeGraph0G && els.flameAoe3dWakeGraph0G.value, 0, 255),
+      wakeGraph0B: optionalNumber(els && els.flameAoe3dWakeGraph0B && els.flameAoe3dWakeGraph0B.value, 0, 255),
+      wakeGraph0A: optionalNumber(els && els.flameAoe3dWakeGraph0A && els.flameAoe3dWakeGraph0A.value, 0, 1),
+      wakeGraph1Pct: optionalNumber(els && els.flameAoe3dWakeGraph1Pct && els.flameAoe3dWakeGraph1Pct.value, 0, 100),
+      wakeGraph1R: optionalNumber(els && els.flameAoe3dWakeGraph1R && els.flameAoe3dWakeGraph1R.value, 0, 255),
+      wakeGraph1G: optionalNumber(els && els.flameAoe3dWakeGraph1G && els.flameAoe3dWakeGraph1G.value, 0, 255),
+      wakeGraph1B: optionalNumber(els && els.flameAoe3dWakeGraph1B && els.flameAoe3dWakeGraph1B.value, 0, 255),
+      wakeGraph1A: optionalNumber(els && els.flameAoe3dWakeGraph1A && els.flameAoe3dWakeGraph1A.value, 0, 1),
+      wakeGraph2Pct: optionalNumber(els && els.flameAoe3dWakeGraph2Pct && els.flameAoe3dWakeGraph2Pct.value, 0, 100),
+      wakeGraph2R: optionalNumber(els && els.flameAoe3dWakeGraph2R && els.flameAoe3dWakeGraph2R.value, 0, 255),
+      wakeGraph2G: optionalNumber(els && els.flameAoe3dWakeGraph2G && els.flameAoe3dWakeGraph2G.value, 0, 255),
+      wakeGraph2B: optionalNumber(els && els.flameAoe3dWakeGraph2B && els.flameAoe3dWakeGraph2B.value, 0, 255),
+      wakeGraph2A: optionalNumber(els && els.flameAoe3dWakeGraph2A && els.flameAoe3dWakeGraph2A.value, 0, 1),
+      wakeGraph3Pct: optionalNumber(els && els.flameAoe3dWakeGraph3Pct && els.flameAoe3dWakeGraph3Pct.value, 0, 100),
+      wakeGraph3R: optionalNumber(els && els.flameAoe3dWakeGraph3R && els.flameAoe3dWakeGraph3R.value, 0, 255),
+      wakeGraph3G: optionalNumber(els && els.flameAoe3dWakeGraph3G && els.flameAoe3dWakeGraph3G.value, 0, 255),
+      wakeGraph3B: optionalNumber(els && els.flameAoe3dWakeGraph3B && els.flameAoe3dWakeGraph3B.value, 0, 255),
+      wakeGraph3A: optionalNumber(els && els.flameAoe3dWakeGraph3A && els.flameAoe3dWakeGraph3A.value, 0, 1),
     });
   }
 

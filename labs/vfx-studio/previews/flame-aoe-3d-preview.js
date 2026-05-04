@@ -62,6 +62,26 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSimplexLacunarity: 2.25,
   wakeSimplexGain: 0.48,
   wakeNoiseMix: 0.35,
+  wakeGraph0Pct: 0,
+  wakeGraph0R: 0,
+  wakeGraph0G: 0,
+  wakeGraph0B: 0,
+  wakeGraph0A: 0,
+  wakeGraph1Pct: 100,
+  wakeGraph1R: 255,
+  wakeGraph1G: 255,
+  wakeGraph1B: 255,
+  wakeGraph1A: 1,
+  wakeGraph2Pct: "",
+  wakeGraph2R: "",
+  wakeGraph2G: "",
+  wakeGraph2B: "",
+  wakeGraph2A: "",
+  wakeGraph3Pct: "",
+  wakeGraph3R: "",
+  wakeGraph3G: "",
+  wakeGraph3B: "",
+  wakeGraph3A: "",
 });
 
 function clampNumber(value, min, max, fallback) {
@@ -79,6 +99,35 @@ function rgbFromFields(els, prefix, fallback) {
   const g = readByte(els, `${prefix}G`, (fallback >> 8) & 255);
   const b = readByte(els, `${prefix}B`, fallback & 255);
   return (r << 16) + (g << 8) + b;
+}
+
+function readOptionalNumber(value, min, max) {
+  if (value == null || String(value).trim() === "") return "";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "";
+  return Math.max(min, Math.min(max, n));
+}
+
+function readWakeGraphConfig(els = {}) {
+  const out = {};
+  for (let i = 0; i < 4; i += 1) {
+    const fallbackPct = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeGraph${i}Pct`];
+    const fallbackR = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeGraph${i}R`];
+    const fallbackG = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeGraph${i}G`];
+    const fallbackB = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeGraph${i}B`];
+    const fallbackA = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeGraph${i}A`];
+    const pctEl = els[`flameAoe3dWakeGraph${i}Pct`];
+    const rEl = els[`flameAoe3dWakeGraph${i}R`];
+    const gEl = els[`flameAoe3dWakeGraph${i}G`];
+    const bEl = els[`flameAoe3dWakeGraph${i}B`];
+    const aEl = els[`flameAoe3dWakeGraph${i}A`];
+    out[`wakeGraph${i}Pct`] = readOptionalNumber(pctEl ? pctEl.value : fallbackPct, 0, 100);
+    out[`wakeGraph${i}R`] = readOptionalNumber(rEl ? rEl.value : fallbackR, 0, 255);
+    out[`wakeGraph${i}G`] = readOptionalNumber(gEl ? gEl.value : fallbackG, 0, 255);
+    out[`wakeGraph${i}B`] = readOptionalNumber(bEl ? bEl.value : fallbackB, 0, 255);
+    out[`wakeGraph${i}A`] = readOptionalNumber(aEl ? aEl.value : fallbackA, 0, 1);
+  }
+  return out;
 }
 
 function readFlameAuraConfig(els = {}) {
@@ -121,6 +170,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSimplexLacunarity: clampNumber(els.flameAoe3dWakeSimplexLacunarity && els.flameAoe3dWakeSimplexLacunarity.value, 1.1, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexLacunarity),
     wakeSimplexGain: clampNumber(els.flameAoe3dWakeSimplexGain && els.flameAoe3dWakeSimplexGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexGain),
     wakeNoiseMix: clampNumber(els.flameAoe3dWakeNoiseMix && els.flameAoe3dWakeNoiseMix.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseMix),
+    ...readWakeGraphConfig(els),
   });
 }
 
@@ -163,6 +213,14 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSimplexLacunarity) els.flameAoe3dWakeSimplexLacunarity.value = String(Number(cfg.wakeSimplexLacunarity).toFixed(2));
   if (els.flameAoe3dWakeSimplexGain) els.flameAoe3dWakeSimplexGain.value = String(Number(cfg.wakeSimplexGain).toFixed(2));
   if (els.flameAoe3dWakeNoiseMix) els.flameAoe3dWakeNoiseMix.value = String(Number(cfg.wakeNoiseMix).toFixed(2));
+  for (let i = 0; i < 4; i += 1) {
+    ["Pct", "R", "G", "B", "A"].forEach((suffix) => {
+      const el = els[`flameAoe3dWakeGraph${i}${suffix}`];
+      if (!el) return;
+      const value = cfg[`wakeGraph${i}${suffix}`];
+      el.value = value == null ? "" : String(value);
+    });
+  }
 }
 
 function layerVisible(button) {
@@ -354,6 +412,31 @@ function createAuraShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 }
 
 function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  const graphStops = [];
+  for (let i = 0; i < 4; i += 1) {
+    const pct = readOptionalNumber(config[`wakeGraph${i}Pct`], 0, 100);
+    const r = readOptionalNumber(config[`wakeGraph${i}R`], 0, 255);
+    const g = readOptionalNumber(config[`wakeGraph${i}G`], 0, 255);
+    const b = readOptionalNumber(config[`wakeGraph${i}B`], 0, 255);
+    const a = readOptionalNumber(config[`wakeGraph${i}A`], 0, 1);
+    if ([pct, r, g, b, a].some((v) => v === "")) continue;
+    graphStops.push({
+      pct: pct / 100,
+      color: new THREE.Vector4(r / 255, g / 255, b / 255, a),
+    });
+  }
+  graphStops.sort((a, b) => a.pct - b.pct);
+  const wakeGraphStops = [0, 1, 1, 1];
+  const wakeGraphColors = [
+    new THREE.Vector4(0, 0, 0, 0),
+    new THREE.Vector4(1, 1, 1, 1),
+    new THREE.Vector4(1, 1, 1, 1),
+    new THREE.Vector4(1, 1, 1, 1),
+  ];
+  graphStops.slice(0, 4).forEach((stop, index) => {
+    wakeGraphStops[index] = stop.pct;
+    wakeGraphColors[index] = stop.color;
+  });
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:directional_wake_material",
     transparent: true,
@@ -386,6 +469,9 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeSimplexLacunarity: { value: config.wakeSimplexLacunarity },
       uWakeSimplexGain: { value: config.wakeSimplexGain },
       uWakeNoiseMix: { value: config.wakeNoiseMix },
+      uWakeGraphCount: { value: Math.max(0, Math.min(4, graphStops.length)) },
+      uWakeGraphStops: { value: wakeGraphStops },
+      uWakeGraphColors: { value: wakeGraphColors },
     },
     vertexShader: `
       precision highp float;
@@ -506,6 +592,9 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeSimplexLacunarity;
       uniform float uWakeSimplexGain;
       uniform float uWakeNoiseMix;
+      uniform int uWakeGraphCount;
+      uniform float uWakeGraphStops[4];
+      uniform vec4 uWakeGraphColors[4];
 
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
@@ -642,6 +731,26 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         return smoothstep(center - edge * 0.5, center + edge * 0.5, field);
       }
 
+      vec4 sampleWakeGraph(float value) {
+        float t = clamp(value, 0.0, 1.0);
+        if (uWakeGraphCount <= 0) return vec4(vec3(t), t);
+        if (uWakeGraphCount == 1) return uWakeGraphColors[0];
+        vec4 result = uWakeGraphColors[0];
+        if (t <= uWakeGraphStops[0]) return result;
+        for (int i = 0; i < 3; i += 1) {
+          if (i >= uWakeGraphCount - 1) break;
+          float left = uWakeGraphStops[i];
+          float right = max(left + 0.0001, uWakeGraphStops[i + 1]);
+          result = uWakeGraphColors[i + 1];
+          if (t <= right) {
+            float localT = clamp((t - left) / (right - left), 0.0, 1.0);
+            result = mix(uWakeGraphColors[i], uWakeGraphColors[i + 1], localT);
+            break;
+          }
+        }
+        return result;
+      }
+
       void main() {
         vec3 surface = normalize(vLocalPos + vec3(0.0, 0.001, 0.0));
 
@@ -670,7 +779,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float density = mix(perlinDensity, simplexDensity, noiseMix);
         float contrast = mix(uWakeNoiseContrast, uWakeSimplexContrast, noiseMix);
         float blobs = colorRampMask(field, density, contrast);
-        gl_FragColor = vec4(vec3(blobs), blobs);
+        gl_FragColor = sampleWakeGraph(blobs);
       }
     `,
   });
@@ -855,6 +964,7 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyWakeSimplexLacunarityBtn,
       els.flameAoe3dApplyWakeSimplexGainBtn,
       els.flameAoe3dApplyWakeNoiseMixBtn,
+      els.flameAoe3dApplyWakeGraphBtn,
     ].forEach((btn) => {
       if (btn) btn.addEventListener("click", apply);
     });

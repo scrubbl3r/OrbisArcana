@@ -537,6 +537,9 @@
     .rgbaParamRow.densityRangeRow{
       grid-template-columns: auto auto minmax(86px, 1fr) auto minmax(86px, 1fr) auto;
     }
+    .rgbaParamRow.wakeGraphRow{
+      grid-template-columns: auto minmax(64px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto;
+    }
     .rgbaParamRow .rgbaLabel,
     .rgbaParamRow label{
       font-size:12px;
@@ -1743,6 +1746,42 @@
             </div>
           </div>
         </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeGraphControls">Wake RGBA Graph</button>
+          <div id="flameAoe3dWakeGraphControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="rgbaParamRow wakeGraphRow">
+              <label for="flameAoe3dWakeGraph0Pct">%</label><input id="flameAoe3dWakeGraph0Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="0" />
+              <label for="flameAoe3dWakeGraph0R">r</label><input id="flameAoe3dWakeGraph0R" class="paramFieldInput" type="number" min="0" max="255" step="1" value="0" />
+              <label for="flameAoe3dWakeGraph0G">g</label><input id="flameAoe3dWakeGraph0G" class="paramFieldInput" type="number" min="0" max="255" step="1" value="0" />
+              <label for="flameAoe3dWakeGraph0B">b</label><input id="flameAoe3dWakeGraph0B" class="paramFieldInput" type="number" min="0" max="255" step="1" value="0" />
+              <label for="flameAoe3dWakeGraph0A">a</label><input id="flameAoe3dWakeGraph0A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0" />
+            </div>
+            <div class="rgbaParamRow wakeGraphRow">
+              <label for="flameAoe3dWakeGraph1Pct">%</label><input id="flameAoe3dWakeGraph1Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="100" />
+              <label for="flameAoe3dWakeGraph1R">r</label><input id="flameAoe3dWakeGraph1R" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+              <label for="flameAoe3dWakeGraph1G">g</label><input id="flameAoe3dWakeGraph1G" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+              <label for="flameAoe3dWakeGraph1B">b</label><input id="flameAoe3dWakeGraph1B" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+              <label for="flameAoe3dWakeGraph1A">a</label><input id="flameAoe3dWakeGraph1A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1" />
+            </div>
+            <div class="rgbaParamRow wakeGraphRow">
+              <label for="flameAoe3dWakeGraph2Pct">%</label><input id="flameAoe3dWakeGraph2Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" />
+              <label for="flameAoe3dWakeGraph2R">r</label><input id="flameAoe3dWakeGraph2R" class="paramFieldInput" type="number" min="0" max="255" step="1" />
+              <label for="flameAoe3dWakeGraph2G">g</label><input id="flameAoe3dWakeGraph2G" class="paramFieldInput" type="number" min="0" max="255" step="1" />
+              <label for="flameAoe3dWakeGraph2B">b</label><input id="flameAoe3dWakeGraph2B" class="paramFieldInput" type="number" min="0" max="255" step="1" />
+              <label for="flameAoe3dWakeGraph2A">a</label><input id="flameAoe3dWakeGraph2A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" />
+            </div>
+            <div class="rgbaParamRow wakeGraphRow">
+              <label for="flameAoe3dWakeGraph3Pct">%</label><input id="flameAoe3dWakeGraph3Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" />
+              <label for="flameAoe3dWakeGraph3R">r</label><input id="flameAoe3dWakeGraph3R" class="paramFieldInput" type="number" min="0" max="255" step="1" />
+              <label for="flameAoe3dWakeGraph3G">g</label><input id="flameAoe3dWakeGraph3G" class="paramFieldInput" type="number" min="0" max="255" step="1" />
+              <label for="flameAoe3dWakeGraph3B">b</label><input id="flameAoe3dWakeGraph3B" class="paramFieldInput" type="number" min="0" max="255" step="1" />
+              <label for="flameAoe3dWakeGraph3A">a</label><input id="flameAoe3dWakeGraph3A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" />
+            </div>
+            <div class="row">
+              <button id="flameAoe3dApplyWakeGraphBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="section" data-effect="bank-orb-3d" hidden>
@@ -2286,7 +2325,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260504a";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260504b";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2827,6 +2866,27 @@
       flameAoe3dWakeNoiseMix: $("flameAoe3dWakeNoiseMix"),
       flameAoe3dApplyWakeNoiseMixBtn: $("flameAoe3dApplyWakeNoiseMixBtn"),
       flameAoe3dWakeVisibleBtn: $("flameAoe3dWakeVisibleBtn"),
+      flameAoe3dWakeGraph0Pct: $("flameAoe3dWakeGraph0Pct"),
+      flameAoe3dWakeGraph0R: $("flameAoe3dWakeGraph0R"),
+      flameAoe3dWakeGraph0G: $("flameAoe3dWakeGraph0G"),
+      flameAoe3dWakeGraph0B: $("flameAoe3dWakeGraph0B"),
+      flameAoe3dWakeGraph0A: $("flameAoe3dWakeGraph0A"),
+      flameAoe3dWakeGraph1Pct: $("flameAoe3dWakeGraph1Pct"),
+      flameAoe3dWakeGraph1R: $("flameAoe3dWakeGraph1R"),
+      flameAoe3dWakeGraph1G: $("flameAoe3dWakeGraph1G"),
+      flameAoe3dWakeGraph1B: $("flameAoe3dWakeGraph1B"),
+      flameAoe3dWakeGraph1A: $("flameAoe3dWakeGraph1A"),
+      flameAoe3dWakeGraph2Pct: $("flameAoe3dWakeGraph2Pct"),
+      flameAoe3dWakeGraph2R: $("flameAoe3dWakeGraph2R"),
+      flameAoe3dWakeGraph2G: $("flameAoe3dWakeGraph2G"),
+      flameAoe3dWakeGraph2B: $("flameAoe3dWakeGraph2B"),
+      flameAoe3dWakeGraph2A: $("flameAoe3dWakeGraph2A"),
+      flameAoe3dWakeGraph3Pct: $("flameAoe3dWakeGraph3Pct"),
+      flameAoe3dWakeGraph3R: $("flameAoe3dWakeGraph3R"),
+      flameAoe3dWakeGraph3G: $("flameAoe3dWakeGraph3G"),
+      flameAoe3dWakeGraph3B: $("flameAoe3dWakeGraph3B"),
+      flameAoe3dWakeGraph3A: $("flameAoe3dWakeGraph3A"),
+      flameAoe3dApplyWakeGraphBtn: $("flameAoe3dApplyWakeGraphBtn"),
       previewBankOrb3d: $("previewBankOrb3d"),
       previewShockwave3d: $("previewShockwave3d"),
     };
