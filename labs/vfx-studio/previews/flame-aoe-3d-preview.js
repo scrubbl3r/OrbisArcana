@@ -43,12 +43,12 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeLengthBo: 0.95,
   wakeRadiusBo: 0.5,
   wakeSubdivisions: 64,
-  wakeDisplaceBo: 0.02,
-  wakeDisplaceScale: 2.6,
+  wakeDisplaceBo: 0.12,
+  wakeDisplaceScale: 1.8,
   wakeDisplaceSpeed: 0.35,
-  wakeDisplaceSoftness: 0.75,
-  wakeDisplaceInfluenceBottom: 0.15,
-  wakeDisplaceInfluenceTop: 0.55,
+  wakeDisplaceSoftness: 0.7,
+  wakeDisplaceInfluenceBottom: 0.35,
+  wakeDisplaceInfluenceTop: 0.85,
   wakeNoiseScale: 2.35,
   wakeNoiseSpeed: 0.86,
   wakeNoiseDensityBottom: 0.52,
@@ -428,48 +428,33 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       varying vec3 vLocalPos;
       varying float vTail;
 
-      float hash31(vec3 p) {
-        p = fract(p * 0.1031);
-        p += dot(p, p.yzx + 33.33);
-        return fract((p.x + p.y) * p.z);
-      }
-
-      float noise(vec3 p) {
-        vec3 i = floor(p);
-        vec3 f = fract(p);
-        f = f * f * (3.0 - 2.0 * f);
-        return mix(
-          mix(
-            mix(hash31(i + vec3(0.0, 0.0, 0.0)), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
-            mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x),
-            f.y
-          ),
-          mix(
-            mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
-            mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x),
-            f.y
-          ),
-          f.z
-        );
-      }
-
       void main() {
         float tail = clamp(uv.y, 0.0, 1.0);
         vec3 local = position;
-        float frequency = 0.72 / max(0.2, uWakeDisplaceScale);
-        vec3 flow = vec3(
-          local.x * frequency,
-          local.y * frequency - uTime * uWakeDisplaceSpeed,
-          local.z * frequency
-        );
-        float cloud = noise(flow);
-        cloud = mix(cloud, smoothstep(0.0, 1.0, cloud), clamp(uWakeDisplaceSoftness, 0.0, 1.0));
-        float centeredCloud = (cloud - 0.5) * 2.0;
-        vec3 radial = normalize(local + vec3(0.0, 0.0001, 0.0));
+
+        vec2 radialPlane = local.xz;
+        float radius = length(radialPlane);
+        vec2 radialDir = radius > 0.0001 ? radialPlane / radius : vec2(1.0, 0.0);
+        float angle = atan(radialDir.y, radialDir.x);
+        float time = uTime * uWakeDisplaceSpeed * 6.28318530718;
+        float verticalPhase = tail * 6.28318530718 * (1.55 / max(0.2, uWakeDisplaceScale));
+
+        float softness = clamp(uWakeDisplaceSoftness, 0.0, 1.0);
+        float primary = sin(angle * 2.0 + verticalPhase - time);
+        float secondary = sin(angle * 3.0 - verticalPhase * 0.72 + time * 0.63 + 1.7);
+        float tertiary = sin(angle + verticalPhase * 1.31 + time * 0.37 + 3.4);
+        float bulge = primary * 0.62;
+        bulge += secondary * mix(0.26, 0.04, softness);
+        bulge += tertiary * mix(0.18, 0.03, softness);
+        bulge = clamp(bulge, -1.0, 1.0);
+
         float influence = mix(uWakeDisplaceInfluenceBottom, uWakeDisplaceInfluenceTop, tail);
         float rootMask = smoothstep(0.02, 0.14, tail);
         float tipMask = 1.0 - smoothstep(0.94, 1.0, tail);
-        local += radial * centeredCloud * uWakeDisplaceDepth * influence * rootMask * tipMask;
+        float bodyMask = sin(tail * 3.14159265359);
+        float displacement = bulge * uWakeDisplaceDepth * influence * rootMask * tipMask * bodyMask;
+        local.xz += radialDir * displacement;
+
         vec4 worldPos = modelMatrix * vec4(local, 1.0);
         vWorldPos = worldPos.xyz;
         vLocalPos = local;
