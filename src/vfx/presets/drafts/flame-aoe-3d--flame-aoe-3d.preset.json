@@ -18,11 +18,11 @@
     "auraB": 24,
     "wakeLengthBo": 1.8,
     "wakeRadiusBo": 0.59,
-    "wakeSubdivisions": 96,
-    "wakeDisplaceBo": 0.12,
+    "wakeSubdivisions": 64,
+    "wakeDisplaceBo": 0.2,
     "wakeDisplaceScale": 1.8,
-    "wakeDisplaceSpeed": 0.35,
-    "wakeDisplaceSoftness": 0.7,
+    "wakeDisplaceSpeed": 4,
+    "wakeDisplaceSoftness": 1,
     "wakeDisplaceInfluenceBottom": 0.35,
     "wakeDisplaceInfluenceTop": 0.85,
     "wakeNoiseScale": 1,
@@ -62,6 +62,6 @@
     "settingsKey": "flame-aoe-3d",
     "registryDefaultPresetId": "preset.flame_aoe.default"
   },
-  "savedAtMs": 1777848524159,
-  "exportedAtMs": 1777848524159
+  "savedAtMs": 1777863154617,
+  "exportedAtMs": 1777863154617
 }
