@@ -880,7 +880,9 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float contrast = mix(uWakeNoiseContrast, uWakeSimplexContrast, noiseMix);
         float blobs = colorRampMask(field, density, contrast);
         vec4 mapped = sampleWakeGraph(blobs);
-        mapped.a *= sampleWakeAlphaGradient(vWakeHeight);
+        float verticalAlpha = sampleWakeAlphaGradient(vWakeHeight);
+        mapped.rgb *= verticalAlpha;
+        mapped.a *= verticalAlpha;
         if (mapped.a <= 0.004) discard;
         gl_FragColor = mapped;
       }
