@@ -193,10 +193,16 @@ export function createOrbGlobe3dRuntime({
         removeParticle(state.orbiting, (_, idx) => idx === i);
       }
     }
+    for (let i = state.inner.length - 1; i >= 0; i -= 1) {
+      const entry = state.inner[i];
+      if (!entry.globeId || !activeIds.has(entry.globeId)) {
+        removeParticle(state.inner, (_, idx) => idx === i);
+      }
+    }
     for (const globe of active) {
       if (globe.state === "bound") continue;
       if (!findParticle(state.orbiting, globe) && !findParticle(state.inner, globe)) {
-        state.orbiting.push(makeParticle(globe, "orbiting"));
+        state.inner.push(makeParticle(globe, "inner"));
       }
     }
     publishCount();
@@ -204,10 +210,11 @@ export function createOrbGlobe3dRuntime({
   }
 
   function load(payload = {}) {
+    const existingInner = removeParticle(state.inner, (entry) => entry === findParticle(state.inner, payload));
     const existingOrbit = removeParticle(state.orbiting, (entry) => entry === findParticle(state.orbiting, payload));
-    const source = existingOrbit || payload;
-    if (!findParticle(state.inner, payload)) {
-      state.inner.push(makeParticle(source, "inner"));
+    const source = existingInner || existingOrbit || payload;
+    if (!findParticle(state.orbiting, payload)) {
+      state.orbiting.push(makeParticle(source, "orbiting"));
     }
     publishCount();
     requestFrame();
