@@ -2015,8 +2015,16 @@ function shellExecuteWordCastAction(shellContext, castActionId, context = {}) {
   if (!shellSpellCastExecutor || typeof shellSpellCastExecutor.execute !== "function") {
     return { handled: false, skipped: "executor_unavailable" };
   }
-  const result = shellSpellCastExecutor.execute(castActionId, context);
-  return result && typeof result === "object" ? result : { handled: !!result };
+  try {
+    const result = shellSpellCastExecutor.execute(castActionId, context);
+    return result && typeof result === "object" ? result : { handled: !!result };
+  } catch (error) {
+    return {
+      handled: false,
+      skipped: "action_threw",
+      reason: error && error.message ? String(error.message) : String(error || "unknown_error"),
+    };
+  }
 }
 
 function shellHandleVoiceSpellCast(shellContext, payload = {}) {
