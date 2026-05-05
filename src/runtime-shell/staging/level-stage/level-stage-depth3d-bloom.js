@@ -2,29 +2,53 @@ import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { ORB_BLOOM_CONFIG } from "../../../game-runtime/rendering/three/three-bloom-config.js?v=20260505d";
+import {
+  ORB_BLOOM_CONFIG,
+  STAGE_BLOOM_CONFIG,
+} from "../../../game-runtime/rendering/three/three-bloom-config.js?v=20260505e";
 
-function readSearchParam(name, fallback = "") {
+function clampNumber(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+function readSearchParam(name) {
   try {
-    return String(new URLSearchParams(globalThis.location && globalThis.location.search || "").get(name) || fallback);
+    const params = new URLSearchParams(globalThis.location && globalThis.location.search || "");
+    if (!params.has(name)) return null;
+    const value = params.get(name);
+    const normalized = String(value == null ? "" : value).trim();
+    return normalized ? normalized : null;
   } catch (_) {
-    return fallback;
+    return null;
   }
 }
 
 function readNumberParam(name, fallback) {
-  const raw = readSearchParam(name, "");
+  const raw = readSearchParam(name);
+  if (raw === null) return fallback;
   const value = Number(raw);
   return Number.isFinite(value) ? value : fallback;
 }
 
-function resolveStageBloomConfig(config = ORB_BLOOM_CONFIG) {
-  const source = config && typeof config === "object" ? config : ORB_BLOOM_CONFIG;
+function readConfigNumberParam(name, value, fallback) {
+  const resolvedFallback = Number.isFinite(Number(value)) ? Number(value) : fallback;
+  return readNumberParam(name, resolvedFallback);
+}
+
+function resolveStageBloomConfig(config = STAGE_BLOOM_CONFIG) {
+  const source = config && typeof config === "object" ? config : STAGE_BLOOM_CONFIG;
+  const pixelRatio = readNumberParam(
+    "depth3dBloomPixelRatio",
+    readConfigNumberParam("depth3dBloomPixelRatio", source.pixelRatio, STAGE_BLOOM_CONFIG.pixelRatio || 1)
+  );
   return Object.freeze({
     enabled: source.enabled !== false,
-    strength: readNumberParam("depth3dBloomStrength", Number(source.strength) || ORB_BLOOM_CONFIG.strength),
-    radius: readNumberParam("depth3dBloomRadius", Number(source.radius) || ORB_BLOOM_CONFIG.radius),
-    threshold: readNumberParam("depth3dBloomThreshold", Number(source.threshold) || ORB_BLOOM_CONFIG.threshold),
+    strength: readConfigNumberParam("depth3dBloomStrength", source.strength, ORB_BLOOM_CONFIG.strength),
+    radius: readConfigNumberParam("depth3dBloomRadius", source.radius, ORB_BLOOM_CONFIG.radius),
+    threshold: readConfigNumberParam("depth3dBloomThreshold", source.threshold, ORB_BLOOM_CONFIG.threshold),
+    pixelRatio: clampNumber(pixelRatio, 0.25, 1, 1),
   });
 }
 
@@ -40,11 +64,18 @@ function createTraceState({
     renderCalls: 0,
     resizeCalls: 0,
     lastRenderAtMs: 0,
-    lastSize: Object.freeze({ width: 0, height: 0 }),
+    lastSize: Object.freeze({
+      width: 0,
+      height: 0,
+      pixelRatio: Number(config && config.pixelRatio) || 1,
+      renderWidth: 0,
+      renderHeight: 0,
+    }),
     config,
     renderer: renderer ? {
       alpha: !!(renderer.getContext && renderer.getContext().getContextAttributes && renderer.getContext().getContextAttributes().alpha),
       pixelRatio: typeof renderer.getPixelRatio === "function" ? renderer.getPixelRatio() : null,
+      bloomPixelRatio: Number(config && config.pixelRatio) || 1,
     } : null,
     camera: camera ? {
       fov: camera.fov,
@@ -93,6 +124,9 @@ export function createLevelStageDepth3dBloom({
   }
 
   const composer = new EffectComposer(renderer);
+  if (typeof composer.setPixelRatio === "function") {
+    composer.setPixelRatio(resolvedConfig.pixelRatio);
+  }
   composer.addPass(new RenderPass(scene, camera));
 
   const bloomPass = new UnrealBloomPass(
@@ -115,10 +149,18 @@ export function createLevelStageDepth3dBloom({
     setSize(width = 1, height = 1) {
       const resolvedWidth = Math.max(1, Math.round(width));
       const resolvedHeight = Math.max(1, Math.round(height));
+      if (typeof composer.setPixelRatio === "function") {
+        composer.setPixelRatio(resolvedConfig.pixelRatio);
+      }
       composer.setSize(resolvedWidth, resolvedHeight);
-      bloomPass.setSize(resolvedWidth, resolvedHeight);
       trace.resizeCalls += 1;
-      trace.lastSize = Object.freeze({ width: resolvedWidth, height: resolvedHeight });
+      trace.lastSize = Object.freeze({
+        width: resolvedWidth,
+        height: resolvedHeight,
+        pixelRatio: resolvedConfig.pixelRatio,
+        renderWidth: Math.max(1, Math.round(resolvedWidth * resolvedConfig.pixelRatio)),
+        renderHeight: Math.max(1, Math.round(resolvedHeight * resolvedConfig.pixelRatio)),
+      });
     },
     render() {
       trace.renderCalls += 1;
@@ -132,4 +174,3 @@ export function createLevelStageDepth3dBloom({
     },
   });
 }
-

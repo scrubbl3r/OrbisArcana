@@ -35,7 +35,7 @@ import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.j
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260501a";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260502a";
-import { createLevelStageDepth3dBloom } from "./level-stage-depth3d-bloom.js?v=20260505e";
+import { createLevelStageDepth3dBloom } from "./level-stage-depth3d-bloom.js?v=20260505f";
 import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430b";
 import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";
 import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetry.js?v=20260430b";
@@ -43,7 +43,7 @@ import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetr
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
 const WORLD_GLOBE_FOREGROUND_Z_BO = 0.08;
-const LEVEL_STAGE_DEPTH3D_BLOOM_TRACE_VERSION = "20260505q";
+const LEVEL_STAGE_DEPTH3D_BLOOM_TRACE_VERSION = "20260505t";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -302,6 +302,7 @@ export function createLevelStageDepth3dLayer({
       `s:${trace.config && trace.config.strength}`,
       `r:${trace.config && trace.config.radius}`,
       `t:${trace.config && trace.config.threshold}`,
+      `px:${trace.config && trace.config.pixelRatio}`,
     ].join(",");
     if (!bloomMarkedReady && perfTrace && typeof perfTrace.mark === "function") {
       bloomMarkedReady = true;
