@@ -7,7 +7,7 @@ export const ORB_BLOOM_CONFIG = Object.freeze({
 
 export const STAGE_BLOOM_CONFIG = Object.freeze({
   ...ORB_BLOOM_CONFIG,
-  pixelRatio: 0.5,
+  pixelRatio: 1,
   strength: 0.58,
   radius: 0.38,
   threshold: 0.16,

@@ -48,7 +48,7 @@ function resolveStageBloomConfig(config = STAGE_BLOOM_CONFIG) {
     strength: readConfigNumberParam("depth3dBloomStrength", source.strength, ORB_BLOOM_CONFIG.strength),
     radius: readConfigNumberParam("depth3dBloomRadius", source.radius, ORB_BLOOM_CONFIG.radius),
     threshold: readConfigNumberParam("depth3dBloomThreshold", source.threshold, ORB_BLOOM_CONFIG.threshold),
-    pixelRatio: clampNumber(pixelRatio, 0.25, 1, 0.5),
+    pixelRatio: clampNumber(pixelRatio, 0.25, 1, 1),
   });
 }
 
