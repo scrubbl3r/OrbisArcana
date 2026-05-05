@@ -639,6 +639,7 @@ export function createFlameAoe3dRuntime({
   getConfig = () => FLAME_AOE_3D_PRESET_DEFAULT,
   now = () => performance.now(),
   onNeedsFrame = () => {},
+  traceMeasure = null,
 } = {}) {
   let raf = 0;
   let timer = 0;
@@ -662,6 +663,11 @@ export function createFlameAoe3dRuntime({
   const shaderMotion = new THREE.Vector3();
   const shaderVertexLag = new THREE.Vector2();
   const shaderLagDirection = new THREE.Vector2();
+
+  function measureTrace(name, fn) {
+    if (typeof traceMeasure === "function") return traceMeasure(name, fn);
+    return typeof fn === "function" ? fn() : undefined;
+  }
 
   function requestFrame() {
     if (typeof onNeedsFrame === "function") onNeedsFrame();
@@ -762,69 +768,71 @@ export function createFlameAoe3dRuntime({
     lastTickMs = Number(nowMs) || 0;
     if (auraMaterial && auraMaterial.uniforms && auraMaterial.uniforms.uTime) auraMaterial.uniforms.uTime.value = time;
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uTime) wakeMaterial.uniforms.uTime.value = time;
-    updateWakeMotion(dtSec);
+    measureTrace("flameAoe3d.wakeMotion", () => updateWakeMotion(dtSec));
     requestFrame();
     raf = requestAnimationFrame(tick);
   }
 
   function play(payload = {}) {
     clear();
-    const baseConfig = typeof getConfig === "function" ? (getConfig() || {}) : {};
-    const config = normalizeFlameAoe3dRuntimeConfig({
-      ...baseConfig,
-      ...(payload && typeof payload === "object" ? payload : {}),
+    return measureTrace("flameAoe3d.play", () => {
+      const baseConfig = typeof getConfig === "function" ? (getConfig() || {}) : {};
+      const config = normalizeFlameAoe3dRuntimeConfig({
+        ...baseConfig,
+        ...(payload && typeof payload === "object" ? payload : {}),
+      });
+      activeConfig = config;
+      const orbModel = typeof getOrbModel === "function" ? getOrbModel() : null;
+      if (!orbModel) return { handled: false, skipped: "orb_model_missing" };
+      const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 72);
+      runtimeBo = bo;
+      startedAtMs = Number(now()) || performance.now();
+      lastTickMs = startedAtMs;
+      const initialPosition = readOrbPosition();
+      if (initialPosition) {
+        lastPosition.copy(initialPosition);
+        motionInitialized = true;
+      }
+      group = new THREE.Group();
+      group.name = "flame_aoe3d:runtime";
+      auraMaterial = createAuraShellMaterial(config);
+      const aura = new THREE.Mesh(
+        new THREE.SphereGeometry(bo * 0.5 * config.auraScale, 96, 48),
+        auraMaterial
+      );
+      aura.name = "flame_aoe3d:aura_shell";
+      aura.renderOrder = 8;
+      wakeMaterial = createWakeMaterial({
+        ...config,
+        wakeDisplacePx: bo * config.wakeDisplaceBo,
+      });
+      const wake = new THREE.Mesh(
+        createWakeTeardropGeometry(
+          bo * config.wakeRadiusBo,
+          bo * config.wakeLengthBo,
+          config.wakeSubdivisions,
+          Math.max(8, Math.round(config.wakeSubdivisions * 0.5))
+        ),
+        wakeMaterial
+      );
+      wake.name = "flame_aoe3d:directional_wake";
+      wake.renderOrder = 10;
+      wakeMesh = wake;
+      const wakeBottomY = -bo * config.wakeRadiusBo;
+      const pivotY = wakeBottomY + (bo * config.wakeLeanOffsetBo);
+      wakePivot = new THREE.Group();
+      wakePivot.name = "flame_aoe3d:directional_wake_pivot";
+      wakePivot.position.set(0, pivotY, 0);
+      wake.position.set(0, -pivotY, 0);
+      group.add(aura);
+      wakePivot.add(wake);
+      group.add(wakePivot);
+      orbModel.add(group);
+      timer = setTimeout(clear, config.durationMs);
+      raf = requestAnimationFrame(tick);
+      requestFrame();
+      return { handled: true };
     });
-    activeConfig = config;
-    const orbModel = typeof getOrbModel === "function" ? getOrbModel() : null;
-    if (!orbModel) return { handled: false, skipped: "orb_model_missing" };
-    const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 72);
-    runtimeBo = bo;
-    startedAtMs = Number(now()) || performance.now();
-    lastTickMs = startedAtMs;
-    const initialPosition = readOrbPosition();
-    if (initialPosition) {
-      lastPosition.copy(initialPosition);
-      motionInitialized = true;
-    }
-    group = new THREE.Group();
-    group.name = "flame_aoe3d:runtime";
-    auraMaterial = createAuraShellMaterial(config);
-    const aura = new THREE.Mesh(
-      new THREE.SphereGeometry(bo * 0.5 * config.auraScale, 96, 48),
-      auraMaterial
-    );
-    aura.name = "flame_aoe3d:aura_shell";
-    aura.renderOrder = 8;
-    wakeMaterial = createWakeMaterial({
-      ...config,
-      wakeDisplacePx: bo * config.wakeDisplaceBo,
-    });
-    const wake = new THREE.Mesh(
-      createWakeTeardropGeometry(
-        bo * config.wakeRadiusBo,
-        bo * config.wakeLengthBo,
-        config.wakeSubdivisions,
-        Math.max(8, Math.round(config.wakeSubdivisions * 0.5))
-      ),
-      wakeMaterial
-    );
-    wake.name = "flame_aoe3d:directional_wake";
-    wake.renderOrder = 10;
-    wakeMesh = wake;
-    const wakeBottomY = -bo * config.wakeRadiusBo;
-    const pivotY = wakeBottomY + (bo * config.wakeLeanOffsetBo);
-    wakePivot = new THREE.Group();
-    wakePivot.name = "flame_aoe3d:directional_wake_pivot";
-    wakePivot.position.set(0, pivotY, 0);
-    wake.position.set(0, -pivotY, 0);
-    group.add(aura);
-    wakePivot.add(wake);
-    group.add(wakePivot);
-    orbModel.add(group);
-    timer = setTimeout(clear, config.durationMs);
-    raf = requestAnimationFrame(tick);
-    requestFrame();
-    return { handled: true };
   }
 
   return Object.freeze({

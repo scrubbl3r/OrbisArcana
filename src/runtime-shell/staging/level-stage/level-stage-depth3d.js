@@ -31,7 +31,7 @@ import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecyc
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260501a";
-import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505h";
+import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505i";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260501a";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260502a";
@@ -145,6 +145,7 @@ export function createLevelStageDepth3dLayer({
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => FLAME_AOE_3D_PRESET_DEFAULT,
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
+    traceMeasure: perfTrace && typeof perfTrace.measure === "function" ? perfTrace.measure : null,
   });
   const worldGlobe3dRuntime = createWorldGlobe3dRuntime({
     group: globe3dGroup,
