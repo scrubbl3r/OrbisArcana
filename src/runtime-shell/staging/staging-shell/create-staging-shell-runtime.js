@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260505t";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260505u";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js?v=20260504a";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -48,7 +48,7 @@ import {
 } from "../authored-level-camera.js?v=20260424c";
 import { createPerfTrace } from "../perf-trace.js?v=20260430b";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260505t";
+globalThis.__orbisStagingShellRuntimeVersion = "20260505u";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1472,6 +1472,10 @@ function startShellStageLoop(shellContext) {
   if (runtime.stageLoop && typeof runtime.stageLoop.stop === "function") {
     runtime.stageLoop.stop();
   }
+  if (runtime.stageLoopMonitorId) {
+    clearInterval(runtime.stageLoopMonitorId);
+    runtime.stageLoopMonitorId = 0;
+  }
 
   const perfTrace = runtime.perfTrace || null;
   const traceMeasure = (name, fn) => (
@@ -1479,6 +1483,12 @@ function startShellStageLoop(shellContext) {
       ? perfTrace.measure(name, fn)
       : (typeof fn === "function" ? fn() : undefined)
   );
+  const stageLoopTrace = {
+    frameCount: 0,
+    startedAtMs: performance.now(),
+    lastFrameAtMs: 0,
+    lastStallMarkAtMs: 0,
+  };
   const pipelineHooks = {
     clamp,
     getLateralBounds: () => traceMeasure("bounds.lateral", () => shellLateralBounds(shellContext)),
@@ -1535,6 +1545,8 @@ function startShellStageLoop(shellContext) {
     isReady: () => true,
     clamp,
     runFrame: ({ ts, dt, nowMs, wasOnGround }) => {
+      stageLoopTrace.frameCount += 1;
+      stageLoopTrace.lastFrameAtMs = performance.now();
       const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
         ? runtime.orbRuntimeState.get()
         : null;
@@ -1596,6 +1608,42 @@ function startShellStageLoop(shellContext) {
   });
   runtime.orbRuntimeLoop = runtime.stageLoop;
   runtime.stageLoop.start();
+  if (perfTrace && typeof perfTrace.mark === "function") {
+    perfTrace.mark("stage.loop.started", {
+      hasLoop: !!runtime.stageLoop,
+      hasState: !!(runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"),
+    });
+  }
+  runtime.stageLoopMonitorId = setInterval(() => {
+    const now = performance.now();
+    const last = stageLoopTrace.lastFrameAtMs || stageLoopTrace.startedAtMs;
+    const ageMs = Math.max(0, now - last);
+    if (perfTrace && typeof perfTrace.record === "function") {
+      perfTrace.record("stage.loopAge", ageMs, 1000, { event: false });
+    }
+    if (
+      perfTrace &&
+      typeof perfTrace.mark === "function" &&
+      ageMs >= 1000 &&
+      now - stageLoopTrace.lastStallMarkAtMs >= 1000
+    ) {
+      stageLoopTrace.lastStallMarkAtMs = now;
+      const loopMeta = runtime.stageLoop && typeof runtime.stageLoop.getState === "function"
+        ? runtime.stageLoop.getState()
+        : null;
+      const orbState = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+        ? runtime.orbRuntimeState.get()
+        : null;
+      perfTrace.mark("stage.loop.stalled", {
+        ageMs: Math.round(ageMs),
+        frameCount: stageLoopTrace.frameCount,
+        loop: loopMeta,
+        hasOrbState: !!orbState,
+        lastTs: orbState && Number.isFinite(Number(orbState.lastTs)) ? Math.round(Number(orbState.lastTs)) : null,
+        visibility: shellContext.rootDocument && shellContext.rootDocument.visibilityState || "",
+      });
+    }
+  }, 1000);
 }
 
 function bindShellStageResize(shellContext) {
