@@ -152,6 +152,25 @@ function retuneInnerMotion(globe, config) {
   globe.innerDriftMax = drifts.max;
 }
 
+function applyBounceDrift(velocity, normal, driftMin = 0, driftMax = 0) {
+  const speed = velocity.length();
+  if (speed <= 0) return;
+  const drift = randomBetween(driftMin || 0, driftMax || 0);
+  if (drift <= 0) {
+    velocity.setLength(speed);
+    return;
+  }
+  const tangent = TMP_B.set(randomBetween(-1, 1), randomBetween(-1, 1), randomBetween(-1, 1));
+  tangent.addScaledVector(normal, -tangent.dot(normal));
+  if (tangent.lengthSq() < 0.0001) tangent.crossVectors(normal, UP);
+  if (tangent.lengthSq() < 0.0001) tangent.set(1, 0, 0);
+  tangent.normalize();
+  const signedDrift = drift * (Math.random() < 0.5 ? -1 : 1);
+  velocity.addScaledVector(tangent, Math.tan(signedDrift) * speed);
+  if (velocity.dot(normal) >= 0) velocity.addScaledVector(normal, -(velocity.dot(normal) + 0.001));
+  velocity.normalize().multiplyScalar(speed);
+}
+
 function updateInnerGlobe(globe, dt, orbRadius, globeRadius, paddingPx) {
   if (!globe.innerPos || !globe.innerVelocity) return;
   globe.innerPos.addScaledVector(globe.innerVelocity, dt);
@@ -162,9 +181,7 @@ function updateInnerGlobe(globe, dt, orbRadius, globeRadius, paddingPx) {
     globe.innerPos.copy(normal).multiplyScalar(wallRadius);
     const normalSpeed = globe.innerVelocity.dot(normal);
     globe.innerVelocity.addScaledVector(normal, -2 * normalSpeed);
-    const drift = randomBetween(globe.innerDriftMin || 0, globe.innerDriftMax || 0);
-    const axis = TMP_A.set(randomBetween(-1, 1), randomBetween(-1, 1), randomBetween(-1, 1)).normalize();
-    globe.innerVelocity.applyAxisAngle(axis, drift * (Math.random() < 0.5 ? -1 : 1));
+    applyBounceDrift(globe.innerVelocity, normal, globe.innerDriftMin, globe.innerDriftMax);
   }
 }
 
@@ -180,6 +197,7 @@ export function createOrbGlobe3dPreview({
   let config = null;
   let lastFrameMs = 0;
   let createdAtMs = 0;
+  let retuneInnerOnNextRebuild = false;
 
   function readBo() {
     const visualState = typeof getOrbBaseVisualState === "function" ? getOrbBaseVisualState() : null;
@@ -236,14 +254,14 @@ export function createOrbGlobe3dPreview({
 
     samples.forEach((globe) => {
       const isBound = globe.state === "bound";
-      if (isBound) assignOrbitMotion(globe);
       const diameter = bo * (isBound ? config.worldCollectedDiameterBO : config.worldConsumedDiameterBO);
       globe.radius = diameter * 0.5;
       globe.model = makeGlobeMesh(diameter, config.material);
       if (!isBound && (!globe.innerPos || !globe.innerVelocity)) initializeInnerMotion(globe, config);
-      else if (!isBound) retuneInnerMotion(globe, config);
+      else if (!isBound && retuneInnerOnNextRebuild) retuneInnerMotion(globe, config);
       inspector.scene.add(globe.model);
     });
+    retuneInnerOnNextRebuild = false;
     updateSamples(0, 0, bo);
     inspector.render();
     return { bo, radius: orbRadius, globes: samples.length };
@@ -325,6 +343,15 @@ export function createOrbGlobe3dPreview({
     if (els.orbGlobe3dAddBtn) els.orbGlobe3dAddBtn.addEventListener("click", () => addGlobe());
     if (els.orbGlobe3dBindBtn) els.orbGlobe3dBindBtn.addEventListener("click", () => bindGlobe());
     if (els.orbGlobe3dClearBtn) els.orbGlobe3dClearBtn.addEventListener("click", clear);
+    [
+      "orbGlobe3dApplyInnerSpeedMinBtn",
+      "orbGlobe3dApplyInnerSpeedMaxBtn",
+      "orbGlobe3dApplyInnerDriftMinBtn",
+      "orbGlobe3dApplyInnerDriftMaxBtn",
+    ].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.addEventListener("click", () => { retuneInnerOnNextRebuild = true; });
+    });
     document.querySelectorAll('[id^="orbGlobe3dApply"]').forEach((btn) => {
       btn.addEventListener("click", rebuildScene);
     });

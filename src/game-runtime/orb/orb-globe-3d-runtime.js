@@ -64,6 +64,25 @@ function createPlane() {
   return { normal, u, v };
 }
 
+function applyBounceDrift(velocity, normal, driftMin = 0, driftMax = 0) {
+  const speed = velocity.length();
+  if (speed <= 0) return;
+  const drift = randRange(driftMin, driftMax, 0);
+  if (drift <= 0) {
+    velocity.setLength(speed);
+    return;
+  }
+  const tangent = TMP_B.set(randRange(-1, 1), randRange(-1, 1), randRange(-1, 1));
+  tangent.addScaledVector(normal, -tangent.dot(normal));
+  if (tangent.lengthSq() < 0.0001) tangent.crossVectors(normal, UP);
+  if (tangent.lengthSq() < 0.0001) tangent.set(1, 0, 0);
+  tangent.normalize();
+  const signedDrift = drift * (Math.random() < 0.5 ? -1 : 1);
+  velocity.addScaledVector(tangent, Math.tan(signedDrift) * speed);
+  if (velocity.dot(normal) >= 0) velocity.addScaledVector(normal, -(velocity.dot(normal) + 0.001));
+  velocity.normalize().multiplyScalar(speed);
+}
+
 function normalizeGlobePayload(payload = {}) {
   return Object.freeze({
     globeId: String(payload.globeId || payload.boundGlobeId || payload.id || ""),
@@ -287,6 +306,7 @@ export function createOrbGlobe3dRuntime({
         entry.offset.setLength(bound);
         const normal = entry.offset.clone().normalize();
         entry.velocity.reflect(normal).normalize();
+        applyBounceDrift(entry.velocity, normal, entry.drift, entry.drift);
       }
       entry.model.visible = !state.dead;
       entry.model.position.set(cx + entry.offset.x, cy + entry.offset.y, cz + entry.offset.z);
