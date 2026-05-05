@@ -171,6 +171,39 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "flame-aoe-3d": {
+      const keys = [
+        "durationMs",
+        "auraAlpha", "auraScale", "auraPulse", "auraNoiseScale", "auraNoiseSpeed", "auraFresnelPower", "auraR", "auraG", "auraB",
+        "wakeLengthBo", "wakeRadiusBo", "wakeSubdivisions",
+        "wakeDisplaceBo", "wakeDisplaceScale", "wakeDisplaceSpeed", "wakeDisplaceSoftness", "wakeDisplaceInfluenceBottom", "wakeDisplaceInfluenceTop",
+        "wakeNoiseScale", "wakeNoiseSpeed", "wakeNoiseDensityBottom", "wakeNoiseDensityTop", "wakeNoiseContrast", "wakeNoiseOctaves", "wakeNoiseLacunarity", "wakeNoiseGain",
+        "wakeSimplexScale", "wakeSimplexSpeed", "wakeSimplexDensityBottom", "wakeSimplexDensityTop", "wakeSimplexContrast", "wakeSimplexOctaves", "wakeSimplexLacunarity", "wakeSimplexGain",
+        "wakeNoiseMix", "wakeGraphEnabled",
+      ];
+      const optionalKeys = [];
+      for (let i = 0; i < 4; i += 1) {
+        optionalKeys.push(
+          `wakeGraph${i}Pct`, `wakeGraph${i}R`, `wakeGraph${i}G`, `wakeGraph${i}B`, `wakeGraph${i}A`,
+          `wakeAlphaGradient${i}Pct`, `wakeAlphaGradient${i}A`
+        );
+      }
+      const settings = {};
+      keys.forEach((key) => {
+        if (p[key] == null || String(p[key]).trim() === "") return;
+        const value = Number(p[key]);
+        settings[key] = Number.isFinite(value) ? value : p[key];
+      });
+      optionalKeys.forEach((key) => {
+        if (p[key] == null || String(p[key]).trim() === "") {
+          settings[key] = "";
+          return;
+        }
+        const value = Number(p[key]);
+        settings[key] = Number.isFinite(value) ? value : p[key];
+      });
+      return `export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze(${JSON.stringify(settings, null, 2)});\n`;
+    }
     case "electric-aoe":
       return [
         "export const ELECTRIC_AOE_PRESET_DEFAULT = Object.freeze({",

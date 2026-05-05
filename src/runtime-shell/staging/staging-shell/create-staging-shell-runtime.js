@@ -1949,6 +1949,12 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
         ? activeAdapter.playBubbleShield3d(payload)
         : { handled: false, skipped: "active_stage_bubble_shield3d_missing" };
     },
+    playFlameAoe3dRuntime: (payload = {}) => {
+      const activeAdapter = getActiveShellStageAdapter(shellContext);
+      return activeAdapter && typeof activeAdapter.playFlameAoe3d === "function"
+        ? activeAdapter.playFlameAoe3d(payload)
+        : { handled: false, skipped: "active_stage_flame_aoe3d_missing" };
+    },
     clamp,
     clamp01,
     evenPx,
@@ -3006,6 +3012,7 @@ async function initShellKwsRuntime(shellContext) {
     BUBBLE_SHIELD_3D_PRESET_DEFAULT,
     SHOCKWAVE_PRESET_DEFAULT,
     FLAME_AOE_PRESET_DEFAULT,
+    FLAME_AOE_3D_PRESET_DEFAULT,
     ELECTRIC_AOE_PRESET_DEFAULT,
     TELEPORT_PRESET_DEFAULT,
     ORB_NOD_PRESET_DEFAULT,
@@ -3070,6 +3077,7 @@ async function initShellKwsRuntime(shellContext) {
       bubbleShield3d: BUBBLE_SHIELD_3D_PRESET_DEFAULT,
       shockwave: SHOCKWAVE_PRESET_DEFAULT,
       flameAoe: FLAME_AOE_PRESET_DEFAULT,
+      flameAoe3d: FLAME_AOE_3D_PRESET_DEFAULT,
       electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
       teleport: TELEPORT_PRESET_DEFAULT,
       orbNod: ORB_NOD_PRESET_DEFAULT,

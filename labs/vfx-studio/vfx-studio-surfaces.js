@@ -62,6 +62,7 @@ export function createLabEffectSurfaces({
       previewFile: "flame-aoe-3d-preview.js",
       autoPreviewKey: "applyFlameAoe3d",
       defaultBindTarget: "spell.aoe_flame",
+      livePreset: Object.freeze({ buildKey: "flame-aoe-3d", path: ["src", "vfx", "presets", "flame-aoe-3d-default.js"], exportName: "FLAME_AOE_3D_PRESET_DEFAULT" }),
       adapterFile: "flame-aoe-3d-authoring-adapter.js",
       authoringAdapter: createFlameAoe3dAuthoringAdapter,
     }),

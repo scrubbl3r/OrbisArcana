@@ -31,7 +31,9 @@ import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecyc
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260501a";
+import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260504a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260501a";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260504a";
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260502a";
 import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430b";
 import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";
@@ -137,6 +139,12 @@ export function createLevelStageDepth3dLayer({
     getConfig: () => BUBBLE_SHIELD_3D_PRESET_DEFAULT,
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
+  const flameAoe3dRuntime = createFlameAoe3dRuntime({
+    getOrbModel: () => orb3dActorRuntime.getModel(),
+    getBo: () => orb3dActorRuntime.getBo(),
+    getConfig: () => FLAME_AOE_3D_PRESET_DEFAULT,
+    onNeedsFrame: () => renderLoop.scheduleAnimation(),
+  });
   const worldGlobe3dRuntime = createWorldGlobe3dRuntime({
     group: globe3dGroup,
     createGlobeObject: createRuntimeGlobe3dObject,
@@ -240,6 +248,7 @@ export function createLevelStageDepth3dLayer({
       || orb3dActorRuntime.isSpinColorActive()
       || teleport3dRuntime.isActive()
       || bubbleShield3dRuntime.isActive()
+      || flameAoe3dRuntime.isActive()
     );
   }
 
@@ -416,6 +425,17 @@ export function createLevelStageDepth3dLayer({
       }
       return result || { handled: false };
     },
+    playFlameAoe3d(payload = {}) {
+      if (disposed || !orb3dActorRuntime.hasModel()) {
+        return { handled: false, skipped: "flame_aoe3d_runtime_missing" };
+      }
+      const result = flameAoe3dRuntime.play(payload);
+      if (result && result.handled) {
+        renderLoop.scheduleAnimation();
+        renderLoop.renderFrame(renderLoop.getLastFrame() || {});
+      }
+      return result || { handled: false };
+    },
     applyOrbSpinColor(color = {}) {
       if (disposed) return;
       orb3dActorRuntime.applySpinColor(color);
@@ -435,6 +455,7 @@ export function createLevelStageDepth3dLayer({
       eventBindings.dispose();
       teleport3dRuntime.destroy();
       bubbleShield3dRuntime.destroy();
+      flameAoe3dRuntime.destroy();
       orbLifecycle3dRuntime.dispose();
       clearGlobe3dObjects();
       orb3dActorRuntime.dispose();

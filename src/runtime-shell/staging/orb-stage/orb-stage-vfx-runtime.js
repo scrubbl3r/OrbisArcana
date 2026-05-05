@@ -6,6 +6,7 @@ import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/telep
 import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/teleport-behavior-state.js?v=20260501a";
 import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501d";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260501a";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260504a";
 import {
   resolveBubbleShieldGeometry,
   resolveElectricAoeGeometry,
@@ -39,6 +40,7 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
       diameterRatio: 2.0,
       durationMs: 10000,
     },
+    flame3d: { ...FLAME_AOE_3D_PRESET_DEFAULT },
     electric: {
       startRatio: 0.80,
       endRatio: 2.0,
@@ -102,6 +104,7 @@ export function initOrbStageReceiverVfxRuntime({
   playOrbNod3dRuntime = null,
   playOrbTeleport3dRuntime = null,
   playBubbleShield3dRuntime = null,
+  playFlameAoe3dRuntime = null,
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
   clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
   evenPx = (value) => value,
@@ -310,6 +313,14 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function directPlayFlameAoe() {
+    if (typeof playFlameAoe3dRuntime === "function") {
+      const result = playFlameAoe3dRuntime(
+        (vfxDefaults && vfxDefaults.flame3d && typeof vfxDefaults.flame3d === "object")
+          ? vfxDefaults.flame3d
+          : Object.create(null)
+      );
+      if (result && result.handled) return result;
+    }
     if (typeof playFlameAoeRuntime === "function") {
       const result = playFlameAoeRuntime({
         flameAoeRuntime: stageVfx.flameAoeRuntime,
