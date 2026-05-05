@@ -26,7 +26,7 @@ import {
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
 import { renderLevelStage } from "../level-stage/level-stage.js?v=20260504a";
-import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js";
+import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js?v=20260504a";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
 import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
@@ -3381,7 +3381,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260504a",
+  moduleCacheBustV = "20260504c",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

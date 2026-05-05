@@ -20,7 +20,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260504b";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260504c";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -350,7 +350,7 @@ export async function loadReceiverInitModules() {
     import("../content/spells/validate-spell-runtime-routing.js"),
     import("../content/spells/validate-spell-schema-integrity.js"),
     import("../content/spell-rules/index.js"),
-    import("../content/interactions-v2/index.js"),
+    import(`../content/interactions-v2/index.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../content/world-items/default-world-items.js"),
   ]);
 
