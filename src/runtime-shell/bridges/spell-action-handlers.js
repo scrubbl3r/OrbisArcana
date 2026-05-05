@@ -49,7 +49,8 @@ export function createSpellActionHandlers({
     },
     play_flame_aoe(payload = {}) {
       if (typeof executeAoeFlame !== "function") return;
-      executeAoeFlame({ playFlameAoe, payload });
+      const result = executeAoeFlame({ playFlameAoe, payload });
+      return result && result.handled ? true : false;
     },
     play_frost_aoe(payload = {}) {
       void payload;

@@ -2030,7 +2030,24 @@ function shellHandleVoiceSpellCast(shellContext, payload = {}) {
   const payloadCastActionId = String(payload.castActionId || "").trim().toLowerCase();
   const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
   const castActionId = payloadCastActionId || String((wordDef && wordDef.castActionId) || wordId || "");
+  if (runtime.perfTrace && typeof runtime.perfTrace.mark === "function") {
+    runtime.perfTrace.mark("spell.voice_cast", {
+      wordId,
+      castActionId,
+      slot: String(payload.slot || payload.directionGroup || ""),
+      trigger: String(payload.trigger || ""),
+    });
+  }
   const result = shellExecuteWordCastAction(shellContext, castActionId, { payload, intent });
+  if (runtime.perfTrace && typeof runtime.perfTrace.mark === "function") {
+    runtime.perfTrace.mark("spell.action_result", {
+      castActionId,
+      handled: !!(result && result.handled),
+      skipped: String(result && result.skipped || ""),
+      blocked: !!(result && result.blocked),
+      reason: String(result && result.reason || ""),
+    });
+  }
   if (!(result && result.handled) || !wordDef) return result;
   const postCastActions = Array.isArray(wordDef.postCastActions) ? wordDef.postCastActions : null;
   if (postCastActions) {
@@ -3234,8 +3251,8 @@ async function initShellKwsRuntime(shellContext) {
         ? getRuntimeVfx().playElectricAoe()
         : { handled: false }
     ),
-    playFlameAoe: () => (
-      shellPlayFlameAoe(shellContext)
+    playFlameAoe: (payload = {}) => (
+      shellPlayFlameAoe(shellContext, payload)
     ),
     playTeleport: (payload = {}) => (
       getRuntimeVfx() && typeof getRuntimeVfx().playTeleport === "function"

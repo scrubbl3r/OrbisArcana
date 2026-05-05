@@ -8,8 +8,8 @@ export function executeAoeFlame({
   if (typeof playFlameAoe !== "function") {
     return { handled: false };
   }
-  playFlameAoe(payload);
-  return { handled: true };
+  const result = playFlameAoe(payload);
+  return result && typeof result === "object" ? result : { handled: result !== false };
 }
 
 export function playFlameAoeRuntime({
