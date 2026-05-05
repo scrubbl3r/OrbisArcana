@@ -571,12 +571,12 @@ export function createFlameAoe3dRuntime({
     const alpha = expLerpAlpha(dtSec, activeConfig && activeConfig.wakeLeanLag);
     wakeOffset.lerp(targetWakeOffset, alpha);
     if (wakePivot) {
-      wakePivot.position.x = wakeOffset.x;
-      wakePivot.position.z = wakeOffset.z;
+      wakePivot.position.x = 0;
+      wakePivot.position.z = 0;
       wakePivot.rotation.z = THREE.MathUtils.clamp(-wakeOffset.x / (bo * 1.15), -0.34, 0.34);
       wakePivot.rotation.x = THREE.MathUtils.clamp(wakeOffset.z / (bo * 1.35), -0.22, 0.22);
     }
-    shaderMotion.copy(wakeOffset).multiplyScalar(1 / Math.max(1, bo));
+    shaderMotion.set(0, 0, 0);
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeMotionOffset) {
       wakeMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
     }
