@@ -2068,8 +2068,8 @@
         <div class="paramGrid">
           <div class="paramField"><label for="orbGlobe3dOrbitDistanceRatio">Orbit distance BO</label><input id="orbGlobe3dOrbitDistanceRatio" class="paramFieldInput" type="number" min="0.10" max="10.00" value="1.07" step="0.01" /><button id="orbGlobe3dApplyOrbitDistanceRatioBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="orbGlobe3dOrbitDistanceMin">Orbit distance min BO</label><input id="orbGlobe3dOrbitDistanceMin" class="paramFieldInput" type="number" min="0" max="10" value="0.02" step="0.01" /><button id="orbGlobe3dApplyOrbitDistanceMinBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="orbGlobe3dSpeedMin">Orbit speed min</label><input id="orbGlobe3dSpeedMin" class="paramFieldInput" type="number" min="0" max="12" value="0.25" step="0.01" /><button id="orbGlobe3dApplySpeedMinBtn" class="toolBtn" type="button">Apply</button></div>
-          <div class="paramField"><label for="orbGlobe3dSpeedMax">Orbit speed max</label><input id="orbGlobe3dSpeedMax" class="paramFieldInput" type="number" min="0" max="12" value="0.30" step="0.01" /><button id="orbGlobe3dApplySpeedMaxBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="orbGlobe3dSpeedMin">Orbit speed min RPS</label><input id="orbGlobe3dSpeedMin" class="paramFieldInput" type="number" min="0" max="12" value="0.25" step="0.01" /><button id="orbGlobe3dApplySpeedMinBtn" class="toolBtn" type="button">Apply</button></div>
+          <div class="paramField"><label for="orbGlobe3dSpeedMax">Orbit speed max RPS</label><input id="orbGlobe3dSpeedMax" class="paramFieldInput" type="number" min="0" max="12" value="0.30" step="0.01" /><button id="orbGlobe3dApplySpeedMaxBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="orbGlobe3dDriftMin">Orbit drift min</label><input id="orbGlobe3dDriftMin" class="paramFieldInput" type="number" min="0" max="12" value="0.50" step="0.01" /><button id="orbGlobe3dApplyDriftMinBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="orbGlobe3dDriftMax">Orbit drift max</label><input id="orbGlobe3dDriftMax" class="paramFieldInput" type="number" min="0" max="12" value="1.00" step="0.01" /><button id="orbGlobe3dApplyDriftMaxBtn" class="toolBtn" type="button">Apply</button></div>
           <div class="paramField"><label for="orbGlobe3dInnerSpeedMin">Inner speed min BO/s</label><input id="orbGlobe3dInnerSpeedMin" class="paramFieldInput" type="number" min="0" max="40" value="3.67" step="0.01" /><button id="orbGlobe3dApplyInnerSpeedMinBtn" class="toolBtn" type="button">Apply</button></div>
@@ -2379,7 +2379,7 @@
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-    import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502d";
+    import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425d";
     import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
     import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425d";

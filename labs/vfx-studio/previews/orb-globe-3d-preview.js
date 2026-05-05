@@ -10,7 +10,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { createGlobeModel } from "../../../src/game-runtime/world/globe-3d-model.js?v=20260429a";
 import { createGlobeMaterial } from "../../../src/game-runtime/world/globe-3d-material.js?v=20260502b";
-import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260502d";
+import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/world-globe-3d-default.js?v=20260502c";
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -225,6 +225,7 @@ export function createOrbGlobe3dPreview({
 
     samples.forEach((globe) => {
       const isBound = globe.state === "bound";
+      if (isBound) assignOrbitMotion(globe);
       const diameter = bo * (isBound ? config.worldCollectedDiameterBO : config.worldConsumedDiameterBO);
       globe.radius = diameter * 0.5;
       globe.model = makeGlobeMesh(diameter, config.material);
@@ -262,19 +263,26 @@ export function createOrbGlobe3dPreview({
     });
   }
 
-  function addGlobe(overrides = {}, { render = true } = {}) {
+  function assignOrbitMotion(globe, overrides = {}) {
     const speeds = readRange(els, "orbGlobe3dSpeedMin", "orbGlobe3dSpeedMax", 0.25, 0.30);
     const drifts = readRange(els, "orbGlobe3dDriftMin", "orbGlobe3dDriftMax", 0.50, 1.00);
-    samples.push({
+    globe.speed = Number.isFinite(Number(overrides.speed)) ? Number(overrides.speed) : randomBetween(speeds.min, speeds.max);
+    globe.direction = Number.isFinite(Number(overrides.direction)) ? Number(overrides.direction) : (Math.random() < 0.5 ? -1 : 1);
+    globe.drift = Number.isFinite(Number(overrides.drift)) ? Number(overrides.drift) : randomBetween(drifts.min, drifts.max);
+    globe.driftDirection = Number.isFinite(Number(overrides.driftDirection)) ? Number(overrides.driftDirection) : (Math.random() < 0.5 ? -1 : 1);
+  }
+
+  function addGlobe(overrides = {}, { render = true } = {}) {
+    const globe = {
       id: nextId++,
       state: "loaded",
       phase: Number.isFinite(Number(overrides.phase)) ? Number(overrides.phase) : Math.random() * Math.PI * 2,
-      speed: Number.isFinite(Number(overrides.speed)) ? Number(overrides.speed) : randomBetween(speeds.min, speeds.max),
-      direction: Number.isFinite(Number(overrides.direction)) ? Number(overrides.direction) : (Math.random() < 0.5 ? -1 : 1),
-      drift: Number.isFinite(Number(overrides.drift)) ? Number(overrides.drift) : randomBetween(drifts.min, drifts.max),
-      driftDirection: Number.isFinite(Number(overrides.driftDirection)) ? Number(overrides.driftDirection) : (Math.random() < 0.5 ? -1 : 1),
       plane: overrides.plane || createPlane(),
       model: null,
+    };
+    assignOrbitMotion(globe, overrides);
+    samples.push({
+      ...globe,
     });
     if (render) rebuildScene();
   }
@@ -286,6 +294,7 @@ export function createOrbGlobe3dPreview({
       globe = samples.find((entry) => entry.state === "loaded");
     }
     if (globe) {
+      assignOrbitMotion(globe);
       globe.state = "bound";
       globe.model = null;
       globe.innerPos = null;
