@@ -482,6 +482,11 @@ function getWakeAlphaGradientStops(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   const graphStops = getWakeGraphStops(config);
   const alphaGradientStops = getWakeAlphaGradientStops(config);
+  const wakeRadiusPx = Math.max(0.0001, Number(config.wakeRadiusPx) || 1);
+  const wakeLengthPx = Math.max(wakeRadiusPx * 2, Number(config.wakeLengthPx) || wakeRadiusPx * 2);
+  const wakeStretchPx = Math.max(0, wakeLengthPx - wakeRadiusPx * 2);
+  const wakeGradientMinY = -wakeRadiusPx;
+  const wakeGradientMaxY = wakeRadiusPx + wakeStretchPx;
   const wakeGraphStops = [0, 1, 1, 1];
   const wakeGraphColors = [
     new THREE.Vector4(0, 0, 0, 0),
@@ -539,6 +544,8 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeAlphaGradientCount: { value: Math.max(0, Math.min(4, alphaGradientStops.length)) },
       uWakeAlphaGradientStops: { value: wakeAlphaGradientStops },
       uWakeAlphaGradientValues: { value: wakeAlphaGradientValues },
+      uWakeGradientMinY: { value: wakeGradientMinY },
+      uWakeGradientMaxY: { value: wakeGradientMaxY },
     },
     vertexShader: `
       precision highp float;
@@ -550,10 +557,13 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeDisplaceSoftness;
       uniform float uWakeDisplaceInfluenceBottom;
       uniform float uWakeDisplaceInfluenceTop;
+      uniform float uWakeGradientMinY;
+      uniform float uWakeGradientMaxY;
 
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
       varying float vTail;
+      varying float vWakeGradientY;
 
       float hash31(vec3 p) {
         p = fract(p * 0.1031);
@@ -635,6 +645,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         vWorldPos = worldPos.xyz;
         vLocalPos = local;
         vTail = tail;
+        vWakeGradientY = clamp((local.y - uWakeGradientMinY) / max(0.0001, uWakeGradientMaxY - uWakeGradientMinY), 0.0, 1.0);
         gl_Position = projectionMatrix * viewMatrix * worldPos;
       }
     `,
@@ -670,6 +681,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
       varying float vTail;
+      varying float vWakeGradientY;
 
       float hash31(vec3 p) {
         p = fract(p * 0.1031);
@@ -872,7 +884,8 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float contrast = mix(uWakeNoiseContrast, uWakeSimplexContrast, noiseMix);
         float blobs = colorRampMask(field, density, contrast);
         vec4 mapped = sampleWakeGraph(blobs);
-        mapped.a *= sampleWakeAlphaGradient(vTail);
+        mapped.a *= sampleWakeAlphaGradient(vWakeGradientY);
+        if (mapped.a <= 0.004) discard;
         gl_FragColor = mapped;
       }
     `,
@@ -970,6 +983,8 @@ export function createFlameAoe3dPreview({
     wakeMaterial = createWakeMaterial({
       ...wakeConfig,
       wakeDisplacePx: bo * wakeConfig.wakeDisplaceBo,
+      wakeRadiusPx: bo * wakeConfig.wakeRadiusBo,
+      wakeLengthPx: bo * wakeConfig.wakeLengthBo,
     });
     wakeMesh = new THREE.Mesh(
       createWakeTeardropGeometry(
