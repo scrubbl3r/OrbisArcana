@@ -26,7 +26,7 @@ export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "wakeXDampGraph1Damp": 0.9,
   "wakeXDampGraph2Pct": 100,
   "wakeXDampGraph2Damp": 0,
-  "wakeLeadingStrength": 0.8,
+  "wakeLeadingStrength": 0.95,
   "wakeLeadingWidth": 0.45,
   "wakeDisplaceBo": 0.25,
   "wakeDisplaceScale": 1.8,
