@@ -340,14 +340,16 @@ function buildVectorDepthLayerMesh({
       walls.userData.loop = loop;
       model.add(walls);
     }
-    const edgeGeometry = buildVectorLoopEdges(loop, depthPx, worldWidthPx, worldHeightPx);
+    const edgeGeometry = environmentMode === DEPTH_ENVIRONMENT_MODE.debug
+      ? buildVectorLoopEdges(loop, depthPx, worldWidthPx, worldHeightPx)
+      : null;
     if (edgeGeometry) {
       const edges = new THREE.LineSegments(
         edgeGeometry,
         new THREE.LineBasicMaterial({
-          color: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0x66727d : 0xf4fbff,
+          color: 0x66727d,
           transparent: true,
-          opacity: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.56 : 0.82,
+          opacity: 0.56,
           depthTest: true,
           depthWrite: false,
         })
@@ -503,21 +505,23 @@ export async function buildDepthLayerMesh({
   mesh.name = `depth:${String(layer.id || "layer")}`;
   const baseRenderOrder = resolveAuthoredRenderOrder(layer, { fallback: 1 });
   mesh.renderOrder = baseRenderOrder;
-  const edges = new THREE.LineSegments(
-    new THREE.EdgesGeometry(geometry, 18),
-    new THREE.LineBasicMaterial({
-      color: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0x8f98a2 : 0xf4fbff,
-      transparent: true,
-      opacity: environmentMode === DEPTH_ENVIRONMENT_MODE.debug ? 0.36 : 0.76,
-      depthTest: true,
-      depthWrite: false,
-    })
-  );
   const model = new THREE.Group();
   model.name = `depth:${String(layer.id || "layer")}:sealed_volume`;
   model.renderOrder = baseRenderOrder;
-  edges.renderOrder = baseRenderOrder + 0.2;
   model.add(mesh);
-  model.add(edges);
+  if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) {
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geometry, 18),
+      new THREE.LineBasicMaterial({
+        color: 0x8f98a2,
+        transparent: true,
+        opacity: 0.36,
+        depthTest: true,
+        depthWrite: false,
+      })
+    );
+    edges.renderOrder = baseRenderOrder + 0.2;
+    model.add(edges);
+  }
   return model;
 }
