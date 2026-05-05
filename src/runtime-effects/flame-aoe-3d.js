@@ -58,6 +58,12 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeLagGraph1Amount: optionalNumber(source.wakeLagGraph1Amount ?? fallback.wakeLagGraph1Amount ?? 0, 0, 10),
     wakeLagGraph2Pct: optionalNumber(source.wakeLagGraph2Pct ?? fallback.wakeLagGraph2Pct ?? 100, 0, 100),
     wakeLagGraph2Amount: optionalNumber(source.wakeLagGraph2Amount ?? fallback.wakeLagGraph2Amount ?? 1, 0, 10),
+    wakeXDampGraph0Pct: optionalNumber(source.wakeXDampGraph0Pct ?? fallback.wakeXDampGraph0Pct ?? 0, 0, 100),
+    wakeXDampGraph0Damp: optionalNumber(source.wakeXDampGraph0Damp ?? fallback.wakeXDampGraph0Damp ?? 1, 0, 1),
+    wakeXDampGraph1Pct: optionalNumber(source.wakeXDampGraph1Pct ?? fallback.wakeXDampGraph1Pct ?? 30, 0, 100),
+    wakeXDampGraph1Damp: optionalNumber(source.wakeXDampGraph1Damp ?? fallback.wakeXDampGraph1Damp ?? 0.9, 0, 1),
+    wakeXDampGraph2Pct: optionalNumber(source.wakeXDampGraph2Pct ?? fallback.wakeXDampGraph2Pct ?? 100, 0, 100),
+    wakeXDampGraph2Damp: optionalNumber(source.wakeXDampGraph2Damp ?? fallback.wakeXDampGraph2Damp ?? 0, 0, 1),
     wakeDisplaceBo: clampNumber(source.wakeDisplaceBo, 0, 0.5, fallback.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(source.wakeDisplaceScale, 0.2, 8, fallback.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(source.wakeDisplaceSpeed, 0, 4, fallback.wakeDisplaceSpeed),
@@ -181,6 +187,18 @@ function getWakeLagGraphStops(config) {
   return stops;
 }
 
+function getWakeXDampGraphStops(config) {
+  const stops = [];
+  for (let i = 0; i < 3; i += 1) {
+    const pct = optionalNumber(config[`wakeXDampGraph${i}Pct`], 0, 100);
+    const damp = optionalNumber(config[`wakeXDampGraph${i}Damp`], 0, 1);
+    if ([pct, damp].some((v) => v === "")) continue;
+    stops.push({ pct: pct / 100, damp });
+  }
+  stops.sort((a, b) => a.pct - b.pct);
+  return stops;
+}
+
 function createAuraShellMaterial(config) {
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:aura_shell_material",
@@ -286,6 +304,7 @@ function createWakeMaterial(config) {
   const graphStops = getWakeGraphStops(config);
   const alphaStops = getWakeAlphaGradientStops(config);
   const lagStops = getWakeLagGraphStops(config);
+  const xDampStops = getWakeXDampGraphStops(config);
   const graphStopValues = [0, 1, 1, 1];
   const graphColors = [
     new THREE.Vector4(0, 0, 0, 0),
@@ -308,6 +327,12 @@ function createWakeMaterial(config) {
   lagStops.slice(0, 3).forEach((stop, index) => {
     lagStopValues[index] = stop.pct;
     lagAmounts[index] = stop.amount;
+  });
+  const xDampStopValues = [0, 0.3, 1];
+  const xDampValues = [1, 0.9, 0];
+  xDampStops.slice(0, 3).forEach((stop, index) => {
+    xDampStopValues[index] = stop.pct;
+    xDampValues[index] = stop.damp;
   });
   const graphEnabled = config.wakeGraphEnabled !== 0;
   return new THREE.ShaderMaterial({
@@ -354,6 +379,9 @@ function createWakeMaterial(config) {
       uWakeLagGraphCount: { value: Math.max(0, Math.min(3, lagStops.length)) },
       uWakeLagGraphStops: { value: lagStopValues },
       uWakeLagGraphAmounts: { value: lagAmounts },
+      uWakeXDampGraphCount: { value: Math.max(0, Math.min(3, xDampStops.length)) },
+      uWakeXDampGraphStops: { value: xDampStopValues },
+      uWakeXDampGraphValues: { value: xDampValues },
     },
     vertexShader: `
       precision highp float;
@@ -370,6 +398,9 @@ function createWakeMaterial(config) {
       uniform int uWakeLagGraphCount;
       uniform float uWakeLagGraphStops[3];
       uniform float uWakeLagGraphAmounts[3];
+      uniform int uWakeXDampGraphCount;
+      uniform float uWakeXDampGraphStops[3];
+      uniform float uWakeXDampGraphValues[3];
       varying vec3 vLocalPos;
       varying float vTail;
       varying float vWakeHeight;
@@ -401,10 +432,31 @@ function createWakeMaterial(config) {
         }
         return result;
       }
+      float sampleWakeXDampGraph(float value) {
+        float t = clamp(value, 0.0, 1.0);
+        if (uWakeXDampGraphCount <= 0) return 0.0;
+        if (uWakeXDampGraphCount == 1) return clamp(uWakeXDampGraphValues[0], 0.0, 1.0);
+        float result = clamp(uWakeXDampGraphValues[0], 0.0, 1.0);
+        if (t <= uWakeXDampGraphStops[0]) return result;
+        for (int i = 0; i < 2; i += 1) {
+          if (i >= uWakeXDampGraphCount - 1) break;
+          float left = uWakeXDampGraphStops[i];
+          float right = max(left + 0.0001, uWakeXDampGraphStops[i + 1]);
+          result = clamp(uWakeXDampGraphValues[i + 1], 0.0, 1.0);
+          if (t <= right) {
+            result = mix(uWakeXDampGraphValues[i], uWakeXDampGraphValues[i + 1], clamp((t - left) / (right - left), 0.0, 1.0));
+            break;
+          }
+        }
+        return clamp(result, 0.0, 1.0);
+      }
       void main() {
         float tail = clamp(uv.y, 0.0, 1.0);
         vec3 local = position;
-        local.xy += uWakeVertexLagOffset * sampleWakeLagGraph(wakeHeight);
+        float vertexLagAmount = sampleWakeLagGraph(wakeHeight);
+        float xDamp = sampleWakeXDampGraph(wakeHeight);
+        local.x += uWakeVertexLagOffset.x * vertexLagAmount * (1.0 - xDamp);
+        local.y += uWakeVertexLagOffset.y * vertexLagAmount;
         vec2 radialPlane = local.xz;
         float radius = length(radialPlane);
         vec2 radialDir = radius > 0.0001 ? radialPlane / radius : vec2(1.0, 0.0);

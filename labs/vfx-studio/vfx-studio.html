@@ -1680,6 +1680,31 @@
               <span class="rgbaLabel"></span>
               <button id="flameAoe3dApplyWakeLagGraphBtn" class="toolBtn" type="button">Apply</button>
             </div>
+            <div class="rgbaParamRow wakeLagGraphRow">
+              <span class="rgbaLabel">X damp graph</span>
+              <label for="flameAoe3dWakeXDampGraph0Pct">%</label>
+              <input id="flameAoe3dWakeXDampGraph0Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="0" />
+              <label for="flameAoe3dWakeXDampGraph0Damp">damp</label>
+              <input id="flameAoe3dWakeXDampGraph0Damp" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1" />
+            </div>
+            <div class="rgbaParamRow wakeLagGraphRow">
+              <span class="rgbaLabel"></span>
+              <label for="flameAoe3dWakeXDampGraph1Pct">%</label>
+              <input id="flameAoe3dWakeXDampGraph1Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="30" />
+              <label for="flameAoe3dWakeXDampGraph1Damp">damp</label>
+              <input id="flameAoe3dWakeXDampGraph1Damp" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.9" />
+            </div>
+            <div class="rgbaParamRow wakeLagGraphRow">
+              <span class="rgbaLabel"></span>
+              <label for="flameAoe3dWakeXDampGraph2Pct">%</label>
+              <input id="flameAoe3dWakeXDampGraph2Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="100" />
+              <label for="flameAoe3dWakeXDampGraph2Damp">damp</label>
+              <input id="flameAoe3dWakeXDampGraph2Damp" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0" />
+            </div>
+            <div class="rgbaParamRow wakeLagGraphApplyRow">
+              <span class="rgbaLabel"></span>
+              <button id="flameAoe3dApplyWakeXDampGraphBtn" class="toolBtn" type="button">Apply</button>
+            </div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -2384,14 +2409,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260505e"),
+      import("./vfx-studio-bootstrap.js?v=20260505f"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
       import("./vfx-studio-surfaces.js?v=20260502b"),
-      import("./vfx-studio-theme-publish.js?v=20260505b"),
+      import("./vfx-studio-theme-publish.js?v=20260505c"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2400,7 +2425,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260505c";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260505d";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2417,7 +2442,7 @@
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
-    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260505d";
+    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260505e";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT,
@@ -2911,6 +2936,13 @@
       flameAoe3dWakeLagGraph2Pct: $("flameAoe3dWakeLagGraph2Pct"),
       flameAoe3dWakeLagGraph2Amount: $("flameAoe3dWakeLagGraph2Amount"),
       flameAoe3dApplyWakeLagGraphBtn: $("flameAoe3dApplyWakeLagGraphBtn"),
+      flameAoe3dWakeXDampGraph0Pct: $("flameAoe3dWakeXDampGraph0Pct"),
+      flameAoe3dWakeXDampGraph0Damp: $("flameAoe3dWakeXDampGraph0Damp"),
+      flameAoe3dWakeXDampGraph1Pct: $("flameAoe3dWakeXDampGraph1Pct"),
+      flameAoe3dWakeXDampGraph1Damp: $("flameAoe3dWakeXDampGraph1Damp"),
+      flameAoe3dWakeXDampGraph2Pct: $("flameAoe3dWakeXDampGraph2Pct"),
+      flameAoe3dWakeXDampGraph2Damp: $("flameAoe3dWakeXDampGraph2Damp"),
+      flameAoe3dApplyWakeXDampGraphBtn: $("flameAoe3dApplyWakeXDampGraphBtn"),
       flameAoe3dWakeDisplaceBo: $("flameAoe3dWakeDisplaceBo"),
       flameAoe3dApplyWakeDisplaceBtn: $("flameAoe3dApplyWakeDisplaceBtn"),
       flameAoe3dWakeDisplaceScale: $("flameAoe3dWakeDisplaceScale"),
