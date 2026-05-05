@@ -543,6 +543,9 @@
     .rgbaParamRow.wakeAlphaGradientRow{
       grid-template-columns: auto minmax(86px, 1fr) auto minmax(86px, 1fr);
     }
+    .rgbaParamRow.wakeLagGraphRow{
+      grid-template-columns: minmax(132px, 132px) auto minmax(104px, 1fr) auto minmax(104px, 1fr) auto;
+    }
     .rgbaParamRow .rgbaLabel,
     .rgbaParamRow label{
       font-size:12px;
@@ -1648,21 +1651,21 @@
               <input id="flameAoe3dWakeLeanLag" class="paramFieldInput" type="number" min="0.1" max="30" step="0.1" value="8.5" />
               <button id="flameAoe3dApplyWakeLeanLagBtn" class="toolBtn" type="button">Apply</button>
             </div>
-            <div class="rgbaParamRow wakeGraphParamRow">
+            <div class="rgbaParamRow wakeLagGraphRow">
               <span class="rgbaLabel">Lag graph</span>
               <label for="flameAoe3dWakeLagGraph0Pct">%</label>
               <input id="flameAoe3dWakeLagGraph0Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="0" />
               <label for="flameAoe3dWakeLagGraph0Amount">amount</label>
               <input id="flameAoe3dWakeLagGraph0Amount" class="paramFieldInput" type="number" min="0" max="10" step="0.01" value="0" />
             </div>
-            <div class="rgbaParamRow wakeGraphParamRow">
+            <div class="rgbaParamRow wakeLagGraphRow">
               <span class="rgbaLabel"></span>
               <label for="flameAoe3dWakeLagGraph1Pct">%</label>
               <input id="flameAoe3dWakeLagGraph1Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="35" />
               <label for="flameAoe3dWakeLagGraph1Amount">amount</label>
               <input id="flameAoe3dWakeLagGraph1Amount" class="paramFieldInput" type="number" min="0" max="10" step="0.01" value="0" />
             </div>
-            <div class="rgbaParamRow wakeGraphParamRow">
+            <div class="rgbaParamRow wakeLagGraphRow">
               <span class="rgbaLabel"></span>
               <label for="flameAoe3dWakeLagGraph2Pct">%</label>
               <input id="flameAoe3dWakeLagGraph2Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="100" />
