@@ -3,11 +3,12 @@
  */
 export function executeAoeFlame({
   playFlameAoe,
+  payload = {},
 } = {}) {
   if (typeof playFlameAoe !== "function") {
     return { handled: false };
   }
-  playFlameAoe();
+  playFlameAoe(payload);
   return { handled: true };
 }
 

@@ -13,7 +13,7 @@ import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260425w";
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260504b";
-import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js";
+import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260504a";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260429c";
@@ -1987,6 +1987,13 @@ function shellActivateBubbleShield(shellContext, { durationMs = 8000 } = {}) {
   orbStageActions.activateBubbleShield({ durationMs });
 }
 
+function shellPlayFlameAoe(shellContext, payload = {}) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  if (!orbStageActions || typeof orbStageActions.playFlameAoe !== "function") return { handled: false };
+  return orbStageActions.playFlameAoe(payload);
+}
+
 function shellApplyColorize(shellContext, payload = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
@@ -3228,9 +3235,7 @@ async function initShellKwsRuntime(shellContext) {
         : { handled: false }
     ),
     playFlameAoe: () => (
-      getRuntimeVfx() && typeof getRuntimeVfx().playFlameAoe === "function"
-        ? getRuntimeVfx().playFlameAoe()
-        : { handled: false }
+      shellPlayFlameAoe(shellContext)
     ),
     playTeleport: (payload = {}) => (
       getRuntimeVfx() && typeof getRuntimeVfx().playTeleport === "function"

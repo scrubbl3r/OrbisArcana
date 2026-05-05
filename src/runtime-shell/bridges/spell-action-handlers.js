@@ -48,9 +48,8 @@ export function createSpellActionHandlers({
       executeAoeElectric({ playElectricAoe });
     },
     play_flame_aoe(payload = {}) {
-      void payload;
       if (typeof executeAoeFlame !== "function") return;
-      executeAoeFlame({ playFlameAoe });
+      executeAoeFlame({ playFlameAoe, payload });
     },
     play_frost_aoe(payload = {}) {
       void payload;

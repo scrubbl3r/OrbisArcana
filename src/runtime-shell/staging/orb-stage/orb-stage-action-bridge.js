@@ -14,6 +14,13 @@ export function createOrbStageActionBridge({
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
 } = {}) {
   return Object.freeze({
+    playFlameAoe(payload = {}) {
+      const shellVfx = runtime && runtime.vfx ? runtime.vfx : null;
+      if (shellVfx && typeof shellVfx.playFlameAoe === "function") {
+        return shellVfx.playFlameAoe(payload);
+      }
+      return { handled: false };
+    },
     activateBubbleShield({ durationMs = 8000 } = {}) {
       const shellVfx = runtime && runtime.vfx ? runtime.vfx : null;
       if (shellVfx && typeof shellVfx.activateBubbleShield === "function") {
