@@ -280,6 +280,31 @@ export function bindStagingRuntimeEvents({
     const slot = String(p.slot || "").trim().toUpperCase();
     kwsBridge.pushLogLine(`TRACE slot_cast_req:${slot || "-"}`, slot ? "ok" : "warn");
   });
+  eventBus.on("pickup.collected", (p = {}) => {
+    const globeId = String(p.globeId || p.id || "").trim();
+    const type = String(p.type || "").trim().toLowerCase();
+    kwsBridge.pushLogLine(`TRACE globe_pickup:${type || "-"}:${globeId || "-"}`, type === "energy_globe" ? "ok" : "warn");
+  });
+  eventBus.on("energy.globe_inventory_changed", (p = {}) => {
+    const stored = Number(p.stored);
+    const globes = Array.isArray(p.globes) ? p.globes : [];
+    const bound = globes.filter((globe) => String(globe && globe.state || "") === "bound").length;
+    kwsBridge.pushLogLine(
+      `TRACE globe_inventory:stored:${Number.isFinite(stored) ? stored : "-"}:bound:${bound}`,
+      "muted"
+    );
+  });
+  eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_REJECTED, (p = {}) => {
+    const reason = String(p.reason || "").trim().toLowerCase() || "-";
+    const spell = String((p.castActionId || p.sourceWordId || p.wordId || p.spellId || p.spell) || "").trim().toLowerCase() || "-";
+    const slot = String(p.slot || p.directionGroup || "").trim().toUpperCase() || "-";
+    const required = Number(p.requiredGlobes);
+    const stored = Number(p.storedGlobes);
+    kwsBridge.pushLogLine(
+      `TRACE spell_rejected:${reason}:spell:${spell}:slot:${slot}:required:${Number.isFinite(required) ? required : "-"}:stored:${Number.isFinite(stored) ? stored : "-"}`,
+      reason === "insufficient_globes" ? "warn" : "muted"
+    );
+  });
   eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {
     const token = String(p.token || "").trim().toLowerCase();
     if (!token) return;
