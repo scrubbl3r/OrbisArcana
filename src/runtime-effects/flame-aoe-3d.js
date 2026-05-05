@@ -583,8 +583,11 @@ export function createFlameAoe3dRuntime({
   let motionInitialized = false;
   const lastPosition = new THREE.Vector3();
   const currentPosition = new THREE.Vector3();
+  const rawMotionOffset = new THREE.Vector3();
   const targetWakeOffset = new THREE.Vector3();
   const wakeOffset = new THREE.Vector3();
+  const targetVertexLagOffset = new THREE.Vector3();
+  const vertexLagOffset = new THREE.Vector3();
   const shaderMotion = new THREE.Vector3();
   const shaderVertexLag = new THREE.Vector2();
 
@@ -608,9 +611,11 @@ export function createFlameAoe3dRuntime({
     const position = readOrbPosition();
     if (!position) {
       targetWakeOffset.set(0, 0, 0);
+      targetVertexLagOffset.set(0, 0, 0);
     } else if (!motionInitialized) {
       lastPosition.copy(position);
       targetWakeOffset.set(0, 0, 0);
+      targetVertexLagOffset.set(0, 0, 0);
       motionInitialized = true;
     } else {
       const safeDt = Math.max(1 / 240, Math.min(0.12, Number(dtSec) || (1 / 60)));
@@ -619,11 +624,14 @@ export function createFlameAoe3dRuntime({
       const vz = (position.z - lastPosition.z) / safeDt;
       lastPosition.copy(position);
       const leanAmount = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 10, 0.35);
-      targetWakeOffset.set(-vx * leanAmount * 0.1, -vy * leanAmount * 0.1, -vz * leanAmount * 0.06);
-      targetWakeOffset.clampLength(0, bo * 0.42);
+      rawMotionOffset.set(-vx * 0.1, -vy * 0.1, -vz * 0.06);
+      rawMotionOffset.clampLength(0, bo * 0.42);
+      targetWakeOffset.copy(rawMotionOffset).multiplyScalar(leanAmount);
+      targetVertexLagOffset.copy(rawMotionOffset).multiplyScalar(0.35);
     }
     const alpha = expLerpAlpha(dtSec, activeConfig && activeConfig.wakeLeanLag);
     wakeOffset.lerp(targetWakeOffset, alpha);
+    vertexLagOffset.lerp(targetVertexLagOffset, alpha);
     if (wakePivot) {
       wakePivot.position.x = 0;
       wakePivot.position.z = 0;
@@ -634,7 +642,7 @@ export function createFlameAoe3dRuntime({
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeMotionOffset) {
       wakeMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
     }
-    shaderVertexLag.set(wakeOffset.x, wakeOffset.y);
+    shaderVertexLag.set(vertexLagOffset.x, vertexLagOffset.y);
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeVertexLagOffset) {
       wakeMaterial.uniforms.uWakeVertexLagOffset.value.copy(shaderVertexLag);
     }
@@ -654,8 +662,11 @@ export function createFlameAoe3dRuntime({
     motionInitialized = false;
     lastPosition.set(0, 0, 0);
     currentPosition.set(0, 0, 0);
+    rawMotionOffset.set(0, 0, 0);
     targetWakeOffset.set(0, 0, 0);
     wakeOffset.set(0, 0, 0);
+    targetVertexLagOffset.set(0, 0, 0);
+    vertexLagOffset.set(0, 0, 0);
     shaderMotion.set(0, 0, 0);
     shaderVertexLag.set(0, 0);
     if (group && group.parent) group.parent.remove(group);
