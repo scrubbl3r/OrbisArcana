@@ -225,10 +225,10 @@ export function createOrbGlobe3dPreview({
 
     samples.forEach((globe) => {
       const isBound = globe.state === "bound";
-      const diameter = bo * (isBound ? config.worldConsumedDiameterBO : config.worldCollectedDiameterBO);
+      const diameter = bo * (isBound ? config.worldCollectedDiameterBO : config.worldConsumedDiameterBO);
       globe.radius = diameter * 0.5;
       globe.model = makeGlobeMesh(diameter, config.material);
-      if (isBound && (!globe.innerPos || !globe.innerVelocity)) initializeInnerMotion(globe, config);
+      if (!isBound && (!globe.innerPos || !globe.innerVelocity)) initializeInnerMotion(globe, config);
       inspector.scene.add(globe.model);
     });
     updateSamples(0, 0, bo);
@@ -243,7 +243,7 @@ export function createOrbGlobe3dPreview({
     const innerPadding = config.innerPaddingBO * bo;
     samples.forEach((globe) => {
       if (!globe.model) return;
-      if (globe.state === "bound") {
+      if (globe.state !== "bound") {
         updateInnerGlobe(globe, dt, orbRadius, globe.radius || 2, innerPadding);
         globe.model.position.copy(globe.innerPos || TMP_A.set(0, 0, 0));
         globe.model.rotation.x += dt * 0.9;
@@ -288,7 +288,8 @@ export function createOrbGlobe3dPreview({
     if (globe) {
       globe.state = "bound";
       globe.model = null;
-      initializeInnerMotion(globe, Object.freeze({ ...(config || {}), els, bo: readBo() }));
+      globe.innerPos = null;
+      globe.innerVelocity = null;
     }
     if (render) rebuildScene();
   }
