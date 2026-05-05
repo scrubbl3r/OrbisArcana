@@ -1705,6 +1705,16 @@
               <span class="rgbaLabel"></span>
               <button id="flameAoe3dApplyWakeXDampGraphBtn" class="toolBtn" type="button">Apply</button>
             </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeLeadingStrength">Leading strength</label>
+              <input id="flameAoe3dWakeLeadingStrength" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.8" />
+              <button id="flameAoe3dApplyWakeLeadingStrengthBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeLeadingWidth">Leading width</label>
+              <input id="flameAoe3dWakeLeadingWidth" class="paramFieldInput" type="number" min="0.05" max="1" step="0.01" value="0.45" />
+              <button id="flameAoe3dApplyWakeLeadingWidthBtn" class="toolBtn" type="button">Apply</button>
+            </div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -2409,14 +2419,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260505f"),
+      import("./vfx-studio-bootstrap.js?v=20260505g"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
       import("./vfx-studio-surfaces.js?v=20260502b"),
-      import("./vfx-studio-theme-publish.js?v=20260505c"),
+      import("./vfx-studio-theme-publish.js?v=20260505d"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2425,7 +2435,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260505d";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260505e";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2442,7 +2452,7 @@
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
-    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260505e";
+    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260505f";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT,
@@ -2943,6 +2953,10 @@
       flameAoe3dWakeXDampGraph2Pct: $("flameAoe3dWakeXDampGraph2Pct"),
       flameAoe3dWakeXDampGraph2Damp: $("flameAoe3dWakeXDampGraph2Damp"),
       flameAoe3dApplyWakeXDampGraphBtn: $("flameAoe3dApplyWakeXDampGraphBtn"),
+      flameAoe3dWakeLeadingStrength: $("flameAoe3dWakeLeadingStrength"),
+      flameAoe3dApplyWakeLeadingStrengthBtn: $("flameAoe3dApplyWakeLeadingStrengthBtn"),
+      flameAoe3dWakeLeadingWidth: $("flameAoe3dWakeLeadingWidth"),
+      flameAoe3dApplyWakeLeadingWidthBtn: $("flameAoe3dApplyWakeLeadingWidthBtn"),
       flameAoe3dWakeDisplaceBo: $("flameAoe3dWakeDisplaceBo"),
       flameAoe3dApplyWakeDisplaceBtn: $("flameAoe3dApplyWakeDisplaceBtn"),
       flameAoe3dWakeDisplaceScale: $("flameAoe3dWakeDisplaceScale"),

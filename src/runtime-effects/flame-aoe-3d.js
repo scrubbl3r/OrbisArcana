@@ -64,6 +64,8 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeXDampGraph1Damp: optionalNumber(source.wakeXDampGraph1Damp ?? fallback.wakeXDampGraph1Damp ?? 0.9, 0, 1),
     wakeXDampGraph2Pct: optionalNumber(source.wakeXDampGraph2Pct ?? fallback.wakeXDampGraph2Pct ?? 100, 0, 100),
     wakeXDampGraph2Damp: optionalNumber(source.wakeXDampGraph2Damp ?? fallback.wakeXDampGraph2Damp ?? 0, 0, 1),
+    wakeLeadingStrength: clampNumber(source.wakeLeadingStrength, 0, 1, fallback.wakeLeadingStrength ?? 0.8),
+    wakeLeadingWidth: clampNumber(source.wakeLeadingWidth, 0.05, 1, fallback.wakeLeadingWidth ?? 0.45),
     wakeDisplaceBo: clampNumber(source.wakeDisplaceBo, 0, 0.5, fallback.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(source.wakeDisplaceScale, 0.2, 8, fallback.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(source.wakeDisplaceSpeed, 0, 4, fallback.wakeDisplaceSpeed),
@@ -376,6 +378,9 @@ function createWakeMaterial(config) {
       uWakeAlphaGradientValues: { value: alphaValues },
       uWakeMotionOffset: { value: new THREE.Vector3() },
       uWakeVertexLagOffset: { value: new THREE.Vector2() },
+      uWakeLagDirection: { value: new THREE.Vector2() },
+      uWakeLeadingStrength: { value: config.wakeLeadingStrength },
+      uWakeLeadingWidth: { value: config.wakeLeadingWidth },
       uWakeLagGraphCount: { value: Math.max(0, Math.min(3, lagStops.length)) },
       uWakeLagGraphStops: { value: lagStopValues },
       uWakeLagGraphAmounts: { value: lagAmounts },
@@ -395,6 +400,9 @@ function createWakeMaterial(config) {
       uniform float uWakeDisplaceInfluenceTop;
       uniform vec3 uWakeMotionOffset;
       uniform vec2 uWakeVertexLagOffset;
+      uniform vec2 uWakeLagDirection;
+      uniform float uWakeLeadingStrength;
+      uniform float uWakeLeadingWidth;
       uniform int uWakeLagGraphCount;
       uniform float uWakeLagGraphStops[3];
       uniform float uWakeLagGraphAmounts[3];
@@ -455,8 +463,19 @@ function createWakeMaterial(config) {
         vec3 local = position;
         float vertexLagAmount = sampleWakeLagGraph(wakeHeight);
         float xDamp = sampleWakeXDampGraph(wakeHeight);
-        local.x += uWakeVertexLagOffset.x * vertexLagAmount * (1.0 - xDamp);
-        local.y += uWakeVertexLagOffset.y * vertexLagAmount;
+        vec2 localPlane = vec2(local.x, local.y);
+        float localPlaneLen = length(localPlane);
+        float directionLen = length(uWakeLagDirection);
+        float leadingMask = 0.0;
+        if (localPlaneLen > 0.0001 && directionLen > 0.0001) {
+          vec2 leadingDirection = -uWakeLagDirection / directionLen;
+          float leadingDot = dot(localPlane / localPlaneLen, leadingDirection);
+          float width = clamp(uWakeLeadingWidth, 0.05, 1.0);
+          leadingMask = smoothstep(1.0 - width, 1.0, leadingDot) * clamp(uWakeLeadingStrength, 0.0, 1.0);
+        }
+        float leadingMultiplier = 1.0 - leadingMask;
+        local.x += uWakeVertexLagOffset.x * vertexLagAmount * (1.0 - xDamp) * leadingMultiplier;
+        local.y += uWakeVertexLagOffset.y * vertexLagAmount * leadingMultiplier;
         vec2 radialPlane = local.xz;
         float radius = length(radialPlane);
         vec2 radialDir = radius > 0.0001 ? radialPlane / radius : vec2(1.0, 0.0);
@@ -642,6 +661,7 @@ export function createFlameAoe3dRuntime({
   const vertexLagOffset = new THREE.Vector3();
   const shaderMotion = new THREE.Vector3();
   const shaderVertexLag = new THREE.Vector2();
+  const shaderLagDirection = new THREE.Vector2();
 
   function requestFrame() {
     if (typeof onNeedsFrame === "function") onNeedsFrame();
@@ -698,6 +718,10 @@ export function createFlameAoe3dRuntime({
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeVertexLagOffset) {
       wakeMaterial.uniforms.uWakeVertexLagOffset.value.copy(shaderVertexLag);
     }
+    shaderLagDirection.set(targetVertexLagOffset.x, targetVertexLagOffset.y);
+    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeLagDirection) {
+      wakeMaterial.uniforms.uWakeLagDirection.value.copy(shaderLagDirection);
+    }
   }
 
   function clear() {
@@ -721,6 +745,7 @@ export function createFlameAoe3dRuntime({
     vertexLagOffset.set(0, 0, 0);
     shaderMotion.set(0, 0, 0);
     shaderVertexLag.set(0, 0);
+    shaderLagDirection.set(0, 0);
     if (group && group.parent) group.parent.remove(group);
     if (group) disposeThreeObject(group);
     group = null;

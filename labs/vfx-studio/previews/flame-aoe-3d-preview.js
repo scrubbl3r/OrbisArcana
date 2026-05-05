@@ -54,6 +54,8 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeXDampGraph1Damp: 0.9,
   wakeXDampGraph2Pct: 100,
   wakeXDampGraph2Damp: 0,
+  wakeLeadingStrength: 0.8,
+  wakeLeadingWidth: 0.45,
   wakeDisplaceBo: 0.12,
   wakeDisplaceScale: 1.8,
   wakeDisplaceSpeed: 0.35,
@@ -200,6 +202,8 @@ function readFlameWakeConfig(els = {}) {
     wakeXDampGraph1Damp: readOptionalNumber(els.flameAoe3dWakeXDampGraph1Damp && els.flameAoe3dWakeXDampGraph1Damp.value, 0, 1),
     wakeXDampGraph2Pct: readOptionalNumber(els.flameAoe3dWakeXDampGraph2Pct && els.flameAoe3dWakeXDampGraph2Pct.value, 0, 100),
     wakeXDampGraph2Damp: readOptionalNumber(els.flameAoe3dWakeXDampGraph2Damp && els.flameAoe3dWakeXDampGraph2Damp.value, 0, 1),
+    wakeLeadingStrength: clampNumber(els.flameAoe3dWakeLeadingStrength && els.flameAoe3dWakeLeadingStrength.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeadingStrength),
+    wakeLeadingWidth: clampNumber(els.flameAoe3dWakeLeadingWidth && els.flameAoe3dWakeLeadingWidth.value, 0.05, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeadingWidth),
     wakeDisplaceBo: clampNumber(els.flameAoe3dWakeDisplaceBo && els.flameAoe3dWakeDisplaceBo.value, 0, 0.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(els.flameAoe3dWakeDisplaceScale && els.flameAoe3dWakeDisplaceScale.value, 0.2, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(els.flameAoe3dWakeDisplaceSpeed && els.flameAoe3dWakeDisplaceSpeed.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceSpeed),
@@ -258,6 +262,8 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
     if (pctEl) pctEl.value = cfg[`wakeXDampGraph${i}Pct`] == null ? "" : String(cfg[`wakeXDampGraph${i}Pct`]);
     if (dampEl) dampEl.value = cfg[`wakeXDampGraph${i}Damp`] == null ? "" : String(cfg[`wakeXDampGraph${i}Damp`]);
   }
+  if (els.flameAoe3dWakeLeadingStrength) els.flameAoe3dWakeLeadingStrength.value = String(Number(cfg.wakeLeadingStrength).toFixed(2));
+  if (els.flameAoe3dWakeLeadingWidth) els.flameAoe3dWakeLeadingWidth.value = String(Number(cfg.wakeLeadingWidth).toFixed(2));
   if (els.flameAoe3dWakeDisplaceBo) els.flameAoe3dWakeDisplaceBo.value = String(Number(cfg.wakeDisplaceBo).toFixed(3));
   if (els.flameAoe3dWakeDisplaceScale) els.flameAoe3dWakeDisplaceScale.value = String(Number(cfg.wakeDisplaceScale).toFixed(2));
   if (els.flameAoe3dWakeDisplaceSpeed) els.flameAoe3dWakeDisplaceSpeed.value = String(Number(cfg.wakeDisplaceSpeed).toFixed(2));
@@ -1119,6 +1125,8 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyWakeLeanLagBtn,
       els.flameAoe3dApplyWakeLagGraphBtn,
       els.flameAoe3dApplyWakeXDampGraphBtn,
+      els.flameAoe3dApplyWakeLeadingStrengthBtn,
+      els.flameAoe3dApplyWakeLeadingWidthBtn,
       els.flameAoe3dApplyWakeDisplaceBtn,
       els.flameAoe3dApplyWakeDisplaceScaleBtn,
       els.flameAoe3dApplyWakeDisplaceSpeedBtn,
