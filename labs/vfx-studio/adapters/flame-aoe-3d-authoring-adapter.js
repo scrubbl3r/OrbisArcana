@@ -54,6 +54,7 @@ const FLAME_AOE_3D_FIELDS = Object.freeze([
   ["flameAoe3dWakeGraph3G", "wakeGraph3G"],
   ["flameAoe3dWakeGraph3B", "wakeGraph3B"],
   ["flameAoe3dWakeGraph3A", "wakeGraph3A"],
+  ["flameAoe3dWakeGraphEnabled", "wakeGraphEnabled"],
 ]);
 
 const FLAME_AOE_3D_DEFAULTS = Object.freeze({
@@ -112,6 +113,7 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
   wakeGraph3G: "",
   wakeGraph3B: "",
   wakeGraph3A: "",
+  wakeGraphEnabled: 1,
 });
 
 function clampNumber(value, min, max, fallback) {
@@ -197,6 +199,7 @@ export function createFlameAoe3dAuthoringAdapter() {
       wakeGraph3G: optionalNumber(els && els.flameAoe3dWakeGraph3G && els.flameAoe3dWakeGraph3G.value, 0, 255),
       wakeGraph3B: optionalNumber(els && els.flameAoe3dWakeGraph3B && els.flameAoe3dWakeGraph3B.value, 0, 255),
       wakeGraph3A: optionalNumber(els && els.flameAoe3dWakeGraph3A && els.flameAoe3dWakeGraph3A.value, 0, 1),
+      wakeGraphEnabled: (els && els.flameAoe3dWakeGraphEnabled && String(els.flameAoe3dWakeGraphEnabled.value) === "0") ? 0 : 1,
     });
   }
 
@@ -206,6 +209,9 @@ export function createFlameAoe3dAuthoringAdapter() {
     FLAME_AOE_3D_FIELDS.forEach(([fieldKey, settingsKey]) => {
       if (els[fieldKey] && settings[settingsKey] != null) els[fieldKey].value = String(settings[settingsKey]);
     });
+    if (els.flameAoe3dWakeGraphVisibleBtn && settings.wakeGraphEnabled != null) {
+      els.flameAoe3dWakeGraphVisibleBtn.setAttribute("aria-pressed", String(settings.wakeGraphEnabled) === "0" ? "false" : "true");
+    }
     if (typeof applyPreview === "function") applyPreview();
     return true;
   }

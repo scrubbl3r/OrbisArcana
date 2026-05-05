@@ -1747,7 +1747,11 @@
           </div>
         </div>
         <div class="controlGroup" data-control-group>
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeGraphControls">Wake RGBA Graph</button>
+          <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeGraphControls">Wake RGBA Graph</button>
+            <button id="flameAoe3dWakeGraphVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Wake RGBA Graph" title="Toggle Wake RGBA Graph"></button>
+          </div>
+          <input id="flameAoe3dWakeGraphEnabled" type="hidden" value="1" />
           <div id="flameAoe3dWakeGraphControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="rgbaParamRow wakeGraphRow">
               <label for="flameAoe3dWakeGraph0Pct">%</label><input id="flameAoe3dWakeGraph0Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="0" />
@@ -2325,7 +2329,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260504b";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260504c";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2886,6 +2890,8 @@
       flameAoe3dWakeGraph3G: $("flameAoe3dWakeGraph3G"),
       flameAoe3dWakeGraph3B: $("flameAoe3dWakeGraph3B"),
       flameAoe3dWakeGraph3A: $("flameAoe3dWakeGraph3A"),
+      flameAoe3dWakeGraphEnabled: $("flameAoe3dWakeGraphEnabled"),
+      flameAoe3dWakeGraphVisibleBtn: $("flameAoe3dWakeGraphVisibleBtn"),
       flameAoe3dApplyWakeGraphBtn: $("flameAoe3dApplyWakeGraphBtn"),
       previewBankOrb3d: $("previewBankOrb3d"),
       previewShockwave3d: $("previewShockwave3d"),

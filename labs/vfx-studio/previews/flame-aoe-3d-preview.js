@@ -82,6 +82,7 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeGraph3G: "",
   wakeGraph3B: "",
   wakeGraph3A: "",
+  wakeGraphEnabled: true,
 });
 
 function clampNumber(value, min, max, fallback) {
@@ -109,7 +110,13 @@ function readOptionalNumber(value, min, max) {
 }
 
 function readWakeGraphConfig(els = {}) {
-  const out = {};
+  const enabledInput = els.flameAoe3dWakeGraphEnabled;
+  const enabledButton = els.flameAoe3dWakeGraphVisibleBtn;
+  const out = {
+    wakeGraphEnabled: enabledButton
+      ? layerVisible(enabledButton)
+      : !(enabledInput && String(enabledInput.value) === "0"),
+  };
   for (let i = 0; i < 4; i += 1) {
     const fallbackPct = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeGraph${i}Pct`];
     const fallbackR = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeGraph${i}R`];
@@ -221,6 +228,9 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       el.value = value == null ? "" : String(value);
     });
   }
+  const graphEnabled = cfg.wakeGraphEnabled !== false && cfg.wakeGraphEnabled !== 0 && cfg.wakeGraphEnabled !== "0";
+  if (els.flameAoe3dWakeGraphEnabled) els.flameAoe3dWakeGraphEnabled.value = graphEnabled ? "1" : "0";
+  if (els.flameAoe3dWakeGraphVisibleBtn) els.flameAoe3dWakeGraphVisibleBtn.setAttribute("aria-pressed", graphEnabled ? "true" : "false");
 }
 
 function layerVisible(button) {
@@ -437,6 +447,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
     wakeGraphStops[index] = stop.pct;
     wakeGraphColors[index] = stop.color;
   });
+  const graphEnabled = config.wakeGraphEnabled !== false && config.wakeGraphEnabled !== 0 && config.wakeGraphEnabled !== "0";
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:directional_wake_material",
     transparent: true,
@@ -469,7 +480,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeSimplexLacunarity: { value: config.wakeSimplexLacunarity },
       uWakeSimplexGain: { value: config.wakeSimplexGain },
       uWakeNoiseMix: { value: config.wakeNoiseMix },
-      uWakeGraphCount: { value: Math.max(0, Math.min(4, graphStops.length)) },
+      uWakeGraphCount: { value: graphEnabled ? Math.max(0, Math.min(4, graphStops.length)) : 0 },
       uWakeGraphStops: { value: wakeGraphStops },
       uWakeGraphColors: { value: wakeGraphColors },
     },
@@ -913,6 +924,15 @@ export function createFlameAoe3dPreview({
     applyLayerVisibility();
   }
 
+  function toggleGraph(button) {
+    if (!button) return;
+    const visible = layerVisible(button);
+    const enabled = !visible;
+    button.setAttribute("aria-pressed", enabled ? "true" : "false");
+    if (els.flameAoe3dWakeGraphEnabled) els.flameAoe3dWakeGraphEnabled.value = enabled ? "1" : "0";
+    apply();
+  }
+
   function apply() {
     auraConfig = readFlameAuraConfig(els);
     wakeConfig = readFlameWakeConfig(els);
@@ -933,6 +953,7 @@ export function createFlameAoe3dPreview({
     if (els.flameAoe3dOrbVisibleBtn) els.flameAoe3dOrbVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dOrbVisibleBtn));
     if (els.flameAoe3dAuraVisibleBtn) els.flameAoe3dAuraVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dAuraVisibleBtn));
     if (els.flameAoe3dWakeVisibleBtn) els.flameAoe3dWakeVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dWakeVisibleBtn));
+    if (els.flameAoe3dWakeGraphVisibleBtn) els.flameAoe3dWakeGraphVisibleBtn.addEventListener("click", () => toggleGraph(els.flameAoe3dWakeGraphVisibleBtn));
     [
       els.flameAoe3dApplyAuraAlphaBtn,
       els.flameAoe3dApplyAuraScaleBtn,
