@@ -16,7 +16,7 @@ import {
 } from "../../../game-runtime/level/depth-runtime-coordinates.js?v=20260430b";
 import {
   buildDepthLayerMesh,
-} from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260505b";
+} from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260505c";
 import {
   applyThreeMeshFlags,
   disposeThreeObject,
@@ -37,13 +37,13 @@ import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-d
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260502a";
 import { createLevelStageDepth3dBloom } from "./level-stage-depth3d-bloom.js?v=20260505h";
 import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430b";
-import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260505b";
+import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260505c";
 import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetry.js?v=20260430b";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
 const WORLD_GLOBE_FOREGROUND_Z_BO = 0.08;
-const LEVEL_STAGE_DEPTH3D_BLOOM_TRACE_VERSION = "20260505x";
+const LEVEL_STAGE_DEPTH3D_BLOOM_TRACE_VERSION = "20260505y";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);

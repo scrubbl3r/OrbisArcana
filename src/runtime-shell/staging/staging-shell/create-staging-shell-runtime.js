@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260505x";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260505y";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js?v=20260504a";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -48,7 +48,7 @@ import {
 } from "../authored-level-camera.js?v=20260424c";
 import { createPerfTrace } from "../perf-trace.js?v=20260430b";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260505x";
+globalThis.__orbisStagingShellRuntimeVersion = "20260505y";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",

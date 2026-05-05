@@ -266,8 +266,6 @@ function buildVectorDepthLayerMesh({
     const wallGeometry = buildVectorWallGeometry(loop, depthPx, worldWidthPx, worldHeightPx);
     if (wallGeometry) {
       const wallMaterial = buildGraphiteMaterial({ opacity: 0.80, color: 0x232a31, environmentMode });
-      wallMaterial.vertexColors = true;
-      wallMaterial.needsUpdate = true;
       if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) wallMaterial.depthWrite = false;
       const walls = new THREE.Mesh(wallGeometry, wallMaterial);
       walls.renderOrder = baseRenderOrder + 0.1;
@@ -434,8 +432,6 @@ export async function buildDepthLayerMesh({
     boWorldUnits,
   });
   const material = buildGraphiteMaterial({ opacity: 0.86, environmentMode });
-  material.vertexColors = true;
-  material.needsUpdate = true;
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = `depth:${String(layer.id || "layer")}`;
   const baseRenderOrder = resolveAuthoredRenderOrder(layer, { fallback: 1 });
