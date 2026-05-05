@@ -194,6 +194,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         const value = Number(p[key]);
         settings[key] = Number.isFinite(value) ? value : p[key];
       });
+      if (settings.durationMs == null) settings.durationMs = 10000;
       optionalKeys.forEach((key) => {
         if (p[key] == null || String(p[key]).trim() === "") {
           settings[key] = "";
