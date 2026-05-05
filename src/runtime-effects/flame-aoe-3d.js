@@ -25,6 +25,10 @@ function rgbHex({ r = 255, g = 106, b = 24 } = {}) {
     + clampInt(b, 0, 255, 24);
 }
 
+function expLerpAlpha(dtSec, hz) {
+  return 1 - Math.exp(-Math.max(0, Number(dtSec) || 0) * Math.max(0.01, Number(hz) || 1));
+}
+
 export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fallback = FLAME_AOE_3D_PRESET_DEFAULT;
@@ -316,6 +320,7 @@ function createWakeMaterial(config) {
       uWakeAlphaGradientCount: { value: Math.max(0, Math.min(4, alphaStops.length)) },
       uWakeAlphaGradientStops: { value: alphaStopValues },
       uWakeAlphaGradientValues: { value: alphaValues },
+      uWakeMotionOffset: { value: new THREE.Vector3() },
     },
     vertexShader: `
       precision highp float;
@@ -327,6 +332,7 @@ function createWakeMaterial(config) {
       uniform float uWakeDisplaceSoftness;
       uniform float uWakeDisplaceInfluenceBottom;
       uniform float uWakeDisplaceInfluenceTop;
+      uniform vec3 uWakeMotionOffset;
       varying vec3 vLocalPos;
       varying float vTail;
       varying float vWakeHeight;
@@ -355,6 +361,7 @@ function createWakeMaterial(config) {
         bulge += sin(angle + verticalPhase * 1.31 + time * 0.37 + 3.4) * mix(0.18, 0.03, softness);
         float blobFrequency = 1.25 / max(0.2, uWakeDisplaceScale);
         vec3 blobFlow = vec3(radialDir.x * blobFrequency, tail * 2.4 * blobFrequency - uTime * uWakeDisplaceSpeed * 0.9, radialDir.y * blobFrequency);
+        blobFlow += vec3(uWakeMotionOffset.x * 0.75, uWakeMotionOffset.y * -0.45, uWakeMotionOffset.z * 0.75) * (0.35 + tail * 0.85);
         float blob = smoothstep(mix(0.40, 0.52, softness), mix(0.82, 0.68, softness), broadFbm(blobFlow)) * 2.0 - 1.0;
         float influence = mix(uWakeDisplaceInfluenceBottom, uWakeDisplaceInfluenceTop, tail);
         float mask = smoothstep(0.02, 0.14, tail) * (1.0 - smoothstep(0.94, 1.0, tail)) * sin(tail * 3.14159265359);
@@ -372,6 +379,7 @@ function createWakeMaterial(config) {
       uniform float uWakeSimplexScale; uniform float uWakeSimplexSpeed; uniform float uWakeSimplexDensityBottom; uniform float uWakeSimplexDensityTop; uniform float uWakeSimplexContrast; uniform float uWakeSimplexOctaves; uniform float uWakeSimplexLacunarity; uniform float uWakeSimplexGain; uniform float uWakeNoiseMix;
       uniform float uWakeGraphEnabled; uniform int uWakeGraphCount; uniform float uWakeGraphStops[4]; uniform vec4 uWakeGraphColors[4];
       uniform int uWakeAlphaGradientCount; uniform float uWakeAlphaGradientStops[4]; uniform float uWakeAlphaGradientValues[4];
+      uniform vec3 uWakeMotionOffset;
       varying vec3 vLocalPos; varying float vTail; varying float vWakeHeight;
       float hash31(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
       float noise(vec3 p) {
@@ -472,12 +480,13 @@ function createWakeMaterial(config) {
         vec3 surface = normalize(vLocalPos + vec3(0.0, 0.001, 0.0));
         float perlinTime = uTime * uWakeNoiseSpeed;
         float perlinFrequency = 4.25 / max(0.1, uWakeNoiseScale);
-        vec3 perlinFlow = vec3(surface.x * perlinFrequency, (vTail * 1.35 - perlinTime * 0.42) * perlinFrequency, surface.z * perlinFrequency);
+        vec3 motionFlow = vec3(uWakeMotionOffset.x, -uWakeMotionOffset.y * 0.55, uWakeMotionOffset.z) * (0.25 + vTail * 0.85);
+        vec3 perlinFlow = vec3(surface.x * perlinFrequency, (vTail * 1.35 - perlinTime * 0.42) * perlinFrequency, surface.z * perlinFrequency) + motionFlow;
         float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, clamp(vTail, 0.0, 1.0));
         float perlin = perlinMusgraveField(perlinFlow);
         float simplexTime = uTime * uWakeSimplexSpeed;
         float simplexFrequency = 4.25 / max(0.1, uWakeSimplexScale);
-        vec3 simplexFlow = vec3(surface.x * simplexFrequency, (vTail * 1.52 - simplexTime * 0.5) * simplexFrequency, surface.z * simplexFrequency);
+        vec3 simplexFlow = vec3(surface.x * simplexFrequency, (vTail * 1.52 - simplexTime * 0.5) * simplexFrequency, surface.z * simplexFrequency) + motionFlow * 1.35;
         float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, clamp(vTail, 0.0, 1.0));
         float simplex = simplexGranularField(simplexFlow);
         float noiseMix = clamp(uWakeNoiseMix, 0.0, 1.0);
@@ -498,6 +507,7 @@ function createWakeMaterial(config) {
 
 export function createFlameAoe3dRuntime({
   getOrbModel = () => null,
+  getOrbPosition = () => null,
   getBo = () => 72,
   getConfig = () => FLAME_AOE_3D_PRESET_DEFAULT,
   now = () => performance.now(),
@@ -508,10 +518,59 @@ export function createFlameAoe3dRuntime({
   let group = null;
   let auraMaterial = null;
   let wakeMaterial = null;
+  let wakeMesh = null;
   let startedAtMs = 0;
+  let lastTickMs = 0;
+  let runtimeBo = 72;
+  let motionInitialized = false;
+  const lastPosition = new THREE.Vector3();
+  const currentPosition = new THREE.Vector3();
+  const targetWakeOffset = new THREE.Vector3();
+  const wakeOffset = new THREE.Vector3();
+  const shaderMotion = new THREE.Vector3();
 
   function requestFrame() {
     if (typeof onNeedsFrame === "function") onNeedsFrame();
+  }
+
+  function readOrbPosition() {
+    const source = typeof getOrbPosition === "function" ? getOrbPosition() : null;
+    if (!source || typeof source !== "object") return null;
+    const x = Number(source.x);
+    const y = Number(source.y);
+    const z = Number(source.z);
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return null;
+    return currentPosition.set(x, y, z);
+  }
+
+  function updateWakeMotion(dtSec) {
+    if (!wakeMesh) return;
+    const bo = Math.max(1, Number(runtimeBo) || 72);
+    const position = readOrbPosition();
+    if (!position) {
+      targetWakeOffset.set(0, 0, 0);
+    } else if (!motionInitialized) {
+      lastPosition.copy(position);
+      targetWakeOffset.set(0, 0, 0);
+      motionInitialized = true;
+    } else {
+      const safeDt = Math.max(1 / 240, Math.min(0.12, Number(dtSec) || (1 / 60)));
+      const vx = (position.x - lastPosition.x) / safeDt;
+      const vy = (position.y - lastPosition.y) / safeDt;
+      const vz = (position.z - lastPosition.z) / safeDt;
+      lastPosition.copy(position);
+      targetWakeOffset.set(-vx * 0.035, -vy * 0.035, -vz * 0.02);
+      targetWakeOffset.clampLength(0, bo * 0.42);
+    }
+    const alpha = expLerpAlpha(dtSec, 8.5);
+    wakeOffset.lerp(targetWakeOffset, alpha);
+    wakeMesh.position.copy(wakeOffset);
+    wakeMesh.rotation.z = THREE.MathUtils.clamp(-wakeOffset.x / (bo * 1.15), -0.34, 0.34);
+    wakeMesh.rotation.x = THREE.MathUtils.clamp(wakeOffset.z / (bo * 1.35), -0.22, 0.22);
+    shaderMotion.copy(wakeOffset).multiplyScalar(1 / Math.max(1, bo));
+    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeMotionOffset) {
+      wakeMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
+    }
   }
 
   function clear() {
@@ -521,6 +580,14 @@ export function createFlameAoe3dRuntime({
     timer = 0;
     auraMaterial = null;
     wakeMaterial = null;
+    wakeMesh = null;
+    lastTickMs = 0;
+    motionInitialized = false;
+    lastPosition.set(0, 0, 0);
+    currentPosition.set(0, 0, 0);
+    targetWakeOffset.set(0, 0, 0);
+    wakeOffset.set(0, 0, 0);
+    shaderMotion.set(0, 0, 0);
     if (group && group.parent) group.parent.remove(group);
     if (group) disposeThreeObject(group);
     group = null;
@@ -533,8 +600,11 @@ export function createFlameAoe3dRuntime({
       return;
     }
     const time = Math.max(0, (Number(nowMs) - startedAtMs) / 1000);
+    const dtSec = lastTickMs > 0 ? Math.max(0, Math.min(0.12, (Number(nowMs) - lastTickMs) / 1000)) : (1 / 60);
+    lastTickMs = Number(nowMs) || 0;
     if (auraMaterial && auraMaterial.uniforms && auraMaterial.uniforms.uTime) auraMaterial.uniforms.uTime.value = time;
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uTime) wakeMaterial.uniforms.uTime.value = time;
+    updateWakeMotion(dtSec);
     requestFrame();
     raf = requestAnimationFrame(tick);
   }
@@ -549,7 +619,14 @@ export function createFlameAoe3dRuntime({
     const orbModel = typeof getOrbModel === "function" ? getOrbModel() : null;
     if (!orbModel) return { handled: false, skipped: "orb_model_missing" };
     const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 72);
+    runtimeBo = bo;
     startedAtMs = Number(now()) || performance.now();
+    lastTickMs = startedAtMs;
+    const initialPosition = readOrbPosition();
+    if (initialPosition) {
+      lastPosition.copy(initialPosition);
+      motionInitialized = true;
+    }
     group = new THREE.Group();
     group.name = "flame_aoe3d:runtime";
     auraMaterial = createAuraShellMaterial(config);
@@ -574,6 +651,7 @@ export function createFlameAoe3dRuntime({
     );
     wake.name = "flame_aoe3d:directional_wake";
     wake.renderOrder = 10;
+    wakeMesh = wake;
     group.add(aura);
     group.add(wake);
     orbModel.add(group);
