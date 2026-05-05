@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260505j";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260505q";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js?v=20260504a";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -47,6 +47,8 @@ import {
   resolveStageCameraZoom,
 } from "../authored-level-camera.js?v=20260424c";
 import { createPerfTrace } from "../perf-trace.js?v=20260430b";
+
+globalThis.__orbisStagingShellRuntimeVersion = "20260505s";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1569,11 +1571,25 @@ function startShellStageLoop(shellContext) {
       }));
       if (perfTrace && typeof perfTrace.frameEnd === "function") {
         const metrics = runtime.frameMetrics || {};
+        const rootWindow = rootDocument && rootDocument.defaultView ? rootDocument.defaultView : globalThis;
+        const bloomTrace = rootWindow && rootWindow.__orbisDepth3dBloomTrace
+          ? rootWindow.__orbisDepth3dBloomTrace
+          : null;
         perfTrace.frameEnd({
           camLeft: Number(metrics.camLeft) || 0,
           camTop: Number(metrics.camTop) || 0,
           zoom: Number(metrics.zoom) || 1,
           camera: cameraTrace,
+          depth3dModuleVersion: rootWindow && rootWindow.__orbisDepth3dModuleVersion || "",
+          depth3dBloom: bloomTrace ? {
+            config: bloomTrace.config,
+            renderCalls: bloomTrace.renderCalls,
+            resizeCalls: bloomTrace.resizeCalls,
+            lastSize: bloomTrace.lastSize,
+            sceneChildren: bloomTrace.sceneChildren,
+            sceneObjectNames: bloomTrace.sceneObjectNames,
+            camera: bloomTrace.camera,
+          } : null,
         });
       }
     },

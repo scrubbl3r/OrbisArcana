@@ -27,9 +27,22 @@ export function createBloomComposer({
   );
   composer.addPass(bloomPass);
 
+  const trace = {
+    createdAtMs: Math.round(performance.now()),
+    renderPath: "lab-world-object-inspector",
+    config: Object.freeze({
+      strength: Number(bloom.strength) || 1.5,
+      radius: Number(bloom.radius) || 0.4,
+      threshold: Number(bloom.threshold) || 0,
+    }),
+    composerCreated: true,
+    bloomPassCreated: true,
+  };
+  globalThis.__orbisLabBloomTrace = trace;
+
   return Object.freeze({
     composer,
     bloomPass,
+    trace,
   });
 }
-

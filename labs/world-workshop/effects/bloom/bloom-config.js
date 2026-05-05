@@ -1,7 +1,2 @@
-export const ORB_BLOOM_CONFIG = Object.freeze({
-  enabled: true,
-  strength: 0.58,
-  radius: 0.38,
-  threshold: 0.16,
-});
+export { ORB_BLOOM_CONFIG } from "../../../../src/game-runtime/rendering/three/three-bloom-config.js?v=20260505a";
 

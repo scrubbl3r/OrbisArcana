@@ -49,7 +49,7 @@ export function createWorldObjectInspector({
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
-  const { composer, bloomPass } = createBloomComposer({ renderer, scene, camera, bloom });
+  const { composer, bloomPass, trace: bloomTrace } = createBloomComposer({ renderer, scene, camera, bloom });
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.06;
@@ -71,6 +71,22 @@ export function createWorldObjectInspector({
 
   let animationFrame = 0;
   const render = () => {
+    if (bloomTrace) {
+      bloomTrace.renderCalls = Number(bloomTrace.renderCalls || 0) + 1;
+      bloomTrace.lastRenderAtMs = Math.round(performance.now());
+      bloomTrace.sceneChildren = scene.children.length;
+      bloomTrace.camera = {
+        fov: camera.fov,
+        near: camera.near,
+        far: camera.far,
+        aspect: camera.aspect,
+        position: {
+          x: Math.round(camera.position.x * 1000) / 1000,
+          y: Math.round(camera.position.y * 1000) / 1000,
+          z: Math.round(camera.position.z * 1000) / 1000,
+        },
+      };
+    }
     if (composer) composer.render();
     else renderer.render(scene, camera);
   };

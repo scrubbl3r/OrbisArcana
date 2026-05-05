@@ -35,6 +35,7 @@ import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.j
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260501a";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260502a";
+import { createLevelStageDepth3dBloom } from "./level-stage-depth3d-bloom.js?v=20260505e";
 import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430b";
 import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";
 import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetry.js?v=20260430b";
@@ -42,6 +43,7 @@ import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetr
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
 const WORLD_GLOBE_FOREGROUND_Z_BO = 0.08;
+const LEVEL_STAGE_DEPTH3D_BLOOM_TRACE_VERSION = "20260505q";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -69,6 +71,13 @@ export function createLevelStageDepth3dLayer({
   perfTrace = null,
 } = {}) {
   if (!root) return null;
+  globalThis.__orbisDepth3dModuleVersion = LEVEL_STAGE_DEPTH3D_BLOOM_TRACE_VERSION;
+  if (perfTrace && typeof perfTrace.mark === "function") {
+    perfTrace.mark("depth3d.module", {
+      version: LEVEL_STAGE_DEPTH3D_BLOOM_TRACE_VERSION,
+      bloomFactory: typeof createLevelStageDepth3dBloom,
+    });
+  }
   const sceneRuntime = createLevelStageDepth3dScene({
     root,
     fovDeg: DEPTH_CAMERA_FOV_DEG,
@@ -107,6 +116,25 @@ export function createLevelStageDepth3dLayer({
     debugEl,
     fallbackBo: baseOrbWorldUnits,
   });
+  const bloom = createLevelStageDepth3dBloom({
+    renderer,
+    scene,
+    camera,
+  });
+  if (perfTrace && typeof perfTrace.mark === "function") {
+    const trace = bloom && typeof bloom.getTrace === "function" ? bloom.getTrace() : null;
+    perfTrace.mark(trace ? "depth3d.bloom.created" : "depth3d.bloom.missing", trace ? {
+      config: trace.config,
+      renderer: trace.renderer,
+      camera: trace.camera,
+    } : {
+      renderer: !!renderer,
+      scene: !!scene,
+      camera: !!camera,
+    });
+  }
+  let bloomMarkedReady = false;
+  let bloomMarkedRender = false;
   const renderLoop = createLevelStageDepth3dRenderLoop({
     isDisposed: () => disposed,
     hasActiveAnimation: hasActiveGlobe3dAnimation,
@@ -261,6 +289,41 @@ export function createLevelStageDepth3dLayer({
       && !globe3dGroup.children.length;
   }
 
+  function syncBloomTelemetry() {
+    const trace = bloom && typeof bloom.getTrace === "function" ? bloom.getTrace() : null;
+    if (!trace) {
+      root.dataset.depth3dBloom = "missing";
+      return;
+    }
+    root.dataset.depth3dBloom = "active";
+    root.dataset.depth3dBloomRenderCalls = String(trace.renderCalls || 0);
+    root.dataset.depth3dBloomResize = `${trace.lastSize && trace.lastSize.width || 0}x${trace.lastSize && trace.lastSize.height || 0}`;
+    root.dataset.depth3dBloomConfig = [
+      `s:${trace.config && trace.config.strength}`,
+      `r:${trace.config && trace.config.radius}`,
+      `t:${trace.config && trace.config.threshold}`,
+    ].join(",");
+    if (!bloomMarkedReady && perfTrace && typeof perfTrace.mark === "function") {
+      bloomMarkedReady = true;
+      perfTrace.mark("depth3d.bloom.ready", {
+        config: trace.config,
+        renderer: trace.renderer,
+        camera: trace.camera,
+      });
+    }
+    if (!bloomMarkedRender && trace.renderCalls > 0 && trace.resizeCalls > 0 && perfTrace && typeof perfTrace.mark === "function") {
+      bloomMarkedRender = true;
+      perfTrace.mark("depth3d.bloom.rendering", {
+        renderCalls: trace.renderCalls,
+        resizeCalls: trace.resizeCalls,
+        size: trace.lastSize,
+        sceneChildren: trace.sceneChildren,
+        sceneObjectNames: trace.sceneObjectNames,
+        camera: trace.camera,
+      });
+    }
+  }
+
   function doRenderFrame({
     camLeft = 0,
     camTop = 0,
@@ -282,6 +345,7 @@ export function createLevelStageDepth3dLayer({
     const { width, height } = cameraFrame;
     if (width !== lastRenderWidth || height !== lastRenderHeight) {
       renderer.setSize(width, height, false);
+      if (bloom) bloom.setSize(width, height);
       worldProps3dRuntime.updateResolution(width, height);
       lastRenderWidth = width;
       lastRenderHeight = height;
@@ -317,12 +381,17 @@ export function createLevelStageDepth3dLayer({
     if (measure) {
       measure("depth3d.orbUpdate", () => orb3dActorRuntime.update(frameNowMs / 1000));
       measure("depth3d.globes", () => tickGlobe3dRuntime(frameNowMs));
-      measure("depth3d.renderer", () => renderer.render(scene, camera));
+      measure("depth3d.renderer", () => {
+        if (bloom) bloom.render();
+        else renderer.render(scene, camera);
+      });
     } else {
       orb3dActorRuntime.update(frameNowMs / 1000);
       tickGlobe3dRuntime(frameNowMs);
-      renderer.render(scene, camera);
+      if (bloom) bloom.render();
+      else renderer.render(scene, camera);
     }
+    syncBloomTelemetry();
   }
 
   function loadProps(props = []) {
@@ -463,6 +532,7 @@ export function createLevelStageDepth3dLayer({
       orb3dActorRuntime.dispose();
       clearGroup();
       clearPropsGroup();
+      if (bloom) bloom.dispose();
       renderer.dispose();
       if (renderer.domElement && renderer.domElement.parentNode) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
