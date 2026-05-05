@@ -1,5 +1,5 @@
 export const GRAPHITE_CONFIG = Object.freeze({
-  faceColor: 0x000000,
+  faceColor: 0x121212,
   edgeColor: 0xffffff,
   edgeWidth: 2,
   edgeOpacity: 0.01,
