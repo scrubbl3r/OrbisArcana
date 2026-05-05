@@ -1640,7 +1640,7 @@
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeLeanAmount">Lean amount</label>
-              <input id="flameAoe3dWakeLeanAmount" class="paramFieldInput" type="number" min="0" max="3" step="0.01" value="0.35" />
+              <input id="flameAoe3dWakeLeanAmount" class="paramFieldInput" type="number" min="0" max="10" step="0.01" value="0.35" />
               <button id="flameAoe3dApplyWakeLeanAmountBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
@@ -2352,7 +2352,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260505b"),
+      import("./vfx-studio-bootstrap.js?v=20260505c"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),

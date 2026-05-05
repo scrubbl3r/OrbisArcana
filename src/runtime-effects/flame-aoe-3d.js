@@ -50,7 +50,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeRadiusBo: clampNumber(source.wakeRadiusBo, 0.02, 2, fallback.wakeRadiusBo),
     wakeSubdivisions: clampInt(source.wakeSubdivisions, 12, 192, fallback.wakeSubdivisions),
     wakeLeanOffsetBo: clampNumber(source.wakeLeanOffsetBo, 0, 4, fallback.wakeLeanOffsetBo),
-    wakeLeanAmount: clampNumber(source.wakeLeanAmount, 0, 3, fallback.wakeLeanAmount),
+    wakeLeanAmount: clampNumber(source.wakeLeanAmount, 0, 10, fallback.wakeLeanAmount),
     wakeLeanLag: clampNumber(source.wakeLeanLag, 0.1, 30, fallback.wakeLeanLag),
     wakeDisplaceBo: clampNumber(source.wakeDisplaceBo, 0, 0.5, fallback.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(source.wakeDisplaceScale, 0.2, 8, fallback.wakeDisplaceScale),
@@ -565,7 +565,7 @@ export function createFlameAoe3dRuntime({
       const vy = (position.y - lastPosition.y) / safeDt;
       const vz = (position.z - lastPosition.z) / safeDt;
       lastPosition.copy(position);
-      const leanAmount = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 3, 0.35);
+      const leanAmount = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 10, 0.35);
       targetWakeOffset.set(-vx * leanAmount * 0.1, -vy * leanAmount * 0.1, -vz * leanAmount * 0.06);
       targetWakeOffset.clampLength(0, bo * 0.42);
     }
