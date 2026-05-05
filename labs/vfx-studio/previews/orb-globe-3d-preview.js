@@ -282,12 +282,14 @@ export function createOrbGlobe3dPreview({
         return;
       }
       const plane = globe.plane || (globe.plane = createPlane());
-      const angle = (globe.phase || 0) + (time * (globe.speed || 1) * TWO_PI * (globe.direction || 1));
-      const driftAngle = time * (globe.drift || 0) * (globe.driftDirection || 1);
-      TMP_A.copy(plane.u).applyAxisAngle(plane.normal, driftAngle);
-      TMP_B.copy(plane.v).applyAxisAngle(plane.normal, driftAngle);
-      TMP_C.copy(TMP_A).multiplyScalar(Math.cos(angle) * orbitRadius);
-      TMP_C.addScaledVector(TMP_B, Math.sin(angle) * orbitRadius);
+      if (!Number.isFinite(globe.orbitAngle)) globe.orbitAngle = Number(globe.phase) || 0;
+      if (!Number.isFinite(globe.orbitDriftAngle)) globe.orbitDriftAngle = 0;
+      globe.orbitAngle += dt * (Number(globe.speed) || 0) * TWO_PI * (globe.direction || 1);
+      globe.orbitDriftAngle += dt * (Number(globe.drift) || 0) * (globe.driftDirection || 1);
+      TMP_A.copy(plane.u).applyAxisAngle(plane.normal, globe.orbitDriftAngle);
+      TMP_B.copy(plane.v).applyAxisAngle(plane.normal, globe.orbitDriftAngle);
+      TMP_C.copy(TMP_A).multiplyScalar(Math.cos(globe.orbitAngle) * orbitRadius);
+      TMP_C.addScaledVector(TMP_B, Math.sin(globe.orbitAngle) * orbitRadius);
       globe.model.position.copy(TMP_C);
       globe.model.rotation.y += dt * 0.8;
     });
@@ -300,6 +302,8 @@ export function createOrbGlobe3dPreview({
     globe.direction = Number.isFinite(Number(overrides.direction)) ? Number(overrides.direction) : (Math.random() < 0.5 ? -1 : 1);
     globe.drift = Number.isFinite(Number(overrides.drift)) ? Number(overrides.drift) : randomBetween(drifts.min, drifts.max);
     globe.driftDirection = Number.isFinite(Number(overrides.driftDirection)) ? Number(overrides.driftDirection) : (Math.random() < 0.5 ? -1 : 1);
+    globe.orbitAngle = Number.isFinite(Number(overrides.phase)) ? Number(overrides.phase) : (Number.isFinite(Number(globe.orbitAngle)) ? Number(globe.orbitAngle) : Math.random() * TWO_PI);
+    globe.orbitDriftAngle = 0;
   }
 
   function addGlobe(overrides = {}, { render = true } = {}) {

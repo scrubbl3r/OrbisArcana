@@ -187,6 +187,8 @@ export function createOrbGlobe3dRuntime({
       model,
       mode,
       phase: Math.random() * Math.PI * 2,
+      orbitAngle: Math.random() * Math.PI * 2,
+      orbitDriftAngle: 0,
       tilt: randRange(-0.85, 0.85, 0),
       direction: Math.random() < 0.5 ? -1 : 1,
       driftDirection: Math.random() < 0.5 ? -1 : 1,
@@ -258,7 +260,7 @@ export function createOrbGlobe3dRuntime({
     requestFrame();
   }
 
-  function updateOrbiting(timeSec = 0) {
+  function updateOrbiting(dtSec = 0.016) {
     const config = currentConfig();
     const baseOrb = currentBo();
     const radius = Math.max(
@@ -274,12 +276,14 @@ export function createOrbGlobe3dRuntime({
       if (!entry || !entry.model) continue;
       const plane = entry.plane || (entry.plane = createPlane());
       const speed = clampNumber(entry.speed, 0.25);
-      const angle = entry.phase + (timeSec * speed * TWO_PI * (entry.direction || 1));
-      const driftAngle = timeSec * Math.max(0.01, entry.drift) * (entry.driftDirection || 1);
-      TMP_A.copy(plane.u).applyAxisAngle(plane.normal, driftAngle);
-      TMP_B.copy(plane.v).applyAxisAngle(plane.normal, driftAngle);
-      TMP_C.copy(TMP_A).multiplyScalar(Math.cos(angle) * radius);
-      TMP_C.addScaledVector(TMP_B, Math.sin(angle) * radius);
+      if (!Number.isFinite(entry.orbitAngle)) entry.orbitAngle = Number(entry.phase) || 0;
+      if (!Number.isFinite(entry.orbitDriftAngle)) entry.orbitDriftAngle = 0;
+      entry.orbitAngle += dtSec * speed * TWO_PI * (entry.direction || 1);
+      entry.orbitDriftAngle += dtSec * Math.max(0, entry.drift) * (entry.driftDirection || 1);
+      TMP_A.copy(plane.u).applyAxisAngle(plane.normal, entry.orbitDriftAngle);
+      TMP_B.copy(plane.v).applyAxisAngle(plane.normal, entry.orbitDriftAngle);
+      TMP_C.copy(TMP_A).multiplyScalar(Math.cos(entry.orbitAngle) * radius);
+      TMP_C.addScaledVector(TMP_B, Math.sin(entry.orbitAngle) * radius);
       entry.model.visible = !state.dead;
       entry.model.position.set(cx + TMP_C.x, cy + TMP_C.y, cz + TMP_C.z);
     }
@@ -314,7 +318,7 @@ export function createOrbGlobe3dRuntime({
   }
 
   function update({ timeSec = 0, dtSec = 0.016 } = {}) {
-    updateOrbiting(timeSec);
+    updateOrbiting(dtSec);
     updateInner(dtSec);
   }
 
