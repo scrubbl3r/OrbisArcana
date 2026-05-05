@@ -1,5 +1,4 @@
 export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
-  "durationMs": 10000,
   "auraAlpha": 0.8,
   "auraScale": 1,
   "auraPulse": 0.08,
@@ -12,9 +11,6 @@ export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "wakeLengthBo": 4,
   "wakeRadiusBo": 0.66,
   "wakeSubdivisions": 64,
-  "wakeLeanOffsetBo": 0.5,
-  "wakeLeanAmount": 0.35,
-  "wakeLeanLag": 8.5,
   "wakeDisplaceBo": 0.25,
   "wakeDisplaceScale": 1.8,
   "wakeDisplaceSpeed": 3,
@@ -39,6 +35,7 @@ export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "wakeSimplexGain": 0.3,
   "wakeNoiseMix": 0.25,
   "wakeGraphEnabled": 1,
+  "durationMs": 10000,
   "wakeGraph0Pct": 0,
   "wakeGraph0R": 0,
   "wakeGraph0G": 0,
