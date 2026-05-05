@@ -176,6 +176,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "durationMs",
         "auraAlpha", "auraScale", "auraPulse", "auraNoiseScale", "auraNoiseSpeed", "auraFresnelPower", "auraR", "auraG", "auraB",
         "wakeLengthBo", "wakeRadiusBo", "wakeSubdivisions",
+        "wakeLeanOffsetBo", "wakeLeanAmount", "wakeLeanLag",
         "wakeDisplaceBo", "wakeDisplaceScale", "wakeDisplaceSpeed", "wakeDisplaceSoftness", "wakeDisplaceInfluenceBottom", "wakeDisplaceInfluenceTop",
         "wakeNoiseScale", "wakeNoiseSpeed", "wakeNoiseDensityBottom", "wakeNoiseDensityTop", "wakeNoiseContrast", "wakeNoiseOctaves", "wakeNoiseLacunarity", "wakeNoiseGain",
         "wakeSimplexScale", "wakeSimplexSpeed", "wakeSimplexDensityBottom", "wakeSimplexDensityTop", "wakeSimplexContrast", "wakeSimplexOctaves", "wakeSimplexLacunarity", "wakeSimplexGain",

@@ -31,9 +31,9 @@ import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecyc
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260501a";
-import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505b";
+import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505c";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260501a";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505a";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505b";
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260502a";
 import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430b";
 import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260430a";

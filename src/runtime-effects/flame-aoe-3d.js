@@ -4,7 +4,8 @@ import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
-  const safe = Number.isFinite(n) ? n : fallback;
+  const f = Number(fallback);
+  const safe = Number.isFinite(n) ? n : (Number.isFinite(f) ? f : min);
   return Math.max(min, Math.min(max, safe));
 }
 
