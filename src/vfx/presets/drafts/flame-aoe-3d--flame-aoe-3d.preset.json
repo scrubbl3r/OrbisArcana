@@ -65,7 +65,7 @@
     "wakeAlphaGradient0Pct": 0,
     "wakeAlphaGradient0A": 1,
     "wakeAlphaGradient1Pct": 60,
-    "wakeAlphaGradient1A": 0.8,
+    "wakeAlphaGradient1A": 0.6,
     "wakeAlphaGradient2Pct": 75,
     "wakeAlphaGradient2A": 0,
     "wakeAlphaGradient3Pct": "",
@@ -79,6 +79,6 @@
     "settingsKey": "flame-aoe-3d",
     "registryDefaultPresetId": "preset.flame_aoe.default"
   },
-  "savedAtMs": 1777943689859,
-  "exportedAtMs": 1777943689859
+  "savedAtMs": 1777944510152,
+  "exportedAtMs": 1777944510152
 }
