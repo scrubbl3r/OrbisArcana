@@ -2,7 +2,7 @@ import * as THREE from "three";
 import {
   DEPTH_ENVIRONMENT_MODE,
   resolveDepthEnvironmentMode,
-} from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260505a";
+} from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260505b";
 
 export function createLevelStageDepth3dScene({
   root = null,

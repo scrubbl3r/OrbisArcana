@@ -5,22 +5,11 @@ import {
   toDepthThreeY,
 } from "./depth-runtime-coordinates.js";
 import { resolveAuthoredRenderOrder } from "./authored-render-stack.js";
+import { createGraphiteMaterial } from "../rendering/three/materials/graphite-material.js";
+import { GRAPHITE_CONFIG } from "../rendering/three/materials/graphite-config.js";
 
 const PREVIEW_RASTER_SIZE = 384;
 const DEPTH_LAYER_ALPHA_THRESHOLD = 8;
-const DEPTH_GRAPHITE_RUNTIME = Object.freeze({
-  faceColor: 0x707680,
-  roughness: 0.58,
-  metalness: 0.0,
-  envMapIntensity: 0.22,
-  clearcoat: 0.25,
-  clearcoatRoughness: 0.7,
-  specularIntensity: 0.28,
-  specularColor: 0xd8f5ff,
-  textureSize: 96,
-  textureRepeat: 5,
-  bumpScale: 0.2,
-});
 
 export const DEPTH_ENVIRONMENT_MODE = Object.freeze({
   runtime: "runtime",
@@ -116,44 +105,6 @@ export function resolveDepthEnvironmentMode() {
   }
 }
 
-function createGraphiteSurfaceTexture() {
-  if (typeof document === "undefined") return null;
-  const size = Math.max(16, DEPTH_GRAPHITE_RUNTIME.textureSize);
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const context = canvas.getContext("2d");
-  if (!context) return null;
-
-  const image = context.createImageData(size, size);
-  for (let index = 0; index < image.data.length; index += 4) {
-    const pixel = index / 4;
-    const x = pixel % size;
-    const y = Math.floor(pixel / size);
-    const grain = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
-    const value = 112 + Math.round((grain - Math.floor(grain)) * 28);
-    image.data[index] = value;
-    image.data[index + 1] = value;
-    image.data[index + 2] = value;
-    image.data[index + 3] = 255;
-  }
-  context.putImageData(image, 0, 0);
-
-  context.globalAlpha = 0.22;
-  for (let y = 0; y < size; y += 3) {
-    context.fillStyle = y % 2 ? "#ffffff" : "#000000";
-    context.fillRect(0, y, size, 1);
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(DEPTH_GRAPHITE_RUNTIME.textureRepeat, DEPTH_GRAPHITE_RUNTIME.textureRepeat);
-  texture.colorSpace = THREE.NoColorSpace;
-  texture.needsUpdate = true;
-  return texture;
-}
-
 function buildGraphiteMaterial({
   opacity = 0.78,
   color = 0x05070a,
@@ -174,26 +125,10 @@ function buildGraphiteMaterial({
     });
   }
 
-  const surfaceTexture = createGraphiteSurfaceTexture();
-  const material = new THREE.MeshPhysicalMaterial({
-    color: DEPTH_GRAPHITE_RUNTIME.faceColor,
-    roughness: DEPTH_GRAPHITE_RUNTIME.roughness,
-    metalness: DEPTH_GRAPHITE_RUNTIME.metalness,
-    envMapIntensity: DEPTH_GRAPHITE_RUNTIME.envMapIntensity,
-    clearcoat: DEPTH_GRAPHITE_RUNTIME.clearcoat,
-    clearcoatRoughness: DEPTH_GRAPHITE_RUNTIME.clearcoatRoughness,
-    specularIntensity: DEPTH_GRAPHITE_RUNTIME.specularIntensity,
-    specularColor: DEPTH_GRAPHITE_RUNTIME.specularColor,
-    side: THREE.DoubleSide,
-    transparent: false,
-    opacity: 1,
-    depthWrite: true,
-  });
-  if (surfaceTexture) {
-    material.roughnessMap = surfaceTexture;
-    material.bumpMap = surfaceTexture;
-    material.bumpScale = DEPTH_GRAPHITE_RUNTIME.bumpScale;
-  }
+  const material = createGraphiteMaterial(GRAPHITE_CONFIG);
+  material.transparent = false;
+  material.opacity = 1;
+  material.depthWrite = true;
   return material;
 }
 
