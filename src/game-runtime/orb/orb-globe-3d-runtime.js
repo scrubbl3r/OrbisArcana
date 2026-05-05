@@ -5,6 +5,7 @@ import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "./orb-globe-3d-default.js";
 
 const UP = new THREE.Vector3(0, 1, 0);
 const TWO_PI = Math.PI * 2;
+const ORBIT_DRIFT_RATE_SCALE = 0.025;
 const TMP_A = new THREE.Vector3();
 const TMP_B = new THREE.Vector3();
 const TMP_C = new THREE.Vector3();
@@ -279,7 +280,7 @@ export function createOrbGlobe3dRuntime({
       if (!Number.isFinite(entry.orbitAngle)) entry.orbitAngle = Number(entry.phase) || 0;
       if (!Number.isFinite(entry.orbitDriftAngle)) entry.orbitDriftAngle = 0;
       entry.orbitAngle += dtSec * speed * TWO_PI * (entry.direction || 1);
-      entry.orbitDriftAngle += dtSec * Math.max(0, entry.drift) * (entry.driftDirection || 1);
+      entry.orbitDriftAngle += dtSec * Math.max(0, entry.drift) * ORBIT_DRIFT_RATE_SCALE * (entry.driftDirection || 1);
       TMP_A.copy(plane.u).applyAxisAngle(plane.normal, entry.orbitDriftAngle);
       TMP_B.copy(plane.v).applyAxisAngle(plane.normal, entry.orbitDriftAngle);
       TMP_C.copy(TMP_A).multiplyScalar(Math.cos(entry.orbitAngle) * radius);

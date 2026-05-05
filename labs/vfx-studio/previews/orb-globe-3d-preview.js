@@ -15,6 +15,7 @@ import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/
 
 const UP = new THREE.Vector3(0, 1, 0);
 const TWO_PI = Math.PI * 2;
+const ORBIT_DRIFT_RATE_SCALE = 0.025;
 const TMP_A = new THREE.Vector3();
 const TMP_B = new THREE.Vector3();
 const TMP_C = new THREE.Vector3();
@@ -285,7 +286,7 @@ export function createOrbGlobe3dPreview({
       if (!Number.isFinite(globe.orbitAngle)) globe.orbitAngle = Number(globe.phase) || 0;
       if (!Number.isFinite(globe.orbitDriftAngle)) globe.orbitDriftAngle = 0;
       globe.orbitAngle += dt * (Number(globe.speed) || 0) * TWO_PI * (globe.direction || 1);
-      globe.orbitDriftAngle += dt * (Number(globe.drift) || 0) * (globe.driftDirection || 1);
+      globe.orbitDriftAngle += dt * (Number(globe.drift) || 0) * ORBIT_DRIFT_RATE_SCALE * (globe.driftDirection || 1);
       TMP_A.copy(plane.u).applyAxisAngle(plane.normal, globe.orbitDriftAngle);
       TMP_B.copy(plane.v).applyAxisAngle(plane.normal, globe.orbitDriftAngle);
       TMP_C.copy(TMP_A).multiplyScalar(Math.cos(globe.orbitAngle) * orbitRadius);
