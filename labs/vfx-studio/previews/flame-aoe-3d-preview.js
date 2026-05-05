@@ -42,6 +42,12 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeLeanOffsetBo: 0.5,
   wakeLeanAmount: 0.35,
   wakeLeanLag: 8.5,
+  wakeLagGraph0Pct: 0,
+  wakeLagGraph0Amount: 0,
+  wakeLagGraph1Pct: 35,
+  wakeLagGraph1Amount: 0,
+  wakeLagGraph2Pct: 100,
+  wakeLagGraph2Amount: 1,
   wakeDisplaceBo: 0.12,
   wakeDisplaceScale: 1.8,
   wakeDisplaceSpeed: 0.35,
@@ -176,6 +182,12 @@ function readFlameWakeConfig(els = {}) {
     wakeLeanOffsetBo: clampNumber(els.flameAoe3dWakeLeanOffsetBo && els.flameAoe3dWakeLeanOffsetBo.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanOffsetBo),
     wakeLeanAmount: clampNumber(els.flameAoe3dWakeLeanAmount && els.flameAoe3dWakeLeanAmount.value, 0, 10, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanAmount),
     wakeLeanLag: clampNumber(els.flameAoe3dWakeLeanLag && els.flameAoe3dWakeLeanLag.value, 0.1, 30, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanLag),
+    wakeLagGraph0Pct: readOptionalNumber(els.flameAoe3dWakeLagGraph0Pct && els.flameAoe3dWakeLagGraph0Pct.value, 0, 100),
+    wakeLagGraph0Amount: readOptionalNumber(els.flameAoe3dWakeLagGraph0Amount && els.flameAoe3dWakeLagGraph0Amount.value, 0, 10),
+    wakeLagGraph1Pct: readOptionalNumber(els.flameAoe3dWakeLagGraph1Pct && els.flameAoe3dWakeLagGraph1Pct.value, 0, 100),
+    wakeLagGraph1Amount: readOptionalNumber(els.flameAoe3dWakeLagGraph1Amount && els.flameAoe3dWakeLagGraph1Amount.value, 0, 10),
+    wakeLagGraph2Pct: readOptionalNumber(els.flameAoe3dWakeLagGraph2Pct && els.flameAoe3dWakeLagGraph2Pct.value, 0, 100),
+    wakeLagGraph2Amount: readOptionalNumber(els.flameAoe3dWakeLagGraph2Amount && els.flameAoe3dWakeLagGraph2Amount.value, 0, 10),
     wakeDisplaceBo: clampNumber(els.flameAoe3dWakeDisplaceBo && els.flameAoe3dWakeDisplaceBo.value, 0, 0.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(els.flameAoe3dWakeDisplaceScale && els.flameAoe3dWakeDisplaceScale.value, 0.2, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(els.flameAoe3dWakeDisplaceSpeed && els.flameAoe3dWakeDisplaceSpeed.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceSpeed),
@@ -222,6 +234,12 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeLeanOffsetBo) els.flameAoe3dWakeLeanOffsetBo.value = String(Number(cfg.wakeLeanOffsetBo).toFixed(2));
   if (els.flameAoe3dWakeLeanAmount) els.flameAoe3dWakeLeanAmount.value = String(Number(cfg.wakeLeanAmount).toFixed(2));
   if (els.flameAoe3dWakeLeanLag) els.flameAoe3dWakeLeanLag.value = String(Number(cfg.wakeLeanLag).toFixed(2));
+  for (let i = 0; i < 3; i += 1) {
+    const pctEl = els[`flameAoe3dWakeLagGraph${i}Pct`];
+    const amountEl = els[`flameAoe3dWakeLagGraph${i}Amount`];
+    if (pctEl) pctEl.value = cfg[`wakeLagGraph${i}Pct`] == null ? "" : String(cfg[`wakeLagGraph${i}Pct`]);
+    if (amountEl) amountEl.value = cfg[`wakeLagGraph${i}Amount`] == null ? "" : String(cfg[`wakeLagGraph${i}Amount`]);
+  }
   if (els.flameAoe3dWakeDisplaceBo) els.flameAoe3dWakeDisplaceBo.value = String(Number(cfg.wakeDisplaceBo).toFixed(3));
   if (els.flameAoe3dWakeDisplaceScale) els.flameAoe3dWakeDisplaceScale.value = String(Number(cfg.wakeDisplaceScale).toFixed(2));
   if (els.flameAoe3dWakeDisplaceSpeed) els.flameAoe3dWakeDisplaceSpeed.value = String(Number(cfg.wakeDisplaceSpeed).toFixed(2));
@@ -1081,6 +1099,7 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyWakeLeanOffsetBtn,
       els.flameAoe3dApplyWakeLeanAmountBtn,
       els.flameAoe3dApplyWakeLeanLagBtn,
+      els.flameAoe3dApplyWakeLagGraphBtn,
       els.flameAoe3dApplyWakeDisplaceBtn,
       els.flameAoe3dApplyWakeDisplaceScaleBtn,
       els.flameAoe3dApplyWakeDisplaceSpeedBtn,

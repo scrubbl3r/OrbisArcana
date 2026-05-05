@@ -52,6 +52,12 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeLeanOffsetBo: clampNumber(source.wakeLeanOffsetBo, 0, 4, fallback.wakeLeanOffsetBo),
     wakeLeanAmount: clampNumber(source.wakeLeanAmount, 0, 10, fallback.wakeLeanAmount),
     wakeLeanLag: clampNumber(source.wakeLeanLag, 0.1, 30, fallback.wakeLeanLag),
+    wakeLagGraph0Pct: optionalNumber(source.wakeLagGraph0Pct ?? fallback.wakeLagGraph0Pct ?? 0, 0, 100),
+    wakeLagGraph0Amount: optionalNumber(source.wakeLagGraph0Amount ?? fallback.wakeLagGraph0Amount ?? 0, 0, 10),
+    wakeLagGraph1Pct: optionalNumber(source.wakeLagGraph1Pct ?? fallback.wakeLagGraph1Pct ?? 35, 0, 100),
+    wakeLagGraph1Amount: optionalNumber(source.wakeLagGraph1Amount ?? fallback.wakeLagGraph1Amount ?? 0, 0, 10),
+    wakeLagGraph2Pct: optionalNumber(source.wakeLagGraph2Pct ?? fallback.wakeLagGraph2Pct ?? 100, 0, 100),
+    wakeLagGraph2Amount: optionalNumber(source.wakeLagGraph2Amount ?? fallback.wakeLagGraph2Amount ?? 1, 0, 10),
     wakeDisplaceBo: clampNumber(source.wakeDisplaceBo, 0, 0.5, fallback.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(source.wakeDisplaceScale, 0.2, 8, fallback.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(source.wakeDisplaceSpeed, 0, 4, fallback.wakeDisplaceSpeed),
@@ -163,6 +169,18 @@ function getWakeAlphaGradientStops(config) {
   return stops;
 }
 
+function getWakeLagGraphStops(config) {
+  const stops = [];
+  for (let i = 0; i < 3; i += 1) {
+    const pct = optionalNumber(config[`wakeLagGraph${i}Pct`], 0, 100);
+    const amount = optionalNumber(config[`wakeLagGraph${i}Amount`], 0, 10);
+    if ([pct, amount].some((v) => v === "")) continue;
+    stops.push({ pct: pct / 100, amount });
+  }
+  stops.sort((a, b) => a.pct - b.pct);
+  return stops;
+}
+
 function createAuraShellMaterial(config) {
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:aura_shell_material",
@@ -267,6 +285,7 @@ function createAuraShellMaterial(config) {
 function createWakeMaterial(config) {
   const graphStops = getWakeGraphStops(config);
   const alphaStops = getWakeAlphaGradientStops(config);
+  const lagStops = getWakeLagGraphStops(config);
   const graphStopValues = [0, 1, 1, 1];
   const graphColors = [
     new THREE.Vector4(0, 0, 0, 0),
@@ -283,6 +302,12 @@ function createWakeMaterial(config) {
   alphaStops.slice(0, 4).forEach((stop, index) => {
     alphaStopValues[index] = stop.pct;
     alphaValues[index] = stop.alpha;
+  });
+  const lagStopValues = [0, 0.35, 1];
+  const lagAmounts = [0, 0, 1];
+  lagStops.slice(0, 3).forEach((stop, index) => {
+    lagStopValues[index] = stop.pct;
+    lagAmounts[index] = stop.amount;
   });
   const graphEnabled = config.wakeGraphEnabled !== 0;
   return new THREE.ShaderMaterial({
@@ -325,6 +350,10 @@ function createWakeMaterial(config) {
       uWakeAlphaGradientStops: { value: alphaStopValues },
       uWakeAlphaGradientValues: { value: alphaValues },
       uWakeMotionOffset: { value: new THREE.Vector3() },
+      uWakeVertexLagOffset: { value: new THREE.Vector2() },
+      uWakeLagGraphCount: { value: Math.max(0, Math.min(3, lagStops.length)) },
+      uWakeLagGraphStops: { value: lagStopValues },
+      uWakeLagGraphAmounts: { value: lagAmounts },
     },
     vertexShader: `
       precision highp float;
@@ -337,6 +366,10 @@ function createWakeMaterial(config) {
       uniform float uWakeDisplaceInfluenceBottom;
       uniform float uWakeDisplaceInfluenceTop;
       uniform vec3 uWakeMotionOffset;
+      uniform vec2 uWakeVertexLagOffset;
+      uniform int uWakeLagGraphCount;
+      uniform float uWakeLagGraphStops[3];
+      uniform float uWakeLagGraphAmounts[3];
       varying vec3 vLocalPos;
       varying float vTail;
       varying float vWakeHeight;
@@ -350,9 +383,28 @@ function createWakeMaterial(config) {
         for (int i = 0; i < 3; i += 1) { value += noise(p * freq) * amp; freq *= 1.82; amp *= 0.42; p += vec3(7.3, -11.9, 5.1); }
         return clamp(value, 0.0, 1.0);
       }
+      float sampleWakeLagGraph(float value) {
+        float t = clamp(value, 0.0, 1.0);
+        if (uWakeLagGraphCount <= 0) return 0.0;
+        if (uWakeLagGraphCount == 1) return uWakeLagGraphAmounts[0];
+        float result = uWakeLagGraphAmounts[0];
+        if (t <= uWakeLagGraphStops[0]) return result;
+        for (int i = 0; i < 2; i += 1) {
+          if (i >= uWakeLagGraphCount - 1) break;
+          float left = uWakeLagGraphStops[i];
+          float right = max(left + 0.0001, uWakeLagGraphStops[i + 1]);
+          result = uWakeLagGraphAmounts[i + 1];
+          if (t <= right) {
+            result = mix(uWakeLagGraphAmounts[i], uWakeLagGraphAmounts[i + 1], clamp((t - left) / (right - left), 0.0, 1.0));
+            break;
+          }
+        }
+        return result;
+      }
       void main() {
         float tail = clamp(uv.y, 0.0, 1.0);
         vec3 local = position;
+        local.xy += uWakeVertexLagOffset * sampleWakeLagGraph(wakeHeight);
         vec2 radialPlane = local.xz;
         float radius = length(radialPlane);
         vec2 radialDir = radius > 0.0001 ? radialPlane / radius : vec2(1.0, 0.0);
@@ -534,6 +586,7 @@ export function createFlameAoe3dRuntime({
   const targetWakeOffset = new THREE.Vector3();
   const wakeOffset = new THREE.Vector3();
   const shaderMotion = new THREE.Vector3();
+  const shaderVertexLag = new THREE.Vector2();
 
   function requestFrame() {
     if (typeof onNeedsFrame === "function") onNeedsFrame();
@@ -581,6 +634,10 @@ export function createFlameAoe3dRuntime({
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeMotionOffset) {
       wakeMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
     }
+    shaderVertexLag.set(wakeOffset.x, wakeOffset.y);
+    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeVertexLagOffset) {
+      wakeMaterial.uniforms.uWakeVertexLagOffset.value.copy(shaderVertexLag);
+    }
   }
 
   function clear() {
@@ -600,6 +657,7 @@ export function createFlameAoe3dRuntime({
     targetWakeOffset.set(0, 0, 0);
     wakeOffset.set(0, 0, 0);
     shaderMotion.set(0, 0, 0);
+    shaderVertexLag.set(0, 0);
     if (group && group.parent) group.parent.remove(group);
     if (group) disposeThreeObject(group);
     group = null;
