@@ -14,6 +14,7 @@ import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-
 import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/world/world-globe-3d-default.js?v=20260502c";
 
 const UP = new THREE.Vector3(0, 1, 0);
+const TWO_PI = Math.PI * 2;
 const TMP_A = new THREE.Vector3();
 const TMP_B = new THREE.Vector3();
 const TMP_C = new THREE.Vector3();
@@ -184,7 +185,6 @@ export function createOrbGlobe3dPreview({
 
   function rebuildScene() {
     if (!els.previewRoot) return null;
-    seedSamples();
     destroyInspector();
     config = readOrbGlobe3dPreviewConfig(els);
     config = Object.freeze({ ...config, els });
@@ -251,8 +251,8 @@ export function createOrbGlobe3dPreview({
         return;
       }
       const plane = globe.plane || (globe.plane = createPlane());
-      const angle = (globe.phase || 0) + (time * (globe.speed || 1) * (globe.direction || 1));
-      const driftAngle = time * (globe.drift || 0) * (globe.driftDirection || 1);
+      const angle = (globe.phase || 0) + (time * (globe.speed || 1) * TWO_PI * (globe.direction || 1));
+      const driftAngle = time * (globe.drift || 0) * TWO_PI * (globe.driftDirection || 1);
       TMP_A.copy(plane.u).applyAxisAngle(plane.normal, driftAngle);
       TMP_B.copy(plane.v).applyAxisAngle(plane.normal, driftAngle);
       TMP_C.copy(TMP_A).multiplyScalar(Math.cos(angle) * orbitRadius);
@@ -299,28 +299,14 @@ export function createOrbGlobe3dPreview({
     destroyInspector();
   }
 
-  function seedSamples() {
-    if (samples.length) return;
-    const frontPlane = {
-      normal: new THREE.Vector3(0, 0, 1),
-      u: new THREE.Vector3(1, 0, 0),
-      v: new THREE.Vector3(0, 1, 0),
-    };
-    addGlobe({ phase: 0, speed: 1.35, drift: 0.04, plane: frontPlane }, { render: false });
-    addGlobe({ phase: Math.PI * 0.72, speed: 1.9, direction: -1, drift: 0.08, plane: frontPlane }, { render: false });
-    addGlobe({ phase: Math.PI * 1.38, speed: 2.25, drift: 0.12, plane: createPlane() }, { render: false });
-    bindGlobe({ render: false });
-  }
-
   function wire() {
     if (els.previewOrbGlobe3d) els.previewOrbGlobe3d.addEventListener("click", rebuildScene);
-    if (els.orbGlobe3dAddBtn) els.orbGlobe3dAddBtn.addEventListener("click", addGlobe);
-    if (els.orbGlobe3dBindBtn) els.orbGlobe3dBindBtn.addEventListener("click", bindGlobe);
+    if (els.orbGlobe3dAddBtn) els.orbGlobe3dAddBtn.addEventListener("click", () => addGlobe());
+    if (els.orbGlobe3dBindBtn) els.orbGlobe3dBindBtn.addEventListener("click", () => bindGlobe());
     if (els.orbGlobe3dClearBtn) els.orbGlobe3dClearBtn.addEventListener("click", clear);
     document.querySelectorAll('[id^="orbGlobe3dApply"]').forEach((btn) => {
       btn.addEventListener("click", rebuildScene);
     });
-    seedSamples();
   }
 
   return Object.freeze({

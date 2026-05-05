@@ -4,6 +4,7 @@ import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../world/world-globe-3d-default.
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "./orb-globe-3d-default.js";
 
 const UP = new THREE.Vector3(0, 1, 0);
+const TWO_PI = Math.PI * 2;
 const TMP_A = new THREE.Vector3();
 const TMP_B = new THREE.Vector3();
 const TMP_C = new THREE.Vector3();
@@ -254,8 +255,8 @@ export function createOrbGlobe3dRuntime({
       if (!entry || !entry.model) continue;
       const plane = entry.plane || (entry.plane = createPlane());
       const speed = clampNumber(entry.speed, 0.25);
-      const angle = entry.phase + (timeSec * speed * (entry.direction || 1));
-      const driftAngle = timeSec * Math.max(0.01, entry.drift) * (entry.driftDirection || 1);
+      const angle = entry.phase + (timeSec * speed * TWO_PI * (entry.direction || 1));
+      const driftAngle = timeSec * Math.max(0.01, entry.drift) * TWO_PI * (entry.driftDirection || 1);
       TMP_A.copy(plane.u).applyAxisAngle(plane.normal, driftAngle);
       TMP_B.copy(plane.v).applyAxisAngle(plane.normal, driftAngle);
       TMP_C.copy(TMP_A).multiplyScalar(Math.cos(angle) * radius);
