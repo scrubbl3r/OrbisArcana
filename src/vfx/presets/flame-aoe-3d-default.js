@@ -13,7 +13,7 @@ export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "wakeSubdivisions": 64,
   "wakeLeanOffsetBo": 0.5,
   "wakeLeanAmount": 8,
-  "wakeLeanLag": 0.1,
+  "wakeLeanLag": 0.3,
   "wakeLagGraph0Pct": 0,
   "wakeLagGraph0Amount": 0,
   "wakeLagGraph1Pct": 30,
