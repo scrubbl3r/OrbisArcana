@@ -544,7 +544,11 @@
       grid-template-columns: auto minmax(86px, 1fr) auto minmax(86px, 1fr);
     }
     .rgbaParamRow.wakeLagGraphRow{
-      grid-template-columns: minmax(132px, 132px) auto minmax(104px, 1fr) auto minmax(104px, 1fr) auto;
+      grid-template-columns: minmax(132px, 132px) auto minmax(104px, 1fr) auto minmax(104px, 1fr);
+    }
+    .rgbaParamRow.wakeLagGraphApplyRow{
+      grid-template-columns: minmax(132px, 132px) auto 1fr;
+      justify-items:start;
     }
     .rgbaParamRow .rgbaLabel,
     .rgbaParamRow label{
@@ -1671,6 +1675,9 @@
               <input id="flameAoe3dWakeLagGraph2Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="100" />
               <label for="flameAoe3dWakeLagGraph2Amount">amount</label>
               <input id="flameAoe3dWakeLagGraph2Amount" class="paramFieldInput" type="number" min="0" max="10" step="0.01" value="1" />
+            </div>
+            <div class="rgbaParamRow wakeLagGraphApplyRow">
+              <span class="rgbaLabel"></span>
               <button id="flameAoe3dApplyWakeLagGraphBtn" class="toolBtn" type="button">Apply</button>
             </div>
           </div>
