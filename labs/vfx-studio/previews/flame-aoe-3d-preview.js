@@ -421,7 +421,7 @@ function createAuraShellMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   });
 }
 
-function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+function getWakeGraphStops(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   const graphStops = [];
   for (let i = 0; i < 4; i += 1) {
     const pct = readOptionalNumber(config[`wakeGraph${i}Pct`], 0, 100);
@@ -436,6 +436,15 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
     });
   }
   graphStops.sort((a, b) => a.pct - b.pct);
+  return graphStops;
+}
+
+function getWakeGraphStopCount(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  return getWakeGraphStops(config).length;
+}
+
+function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  const graphStops = getWakeGraphStops(config);
   const wakeGraphStops = [0, 1, 1, 1];
   const wakeGraphColors = [
     new THREE.Vector4(0, 0, 0, 0),
@@ -480,6 +489,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeSimplexLacunarity: { value: config.wakeSimplexLacunarity },
       uWakeSimplexGain: { value: config.wakeSimplexGain },
       uWakeNoiseMix: { value: config.wakeNoiseMix },
+      uWakeGraphEnabled: { value: graphEnabled ? 1 : 0 },
       uWakeGraphCount: { value: graphEnabled ? Math.max(0, Math.min(4, graphStops.length)) : 0 },
       uWakeGraphStops: { value: wakeGraphStops },
       uWakeGraphColors: { value: wakeGraphColors },
@@ -603,6 +613,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeSimplexLacunarity;
       uniform float uWakeSimplexGain;
       uniform float uWakeNoiseMix;
+      uniform float uWakeGraphEnabled;
       uniform int uWakeGraphCount;
       uniform float uWakeGraphStops[4];
       uniform vec4 uWakeGraphColors[4];
@@ -744,6 +755,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 
       vec4 sampleWakeGraph(float value) {
         float t = clamp(value, 0.0, 1.0);
+        if (uWakeGraphEnabled < 0.5) return vec4(vec3(t), t);
         if (uWakeGraphCount <= 0) return vec4(vec3(t), t);
         if (uWakeGraphCount == 1) return uWakeGraphColors[0];
         vec4 result = uWakeGraphColors[0];
@@ -930,6 +942,16 @@ export function createFlameAoe3dPreview({
     const enabled = !visible;
     button.setAttribute("aria-pressed", enabled ? "true" : "false");
     if (els.flameAoe3dWakeGraphEnabled) els.flameAoe3dWakeGraphEnabled.value = enabled ? "1" : "0";
+    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeGraphEnabled) {
+      wakeMaterial.uniforms.uWakeGraphEnabled.value = enabled ? 1 : 0;
+    }
+    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeGraphCount) {
+      wakeMaterial.uniforms.uWakeGraphCount.value = enabled
+        ? Math.max(0, Math.min(4, getWakeGraphStopCount(wakeConfig)))
+        : 0;
+      wakeMaterial.needsUpdate = true;
+    }
+    if (inspector && typeof inspector.render === "function") inspector.render();
     apply();
   }
 
