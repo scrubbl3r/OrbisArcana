@@ -37,9 +37,15 @@ export function bindStagingRuntimeEvents({
   setOrbInputSuppressed = () => {},
   getOrbAlive = () => true,
   skipVoiceSpellCastBinding = false,
+  perfTrace = null,
 } = {}) {
   let lastHeardNodToken = "";
   let lastHeardNodAtMs = 0;
+
+  function markPerf(name, value = {}) {
+    if (!perfTrace || typeof perfTrace.mark !== "function") return;
+    perfTrace.mark(name, value && typeof value === "object" ? value : {});
+  }
 
   function shouldTriggerHeardWordNod(token, atMs) {
     const heardToken = String(token || "").trim().toLowerCase();
@@ -283,12 +289,18 @@ export function bindStagingRuntimeEvents({
   eventBus.on("pickup.collected", (p = {}) => {
     const globeId = String(p.globeId || p.id || "").trim();
     const type = String(p.type || "").trim().toLowerCase();
+    markPerf("resource.globe_pickup", { type, globeId });
     kwsBridge.pushLogLine(`TRACE globe_pickup:${type || "-"}:${globeId || "-"}`, type === "energy_globe" ? "ok" : "warn");
   });
   eventBus.on("energy.globe_inventory_changed", (p = {}) => {
     const stored = Number(p.stored);
     const globes = Array.isArray(p.globes) ? p.globes : [];
     const bound = globes.filter((globe) => String(globe && globe.state || "") === "bound").length;
+    markPerf("resource.globe_inventory", {
+      stored: Number.isFinite(stored) ? stored : -1,
+      bound,
+      globeCount: globes.length,
+    });
     kwsBridge.pushLogLine(
       `TRACE globe_inventory:stored:${Number.isFinite(stored) ? stored : "-"}:bound:${bound}`,
       "muted"
@@ -300,6 +312,13 @@ export function bindStagingRuntimeEvents({
     const slot = String(p.slot || p.directionGroup || "").trim().toUpperCase() || "-";
     const required = Number(p.requiredGlobes);
     const stored = Number(p.storedGlobes);
+    markPerf("spell.rejected", {
+      reason,
+      spell,
+      slot,
+      requiredGlobes: Number.isFinite(required) ? required : -1,
+      storedGlobes: Number.isFinite(stored) ? stored : -1,
+    });
     kwsBridge.pushLogLine(
       `TRACE spell_rejected:${reason}:spell:${spell}:slot:${slot}:required:${Number.isFinite(required) ? required : "-"}:stored:${Number.isFinite(stored) ? stored : "-"}`,
       reason === "insufficient_globes" ? "warn" : "muted"

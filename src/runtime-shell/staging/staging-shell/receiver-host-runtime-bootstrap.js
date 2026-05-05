@@ -275,6 +275,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     RULE_ENGINE_TRIGGER: "rule_engine",
     RULE_CHAIN_TRACE_ENABLED: true,
     DEFAULT_KWS_GATE_TIMEOUT_MS: 1500,
+    perfTrace: runtime && runtime.perfTrace ? runtime.perfTrace : null,
     kwsBridge: shellKws.kwsBridge,
     kwsListenPolicyController: shellKws.kwsListenPolicyController,
     kwsRuntimeController: shellKws.kwsRuntimeController,
