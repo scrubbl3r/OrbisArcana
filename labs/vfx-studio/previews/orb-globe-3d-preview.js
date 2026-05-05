@@ -141,6 +141,17 @@ function initializeInnerMotion(globe, config) {
   globe.innerDriftMax = drifts.max;
 }
 
+function retuneInnerMotion(globe, config) {
+  if (!globe || !globe.innerVelocity) return;
+  const speeds = readRange(config.els, "orbGlobe3dInnerSpeedMin", "orbGlobe3dInnerSpeedMax", 3.67, 4.53);
+  const drifts = readRange(config.els, "orbGlobe3dInnerDriftMin", "orbGlobe3dInnerDriftMax", 0.08, 0.28);
+  const bo = Math.max(1, Number(config.bo) || 72);
+  if (globe.innerVelocity.lengthSq() < 0.0001) globe.innerVelocity.set(1, 0, 0);
+  globe.innerVelocity.normalize().multiplyScalar(randomBetween(speeds.min, speeds.max) * bo);
+  globe.innerDriftMin = drifts.min;
+  globe.innerDriftMax = drifts.max;
+}
+
 function updateInnerGlobe(globe, dt, orbRadius, globeRadius, paddingPx) {
   if (!globe.innerPos || !globe.innerVelocity) return;
   globe.innerPos.addScaledVector(globe.innerVelocity, dt);
@@ -230,6 +241,7 @@ export function createOrbGlobe3dPreview({
       globe.radius = diameter * 0.5;
       globe.model = makeGlobeMesh(diameter, config.material);
       if (!isBound && (!globe.innerPos || !globe.innerVelocity)) initializeInnerMotion(globe, config);
+      else if (!isBound) retuneInnerMotion(globe, config);
       inspector.scene.add(globe.model);
     });
     updateSamples(0, 0, bo);
@@ -253,7 +265,7 @@ export function createOrbGlobe3dPreview({
       }
       const plane = globe.plane || (globe.plane = createPlane());
       const angle = (globe.phase || 0) + (time * (globe.speed || 1) * TWO_PI * (globe.direction || 1));
-      const driftAngle = time * (globe.drift || 0) * TWO_PI * (globe.driftDirection || 1);
+      const driftAngle = time * (globe.drift || 0) * (globe.driftDirection || 1);
       TMP_A.copy(plane.u).applyAxisAngle(plane.normal, driftAngle);
       TMP_B.copy(plane.v).applyAxisAngle(plane.normal, driftAngle);
       TMP_C.copy(TMP_A).multiplyScalar(Math.cos(angle) * orbitRadius);

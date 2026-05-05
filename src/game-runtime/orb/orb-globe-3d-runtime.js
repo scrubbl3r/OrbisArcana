@@ -158,10 +158,10 @@ export function createOrbGlobe3dRuntime({
       : null;
     if (model && group && typeof group.add === "function") group.add(model);
     const speedMin = mode === "inner"
-      ? readSpeedBOPerSec(config, baseOrb, "innerSpeedMinBOPerSec", "innerSpeedMinPxPerSec", 4.53)
+      ? readSpeedBOPerSec(config, baseOrb, "innerSpeedMinBOPerSec", "innerSpeedMinPxPerSec", 3.67)
       : readOrbitHz(config, "orbitSpeedMinHz", "orbitSpeedMin", 0.25);
     const speedMax = mode === "inner"
-      ? readSpeedBOPerSec(config, baseOrb, "innerSpeedMaxBOPerSec", "innerSpeedMaxPxPerSec", 3.67)
+      ? readSpeedBOPerSec(config, baseOrb, "innerSpeedMaxBOPerSec", "innerSpeedMaxPxPerSec", 4.53)
       : readOrbitHz(config, "orbitSpeedMaxHz", "orbitSpeedMax", 0.30);
     return {
       ...globe,
@@ -256,7 +256,7 @@ export function createOrbGlobe3dRuntime({
       const plane = entry.plane || (entry.plane = createPlane());
       const speed = clampNumber(entry.speed, 0.25);
       const angle = entry.phase + (timeSec * speed * TWO_PI * (entry.direction || 1));
-      const driftAngle = timeSec * Math.max(0.01, entry.drift) * TWO_PI * (entry.driftDirection || 1);
+      const driftAngle = timeSec * Math.max(0.01, entry.drift) * (entry.driftDirection || 1);
       TMP_A.copy(plane.u).applyAxisAngle(plane.normal, driftAngle);
       TMP_B.copy(plane.v).applyAxisAngle(plane.normal, driftAngle);
       TMP_C.copy(TMP_A).multiplyScalar(Math.cos(angle) * radius);
