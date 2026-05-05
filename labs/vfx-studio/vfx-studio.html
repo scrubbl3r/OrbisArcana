@@ -540,6 +540,9 @@
     .rgbaParamRow.wakeGraphRow{
       grid-template-columns: auto minmax(64px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto;
     }
+    .rgbaParamRow.wakeAlphaGradientRow{
+      grid-template-columns: auto minmax(86px, 1fr) auto minmax(86px, 1fr);
+    }
     .rgbaParamRow .rgbaLabel,
     .rgbaParamRow label{
       font-size:12px;
@@ -1781,6 +1784,22 @@
               <label for="flameAoe3dWakeGraph3B">b</label><input id="flameAoe3dWakeGraph3B" class="paramFieldInput" type="number" min="0" max="255" step="1" />
               <label for="flameAoe3dWakeGraph3A">a</label><input id="flameAoe3dWakeGraph3A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" />
             </div>
+            <div class="rgbaParamRow wakeAlphaGradientRow">
+              <label for="flameAoe3dWakeAlphaGradient0Pct">%</label><input id="flameAoe3dWakeAlphaGradient0Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="0" />
+              <label for="flameAoe3dWakeAlphaGradient0A">a</label><input id="flameAoe3dWakeAlphaGradient0A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1" />
+            </div>
+            <div class="rgbaParamRow wakeAlphaGradientRow">
+              <label for="flameAoe3dWakeAlphaGradient1Pct">%</label><input id="flameAoe3dWakeAlphaGradient1Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="100" />
+              <label for="flameAoe3dWakeAlphaGradient1A">a</label><input id="flameAoe3dWakeAlphaGradient1A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1" />
+            </div>
+            <div class="rgbaParamRow wakeAlphaGradientRow">
+              <label for="flameAoe3dWakeAlphaGradient2Pct">%</label><input id="flameAoe3dWakeAlphaGradient2Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" />
+              <label for="flameAoe3dWakeAlphaGradient2A">a</label><input id="flameAoe3dWakeAlphaGradient2A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" />
+            </div>
+            <div class="rgbaParamRow wakeAlphaGradientRow">
+              <label for="flameAoe3dWakeAlphaGradient3Pct">%</label><input id="flameAoe3dWakeAlphaGradient3Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" />
+              <label for="flameAoe3dWakeAlphaGradient3A">a</label><input id="flameAoe3dWakeAlphaGradient3A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" />
+            </div>
             <div class="row">
               <button id="flameAoe3dApplyWakeGraphBtn" class="toolBtn" type="button">Apply</button>
             </div>
@@ -2329,7 +2348,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260504c";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260504d";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
@@ -2890,6 +2909,14 @@
       flameAoe3dWakeGraph3G: $("flameAoe3dWakeGraph3G"),
       flameAoe3dWakeGraph3B: $("flameAoe3dWakeGraph3B"),
       flameAoe3dWakeGraph3A: $("flameAoe3dWakeGraph3A"),
+      flameAoe3dWakeAlphaGradient0Pct: $("flameAoe3dWakeAlphaGradient0Pct"),
+      flameAoe3dWakeAlphaGradient0A: $("flameAoe3dWakeAlphaGradient0A"),
+      flameAoe3dWakeAlphaGradient1Pct: $("flameAoe3dWakeAlphaGradient1Pct"),
+      flameAoe3dWakeAlphaGradient1A: $("flameAoe3dWakeAlphaGradient1A"),
+      flameAoe3dWakeAlphaGradient2Pct: $("flameAoe3dWakeAlphaGradient2Pct"),
+      flameAoe3dWakeAlphaGradient2A: $("flameAoe3dWakeAlphaGradient2A"),
+      flameAoe3dWakeAlphaGradient3Pct: $("flameAoe3dWakeAlphaGradient3Pct"),
+      flameAoe3dWakeAlphaGradient3A: $("flameAoe3dWakeAlphaGradient3A"),
       flameAoe3dWakeGraphEnabled: $("flameAoe3dWakeGraphEnabled"),
       flameAoe3dWakeGraphVisibleBtn: $("flameAoe3dWakeGraphVisibleBtn"),
       flameAoe3dApplyWakeGraphBtn: $("flameAoe3dApplyWakeGraphBtn"),

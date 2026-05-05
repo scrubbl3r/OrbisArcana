@@ -54,6 +54,14 @@ const FLAME_AOE_3D_FIELDS = Object.freeze([
   ["flameAoe3dWakeGraph3G", "wakeGraph3G"],
   ["flameAoe3dWakeGraph3B", "wakeGraph3B"],
   ["flameAoe3dWakeGraph3A", "wakeGraph3A"],
+  ["flameAoe3dWakeAlphaGradient0Pct", "wakeAlphaGradient0Pct"],
+  ["flameAoe3dWakeAlphaGradient0A", "wakeAlphaGradient0A"],
+  ["flameAoe3dWakeAlphaGradient1Pct", "wakeAlphaGradient1Pct"],
+  ["flameAoe3dWakeAlphaGradient1A", "wakeAlphaGradient1A"],
+  ["flameAoe3dWakeAlphaGradient2Pct", "wakeAlphaGradient2Pct"],
+  ["flameAoe3dWakeAlphaGradient2A", "wakeAlphaGradient2A"],
+  ["flameAoe3dWakeAlphaGradient3Pct", "wakeAlphaGradient3Pct"],
+  ["flameAoe3dWakeAlphaGradient3A", "wakeAlphaGradient3A"],
   ["flameAoe3dWakeGraphEnabled", "wakeGraphEnabled"],
 ]);
 
@@ -113,6 +121,14 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
   wakeGraph3G: "",
   wakeGraph3B: "",
   wakeGraph3A: "",
+  wakeAlphaGradient0Pct: 0,
+  wakeAlphaGradient0A: 1,
+  wakeAlphaGradient1Pct: 100,
+  wakeAlphaGradient1A: 1,
+  wakeAlphaGradient2Pct: "",
+  wakeAlphaGradient2A: "",
+  wakeAlphaGradient3Pct: "",
+  wakeAlphaGradient3A: "",
   wakeGraphEnabled: 1,
 });
 
@@ -199,6 +215,14 @@ export function createFlameAoe3dAuthoringAdapter() {
       wakeGraph3G: optionalNumber(els && els.flameAoe3dWakeGraph3G && els.flameAoe3dWakeGraph3G.value, 0, 255),
       wakeGraph3B: optionalNumber(els && els.flameAoe3dWakeGraph3B && els.flameAoe3dWakeGraph3B.value, 0, 255),
       wakeGraph3A: optionalNumber(els && els.flameAoe3dWakeGraph3A && els.flameAoe3dWakeGraph3A.value, 0, 1),
+      wakeAlphaGradient0Pct: optionalNumber(els && els.flameAoe3dWakeAlphaGradient0Pct && els.flameAoe3dWakeAlphaGradient0Pct.value, 0, 100),
+      wakeAlphaGradient0A: optionalNumber(els && els.flameAoe3dWakeAlphaGradient0A && els.flameAoe3dWakeAlphaGradient0A.value, 0, 1),
+      wakeAlphaGradient1Pct: optionalNumber(els && els.flameAoe3dWakeAlphaGradient1Pct && els.flameAoe3dWakeAlphaGradient1Pct.value, 0, 100),
+      wakeAlphaGradient1A: optionalNumber(els && els.flameAoe3dWakeAlphaGradient1A && els.flameAoe3dWakeAlphaGradient1A.value, 0, 1),
+      wakeAlphaGradient2Pct: optionalNumber(els && els.flameAoe3dWakeAlphaGradient2Pct && els.flameAoe3dWakeAlphaGradient2Pct.value, 0, 100),
+      wakeAlphaGradient2A: optionalNumber(els && els.flameAoe3dWakeAlphaGradient2A && els.flameAoe3dWakeAlphaGradient2A.value, 0, 1),
+      wakeAlphaGradient3Pct: optionalNumber(els && els.flameAoe3dWakeAlphaGradient3Pct && els.flameAoe3dWakeAlphaGradient3Pct.value, 0, 100),
+      wakeAlphaGradient3A: optionalNumber(els && els.flameAoe3dWakeAlphaGradient3A && els.flameAoe3dWakeAlphaGradient3A.value, 0, 1),
       wakeGraphEnabled: (els && els.flameAoe3dWakeGraphEnabled && String(els.flameAoe3dWakeGraphEnabled.value) === "0") ? 0 : 1,
     });
   }
