@@ -48,6 +48,9 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeLengthBo: clampNumber(source.wakeLengthBo, 0.05, 4, fallback.wakeLengthBo),
     wakeRadiusBo: clampNumber(source.wakeRadiusBo, 0.02, 2, fallback.wakeRadiusBo),
     wakeSubdivisions: clampInt(source.wakeSubdivisions, 12, 192, fallback.wakeSubdivisions),
+    wakeLeanOffsetBo: clampNumber(source.wakeLeanOffsetBo, 0, 4, fallback.wakeLeanOffsetBo),
+    wakeLeanAmount: clampNumber(source.wakeLeanAmount, 0, 3, fallback.wakeLeanAmount),
+    wakeLeanLag: clampNumber(source.wakeLeanLag, 0.1, 30, fallback.wakeLeanLag),
     wakeDisplaceBo: clampNumber(source.wakeDisplaceBo, 0, 0.5, fallback.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(source.wakeDisplaceScale, 0.2, 8, fallback.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(source.wakeDisplaceSpeed, 0, 4, fallback.wakeDisplaceSpeed),
@@ -519,6 +522,8 @@ export function createFlameAoe3dRuntime({
   let auraMaterial = null;
   let wakeMaterial = null;
   let wakeMesh = null;
+  let wakePivot = null;
+  let activeConfig = null;
   let startedAtMs = 0;
   let lastTickMs = 0;
   let runtimeBo = 72;
@@ -559,14 +564,18 @@ export function createFlameAoe3dRuntime({
       const vy = (position.y - lastPosition.y) / safeDt;
       const vz = (position.z - lastPosition.z) / safeDt;
       lastPosition.copy(position);
-      targetWakeOffset.set(-vx * 0.035, -vy * 0.035, -vz * 0.02);
+      const leanAmount = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 3, 0.35);
+      targetWakeOffset.set(-vx * leanAmount * 0.1, -vy * leanAmount * 0.1, -vz * leanAmount * 0.06);
       targetWakeOffset.clampLength(0, bo * 0.42);
     }
-    const alpha = expLerpAlpha(dtSec, 8.5);
+    const alpha = expLerpAlpha(dtSec, activeConfig && activeConfig.wakeLeanLag);
     wakeOffset.lerp(targetWakeOffset, alpha);
-    wakeMesh.position.copy(wakeOffset);
-    wakeMesh.rotation.z = THREE.MathUtils.clamp(-wakeOffset.x / (bo * 1.15), -0.34, 0.34);
-    wakeMesh.rotation.x = THREE.MathUtils.clamp(wakeOffset.z / (bo * 1.35), -0.22, 0.22);
+    if (wakePivot) {
+      wakePivot.position.x = wakeOffset.x;
+      wakePivot.position.z = wakeOffset.z;
+      wakePivot.rotation.z = THREE.MathUtils.clamp(-wakeOffset.x / (bo * 1.15), -0.34, 0.34);
+      wakePivot.rotation.x = THREE.MathUtils.clamp(wakeOffset.z / (bo * 1.35), -0.22, 0.22);
+    }
     shaderMotion.copy(wakeOffset).multiplyScalar(1 / Math.max(1, bo));
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeMotionOffset) {
       wakeMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
@@ -581,6 +590,8 @@ export function createFlameAoe3dRuntime({
     auraMaterial = null;
     wakeMaterial = null;
     wakeMesh = null;
+    wakePivot = null;
+    activeConfig = null;
     lastTickMs = 0;
     motionInitialized = false;
     lastPosition.set(0, 0, 0);
@@ -616,6 +627,7 @@ export function createFlameAoe3dRuntime({
       ...baseConfig,
       ...(payload && typeof payload === "object" ? payload : {}),
     });
+    activeConfig = config;
     const orbModel = typeof getOrbModel === "function" ? getOrbModel() : null;
     if (!orbModel) return { handled: false, skipped: "orb_model_missing" };
     const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 72);
@@ -652,8 +664,15 @@ export function createFlameAoe3dRuntime({
     wake.name = "flame_aoe3d:directional_wake";
     wake.renderOrder = 10;
     wakeMesh = wake;
+    const wakeBottomY = -bo * config.wakeRadiusBo;
+    const pivotY = wakeBottomY + (bo * config.wakeLeanOffsetBo);
+    wakePivot = new THREE.Group();
+    wakePivot.name = "flame_aoe3d:directional_wake_pivot";
+    wakePivot.position.set(0, pivotY, 0);
+    wake.position.set(0, -pivotY, 0);
     group.add(aura);
-    group.add(wake);
+    wakePivot.add(wake);
+    group.add(wakePivot);
     orbModel.add(group);
     timer = setTimeout(clear, config.durationMs);
     raf = requestAnimationFrame(tick);
