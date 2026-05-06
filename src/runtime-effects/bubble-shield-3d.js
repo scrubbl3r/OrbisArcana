@@ -5,6 +5,23 @@ import {
 } from "../game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../vfx/presets/bubble-shield-3d-default.js";
 
+const BUBBLE_SHIELD_3D_INTERNAL_NOISE_DEFAULTS = Object.freeze({
+  density: 3,
+  color: 0x64c8ff,
+  alpha: 0.60,
+  widthPx: 0.25,
+  liftBO: 0,
+  glow: 1.35,
+  washColor: 0x94b8c2,
+  speed: 15,
+  amount: 0.80,
+  wash: 0.50,
+  edge: 0,
+  dropout: 1,
+  sharpness: 0.90,
+  detail: 1,
+});
+
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   const safe = Number.isFinite(n) ? n : fallback;
@@ -32,6 +49,7 @@ function hexColor(value, fallback) {
 export function normalizeBubbleShield3dRuntimeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fallback = BUBBLE_SHIELD_3D_PRESET_DEFAULT;
+  const noiseFallback = BUBBLE_SHIELD_3D_INTERNAL_NOISE_DEFAULTS;
   return Object.freeze({
     durationMs: Math.round(clampNumber(source.durationMs ?? source.shieldMs, 80, 120000, fallback.durationMs)),
     diameterRatio: clampNumber(source.diameterRatio ?? source.shieldDiameterRatio, 0.1, 8, fallback.diameterRatio),
@@ -40,22 +58,22 @@ export function normalizeBubbleShield3dRuntimeConfig(raw = {}) {
     pulseMin: clampNumber(source.pulseMin, 0, 1, fallback.pulseMin),
     pulseMax: clampNumber(source.pulseMax, 0, 1, fallback.pulseMax),
     maxHits: 3,
-    maxCracks: clampInt(source.maxCracks, 3, 96, fallback.maxCracks),
+    maxCracks: clampInt(source.maxCracks, 3, 96, noiseFallback.density),
     crackColor: source.crackColor != null
-      ? hexColor(source.crackColor, fallback.crackColor)
-      : rgbToHex(source.colorRgb, fallback.crackColor),
-    crackAlpha: clampNumber(source.crackAlpha, 0, 1, fallback.crackAlpha),
-    crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, fallback.crackWidthPx),
-    crackLiftBO: clampNumber(source.crackLiftBO, 0, 0.2, fallback.crackLiftBO),
-    criticalGlow: clampNumber(source.criticalGlow, 0, 4, fallback.criticalGlow),
-    energyColor: hexColor(source.energyColor, fallback.energyColor),
-    mutationSpeed: clampNumber(source.mutationSpeed, 0, Infinity, fallback.mutationSpeed),
-    mutationAmount: clampNumber(source.mutationAmount, 0, Infinity, fallback.mutationAmount),
-    diffuseWash: clampNumber(source.diffuseWash, 0, 2, fallback.diffuseWash),
-    edgeBrightness: clampNumber(source.edgeBrightness, 0, 3, fallback.edgeBrightness),
-    cellDarkness: clampNumber(source.cellDarkness, 0, 2, fallback.cellDarkness),
-    cellSharpness: clampNumber(source.cellSharpness, 0, 3, fallback.cellSharpness),
-    detailEmergence: clampNumber(source.detailEmergence, 0, 1, fallback.detailEmergence),
+      ? hexColor(source.crackColor, noiseFallback.color)
+      : rgbToHex(source.colorRgb, noiseFallback.color),
+    crackAlpha: clampNumber(source.crackAlpha, 0, 1, noiseFallback.alpha),
+    crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, noiseFallback.widthPx),
+    crackLiftBO: clampNumber(source.crackLiftBO, 0, 0.2, noiseFallback.liftBO),
+    criticalGlow: clampNumber(source.criticalGlow, 0, 4, noiseFallback.glow),
+    energyColor: hexColor(source.energyColor, noiseFallback.washColor),
+    mutationSpeed: clampNumber(source.mutationSpeed, 0, Infinity, noiseFallback.speed),
+    mutationAmount: clampNumber(source.mutationAmount, 0, Infinity, noiseFallback.amount),
+    diffuseWash: clampNumber(source.diffuseWash, 0, 2, noiseFallback.wash),
+    edgeBrightness: clampNumber(source.edgeBrightness, 0, 3, noiseFallback.edge),
+    cellDarkness: clampNumber(source.cellDarkness, 0, 2, noiseFallback.dropout),
+    cellSharpness: clampNumber(source.cellSharpness, 0, 3, noiseFallback.sharpness),
+    detailEmergence: clampNumber(source.detailEmergence, 0, 1, noiseFallback.detail),
   });
 }
 
@@ -136,7 +154,7 @@ export function createBubbleShield3dRuntime({
       seed: Math.round(startedAtMs),
       config: activeConfig,
     });
-    shield.name = "bubble_shield3d:voronoi_shell";
+    shield.name = "bubble_shield3d:legacy_noise_shell";
     orbModel.add(shield);
     setShieldAlpha(activeConfig.alpha);
     timer = setTimeout(clear, activeConfig.durationMs);

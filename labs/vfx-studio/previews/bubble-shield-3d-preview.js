@@ -18,12 +18,22 @@ function clampNumber(value, min, max, fallback) {
   return Math.max(min, Math.min(max, Number.isFinite(n) ? n : fallback));
 }
 
-function readHex(els, prefix, fallback) {
-  const r = Math.round(clampNumber(els[`${prefix}R`] && els[`${prefix}R`].value, 0, 255, (fallback >> 16) & 255));
-  const g = Math.round(clampNumber(els[`${prefix}G`] && els[`${prefix}G`].value, 0, 255, (fallback >> 8) & 255));
-  const b = Math.round(clampNumber(els[`${prefix}B`] && els[`${prefix}B`].value, 0, 255, fallback & 255));
-  return (r << 16) + (g << 8) + b;
-}
+const BUBBLE_SHIELD_3D_PREVIEW_NOISE_DEFAULTS = Object.freeze({
+  maxCracks: 3,
+  crackColor: 0x64c8ff,
+  crackAlpha: 0.60,
+  crackWidthPx: 0.25,
+  crackLiftBO: 0,
+  criticalGlow: 1.35,
+  energyColor: 0x94b8c2,
+  mutationSpeed: 15,
+  mutationAmount: 0.80,
+  diffuseWash: 0.50,
+  edgeBrightness: 0,
+  cellDarkness: 1,
+  cellSharpness: 0.90,
+  detailEmergence: 1,
+});
 
 function frameCameraToSsotOrbSize(inspector, root, bo) {
   if (!inspector || !inspector.camera || !root) return;
@@ -76,20 +86,7 @@ export function createBubbleShield3dPreview({
       pulseMin: clampNumber(els.shield3dPulseMin && els.shield3dPulseMin.value, 0, 1, 0.3),
       pulseMax: clampNumber(els.shield3dPulseMax && els.shield3dPulseMax.value, 0, 1, 1),
       maxHits: 3,
-      maxCracks: Math.round(clampNumber(els.shield3dCrackTotal && els.shield3dCrackTotal.value, 3, 96, 8)),
-      crackColor: readHex(els, "shield3dCrack", 0xf8fdff),
-      crackAlpha: clampNumber(els.shield3dCrackAlpha && els.shield3dCrackAlpha.value, 0, 1, 0.6),
-      crackWidthPx: clampNumber(els.shield3dCrackStroke && els.shield3dCrackStroke.value, 0.25, 12, 1),
-      crackLiftBO: clampNumber(els.shield3dCrackLift && els.shield3dCrackLift.value, 0, 0.2, 0),
-      criticalGlow: clampNumber(els.shield3dCriticalGlow && els.shield3dCriticalGlow.value, 0, 4, 1.35),
-      energyColor: readHex(els, "shield3dEnergy", 0x94b8c2),
-      mutationSpeed: clampNumber(els.shield3dMutationSpeed && els.shield3dMutationSpeed.value, 0, Infinity, 2),
-      mutationAmount: clampNumber(els.shield3dMutationAmount && els.shield3dMutationAmount.value, 0, Infinity, 1.5),
-      diffuseWash: clampNumber(els.shield3dDiffuseWash && els.shield3dDiffuseWash.value, 0, 2, 1),
-      edgeBrightness: clampNumber(els.shield3dEdgeBrightness && els.shield3dEdgeBrightness.value, 0, 3, 1),
-      cellDarkness: clampNumber(els.shield3dCellDarkness && els.shield3dCellDarkness.value, 0, 2, 1),
-      cellSharpness: clampNumber(els.shield3dCellSharpness && els.shield3dCellSharpness.value, 0, 3, 1.1),
-      detailEmergence: clampNumber(els.shield3dDetailEmergence && els.shield3dDetailEmergence.value, 0, 1, 1),
+      ...BUBBLE_SHIELD_3D_PREVIEW_NOISE_DEFAULTS,
     };
   }
 
