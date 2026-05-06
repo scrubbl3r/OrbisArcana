@@ -107,7 +107,9 @@ export function createBubbleShield3dPreview({
   function setShieldAlpha(alpha, config) {
     if (!shield) return;
     const value = Math.max(0, Math.min(1, Number(alpha) || 0));
-    shield.visible = layerVisible(els.shield3dBubbleMeshVisibleBtn) && value > 0.001;
+    shield.visible = layerVisible(els.shield3dBubbleMeshVisibleBtn)
+      && layerVisible(els.shield3dNoiseVisibleBtn)
+      && value > 0.001;
     shield.traverse((child) => {
       const uniforms = child && child.material && child.material.uniforms;
       if (uniforms && uniforms.uAlpha) uniforms.uAlpha.value = config.crackAlpha * value;
@@ -115,7 +117,10 @@ export function createBubbleShield3dPreview({
   }
 
   function applyLayerVisibility() {
-    if (shield) shield.visible = layerVisible(els.shield3dBubbleMeshVisibleBtn);
+    if (shield) {
+      shield.visible = layerVisible(els.shield3dBubbleMeshVisibleBtn)
+        && layerVisible(els.shield3dNoiseVisibleBtn);
+    }
     if (inspector && typeof inspector.render === "function") inspector.render();
   }
 
@@ -179,7 +184,8 @@ export function createBubbleShield3dPreview({
       seed: 1,
       config: cfg,
     });
-    shield.visible = layerVisible(els.shield3dBubbleMeshVisibleBtn);
+    shield.visible = layerVisible(els.shield3dBubbleMeshVisibleBtn)
+      && layerVisible(els.shield3dNoiseVisibleBtn);
     model.add(shield);
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.035));
     inspector.scene.add(model);
@@ -200,6 +206,9 @@ export function createBubbleShield3dPreview({
     if (els.previewBubbleShield3d) els.previewBubbleShield3d.addEventListener("click", play);
     if (els.shield3dBubbleMeshVisibleBtn) {
       els.shield3dBubbleMeshVisibleBtn.addEventListener("click", () => toggleLayer(els.shield3dBubbleMeshVisibleBtn));
+    }
+    if (els.shield3dNoiseVisibleBtn) {
+      els.shield3dNoiseVisibleBtn.addEventListener("click", () => toggleLayer(els.shield3dNoiseVisibleBtn));
     }
     document.querySelectorAll('[id^="shield3dApply"]').forEach((btn) => {
       if (btn) btn.addEventListener("click", apply);

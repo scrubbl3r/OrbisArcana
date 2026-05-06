@@ -1144,6 +1144,13 @@
             <div class="paramFieldRow"><label for="shield3dPulseMax">Pulse max alpha</label><input id="shield3dPulseMax" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" /><button id="shield3dApplyPulseMaxBtn" class="toolBtn" type="button">Apply</button></div>
           </div>
         </div>
+        <div class="controlGroup" data-control-group>
+          <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="shield3dNoiseControls">Noise</button>
+            <button id="shield3dNoiseVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Noise visibility" title="Toggle Noise visibility"></button>
+          </div>
+          <div id="shield3dNoiseControls" class="controlGroupBody paramFieldRows" hidden></div>
+        </div>
       </div>
 
       <!-- Shockwave controls -->
@@ -2413,7 +2420,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260505h"),
+      import("./vfx-studio-bootstrap.js?v=20260505i"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2592,6 +2599,7 @@
       shieldApplyColorBtn: $("shieldApplyColorBtn"),
       previewBubbleShield3d: $("previewBubbleShield3d"),
       shield3dBubbleMeshVisibleBtn: $("shield3dBubbleMeshVisibleBtn"),
+      shield3dNoiseVisibleBtn: $("shield3dNoiseVisibleBtn"),
       shield3dMs: $("shield3dMs"),
       shield3dApplyDurationBtn: $("shield3dApplyDurationBtn"),
       shield3dDiameterRatio: $("shield3dDiameterRatio"),
