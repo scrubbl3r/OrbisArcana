@@ -2,8 +2,8 @@ import { disposeThreeObject } from "../game-runtime/rendering/three/three-object
 import {
   createBubbleShield3dSimplexShell,
   normalizeBubbleShield3dSimplexConfig,
-} from "./bubble-shield-3d-simplex-shell.js";
-import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../vfx/presets/bubble-shield-3d-default.js";
+} from "./bubble-shield-3d-simplex-shell.js?v=20260506b";
+import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../vfx/presets/bubble-shield-3d-default.js?v=20260506b";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);

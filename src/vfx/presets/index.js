@@ -1,5 +1,5 @@
 export { BUBBLE_SHIELD_PRESET_DEFAULT } from "./bubble-shield-default.js";
-export { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "./bubble-shield-3d-default.js?v=20260506a";
+export { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "./bubble-shield-3d-default.js?v=20260506b";
 export { SHOCKWAVE_PRESET_DEFAULT } from "./shockwave-default.js";
 export { FLAME_AOE_PRESET_DEFAULT } from "./flame-aoe-default.js";
 export { FLAME_AOE_3D_PRESET_DEFAULT } from "./flame-aoe-3d-default.js";

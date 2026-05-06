@@ -166,6 +166,7 @@ export function createBubbleShield3dSimplexShell({ bo = 72, config = {} } = {}) 
   const material = createBubbleShield3dSimplexMaterial(config);
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = "BubbleShield3dSimplexShell";
+  mesh.renderOrder = 9;
   mesh.frustumCulled = false;
   return mesh;
 }
