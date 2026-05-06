@@ -1140,7 +1140,9 @@
             <div class="paramFieldRow"><label for="shield3dDiameterRatio">Start diam</label><input id="shield3dDiameterRatio" class="paramFieldInput" type="number" min="0.10" max="8" step="0.01" value="1.24" /><button id="shield3dApplyDiameterBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dEndDiameterRatio">End diam</label><input id="shield3dEndDiameterRatio" class="paramFieldInput" type="number" min="0.10" max="8" step="0.01" value="1.80" /><button id="shield3dApplyEndDiameterBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dTransitionMs">Transition time ms</label><input id="shield3dTransitionMs" class="paramFieldInput" type="number" min="0" max="3000" step="10" value="420" /><button id="shield3dApplyTransitionBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dBounceAmount">Bounce amount</label><input id="shield3dBounceAmount" class="paramFieldInput" type="number" min="0" max="1.5" step="0.01" value="0.28" /><button id="shield3dApplyBounceBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shield3dOvershoot">Overshoot</label><input id="shield3dOvershoot" class="paramFieldInput" type="number" min="0" max="1.5" step="0.01" value="0.12" /><button id="shield3dApplyOvershootBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shield3dJiggleFrequency">Jiggle frequency</label><input id="shield3dJiggleFrequency" class="paramFieldInput" type="number" min="0" max="48" step="0.25" value="18.00" /><button id="shield3dApplyJiggleFrequencyBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shield3dJiggleDecay">Jiggle decay</label><input id="shield3dJiggleDecay" class="paramFieldInput" type="number" min="0" max="24" step="0.25" value="7.00" /><button id="shield3dApplyJiggleDecayBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dAlpha">Opacity</label><input id="shield3dAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" /><button id="shield3dApplyAlphaBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dPulseMs">Pulse rate ms</label><input id="shield3dPulseMs" class="paramFieldInput" type="number" min="20" max="700" step="5" value="80" /><button id="shield3dApplyPulseMsBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dPulseMin">Pulse min alpha</label><input id="shield3dPulseMin" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.30" /><button id="shield3dApplyPulseMinBtn" class="toolBtn" type="button">Apply</button></div>
@@ -2437,7 +2439,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260506c"),
+      import("./vfx-studio-bootstrap.js?v=20260506d"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2449,7 +2451,7 @@
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
     });
-    import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506b";
+    import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506c";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
@@ -2625,8 +2627,12 @@
       shield3dApplyEndDiameterBtn: $("shield3dApplyEndDiameterBtn"),
       shield3dTransitionMs: $("shield3dTransitionMs"),
       shield3dApplyTransitionBtn: $("shield3dApplyTransitionBtn"),
-      shield3dBounceAmount: $("shield3dBounceAmount"),
-      shield3dApplyBounceBtn: $("shield3dApplyBounceBtn"),
+      shield3dOvershoot: $("shield3dOvershoot"),
+      shield3dApplyOvershootBtn: $("shield3dApplyOvershootBtn"),
+      shield3dJiggleFrequency: $("shield3dJiggleFrequency"),
+      shield3dApplyJiggleFrequencyBtn: $("shield3dApplyJiggleFrequencyBtn"),
+      shield3dJiggleDecay: $("shield3dJiggleDecay"),
+      shield3dApplyJiggleDecayBtn: $("shield3dApplyJiggleDecayBtn"),
       shield3dAlpha: $("shield3dAlpha"),
       shield3dApplyAlphaBtn: $("shield3dApplyAlphaBtn"),
       shield3dPulseMs: $("shield3dPulseMs"),

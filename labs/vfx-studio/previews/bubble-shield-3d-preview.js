@@ -38,10 +38,11 @@ function layerVisible(button) {
   return !button || button.getAttribute("aria-pressed") !== "false";
 }
 
-function bounceEase(progress, amount) {
+function jelloEase(progress, overshoot, frequency, decay) {
   const t = clampNumber(progress, 0, 1, 1);
   const eased = 1 - Math.pow(1 - t, 3);
-  return eased + (Math.sin(t * Math.PI) * clampNumber(amount, 0, 1.5, 0.28) * (1 - t));
+  const settle = t <= 0 ? 0 : Math.sin(t * Math.max(0, frequency)) * Math.exp(-t * Math.max(0, decay));
+  return eased + (settle * clampNumber(overshoot, 0, 1.5, 0.12));
 }
 
 export function createBubbleShield3dPreview({
@@ -71,7 +72,9 @@ export function createBubbleShield3dPreview({
       startDiameterRatio,
       endDiameterRatio: clampNumber(els.shield3dEndDiameterRatio && els.shield3dEndDiameterRatio.value, 0.1, 8, 1.8),
       transitionMs: Math.round(clampNumber(els.shield3dTransitionMs && els.shield3dTransitionMs.value, 0, 3000, 420)),
-      bounceAmount: clampNumber(els.shield3dBounceAmount && els.shield3dBounceAmount.value, 0, 1.5, 0.28),
+      overshoot: clampNumber(els.shield3dOvershoot && els.shield3dOvershoot.value, 0, 1.5, 0.12),
+      jiggleFrequency: clampNumber(els.shield3dJiggleFrequency && els.shield3dJiggleFrequency.value, 0, 48, 18),
+      jiggleDecay: clampNumber(els.shield3dJiggleDecay && els.shield3dJiggleDecay.value, 0, 24, 7),
       alpha: clampNumber(els.shield3dAlpha && els.shield3dAlpha.value, 0, 1, 1),
       pulseMs: Math.round(clampNumber(els.shield3dPulseMs && els.shield3dPulseMs.value, 20, 700, 80)),
       pulseMin: clampNumber(els.shield3dPulseMin && els.shield3dPulseMin.value, 0, 1, 0.3),
@@ -125,7 +128,7 @@ export function createBubbleShield3dPreview({
     const end = Math.max(0.1, config.endDiameterRatio);
     const duration = Math.max(0, config.transitionMs);
     const progress = duration <= 0 ? 1 : elapsedMs / duration;
-    const eased = bounceEase(progress, config.bounceAmount);
+    const eased = jelloEase(progress, config.overshoot, config.jiggleFrequency, config.jiggleDecay);
     const current = start + ((end - start) * eased);
     shield.scale.setScalar(current / end);
   }

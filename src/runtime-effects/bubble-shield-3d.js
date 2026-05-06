@@ -27,7 +27,9 @@ export function normalizeBubbleShield3dRuntimeConfig(raw = {}) {
     startDiameterRatio,
     endDiameterRatio: clampNumber(source.endDiameterRatio, 0.1, 8, fallback.endDiameterRatio ?? startDiameterRatio),
     transitionMs: Math.round(clampNumber(source.transitionMs, 0, 3000, fallback.transitionMs ?? 420)),
-    bounceAmount: clampNumber(source.bounceAmount, 0, 1.5, fallback.bounceAmount ?? 0.28),
+    overshoot: clampNumber(source.overshoot ?? source.bounceAmount, 0, 1.5, fallback.overshoot ?? fallback.bounceAmount ?? 0.12),
+    jiggleFrequency: clampNumber(source.jiggleFrequency, 0, 48, fallback.jiggleFrequency ?? 18),
+    jiggleDecay: clampNumber(source.jiggleDecay, 0, 24, fallback.jiggleDecay ?? 7),
     alpha: clampNumber(source.alpha ?? source.shieldAlpha, 0, 1, fallback.alpha),
     pulseMs: Math.round(clampNumber(source.pulseMs, 20, 700, fallback.pulseMs)),
     pulseMin: clampNumber(source.pulseMin, 0, 1, fallback.pulseMin),
@@ -74,10 +76,11 @@ export function createBubbleShield3dRuntime({
     if (uniforms && uniforms.uTime) uniforms.uTime.value = timeSec;
   }
 
-  function bounceEase(progress, amount) {
+  function jelloEase(progress, overshoot, frequency, decay) {
     const t = clampNumber(progress, 0, 1, 1);
     const eased = 1 - Math.pow(1 - t, 3);
-    return eased + (Math.sin(t * Math.PI) * clampNumber(amount, 0, 1.5, 0.28) * (1 - t));
+    const settle = t <= 0 ? 0 : Math.sin(t * Math.max(0, frequency)) * Math.exp(-t * Math.max(0, decay));
+    return eased + (settle * clampNumber(overshoot, 0, 1.5, 0.12));
   }
 
   function setShieldDiameter(elapsedMs) {
@@ -86,7 +89,7 @@ export function createBubbleShield3dRuntime({
     const end = Math.max(0.1, activeConfig.endDiameterRatio);
     const duration = Math.max(0, activeConfig.transitionMs);
     const progress = duration <= 0 ? 1 : elapsedMs / duration;
-    const eased = bounceEase(progress, activeConfig.bounceAmount);
+    const eased = jelloEase(progress, activeConfig.overshoot, activeConfig.jiggleFrequency, activeConfig.jiggleDecay);
     const current = start + ((end - start) * eased);
     shield.scale.setScalar(current / end);
   }
