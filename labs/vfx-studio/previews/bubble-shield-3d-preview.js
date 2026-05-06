@@ -8,32 +8,11 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import {
-  createOrbLifecycle3dCracks,
-  updateOrbLifecycle3dCracks,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260430a";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   return Math.max(min, Math.min(max, Number.isFinite(n) ? n : fallback));
 }
-
-const BUBBLE_SHIELD_3D_PREVIEW_NOISE_DEFAULTS = Object.freeze({
-  maxCracks: 3,
-  crackColor: 0x64c8ff,
-  crackAlpha: 0.60,
-  crackWidthPx: 0.25,
-  crackLiftBO: 0,
-  criticalGlow: 1.35,
-  energyColor: 0x94b8c2,
-  mutationSpeed: 15,
-  mutationAmount: 0.80,
-  diffuseWash: 0.50,
-  edgeBrightness: 0,
-  cellDarkness: 1,
-  cellSharpness: 0.90,
-  detailEmergence: 1,
-});
 
 function frameCameraToSsotOrbSize(inspector, root, bo) {
   if (!inspector || !inspector.camera || !root) return;
@@ -86,7 +65,6 @@ export function createBubbleShield3dPreview({
       pulseMin: clampNumber(els.shield3dPulseMin && els.shield3dPulseMin.value, 0, 1, 0.3),
       pulseMax: clampNumber(els.shield3dPulseMax && els.shield3dPulseMax.value, 0, 1, 1),
       maxHits: 3,
-      ...BUBBLE_SHIELD_3D_PREVIEW_NOISE_DEFAULTS,
     };
   }
 
@@ -109,7 +87,7 @@ export function createBubbleShield3dPreview({
       && value > 0.001;
     shield.traverse((child) => {
       const uniforms = child && child.material && child.material.uniforms;
-      if (uniforms && uniforms.uAlpha) uniforms.uAlpha.value = config.crackAlpha * value;
+      if (uniforms && uniforms.uAlpha) uniforms.uAlpha.value = config.alpha * value;
     });
   }
 
@@ -148,13 +126,7 @@ export function createBubbleShield3dPreview({
         const time = (nowMs - createdAt) / 1000;
         if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = time;
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
-        if (shield) {
-          const elapsedMs = Math.max(0, nowMs - createdAt);
-          const phase = ((elapsedMs % Math.max(1, cfg.pulseMs)) / Math.max(1, cfg.pulseMs)) * Math.PI * 2;
-          const pulse01 = 0.5 - (Math.cos(phase) * 0.5);
-          setShieldAlpha(cfg.pulseMin + ((Math.min(cfg.pulseMax, cfg.alpha) - cfg.pulseMin) * pulse01), cfg);
-          updateOrbLifecycle3dCracks(shield, nowMs);
-        }
+        if (shield) setShieldAlpha(cfg.alpha, cfg);
       },
     });
     if (!inspector) return cfg;
@@ -174,16 +146,7 @@ export function createBubbleShield3dPreview({
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
     model.add(orbLight);
-    shield = createOrbLifecycle3dCracks({
-      bo: bo * cfg.diameterRatio,
-      hitsTaken: cfg.maxHits,
-      maxHits: cfg.maxHits,
-      seed: 1,
-      config: cfg,
-    });
-    shield.visible = layerVisible(els.shield3dBubbleMeshVisibleBtn)
-      && layerVisible(els.shield3dNoiseVisibleBtn);
-    model.add(shield);
+    shield = null;
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.035));
     inspector.scene.add(model);
     inspector.render();

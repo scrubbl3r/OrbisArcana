@@ -1,26 +1,5 @@
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import {
-  createOrbLifecycle3dCracks,
-  updateOrbLifecycle3dCracks,
-} from "../game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../vfx/presets/bubble-shield-3d-default.js";
-
-const BUBBLE_SHIELD_3D_INTERNAL_NOISE_DEFAULTS = Object.freeze({
-  density: 3,
-  color: 0x64c8ff,
-  alpha: 0.60,
-  widthPx: 0.25,
-  liftBO: 0,
-  glow: 1.35,
-  washColor: 0x94b8c2,
-  speed: 15,
-  amount: 0.80,
-  wash: 0.50,
-  edge: 0,
-  dropout: 1,
-  sharpness: 0.90,
-  detail: 1,
-});
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -28,28 +7,9 @@ function clampNumber(value, min, max, fallback) {
   return Math.max(min, Math.min(max, safe));
 }
 
-function clampInt(value, min, max, fallback) {
-  return Math.round(clampNumber(value, min, max, fallback));
-}
-
-function rgbToHex(color = {}, fallback = 0x78d2ff) {
-  const fallbackColor = Number.isFinite(Number(fallback)) ? Number(fallback) >>> 0 : 0x78d2ff;
-  const r = clampInt(color.r, 0, 255, (fallbackColor >> 16) & 255);
-  const g = clampInt(color.g, 0, 255, (fallbackColor >> 8) & 255);
-  const b = clampInt(color.b, 0, 255, fallbackColor & 255);
-  return (r << 16) + (g << 8) + b;
-}
-
-function hexColor(value, fallback) {
-  const n = Number(value);
-  if (Number.isFinite(n)) return Math.max(0, Math.min(0xffffff, Math.round(n))) >>> 0;
-  return Number(fallback) >>> 0;
-}
-
 export function normalizeBubbleShield3dRuntimeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fallback = BUBBLE_SHIELD_3D_PRESET_DEFAULT;
-  const noiseFallback = BUBBLE_SHIELD_3D_INTERNAL_NOISE_DEFAULTS;
   return Object.freeze({
     durationMs: Math.round(clampNumber(source.durationMs ?? source.shieldMs, 80, 120000, fallback.durationMs)),
     diameterRatio: clampNumber(source.diameterRatio ?? source.shieldDiameterRatio, 0.1, 8, fallback.diameterRatio),
@@ -58,22 +18,6 @@ export function normalizeBubbleShield3dRuntimeConfig(raw = {}) {
     pulseMin: clampNumber(source.pulseMin, 0, 1, fallback.pulseMin),
     pulseMax: clampNumber(source.pulseMax, 0, 1, fallback.pulseMax),
     maxHits: 3,
-    maxCracks: clampInt(source.maxCracks, 3, 96, noiseFallback.density),
-    crackColor: source.crackColor != null
-      ? hexColor(source.crackColor, noiseFallback.color)
-      : rgbToHex(source.colorRgb, noiseFallback.color),
-    crackAlpha: clampNumber(source.crackAlpha, 0, 1, noiseFallback.alpha),
-    crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, noiseFallback.widthPx),
-    crackLiftBO: clampNumber(source.crackLiftBO, 0, 0.2, noiseFallback.liftBO),
-    criticalGlow: clampNumber(source.criticalGlow, 0, 4, noiseFallback.glow),
-    energyColor: hexColor(source.energyColor, noiseFallback.washColor),
-    mutationSpeed: clampNumber(source.mutationSpeed, 0, Infinity, noiseFallback.speed),
-    mutationAmount: clampNumber(source.mutationAmount, 0, Infinity, noiseFallback.amount),
-    diffuseWash: clampNumber(source.diffuseWash, 0, 2, noiseFallback.wash),
-    edgeBrightness: clampNumber(source.edgeBrightness, 0, 3, noiseFallback.edge),
-    cellDarkness: clampNumber(source.cellDarkness, 0, 2, noiseFallback.dropout),
-    cellSharpness: clampNumber(source.cellSharpness, 0, 3, noiseFallback.sharpness),
-    detailEmergence: clampNumber(source.detailEmergence, 0, 1, noiseFallback.detail),
   });
 }
 
@@ -104,12 +48,6 @@ export function createBubbleShield3dRuntime({
     if (!shield) return;
     const value = clampNumber(alpha, 0, 1, 1);
     shield.visible = value > 0.001;
-    shield.traverse((child) => {
-      const uniforms = child && child.material && child.material.uniforms;
-      if (uniforms && uniforms.uAlpha) {
-        uniforms.uAlpha.value = activeConfig.crackAlpha * value;
-      }
-    });
   }
 
   function clear() {
@@ -131,7 +69,6 @@ export function createBubbleShield3dRuntime({
     const pulse01 = 0.5 - (Math.cos(pulsePhase) * 0.5);
     const pulseAlpha = activeConfig.pulseMin + ((Math.min(activeConfig.pulseMax, activeConfig.alpha) - activeConfig.pulseMin) * pulse01);
     setShieldAlpha(pulseAlpha);
-    updateOrbLifecycle3dCracks(shield, nowMs);
     requestFrame();
     raf = requestAnimationFrame(tick);
   }
@@ -147,18 +84,9 @@ export function createBubbleShield3dRuntime({
     if (!orbModel) return { handled: false, skipped: "orb_model_missing" };
     const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 72);
     startedAtMs = Number(now()) || performance.now();
-    shield = createOrbLifecycle3dCracks({
-      bo: bo * activeConfig.diameterRatio,
-      hitsTaken: activeConfig.maxHits,
-      maxHits: activeConfig.maxHits,
-      seed: Math.round(startedAtMs),
-      config: activeConfig,
-    });
-    shield.name = "bubble_shield3d:legacy_noise_shell";
-    orbModel.add(shield);
+    shield = null;
     setShieldAlpha(activeConfig.alpha);
     timer = setTimeout(clear, activeConfig.durationMs);
-    raf = requestAnimationFrame(tick);
     requestFrame();
     return { handled: true };
   }
@@ -169,7 +97,7 @@ export function createBubbleShield3dRuntime({
     off: clear,
     destroy: clear,
     isActive() {
-      return !!shield || !!raf;
+      return !!shield || !!raf || !!timer;
     },
   });
 }
