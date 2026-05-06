@@ -1,4 +1,4 @@
-import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js";
+import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js?v=20260506a";
 import { createOrbNod3dDomFallbackRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-dom-fallback-runtime.js";
 import { createOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-runtime.js";
 import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runtime.js";
@@ -7,6 +7,7 @@ import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/tel
 import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501d";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
+import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 import {
   resolveBubbleShieldGeometry,
   resolveElectricAoeGeometry,
@@ -36,6 +37,7 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
       strokeRatio: 0.04,
       decayMs: 150,
     },
+    shock3d: { ...SHOCKWAVE_3D_PRESET_DEFAULT },
     flame: {
       diameterRatio: 2.0,
       durationMs: 10000,
@@ -104,6 +106,7 @@ export function initOrbStageReceiverVfxRuntime({
   playOrbNod3dRuntime = null,
   playOrbTeleport3dRuntime = null,
   playBubbleShield3dRuntime = null,
+  playShockwave3dRuntime = null,
   playFlameAoe3dRuntime = null,
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
   clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
@@ -289,7 +292,22 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
+  function directPlayShockwave3d(payload = {}) {
+    if (typeof playShockwave3dRuntime === "function") {
+      const result = playShockwave3dRuntime({
+        ...(vfxDefaults && vfxDefaults.shock3d && typeof vfxDefaults.shock3d === "object"
+          ? vfxDefaults.shock3d
+          : Object.create(null)),
+        ...(payload && typeof payload === "object" ? payload : {}),
+      });
+      if (result && result.handled) return result;
+    }
+    return { handled: false };
+  }
+
   function directTriggerShockwave() {
+    const shockwave3dResult = directPlayShockwave3d();
+    if (shockwave3dResult && shockwave3dResult.handled) return shockwave3dResult;
     if (typeof triggerShockwaveRuntime === "function") {
       const result = triggerShockwaveRuntime({
         shockwaveRuntime: stageVfx.shockwaveRuntime,
@@ -430,6 +448,7 @@ export function initOrbStageReceiverVfxRuntime({
         runtime: {
           playFlameAoe: () => directPlayFlameAoe(),
           playElectricAoe: () => directPlayElectricAoe(),
+          playShockwave3d: (payload = {}) => directPlayShockwave3d(payload),
           triggerShockwave: () => directTriggerShockwave(),
           activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
         },
@@ -444,6 +463,7 @@ export function initOrbStageReceiverVfxRuntime({
         runtime: {
           playFlameAoe: () => directPlayFlameAoe(),
           playElectricAoe: () => directPlayElectricAoe(),
+          playShockwave3d: (payload = {}) => directPlayShockwave3d(payload),
           triggerShockwave: () => directTriggerShockwave(),
           activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
         },
@@ -458,6 +478,7 @@ export function initOrbStageReceiverVfxRuntime({
         runtime: {
           playFlameAoe: () => directPlayFlameAoe(),
           playElectricAoe: () => directPlayElectricAoe(),
+          playShockwave3d: (payload = {}) => directPlayShockwave3d(payload),
           triggerShockwave: () => directTriggerShockwave(),
           activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
         },
@@ -472,6 +493,7 @@ export function initOrbStageReceiverVfxRuntime({
         runtime: {
           playFlameAoe: () => directPlayFlameAoe(),
           playElectricAoe: () => directPlayElectricAoe(),
+          playShockwave3d: (payload = {}) => directPlayShockwave3d(payload),
           triggerShockwave: () => directTriggerShockwave(),
           activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
         },

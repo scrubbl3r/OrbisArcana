@@ -1,4 +1,4 @@
-import { resolveRuntimeEffectBinding } from "./resolve-runtime-effect-binding.js";
+import { resolveRuntimeEffectBinding } from "./resolve-runtime-effect-binding.js?v=20260506a";
 
 /**
  * Resolve a runtime-target VFX binding and dispatch its bound effect through
@@ -13,6 +13,7 @@ import { resolveRuntimeEffectBinding } from "./resolve-runtime-effect-binding.js
  * @param {Object} [options.runtime]
  * @param {Function} [options.runtime.playFlameAoe]
  * @param {Function} [options.runtime.playElectricAoe]
+ * @param {Function} [options.runtime.playShockwave3d]
  * @param {Function} [options.runtime.triggerShockwave]
  * @param {Function} [options.runtime.activateBubbleShield]
  * @param {Function} [options.runtime.playOrbShatter]
@@ -46,6 +47,10 @@ export function dispatchRuntimeEffect({
     case "spell.shockwave_ring":
       return typeof runtime.triggerShockwave === "function"
         ? { ...(runtime.triggerShockwave(payload) || { handled: false }), binding }
+        : { handled: false, skipped: "runtime_missing", binding };
+    case "spell.shockwave_sphere3d":
+      return typeof runtime.playShockwave3d === "function"
+        ? { ...(runtime.playShockwave3d(payload) || { handled: false }), binding }
         : { handled: false, skipped: "runtime_missing", binding };
     case "spell.shield_bubble":
     case "spell.shield_bubble3d":

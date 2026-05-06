@@ -1,7 +1,7 @@
 import {
   getRuntimeEffectBinding,
   getVfxEffectRegistryEntry,
-} from "../content/vfx/index.js";
+} from "../content/vfx/index.js?v=20260506a";
 
 /**
  * Resolve a runtime-target VFX binding entry into a lab/game-friendly structure.

@@ -2,7 +2,7 @@ export {
   VFX_EFFECT_REGISTRY,
   VFX_EFFECT_REGISTRY_BY_ID,
   getVfxEffectRegistryEntry,
-} from "./effect-registry.js";
+} from "./effect-registry.js?v=20260506a";
 
 export {
   RUNTIME_EFFECT_TARGET_REGISTRY,
@@ -14,7 +14,7 @@ export {
   RUNTIME_EFFECT_BINDINGS,
   RUNTIME_EFFECT_BINDINGS_BY_KEY,
   getRuntimeEffectBinding,
-} from "./runtime-effect-bindings.js";
+} from "./runtime-effect-bindings.js?v=20260506a";
 
 export {
   WORD_VFX_BINDINGS,

@@ -32,8 +32,10 @@ import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifec
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505i";
+import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
+import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260502a";
 import { createLevelStageDepth3dBloom } from "./level-stage-depth3d-bloom.js?v=20260505h";
 import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430b";
@@ -178,6 +180,12 @@ export function createLevelStageDepth3dLayer({
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
     traceMeasure: perfTrace && typeof perfTrace.measure === "function" ? perfTrace.measure : null,
   });
+  const shockwave3dRuntime = createShockwave3dRuntime({
+    getOrbModel: () => orb3dActorRuntime.getModel(),
+    getBo: () => orb3dActorRuntime.getBo(),
+    getConfig: () => SHOCKWAVE_3D_PRESET_DEFAULT,
+    onNeedsFrame: () => renderLoop.scheduleAnimation(),
+  });
   const worldGlobe3dRuntime = createWorldGlobe3dRuntime({
     group: globe3dGroup,
     createGlobeObject: createRuntimeGlobe3dObject,
@@ -282,6 +290,7 @@ export function createLevelStageDepth3dLayer({
       || teleport3dRuntime.isActive()
       || bubbleShield3dRuntime.isActive()
       || flameAoe3dRuntime.isActive()
+      || shockwave3dRuntime.isActive()
     );
   }
 
@@ -536,6 +545,17 @@ export function createLevelStageDepth3dLayer({
       }
       return result || { handled: false };
     },
+    playShockwave3d(payload = {}) {
+      if (disposed || !orb3dActorRuntime.hasModel()) {
+        return { handled: false, skipped: "shockwave3d_runtime_missing" };
+      }
+      const result = shockwave3dRuntime.play(payload);
+      if (result && result.handled) {
+        renderLoop.scheduleAnimation();
+        renderLoop.renderFrame(renderLoop.getLastFrame() || {});
+      }
+      return result || { handled: false };
+    },
     applyOrbSpinColor(color = {}) {
       if (disposed) return;
       orb3dActorRuntime.applySpinColor(color);
@@ -556,6 +576,7 @@ export function createLevelStageDepth3dLayer({
       teleport3dRuntime.destroy();
       bubbleShield3dRuntime.destroy();
       flameAoe3dRuntime.destroy();
+      shockwave3dRuntime.destroy();
       orbLifecycle3dRuntime.dispose();
       clearGlobe3dObjects();
       orb3dActorRuntime.dispose();

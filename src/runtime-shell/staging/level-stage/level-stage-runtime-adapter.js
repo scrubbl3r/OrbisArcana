@@ -78,6 +78,11 @@ export function createLevelStageRuntimeAdapter({
         ? depth3dRuntime.playBubbleShield3d(payload)
         : { handled: false, skipped: "depth3d_runtime_missing" };
     },
+    playShockwave3d(payload = {}) {
+      return depth3dRuntime && typeof depth3dRuntime.playShockwave3d === "function"
+        ? depth3dRuntime.playShockwave3d(payload)
+        : { handled: false, skipped: "depth3d_runtime_missing" };
+    },
     playFlameAoe3d(payload = {}) {
       return depth3dRuntime && typeof depth3dRuntime.playFlameAoe3d === "function"
         ? depth3dRuntime.playFlameAoe3d(payload)

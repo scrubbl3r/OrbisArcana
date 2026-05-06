@@ -161,6 +161,27 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "shockwave-3d":
+      return [
+        "export const SHOCKWAVE_3D_PRESET_DEFAULT = Object.freeze({",
+        `  sphereCount: ${Math.round(toNum(p.sphereCount, 2))},`,
+        `  spawnMs: ${Math.round(toNum(p.spawnMs, 100))},`,
+        `  expandMs: ${Math.round(toNum(p.expandMs, 100))},`,
+        `  decayMs: ${Math.round(toNum(p.decayMs, 100))},`,
+        `  startRatio: ${toNum(p.startRatio, 1).toFixed(2)},`,
+        `  endRatio: ${toNum(p.endRatio, 2.7).toFixed(2)},`,
+        `  icoDetail: ${Math.round(toNum(p.icoDetail, 5))},`,
+        `  fresnelPower: ${toNum(p.fresnelPower, 7).toFixed(2)},`,
+        `  centerAlpha: ${toNum(p.centerAlpha, 0.01).toFixed(2)},`,
+        `  rimAlpha: ${toNum(p.rimAlpha, 0.62).toFixed(2)},`,
+        `  luminanceBoost: ${toNum(p.luminanceBoost, 1.45).toFixed(2)},`,
+        `  colorR: ${Math.round(clampNum(p.colorR, 0, 255, 255))},`,
+        `  colorG: ${Math.round(clampNum(p.colorG, 0, 255, 255))},`,
+        `  colorB: ${Math.round(clampNum(p.colorB, 0, 255, 255))},`,
+        `  colorA: ${clampNum(p.colorA, 0, 1, 0.75).toFixed(2)},`,
+        "});",
+        "",
+      ].join("\n");
     case "flame-aoe":
       return [
         "export const FLAME_AOE_PRESET_DEFAULT = Object.freeze({",

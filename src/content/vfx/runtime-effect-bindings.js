@@ -56,8 +56,8 @@ export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
   Object.freeze({
     targetKind: "spell",
     targetId: "shockwave",
-    effectId: "spell.shockwave_ring",
-    presetId: "preset.spell-shockwave-ring.shockwave",
+    effectId: "spell.shockwave_sphere3d",
+    presetId: "preset.spell-shockwave-sphere3d.shockwave-3d",
   }),
   Object.freeze({
     targetKind: "spell",

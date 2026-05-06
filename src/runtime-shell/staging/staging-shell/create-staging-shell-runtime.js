@@ -12,7 +12,7 @@ import {
 import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260425w";
 import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
 import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260506d";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260506e";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260504a";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -25,7 +25,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderLevelStage } from "../level-stage/level-stage.js?v=20260506d";
+import { renderLevelStage } from "../level-stage/level-stage.js?v=20260506e";
 import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js?v=20260504a";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
@@ -2014,6 +2014,12 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
         ? activeAdapter.playBubbleShield3d(payload)
         : { handled: false, skipped: "active_stage_bubble_shield3d_missing" };
     },
+    playShockwave3dRuntime: (payload = {}) => {
+      const activeAdapter = getActiveShellStageAdapter(shellContext);
+      return activeAdapter && typeof activeAdapter.playShockwave3d === "function"
+        ? activeAdapter.playShockwave3d(payload)
+        : { handled: false, skipped: "active_stage_shockwave3d_missing" };
+    },
     playFlameAoe3dRuntime: (payload = {}) => {
       const activeAdapter = getActiveShellStageAdapter(shellContext);
       return activeAdapter && typeof activeAdapter.playFlameAoe3d === "function"
@@ -3108,6 +3114,7 @@ async function initShellKwsRuntime(shellContext) {
     BUBBLE_SHIELD_PRESET_DEFAULT,
     BUBBLE_SHIELD_3D_PRESET_DEFAULT,
     SHOCKWAVE_PRESET_DEFAULT,
+    SHOCKWAVE_3D_PRESET_DEFAULT,
     FLAME_AOE_PRESET_DEFAULT,
     FLAME_AOE_3D_PRESET_DEFAULT,
     ELECTRIC_AOE_PRESET_DEFAULT,
@@ -3173,6 +3180,7 @@ async function initShellKwsRuntime(shellContext) {
       bubbleShield: BUBBLE_SHIELD_PRESET_DEFAULT,
       bubbleShield3d: BUBBLE_SHIELD_3D_PRESET_DEFAULT,
       shockwave: SHOCKWAVE_PRESET_DEFAULT,
+      shockwave3d: SHOCKWAVE_3D_PRESET_DEFAULT,
       flameAoe: FLAME_AOE_PRESET_DEFAULT,
       flameAoe3d: FLAME_AOE_3D_PRESET_DEFAULT,
       electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,

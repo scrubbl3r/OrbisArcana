@@ -69,6 +69,15 @@ export const VFX_EFFECT_REGISTRY = Object.freeze([
     publishTargets: ["preset", "binding"],
   }),
   Object.freeze({
+    id: "spell.shockwave_sphere3d",
+    label: "Shockwave 3D",
+    category: "spell",
+    runtimeModuleId: "shockwave3d_runtime",
+    defaultPresetId: "preset.spell-shockwave-sphere3d.shockwave-3d",
+    supportedContexts: ["lab", "receiver"],
+    publishTargets: ["preset", "binding"],
+  }),
+  Object.freeze({
     id: "spell.teleport",
     label: "Teleport",
     category: "spell",

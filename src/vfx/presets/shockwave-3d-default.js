@@ -1,0 +1,17 @@
+export const SHOCKWAVE_3D_PRESET_DEFAULT = Object.freeze({
+  sphereCount: 2,
+  spawnMs: 100,
+  expandMs: 100,
+  decayMs: 100,
+  startRatio: 1,
+  endRatio: 2.7,
+  icoDetail: 5,
+  fresnelPower: 7,
+  centerAlpha: 0.01,
+  rimAlpha: 0.62,
+  luminanceBoost: 1.45,
+  colorR: 255,
+  colorG: 255,
+  colorB: 255,
+  colorA: 0.75,
+});
