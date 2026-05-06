@@ -15,13 +15,13 @@
     "endRatio": 2.7,
     "icoDetail": 5,
     "fresnelPower": 7,
-    "centerAlpha": 0.01,
+    "centerAlpha": 0.03,
     "rimAlpha": 0.62,
     "luminanceBoost": 1.45,
     "colorR": 255,
     "colorG": 255,
     "colorB": 255,
-    "colorA": 0.75
+    "colorA": 0.5
   },
   "source": {
     "studio": "vfx-studio.html",
@@ -30,6 +30,6 @@
     "settingsKey": "shockwave-3d",
     "registryDefaultPresetId": ""
   },
-  "savedAtMs": 1778095924227,
-  "exportedAtMs": 1778095924228
+  "savedAtMs": 1778099106709,
+  "exportedAtMs": 1778099106710
 }
