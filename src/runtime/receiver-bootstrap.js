@@ -342,7 +342,7 @@ export async function loadReceiverInitModules() {
     import("../ui/dev-console/apply-dev-console-theme-css-vars.js"),
     import("../ui/build-input-hud-view-model.js"),
     import("../game-runtime/input/input-frame-pipeline.js"),
-    import("../vfx/presets/index.js?v=20260506b"),
+    import("../vfx/presets/index.js?v=20260506d"),
     import("../content/input/gesture-config-default.js"),
     import("../content/input/dynamics-config-default.js"),
     import("../content/spells/cast-action-registry.js"),
