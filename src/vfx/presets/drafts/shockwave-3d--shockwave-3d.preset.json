@@ -14,10 +14,10 @@
     "startRatio": 1,
     "endRatio": 2.7,
     "icoDetail": 5,
-    "fresnelPower": 7,
-    "centerAlpha": 0.03,
-    "rimAlpha": 0.62,
-    "luminanceBoost": 1.45,
+    "fresnelPower": 2,
+    "centerAlpha": 0,
+    "rimAlpha": 0.3,
+    "luminanceBoost": 1,
     "colorR": 255,
     "colorG": 255,
     "colorB": 255,
@@ -30,6 +30,6 @@
     "settingsKey": "shockwave-3d",
     "registryDefaultPresetId": ""
   },
-  "savedAtMs": 1778099106709,
-  "exportedAtMs": 1778099106710
+  "savedAtMs": 1778099999422,
+  "exportedAtMs": 1778099999422
 }
