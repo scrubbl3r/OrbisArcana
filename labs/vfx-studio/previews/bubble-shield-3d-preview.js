@@ -8,7 +8,7 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { createBubbleShield3dSimplexShell } from "../../../src/runtime-effects/bubble-shield-3d-simplex-shell.js?v=20260505b";
+import { createBubbleShield3dSimplexShell } from "../../../src/runtime-effects/bubble-shield-3d-simplex-shell.js?v=20260506b";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -65,8 +65,10 @@ export function createBubbleShield3dPreview({
       pulseMs: Math.round(clampNumber(els.shield3dPulseMs && els.shield3dPulseMs.value, 20, 700, 80)),
       pulseMin: clampNumber(els.shield3dPulseMin && els.shield3dPulseMin.value, 0, 1, 0.3),
       pulseMax: clampNumber(els.shield3dPulseMax && els.shield3dPulseMax.value, 0, 1, 1),
-      simplexScale: clampNumber(els.shield3dSimplexScale && els.shield3dSimplexScale.value, 1, 96, 28),
-      simplexSpeed: clampNumber(els.shield3dSimplexSpeed && els.shield3dSimplexSpeed.value, 0, 48, 18),
+      simplexScale: clampNumber(els.shield3dSimplexScale && els.shield3dSimplexScale.value, 0.1, 16, 0.85),
+      simplexSpeed: clampNumber(els.shield3dSimplexSpeed && els.shield3dSimplexSpeed.value, 0, 24, 6),
+      simplexDensityBottom: clampNumber(els.shield3dSimplexDensityBottom && els.shield3dSimplexDensityBottom.value, 0, 1, 0),
+      simplexDensityTop: clampNumber(els.shield3dSimplexDensityTop && els.shield3dSimplexDensityTop.value, 0, 1, 0.3),
       simplexContrast: clampNumber(els.shield3dSimplexContrast && els.shield3dSimplexContrast.value, 0.02, 1, 0.6),
       simplexOctaves: Math.round(clampNumber(els.shield3dSimplexOctaves && els.shield3dSimplexOctaves.value, 1, 8, 3)),
       simplexLacunarity: clampNumber(els.shield3dSimplexLacunarity && els.shield3dSimplexLacunarity.value, 1, 4, 1.1),

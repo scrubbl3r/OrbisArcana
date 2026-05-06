@@ -12,8 +12,10 @@ function clampInt(value, min, max, fallback) {
 }
 
 export const BUBBLE_SHIELD_3D_SIMPLEX_DEFAULT = Object.freeze({
-  simplexScale: 28.00,
-  simplexSpeed: 18.00,
+  simplexScale: 0.85,
+  simplexSpeed: 6.00,
+  simplexDensityBottom: 0.00,
+  simplexDensityTop: 0.30,
   simplexContrast: 0.60,
   simplexOctaves: 3,
   simplexLacunarity: 1.10,
@@ -23,8 +25,10 @@ export const BUBBLE_SHIELD_3D_SIMPLEX_DEFAULT = Object.freeze({
 export function normalizeBubbleShield3dSimplexConfig(raw = {}, fallback = BUBBLE_SHIELD_3D_SIMPLEX_DEFAULT) {
   const source = raw && typeof raw === "object" ? raw : {};
   return Object.freeze({
-    simplexScale: clampNumber(source.simplexScale, 1, 96, fallback.simplexScale),
-    simplexSpeed: clampNumber(source.simplexSpeed, 0, 48, fallback.simplexSpeed),
+    simplexScale: clampNumber(source.simplexScale, 0.1, 16, fallback.simplexScale),
+    simplexSpeed: clampNumber(source.simplexSpeed, 0, 24, fallback.simplexSpeed),
+    simplexDensityBottom: clampNumber(source.simplexDensityBottom, 0, 1, fallback.simplexDensityBottom),
+    simplexDensityTop: clampNumber(source.simplexDensityTop, 0, 1, fallback.simplexDensityTop),
     simplexContrast: clampNumber(source.simplexContrast, 0.02, 1, fallback.simplexContrast),
     simplexOctaves: clampInt(source.simplexOctaves, 1, 8, fallback.simplexOctaves),
     simplexLacunarity: clampNumber(source.simplexLacunarity, 1, 4, fallback.simplexLacunarity),
@@ -45,6 +49,8 @@ export function createBubbleShield3dSimplexMaterial(config = {}) {
       uAlpha: { value: 1 },
       uSimplexScale: { value: simplex.simplexScale },
       uSimplexSpeed: { value: simplex.simplexSpeed },
+      uSimplexDensityBottom: { value: simplex.simplexDensityBottom },
+      uSimplexDensityTop: { value: simplex.simplexDensityTop },
       uSimplexContrast: { value: simplex.simplexContrast },
       uSimplexOctaves: { value: simplex.simplexOctaves },
       uSimplexLacunarity: { value: simplex.simplexLacunarity },
@@ -68,6 +74,8 @@ export function createBubbleShield3dSimplexMaterial(config = {}) {
       uniform float uAlpha;
       uniform float uSimplexScale;
       uniform float uSimplexSpeed;
+      uniform float uSimplexDensityBottom;
+      uniform float uSimplexDensityTop;
       uniform float uSimplexContrast;
       uniform float uSimplexOctaves;
       uniform float uSimplexLacunarity;
@@ -130,13 +138,16 @@ export function createBubbleShield3dSimplexMaterial(config = {}) {
       void main() {
         vec3 surface = normalize(vLocalPos + vec3(0.001, -0.002, 0.003));
         float t = uTime * uSimplexSpeed;
-        float scale = max(1.0, uSimplexScale);
+        float scale = 4.25 / max(0.1, uSimplexScale);
         vec3 flow = surface * scale + vec3(t * 0.73, -t * 0.51, t * 0.37);
         float field = simplexFbm(flow);
         float fine = simplexNoise(flow * 2.65 + vec3(-t * 1.7, t * 1.13, t * 0.89));
         float staticField = clamp(field * 0.62 + fine * 0.38, 0.0, 1.0);
-        float threshold = mix(0.82, 0.38, clamp(uSimplexContrast, 0.0, 1.0));
-        float sparks = smoothstep(threshold, min(0.995, threshold + 0.025), staticField);
+        float vertical = clamp(surface.y * 0.5 + 0.5, 0.0, 1.0);
+        float density = mix(uSimplexDensityBottom, uSimplexDensityTop, vertical);
+        float edge = clamp(uSimplexContrast, 0.02, 1.0);
+        float threshold = mix(0.74, 0.32, clamp(density, 0.0, 1.0));
+        float sparks = smoothstep(threshold - edge * 0.08, threshold + edge * 0.08, staticField);
         float pulse = 0.58 + 0.42 * hash31(floor(flow * 1.7) + floor(vec3(t * 7.0)));
         vec3 viewDir = normalize(cameraPosition - vWorldPos);
         float rim = pow(1.0 - abs(dot(normalize(vWorldNormal), viewDir)), 2.4);

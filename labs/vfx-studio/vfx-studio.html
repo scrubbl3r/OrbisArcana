@@ -1150,8 +1150,15 @@
             <button id="shield3dNoiseVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Noise visibility" title="Toggle Noise visibility"></button>
           </div>
           <div id="shield3dNoiseControls" class="controlGroupBody paramFieldRows" hidden>
-            <div class="paramFieldRow"><label for="shield3dSimplexScale">Simplex scale</label><input id="shield3dSimplexScale" class="paramFieldInput" type="number" min="1" max="96" step="0.25" value="28.00" /><button id="shield3dApplySimplexScaleBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dSimplexSpeed">Simplex speed</label><input id="shield3dSimplexSpeed" class="paramFieldInput" type="number" min="0" max="48" step="0.25" value="18.00" /><button id="shield3dApplySimplexSpeedBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shield3dSimplexScale">Simplex scale</label><input id="shield3dSimplexScale" class="paramFieldInput" type="number" min="0.10" max="16" step="0.05" value="0.85" /><button id="shield3dApplySimplexScaleBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shield3dSimplexSpeed">Simplex speed</label><input id="shield3dSimplexSpeed" class="paramFieldInput" type="number" min="0" max="24" step="0.05" value="6.00" /><button id="shield3dApplySimplexSpeedBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow rgbaRow">
+              <label class="rgbaLabel" for="shield3dSimplexDensityBottom">SIMPLEX DENSITY BOTTOM</label>
+              <input id="shield3dSimplexDensityBottom" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.00" />
+              <label for="shield3dSimplexDensityTop">TOP</label>
+              <input id="shield3dSimplexDensityTop" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.30" />
+              <button id="shield3dApplySimplexDensityBtn" class="toolBtn" type="button">Apply</button>
+            </div>
             <div class="paramFieldRow"><label for="shield3dSimplexContrast">Simplex contrast</label><input id="shield3dSimplexContrast" class="paramFieldInput" type="number" min="0.02" max="1" step="0.01" value="0.60" /><button id="shield3dApplySimplexContrastBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dSimplexOctaves">Simplex octaves</label><input id="shield3dSimplexOctaves" class="paramFieldInput" type="number" min="1" max="8" step="1" value="3" /><button id="shield3dApplySimplexOctavesBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dSimplexLacunarity">Simplex lacunarity</label><input id="shield3dSimplexLacunarity" class="paramFieldInput" type="number" min="1" max="4" step="0.01" value="1.10" /><button id="shield3dApplySimplexLacunarityBtn" class="toolBtn" type="button">Apply</button></div>
@@ -2427,7 +2434,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260505l"),
+      import("./vfx-studio-bootstrap.js?v=20260506b"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2439,7 +2446,7 @@
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
     });
-    import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260505b";
+    import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506a";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
@@ -2623,6 +2630,9 @@
       shield3dApplySimplexScaleBtn: $("shield3dApplySimplexScaleBtn"),
       shield3dSimplexSpeed: $("shield3dSimplexSpeed"),
       shield3dApplySimplexSpeedBtn: $("shield3dApplySimplexSpeedBtn"),
+      shield3dSimplexDensityBottom: $("shield3dSimplexDensityBottom"),
+      shield3dSimplexDensityTop: $("shield3dSimplexDensityTop"),
+      shield3dApplySimplexDensityBtn: $("shield3dApplySimplexDensityBtn"),
       shield3dSimplexContrast: $("shield3dSimplexContrast"),
       shield3dApplySimplexContrastBtn: $("shield3dApplySimplexContrastBtn"),
       shield3dSimplexOctaves: $("shield3dSimplexOctaves"),
