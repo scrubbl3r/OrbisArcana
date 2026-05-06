@@ -1,0 +1,34 @@
+{
+  "kind": "orbis-arcana.vfx-preset-draft",
+  "version": 1,
+  "profileName": "Shockwave 3D",
+  "profileValue": "shockwave-3d",
+  "effectId": null,
+  "baseEffect": "shockwave-3d",
+  "presetId": "preset.shockwave-3d.shockwave-3d",
+  "params": {
+    "sphereCount": 3,
+    "spawnMs": 100,
+    "decayMs": 200,
+    "startRatio": 1,
+    "endRatio": 2.7,
+    "icoDetail": 5,
+    "fresnelPower": 7,
+    "centerAlpha": 0.01,
+    "rimAlpha": 0.62,
+    "luminanceBoost": 1.45,
+    "colorR": 255,
+    "colorG": 255,
+    "colorB": 255,
+    "colorA": 0.75
+  },
+  "source": {
+    "studio": "vfx-studio.html",
+    "selectionLabel": "Shockwave 3D",
+    "authoringBaseEffect": "shockwave-3d",
+    "settingsKey": "shockwave-3d",
+    "registryDefaultPresetId": ""
+  },
+  "savedAtMs": 1778094933966,
+  "exportedAtMs": 1778094933967
+}
