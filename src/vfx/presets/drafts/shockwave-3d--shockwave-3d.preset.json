@@ -7,9 +7,10 @@
   "baseEffect": "shockwave-3d",
   "presetId": "preset.shockwave-3d.shockwave-3d",
   "params": {
-    "sphereCount": 3,
+    "sphereCount": 2,
     "spawnMs": 100,
-    "decayMs": 200,
+    "expandMs": 100,
+    "decayMs": 100,
     "startRatio": 1,
     "endRatio": 2.7,
     "icoDetail": 5,
@@ -29,6 +30,6 @@
     "settingsKey": "shockwave-3d",
     "registryDefaultPresetId": ""
   },
-  "savedAtMs": 1778094933966,
-  "exportedAtMs": 1778094933967
+  "savedAtMs": 1778095924227,
+  "exportedAtMs": 1778095924228
 }
