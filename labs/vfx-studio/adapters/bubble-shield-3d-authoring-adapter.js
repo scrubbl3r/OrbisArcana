@@ -5,6 +5,12 @@ const BUBBLE_SHIELD_3D_FIELDS = Object.freeze([
   ["shield3dPulseMs", "pulseMs"],
   ["shield3dPulseMin", "pulseMin"],
   ["shield3dPulseMax", "pulseMax"],
+  ["shield3dSimplexScale", "simplexScale"],
+  ["shield3dSimplexSpeed", "simplexSpeed"],
+  ["shield3dSimplexContrast", "simplexContrast"],
+  ["shield3dSimplexOctaves", "simplexOctaves"],
+  ["shield3dSimplexLacunarity", "simplexLacunarity"],
+  ["shield3dSimplexGain", "simplexGain"],
 ]);
 
 function clampNumber(value, min, max, fallback) {
@@ -32,6 +38,12 @@ export function createBubbleShield3dAuthoringAdapter({
       pulseMs: roundedNumber(clampNumber(bubbleShield3dPresetDefault.pulseMs, 20, 700, 80)),
       pulseMin: fixedNumber(clampNumber(bubbleShield3dPresetDefault.pulseMin, 0, 1, 0.3), 2, 0.3),
       pulseMax: fixedNumber(clampNumber(bubbleShield3dPresetDefault.pulseMax, 0, 1, 1), 2, 1),
+      simplexScale: fixedNumber(clampNumber(bubbleShield3dPresetDefault.simplexScale, 1, 96, 28), 2, 28),
+      simplexSpeed: fixedNumber(clampNumber(bubbleShield3dPresetDefault.simplexSpeed, 0, 48, 18), 2, 18),
+      simplexContrast: fixedNumber(clampNumber(bubbleShield3dPresetDefault.simplexContrast, 0.02, 1, 0.6), 2, 0.6),
+      simplexOctaves: roundedNumber(clampNumber(bubbleShield3dPresetDefault.simplexOctaves, 1, 8, 3)),
+      simplexLacunarity: fixedNumber(clampNumber(bubbleShield3dPresetDefault.simplexLacunarity, 1, 4, 1.1), 2, 1.1),
+      simplexGain: fixedNumber(clampNumber(bubbleShield3dPresetDefault.simplexGain, 0.05, 0.95, 0.3), 2, 0.3),
     };
   }
 

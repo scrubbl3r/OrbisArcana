@@ -8,6 +8,7 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
+import { createBubbleShield3dSimplexShell } from "../../../src/runtime-effects/bubble-shield-3d-simplex-shell.js?v=20260505b";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -64,6 +65,12 @@ export function createBubbleShield3dPreview({
       pulseMs: Math.round(clampNumber(els.shield3dPulseMs && els.shield3dPulseMs.value, 20, 700, 80)),
       pulseMin: clampNumber(els.shield3dPulseMin && els.shield3dPulseMin.value, 0, 1, 0.3),
       pulseMax: clampNumber(els.shield3dPulseMax && els.shield3dPulseMax.value, 0, 1, 1),
+      simplexScale: clampNumber(els.shield3dSimplexScale && els.shield3dSimplexScale.value, 1, 96, 28),
+      simplexSpeed: clampNumber(els.shield3dSimplexSpeed && els.shield3dSimplexSpeed.value, 0, 48, 18),
+      simplexContrast: clampNumber(els.shield3dSimplexContrast && els.shield3dSimplexContrast.value, 0.02, 1, 0.6),
+      simplexOctaves: Math.round(clampNumber(els.shield3dSimplexOctaves && els.shield3dSimplexOctaves.value, 1, 8, 3)),
+      simplexLacunarity: clampNumber(els.shield3dSimplexLacunarity && els.shield3dSimplexLacunarity.value, 1, 4, 1.1),
+      simplexGain: clampNumber(els.shield3dSimplexGain && els.shield3dSimplexGain.value, 0.05, 0.95, 0.3),
       maxHits: 3,
     };
   }
@@ -87,7 +94,15 @@ export function createBubbleShield3dPreview({
       && value > 0.001;
     shield.traverse((child) => {
       const uniforms = child && child.material && child.material.uniforms;
-      if (uniforms && uniforms.uAlpha) uniforms.uAlpha.value = config.alpha * value;
+      if (uniforms && uniforms.uAlpha) uniforms.uAlpha.value = value;
+    });
+  }
+
+  function setShieldTime(time) {
+    if (!shield) return;
+    shield.traverse((child) => {
+      const uniforms = child && child.material && child.material.uniforms;
+      if (uniforms && uniforms.uTime) uniforms.uTime.value = time;
     });
   }
 
@@ -126,7 +141,10 @@ export function createBubbleShield3dPreview({
         const time = (nowMs - createdAt) / 1000;
         if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = time;
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
-        if (shield) setShieldAlpha(cfg.alpha, cfg);
+        if (shield) {
+          setShieldTime(time);
+          setShieldAlpha(cfg.alpha, cfg);
+        }
       },
     });
     if (!inspector) return cfg;
@@ -146,7 +164,8 @@ export function createBubbleShield3dPreview({
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
     model.add(orbLight);
-    shield = null;
+    shield = createBubbleShield3dSimplexShell({ bo, config: cfg });
+    model.add(shield);
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.035));
     inspector.scene.add(model);
     inspector.render();

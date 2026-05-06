@@ -1,4 +1,8 @@
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
+import {
+  createBubbleShield3dSimplexShell,
+  normalizeBubbleShield3dSimplexConfig,
+} from "./bubble-shield-3d-simplex-shell.js";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../vfx/presets/bubble-shield-3d-default.js";
 
 function clampNumber(value, min, max, fallback) {
@@ -17,6 +21,7 @@ export function normalizeBubbleShield3dRuntimeConfig(raw = {}) {
     pulseMs: Math.round(clampNumber(source.pulseMs, 20, 700, fallback.pulseMs)),
     pulseMin: clampNumber(source.pulseMin, 0, 1, fallback.pulseMin),
     pulseMax: clampNumber(source.pulseMax, 0, 1, fallback.pulseMax),
+    ...normalizeBubbleShield3dSimplexConfig(source, fallback),
     maxHits: 3,
   });
 }
@@ -48,6 +53,14 @@ export function createBubbleShield3dRuntime({
     if (!shield) return;
     const value = clampNumber(alpha, 0, 1, 1);
     shield.visible = value > 0.001;
+    const uniforms = shield.material && shield.material.uniforms;
+    if (uniforms && uniforms.uAlpha) uniforms.uAlpha.value = value;
+  }
+
+  function setShieldTime(timeSec) {
+    if (!shield) return;
+    const uniforms = shield.material && shield.material.uniforms;
+    if (uniforms && uniforms.uTime) uniforms.uTime.value = timeSec;
   }
 
   function clear() {
@@ -68,6 +81,7 @@ export function createBubbleShield3dRuntime({
     const pulsePhase = ((elapsed % Math.max(1, activeConfig.pulseMs)) / Math.max(1, activeConfig.pulseMs)) * Math.PI * 2;
     const pulse01 = 0.5 - (Math.cos(pulsePhase) * 0.5);
     const pulseAlpha = activeConfig.pulseMin + ((Math.min(activeConfig.pulseMax, activeConfig.alpha) - activeConfig.pulseMin) * pulse01);
+    setShieldTime(elapsed / 1000);
     setShieldAlpha(pulseAlpha);
     requestFrame();
     raf = requestAnimationFrame(tick);
@@ -84,9 +98,11 @@ export function createBubbleShield3dRuntime({
     if (!orbModel) return { handled: false, skipped: "orb_model_missing" };
     const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 72);
     startedAtMs = Number(now()) || performance.now();
-    shield = null;
+    shield = createBubbleShield3dSimplexShell({ bo, config: activeConfig });
+    orbModel.add(shield);
     setShieldAlpha(activeConfig.alpha);
     timer = setTimeout(clear, activeConfig.durationMs);
+    raf = requestAnimationFrame(tick);
     requestFrame();
     return { handled: true };
   }

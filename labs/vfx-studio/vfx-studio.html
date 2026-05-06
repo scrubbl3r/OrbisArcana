@@ -1149,7 +1149,14 @@
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="shield3dNoiseControls">Noise</button>
             <button id="shield3dNoiseVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Noise visibility" title="Toggle Noise visibility"></button>
           </div>
-          <div id="shield3dNoiseControls" class="controlGroupBody paramFieldRows" hidden></div>
+          <div id="shield3dNoiseControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow"><label for="shield3dSimplexScale">Simplex scale</label><input id="shield3dSimplexScale" class="paramFieldInput" type="number" min="1" max="96" step="0.25" value="28.00" /><button id="shield3dApplySimplexScaleBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shield3dSimplexSpeed">Simplex speed</label><input id="shield3dSimplexSpeed" class="paramFieldInput" type="number" min="0" max="48" step="0.25" value="18.00" /><button id="shield3dApplySimplexSpeedBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shield3dSimplexContrast">Simplex contrast</label><input id="shield3dSimplexContrast" class="paramFieldInput" type="number" min="0.02" max="1" step="0.01" value="0.60" /><button id="shield3dApplySimplexContrastBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shield3dSimplexOctaves">Simplex octaves</label><input id="shield3dSimplexOctaves" class="paramFieldInput" type="number" min="1" max="8" step="1" value="3" /><button id="shield3dApplySimplexOctavesBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shield3dSimplexLacunarity">Simplex lacunarity</label><input id="shield3dSimplexLacunarity" class="paramFieldInput" type="number" min="1" max="4" step="0.01" value="1.10" /><button id="shield3dApplySimplexLacunarityBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shield3dSimplexGain">Simplex gain</label><input id="shield3dSimplexGain" class="paramFieldInput" type="number" min="0.05" max="0.95" step="0.01" value="0.30" /><button id="shield3dApplySimplexGainBtn" class="toolBtn" type="button">Apply</button></div>
+          </div>
         </div>
       </div>
 
@@ -2420,7 +2427,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260505j"),
+      import("./vfx-studio-bootstrap.js?v=20260505l"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2432,7 +2439,7 @@
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
     });
-    import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260505a";
+    import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260505b";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
@@ -2612,6 +2619,18 @@
       shield3dApplyPulseMinBtn: $("shield3dApplyPulseMinBtn"),
       shield3dPulseMax: $("shield3dPulseMax"),
       shield3dApplyPulseMaxBtn: $("shield3dApplyPulseMaxBtn"),
+      shield3dSimplexScale: $("shield3dSimplexScale"),
+      shield3dApplySimplexScaleBtn: $("shield3dApplySimplexScaleBtn"),
+      shield3dSimplexSpeed: $("shield3dSimplexSpeed"),
+      shield3dApplySimplexSpeedBtn: $("shield3dApplySimplexSpeedBtn"),
+      shield3dSimplexContrast: $("shield3dSimplexContrast"),
+      shield3dApplySimplexContrastBtn: $("shield3dApplySimplexContrastBtn"),
+      shield3dSimplexOctaves: $("shield3dSimplexOctaves"),
+      shield3dApplySimplexOctavesBtn: $("shield3dApplySimplexOctavesBtn"),
+      shield3dSimplexLacunarity: $("shield3dSimplexLacunarity"),
+      shield3dApplySimplexLacunarityBtn: $("shield3dApplySimplexLacunarityBtn"),
+      shield3dSimplexGain: $("shield3dSimplexGain"),
+      shield3dApplySimplexGainBtn: $("shield3dApplySimplexGainBtn"),
 
       pulseMs: $("pulseMs"),
       shieldApplyPulseMsBtn: $("shieldApplyPulseMsBtn"),
