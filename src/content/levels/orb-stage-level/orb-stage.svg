@@ -31,7 +31,7 @@
      inkscape:window-x="16"
      inkscape:window-y="119"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg1"
+     inkscape:current-layer="layer2"
      showgrid="true">
     <inkscape:grid
        id="grid1"
@@ -158,7 +158,7 @@
   <g
      inkscape:groupmode="layer"
      id="layer2"
-     inkscape:label="spawn"
+     inkscape:label="spawns"
      sodipodi:insensitive="true">
     <circle
        style="fill:#ff0000;stroke:none;stroke-width:0.696242"
