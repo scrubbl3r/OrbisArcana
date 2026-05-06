@@ -1128,32 +1128,20 @@
         <div class="row">
           <button id="previewBubbleShield3d" class="toolBtn" type="button">Preview</button>
         </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow"><label for="shield3dMs">Duration ms</label><input id="shield3dMs" class="paramFieldInput" type="number" min="80" max="120000" step="10" value="5000" /><button id="shield3dApplyDurationBtn" class="toolBtn" type="button">Apply</button></div>
+        </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="shield3dBubbleMeshControls">Bubble Mesh</button>
             <button id="shield3dBubbleMeshVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Bubble Mesh visibility" title="Toggle Bubble Mesh visibility"></button>
           </div>
           <div id="shield3dBubbleMeshControls" class="controlGroupBody paramFieldRows" hidden>
-            <div class="paramFieldRow"><label for="shield3dMs">Duration ms</label><input id="shield3dMs" class="paramFieldInput" type="number" min="80" max="120000" step="10" value="5000" /><button id="shield3dApplyDurationBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dDiameterRatio">Diameter ratio</label><input id="shield3dDiameterRatio" class="paramFieldInput" type="number" min="0.10" max="8" step="0.01" value="1.24" /><button id="shield3dApplyDiameterBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dAlpha">Opacity</label><input id="shield3dAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" /><button id="shield3dApplyAlphaBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dPulseMs">Pulse rate ms</label><input id="shield3dPulseMs" class="paramFieldInput" type="number" min="20" max="700" step="5" value="80" /><button id="shield3dApplyPulseMsBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dPulseMin">Pulse min alpha</label><input id="shield3dPulseMin" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.30" /><button id="shield3dApplyPulseMinBtn" class="toolBtn" type="button">Apply</button></div>
             <div class="paramFieldRow"><label for="shield3dPulseMax">Pulse max alpha</label><input id="shield3dPulseMax" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" /><button id="shield3dApplyPulseMaxBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dCrackTotal">Voronoi cells</label><input id="shield3dCrackTotal" class="paramFieldInput" type="number" min="3" max="96" step="1" value="8" /><button id="shield3dApplyCrackTotalBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="rgbaParamRow"><span class="rgbaLabel">Crack RGB</span><label for="shield3dCrackR">r</label><input id="shield3dCrackR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="248" /><label for="shield3dCrackG">g</label><input id="shield3dCrackG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="253" /><label for="shield3dCrackB">b</label><input id="shield3dCrackB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" /><button id="shield3dApplyCrackColorBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dCrackAlpha">Crack alpha</label><input id="shield3dCrackAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.60" /><button id="shield3dApplyCrackAlphaBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dCrackStroke">Crack width</label><input id="shield3dCrackStroke" class="paramFieldInput" type="number" min="0.25" max="12" step="0.25" value="1.00" /><button id="shield3dApplyCrackStrokeBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dCrackLift">Crack lift BO</label><input id="shield3dCrackLift" class="paramFieldInput" type="number" min="0" max="0.2" step="0.001" value="0.000" /><button id="shield3dApplyCrackLiftBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dCriticalGlow">Critical glow</label><input id="shield3dCriticalGlow" class="paramFieldInput" type="number" min="0" max="4" step="0.05" value="1.35" /><button id="shield3dApplyCriticalGlowBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="rgbaParamRow"><span class="rgbaLabel">Energy RGB</span><label for="shield3dEnergyR">r</label><input id="shield3dEnergyR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="148" /><label for="shield3dEnergyG">g</label><input id="shield3dEnergyG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="184" /><label for="shield3dEnergyB">b</label><input id="shield3dEnergyB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="194" /><button id="shield3dApplyEnergyColorBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dMutationSpeed">Mutation speed</label><input id="shield3dMutationSpeed" class="paramFieldInput" type="number" min="0" step="0.01" value="2.00" /><button id="shield3dApplyMutationSpeedBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dMutationAmount">Mutation amount</label><input id="shield3dMutationAmount" class="paramFieldInput" type="number" min="0" step="0.01" value="1.50" /><button id="shield3dApplyMutationAmountBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dDiffuseWash">Diffuse wash</label><input id="shield3dDiffuseWash" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="1.00" /><button id="shield3dApplyDiffuseWashBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dEdgeBrightness">Edge brightness</label><input id="shield3dEdgeBrightness" class="paramFieldInput" type="number" min="0" max="3" step="0.01" value="1.00" /><button id="shield3dApplyEdgeBrightnessBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dCellDarkness">Cell darkness</label><input id="shield3dCellDarkness" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="1.00" /><button id="shield3dApplyCellDarknessBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dCellSharpness">Cell sharpness</label><input id="shield3dCellSharpness" class="paramFieldInput" type="number" min="0" max="3" step="0.01" value="1.10" /><button id="shield3dApplyCellSharpnessBtn" class="toolBtn" type="button">Apply</button></div>
-            <div class="paramFieldRow"><label for="shield3dDetailEmergence">Detail emergence</label><input id="shield3dDetailEmergence" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" /><button id="shield3dApplyDetailEmergenceBtn" class="toolBtn" type="button">Apply</button></div>
           </div>
         </div>
       </div>
@@ -2437,7 +2425,7 @@
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
     });
-    import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260501a";
+    import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260505a";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
@@ -2616,38 +2604,6 @@
       shield3dApplyPulseMinBtn: $("shield3dApplyPulseMinBtn"),
       shield3dPulseMax: $("shield3dPulseMax"),
       shield3dApplyPulseMaxBtn: $("shield3dApplyPulseMaxBtn"),
-      shield3dCrackTotal: $("shield3dCrackTotal"),
-      shield3dApplyCrackTotalBtn: $("shield3dApplyCrackTotalBtn"),
-      shield3dCrackR: $("shield3dCrackR"),
-      shield3dCrackG: $("shield3dCrackG"),
-      shield3dCrackB: $("shield3dCrackB"),
-      shield3dApplyCrackColorBtn: $("shield3dApplyCrackColorBtn"),
-      shield3dCrackAlpha: $("shield3dCrackAlpha"),
-      shield3dApplyCrackAlphaBtn: $("shield3dApplyCrackAlphaBtn"),
-      shield3dCrackStroke: $("shield3dCrackStroke"),
-      shield3dApplyCrackStrokeBtn: $("shield3dApplyCrackStrokeBtn"),
-      shield3dCrackLift: $("shield3dCrackLift"),
-      shield3dApplyCrackLiftBtn: $("shield3dApplyCrackLiftBtn"),
-      shield3dCriticalGlow: $("shield3dCriticalGlow"),
-      shield3dApplyCriticalGlowBtn: $("shield3dApplyCriticalGlowBtn"),
-      shield3dEnergyR: $("shield3dEnergyR"),
-      shield3dEnergyG: $("shield3dEnergyG"),
-      shield3dEnergyB: $("shield3dEnergyB"),
-      shield3dApplyEnergyColorBtn: $("shield3dApplyEnergyColorBtn"),
-      shield3dMutationSpeed: $("shield3dMutationSpeed"),
-      shield3dApplyMutationSpeedBtn: $("shield3dApplyMutationSpeedBtn"),
-      shield3dMutationAmount: $("shield3dMutationAmount"),
-      shield3dApplyMutationAmountBtn: $("shield3dApplyMutationAmountBtn"),
-      shield3dDiffuseWash: $("shield3dDiffuseWash"),
-      shield3dApplyDiffuseWashBtn: $("shield3dApplyDiffuseWashBtn"),
-      shield3dEdgeBrightness: $("shield3dEdgeBrightness"),
-      shield3dApplyEdgeBrightnessBtn: $("shield3dApplyEdgeBrightnessBtn"),
-      shield3dCellDarkness: $("shield3dCellDarkness"),
-      shield3dApplyCellDarknessBtn: $("shield3dApplyCellDarknessBtn"),
-      shield3dCellSharpness: $("shield3dCellSharpness"),
-      shield3dApplyCellSharpnessBtn: $("shield3dApplyCellSharpnessBtn"),
-      shield3dDetailEmergence: $("shield3dDetailEmergence"),
-      shield3dApplyDetailEmergenceBtn: $("shield3dApplyDetailEmergenceBtn"),
 
       pulseMs: $("pulseMs"),
       shieldApplyPulseMsBtn: $("shieldApplyPulseMsBtn"),
