@@ -30,7 +30,7 @@ import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260430b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
-import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506b";
+import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506c";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505i";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506b";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
@@ -166,6 +166,9 @@ export function createLevelStageDepth3dLayer({
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => BUBBLE_SHIELD_3D_PRESET_DEFAULT,
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
+    traceMark: perfTrace && typeof perfTrace.mark === "function"
+      ? (name, value = {}) => perfTrace.mark(name, value)
+      : null,
   });
   const flameAoe3dRuntime = createFlameAoe3dRuntime({
     getOrbModel: () => orb3dActorRuntime.getModel(),
@@ -487,13 +490,38 @@ export function createLevelStageDepth3dLayer({
       return result || { handled: false };
     },
     playBubbleShield3d(payload = {}) {
+      if (perfTrace && typeof perfTrace.mark === "function") {
+        perfTrace.mark("depth3d.bubbleShield.play.request", {
+          disposed: !!disposed,
+          hasModel: !!orb3dActorRuntime.hasModel(),
+          durationMs: Number(payload && payload.durationMs) || 0,
+        });
+      }
       if (disposed || !orb3dActorRuntime.hasModel()) {
+        if (perfTrace && typeof perfTrace.mark === "function") {
+          perfTrace.mark("depth3d.bubbleShield.play.skipped", {
+            disposed: !!disposed,
+            hasModel: !!orb3dActorRuntime.hasModel(),
+          });
+        }
         return { handled: false, skipped: "bubble_shield3d_runtime_missing" };
       }
       const result = bubbleShield3dRuntime.activate(payload);
+      if (perfTrace && typeof perfTrace.mark === "function") {
+        perfTrace.mark("depth3d.bubbleShield.play.result", {
+          handled: !!(result && result.handled),
+          skipped: String(result && result.skipped || ""),
+          active: !!(bubbleShield3dRuntime && bubbleShield3dRuntime.isActive && bubbleShield3dRuntime.isActive()),
+        });
+      }
       if (result && result.handled) {
         renderLoop.scheduleAnimation();
         renderLoop.renderFrame(renderLoop.getLastFrame() || {});
+        if (perfTrace && typeof perfTrace.mark === "function") {
+          perfTrace.mark("depth3d.bubbleShield.frame.requested", {
+            active: !!(bubbleShield3dRuntime && bubbleShield3dRuntime.isActive && bubbleShield3dRuntime.isActive()),
+          });
+        }
       }
       return result || { handled: false };
     },

@@ -45,6 +45,7 @@ export function createBubbleShield3dRuntime({
   getConfig = () => BUBBLE_SHIELD_3D_PRESET_DEFAULT,
   now = () => performance.now(),
   onNeedsFrame = () => {},
+  traceMark = null,
 } = {}) {
   let raf = 0;
   let timer = 0;
@@ -54,6 +55,10 @@ export function createBubbleShield3dRuntime({
 
   function requestFrame() {
     if (typeof onNeedsFrame === "function") onNeedsFrame();
+  }
+
+  function markTrace(name, value = {}) {
+    if (typeof traceMark === "function") traceMark(name, value && typeof value === "object" ? value : {});
   }
 
   function removeShield() {
@@ -95,6 +100,13 @@ export function createBubbleShield3dRuntime({
   }
 
   function clear() {
+    if (shield || raf || timer) {
+      markTrace("bubbleShield3d.clear", {
+        hadShield: !!shield,
+        hadRaf: !!raf,
+        hadTimer: !!timer,
+      });
+    }
     if (raf) cancelAnimationFrame(raf);
     if (timer) clearTimeout(timer);
     raf = 0;
@@ -105,6 +117,7 @@ export function createBubbleShield3dRuntime({
 
   function tick(nowMs = now()) {
     if (!shield) {
+      markTrace("bubbleShield3d.tick.missing_shield");
       raf = 0;
       return;
     }
@@ -121,15 +134,33 @@ export function createBubbleShield3dRuntime({
 
   function activate(payload = {}) {
     clear();
+    markTrace("bubbleShield3d.activate.start", {
+      durationMs: Number(payload && payload.durationMs) || 0,
+      startDiameterRatio: Number(payload && payload.startDiameterRatio) || Number(payload && payload.diameterRatio) || 0,
+      endDiameterRatio: Number(payload && payload.endDiameterRatio) || 0,
+    });
     const baseConfig = typeof getConfig === "function" ? (getConfig() || {}) : {};
     activeConfig = normalizeBubbleShield3dRuntimeConfig({
       ...baseConfig,
       ...(payload && typeof payload === "object" ? payload : {}),
     });
     const orbModel = typeof getOrbModel === "function" ? getOrbModel() : null;
-    if (!orbModel) return { handled: false, skipped: "orb_model_missing" };
+    if (!orbModel) {
+      markTrace("bubbleShield3d.activate.skipped", { reason: "orb_model_missing" });
+      return { handled: false, skipped: "orb_model_missing" };
+    }
     const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 72);
     startedAtMs = Number(now()) || performance.now();
+    markTrace("bubbleShield3d.activate.config", {
+      bo,
+      durationMs: activeConfig.durationMs,
+      startDiameterRatio: activeConfig.startDiameterRatio,
+      endDiameterRatio: activeConfig.endDiameterRatio,
+      alpha: activeConfig.alpha,
+      pulseMs: activeConfig.pulseMs,
+      simplexScale: activeConfig.simplexScale,
+      simplexDensityTop: activeConfig.simplexDensityTop,
+    });
     shield = createBubbleShield3dSimplexShell({
       bo,
       config: {
@@ -143,6 +174,13 @@ export function createBubbleShield3dRuntime({
     timer = setTimeout(clear, activeConfig.durationMs);
     raf = requestAnimationFrame(tick);
     requestFrame();
+    markTrace("bubbleShield3d.activate.attached", {
+      shieldName: String(shield && shield.name || ""),
+      parentName: String(shield && shield.parent && shield.parent.name || ""),
+      childCount: Number(orbModel && orbModel.children && orbModel.children.length) || 0,
+      visible: !!(shield && shield.visible),
+      renderOrder: Number(shield && shield.renderOrder) || 0,
+    });
     return { handled: true };
   }
 

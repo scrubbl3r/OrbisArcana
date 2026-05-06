@@ -120,6 +120,12 @@ export function initOrbStageReceiverVfxRuntime({
     1,
     Number(getOrbDiameterPx()) || (Math.max(0.01, Number(getOrbScaleFactor()) || 1) * 100)
   );
+  const markTrace = (name, value = {}) => {
+    const perfTrace = runtime && runtime.perfTrace;
+    if (perfTrace && typeof perfTrace.mark === "function") {
+      perfTrace.mark(name, value && typeof value === "object" ? value : {});
+    }
+  };
 
   const vfxRuntimesBundle = createVfxRuntimesBundle({
     bubbleShield: {
@@ -335,21 +341,37 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function directActivateBubbleShield({ durationMs } = {}) {
+    const resolvedDurationMs = Math.max(150, Number(durationMs) || Number(vfxDefaults.shield.durationMs) || 8000);
+    markTrace("orbStage.bubbleShield.activate.request", {
+      durationMs: resolvedDurationMs,
+      has3dRuntime: typeof playBubbleShield3dRuntime === "function",
+      hasDomRuntime: !!(stageVfx.bubbleShieldRuntime && typeof stageVfx.bubbleShieldRuntime.activate === "function"),
+    });
     if (typeof playBubbleShield3dRuntime === "function") {
       const result = playBubbleShield3dRuntime({
         ...(vfxDefaults && vfxDefaults.shield3d && typeof vfxDefaults.shield3d === "object"
           ? vfxDefaults.shield3d
           : Object.create(null)),
-        durationMs: Math.max(150, Number(durationMs) || Number(vfxDefaults.shield.durationMs) || 8000),
+        durationMs: resolvedDurationMs,
+      });
+      markTrace("orbStage.bubbleShield.activate.3d_result", {
+        handled: !!(result && result.handled),
+        skipped: String(result && result.skipped || ""),
       });
       if (result && result.handled) return result;
     }
     if (stageVfx.bubbleShieldRuntime && typeof stageVfx.bubbleShieldRuntime.activate === "function") {
       stageVfx.bubbleShieldRuntime.activate({
-        durationMs: Math.max(150, Number(durationMs) || Number(vfxDefaults.shield.durationMs) || 8000),
+        durationMs: resolvedDurationMs,
+      });
+      markTrace("orbStage.bubbleShield.activate.dom_fallback", {
+        durationMs: resolvedDurationMs,
       });
       return { handled: true };
     }
+    markTrace("orbStage.bubbleShield.activate.failed", {
+      durationMs: resolvedDurationMs,
+    });
     return { handled: false };
   }
 
