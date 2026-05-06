@@ -65,6 +65,11 @@ export function createStudioBootstrap({
       shockLayer: getElementById("shockLaneLayer"),
       orb: getElementById("shockLaneOrb"),
     }),
+    shockwave3d: Object.freeze({
+      ...els,
+      previewRoot: els.shockwave3dPreviewRoot,
+      previewShockwave3d: els.previewShockwave3d,
+    }),
     flame: Object.freeze({
       ...els,
       previewRoot: els.flamePreviewRoot,

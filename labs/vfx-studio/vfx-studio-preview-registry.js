@@ -1,6 +1,7 @@
 import { createShieldPreview } from "./previews/shield-preview.js?v=20260425d";
 import { createBubbleShield3dPreview } from "./previews/bubble-shield-3d-preview.js?v=20260506d";
 import { createShockwavePreview } from "./previews/shockwave-preview.js?v=20260425d";
+import { createShockwave3dPreview } from "./previews/shockwave-3d-preview.js?v=20260506a";
 import { createFlameAoePreview } from "./previews/flame-aoe-preview.js?v=20260425d";
 import { createElectricAoePreview } from "./previews/electric-aoe-preview.js?v=20260425d";
 import { createOrbBasePreview } from "./previews/orb-base-preview.js?v=20260425d";
@@ -73,6 +74,16 @@ export function createStudioPreviewRegistry({
   actions.clearShock = shockwavePreview.clear;
   actions.playShock = shockwavePreview.play;
   shockwavePreview.wire();
+
+  const shockwave3dPreview = createShockwave3dPreview({
+    els: previewEls.shockwave3d,
+    getOrbBaseVisualState,
+    getOrb3dVisualSettings: getOrb3dVisualSettings || (() => readOrb3dPreviewConfig(previewEls.orb3d)),
+  });
+  actions.applyShockwave3d = shockwave3dPreview.apply;
+  actions.clearShockwave3d = shockwave3dPreview.clear;
+  actions.playShockwave3d = shockwave3dPreview.play;
+  shockwave3dPreview.wire();
 
   const flamePreview = createFlameAoePreview({
     els: previewEls.flame,
@@ -242,6 +253,7 @@ export function createStudioPreviewRegistry({
   function stopAllStudioEffects() {
     if (typeof actions.shieldOffNow === "function") actions.shieldOffNow();
     if (typeof actions.clearShock === "function") actions.clearShock();
+    if (typeof actions.clearShockwave3d === "function") actions.clearShockwave3d();
     if (typeof actions.clearFlame === "function") actions.clearFlame();
     if (typeof actions.clearElectric === "function") actions.clearElectric();
     if (typeof actions.clearOrbTemplate === "function") actions.clearOrbTemplate();

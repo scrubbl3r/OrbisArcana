@@ -582,6 +582,7 @@
     }
     .previewLane.orb3dPreviewLane,
     .previewLane.bubbleShield3dPreviewLane,
+    .previewLane.shockwave3dPreviewLane,
     .previewLane.orbSpawnPreviewLane,
     .previewLane.orbNod3dPreviewLane,
     .previewLane.orbLifecycle3dPreviewLane,
@@ -607,6 +608,7 @@
     }
     .orb3dCanvas,
     .bubbleShield3dCanvas,
+    .shockwave3dCanvas,
     .orbSpawnCanvas,
     .orbNod3dCanvas,
     .orbLifecycle3dCanvas,
@@ -623,6 +625,7 @@
     }
     .orb3dCanvas:active,
     .bubbleShield3dCanvas:active,
+    .shockwave3dCanvas:active,
     .orbSpawnCanvas:active,
     .orbNod3dCanvas:active,
     .orbLifecycle3dCanvas:active,
@@ -993,6 +996,7 @@
           <div class="shockLayer" id="shockLaneLayer"></div>
           <div class="orb atOrigin" id="shockLaneOrb"></div>
         </div>
+        <div class="previewLane shockwave3dPreviewLane" id="shockwave3dPreviewRoot" data-preview-root hidden aria-hidden="true"></div>
         <div class="previewLane" id="flamePreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="flameLayer" id="flameLaneLayer"></div>
           <div class="orb atOrigin" id="flameLaneOrb"></div>
@@ -1924,6 +1928,48 @@
         <div class="row">
           <button id="previewShockwave3d" class="toolBtn" type="button">Preview</button>
         </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="shockwave3dTimingControls">Timing</button>
+          <div id="shockwave3dTimingControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow"><label for="shockwave3dSphereCount">Sphere count</label><input id="shockwave3dSphereCount" class="paramFieldInput" type="number" min="1" max="8" step="1" value="2" /><button id="shockwave3dApplySphereCountBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shockwave3dSpawnMs">Spawn rate ms</label><input id="shockwave3dSpawnMs" class="paramFieldInput" type="number" min="1" max="1000" step="1" value="105" /><button id="shockwave3dApplySpawnMsBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shockwave3dDecayMs">Decay ms</label><input id="shockwave3dDecayMs" class="paramFieldInput" type="number" min="40" max="4000" step="10" value="150" /><button id="shockwave3dApplyDecayMsBtn" class="toolBtn" type="button">Apply</button></div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="shockwave3dSphereControls">Sphere Mesh</button>
+          <div id="shockwave3dSphereControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow"><label for="shockwave3dStartRatio">Start ratio</label><input id="shockwave3dStartRatio" class="paramFieldInput" type="number" min="0.01" max="10" step="0.01" value="0.43" /><button id="shockwave3dApplyStartRatioBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shockwave3dEndRatio">End ratio</label><input id="shockwave3dEndRatio" class="paramFieldInput" type="number" min="0.01" max="20" step="0.01" value="1.69" /><button id="shockwave3dApplyEndRatioBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shockwave3dIcoDetail">Icosphere detail</label><input id="shockwave3dIcoDetail" class="paramFieldInput" type="number" min="0" max="4" step="1" value="3" /><button id="shockwave3dApplyIcoDetailBtn" class="toolBtn" type="button">Apply</button></div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="shockwave3dMaterialControls">Shell Material</button>
+          <div id="shockwave3dMaterialControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow"><label for="shockwave3dFresnelPower">Fresnel power</label><input id="shockwave3dFresnelPower" class="paramFieldInput" type="number" min="0.1" max="8" step="0.05" value="2.6" /><button id="shockwave3dApplyFresnelPowerBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shockwave3dCenterAlpha">Center alpha</label><input id="shockwave3dCenterAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.01" /><button id="shockwave3dApplyCenterAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shockwave3dRimAlpha">Rim alpha</label><input id="shockwave3dRimAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.62" /><button id="shockwave3dApplyRimAlphaBtn" class="toolBtn" type="button">Apply</button></div>
+            <div class="paramFieldRow"><label for="shockwave3dLuminanceBoost">Luminance boost</label><input id="shockwave3dLuminanceBoost" class="paramFieldInput" type="number" min="0" max="4" step="0.05" value="1.45" /><button id="shockwave3dApplyLuminanceBoostBtn" class="toolBtn" type="button">Apply</button></div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="shockwave3dColorControls">Color</button>
+          <div id="shockwave3dColorControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">RGBA</span>
+              <label for="shockwave3dR">r</label>
+              <input id="shockwave3dR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+              <label for="shockwave3dG">g</label>
+              <input id="shockwave3dG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+              <label for="shockwave3dB">b</label>
+              <input id="shockwave3dB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+              <label for="shockwave3dA">a</label>
+              <input id="shockwave3dA" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.65" />
+              <button id="shockwave3dApplyColorBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="section" data-effect="orb-lifecycle" hidden>
@@ -2466,6 +2512,7 @@
     import { createOrbNodAuthoringAdapter } from "./adapters/orb-nod-authoring-adapter.js?v=20260425d";
     import { createOrbNod3dAuthoringAdapter } from "./adapters/orb-nod3d-authoring-adapter.js?v=20260427a";
     import { createOrbSpawnAuthoringAdapter } from "./adapters/orb-spawn-authoring-adapter.js?v=20260429a";
+    import { createShockwave3dAuthoringAdapter } from "./adapters/shockwave-3d-authoring-adapter.js?v=20260506a";
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
@@ -2523,6 +2570,7 @@
       createOrbNodAuthoringAdapter,
       createOrbNod3dAuthoringAdapter,
       createOrbSpawnAuthoringAdapter,
+      createShockwave3dAuthoringAdapter,
       createShockwaveAuthoringAdapter,
       createTeleport3dAuthoringAdapter,
       createTeleportAuthoringAdapter,
@@ -2553,6 +2601,7 @@
       shieldPreviewRoot: $("shieldPreviewRoot"),
       bubbleShield3dPreviewRoot: $("bubbleShield3dPreviewRoot"),
       shockPreviewRoot: $("shockPreviewRoot"),
+      shockwave3dPreviewRoot: $("shockwave3dPreviewRoot"),
       flamePreviewRoot: $("flamePreviewRoot"),
       electricPreviewRoot: $("electricPreviewRoot"),
       orbBasePreviewRoot: $("orbBasePreviewRoot"),
@@ -2682,6 +2731,32 @@
       shockB: $("shockB"),
       shockA: $("shockA"),
       shockApplyColorBtn: $("shockApplyColorBtn"),
+      previewShockwave3d: $("previewShockwave3d"),
+      shockwave3dSphereCount: $("shockwave3dSphereCount"),
+      shockwave3dApplySphereCountBtn: $("shockwave3dApplySphereCountBtn"),
+      shockwave3dSpawnMs: $("shockwave3dSpawnMs"),
+      shockwave3dApplySpawnMsBtn: $("shockwave3dApplySpawnMsBtn"),
+      shockwave3dDecayMs: $("shockwave3dDecayMs"),
+      shockwave3dApplyDecayMsBtn: $("shockwave3dApplyDecayMsBtn"),
+      shockwave3dStartRatio: $("shockwave3dStartRatio"),
+      shockwave3dApplyStartRatioBtn: $("shockwave3dApplyStartRatioBtn"),
+      shockwave3dEndRatio: $("shockwave3dEndRatio"),
+      shockwave3dApplyEndRatioBtn: $("shockwave3dApplyEndRatioBtn"),
+      shockwave3dIcoDetail: $("shockwave3dIcoDetail"),
+      shockwave3dApplyIcoDetailBtn: $("shockwave3dApplyIcoDetailBtn"),
+      shockwave3dFresnelPower: $("shockwave3dFresnelPower"),
+      shockwave3dApplyFresnelPowerBtn: $("shockwave3dApplyFresnelPowerBtn"),
+      shockwave3dCenterAlpha: $("shockwave3dCenterAlpha"),
+      shockwave3dApplyCenterAlphaBtn: $("shockwave3dApplyCenterAlphaBtn"),
+      shockwave3dRimAlpha: $("shockwave3dRimAlpha"),
+      shockwave3dApplyRimAlphaBtn: $("shockwave3dApplyRimAlphaBtn"),
+      shockwave3dLuminanceBoost: $("shockwave3dLuminanceBoost"),
+      shockwave3dApplyLuminanceBoostBtn: $("shockwave3dApplyLuminanceBoostBtn"),
+      shockwave3dR: $("shockwave3dR"),
+      shockwave3dG: $("shockwave3dG"),
+      shockwave3dB: $("shockwave3dB"),
+      shockwave3dA: $("shockwave3dA"),
+      shockwave3dApplyColorBtn: $("shockwave3dApplyColorBtn"),
 
       playFlame: $("playFlame"),
       flameDiameterRatio: $("flameDiameterRatio"),
@@ -3048,7 +3123,6 @@
       flameAoe3dWakeGraphVisibleBtn: $("flameAoe3dWakeGraphVisibleBtn"),
       flameAoe3dApplyWakeGraphBtn: $("flameAoe3dApplyWakeGraphBtn"),
       previewBankOrb3d: $("previewBankOrb3d"),
-      previewShockwave3d: $("previewShockwave3d"),
     };
 
     function initCollapsibleControlGroups(root = document) {
@@ -3645,6 +3719,7 @@
 
       applyOrbLaneSsot(els.shieldPreviewRoot);
       applyOrbLaneSsot(els.shockPreviewRoot);
+      applyOrbLaneSsot(els.shockwave3dPreviewRoot);
       applyOrbLaneSsot(els.flamePreviewRoot);
       applyOrbLaneSsot(els.electricPreviewRoot);
       setRootVar(els.shieldPreviewRoot, "--shield-d", GEOM.shieldD + "px");
@@ -3708,10 +3783,10 @@
         "bubble-shield": () => applyShield(),
         "bubble-shield-3d": () => playBubbleShield3d(),
         shockwave: () => applyShock(),
+        "shockwave-3d": () => applyShockwave3d(),
         "flame-aoe": () => applyFlameControls(),
         "flame-aoe-3d": () => applyFlameAoe3d(),
         "bank-orb-3d": () => applyBankOrb3d(),
-        "shockwave-3d": () => applyBankOrb3d(),
         "orb-base": () => applyOrbBase(),
         "orb-3d": () => applyOrb3d(),
         "orb-spawn": () => applyOrbSpawn(),
@@ -3765,6 +3840,9 @@
       applyShock,
       clearShock,
       playShock,
+      applyShockwave3d,
+      clearShockwave3d,
+      playShockwave3d,
       applyFlameControls,
       clearFlame,
       playFlame,
@@ -3816,12 +3894,10 @@
     const updateBehaviorSections = studioBootstrap.updateBehaviorSections;
     const updateEffectSections = studioBootstrap.updateEffectSections;
     const settleSelectedEffectState = studioBootstrap.settleSelectedEffectState;
-    if (els.previewShockwave3d) {
-      els.previewShockwave3d.addEventListener("click", () => applyBankOrb3d());
-    }
     requestAnimationFrame(() => {
       if (typeof applyShieldGeometry === "function") applyShieldGeometry();
       if (typeof applyShock === "function") applyShock();
+      if (typeof applyShockwave3d === "function") applyShockwave3d();
       if (typeof applyFlameControls === "function") applyFlameControls();
       if (typeof applyElectricControls === "function") applyElectricControls();
       if (typeof applyOrbTemplate === "function") applyOrbTemplate();

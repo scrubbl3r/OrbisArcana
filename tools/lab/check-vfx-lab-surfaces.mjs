@@ -44,9 +44,11 @@ function createSentinelAdapter(name) {
 
 const surfaces = createLabEffectSurfaces({
   buildTeleportBehaviorModule,
+  createBankOrb3dAuthoringAdapter: createSentinelAdapter("bank-orb-3d"),
   createBubbleShield3dAuthoringAdapter: createSentinelAdapter("bubble-shield-3d"),
   createBubbleShieldAuthoringAdapter: createSentinelAdapter("bubble-shield"),
   createElectricAoeAuthoringAdapter: createSentinelAdapter("electric-aoe"),
+  createFlameAoe3dAuthoringAdapter: createSentinelAdapter("flame-aoe-3d"),
   createFlameAoeAuthoringAdapter: createSentinelAdapter("flame-aoe"),
   createOrb3dAuthoringAdapter: createSentinelAdapter("orb-3d"),
   createOrbBaseAuthoringAdapter: createSentinelAdapter("orb-base"),
@@ -57,6 +59,7 @@ const surfaces = createLabEffectSurfaces({
   createOrbNodAuthoringAdapter: createSentinelAdapter("orb-nod"),
   createOrbNod3dAuthoringAdapter: createSentinelAdapter("orb-nod3d"),
   createOrbSpawnAuthoringAdapter: createSentinelAdapter("orb-spawn"),
+  createShockwave3dAuthoringAdapter: createSentinelAdapter("shockwave-3d"),
   createShockwaveAuthoringAdapter: createSentinelAdapter("shockwave"),
   createTeleportAuthoringAdapter: createSentinelAdapter("teleport"),
   createTeleport3dAuthoringAdapter: createSentinelAdapter("teleport-3d"),
