@@ -1,6 +1,9 @@
 const BUBBLE_SHIELD_3D_FIELDS = Object.freeze([
   ["shield3dMs", "durationMs"],
   ["shield3dDiameterRatio", "diameterRatio"],
+  ["shield3dEndDiameterRatio", "endDiameterRatio"],
+  ["shield3dTransitionMs", "transitionMs"],
+  ["shield3dBounceAmount", "bounceAmount"],
   ["shield3dAlpha", "alpha"],
   ["shield3dPulseMs", "pulseMs"],
   ["shield3dPulseMin", "pulseMin"],
@@ -35,7 +38,10 @@ export function createBubbleShield3dAuthoringAdapter({
   function defaultSettings() {
     return {
       durationMs: roundedNumber(clampNumber(bubbleShield3dPresetDefault.durationMs, 80, 120000, 5000)),
-      diameterRatio: fixedNumber(clampNumber(bubbleShield3dPresetDefault.diameterRatio, 0.1, 8, 1.24), 2, 1.24),
+      diameterRatio: fixedNumber(clampNumber(bubbleShield3dPresetDefault.startDiameterRatio ?? bubbleShield3dPresetDefault.diameterRatio, 0.1, 8, 1.24), 2, 1.24),
+      endDiameterRatio: fixedNumber(clampNumber(bubbleShield3dPresetDefault.endDiameterRatio, 0.1, 8, 1.8), 2, 1.8),
+      transitionMs: roundedNumber(clampNumber(bubbleShield3dPresetDefault.transitionMs, 0, 3000, 420)),
+      bounceAmount: fixedNumber(clampNumber(bubbleShield3dPresetDefault.bounceAmount, 0, 1.5, 0.28), 2, 0.28),
       alpha: fixedNumber(clampNumber(bubbleShield3dPresetDefault.alpha, 0, 1, 1), 2, 1),
       pulseMs: roundedNumber(clampNumber(bubbleShield3dPresetDefault.pulseMs, 20, 700, 80)),
       pulseMin: fixedNumber(clampNumber(bubbleShield3dPresetDefault.pulseMin, 0, 1, 0.3), 2, 0.3),

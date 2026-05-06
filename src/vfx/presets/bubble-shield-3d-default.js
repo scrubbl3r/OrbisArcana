@@ -1,6 +1,10 @@
 export const BUBBLE_SHIELD_3D_PRESET_DEFAULT = Object.freeze({
   durationMs: 5000,
-  diameterRatio: 1.80,
+  diameterRatio: 1.24,
+  startDiameterRatio: 1.24,
+  endDiameterRatio: 1.80,
+  transitionMs: 420,
+  bounceAmount: 0.28,
   alpha: 1.00,
   pulseMs: 10,
   pulseMin: 0.30,

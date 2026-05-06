@@ -14,9 +14,20 @@ function clampNumber(value, min, max, fallback) {
 export function normalizeBubbleShield3dRuntimeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fallback = BUBBLE_SHIELD_3D_PRESET_DEFAULT;
+  const fallbackStart = fallback.startDiameterRatio ?? fallback.diameterRatio;
+  const startDiameterRatio = clampNumber(
+    source.startDiameterRatio ?? source.diameterRatio ?? source.shieldDiameterRatio,
+    0.1,
+    8,
+    fallbackStart,
+  );
   return Object.freeze({
     durationMs: Math.round(clampNumber(source.durationMs ?? source.shieldMs, 80, 120000, fallback.durationMs)),
-    diameterRatio: clampNumber(source.diameterRatio ?? source.shieldDiameterRatio, 0.1, 8, fallback.diameterRatio),
+    diameterRatio: startDiameterRatio,
+    startDiameterRatio,
+    endDiameterRatio: clampNumber(source.endDiameterRatio, 0.1, 8, fallback.endDiameterRatio ?? startDiameterRatio),
+    transitionMs: Math.round(clampNumber(source.transitionMs, 0, 3000, fallback.transitionMs ?? 420)),
+    bounceAmount: clampNumber(source.bounceAmount, 0, 1.5, fallback.bounceAmount ?? 0.28),
     alpha: clampNumber(source.alpha ?? source.shieldAlpha, 0, 1, fallback.alpha),
     pulseMs: Math.round(clampNumber(source.pulseMs, 20, 700, fallback.pulseMs)),
     pulseMin: clampNumber(source.pulseMin, 0, 1, fallback.pulseMin),
@@ -63,6 +74,23 @@ export function createBubbleShield3dRuntime({
     if (uniforms && uniforms.uTime) uniforms.uTime.value = timeSec;
   }
 
+  function bounceEase(progress, amount) {
+    const t = clampNumber(progress, 0, 1, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    return eased + (Math.sin(t * Math.PI) * clampNumber(amount, 0, 1.5, 0.28) * (1 - t));
+  }
+
+  function setShieldDiameter(elapsedMs) {
+    if (!shield) return;
+    const start = Math.max(0.1, activeConfig.startDiameterRatio);
+    const end = Math.max(0.1, activeConfig.endDiameterRatio);
+    const duration = Math.max(0, activeConfig.transitionMs);
+    const progress = duration <= 0 ? 1 : elapsedMs / duration;
+    const eased = bounceEase(progress, activeConfig.bounceAmount);
+    const current = start + ((end - start) * eased);
+    shield.scale.setScalar(current / end);
+  }
+
   function clear() {
     if (raf) cancelAnimationFrame(raf);
     if (timer) clearTimeout(timer);
@@ -82,6 +110,7 @@ export function createBubbleShield3dRuntime({
     const pulse01 = 0.5 - (Math.cos(pulsePhase) * 0.5);
     const pulseAlpha = activeConfig.pulseMin + ((Math.min(activeConfig.pulseMax, activeConfig.alpha) - activeConfig.pulseMin) * pulse01);
     setShieldTime(elapsed / 1000);
+    setShieldDiameter(elapsed);
     setShieldAlpha(pulseAlpha);
     requestFrame();
     raf = requestAnimationFrame(tick);
@@ -98,8 +127,15 @@ export function createBubbleShield3dRuntime({
     if (!orbModel) return { handled: false, skipped: "orb_model_missing" };
     const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 72);
     startedAtMs = Number(now()) || performance.now();
-    shield = createBubbleShield3dSimplexShell({ bo, config: activeConfig });
+    shield = createBubbleShield3dSimplexShell({
+      bo,
+      config: {
+        ...activeConfig,
+        diameterRatio: activeConfig.endDiameterRatio,
+      },
+    });
     orbModel.add(shield);
+    setShieldDiameter(0);
     setShieldAlpha(activeConfig.alpha);
     timer = setTimeout(clear, activeConfig.durationMs);
     raf = requestAnimationFrame(tick);

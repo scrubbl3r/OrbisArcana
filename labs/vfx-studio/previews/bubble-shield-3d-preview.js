@@ -38,6 +38,12 @@ function layerVisible(button) {
   return !button || button.getAttribute("aria-pressed") !== "false";
 }
 
+function bounceEase(progress, amount) {
+  const t = clampNumber(progress, 0, 1, 1);
+  const eased = 1 - Math.pow(1 - t, 3);
+  return eased + (Math.sin(t * Math.PI) * clampNumber(amount, 0, 1.5, 0.28) * (1 - t));
+}
+
 export function createBubbleShield3dPreview({
   els = {},
   getOrbBaseVisualState = null,
@@ -58,9 +64,14 @@ export function createBubbleShield3dPreview({
   }
 
   function readConfig() {
+    const startDiameterRatio = clampNumber(els.shield3dDiameterRatio && els.shield3dDiameterRatio.value, 0.1, 8, 1.24);
     return {
       durationMs: Math.round(clampNumber(els.shield3dMs && els.shield3dMs.value, 80, 120000, 5000)),
-      diameterRatio: clampNumber(els.shield3dDiameterRatio && els.shield3dDiameterRatio.value, 0.1, 8, 1.24),
+      diameterRatio: startDiameterRatio,
+      startDiameterRatio,
+      endDiameterRatio: clampNumber(els.shield3dEndDiameterRatio && els.shield3dEndDiameterRatio.value, 0.1, 8, 1.8),
+      transitionMs: Math.round(clampNumber(els.shield3dTransitionMs && els.shield3dTransitionMs.value, 0, 3000, 420)),
+      bounceAmount: clampNumber(els.shield3dBounceAmount && els.shield3dBounceAmount.value, 0, 1.5, 0.28),
       alpha: clampNumber(els.shield3dAlpha && els.shield3dAlpha.value, 0, 1, 1),
       pulseMs: Math.round(clampNumber(els.shield3dPulseMs && els.shield3dPulseMs.value, 20, 700, 80)),
       pulseMin: clampNumber(els.shield3dPulseMin && els.shield3dPulseMin.value, 0, 1, 0.3),
@@ -108,6 +119,17 @@ export function createBubbleShield3dPreview({
     });
   }
 
+  function setShieldDiameter(elapsedMs, config) {
+    if (!shield) return;
+    const start = Math.max(0.1, config.startDiameterRatio);
+    const end = Math.max(0.1, config.endDiameterRatio);
+    const duration = Math.max(0, config.transitionMs);
+    const progress = duration <= 0 ? 1 : elapsedMs / duration;
+    const eased = bounceEase(progress, config.bounceAmount);
+    const current = start + ((end - start) * eased);
+    shield.scale.setScalar(current / end);
+  }
+
   function applyLayerVisibility() {
     if (shield) {
       shield.visible = layerVisible(els.shield3dBubbleMeshVisibleBtn)
@@ -145,6 +167,7 @@ export function createBubbleShield3dPreview({
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
         if (shield) {
           setShieldTime(time);
+          setShieldDiameter(nowMs - createdAt, cfg);
           setShieldAlpha(cfg.alpha, cfg);
         }
       },
@@ -166,8 +189,15 @@ export function createBubbleShield3dPreview({
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
     model.add(orbLight);
-    shield = createBubbleShield3dSimplexShell({ bo, config: cfg });
+    shield = createBubbleShield3dSimplexShell({
+      bo,
+      config: {
+        ...cfg,
+        diameterRatio: cfg.endDiameterRatio,
+      },
+    });
     model.add(shield);
+    setShieldDiameter(0, cfg);
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.035));
     inspector.scene.add(model);
     inspector.render();

@@ -1,5 +1,5 @@
 import { createShieldPreview } from "./previews/shield-preview.js?v=20260425d";
-import { createBubbleShield3dPreview } from "./previews/bubble-shield-3d-preview.js?v=20260506b";
+import { createBubbleShield3dPreview } from "./previews/bubble-shield-3d-preview.js?v=20260506c";
 import { createShockwavePreview } from "./previews/shockwave-preview.js?v=20260425d";
 import { createFlameAoePreview } from "./previews/flame-aoe-preview.js?v=20260425d";
 import { createElectricAoePreview } from "./previews/electric-aoe-preview.js?v=20260425d";
