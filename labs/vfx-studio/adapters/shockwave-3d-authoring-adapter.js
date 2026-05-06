@@ -1,6 +1,7 @@
 const SHOCKWAVE_3D_FIELDS = Object.freeze([
   ["shockwave3dSphereCount", "sphereCount"],
   ["shockwave3dSpawnMs", "spawnMs"],
+  ["shockwave3dExpandMs", "expandMs"],
   ["shockwave3dDecayMs", "decayMs"],
   ["shockwave3dStartRatio", "startRatio"],
   ["shockwave3dEndRatio", "endRatio"],
@@ -37,6 +38,7 @@ export function createShockwave3dAuthoringAdapter({
     return {
       sphereCount: roundedNumber(clampNumber(shockwavePresetDefault.rings, 1, 8, 2)),
       spawnMs: roundedNumber(clampNumber(shockwavePresetDefault.spawnMs, 1, 1000, 105)),
+      expandMs: roundedNumber(clampNumber(shockwavePresetDefault.decayMs, 40, 4000, 150)),
       decayMs: roundedNumber(clampNumber(shockwavePresetDefault.decayMs, 40, 4000, 150)),
       startRatio: fixedNumber(clampNumber(shockwavePresetDefault.startRatio, 0.01, 10, 0.43), 2, 0.43),
       endRatio: fixedNumber(clampNumber(shockwavePresetDefault.endRatio, 0.01, 20, 1.69), 2, 1.69),

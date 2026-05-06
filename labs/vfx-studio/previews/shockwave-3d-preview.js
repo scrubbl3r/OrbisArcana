@@ -113,6 +113,7 @@ export function createShockwave3dPreview({
     return Object.freeze({
       sphereCount: Math.round(clampNumber(els.shockwave3dSphereCount && els.shockwave3dSphereCount.value, 1, 8, 2)),
       spawnMs: Math.round(clampNumber(els.shockwave3dSpawnMs && els.shockwave3dSpawnMs.value, 1, 1000, 105)),
+      expandMs: Math.round(clampNumber(els.shockwave3dExpandMs && els.shockwave3dExpandMs.value, 40, 4000, 150)),
       decayMs: Math.round(clampNumber(els.shockwave3dDecayMs && els.shockwave3dDecayMs.value, 40, 4000, 150)),
       startRatio: Number(clampNumber(els.shockwave3dStartRatio && els.shockwave3dStartRatio.value, 0.01, 10, 0.43).toFixed(2)),
       endRatio: Number(clampNumber(els.shockwave3dEndRatio && els.shockwave3dEndRatio.value, 0.01, 20, 1.69).toFixed(2)),
@@ -130,6 +131,7 @@ export function createShockwave3dPreview({
     if (!config) return;
     if (els.shockwave3dSphereCount) els.shockwave3dSphereCount.value = String(config.sphereCount);
     if (els.shockwave3dSpawnMs) els.shockwave3dSpawnMs.value = String(config.spawnMs);
+    if (els.shockwave3dExpandMs) els.shockwave3dExpandMs.value = String(config.expandMs);
     if (els.shockwave3dDecayMs) els.shockwave3dDecayMs.value = String(config.decayMs);
     if (els.shockwave3dStartRatio) els.shockwave3dStartRatio.value = config.startRatio.toFixed(2);
     if (els.shockwave3dEndRatio) els.shockwave3dEndRatio.value = config.endRatio.toFixed(2);
@@ -229,11 +231,12 @@ export function createShockwave3dPreview({
     for (let i = activeRings.length - 1; i >= 0; i -= 1) {
       const ring = activeRings[i];
       const age = Math.max(0, now - ring.born);
-      const t01 = Math.max(0, Math.min(1, age / activeConfig.decayMs));
-      const scale = activeConfig.startRatio + ((activeConfig.endRatio - activeConfig.startRatio) * t01);
+      const expandT01 = Math.max(0, Math.min(1, age / activeConfig.expandMs));
+      const fadeT01 = Math.max(0, Math.min(1, age / activeConfig.decayMs));
+      const scale = activeConfig.startRatio + ((activeConfig.endRatio - activeConfig.startRatio) * expandT01);
       ring.mesh.scale.setScalar(scale);
-      ring.material.uniforms.uOpacity.value = (t01 <= 0 ? 0 : (1 - t01)) * activeConfig.colorA;
-      if (t01 >= 1) {
+      ring.material.uniforms.uOpacity.value = (fadeT01 <= 0 ? 0 : (1 - fadeT01)) * activeConfig.colorA;
+      if (fadeT01 >= 1) {
         disposeRing(ring);
         activeRings.splice(i, 1);
       }
