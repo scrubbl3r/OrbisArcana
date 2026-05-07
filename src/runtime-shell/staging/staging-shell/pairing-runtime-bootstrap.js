@@ -28,9 +28,6 @@ export async function bootstrapShellPairingRuntime({
 
   let calibInFlight = false;
   let calibAvailable = false;
-  let uiOverlaysSystem = null;
-  let mobileImpulseSystem = null;
-  let lanSession = null;
   let lastCalibStatus = "";
 
   updateBootUi(rootDocument, bootStatus.pairingBooting, "Loading pairing systems");
@@ -39,7 +36,7 @@ export async function bootstrapShellPairingRuntime({
   const { createMobileImpulseSystem } = await import("../../receiver/mobile-impulse-runtime.js");
   const { createLanSessionSystem } = await import("../../session/lan-session.js");
 
-  uiOverlaysSystem = createUiOverlaysSystem({
+  const uiOverlaysSystem = createUiOverlaysSystem({
     startScreenEl,
     calibOverlayEl,
     calibBtnEl,
@@ -86,7 +83,7 @@ export async function bootstrapShellPairingRuntime({
     shellOnboardingOverlay.parentNode.removeChild(shellOnboardingOverlay);
   };
 
-  mobileImpulseSystem = createMobileImpulseSystem({
+  const mobileImpulseSystem = createMobileImpulseSystem({
     idleMarkActivity: () => {},
     applyDataToUI: (data) => {
       handleImpulseFrame(data);
@@ -114,7 +111,7 @@ export async function bootstrapShellPairingRuntime({
     isInputSuppressed: () => false,
   });
 
-  lanSession = createLanSessionSystem({
+  const lanSession = createLanSessionSystem({
     AblyCtor: (win.Ably && win.Ably.Realtime) ? win.Ably.Realtime : null,
     QRCodeLib: (win.QRCode) ? win.QRCode : null,
     workerBase,
