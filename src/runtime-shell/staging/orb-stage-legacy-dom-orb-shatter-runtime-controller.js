@@ -28,7 +28,7 @@ function colorPart(value, fallback, clamp = defaultClamp) {
   return clamp(Number.isFinite(n) ? n : fallback, 0, 255);
 }
 
-export function createLegacyDomOrbShatterRuntimeController({
+export function createOrbStageLegacyDomOrbShatterRuntimeController({
   root = globalThis.document && globalThis.document.documentElement,
   getOrbEl,
   getOrbShatterRuntime,
