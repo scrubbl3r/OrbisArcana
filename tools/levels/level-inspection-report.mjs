@@ -1,5 +1,5 @@
 export function readLevelInspectionReportValue(report = {}, key = "") {
-  if (key === "spawnMarkerCount") return Array.isArray(report.spawnMarkers) ? report.spawnMarkers.length : 0;
+  if (key === "spawnCount") return Number(report.spawnCount) || (Array.isArray(report.spawnMarkers) ? report.spawnMarkers.length : 0);
   if (key === "worldItemSpawnCount") return Array.isArray(report.worldItemSpawns) ? report.worldItemSpawns.length : 0;
   if (key === "occupiedTileCount") {
     return Number(report.boundaryTileMask && report.boundaryTileMask.occupiedTileCount) || 0;
@@ -11,7 +11,7 @@ export function formatLevelInspectionSummary(report = {}) {
   return (
     `${report.levelId || "unknown"} svg ok: loops=${Number(report.loopCount) || 0}` +
     ` camLoops=${Number(report.cameraBoundaryLoopCount) || 0}` +
-    ` spawns=${readLevelInspectionReportValue(report, "spawnMarkerCount")}` +
+    ` spawns=${readLevelInspectionReportValue(report, "spawnCount")}` +
     ` globes=${readLevelInspectionReportValue(report, "worldItemSpawnCount")}` +
     ` props=${Number(report.propCount) || 0}` +
     ` art=${Number(report.artShapeCount) || 0}` +

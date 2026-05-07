@@ -102,6 +102,7 @@ const report = {
     authoredRadius: spawn.authoredRadius,
     worldCenter: spawn.worldCenter,
   })),
+  spawnCount: summary.spawnMarkers.length,
   cameraAnchors: summary.cameraAnchors.map((anchor) => ({
     id: anchor.id,
     authoredCenter: anchor.authoredCenter,
