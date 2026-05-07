@@ -410,27 +410,38 @@ function shellWorldHeight(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   const runtimeWorldHeight = Number(stage && stage.phys && stage.phys.worldHeightPx);
   if (Number.isFinite(runtimeWorldHeight) && runtimeWorldHeight > 0) return runtimeWorldHeight;
-  const activeLevel = shellActiveStageLevel(shellContext);
-  if (activeLevel) {
-    const levelWorldSize = resolveLevelWorldSize(activeLevel);
-    const heightPx = Number(levelWorldSize && levelWorldSize.heightPx);
-    if (Number.isFinite(heightPx) && heightPx > 0) return heightPx;
-  }
-  return 5000;
+  const worldSize = shellActiveStageWorldSize(shellContext);
+  return worldSize.heightPx;
 }
 
 function shellWorldWidth(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   const runtimeWorldWidth = Number(stage && stage.phys && stage.phys.worldWidthPx);
   if (Number.isFinite(runtimeWorldWidth) && runtimeWorldWidth > 0) return runtimeWorldWidth;
+  const worldSize = shellActiveStageWorldSize(shellContext);
+  return worldSize.widthPx;
+}
+
+function shellActiveStageWorldSize(shellContext) {
   const activeLevel = shellActiveStageLevel(shellContext);
   if (activeLevel) {
     const levelWorldSize = resolveLevelWorldSize(activeLevel);
     const widthPx = Number(levelWorldSize && levelWorldSize.widthPx);
-    if (Number.isFinite(widthPx) && widthPx > 0) return widthPx;
+    const heightPx = Number(levelWorldSize && levelWorldSize.heightPx);
+    if (
+      Number.isFinite(widthPx) &&
+      widthPx > 0 &&
+      Number.isFinite(heightPx) &&
+      heightPx > 0
+    ) {
+      return { widthPx, heightPx };
+    }
   }
   const rect = shellStageRect(shellContext);
-  return Math.max(1, Number(rect.width) || 0);
+  return {
+    widthPx: Math.max(1, Number(rect.width) || 0),
+    heightPx: 5000,
+  };
 }
 
 function shellActiveStageCameraFollowMode(shellContext) {
