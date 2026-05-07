@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-stage-backdrop.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507m";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507n";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1917,7 +1917,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
   const vfxDefaults = runtime.vfxDefaults || createShellReceiverVfxDefaults();
   return initOrbStageReceiverVfxRuntime({
     runtime,
-    legacyDomStageEls: shellContext.stageEls || {},
+    legacyDomStageEls: getShellLegacyDomStageElements(shellContext),
     createVfxRuntimesBundle,
     rootStyle,
     vfxDefaults,
@@ -2195,6 +2195,10 @@ function getActiveShellStageElements(shellContext) {
     : {};
 }
 
+function getShellLegacyDomStageElements(shellContext) {
+  return shellContext && shellContext.stageEls ? shellContext.stageEls : {};
+}
+
 function getActiveShellStageRoot(shellContext) {
   const adapter = getActiveShellStageAdapter(shellContext);
   return adapter && adapter.refs ? adapter.refs.root || null : null;
@@ -2245,7 +2249,7 @@ function createShellOrbStageActions(shellContext) {
   if (!runtime) return null;
   return createOrbStageActionBridge({
     runtime,
-    legacyDomShieldEl: shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null,
+    legacyDomShieldEl: getShellLegacyDomStageElements(shellContext).shield || null,
     patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
     getOrbRuntime: () => getShellOrbRuntime(shellContext),
     applyOrbTransform: () => applyShellOrbTransform(shellContext),
