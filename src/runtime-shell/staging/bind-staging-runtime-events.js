@@ -24,12 +24,12 @@ export function bindStagingRuntimeEvents({
   playOrbNod = () => {},
   clearFloatGrace = () => {},
   renderLegacyDomOrbDamageVisuals = () => {},
-  spawnShardFx = () => {},
+  spawnLegacyDomOrbShardFx = () => {},
   clearOrbRuntimeFxForDeath = () => {},
   scheduleDeathOverlay = () => {},
   updateDebugReadout = () => {},
   legacyDomOrbShatterController = null,
-  stopShardSim = () => {},
+  stopLegacyDomOrbShardSim = () => {},
   worldSystem = null,
   resetOrbStrokeColor = () => {},
   clearDeathOverlaySchedule = () => {},
@@ -60,7 +60,7 @@ export function bindStagingRuntimeEvents({
   }
 
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderLegacyDomOrbDamageVisuals);
-  eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnShardFx);
+  eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnLegacyDomOrbShardFx);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
     if (
       legacyDomOrbShatterController &&
@@ -110,7 +110,7 @@ export function bindStagingRuntimeEvents({
     ) {
       legacyDomOrbShatterController.handleOrbShatterComplete();
     } else {
-      stopShardSim();
+      stopLegacyDomOrbShardSim();
     }
   });
   if (!skipVoiceSpellCastBinding) {
