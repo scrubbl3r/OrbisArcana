@@ -1,5 +1,5 @@
 import { createGameStageRuntimeAdapter } from "../game-stage/game-stage-runtime-adapter.js?v=20260506a";
-import { createLegacyDomOrbStageAdapter } from "../dom-orb-stage-adapter.js";
+import { createLegacyDomOrbStageAdapter } from "../legacy-dom-orb-stage-adapter.js";
 
 const ORB_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
