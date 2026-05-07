@@ -393,7 +393,7 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function playLegacyDomOrbShatterFallback(payload = {}) {
+  function playOrbStageLegacyDomOrbShatterFallback(payload = {}) {
     const controller = runtime && runtime.legacyDomOrbShatterController;
     if (controller && typeof controller.spawnShardVfx === "function") {
       controller.spawnShardVfx(payload);
@@ -402,12 +402,12 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function getLegacyDomOrbShatterRuntime() {
+  function getOrbStageLegacyDomOrbShatterRuntime() {
     return stageVfx.legacyDomOrbShatterRuntime || null;
   }
 
-  function clearLegacyDomOrbShatterRuntime() {
-    const shatterRuntime = getLegacyDomOrbShatterRuntime();
+  function clearOrbStageLegacyDomOrbShatterRuntime() {
+    const shatterRuntime = getOrbStageLegacyDomOrbShatterRuntime();
     if (shatterRuntime && typeof shatterRuntime.clear === "function") {
       shatterRuntime.clear();
       return { handled: true };
@@ -452,7 +452,7 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function clearLegacyDomOrbDeathVfx() {
+  function clearOrbStageLegacyDomOrbDeathVfx() {
     if (stageVfx.legacyDomShockwaveRuntime && typeof stageVfx.legacyDomShockwaveRuntime.clear === "function") {
       stageVfx.legacyDomShockwaveRuntime.clear();
     }
@@ -475,9 +475,9 @@ export function initOrbStageReceiverVfxRuntime({
 
   const shellVfx = {
     vfxDefaults,
-    clearLegacyDomOrbDeathVfx,
-    clearLegacyDomOrbShatterRuntime,
-    getLegacyDomOrbShatterRuntime,
+    clearLegacyDomOrbDeathVfx: clearOrbStageLegacyDomOrbDeathVfx,
+    clearLegacyDomOrbShatterRuntime: clearOrbStageLegacyDomOrbShatterRuntime,
+    getLegacyDomOrbShatterRuntime: getOrbStageLegacyDomOrbShatterRuntime,
     playShock() {
       return playOrbStageShockFallback();
     },
@@ -559,12 +559,12 @@ export function initOrbStageReceiverVfxRuntime({
         targetKind: "orb-state",
         targetId: "shattered",
         runtime: {
-          playOrbShatter: (nextPayload = {}) => playLegacyDomOrbShatterFallback(nextPayload),
+          playOrbShatter: (nextPayload = {}) => playOrbStageLegacyDomOrbShatterFallback(nextPayload),
         },
         payload,
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return playLegacyDomOrbShatterFallback(payload);
+      return playOrbStageLegacyDomOrbShatterFallback(payload);
     },
     playOrbNod(payload = {}) {
       const dispatched = dispatchRuntimeEffect({
