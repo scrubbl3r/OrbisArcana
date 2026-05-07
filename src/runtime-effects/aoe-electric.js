@@ -10,13 +10,3 @@ export function executeAoeElectric({
   playElectricAoe();
   return { handled: true };
 }
-
-export function playElectricAoeRuntime({
-  legacyDomElectricAoeRuntime,
-} = {}) {
-  if (!legacyDomElectricAoeRuntime || typeof legacyDomElectricAoeRuntime.play !== "function") {
-    return { handled: false };
-  }
-  legacyDomElectricAoeRuntime.play();
-  return { handled: true };
-}

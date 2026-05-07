@@ -11,18 +11,3 @@ export function executeShockwave({
   triggerShockwave();
   return { handled: true };
 }
-
-export function triggerShockwaveRuntime({
-  legacyDomShockwaveRuntime,
-  playShock,
-} = {}) {
-  if (legacyDomShockwaveRuntime && typeof legacyDomShockwaveRuntime.trigger === "function") {
-    legacyDomShockwaveRuntime.trigger();
-    return { handled: true, mode: "runtime_trigger" };
-  }
-  if (typeof playShock === "function") {
-    playShock();
-    return { handled: true, mode: "play_fallback" };
-  }
-  return { handled: false };
-}
