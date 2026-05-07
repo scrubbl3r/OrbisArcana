@@ -95,11 +95,5 @@ export function createOrbStageRuntimeAdapter({
         ...collectOrbStageVisualRefs(stageRefs),
       });
     },
-    getOrbVisualRefs() {
-      return Object.freeze({
-        ...collectOrbStageVisualRefs(stageRefs),
-        deathPanel: stageRefs.deathPanel,
-      });
-    },
   });
 }
