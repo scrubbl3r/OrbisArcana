@@ -19,9 +19,9 @@ import {
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507ae";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507e";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507j";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507k";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507k";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507l";
 import { createShellReceiverConfigs } from "./receiver-configs.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507ck";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507cl";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2050,14 +2050,14 @@ async function initShellReceiverHostRuntime(shellContext) {
       allDirLampOff: () => allShellDirectionLampsOff(shellContext),
       flashDirLampPair: (a, b, ms) => flashShellDirectionLampPair(shellContext, a, b, ms),
       flashDirLampSingle: (code, ms) => flashShellDirectionLampSingle(shellContext, code, ms),
-      renderLegacyDomOrbDamageVisuals: () => renderShellOrbStageLegacyDomOrbDamageVisuals(shellContext),
-      spawnLegacyDomOrbShatterShardVfx: (payload) => spawnShellOrbStageLegacyDomOrbShatterShardVfx(shellContext, payload),
+      renderOrbStageLegacyDomOrbDamageVisuals: () => renderShellOrbStageLegacyDomOrbDamageVisuals(shellContext),
+      spawnOrbStageLegacyDomOrbShatterShardVfx: (payload) => spawnShellOrbStageLegacyDomOrbShatterShardVfx(shellContext, payload),
       clearOrbDeathRuntimeVfx: () => clearShellOrbDeathRuntimeVfx(shellContext),
       scheduleDeathOverlay: () => scheduleShellDeathOverlay(shellContext, 3000),
       clearDeathOverlaySchedule: () => clearShellDeathOverlaySchedule(shellContext),
       closeDeathOverlay: () => closeShellDeathOverlay(shellContext),
-      stopLegacyDomOrbShatterShardSim: () => stopShellOrbStageLegacyDomOrbShatterShardSim(shellContext),
-      legacyDomOrbShatterController: runtime.legacyDomOrbShatterController || null,
+      stopOrbStageLegacyDomOrbShatterShardSim: () => stopShellOrbStageLegacyDomOrbShatterShardSim(shellContext),
+      orbStageLegacyDomOrbShatterController: runtime.legacyDomOrbShatterController || null,
       setOrbInputSuppressed: (next) => { runtime.orbInputSuppressed = !!next; },
       playElectricAoe: () => {
         const shellVfx = runtime.vfx || null;
@@ -2893,7 +2893,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507ae",
+  moduleCacheBustV = "20260507af",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

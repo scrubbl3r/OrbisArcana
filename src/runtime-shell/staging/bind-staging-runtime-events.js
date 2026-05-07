@@ -23,13 +23,13 @@ export function bindStagingRuntimeEvents({
   playElectricAoe = () => {},
   playOrbNod = () => {},
   clearFloatGrace = () => {},
-  renderLegacyDomOrbDamageVisuals = () => {},
-  spawnLegacyDomOrbShatterShardVfx = () => {},
+  renderOrbStageLegacyDomOrbDamageVisuals = () => {},
+  spawnOrbStageLegacyDomOrbShatterShardVfx = () => {},
   clearOrbDeathRuntimeVfx = () => {},
   scheduleDeathOverlay = () => {},
   updateDebugReadout = () => {},
-  legacyDomOrbShatterController: orbStageLegacyDomOrbShatterController = null,
-  stopLegacyDomOrbShatterShardSim = () => {},
+  orbStageLegacyDomOrbShatterController = null,
+  stopOrbStageLegacyDomOrbShatterShardSim = () => {},
   worldSystem = null,
   resetOrbStrokeColor = () => {},
   clearDeathOverlaySchedule = () => {},
@@ -84,12 +84,12 @@ export function bindStagingRuntimeEvents({
     ) {
       orbStageLegacyDomOrbShatterController.handleOrbShatterComplete();
     } else {
-      stopLegacyDomOrbShatterShardSim();
+      stopOrbStageLegacyDomOrbShatterShardSim();
     }
   }
 
-  eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderLegacyDomOrbDamageVisuals);
-  eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnLegacyDomOrbShatterShardVfx);
+  eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderOrbStageLegacyDomOrbDamageVisuals);
+  eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnOrbStageLegacyDomOrbShatterShardVfx);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
     handleOrbStageLegacyDomOrbDied();
     setOrbInputSuppressed(true);
@@ -106,7 +106,7 @@ export function bindStagingRuntimeEvents({
     closeDeathOverlay();
     if (worldSystem) worldSystem.reset(performance.now());
     resetOrbStrokeColor(true);
-    renderLegacyDomOrbDamageVisuals();
+    renderOrbStageLegacyDomOrbDamageVisuals();
     updateDebugReadout();
   });
   eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {

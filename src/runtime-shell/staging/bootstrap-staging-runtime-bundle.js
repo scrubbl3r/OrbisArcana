@@ -33,7 +33,7 @@ export function bootstrapStagingRuntimeBundle({
   worldSystem = null,
   clearDeathOverlaySchedule = () => {},
   closeDeathOverlay = () => {},
-  renderLegacyDomOrbDamageVisuals: renderOrbStageLegacyDomOrbDamageVisuals = () => {},
+  renderOrbStageLegacyDomOrbDamageVisuals = () => {},
   updateDebugReadout = () => {},
   setOrbInputSuppressed = () => {},
 } = {}) {
