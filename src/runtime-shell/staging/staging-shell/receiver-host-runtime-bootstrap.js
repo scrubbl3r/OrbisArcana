@@ -298,8 +298,13 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     clearFloatGrace: () => {
       if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace();
     },
-    renderOrbDamageVisuals: () => {
-      if (shellHooks && typeof shellHooks.renderOrbDamageVisuals === "function") shellHooks.renderOrbDamageVisuals();
+    renderLegacyDomOrbDamageVisuals: () => {
+      if (
+        shellHooks &&
+        typeof shellHooks.renderLegacyDomOrbDamageVisuals === "function"
+      ) {
+        shellHooks.renderLegacyDomOrbDamageVisuals();
+      }
     },
     spawnShardFx: (payload) => {
       if (shellHooks && typeof shellHooks.spawnShardFx === "function") shellHooks.spawnShardFx(payload);
@@ -378,8 +383,13 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     closeDeathOverlay: () => {
       if (shellHooks && typeof shellHooks.closeDeathOverlay === "function") shellHooks.closeDeathOverlay();
     },
-    renderOrbDamageVisuals: () => {
-      if (shellHooks && typeof shellHooks.renderOrbDamageVisuals === "function") shellHooks.renderOrbDamageVisuals();
+    renderLegacyDomOrbDamageVisuals: () => {
+      if (
+        shellHooks &&
+        typeof shellHooks.renderLegacyDomOrbDamageVisuals === "function"
+      ) {
+        shellHooks.renderLegacyDomOrbDamageVisuals();
+      }
     },
     updateDebugReadout: () => {
       if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
