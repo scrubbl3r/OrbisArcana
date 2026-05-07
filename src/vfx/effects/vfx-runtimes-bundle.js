@@ -8,7 +8,7 @@ import { createElectricAoeRuntime } from "./spells/electric-aoe-runtime.js";
  * @typedef {Object} VfxRuntimesBundle
  * @property {Object|null} bubbleShieldRuntime
  * @property {Object|null} shockwaveRuntime
- * @property {Object|null} orbShatterRuntime
+ * @property {Object|null} legacyDomOrbShatterRuntime
  * @property {Object|null} flameAoeRuntime
  * @property {Object|null} electricAoeRuntime
  * @property {() => void} clearAll
@@ -24,7 +24,7 @@ import { createElectricAoeRuntime } from "./spells/electric-aoe-runtime.js";
  * @param {Object} [options]
  * @param {Object} [options.bubbleShield]
  * @param {Object} [options.shockwave]
- * @param {Object} [options.orbShatter]
+ * @param {Object} [options.legacyDomOrbShatter]
  * @param {Object} [options.flameAoe]
  * @param {Object} [options.electricAoe]
  * @returns {VfxRuntimesBundle}
@@ -32,14 +32,16 @@ import { createElectricAoeRuntime } from "./spells/electric-aoe-runtime.js";
 export function createVfxRuntimesBundle(options = {}) {
   const bubbleShieldRuntime = options.bubbleShield ? createBubbleShieldRuntime(options.bubbleShield) : null;
   const shockwaveRuntime = options.shockwave ? createShockwaveRuntime(options.shockwave) : null;
-  const orbShatterRuntime = options.orbShatter ? createLegacyDomOrbShatterRuntime(options.orbShatter) : null;
+  const legacyDomOrbShatterRuntime = options.legacyDomOrbShatter
+    ? createLegacyDomOrbShatterRuntime(options.legacyDomOrbShatter)
+    : null;
   const flameAoeRuntime = options.flameAoe ? createFlameAoeRuntime(options.flameAoe) : null;
   const electricAoeRuntime = options.electricAoe ? createElectricAoeRuntime(options.electricAoe) : null;
 
   function clearAll() {
     try { shockwaveRuntime && typeof shockwaveRuntime.clear === "function" && shockwaveRuntime.clear(); } catch (_) {}
     try { bubbleShieldRuntime && typeof bubbleShieldRuntime.off === "function" && bubbleShieldRuntime.off(); } catch (_) {}
-    try { orbShatterRuntime && typeof orbShatterRuntime.clear === "function" && orbShatterRuntime.clear(); } catch (_) {}
+    try { legacyDomOrbShatterRuntime && typeof legacyDomOrbShatterRuntime.clear === "function" && legacyDomOrbShatterRuntime.clear(); } catch (_) {}
     try { flameAoeRuntime && typeof flameAoeRuntime.clear === "function" && flameAoeRuntime.clear(); } catch (_) {}
     try { electricAoeRuntime && typeof electricAoeRuntime.clear === "function" && electricAoeRuntime.clear(); } catch (_) {}
   }
@@ -47,7 +49,7 @@ export function createVfxRuntimesBundle(options = {}) {
   function destroy() {
     try { bubbleShieldRuntime && typeof bubbleShieldRuntime.destroy === "function" && bubbleShieldRuntime.destroy(); } catch (_) {}
     try { shockwaveRuntime && typeof shockwaveRuntime.destroy === "function" && shockwaveRuntime.destroy(); } catch (_) {}
-    try { orbShatterRuntime && typeof orbShatterRuntime.destroy === "function" && orbShatterRuntime.destroy(); } catch (_) {}
+    try { legacyDomOrbShatterRuntime && typeof legacyDomOrbShatterRuntime.destroy === "function" && legacyDomOrbShatterRuntime.destroy(); } catch (_) {}
     try { flameAoeRuntime && typeof flameAoeRuntime.destroy === "function" && flameAoeRuntime.destroy(); } catch (_) {}
     try { electricAoeRuntime && typeof electricAoeRuntime.destroy === "function" && electricAoeRuntime.destroy(); } catch (_) {}
   }
@@ -55,7 +57,7 @@ export function createVfxRuntimesBundle(options = {}) {
   return {
     bubbleShieldRuntime,
     shockwaveRuntime,
-    orbShatterRuntime,
+    legacyDomOrbShatterRuntime,
     flameAoeRuntime,
     electricAoeRuntime,
     clearAll,

@@ -156,7 +156,7 @@ export function initOrbStageReceiverVfxRuntime({
       clamp,
       normalizeStroke: evenStroke,
     },
-    orbShatter: {
+    legacyDomOrbShatter: {
       layerEl: legacyDomEls.orbShards,
       clamp,
     },
@@ -184,7 +184,7 @@ export function initOrbStageReceiverVfxRuntime({
     vfxDefaults,
     legacyDomBubbleShieldRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.bubbleShieldRuntime,
     legacyDomShockwaveRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.shockwaveRuntime,
-    legacyDomOrbShatterRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.orbShatterRuntime,
+    legacyDomOrbShatterRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomOrbShatterRuntime,
     legacyDomOrbNodRuntime: createOrbNodRuntime({
       orbEl: legacyDomEls.orb,
       mountEl: legacyDomEls.orb ? legacyDomEls.orb.parentElement : null,
