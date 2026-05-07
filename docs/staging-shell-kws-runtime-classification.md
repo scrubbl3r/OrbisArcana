@@ -1,7 +1,7 @@
 # Staging Shell KWS Runtime Classification
 
-Date: 2026-04-06
-Branch: `ssot-runtime-shell-cleanup`
+Date: 2026-05-07
+Branch: `05/06/26-Orbis-Arcana-3D`
 
 ## Goal
 
@@ -13,22 +13,26 @@ so we can identify the next clean extraction seam without destabilizing the acti
 
 ## Main Conclusion
 
-`initShellKwsRuntime(...)` is currently a mixed domain made of four distinct responsibilities:
+`initShellKwsRuntime(...)` is currently a shell composition point built from four distinct responsibilities:
 
 1. reusable KWS runtime boot
 2. dev-surface KWS bridge wiring
 3. shell gameplay/spell/VFX integration
 4. shell-local wake-window / rule trace helpers
 
-So the next good move is **not** to lift the whole function into one giant helper.
+The first pass of that split is now done.
 
-The good move is to split it by responsibility.
+The good move remains to split by responsibility, but the current decision point is no longer "where is the KWS bootstrap seam?" It is now "how thin should the remaining shell composer become before promotion?"
 
 ## Classification
 
 ### A. Reusable KWS runtime boot
 
-These parts look like genuine KWS/bootstrap responsibilities and are strong candidates for shared extraction:
+These parts are now extracted into:
+
+- `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/runtime-shell/staging/staging-shell/kws-runtime-bootstrap.js`
+
+The extracted helper owns:
 
 - shared module lookup/validation for:
   - `bootstrapKwsStaging`
@@ -48,13 +52,10 @@ These parts look like genuine KWS/bootstrap responsibilities and are strong cand
 - KWS panel/runtime/controller/orchestrator bootstrap
 - KWS voice runtime bootstrap
 - listen policy controller bootstrap
-- runtime controller startup:
-  - backend selection
-  - voice engine selection
-  - mic enable
-  - autostart watchdog
+- base KWS runtime commands
+- KWS runtime config
 
-This is the clearest candidate for a future dedicated KWS bootstrap helper.
+The remaining runtime controller startup call still happens from `initShellKwsRuntime(...)`, but the base runtime/controller/orchestrator/provider construction lane is real.
 
 ### B. Dev-surface KWS bridge glue
 
@@ -74,39 +75,45 @@ It is the shell/dev-surface bridge.
 
 ### C. Shell-local gameplay / spell / VFX integration
 
-These parts are clearly shell/game integration and should not be hidden inside generic KWS bootstrap:
+These parts are clearly shell/game integration and should not be hidden inside generic KWS bootstrap.
+
+Already extracted:
+
+- voice spell cast handling:
+  - `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/runtime-shell/staging/staging-shell/shell-voice-spell-runtime.js`
+- spell action handler / cast executor assembly:
+  - `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/runtime-shell/staging/staging-shell/shell-spell-action-runtime.js`
+- rule-action execution bridge:
+  - `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/runtime-shell/staging/staging-shell/shell-rule-action-runtime.js`
+
+Still composed in `initShellKwsRuntime(...)`:
 
 - `hydrateReceiverBootstrapState(...)` with shell-specific state capture
 - shell VFX default hydration
 - `initShellReceiverVfxRuntime(...)`
-- shell spell action handlers:
-  - `createSpellActionHandlersImported(...)`
-- shell spell cast executor:
-  - `createSpellCastExecutor(...)`
 - shell gameplay hooks:
   - `shellTeleportOrbToSpawnNeutralizePhysics(...)`
   - `shellActivateBubbleShield(...)`
-  - `shellGrantSuperGrace(...)`
+  - `shellGrantOrbGrace(...)`
   - `shellApplyColorize(...)`
   - `shellClearColorize(...)`
-- shell rule-action execution bridge:
-  - `bindShellRuleActionRuntime(...)`
 
 This is not “KWS runtime” in the pure sense.
-It is shell spell/gameplay integration attached to KWS/rule events.
+It is shell spell/gameplay integration attached to KWS/rule events. The heavy assembly now has named helper modules; the shell composer still supplies concrete stage/VFX callbacks.
 
 ### D. Shell-local wake-window and trace helpers
 
-These parts are still embedded in the shell file and look like their own small subdomain:
+Wake-window behavior is now extracted into:
 
-- `buildShellRootWakeWindowMap(...)`
-- `bindShellRootWakeWindows(...)`
-- `bindShellWakeWindowVisuals(...)`
+- `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/runtime-shell/staging/staging-shell/kws-wake-window-bridge.js`
+
+Still embedded in the shell file:
+
 - rule/action trace log subscriptions
 
 They are related to KWS, but they are not the same as KWS provider/runtime boot.
 
-These likely deserve a separate shell KWS bridge helper rather than staying in the main runtime file forever.
+The remaining trace subscriptions may eventually move into a shell KWS composition helper, but they are low-risk to keep at the composition point for now.
 
 ## What `runtime.kws` Currently Represents
 
@@ -116,16 +123,16 @@ These likely deserve a separate shell KWS bridge helper rather than staying in t
 - listen policy state
 - schema/word indexes
 - rule engine preview system
-- shell spell handlers / executor / rule runtime
+- shell spell handlers / executor / rule runtime from extracted helper modules
 - bridge disposers / trace subscriptions
 
 That is useful at runtime, but it also reflects how many responsibilities are currently merged into one lane.
 
 ## Best Next Extraction Options
 
-### Option 1: Extract reusable KWS bootstrap first
+### Option 1: Keep the current modular composition
 
-Move out the part that creates:
+Already done:
 
 - `kwsBridge`
 - `kwsPanelController`
@@ -133,55 +140,59 @@ Move out the part that creates:
 - `kwsBootOrchestrator`
 - `kwsVoiceRuntime`
 - `kwsListenPolicyController`
-- base KWS event binding
+- KWS runtime commands
+- wake-window bridge/visuals
+- voice spell bridge
+- spell action runtime assembly
+- rule-action runtime bridge
 
-Keep shell spell/VFX integration and shell wake-window helpers at the call site for now.
+Keep final shell composition, trace subscriptions, runtime startup, and `runtime.kws` assembly at the call site for now.
 
 Pros:
 
-- lowest-risk KWS extraction
-- creates a real KWS bootstrap seam
-- does not hide shell gameplay wiring inside a generic helper
+- the responsibilities are now named
+- `create-staging-shell-runtime.js` remains the shell composition owner
+- avoids another large behavior-sensitive move
 
 Cons:
 
-- `initShellKwsRuntime(...)` would still remain substantial
+- `initShellKwsRuntime(...)` remains substantial
 
-### Option 2: Extract shell KWS/gameplay bridge first
+### Option 2: Extract a shell KWS composition helper
 
 Move out:
 
-- shell spell action handler creation
-- shell spell executor creation
-- shell rule-action runtime binding
-- shell wake-window bridge/visuals
+- KWS event handler binding
+- listen-policy sync bridge
+- rule/action trace subscriptions
+- calls into wake-window, spell action, voice spell, and rule-action helpers
+- final `runtime.kws` assembly
 
 Pros:
 
-- directly reduces the shell-specific knot
+- directly thins `create-staging-shell-runtime.js`
+- creates a named KWS composition boundary
 
 Cons:
 
 - more behavior-sensitive
-- more entangled with spell/VFX/runtime semantics
+- risks moving composition complexity without simplifying it
 
 ## Recommendation
 
-I recommend **Option 1 first**:
+I recommend **Option 1 for now**:
 
-- extract reusable KWS bootstrap first
+- keep the current modular composition and smoke it
 
 Reason:
 
-- it follows the same pattern that worked for receiver-host bootstrap and pairing bootstrap
-- it preserves a clear boundary:
-  - generic KWS/runtime boot
-  - shell-specific spell/VFX/dev-surface wiring
-- it is the safer way to thin `create-staging-shell-runtime.js`
+- the highest-value extractions are now complete
+- the remaining code is shell composition, not generic KWS bootstrap residue
+- another extraction would be mostly aesthetic unless we specifically want a thinner composer before promotion
 
 ## Suggested Boundary
 
-The first KWS helper should probably return a bundle roughly like:
+Current extracted KWS/runtime helper returns a bundle roughly like:
 
 - `eventBus`
 - `kwsBridge`
@@ -197,24 +208,29 @@ The first KWS helper should probably return a bundle roughly like:
 - `kwsDebugState`
 - `kwsBackendKey`
 - `receiverEvents`
-- base KWS event disposers
+- `kwsRuntimeCommands`
 
-Then `create-staging-shell-runtime.js` can keep:
+Current shell helper modules own:
 
-- shell VFX/spell integration
-- shell wake-window visuals/trace hookups
+- wake-window bridge/visuals
+- voice spell dispatch
+- spell action runtime assembly
+- rule-action execution bridge
+
+`create-staging-shell-runtime.js` still owns:
+
+- shell VFX initialization
+- concrete shell gameplay callbacks
+- KWS event binding and trace subscriptions
 - final `runtime.kws` assembly
 
 ## Recommendation To User
 
-If we continue right now, the best next slice is:
+If we continue right now, the best next slice is probably:
 
-- extract the reusable KWS bootstrap/runtime construction lane
+- either smoke/readiness audit for promoting the staging shell
+- or a deliberately small shell-composer extraction for trace/listen-policy/final assembly
 
 Not:
 
-- shell spell/VFX integration
-- not wake-window visual behavior
-- not rule-action execution glue
-
-Those can come after the base KWS bootstrap seam is real.
+- another broad KWS bootstrap extraction, because that seam is already real.
