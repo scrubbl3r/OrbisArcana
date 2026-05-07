@@ -61,6 +61,15 @@ function buildOrbStageArtKey(artShapes = []) {
     .join("|");
 }
 
+function resolveDomOrbWrapPosition({ top = 0, left = "50%" } = {}) {
+  return {
+    left: (typeof left === "number")
+      ? `${Number(left || 0).toFixed(2)}px`
+      : String(left || "50%"),
+    transform: `translate(-50%, ${Number(top || 0).toFixed(2)}px)`,
+  };
+}
+
 export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOverlayMarkup = () => "" } = {}) {
   const localBackdropState = Object.create(null);
   let activeBackdropState = localBackdropState;
@@ -73,12 +82,7 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
   });
   const domOrbAdapter = createDomOrbStageAdapter({
     refs: stageRefs,
-    getOrbWrapPosition: ({ top = 0, left = "50%" } = {}) => ({
-      left: (typeof left === "number")
-        ? `${Number(left || 0).toFixed(2)}px`
-        : String(left || "50%"),
-      transform: `translate(-50%, ${Number(top || 0).toFixed(2)}px)`,
-    }),
+    getOrbWrapPosition: resolveDomOrbWrapPosition,
   });
 
   return Object.freeze({
