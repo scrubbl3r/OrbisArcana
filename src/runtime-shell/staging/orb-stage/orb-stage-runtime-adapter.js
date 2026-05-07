@@ -1,5 +1,5 @@
 import { createGameStageRuntimeAdapter } from "../game-stage/game-stage-runtime-adapter.js?v=20260506a";
-import { createDomOrbStageAdapter } from "../dom-orb-stage-adapter.js";
+import { createDomOrbStageAdapter as createLegacyDomOrbStageAdapter } from "../dom-orb-stage-adapter.js";
 
 const ORB_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
@@ -25,7 +25,7 @@ const ORB_STAGE_REF_KEYS = Object.freeze([
   "tryAgainBtn",
 ]);
 
-const ORB_STAGE_VISUAL_REF_KEYS = Object.freeze([
+const ORB_STAGE_LEGACY_DOM_ORB_REF_KEYS = Object.freeze([
   "orbWrap",
   "orb",
   "orbInterior",
@@ -44,8 +44,8 @@ function collectOrbStageRefs(sourceRefs = {}, keys = ORB_STAGE_REF_KEYS) {
   }, {});
 }
 
-function collectOrbStageVisualRefs(stageRefs = {}) {
-  return collectOrbStageRefs(stageRefs, ORB_STAGE_VISUAL_REF_KEYS);
+function collectLegacyDomOrbRefs(stageRefs = {}) {
+  return collectOrbStageRefs(stageRefs, ORB_STAGE_LEGACY_DOM_ORB_REF_KEYS);
 }
 
 function resolveDomOrbWrapPosition({ top = 0, left = "50%" } = {}) {
@@ -74,7 +74,7 @@ export function createOrbStageRuntimeAdapter({
     orbDiameterWorldUnits,
     unbindResize,
   });
-  const domOrbAdapter = createDomOrbStageAdapter({
+  const legacyDomOrbAdapter = createLegacyDomOrbStageAdapter({
     refs: stageRefs,
     getOrbWrapPosition: resolveDomOrbWrapPosition,
   });
@@ -82,17 +82,17 @@ export function createOrbStageRuntimeAdapter({
   return Object.freeze({
     ...shared3dAdapter,
     applyOrbTransform(args = {}) {
-      domOrbAdapter.applyOrbTransform(args);
+      legacyDomOrbAdapter.applyOrbTransform(args);
       if (typeof shared3dAdapter.applyOrbTransform === "function") {
         shared3dAdapter.applyOrbTransform(args);
       }
     },
-    renderOrbDamageVisuals: domOrbAdapter.renderOrbDamageVisuals,
-    createOrbShatterController: domOrbAdapter.createOrbShatterController,
+    renderOrbDamageVisuals: legacyDomOrbAdapter.renderOrbDamageVisuals,
+    createOrbShatterController: legacyDomOrbAdapter.createOrbShatterController,
     getStageElements() {
       return Object.freeze({
         ...shared3dAdapter.getStageElements(),
-        ...collectOrbStageVisualRefs(stageRefs),
+        ...collectLegacyDomOrbRefs(stageRefs),
       });
     },
   });
