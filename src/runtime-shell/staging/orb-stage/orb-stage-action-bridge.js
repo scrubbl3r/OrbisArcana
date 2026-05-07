@@ -1,6 +1,6 @@
 import { resolveOrbGraceDefaultTtlMs, resolveOrbGracePayload } from "../../../game-runtime/orb/orb-grace.js";
 
-function activateLegacyDomBubbleShieldFallback({
+function activateOrbStageLegacyDomBubbleShieldFallback({
   runtime = null,
   shieldEl = null,
   durationMs = 8000,
@@ -25,7 +25,7 @@ function activateLegacyDomBubbleShieldFallback({
 
 export function createOrbStageActionBridge({
   runtime = null,
-  legacyDomBubbleShieldEl = null,
+  orbStageLegacyDomBubbleShieldEl = null,
   patchOrbRuntime = () => {},
   getOrbRuntime = () => null,
   applyOrbTransform = () => {},
@@ -50,9 +50,9 @@ export function createOrbStageActionBridge({
         const result = shellVfx.activateBubbleShield({ durationMs });
         if (result && result.handled) return result;
       }
-      return activateLegacyDomBubbleShieldFallback({
+      return activateOrbStageLegacyDomBubbleShieldFallback({
         runtime,
-        shieldEl: legacyDomBubbleShieldEl,
+        shieldEl: orbStageLegacyDomBubbleShieldEl,
         durationMs,
       });
     },
