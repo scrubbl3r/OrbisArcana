@@ -393,7 +393,7 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function directPlayOrbShatter(payload = {}) {
+  function directPlayLegacyDomOrbShatter(payload = {}) {
     const controller = runtime && runtime.legacyDomOrbShatterController;
     if (controller && typeof controller.spawnShardFx === "function") {
       controller.spawnShardFx(payload);
@@ -559,12 +559,12 @@ export function initOrbStageReceiverVfxRuntime({
         targetKind: "orb-state",
         targetId: "shattered",
         runtime: {
-          playOrbShatter: (nextPayload = {}) => directPlayOrbShatter(nextPayload),
+          playOrbShatter: (nextPayload = {}) => directPlayLegacyDomOrbShatter(nextPayload),
         },
         payload,
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return directPlayOrbShatter(payload);
+      return directPlayLegacyDomOrbShatter(payload);
     },
     playOrbNod(payload = {}) {
       const dispatched = dispatchRuntimeEffect({
