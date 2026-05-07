@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507bz";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507ca";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1613,7 +1613,7 @@ function bindShellStageActions(shellContext) {
       receiverRuntime.orbSystem.revive({ health: 300, atMs: performance.now() });
       receiverRuntime.lastImpact = null;
     }
-    stopShellLegacyDomOrbShatterShardSim(shellContext);
+    stopShellOrbStageLegacyDomOrbShatterShardSim(shellContext);
     if (stage && stage.worldSystem && typeof stage.worldSystem.reset === "function") {
       stage.worldSystem.reset(performance.now());
     }
@@ -1622,7 +1622,7 @@ function bindShellStageActions(shellContext) {
       orbFxSystem.reset();
     }
     closeShellDeathOverlay(shellContext);
-    renderShellLegacyDomOrbDamageVisuals(shellContext);
+    renderShellOrbStageLegacyDomOrbDamageVisuals(shellContext);
   };
   for (const button of buttons) {
     button.addEventListener("click", onTryAgain);
@@ -1669,7 +1669,7 @@ function updateShellOrbStrokeColor(shellContext, dt) {
   }
 }
 
-function renderShellLegacyDomOrbDamageVisuals(shellContext) {
+function renderShellOrbStageLegacyDomOrbDamageVisuals(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const receiverRuntime = resolveShellReceiverRuntime(runtime);
   if (!receiverRuntime || !receiverRuntime.orbDamageVisualsRuntime) return;
@@ -1706,7 +1706,7 @@ function scheduleShellDeathOverlay(shellContext, delayMs = 3000) {
   }, Math.max(0, Number(delayMs) || 3000));
 }
 
-function stopShellLegacyDomOrbShatterShardSim(shellContext) {
+function stopShellOrbStageLegacyDomOrbShatterShardSim(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const controller = runtime && runtime.legacyDomOrbShatterController;
   if (controller && typeof controller.stopShardSim === "function") {
@@ -1719,7 +1719,7 @@ function stopShellLegacyDomOrbShatterShardSim(shellContext) {
   }
 }
 
-function spawnShellLegacyDomOrbShatterShardVfx(shellContext, payload) {
+function spawnShellOrbStageLegacyDomOrbShatterShardVfx(shellContext, payload) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const shellVfx = runtime && runtime.vfx ? runtime.vfx : null;
   if (shellVfx && typeof shellVfx.playOrbShatter === "function") {
@@ -2044,13 +2044,13 @@ async function initShellReceiverHostRuntime(shellContext) {
       allDirLampOff: () => allShellDirectionLampsOff(shellContext),
       flashDirLampPair: (a, b, ms) => flashShellDirectionLampPair(shellContext, a, b, ms),
       flashDirLampSingle: (code, ms) => flashShellDirectionLampSingle(shellContext, code, ms),
-      renderLegacyDomOrbDamageVisuals: () => renderShellLegacyDomOrbDamageVisuals(shellContext),
-      spawnLegacyDomOrbShatterShardVfx: (payload) => spawnShellLegacyDomOrbShatterShardVfx(shellContext, payload),
+      renderLegacyDomOrbDamageVisuals: () => renderShellOrbStageLegacyDomOrbDamageVisuals(shellContext),
+      spawnLegacyDomOrbShatterShardVfx: (payload) => spawnShellOrbStageLegacyDomOrbShatterShardVfx(shellContext, payload),
       clearOrbDeathRuntimeVfx: () => clearShellOrbDeathRuntimeVfx(shellContext),
       scheduleDeathOverlay: () => scheduleShellDeathOverlay(shellContext, 3000),
       clearDeathOverlaySchedule: () => clearShellDeathOverlaySchedule(shellContext),
       closeDeathOverlay: () => closeShellDeathOverlay(shellContext),
-      stopLegacyDomOrbShatterShardSim: () => stopShellLegacyDomOrbShatterShardSim(shellContext),
+      stopLegacyDomOrbShatterShardSim: () => stopShellOrbStageLegacyDomOrbShatterShardSim(shellContext),
       legacyDomOrbShatterController: runtime.legacyDomOrbShatterController || null,
       setOrbInputSuppressed: (next) => { runtime.orbInputSuppressed = !!next; },
       playElectricAoe: () => {
@@ -2206,7 +2206,7 @@ function getActiveShellStageMethod(shellContext, methodName) {
   return typeof method === "function" ? { activeAdapter, method } : null;
 }
 
-function createShellLegacyDomOrbShatterController(shellContext) {
+function createShellOrbStageLegacyDomOrbShatterController(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   if (!runtime) return null;
   const createLegacyDomOrbShatterController = getActiveShellStageMethod(
@@ -2301,7 +2301,7 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
   }
 
   runtime.orbStageActions = createShellOrbStageActions(shellContext);
-  runtime.legacyDomOrbShatterController = createShellLegacyDomOrbShatterController(shellContext);
+  runtime.legacyDomOrbShatterController = createShellOrbStageLegacyDomOrbShatterController(shellContext);
 }
 
 function syncActiveStageGlobe3dRuntime(shellContext) {
