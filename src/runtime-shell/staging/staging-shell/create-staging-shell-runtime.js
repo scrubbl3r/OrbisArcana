@@ -17,7 +17,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507f";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507g";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507a";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-stage-backdrop.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507q";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507r";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1731,23 +1731,8 @@ function spawnShellShardFx(shellContext, payload) {
 function clearShellOrbRuntimeFxForDeath(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const shellVfx = runtime && runtime.vfx ? runtime.vfx : null;
-  if (shellVfx && shellVfx.shockwaveRuntime && typeof shellVfx.shockwaveRuntime.clear === "function") {
-    shellVfx.shockwaveRuntime.clear();
-  }
-  if (shellVfx && shellVfx.flameAoeRuntime && typeof shellVfx.flameAoeRuntime.clear === "function") {
-    shellVfx.flameAoeRuntime.clear();
-  }
-  if (shellVfx && shellVfx.electricAoeRuntime && typeof shellVfx.electricAoeRuntime.clear === "function") {
-    shellVfx.electricAoeRuntime.clear();
-  }
-  if (shellVfx && shellVfx.bubbleShieldRuntime && typeof shellVfx.bubbleShieldRuntime.off === "function") {
-    shellVfx.bubbleShieldRuntime.off();
-  }
-  if (shellVfx && shellVfx.orbNodRuntime && typeof shellVfx.orbNodRuntime.clear === "function") {
-    shellVfx.orbNodRuntime.clear();
-  }
-  if (shellVfx && shellVfx.teleportRuntime && typeof shellVfx.teleportRuntime.clear === "function") {
-    shellVfx.teleportRuntime.clear();
+  if (shellVfx && typeof shellVfx.clearLegacyDomOrbRuntimeFx === "function") {
+    shellVfx.clearLegacyDomOrbRuntimeFx();
   }
   if (
     runtime &&

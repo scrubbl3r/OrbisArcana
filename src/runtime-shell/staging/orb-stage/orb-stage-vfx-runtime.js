@@ -444,8 +444,30 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
+  function clearLegacyDomOrbRuntimeFx() {
+    if (stageVfx.shockwaveRuntime && typeof stageVfx.shockwaveRuntime.clear === "function") {
+      stageVfx.shockwaveRuntime.clear();
+    }
+    if (stageVfx.flameAoeRuntime && typeof stageVfx.flameAoeRuntime.clear === "function") {
+      stageVfx.flameAoeRuntime.clear();
+    }
+    if (stageVfx.electricAoeRuntime && typeof stageVfx.electricAoeRuntime.clear === "function") {
+      stageVfx.electricAoeRuntime.clear();
+    }
+    if (stageVfx.bubbleShieldRuntime && typeof stageVfx.bubbleShieldRuntime.off === "function") {
+      stageVfx.bubbleShieldRuntime.off();
+    }
+    if (stageVfx.orbNodRuntime && typeof stageVfx.orbNodRuntime.clear === "function") {
+      stageVfx.orbNodRuntime.clear();
+    }
+    if (stageVfx.teleportRuntime && typeof stageVfx.teleportRuntime.clear === "function") {
+      stageVfx.teleportRuntime.clear();
+    }
+  }
+
   const shellVfx = {
     ...stageVfx,
+    clearLegacyDomOrbRuntimeFx,
     playShock() {
       return directPlayShock();
     },
