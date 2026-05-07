@@ -61,7 +61,7 @@ const summary = summarizeSvgLevelSource({
   spawnLayerLabels: [LEVEL_SVG_LAYER_SPAWNS],
   worldItemLayerLabels: [LEVEL_SVG_LAYER_GLOBES],
   propLayerLabels: [LEVEL_SVG_LAYER_PROPS],
-  lineArtLayerLabels: [LEVEL_SVG_LAYER_ART],
+  artLayerLabels: [LEVEL_SVG_LAYER_ART],
   starsFieldLayerLabels: [LEVEL_SVG_LAYER_FIELDS],
   spawnMarkerId: "spawn_01",
   tileSizePx: 100,

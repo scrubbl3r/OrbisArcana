@@ -914,16 +914,20 @@ export function buildSvgPropInstances({
   return Object.freeze(props);
 }
 
-export function buildSvgLineArtShapes({
+export function buildSvgArtShapes({
   svgText = "",
   worldWidthPx = 0,
   worldHeightPx = 0,
+  artLayerLabels = [],
   lineArtLayerLabels = [],
 } = {}) {
+  const layerLabels = Array.isArray(artLayerLabels) && artLayerLabels.length
+    ? artLayerLabels
+    : lineArtLayerLabels;
   const viewBox = parseSvgViewBox(svgText);
   const authoredLayers = parseSvgLayerElements(svgText);
   const allowedLabels = new Set(
-    (Array.isArray(lineArtLayerLabels) ? lineArtLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+    (Array.isArray(layerLabels) ? layerLabels : []).map((label) => String(label || "").trim().toLowerCase())
   );
   const matchingLayers = authoredLayers
     .filter((layer) => (
@@ -961,6 +965,10 @@ export function buildSvgLineArtShapes({
       });
     }).filter(Boolean);
   }));
+}
+
+export function buildSvgLineArtShapes(options = {}) {
+  return buildSvgArtShapes(options);
 }
 
 export function buildSvgStarsFieldRegions({
@@ -1180,6 +1188,7 @@ export function summarizeSvgLevelSource({
   cameraBoundaryLayerLabels = [],
   worldItemLayerLabels = [],
   propLayerLabels = [],
+  artLayerLabels = [],
   lineArtLayerLabels = [],
   starsFieldLayerLabels = [],
   spawnMarkerId = "",
@@ -1224,13 +1233,14 @@ export function summarizeSvgLevelSource({
     worldHeightPx,
     propLayerLabels,
   });
-  const lineArtShapes = buildSvgLineArtShapes({
+  const artShapes = buildSvgArtShapes({
     svgText,
     worldWidthPx,
     worldHeightPx,
-    lineArtLayerLabels,
+    artLayerLabels: Array.isArray(artLayerLabels) && artLayerLabels.length
+      ? artLayerLabels
+      : lineArtLayerLabels,
   });
-  const artShapes = Object.freeze(lineArtShapes);
   const starsFieldRegions = buildSvgStarsFieldRegions({
     svgText,
     worldWidthPx,

@@ -20,7 +20,7 @@ export function buildSvgLevelSummaryOptions({
     cameraBoundaryLayerLabels: semanticLayers.cameraBounds || [],
     worldItemLayerLabels: semanticLayers.worldItems || [],
     propLayerLabels: semanticLayers.props || [],
-    lineArtLayerLabels: semanticLayers.art || [],
+    artLayerLabels: semanticLayers.art || [],
     starsFieldLayerLabels: semanticLayers.fields || [],
     spawnMarkerId: safeMapSource.spawnMarker && safeMapSource.spawnMarker.id,
     tileSizePx: Number(safeMapSource.scale && safeMapSource.scale.boundaryTileSizePx) || LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX,
