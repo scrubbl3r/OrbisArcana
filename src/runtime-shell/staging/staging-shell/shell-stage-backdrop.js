@@ -4,18 +4,18 @@ import {
 } from "../../../game-runtime/level/authored-level-read-model.js";
 
 export function ensureShellStageBackdrop(shellContext, {
-  getActiveShellStageAdapter = () => null,
+  getActiveShellStageMethod = () => null,
   shellStageRect = () => ({ width: 0, height: 0 }),
   shellWorldHeight = () => 0,
   clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
 } = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const rootDocument = shellContext && shellContext.rootDocument ? shellContext.rootDocument : null;
-  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-  if (!runtime || !activeStageAdapter || typeof activeStageAdapter.ensureBackdrop !== "function" || !rootDocument) return;
+  const ensureBackdrop = getActiveShellStageMethod(shellContext, "ensureBackdrop");
+  if (!runtime || !ensureBackdrop || !rootDocument) return;
 
   const rect = shellStageRect(shellContext);
-  activeStageAdapter.ensureBackdrop({
+  ensureBackdrop.method.call(ensureBackdrop.activeAdapter, {
     runtime,
     rootDocument,
     rect,
@@ -41,30 +41,30 @@ export function shellGroundLineScreenY(shellContext, {
 }
 
 export function drawShellStars(shellContext, {
-  getActiveShellStageAdapter = () => null,
+  getActiveShellStageMethod = () => null,
   shellCameraTopFor = () => 0,
 } = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
+  const drawStars = getActiveShellStageMethod(shellContext, "drawStars");
   const stageBackdrop = runtime && runtime.stageBackdrop;
-  if (!runtime || !activeStageAdapter || typeof activeStageAdapter.drawStars !== "function" || !stageBackdrop) return;
+  if (!runtime || !drawStars || !stageBackdrop) return;
   const h = stageBackdrop.height || 0;
   const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, h);
-  activeStageAdapter.drawStars({
+  drawStars.method.call(drawStars.activeAdapter, {
     runtime,
     camTop,
   });
 }
 
 export function drawShellBackdrop(shellContext, {
-  getActiveShellStageAdapter = () => null,
+  getActiveShellStageMethod = () => null,
   groundLineScreenY = () => 0,
 } = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
+  const drawBackdrop = getActiveShellStageMethod(shellContext, "drawBackdrop");
   const stageBackdrop = runtime && runtime.stageBackdrop;
-  if (!runtime || !activeStageAdapter || typeof activeStageAdapter.drawBackdrop !== "function" || !stageBackdrop) return;
-  activeStageAdapter.drawBackdrop({
+  if (!runtime || !drawBackdrop || !stageBackdrop) return;
+  drawBackdrop.method.call(drawBackdrop.activeAdapter, {
     runtime,
     groundY: groundLineScreenY(shellContext),
   });

@@ -2549,7 +2549,7 @@ function formatPhoneImpulseLogLine(d) {
 
 function ensureShellStageBackdrop(shellContext) {
   ensureShellStageBackdropSurface(shellContext, {
-    getActiveShellStageAdapter,
+    getActiveShellStageMethod,
     shellStageRect,
     shellWorldHeight,
     clamp01,
@@ -2566,14 +2566,14 @@ function shellGroundLineScreenY(shellContext) {
 
 function drawShellStars(shellContext) {
   drawShellStageStars(shellContext, {
-    getActiveShellStageAdapter,
+    getActiveShellStageMethod,
     shellCameraTopFor,
   });
 }
 
 function drawShellBackdrop(shellContext) {
   drawShellStageBackdrop(shellContext, {
-    getActiveShellStageAdapter,
+    getActiveShellStageMethod,
     groundLineScreenY: shellGroundLineScreenY,
   });
 }
