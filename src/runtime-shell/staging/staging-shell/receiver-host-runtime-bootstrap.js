@@ -370,12 +370,14 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     grantOrbGrace: (grace) => {
       if (shellHooks && typeof shellHooks.grantOrbGrace === "function") shellHooks.grantOrbGrace(grace);
     },
-    legacyDomOrbShatterRuntime: (
-      runtime.vfx &&
-      typeof runtime.vfx.getLegacyDomOrbShatterRuntime === "function"
-    )
-      ? runtime.vfx.getLegacyDomOrbShatterRuntime()
-      : null,
+    clearLegacyDomOrbShatterRuntime: () => {
+      if (
+        runtime.vfx &&
+        typeof runtime.vfx.clearLegacyDomOrbShatterRuntime === "function"
+      ) {
+        runtime.vfx.clearLegacyDomOrbShatterRuntime();
+      }
+    },
     worldSystem: stageAdapters && typeof stageAdapters.getWorldSystem === "function" ? stageAdapters.getWorldSystem() : null,
     clearDeathOverlaySchedule: () => {
       if (shellHooks && typeof shellHooks.clearDeathOverlaySchedule === "function") shellHooks.clearDeathOverlaySchedule();
