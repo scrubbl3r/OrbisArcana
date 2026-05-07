@@ -1297,9 +1297,10 @@ function handleShellImpulseFrame(shellContext, data) {
 function updateShellSpinColorFromMotionState(shellContext, motionState) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const orbColorRuntime = runtime && runtime.orbColorRuntime ? runtime.orbColorRuntime : null;
-  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-  const canApply3dSpin = !!(activeStageAdapter && typeof activeStageAdapter.applyOrbSpinColor === "function");
-  const canClear3dSpin = !!(activeStageAdapter && typeof activeStageAdapter.clearOrbSpinColor === "function");
+  const apply3dSpin = getActiveShellStageMethod(shellContext, "applyOrbSpinColor");
+  const clear3dSpin = getActiveShellStageMethod(shellContext, "clearOrbSpinColor");
+  const canApply3dSpin = !!apply3dSpin;
+  const canClear3dSpin = !!clear3dSpin;
   if (!orbColorRuntime && !canApply3dSpin && !canClear3dSpin) return;
   const spin = motionState && motionState.spin ? motionState.spin : null;
   const axis = String(spin && spin.label || "").trim().toLowerCase();
@@ -1335,7 +1336,7 @@ function updateShellSpinColorFromMotionState(shellContext, motionState) {
       orbColorRuntime.clearSpinColor();
     }
     if (canClear3dSpin && state.applied3dColorKey) {
-      activeStageAdapter.clearOrbSpinColor();
+      clear3dSpin.method.call(clear3dSpin.activeAdapter);
       state.applied3dColorKey = "";
     }
     return;
@@ -1356,7 +1357,7 @@ function updateShellSpinColorFromMotionState(shellContext, motionState) {
     }
     const colorKey = `${state.axis}:${state.direction}`;
     if (canApply3dSpin && state.applied3dColorKey !== colorKey) {
-      activeStageAdapter.applyOrbSpinColor(color);
+      apply3dSpin.method.call(apply3dSpin.activeAdapter, color);
       state.applied3dColorKey = colorKey;
     }
     return;
@@ -1365,7 +1366,7 @@ function updateShellSpinColorFromMotionState(shellContext, motionState) {
     orbColorRuntime.clearSpinColor();
   }
   if (canClear3dSpin && state.applied3dColorKey) {
-    activeStageAdapter.clearOrbSpinColor();
+    clear3dSpin.method.call(clear3dSpin.activeAdapter);
     state.applied3dColorKey = "";
   }
 }
