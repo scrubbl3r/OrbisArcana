@@ -17,7 +17,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507y";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507z";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507d";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507j";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507bq";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507br";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1734,8 +1734,8 @@ function spawnShellLegacyDomOrbShatterShardFx(shellContext, payload) {
 function clearShellOrbDeathRuntimeFx(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const shellVfx = runtime && runtime.vfx ? runtime.vfx : null;
-  if (shellVfx && typeof shellVfx.clearLegacyDomOrbDeathFx === "function") {
-    shellVfx.clearLegacyDomOrbDeathFx();
+  if (shellVfx && typeof shellVfx.clearLegacyDomOrbDeathVfx === "function") {
+    shellVfx.clearLegacyDomOrbDeathVfx();
   }
   if (
     runtime &&

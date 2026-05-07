@@ -452,7 +452,7 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function clearLegacyDomOrbDeathFx() {
+  function clearLegacyDomOrbDeathVfx() {
     if (stageVfx.legacyDomShockwaveRuntime && typeof stageVfx.legacyDomShockwaveRuntime.clear === "function") {
       stageVfx.legacyDomShockwaveRuntime.clear();
     }
@@ -475,7 +475,7 @@ export function initOrbStageReceiverVfxRuntime({
 
   const shellVfx = {
     vfxDefaults,
-    clearLegacyDomOrbDeathFx,
+    clearLegacyDomOrbDeathVfx,
     clearLegacyDomOrbShatterRuntime,
     getLegacyDomOrbShatterRuntime,
     playShock() {
