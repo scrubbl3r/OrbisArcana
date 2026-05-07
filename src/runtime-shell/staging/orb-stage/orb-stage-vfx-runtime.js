@@ -238,7 +238,6 @@ export function initOrbStageReceiverVfxRuntime({
 
   const shellVfx = {
     vfxDefaults,
-    clearLegacyDomOrbDeathVfx: () => {},
     playShock() {
       return playOrbStageShockwave3dFallback();
     },

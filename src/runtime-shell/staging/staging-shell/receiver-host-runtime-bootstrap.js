@@ -103,15 +103,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       : false
   );
 
-  const callShellHook = (name, ...args) => {
-    const hook = shellHooks && name ? shellHooks[name] : null;
-    return typeof hook === "function" ? hook(...args) : undefined;
-  };
-
-  const renderOrbStageLegacyDomOrbDamageVisuals = () => {
-    callShellHook("renderOrbStageLegacyDomOrbDamageVisuals");
-  };
-
   const stageWorldItems =
     stageAdapters && typeof stageAdapters.getWorldItems === "function"
       ? stageAdapters.getWorldItems()
@@ -307,7 +298,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     clearFloatGrace: () => {
       if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace();
     },
-    renderOrbStageLegacyDomOrbDamageVisuals,
     clearOrbDeathRuntimeVfx: () => {
       if (shellHooks && typeof shellHooks.clearOrbDeathRuntimeVfx === "function") shellHooks.clearOrbDeathRuntimeVfx();
     },
@@ -372,7 +362,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     closeDeathOverlay: () => {
       if (shellHooks && typeof shellHooks.closeDeathOverlay === "function") shellHooks.closeDeathOverlay();
     },
-    renderOrbStageLegacyDomOrbDamageVisuals,
     updateDebugReadout: () => {
       if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
     },

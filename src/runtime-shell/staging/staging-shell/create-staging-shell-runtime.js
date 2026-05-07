@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507x";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507y";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -21,7 +21,7 @@ import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } fro
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507l";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507n";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507o";
 import { createShellReceiverConfigs } from "./receiver-configs.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507cu";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507cv";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1621,7 +1621,6 @@ function bindShellStageActions(shellContext) {
       orbFxSystem.reset();
     }
     closeShellDeathOverlay(shellContext);
-    renderShellOrbStageLegacyDomOrbDamageVisuals(shellContext);
   };
   for (const button of buttons) {
     button.addEventListener("click", onTryAgain);
@@ -1668,17 +1667,6 @@ function updateShellOrbStrokeColor(shellContext, dt) {
   }
 }
 
-function renderShellOrbStageLegacyDomOrbDamageVisuals(shellContext) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const receiverRuntime = resolveShellReceiverRuntime(runtime);
-  if (!receiverRuntime || !receiverRuntime.orbDamageVisualsRuntime) return;
-  const fx = receiverRuntime.orbDamageVisualsRuntime.getState();
-  const orbStageLegacyDomRenderMethod = getActiveShellStageMethod(shellContext, "renderOrbStageLegacyDomOrbDamageVisuals");
-  if (orbStageLegacyDomRenderMethod) {
-    orbStageLegacyDomRenderMethod.method.call(orbStageLegacyDomRenderMethod.activeAdapter, { fx });
-  }
-}
-
 function openShellDeathOverlay(shellContext) {
   callActiveShellStageVoidMethod(shellContext, "openDeathOverlay");
 }
@@ -1707,10 +1695,6 @@ function scheduleShellDeathOverlay(shellContext, delayMs = 3000) {
 
 function clearShellOrbDeathRuntimeVfx(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const shellVfx = runtime && runtime.vfx ? runtime.vfx : null;
-  if (shellVfx && typeof shellVfx.clearLegacyDomOrbDeathVfx === "function") {
-    shellVfx.clearLegacyDomOrbDeathVfx();
-  }
   if (
     runtime &&
     runtime.cameraRuntime &&
@@ -1997,7 +1981,6 @@ async function initShellReceiverHostRuntime(shellContext) {
       allDirLampOff: () => allShellDirectionLampsOff(shellContext),
       flashDirLampPair: (a, b, ms) => flashShellDirectionLampPair(shellContext, a, b, ms),
       flashDirLampSingle: (code, ms) => flashShellDirectionLampSingle(shellContext, code, ms),
-      renderOrbStageLegacyDomOrbDamageVisuals: () => renderShellOrbStageLegacyDomOrbDamageVisuals(shellContext),
       clearOrbDeathRuntimeVfx: () => clearShellOrbDeathRuntimeVfx(shellContext),
       scheduleDeathOverlay: () => scheduleShellDeathOverlay(shellContext, 3000),
       clearDeathOverlaySchedule: () => clearShellDeathOverlaySchedule(shellContext),
@@ -2791,7 +2774,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507al",
+  moduleCacheBustV = "20260507am",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

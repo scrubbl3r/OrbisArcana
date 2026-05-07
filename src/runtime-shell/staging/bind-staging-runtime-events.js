@@ -23,7 +23,6 @@ export function bindStagingRuntimeEvents({
   playElectricAoe = () => {},
   playOrbNod = () => {},
   clearFloatGrace = () => {},
-  renderOrbStageLegacyDomOrbDamageVisuals = () => {},
   clearOrbDeathRuntimeVfx = () => {},
   scheduleDeathOverlay = () => {},
   updateDebugReadout = () => {},
@@ -56,7 +55,6 @@ export function bindStagingRuntimeEvents({
     return true;
   }
 
-  eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderOrbStageLegacyDomOrbDamageVisuals);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
     setOrbInputSuppressed(true);
     clearFloatGrace();
@@ -71,7 +69,6 @@ export function bindStagingRuntimeEvents({
     closeDeathOverlay();
     if (worldSystem) worldSystem.reset(performance.now());
     resetOrbStrokeColor(true);
-    renderOrbStageLegacyDomOrbDamageVisuals();
     updateDebugReadout();
   });
   eventBus.on(RECEIVER_EVENTS.EVT_VOICE_TOKEN_DETECTED, (p = {}) => {

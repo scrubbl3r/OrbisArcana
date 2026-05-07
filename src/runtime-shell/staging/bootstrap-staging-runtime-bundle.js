@@ -26,7 +26,6 @@ export function bootstrapStagingRuntimeBundle({
   worldSystem = null,
   clearDeathOverlaySchedule = () => {},
   closeDeathOverlay = () => {},
-  renderOrbStageLegacyDomOrbDamageVisuals = () => {},
   updateDebugReadout = () => {},
   setOrbInputSuppressed = () => {},
 } = {}) {
@@ -69,7 +68,6 @@ export function bootstrapStagingRuntimeBundle({
         atMs: performance.now(),
       };
       orbSystem.applyImpact({ impact, source, atMs: performance.now() });
-      renderOrbStageLegacyDomOrbDamageVisuals();
       updateDebugReadout();
     },
   };
@@ -86,7 +84,6 @@ export function bootstrapStagingRuntimeBundle({
   if (worldSystem && typeof worldSystem.reset === "function") worldSystem.reset(performance.now());
   clearDeathOverlaySchedule();
   closeDeathOverlay();
-  renderOrbStageLegacyDomOrbDamageVisuals();
   updateDebugReadout();
 
   return receiverRuntime;
