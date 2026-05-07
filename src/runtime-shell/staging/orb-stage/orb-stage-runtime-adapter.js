@@ -1,11 +1,10 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
+import { createGameStageRuntimeAdapter } from "../game-stage/game-stage-runtime-adapter.js?v=20260506a";
 import { createDomOrbStageAdapter } from "../dom-orb-stage-adapter.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { resolveAuthoredLevelReadModelPrimarySpawn } from "../../../game-runtime/level/authored-level-read-model.js";
 import {
   captureAuthoredStarsFieldParallaxRefs,
 } from "../../../game-runtime/stage/authored-level-overlay.js?v=20260506a";
-import { applyAuthoredStageCameraVars } from "../../../game-runtime/stage/authored-stage-frame.js";
 
 const ORB_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
@@ -90,11 +89,18 @@ export function createOrbStageRuntimeAdapter({
   let activeBackdropState = localBackdropState;
   const levelWorldSize = resolveLevelWorldSize(level);
   const stageRefs = Object.freeze(collectOrbStageRefs(refs));
-
-  const core = createStageRuntimeAdapterCore({
+  const legacyCore = createStageRuntimeAdapterCore({
     refs: stageRefs,
     level,
     state,
+  });
+  const shared3dAdapter = createGameStageRuntimeAdapter({
+    refs: stageRefs,
+    level,
+    state,
+    depth3dRuntime,
+    orbDiameterWorldUnits,
+    unbindResize,
   });
   const domOrbAdapter = createDomOrbStageAdapter({
     refs: stageRefs,
@@ -102,80 +108,18 @@ export function createOrbStageRuntimeAdapter({
   });
 
   return Object.freeze({
-    ...core,
+    ...shared3dAdapter,
     applyOrbTransform(args = {}) {
       domOrbAdapter.applyOrbTransform(args);
-      if (depth3dRuntime && typeof depth3dRuntime.setOrbWorldPosition === "function") {
-        depth3dRuntime.setOrbWorldPosition({
-          xW: args.xW,
-          yW: args.yW,
-          bo: orbDiameterWorldUnits,
-        });
+      if (typeof shared3dAdapter.applyOrbTransform === "function") {
+        shared3dAdapter.applyOrbTransform(args);
       }
     },
     renderOrbDamageVisuals: domOrbAdapter.renderOrbDamageVisuals,
     createOrbShatterController: domOrbAdapter.createOrbShatterController,
-    playOrbNod3d(payload = {}) {
-      return depth3dRuntime && typeof depth3dRuntime.playOrbNod3d === "function"
-        ? depth3dRuntime.playOrbNod3d(payload)
-        : { handled: false, skipped: "depth3d_runtime_missing" };
-    },
-    playOrbTeleport3d(payload = {}) {
-      return depth3dRuntime && typeof depth3dRuntime.playOrbTeleport3d === "function"
-        ? depth3dRuntime.playOrbTeleport3d(payload)
-        : { handled: false, skipped: "depth3d_runtime_missing" };
-    },
-    playBubbleShield3d(payload = {}) {
-      return depth3dRuntime && typeof depth3dRuntime.playBubbleShield3d === "function"
-        ? depth3dRuntime.playBubbleShield3d(payload)
-        : { handled: false, skipped: "depth3d_runtime_missing" };
-    },
-    playShockwave3d(payload = {}) {
-      return depth3dRuntime && typeof depth3dRuntime.playShockwave3d === "function"
-        ? depth3dRuntime.playShockwave3d(payload)
-        : { handled: false, skipped: "depth3d_runtime_missing" };
-    },
-    playFlameAoe3d(payload = {}) {
-      return depth3dRuntime && typeof depth3dRuntime.playFlameAoe3d === "function"
-        ? depth3dRuntime.playFlameAoe3d(payload)
-        : { handled: false, skipped: "depth3d_runtime_missing" };
-    },
-    applyOrbSpinColor(color = {}) {
-      if (depth3dRuntime && typeof depth3dRuntime.applyOrbSpinColor === "function") {
-        depth3dRuntime.applyOrbSpinColor(color);
-      }
-    },
-    clearOrbSpinColor() {
-      if (depth3dRuntime && typeof depth3dRuntime.clearOrbSpinColor === "function") {
-        depth3dRuntime.clearOrbSpinColor();
-      }
-    },
-    bindGlobe3dRuntime(args = {}) {
-      if (depth3dRuntime && typeof depth3dRuntime.bindGlobe3dRuntime === "function") {
-        depth3dRuntime.bindGlobe3dRuntime(args);
-      }
-    },
-    getPrimarySpawn() {
-      return resolveAuthoredLevelReadModelPrimarySpawn(state);
-    },
-    getPreviewZoom() {
-      return state ? state.previewZoom : 0;
-    },
-    getPreviewFollowMode() {
-      return state ? state.previewFollowMode : "";
-    },
-    getAuthoredSceneReadModel() {
-      if (!state || !state.summary || !state.sceneModel) return null;
-      return Object.freeze({
-        level,
-        summary: state.summary,
-        sceneModel: state.sceneModel,
-        levelGraphicsModel: state.levelGraphicsModel || null,
-      });
-    },
     getStageElements() {
       return Object.freeze({
-        ...core.getStageElements(),
+        ...legacyCore.getStageElements(),
         ...collectOrbStageVisualRefs(stageRefs),
       });
     },
@@ -217,48 +161,6 @@ export function createOrbStageRuntimeAdapter({
         stageBackdrop.height = height;
       }
       stageRefs.worldOverlay.setAttribute("viewBox", `0 0 ${worldSize.widthPx} ${worldSize.heightPx}`);
-    },
-    applyCameraFrame({
-      camLeft = 0,
-      camTop = 0,
-      zoom = state && state.previewZoom || 1,
-      worldWidthPx = levelWorldSize.widthPx,
-      worldHeightPx = levelWorldSize.heightPx,
-    } = {}) {
-      if (!stageRefs.world) return;
-      const rect = stageRefs.physStage && typeof stageRefs.physStage.getBoundingClientRect === "function"
-        ? stageRefs.physStage.getBoundingClientRect()
-        : { width: activeBackdropState.width || 0, height: activeBackdropState.height || 0 };
-      const frameZoom = Number(zoom || state && state.previewZoom || 1);
-      if (state) state.externalCameraAuthority = true;
-      applyAuthoredStageCameraVars({
-        refs: stageRefs,
-        starsParallaxRefs: state && state.starsParallaxRefs ? state.starsParallaxRefs : activeBackdropState.starsParallaxRefs,
-        worldWidthPx: state ? state.worldWidthPx : worldWidthPx,
-        worldHeightPx: state ? state.worldHeightPx : worldHeightPx,
-        camLeft,
-        camTop,
-        zoom: frameZoom,
-        viewportWidthPx: Math.max(0, Number(rect.width) || 0),
-        viewportHeightPx: Math.max(0, Number(rect.height) || 0),
-      });
-      if (depth3dRuntime && typeof depth3dRuntime.renderFrame === "function") {
-        depth3dRuntime.renderFrame({
-          camLeft: Number(camLeft || 0),
-          camTop: Number(camTop || 0),
-          zoom: frameZoom,
-          viewportWidthPx: Math.max(0, Number(rect.width) || 0),
-          viewportHeightPx: Math.max(0, Number(rect.height) || 0),
-          worldWidthPx: state ? state.worldWidthPx : worldWidthPx,
-          worldHeightPx: state ? state.worldHeightPx : worldHeightPx,
-        });
-      }
-    },
-    dispose() {
-      if (depth3dRuntime && typeof depth3dRuntime.dispose === "function") {
-        depth3dRuntime.dispose();
-      }
-      unbindResize();
     },
   });
 }
