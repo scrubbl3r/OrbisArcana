@@ -109,8 +109,6 @@ export function runOrbRuntimePipeline({
   const groundCenterWorld = hooks.groundCenterWorld;
   const getCeilingWorld = hooks.getCeilingWorld;
   const computeImpactMetric = hooks.computeImpactMetric;
-  const drawStars = hooks.drawStars;
-  const drawWorldBackdrop = hooks.drawWorldBackdrop;
   const updateOrbStrokeColor = hooks.updateOrbStrokeColor;
   const applyOrbTransform = hooks.applyOrbTransform;
   const updateDebugReadout = hooks.updateDebugReadout;
@@ -170,8 +168,6 @@ export function runOrbRuntimePipeline({
       state.descendMs = 0;
       state.shieldDescentBlocked = false;
 
-      if (typeof drawStars === "function") drawStars();
-      if (typeof drawWorldBackdrop === "function") drawWorldBackdrop();
       if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
       if (typeof applyOrbTransform === "function") applyOrbTransform();
       if (orbFxSystem && typeof orbFxSystem.tick === "function") traceMeasure("orbFx.tick", () => orbFxSystem.tick(ts, dt));
@@ -198,8 +194,6 @@ export function runOrbRuntimePipeline({
     state.descendMs = 0;
     state.shieldDescentBlocked = false;
 
-    if (typeof drawStars === "function") drawStars();
-    if (typeof drawWorldBackdrop === "function") drawWorldBackdrop();
     if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
     if (typeof applyOrbTransform === "function") applyOrbTransform();
     if (orbFxSystem && typeof orbFxSystem.tick === "function") traceMeasure("orbFx.tick", () => orbFxSystem.tick(ts, dt));
@@ -343,8 +337,6 @@ export function runOrbRuntimePipeline({
     });
   }
 
-  if (typeof drawStars === "function") drawStars();
-  if (typeof drawWorldBackdrop === "function") drawWorldBackdrop();
   if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
   if (typeof applyOrbTransform === "function") applyOrbTransform();
   if (orbFxSystem && typeof orbFxSystem.tick === "function") traceMeasure("orbFx.tick", () => orbFxSystem.tick(ts, dt));
