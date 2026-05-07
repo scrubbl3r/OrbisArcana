@@ -257,7 +257,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     return String((entry && entry.castActionId) || key || "");
   };
 
-  const eventBinder = bindStagingRuntimeEvents({
+  bindStagingRuntimeEvents({
     eventBus: runtime.eventBus,
     RECEIVER_EVENTS: shellKws.receiverEvents,
     RULE_ENGINE_ACTION_EXECUTED_EVENT: "rule_engine.action_executed",
@@ -392,7 +392,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   runtime.receiverRuntime = receiverRuntime;
 
   runtime.receiverHostRuntime = {
-    eventBinder,
     receiverRuntime,
   };
   const processIncomingImpulse = attachShellReceiverHostImpulseAdapter({
@@ -416,7 +415,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   return {
     receiverHostRuntime: runtime.receiverHostRuntime,
     runtimeContext,
-    eventBinder,
     receiverRuntime,
   };
 }
