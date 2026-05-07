@@ -19,7 +19,7 @@ import {
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507s";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507c";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507f";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507g";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507j";
 import { createShellReceiverConfigs } from "./receiver-configs.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507bb";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507bc";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1878,11 +1878,11 @@ function createShellReceiverVfxDefaults() {
 function initShellReceiverVfxRuntime(shellContext, mods = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
-  const createVfxRuntimesBundle =
+  const createLegacyDomVfxRuntimesBundle =
     sharedModules &&
-    sharedModules.vfxRuntimesBundleModule &&
-    sharedModules.vfxRuntimesBundleModule.createVfxRuntimesBundle;
-  if (!runtime || typeof createVfxRuntimesBundle !== "function") return null;
+    sharedModules.legacyDomVfxRuntimesBundleModule &&
+    sharedModules.legacyDomVfxRuntimesBundleModule.createLegacyDomVfxRuntimesBundle;
+  if (!runtime || typeof createLegacyDomVfxRuntimesBundle !== "function") return null;
 
   const {
     playElectricAoeRuntime,
@@ -1906,7 +1906,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
   return initOrbStageReceiverVfxRuntime({
     runtime,
     legacyDomStageEls: getShellLegacyDomStageElements(shellContext),
-    createVfxRuntimesBundle,
+    createLegacyDomVfxRuntimesBundle,
     rootStyle,
     vfxDefaults,
     playElectricAoeRuntime,
@@ -2887,7 +2887,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507o",
+  moduleCacheBustV = "20260507p",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

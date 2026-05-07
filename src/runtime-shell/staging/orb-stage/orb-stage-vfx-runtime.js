@@ -97,7 +97,7 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
 export function initOrbStageReceiverVfxRuntime({
   runtime = null,
   legacyDomStageEls = {},
-  createVfxRuntimesBundle = null,
+  createLegacyDomVfxRuntimesBundle = null,
   rootStyle = null,
   vfxDefaults = null,
   playElectricAoeRuntime = null,
@@ -118,7 +118,7 @@ export function initOrbStageReceiverVfxRuntime({
   requestCameraTravel = null,
   cancelCameraTravel = null,
 } = {}) {
-  if (!runtime || typeof createVfxRuntimesBundle !== "function" || !vfxDefaults) return null;
+  if (!runtime || typeof createLegacyDomVfxRuntimesBundle !== "function" || !vfxDefaults) return null;
   const legacyDomEls = legacyDomStageEls || {};
   const readOrbDiameterPx = () => Math.max(
     1,
@@ -131,7 +131,7 @@ export function initOrbStageReceiverVfxRuntime({
     }
   };
 
-  const legacyDomVfxRuntimesBundle = createVfxRuntimesBundle({
+  const legacyDomVfxRuntimesBundle = createLegacyDomVfxRuntimesBundle({
     bubbleShield: {
       shieldEl: legacyDomEls.shield,
       getConfig: () => resolveBubbleShieldGeometry(vfxDefaults.shield, {
