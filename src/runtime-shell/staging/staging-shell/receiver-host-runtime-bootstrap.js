@@ -317,8 +317,8 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     },
     renderLegacyDomOrbDamageVisuals,
     spawnLegacyDomOrbShatterShardFx,
-    clearOrbDeathRuntimeFx: () => {
-      if (shellHooks && typeof shellHooks.clearOrbDeathRuntimeFx === "function") shellHooks.clearOrbDeathRuntimeFx();
+    clearOrbDeathRuntimeVfx: () => {
+      if (shellHooks && typeof shellHooks.clearOrbDeathRuntimeVfx === "function") shellHooks.clearOrbDeathRuntimeVfx();
     },
     scheduleDeathOverlay: () => {
       if (shellHooks && typeof shellHooks.scheduleDeathOverlay === "function") shellHooks.scheduleDeathOverlay();

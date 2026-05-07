@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507br";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507bs";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1731,7 +1731,7 @@ function spawnShellLegacyDomOrbShatterShardFx(shellContext, payload) {
   controller.spawnShardFx(payload);
 }
 
-function clearShellOrbDeathRuntimeFx(shellContext) {
+function clearShellOrbDeathRuntimeVfx(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const shellVfx = runtime && runtime.vfx ? runtime.vfx : null;
   if (shellVfx && typeof shellVfx.clearLegacyDomOrbDeathVfx === "function") {
@@ -2046,7 +2046,7 @@ async function initShellReceiverHostRuntime(shellContext) {
       flashDirLampSingle: (code, ms) => flashShellDirectionLampSingle(shellContext, code, ms),
       renderLegacyDomOrbDamageVisuals: () => renderShellLegacyDomOrbDamageVisuals(shellContext),
       spawnLegacyDomOrbShatterShardFx: (payload) => spawnShellLegacyDomOrbShatterShardFx(shellContext, payload),
-      clearOrbDeathRuntimeFx: () => clearShellOrbDeathRuntimeFx(shellContext),
+      clearOrbDeathRuntimeVfx: () => clearShellOrbDeathRuntimeVfx(shellContext),
       scheduleDeathOverlay: () => scheduleShellDeathOverlay(shellContext, 3000),
       clearDeathOverlaySchedule: () => clearShellDeathOverlaySchedule(shellContext),
       closeDeathOverlay: () => closeShellDeathOverlay(shellContext),
@@ -2887,7 +2887,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507w",
+  moduleCacheBustV = "20260507x",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
