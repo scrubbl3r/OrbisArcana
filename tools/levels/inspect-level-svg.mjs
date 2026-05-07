@@ -118,7 +118,6 @@ const report = {
   })),
   propCount: summary.props.length,
   artShapeCount: summary.artShapes.length,
-  lineArtShapeCount: summary.artShapes.length,
   starsFieldRegionCount: summary.starsFieldRegions.length,
   depthLayerCount: summary.depthLayers.length,
   boundaryTileMask: {

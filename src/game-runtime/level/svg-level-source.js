@@ -919,15 +919,11 @@ export function buildSvgArtShapes({
   worldWidthPx = 0,
   worldHeightPx = 0,
   artLayerLabels = [],
-  lineArtLayerLabels = [],
 } = {}) {
-  const layerLabels = Array.isArray(artLayerLabels) && artLayerLabels.length
-    ? artLayerLabels
-    : lineArtLayerLabels;
   const viewBox = parseSvgViewBox(svgText);
   const authoredLayers = parseSvgLayerElements(svgText);
   const allowedLabels = new Set(
-    (Array.isArray(layerLabels) ? layerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+    (Array.isArray(artLayerLabels) ? artLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
   );
   const matchingLayers = authoredLayers
     .filter((layer) => (
@@ -965,10 +961,6 @@ export function buildSvgArtShapes({
       });
     }).filter(Boolean);
   }));
-}
-
-export function buildSvgLineArtShapes(options = {}) {
-  return buildSvgArtShapes(options);
 }
 
 export function buildSvgStarsFieldRegions({
@@ -1189,7 +1181,6 @@ export function summarizeSvgLevelSource({
   worldItemLayerLabels = [],
   propLayerLabels = [],
   artLayerLabels = [],
-  lineArtLayerLabels = [],
   starsFieldLayerLabels = [],
   spawnMarkerId = "",
   tileSizePx = LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX,
@@ -1237,9 +1228,7 @@ export function summarizeSvgLevelSource({
     svgText,
     worldWidthPx,
     worldHeightPx,
-    artLayerLabels: Array.isArray(artLayerLabels) && artLayerLabels.length
-      ? artLayerLabels
-      : lineArtLayerLabels,
+    artLayerLabels,
   });
   const starsFieldRegions = buildSvgStarsFieldRegions({
     svgText,
@@ -1271,7 +1260,6 @@ export function summarizeSvgLevelSource({
     worldItemSpawns: Object.freeze(worldItemSpawns),
     props: Object.freeze(props),
     artShapes,
-    lineArtShapes: artShapes,
     starsFieldRegions: Object.freeze(starsFieldRegions),
     depthLayers: Object.freeze(depthLayers),
     boundaryBox,
