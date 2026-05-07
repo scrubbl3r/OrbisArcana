@@ -19,9 +19,7 @@ export function ensureLegacyShellStageBackdrop(shellContext, {
   const activeLevel = shellActiveStageLevel(shellContext);
   const terrainProfile = Array.isArray(activeLevel && activeLevel.terrain && activeLevel.terrain.profile)
     ? activeLevel.terrain.profile
-    : (Array.isArray(activeLevel && activeLevel.terrainProfile)
-        ? activeLevel.terrainProfile
-        : []);
+    : [];
   activeStageAdapter.ensureBackdrop({
     runtime,
     rootDocument,

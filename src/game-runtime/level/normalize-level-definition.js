@@ -137,10 +137,10 @@ export function normalizeLevelDefinition(level = {}) {
   const terrainProfile = Array.isArray(source.terrainProfile) ? source.terrainProfile.slice() : [];
   const worldItemSpawns = Array.isArray(sourceElements.worldItemSpawns)
     ? sourceElements.worldItemSpawns.slice()
-    : (Array.isArray(source.worldItemSpawns) ? source.worldItemSpawns.slice() : []);
+    : [];
   const boundaries = Array.isArray(sourceElements.boundaries)
     ? sourceElements.boundaries.slice()
-    : (Array.isArray(source.boundaries) ? source.boundaries.slice() : []);
+    : [];
   return Object.freeze({
     id: String(source.id || "").trim(),
     label: String(source.label || source.id || "Untitled Level").trim(),
@@ -177,9 +177,5 @@ export function normalizeLevelDefinition(level = {}) {
       boundaries: Object.freeze(boundaries),
       worldItemSpawns: Object.freeze(worldItemSpawns),
     }),
-    // Compatibility aliases while downstream callers migrate to normalized buckets.
-    terrainProfile: Object.freeze(terrainProfile),
-    boundaries: Object.freeze(boundaries),
-    worldItemSpawns: Object.freeze(worldItemSpawns),
   });
 }

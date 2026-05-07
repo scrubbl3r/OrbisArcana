@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { LEVELS, LEVELS_BY_ID, getLevelById } from "../../src/content/levels/registry.js";
 import {
   CANONICAL_LEVEL_IDS,
+  DEPRECATED_NORMALIZED_LEVEL_KEYS,
   DEPRECATED_LEVEL_SEMANTIC_LAYER_KEYS,
   EXPECTED_LEVEL_SEMANTIC_LAYERS,
 } from "./level-contract-fixtures.mjs";
@@ -47,6 +48,9 @@ for (const id of CANONICAL_LEVEL_IDS) {
   assert.equal(Object.isFrozen(level.mapSource.primarySpawn), true, `${id} primarySpawn should be frozen`);
   assert.equal(level.mapSource.primarySpawn.id, "spawn_01", `${id} should expose canonical primary spawn id`);
   assert.equal(Object.hasOwn(level.mapSource, "spawnMarker"), false, `${id} should not expose deprecated spawnMarker config`);
+  for (const key of DEPRECATED_NORMALIZED_LEVEL_KEYS) {
+    assert.equal(Object.hasOwn(level, key), false, `${id} should not expose deprecated top-level ${key}`);
+  }
 }
 
 for (const expectation of EXPECTED_LEVEL_SEMANTIC_LAYERS) {

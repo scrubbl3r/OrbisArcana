@@ -110,6 +110,4 @@ export const REACTOR_SHAFT = Object.freeze({
     boundaries: REACTOR_SHAFT_BOUNDARIES,
     worldItemSpawns: REACTOR_SHAFT_WORLD_ITEM_SPAWNS,
   }),
-  boundaries: REACTOR_SHAFT_BOUNDARIES,
-  worldItemSpawns: REACTOR_SHAFT_WORLD_ITEM_SPAWNS,
 });

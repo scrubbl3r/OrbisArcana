@@ -36,6 +36,12 @@ export const DEPRECATED_LEVEL_SEMANTIC_LAYER_KEYS = Object.freeze([
   "starsField",
 ]);
 
+export const DEPRECATED_NORMALIZED_LEVEL_KEYS = Object.freeze([
+  "boundaries",
+  "terrainProfile",
+  "worldItemSpawns",
+]);
+
 export const EXPECTED_LEVEL_WORLD_SIZES = Object.freeze({
   "reactor-shaft": Object.freeze({
     widthPx: 8192,

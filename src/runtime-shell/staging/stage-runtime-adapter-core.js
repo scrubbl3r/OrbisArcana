@@ -43,10 +43,9 @@ export function createStageRuntimeAdapterCore({
       return refs.physStage.getBoundingClientRect();
     },
     getWorldItemSpawns() {
-      if (Array.isArray(level && level.elements && level.elements.worldItemSpawns)) {
-        return level.elements.worldItemSpawns;
-      }
-      return Array.isArray(level && level.worldItemSpawns) ? level.worldItemSpawns : [];
+      return Array.isArray(level && level.elements && level.elements.worldItemSpawns)
+        ? level.elements.worldItemSpawns
+        : [];
     },
     normalizeWorldItemSpawn(item, options = {}) {
       return normalizeLevelWorldItemSpawn(item, options);

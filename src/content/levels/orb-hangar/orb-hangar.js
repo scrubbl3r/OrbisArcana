@@ -99,6 +99,4 @@ export const ORB_HANGAR = Object.freeze({
     boundaries: ORB_HANGAR_BOUNDARIES,
     worldItemSpawns: ORB_HANGAR_WORLD_ITEM_SPAWNS,
   }),
-  boundaries: ORB_HANGAR_BOUNDARIES,
-  worldItemSpawns: ORB_HANGAR_WORLD_ITEM_SPAWNS,
 });

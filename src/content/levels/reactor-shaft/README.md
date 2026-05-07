@@ -10,5 +10,4 @@ Current authored source:
 
 Current MVP posture:
 - the SVG is treated as source geometry for boundary/collision tooling
-- runtime still keeps compatibility fields such as `boundaries` and
-  `worldItemSpawns` while the SVG pipeline grows in
+- reusable authored element families live under `elements`
