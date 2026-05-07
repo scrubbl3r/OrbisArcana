@@ -1,4 +1,4 @@
-function clearLegacyDomOrbShatterPresentation({
+function clearOrbStageLegacyDomOrbShatterPresentation({
   clearLegacyDomOrbShatterRuntime = () => {},
 } = {}) {
   clearLegacyDomOrbShatterRuntime();
@@ -88,7 +88,7 @@ export function bootstrapStagingRuntimeBundle({
     receiverRuntime.orbSystem.revive({ health: 300, atMs: performance.now() });
   }
   receiverRuntime.lastImpact = null;
-  clearLegacyDomOrbShatterPresentation({
+  clearOrbStageLegacyDomOrbShatterPresentation({
     clearLegacyDomOrbShatterRuntime,
   });
   setOrbInputSuppressed(false);
