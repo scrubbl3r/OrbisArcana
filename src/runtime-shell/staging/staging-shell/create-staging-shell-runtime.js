@@ -650,41 +650,47 @@ function shellCameraTopFor(shellContext, yW, stageH, nowMs = performance.now()) 
     return Number(runtime.frameMetrics.camTop) || 0;
   }
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
-  const cameraConfig = shellActiveStageCameraConfig(shellContext);
-  const clampBounds = shellActiveStageCameraClampBounds(shellContext);
   const target = shellActiveStageCameraTarget(shellContext, { xW: shellStageCenterX(shellContext), yW });
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
-    ? cameraRuntime.resolveFrame({
+    ? cameraRuntime.resolveFrame(buildShellCameraResolveArgs(shellContext, {
         targetXW: target.xW,
         targetYW: target.yW,
         viewportWidthPx: shellStageRect(shellContext).width || 0,
         viewportHeightPx: stageH,
-        worldWidthPx: shellWorldWidth(shellContext),
-        worldHeightPx: shellWorldHeight(shellContext),
-        zoom: shellActiveStageCameraZoom(shellContext),
-        followMode: shellActiveStageCameraFollowMode(shellContext),
-        fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
-        fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
-        screenAnchorX: cameraConfig.screenAnchorX,
-        screenAnchorY: cameraConfig.screenAnchorY,
-        deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
-        deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
-        deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
-        deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
-        followLerpX: cameraConfig.followLerpX,
-        followLerpY: cameraConfig.followLerpY,
-        clampLeftXW: clampBounds.leftXW,
-        clampRightXW: clampBounds.rightXW,
-        clampTopYW: clampBounds.topYW,
-        clampBottomYW: clampBounds.bottomYW,
-        clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
-        clampInsetRightPx: cameraConfig.clampInsetRightPx,
-        clampInsetTopPx: cameraConfig.clampInsetTopPx,
-        clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
         nowMs,
-      })
+      }))
     : null;
   return Number(frame && frame.camTop) || 0;
+}
+
+function buildShellCameraResolveArgs(shellContext, args = {}) {
+  const cameraConfig = shellActiveStageCameraConfig(shellContext);
+  const clampBounds = shellActiveStageCameraClampBounds(shellContext);
+  return {
+    ...args,
+    worldWidthPx: shellWorldWidth(shellContext),
+    worldHeightPx: shellWorldHeight(shellContext),
+    zoom: shellActiveStageCameraZoom(shellContext),
+    followMode: shellActiveStageCameraFollowMode(shellContext),
+    fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
+    fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
+    screenAnchorX: cameraConfig.screenAnchorX,
+    screenAnchorY: cameraConfig.screenAnchorY,
+    deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
+    deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
+    deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
+    deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
+    followLerpX: cameraConfig.followLerpX,
+    followLerpY: cameraConfig.followLerpY,
+    clampLeftXW: clampBounds.leftXW,
+    clampRightXW: clampBounds.rightXW,
+    clampTopYW: clampBounds.topYW,
+    clampBottomYW: clampBounds.bottomYW,
+    clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
+    clampInsetRightPx: cameraConfig.clampInsetRightPx,
+    clampInsetTopPx: cameraConfig.clampInsetTopPx,
+    clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
+  };
 }
 
 function shellOrbScreenY(shellContext) {
