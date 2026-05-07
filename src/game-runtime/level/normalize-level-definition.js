@@ -61,12 +61,6 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
   const semanticLayers = mapSource.semanticLayers && typeof mapSource.semanticLayers === "object"
     ? mapSource.semanticLayers
     : {};
-  const worldItemLayers = normalizeLayerLabels(
-    semanticLayers.worldItems,
-    semanticLayers.actorItems,
-    semanticLayers.globes
-  );
-  const cameraBoundsLayers = normalizeLayerLabels(semanticLayers.cameraBounds, semanticLayers.boundsCam);
   return Object.freeze({
     kind: String(mapSource.kind || "").trim(),
     assetUrl: String(mapSource.assetUrl || "").trim(),
@@ -88,15 +82,15 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
         : LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX,
     }),
     semanticLayers: Object.freeze({
-      boundary: normalizeLayerLabels(semanticLayers.boundary, semanticLayers.bounds),
-      spawns: normalizeLayerLabels(semanticLayers.spawns, semanticLayers.spawn),
-      cameras: normalizeLayerLabels(semanticLayers.cameras, semanticLayers.camera),
-      cameraBounds: cameraBoundsLayers,
-      depths: normalizeLayerLabels(semanticLayers.depths, semanticLayers.depth),
-      worldItems: worldItemLayers,
+      boundary: normalizeLayerLabels(semanticLayers.boundary),
+      spawns: normalizeLayerLabels(semanticLayers.spawns),
+      cameras: normalizeLayerLabels(semanticLayers.cameras),
+      cameraBounds: normalizeLayerLabels(semanticLayers.cameraBounds),
+      depths: normalizeLayerLabels(semanticLayers.depths),
+      worldItems: normalizeLayerLabels(semanticLayers.worldItems),
       props: normalizeLayerLabels(semanticLayers.props),
-      art: normalizeLayerLabels(semanticLayers.art, semanticLayers.lineArt),
-      fields: normalizeLayerLabels(semanticLayers.fields, semanticLayers.starsField),
+      art: normalizeLayerLabels(semanticLayers.art),
+      fields: normalizeLayerLabels(semanticLayers.fields),
     }),
     spawnMarker: Object.freeze({
       id: String(mapSource.spawnMarker && mapSource.spawnMarker.id || "").trim(),
