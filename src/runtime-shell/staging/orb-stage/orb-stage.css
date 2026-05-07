@@ -1,6 +1,6 @@
 :root {
   --orb-stage-panel-height: 800px;
-  --orb-stage-level-box-height: 640px;
+  --orb-hangar-box-height: 640px;
   --shield-r: 120;
   --shield-g: 210;
   --shield-b: 255;
@@ -77,12 +77,16 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  width: var(--orb-stage-world-width, 8192px);
-  height: var(--orb-stage-world-height, 8192px);
+  width: var(--level-world-width, var(--orb-stage-world-width, 8192px));
+  height: var(--level-world-height, var(--orb-stage-world-height, 8192px));
   transform-origin: 0 0;
   transform:
-    translate3d(var(--orb-stage-world-x, 0px), var(--orb-stage-world-y, 0px), 0)
-    scale(var(--orb-stage-world-zoom, 1));
+    translate3d(
+      var(--level-world-x, var(--orb-stage-world-x, 0px)),
+      var(--level-world-y, var(--orb-stage-world-y, 0px)),
+      0
+    )
+    scale(var(--level-world-zoom, var(--orb-stage-world-zoom, 1)));
   will-change: transform;
 }
 

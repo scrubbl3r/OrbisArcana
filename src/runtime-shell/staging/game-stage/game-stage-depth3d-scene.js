@@ -4,7 +4,7 @@ import {
   resolveDepthEnvironmentMode,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260505c";
 
-export function createLevelStageDepth3dScene({
+export function createGameStageDepth3dScene({
   root = null,
   fovDeg = 42,
 } = {}) {

@@ -1,5 +1,10 @@
-import { LEVELS_BY_ID } from "../../../content/levels/registry.js";
-import { normalizeLevelDefinition } from "../../../game-runtime/level/normalize-level-definition.js";
+import { getLevelById } from "../../../content/levels/registry.js";
+import {
+  LEVEL_STAGE_BOX_HEIGHT_FALLBACK_PX,
+  LEVEL_STAGE_PANEL_HEIGHT_FALLBACK_PX,
+  normalizeLevelDefinition,
+} from "../../../game-runtime/level/normalize-level-definition.js";
+import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
 import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260424h";
 import {
   applyOrbBaseVisualCssVars,
@@ -17,16 +22,17 @@ import {
   applyWorldGlobeVisualCssVars,
   buildWorldGlobeVisualState,
 } from "../../../game-runtime/world/world-globe-state.js?v=20260418a";
-import { buildAuthoredLevelOverlayMarkup } from "../authored-level-overlay.js?v=20260425w";
+import { buildAuthoredLevelOverlayMarkup } from "../../../game-runtime/stage/authored-level-overlay.js?v=20260506a";
 
-const ORB_STAGE_TEMPLATE = `
+function buildOrbStageTemplate({ worldWidthPx = 2048, worldHeightPx = 2048 } = {}) {
+  return `
   <section class="orbStage" aria-label="Orb stage">
     <div class="orbStageCard">
       <div id="physStage" class="physStage" aria-label="Physics test stage">
         <div class="orbStageViewportLabel">Orb Stage</div>
         <div class="orbStageWorldDock" aria-hidden="true">
           <div class="orbStageWorld">
-            <svg id="orbStageWorldOverlay" class="orbStageWorldOverlay" viewBox="0 0 2048 2048" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <svg id="orbStageWorldOverlay" class="orbStageWorldOverlay" viewBox="0 0 ${Number(worldWidthPx) || 2048} ${Number(worldHeightPx) || 2048}" preserveAspectRatio="none" aria-hidden="true"></svg>
           </div>
         </div>
 
@@ -53,13 +59,18 @@ const ORB_STAGE_TEMPLATE = `
     </div>
   </section>
 `;
+}
 
-const DEFAULT_LEVEL = normalizeLevelDefinition(LEVELS_BY_ID["orb-stage-level"] || null);
+const DEFAULT_LEVEL = getLevelById("orb-hangar");
 
 export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   if (!root) return null;
   const resolvedLevel = normalizeLevelDefinition(level || DEFAULT_LEVEL);
-  root.innerHTML = ORB_STAGE_TEMPLATE;
+  const worldSize = resolveLevelWorldSize(resolvedLevel);
+  root.innerHTML = buildOrbStageTemplate({
+    worldWidthPx: worldSize.widthPx,
+    worldHeightPx: worldSize.heightPx,
+  });
   const stage = resolvedLevel && resolvedLevel.stage ? resolvedLevel.stage : {};
   const orbBaseVisualState = buildOrbBaseVisualState();
   const orbFractureVisualState = buildOrbFractureVisualState();
@@ -67,9 +78,9 @@ export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   const worldGlobeVisualState = buildWorldGlobeVisualState(null, {
     orbDiameterPx: orbBaseVisualState.diameterPx,
   });
-  root.dataset.levelId = String(resolvedLevel && resolvedLevel.id || "orb-stage-level");
-  root.style.setProperty("--orb-stage-panel-height", `${Number(stage.panelHeightPx) || 800}px`);
-  root.style.setProperty("--orb-stage-level-box-height", `${Number(stage.levelBoxHeightPx) || 640}px`);
+  root.dataset.levelId = String(resolvedLevel && resolvedLevel.id || "orb-hangar");
+  root.style.setProperty("--orb-stage-panel-height", `${Number(stage.panelHeightPx) || LEVEL_STAGE_PANEL_HEIGHT_FALLBACK_PX}px`);
+  root.style.setProperty("--orb-hangar-box-height", `${Number(stage.levelBoxHeightPx) || LEVEL_STAGE_BOX_HEIGHT_FALLBACK_PX}px`);
   applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
   applyOrbFractureVisualCssVars(orbFractureVisualState, { root });
   applyOrbGlobeVisualCssVars(orbGlobeVisualState, { root, orbRadiusPx: orbBaseVisualState.radiusPx });

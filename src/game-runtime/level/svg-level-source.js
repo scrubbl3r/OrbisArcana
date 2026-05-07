@@ -1,3 +1,20 @@
+import {
+  LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX,
+  LEVEL_SVG_DEPTH_MATERIAL_FALLBACK,
+  LEVEL_SVG_DEPTH_TESSELLATION_FALLBACK,
+  LEVEL_SVG_METADATA_SCALE_MODE_FIXED,
+  LEVEL_SVG_METADATA_SCALE_MODE_ORB,
+  LEVEL_SVG_METADATA_Z_MODE_ORB,
+  LEVEL_SVG_METADATA_Z_MODE_WORLD,
+  LEVEL_SVG_PROP_ANCHOR_BASE,
+  LEVEL_SVG_PROP_ANCHOR_BOTTOM,
+  LEVEL_SVG_PROP_ANCHOR_CENTER,
+  LEVEL_SVG_PROP_ANCHOR_TOP,
+  LEVEL_WORLD_ITEM_KIND_ENERGY_GLOBE_EMITTER,
+  LEVEL_WORLD_ITEM_REGEN_TRIGGER_GLOBE_SPENT,
+  LEVEL_WORLD_ITEM_Z_MODE_FALLBACK,
+} from "./normalize-level-definition.js";
+
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -63,23 +80,23 @@ function parseSvgLabelMetadata(label = "", fallbackId = "") {
 
   const zRaw = String(entries.z || entries.zbo || entries.depth || "").trim();
   const zNormalized = zRaw.toLowerCase();
-  let zMode = "fixed";
+  let zMode = LEVEL_WORLD_ITEM_Z_MODE_FALLBACK;
   let zBO = parseBoValue(zRaw, 4);
-  if (zNormalized === "orb" || zNormalized === "orbz" || zNormalized === "orb_z") {
-    zMode = "orb";
+  if (zNormalized === LEVEL_SVG_METADATA_Z_MODE_ORB || zNormalized === "orbz" || zNormalized === "orb_z") {
+    zMode = LEVEL_SVG_METADATA_Z_MODE_ORB;
     zBO = null;
   } else if (zNormalized === "world" || zNormalized === "map") {
-    zMode = "world";
+    zMode = LEVEL_SVG_METADATA_Z_MODE_WORLD;
     zBO = null;
   }
 
   const hasScale = Object.prototype.hasOwnProperty.call(entries, "scale");
   const scaleRaw = hasScale ? entries.scale : "";
   const scaleNormalized = String(scaleRaw || "").trim().toLowerCase();
-  let scaleMode = "fixed";
+  let scaleMode = LEVEL_SVG_METADATA_SCALE_MODE_FIXED;
   let scale = hasScale ? Math.max(0.01, clampNumber(scaleRaw, 1)) : 1;
-  if (scaleNormalized === "orb" || scaleNormalized === "bo") {
-    scaleMode = "orb";
+  if (scaleNormalized === LEVEL_SVG_METADATA_SCALE_MODE_ORB || scaleNormalized === "bo") {
+    scaleMode = LEVEL_SVG_METADATA_SCALE_MODE_ORB;
     scale = 1;
   }
 
@@ -95,12 +112,12 @@ function parseSvgLabelMetadata(label = "", fallbackId = "") {
     kind: String(entries.kind || entries.type || depthRole || "").trim().toLowerCase(),
     zMode,
     zBO,
-    anchor: String(entries.anchor || "center").trim().toLowerCase(),
+    anchor: String(entries.anchor || LEVEL_SVG_PROP_ANCHOR_CENTER).trim().toLowerCase(),
     scaleMode,
     scale,
     maxDepthBO: Math.max(0, parseBoValue(entries.max || entries.maxdepth || entries.depthmax || "", 10)),
-    material: String(entries.material || entries.mat || "graphite").trim().toLowerCase(),
-    tessellation: Math.max(2, Math.round(clampNumber(entries.tess || entries.tessellation, 24))),
+    material: String(entries.material || entries.mat || LEVEL_SVG_DEPTH_MATERIAL_FALLBACK).trim().toLowerCase(),
+    tessellation: Math.max(2, Math.round(clampNumber(entries.tess || entries.tessellation, LEVEL_SVG_DEPTH_TESSELLATION_FALLBACK))),
   });
 }
 
@@ -134,7 +151,7 @@ function parseDepthLayerLabel(label = "") {
     id: name,
     label: text,
     maxDepthBO: metadata.maxDepthBO,
-    orbZBO: metadata.zMode === "fixed" ? Math.max(0, parseBoValue(entries.z || entries.orbz || entries.orb_z || "", 4)) : 4,
+    orbZBO: metadata.zMode === LEVEL_WORLD_ITEM_Z_MODE_FALLBACK ? Math.max(0, parseBoValue(entries.z || entries.orbz || entries.orb_z || "", 4)) : 4,
     material: metadata.material,
     tessellation: metadata.tessellation,
   });
@@ -159,16 +176,16 @@ function inferPropKind(id = "") {
   return match ? String(match[1] || "").toLowerCase() : text;
 }
 
-function resolveRectPropAnchor(rect = {}, anchor = "center") {
+function resolveRectPropAnchor(rect = {}, anchor = LEVEL_SVG_PROP_ANCHOR_CENTER) {
   const x = clampNumber(rect && rect.x, 0);
   const y = clampNumber(rect && rect.y, 0);
   const width = clampNumber(rect && rect.width, 0);
   const height = clampNumber(rect && rect.height, 0);
-  const normalizedAnchor = String(anchor || "center").trim().toLowerCase();
-  if (normalizedAnchor === "top") {
+  const normalizedAnchor = String(anchor || LEVEL_SVG_PROP_ANCHOR_CENTER).trim().toLowerCase();
+  if (normalizedAnchor === LEVEL_SVG_PROP_ANCHOR_TOP) {
     return Object.freeze({ x: x + (width * 0.5), y });
   }
-  if (normalizedAnchor === "bottom" || normalizedAnchor === "base") {
+  if (normalizedAnchor === LEVEL_SVG_PROP_ANCHOR_BOTTOM || normalizedAnchor === LEVEL_SVG_PROP_ANCHOR_BASE) {
     return Object.freeze({ x: x + (width * 0.5), y: y + height });
   }
   return Object.freeze({ x: x + (width * 0.5), y: y + (height * 0.5) });
@@ -715,7 +732,7 @@ export function buildSvgWorldItemSpawns({
   worldWidthPx = 0,
   worldHeightPx = 0,
   worldItemLayerLabels = [],
-  defaultKind = "energy_globe_emitter",
+  defaultKind = LEVEL_WORLD_ITEM_KIND_ENERGY_GLOBE_EMITTER,
   defaultRadiusPx = 25,
 } = {}) {
   const viewBox = parseSvgViewBox(svgText);
@@ -756,7 +773,7 @@ export function buildSvgWorldItemSpawns({
         yW: clampNumber(worldCenter.yW, 0),
         r: Math.max(1, Number(defaultRadiusPx) || 25),
         capacity: 1,
-        regenTrigger: "globe_spent",
+        regenTrigger: LEVEL_WORLD_ITEM_REGEN_TRIGGER_GLOBE_SPENT,
         authoredCenter,
         worldCenter,
         authoredRadius: clampNumber(circle && circle.r, 0),
@@ -909,7 +926,10 @@ export function buildSvgLineArtShapes({
     (Array.isArray(lineArtLayerLabels) ? lineArtLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
   );
   const matchingLayers = authoredLayers
-    .filter((layer) => allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase()));
+    .filter((layer) => (
+      allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase())
+      && isSvgRenderLayerVisible(layer)
+    ));
   const worldScaleX = Math.max(0, clampNumber(worldWidthPx, 0)) / Math.max(1, clampNumber(viewBox.width, 0));
 
   return Object.freeze(matchingLayers.flatMap((layer) => {
@@ -1111,11 +1131,11 @@ export function buildBoundaryTileMask({
   loops = [],
   worldWidthPx = 0,
   worldHeightPx = 0,
-  tileSizePx = 128,
+  tileSizePx = LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX,
 } = {}) {
   const worldW = Math.max(0, clampNumber(worldWidthPx, 0));
   const worldH = Math.max(0, clampNumber(worldHeightPx, 0));
-  const tileSize = Math.max(1, clampNumber(tileSizePx, 128));
+  const tileSize = Math.max(1, clampNumber(tileSizePx, LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX));
   const cols = Math.max(1, Math.ceil(worldW / tileSize));
   const rows = Math.max(1, Math.ceil(worldH / tileSize));
   const occupied = new Set();
@@ -1163,7 +1183,7 @@ export function summarizeSvgLevelSource({
   lineArtLayerLabels = [],
   starsFieldLayerLabels = [],
   spawnMarkerId = "",
-  tileSizePx = 128,
+  tileSizePx = LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX,
 } = {}) {
   const viewBox = parseSvgViewBox(svgText);
   const loops = buildSvgBoundaryLoops({

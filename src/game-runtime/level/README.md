@@ -17,6 +17,35 @@ Three-layer model:
 Runtime shells should consume level runtime/definitions from here rather than
 inventing their own level ownership model.
 
+Verification:
+- `npm run check:levels` is the level schema/runtime smoke. It covers the
+  normalized registry contract, authored world-size SSOT, SVG source hydration
+  contract, fixture integrity, and SVG inspection summaries for canonical
+  authored levels.
+- `tools/levels/inspect-level-svg.mjs <level-id> --summary` prints the compact
+  SVG schema count smoke. `--json` emits the structured report used by
+  `check:levels`.
+- `tools/levels/level-contract-fixtures.mjs` is the test-side fixture SSOT for
+  canonical ids and expected inspection counts. It should be updated alongside
+  `src/content/levels/registry.js` when a new level graduates into the canon.
+
+Authored scene SSOT:
+- `load-authored-level-scene.js` fetches an authored SVG once per scene load,
+  summarizes it, builds the scene model, and builds stage-facing graphics models.
+  Shells and stages should consume that read model instead of parsing SVGs
+  independently.
+- `authored-level-read-model.js` owns scene-model-first accessors for consumers
+  that need arrays, boxes, or spawn points from an authored read model. Shells
+  should use these helpers instead of duplicating `sceneModel` / `summary`
+  fallback logic. Its `AUTHORED_LEVEL_READ_MODEL_KEY_*` exports are the
+  canonical field names for shared read-model access.
+- `svg-level-summary-options.js` owns the normalized `mapSource.semanticLayers`
+  to `summarizeSvgLevelSource()` option mapping. Runtime loaders and inspection
+  tools should use it instead of hand-wiring SVG layer buckets.
+- `resolve-level-world-size.js` owns the canonical fallback ladder for authored
+  world dimensions: map scale, level world size, authoring viewBox, then a hard
+  fallback.
+
 3D depth-layer rendering lives here as runtime rendering logic:
 - `depth-projection.js` owns camera/depth projection math.
 - `depth-runtime-coordinates.js` owns world-to-depth-Three coordinate

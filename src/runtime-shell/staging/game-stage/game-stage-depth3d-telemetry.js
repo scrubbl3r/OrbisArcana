@@ -18,7 +18,7 @@ function resolveMaxDepthBO(depthLayers = []) {
   return maxDepthBO;
 }
 
-export function createLevelStageDepth3dTelemetry({
+export function createGameStageDepth3dTelemetry({
   root = null,
   labelEl = null,
   debugEl = null,

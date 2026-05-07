@@ -258,11 +258,11 @@ html[data-staging-shell-mode="split-lab"] .shellGrid {
   height: calc(100vh - 38px);
 }
 
-html[data-staging-shell-mode="level-stage"] .stagingShell {
+html[data-staging-shell-mode="game-stage"] .stagingShell {
   padding: 0;
 }
 
-html[data-staging-shell-mode="level-stage"] .shellGrid {
+html[data-staging-shell-mode="game-stage"] .shellGrid {
   display: block;
   width: 100%;
   max-width: none;
@@ -276,7 +276,7 @@ html[data-staging-shell-mode="level-stage"] .shellGrid {
 
 .shellMountDev,
 .shellMountOrb,
-.shellMountLevel {
+.shellMountGame {
   display: flex;
   flex: 1 1 auto;
   min-width: 0;
@@ -286,7 +286,7 @@ html[data-staging-shell-mode="level-stage"] .shellGrid {
 
 .shellMountDev > *,
 .shellMountOrb > *,
-.shellMountLevel > * {
+.shellMountGame > * {
   flex: 1 1 auto;
   min-width: 0;
   min-height: 100%;
@@ -305,27 +305,27 @@ html[data-staging-shell-mode="level-stage"] .shellGrid {
   overflow: hidden;
 }
 
-.shellMountLevel {
+.shellMountGame {
   display: none;
   overflow: hidden;
 }
 
-html[data-staging-shell-mode="split-lab"] .shellMountLevel {
+html[data-staging-shell-mode="split-lab"] .shellMountGame {
   display: none;
 }
 
-html[data-staging-shell-mode="level-stage"] .shellMountOrb {
+html[data-staging-shell-mode="game-stage"] .shellMountOrb {
   display: none;
 }
 
-html[data-staging-shell-mode="level-stage"] .shellMountLevel {
+html[data-staging-shell-mode="game-stage"] .shellMountGame {
   display: flex;
   position: absolute;
   inset: 0;
   z-index: 2;
 }
 
-html[data-staging-shell-mode="level-stage"] .shellMountDev {
+html[data-staging-shell-mode="game-stage"] .shellMountDev {
   position: absolute;
   top: 18px;
   left: 18px;
@@ -336,7 +336,7 @@ html[data-staging-shell-mode="level-stage"] .shellMountDev {
   box-sizing: border-box;
 }
 
-html[data-staging-shell-mode="level-stage"][data-dev-stage-visibility="hidden"] .shellMountDev {
+html[data-staging-shell-mode="game-stage"][data-dev-stage-visibility="hidden"] .shellMountDev {
   transform: translateX(calc(-100% - 24px));
   opacity: 0;
   pointer-events: none;
@@ -383,11 +383,11 @@ html[data-staging-shell-mode="level-stage"][data-dev-stage-visibility="hidden"] 
 
   .shellMountDev,
   .shellMountOrb,
-  .shellMountLevel {
+  .shellMountGame {
     overflow: visible;
   }
 
-  html[data-staging-shell-mode="level-stage"] .shellMountDev {
+  html[data-staging-shell-mode="game-stage"] .shellMountDev {
     top: 10px;
     left: 10px;
     right: 10px;

@@ -18,6 +18,11 @@ import {
   buildDepthLayerMesh,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260505c";
 import {
+  AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
+  AUTHORED_LEVEL_READ_MODEL_KEY_PROPS,
+  resolveAuthoredLevelReadModelArray,
+} from "../../../game-runtime/level/authored-level-read-model.js";
+import {
   applyThreeMeshFlags,
   disposeThreeObject,
 } from "../../../game-runtime/rendering/three/three-object-utils.js";
@@ -36,20 +41,39 @@ import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
-import { createLevelStageDepth3dEventBindings } from "./level-stage-depth3d-events.js?v=20260502a";
-import { createLevelStageDepth3dBloom } from "./level-stage-depth3d-bloom.js?v=20260505h";
-import { createLevelStageDepth3dRenderLoop } from "./level-stage-depth3d-render-loop.js?v=20260430b";
-import { createLevelStageDepth3dScene } from "./level-stage-depth3d-scene.js?v=20260505c";
-import { createLevelStageDepth3dTelemetry } from "./level-stage-depth3d-telemetry.js?v=20260430b";
+import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260502a";
+import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=20260505h";
+import {
+  GAME_STAGE_DEPTH3D_TRACE_VERSION,
+  publishDepth3dModuleVersion,
+} from "./game-stage-depth3d-debug.js";
+import { createGameStageDepth3dRenderLoop } from "./game-stage-depth3d-render-loop.js?v=20260430b";
+import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260505c";
+import { createGameStageDepth3dTelemetry } from "./game-stage-depth3d-telemetry.js?v=20260430b";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
 const WORLD_GLOBE_FOREGROUND_Z_BO = 0.08;
-const LEVEL_STAGE_DEPTH3D_BLOOM_TRACE_VERSION = "20260505y";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function resolveSceneModel(authoredScene = null) {
+  return authoredScene && authoredScene.sceneModel ? authoredScene.sceneModel : null;
+}
+
+function resolveSceneSummary(authoredScene = null) {
+  return authoredScene && authoredScene.summary ? authoredScene.summary : null;
+}
+
+function resolveSceneDepthLayers(authoredScene = null) {
+  return resolveAuthoredLevelReadModelArray(authoredScene, AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS);
+}
+
+function resolveSceneProps(authoredScene = null) {
+  return resolveAuthoredLevelReadModelArray(authoredScene, AUTHORED_LEVEL_READ_MODEL_KEY_PROPS);
 }
 
 function resolveWorldGlobeDepthZ({
@@ -65,7 +89,7 @@ function resolveWorldGlobeDepthZ({
   return Math.max(1, Number(bo) || BO_WORLD_UNITS) * WORLD_GLOBE_FOREGROUND_Z_BO;
 }
 
-export function createLevelStageDepth3dLayer({
+export function createGameStageDepth3dLayer({
   root = null,
   labelEl = null,
   debugEl = null,
@@ -73,14 +97,14 @@ export function createLevelStageDepth3dLayer({
   perfTrace = null,
 } = {}) {
   if (!root) return null;
-  globalThis.__orbisDepth3dModuleVersion = LEVEL_STAGE_DEPTH3D_BLOOM_TRACE_VERSION;
+  publishDepth3dModuleVersion(GAME_STAGE_DEPTH3D_TRACE_VERSION);
   if (perfTrace && typeof perfTrace.mark === "function") {
     perfTrace.mark("depth3d.module", {
-      version: LEVEL_STAGE_DEPTH3D_BLOOM_TRACE_VERSION,
-      bloomFactory: typeof createLevelStageDepth3dBloom,
+      version: GAME_STAGE_DEPTH3D_TRACE_VERSION,
+      bloomFactory: typeof createGameStageDepth3dBloom,
     });
   }
-  const sceneRuntime = createLevelStageDepth3dScene({
+  const sceneRuntime = createGameStageDepth3dScene({
     root,
     fovDeg: DEPTH_CAMERA_FOV_DEG,
   });
@@ -112,13 +136,13 @@ export function createLevelStageDepth3dLayer({
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let lastGlobe3dTickMs = 0;
   let boundGlobe3dSpawns = Object.freeze([]);
-  const telemetry = createLevelStageDepth3dTelemetry({
+  const telemetry = createGameStageDepth3dTelemetry({
     root,
     labelEl,
     debugEl,
     fallbackBo: baseOrbWorldUnits,
   });
-  const bloom = createLevelStageDepth3dBloom({
+  const bloom = createGameStageDepth3dBloom({
     renderer,
     scene,
     camera,
@@ -137,7 +161,7 @@ export function createLevelStageDepth3dLayer({
   }
   let bloomMarkedReady = false;
   let bloomMarkedRender = false;
-  const renderLoop = createLevelStageDepth3dRenderLoop({
+  const renderLoop = createGameStageDepth3dRenderLoop({
     isDisposed: () => disposed,
     hasActiveAnimation: hasActiveGlobe3dAnimation,
     renderNow: doRenderFrame,
@@ -219,7 +243,7 @@ export function createLevelStageDepth3dLayer({
     getBurstPosition: () => orb3dActorRuntime.getPosition(),
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
-  const eventBindings = createLevelStageDepth3dEventBindings({
+  const eventBindings = createGameStageDepth3dEventBindings({
     root,
     worldGlobe3dRuntime,
     orbGlobe3dRuntime,
@@ -416,15 +440,13 @@ export function createLevelStageDepth3dLayer({
       if (disposed) return;
       clearGroup();
       clearPropsGroup();
-      const summary = authoredScene && authoredScene.summary ? authoredScene.summary : null;
-      const layers = Array.isArray(summary && summary.depthLayers) ? summary.depthLayers : [];
-      const props = Array.isArray(authoredScene && authoredScene.props)
-        ? authoredScene.props
-        : (Array.isArray(summary && summary.props) ? summary.props : []);
+      const summary = resolveSceneSummary(authoredScene);
+      const layers = resolveSceneDepthLayers(authoredScene);
+      const props = resolveSceneProps(authoredScene);
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;
-      currentOrbZBO = resolveOrbTravelZBO(summary, LEVEL_DEPTH_DEFAULT_ORB_Z_BO);
+      currentOrbZBO = resolveOrbTravelZBO({ depthLayers: layers }, LEVEL_DEPTH_DEFAULT_ORB_Z_BO);
       telemetry.setDepthLayerLabel(layers);
       for (const layer of layers) {
         const mesh = await buildDepthLayerMesh({

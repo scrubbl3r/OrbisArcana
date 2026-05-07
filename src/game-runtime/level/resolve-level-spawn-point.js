@@ -1,3 +1,8 @@
+import {
+  LEVEL_POINT_Y_MODE_FALLBACK,
+  LEVEL_POINT_Y_MODE_GROUND_CENTER_OFFSET,
+} from "./normalize-level-definition.js";
+
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -21,12 +26,12 @@ export function resolveLevelPointSpec(
           : null
       );
 
-  const yMode = String(point.yMode || "absolute").trim().toLowerCase();
+  const yMode = String(point.yMode || LEVEL_POINT_Y_MODE_FALLBACK).trim().toLowerCase();
   let yW = null;
 
   if (Number.isFinite(Number(point.yW))) {
     yW = Number(point.yW);
-  } else if (yMode === "ground_center_offset") {
+  } else if (yMode === LEVEL_POINT_Y_MODE_GROUND_CENTER_OFFSET) {
     yW = Number(groundCenterWorld()) + clampNumber(point.yValue, 0);
   } else if (Number.isFinite(Number(point.yValue))) {
     yW = Number(point.yValue);

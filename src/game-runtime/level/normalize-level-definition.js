@@ -1,3 +1,40 @@
+import { LEVEL_WORLD_SIZE_FALLBACK_PX } from "./resolve-level-world-size.js";
+
+export const LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX = 128;
+export const LEVEL_STAGE_PANEL_HEIGHT_FALLBACK_PX = 800;
+export const LEVEL_STAGE_BOX_HEIGHT_FALLBACK_PX = 640;
+export const LEVEL_STAGE_PREVIEW_ZOOM_FALLBACK = 1;
+export const LEVEL_CAMERA_MODE_GAMEPLAY = "gameplay";
+export const LEVEL_CAMERA_MODE_PREVIEW = "preview";
+export const LEVEL_CAMERA_FOLLOW_MODE_FALLBACK = "follow_target_center";
+export const LEVEL_CAMERA_INITIAL_TARGET_FALLBACK = "spawn";
+export const LEVEL_POINT_Y_MODE_FALLBACK = "absolute";
+export const LEVEL_POINT_Y_MODE_GROUND_CENTER_OFFSET = "ground_center_offset";
+export const LEVEL_WORLD_ITEM_KIND_ENERGY_GLOBE = "energy_globe";
+export const LEVEL_WORLD_ITEM_KIND_ENERGY_GLOBE_EMITTER = "energy_globe_emitter";
+export const LEVEL_WORLD_ITEM_Z_MODE_FALLBACK = "fixed";
+export const LEVEL_WORLD_ITEM_REGEN_TRIGGER_MANUAL = "manual";
+export const LEVEL_WORLD_ITEM_REGEN_TRIGGER_GLOBE_SPENT = "globe_spent";
+export const LEVEL_SVG_METADATA_Z_MODE_ORB = "orb";
+export const LEVEL_SVG_METADATA_Z_MODE_WORLD = "world";
+export const LEVEL_SVG_METADATA_SCALE_MODE_FIXED = "fixed";
+export const LEVEL_SVG_METADATA_SCALE_MODE_ORB = "orb";
+export const LEVEL_SVG_PROP_ANCHOR_CENTER = "center";
+export const LEVEL_SVG_PROP_ANCHOR_TOP = "top";
+export const LEVEL_SVG_PROP_ANCHOR_BOTTOM = "bottom";
+export const LEVEL_SVG_PROP_ANCHOR_BASE = "base";
+export const LEVEL_SVG_DEPTH_MATERIAL_FALLBACK = "graphite";
+export const LEVEL_SVG_DEPTH_TESSELLATION_FALLBACK = 24;
+export const LEVEL_SVG_LAYER_BOUNDS = "bounds";
+export const LEVEL_SVG_LAYER_CAMERA_BOUNDS = "bounds_cam";
+export const LEVEL_SVG_LAYER_SPAWNS = "spawns";
+export const LEVEL_SVG_LAYER_CAMERAS = "cameras";
+export const LEVEL_SVG_LAYER_DEPTHS = "depths";
+export const LEVEL_SVG_LAYER_GLOBES = "globes";
+export const LEVEL_SVG_LAYER_PROPS = "props";
+export const LEVEL_SVG_LAYER_ART = "art";
+export const LEVEL_SVG_LAYER_FIELDS = "fields";
+
 function cloneJsonLike(value, fallback = {}) {
   if (!value || typeof value !== "object") return { ...fallback };
   try {
@@ -56,13 +93,13 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
     scale: Object.freeze({
       worldWidthPx: Number(mapSource.scale && mapSource.scale.worldWidthPx) > 0
         ? Number(mapSource.scale.worldWidthPx)
-        : (Number(world.widthPx) > 0 ? Number(world.widthPx) : 2000),
+        : (Number(world.widthPx) > 0 ? Number(world.widthPx) : LEVEL_WORLD_SIZE_FALLBACK_PX),
       worldHeightPx: Number(mapSource.scale && mapSource.scale.worldHeightPx) > 0
         ? Number(mapSource.scale.worldHeightPx)
-        : (Number(world.heightPx) > 0 ? Number(world.heightPx) : 2000),
+        : (Number(world.heightPx) > 0 ? Number(world.heightPx) : LEVEL_WORLD_SIZE_FALLBACK_PX),
       boundaryTileSizePx: Number(mapSource.scale && mapSource.scale.boundaryTileSizePx) > 0
         ? Number(mapSource.scale.boundaryTileSizePx)
-        : 128,
+        : LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX,
     }),
     semanticLayers: Object.freeze({
       boundary: normalizeLayerLabels(semanticLayers.boundary, semanticLayers.bounds),
@@ -97,11 +134,11 @@ function normalizeLevelCamera(camera = {}, stage = {}) {
   return Object.freeze({
     previewZoom: Number(camera.previewZoom) > 0
       ? Number(camera.previewZoom)
-      : (Number(stage.previewZoom) > 0 ? Number(stage.previewZoom) : 1),
+      : (Number(stage.previewZoom) > 0 ? Number(stage.previewZoom) : LEVEL_STAGE_PREVIEW_ZOOM_FALLBACK),
     gameplayZoom: Number(camera.gameplayZoom) > 0 ? Number(camera.gameplayZoom) : 1,
-    previewFollowMode: String(camera.previewFollowMode || camera.followMode || "follow_target_center").trim(),
-    gameplayFollowMode: String(camera.gameplayFollowMode || camera.followMode || "follow_target_center").trim(),
-    initialTarget: String(camera.initialTarget || "spawn").trim(),
+    previewFollowMode: String(camera.previewFollowMode || camera.followMode || LEVEL_CAMERA_FOLLOW_MODE_FALLBACK).trim(),
+    gameplayFollowMode: String(camera.gameplayFollowMode || camera.followMode || LEVEL_CAMERA_FOLLOW_MODE_FALLBACK).trim(),
+    initialTarget: String(camera.initialTarget || LEVEL_CAMERA_INITIAL_TARGET_FALLBACK).trim(),
     screenAnchorX: Number(camera.screenAnchorX) >= 0 ? Number(camera.screenAnchorX) : 0.5,
     screenAnchorY: Number(camera.screenAnchorY) >= 0 ? Number(camera.screenAnchorY) : 0.5,
     deadzoneWidthPx: Number(camera.deadzoneWidthPx) >= 0 ? Number(camera.deadzoneWidthPx) : -1,
@@ -140,20 +177,20 @@ export function normalizeLevelDefinition(level = {}) {
     id: String(source.id || "").trim(),
     label: String(source.label || source.id || "Untitled Level").trim(),
     stage: Object.freeze({
-      panelHeightPx: Number(stage.panelHeightPx) || 800,
-      levelBoxHeightPx: Number(stage.levelBoxHeightPx) || 640,
-      previewZoom: Number(stage.previewZoom) > 0 ? Number(stage.previewZoom) : 1,
+      panelHeightPx: Number(stage.panelHeightPx) || LEVEL_STAGE_PANEL_HEIGHT_FALLBACK_PX,
+      levelBoxHeightPx: Number(stage.levelBoxHeightPx) || LEVEL_STAGE_BOX_HEIGHT_FALLBACK_PX,
+      previewZoom: Number(stage.previewZoom) > 0 ? Number(stage.previewZoom) : LEVEL_STAGE_PREVIEW_ZOOM_FALLBACK,
     }),
     camera: normalizeLevelCamera(camera, stage),
     world: Object.freeze({
-      widthPx: Number(world.widthPx) > 0 ? Number(world.widthPx) : 2000,
-      heightPx: Number(world.heightPx) > 0 ? Number(world.heightPx) : 2000,
+      widthPx: Number(world.widthPx) > 0 ? Number(world.widthPx) : LEVEL_WORLD_SIZE_FALLBACK_PX,
+      heightPx: Number(world.heightPx) > 0 ? Number(world.heightPx) : LEVEL_WORLD_SIZE_FALLBACK_PX,
     }),
     spawn: Object.freeze({
       xW: normalizeOptionalNumber(spawn.xW),
       xNorm: normalizeOptionalNumber(spawn.xNorm),
       yW: normalizeOptionalNumber(spawn.yW),
-      yMode: String(spawn.yMode || "absolute").trim(),
+      yMode: String(spawn.yMode || LEVEL_POINT_Y_MODE_FALLBACK).trim(),
       yValue: normalizeOptionalNumber(spawn.yValue),
     }),
     cameraAnchors: Object.freeze(cameraAnchors.map((anchor = {}) => Object.freeze({
@@ -161,7 +198,7 @@ export function normalizeLevelDefinition(level = {}) {
       xW: normalizeOptionalNumber(anchor.xW),
       xNorm: normalizeOptionalNumber(anchor.xNorm),
       yW: normalizeOptionalNumber(anchor.yW),
-      yMode: String(anchor.yMode || "absolute").trim(),
+      yMode: String(anchor.yMode || LEVEL_POINT_Y_MODE_FALLBACK).trim(),
       yValue: normalizeOptionalNumber(anchor.yValue),
     }))),
     mapSource: normalizeLevelMapSource(mapSource, world),

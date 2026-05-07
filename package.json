@@ -2,6 +2,7 @@
   "type": "module",
   "scripts": {
     "check:labs": "npm run check:vfx-studio",
+    "check:levels": "node tools/levels/check-level-contracts.mjs",
     "check:vfx-studio": "node tools/lab/check-vfx-lab-surfaces.mjs",
     "check:vfx-lab": "npm run check:vfx-studio",
     "pre-smoke:v2": "node tools/rule-engine-v2/pre-smoke-check.mjs",

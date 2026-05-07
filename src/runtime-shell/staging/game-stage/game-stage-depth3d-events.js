@@ -10,7 +10,7 @@ import {
   EVT_VOICE_SPELL_LOADED,
 } from "../../../contracts/events.js";
 
-export function createLevelStageDepth3dEventBindings({
+export function createGameStageDepth3dEventBindings({
   root = null,
   worldGlobe3dRuntime = null,
   orbGlobe3dRuntime = null,

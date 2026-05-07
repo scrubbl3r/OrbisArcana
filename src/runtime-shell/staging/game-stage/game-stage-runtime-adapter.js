@@ -1,34 +1,20 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
-import { applyAuthoredStarsFieldParallax } from "../authored-level-overlay.js?v=20260425w";
+import { applyAuthoredStageCameraVars } from "../../../game-runtime/stage/authored-stage-frame.js";
+import { resolveAuthoredLevelReadModelSpawnMarker } from "../../../game-runtime/level/authored-level-read-model.js";
 
-const LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
+const GAME_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 }
 
-function applyCameraVarsToWorld(worldEl, {
-  worldWidthPx = 0,
-  worldHeightPx = 0,
-  zoom = 1,
-  camLeft = 0,
-  camTop = 0,
-} = {}) {
-  if (!worldEl) return;
-  worldEl.style.setProperty("--level-world-width", `${worldWidthPx}px`);
-  worldEl.style.setProperty("--level-world-height", `${worldHeightPx}px`);
-  worldEl.style.setProperty("--level-world-zoom", `${Number(zoom || 1)}`);
-  worldEl.style.setProperty("--level-world-x", `${(-Number(camLeft || 0) * Number(zoom || 1)).toFixed(2)}px`);
-  worldEl.style.setProperty("--level-world-y", `${(-Number(camTop || 0) * Number(zoom || 1)).toFixed(2)}px`);
-}
-
-export function createLevelStageRuntimeAdapter({
+export function createGameStageRuntimeAdapter({
   refs = {},
   level = null,
   state = null,
   depth3dRuntime = null,
-  orbDiameterWorldUnits = LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS,
+  orbDiameterWorldUnits = GAME_STAGE_ORB_DIAMETER_WORLD_UNITS,
   unbindResize = () => {},
 } = {}) {
   const core = createStageRuntimeAdapterCore({
@@ -36,7 +22,7 @@ export function createLevelStageRuntimeAdapter({
     level,
     state,
     getOrbWrapPosition: ({ top = 0, left = "50%", xW = null, yW = null } = {}) => {
-      const orbRadiusWorldUnits = Math.max(1, Number(orbDiameterWorldUnits) || LEVEL_STAGE_ORB_DIAMETER_WORLD_UNITS) * 0.5;
+      const orbRadiusWorldUnits = Math.max(1, Number(orbDiameterWorldUnits) || GAME_STAGE_ORB_DIAMETER_WORLD_UNITS) * 0.5;
       if (Number.isFinite(Number(xW)) && Number.isFinite(Number(yW))) {
         return {
           left: `${Number(xW).toFixed(2)}px`,
@@ -104,13 +90,22 @@ export function createLevelStageRuntimeAdapter({
       }
     },
     getSpawnMarker() {
-      return state && state.spawn ? state.spawn : null;
+      return resolveAuthoredLevelReadModelSpawnMarker(state);
     },
     getPreviewZoom() {
       return state ? state.previewZoom : 0;
     },
     getPreviewFollowMode() {
       return state ? state.previewFollowMode : "";
+    },
+    getAuthoredSceneReadModel() {
+      if (!state || !state.summary || !state.sceneModel) return null;
+      return Object.freeze({
+        level,
+        summary: state.summary,
+        sceneModel: state.sceneModel,
+        levelGraphicsModel: state.levelGraphicsModel || null,
+      });
     },
     applyCameraFrame({
       camLeft = 0,
@@ -123,19 +118,13 @@ export function createLevelStageRuntimeAdapter({
         : { width: 0, height: 0 };
       const frameZoom = Number(zoom || state.previewZoom);
       state.externalCameraAuthority = true;
-      const cameraVars = {
+      applyAuthoredStageCameraVars({
+        refs,
+        starsParallaxRefs: state.starsParallaxRefs,
         worldWidthPx: state.worldWidthPx,
         worldHeightPx: state.worldHeightPx,
-        zoom: frameZoom,
         camLeft,
         camTop,
-      };
-      applyCameraVarsToWorld(refs.world, cameraVars);
-      applyCameraVarsToWorld(refs.actorWorld, cameraVars);
-      applyCameraVarsToWorld(refs.topArtWorld, cameraVars);
-      applyAuthoredStarsFieldParallax(state.starsParallaxRefs, {
-        camLeft: Number(camLeft || 0),
-        camTop: Number(camTop || 0),
         zoom: frameZoom,
         viewportWidthPx: clampNumber(rect.width, 0),
         viewportHeightPx: clampNumber(rect.height, 0),

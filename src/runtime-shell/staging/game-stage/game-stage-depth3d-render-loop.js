@@ -1,6 +1,6 @@
 import { normalizeDepthRenderFrame } from "../../../game-runtime/level/depth-stage-frame.js?v=20260430a";
 
-export function createLevelStageDepth3dRenderLoop({
+export function createGameStageDepth3dRenderLoop({
   isDisposed = () => false,
   hasActiveAnimation = () => false,
   renderNow = () => {},

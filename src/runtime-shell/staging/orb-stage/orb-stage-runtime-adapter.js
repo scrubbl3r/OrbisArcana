@@ -1,11 +1,13 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
+import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
 import {
-  applyAuthoredStarsFieldParallax,
   captureAuthoredStarsFieldParallaxRefs,
-} from "../authored-level-overlay.js?v=20260425w";
+} from "../../../game-runtime/stage/authored-level-overlay.js?v=20260506a";
+import { applyAuthoredStageCameraVars } from "../../../game-runtime/stage/authored-stage-frame.js";
 
 export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOverlayMarkup = () => "" } = {}) {
   const localBackdropState = Object.create(null);
+  const levelWorldSize = resolveLevelWorldSize(level);
   const stageRefs = Object.freeze({
     root: refs.root || null,
     physStage: refs.physStage || null,
@@ -63,8 +65,8 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
       const stageBackdrop = runtime.stageBackdrop || (runtime.stageBackdrop = localBackdropState);
       const nextLineArtShapes = Array.isArray(lineArtShapes) ? lineArtShapes.slice() : [];
       const nextLineArtKey = nextLineArtShapes.map((shape = {}) => String(shape.id || "")).join("|");
-      const worldWidth = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldWidthPx) || 2048);
-      const worldHeight = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldHeightPx) || 2048);
+      const worldWidth = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldWidthPx) || levelWorldSize.widthPx);
+      const worldHeight = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldHeightPx) || levelWorldSize.heightPx);
 
       if (stageBackdrop.lineArtKey !== nextLineArtKey) {
         stageBackdrop.lineArtShapes = nextLineArtShapes;
@@ -86,19 +88,18 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
       camLeft = 0,
       camTop = 0,
       zoom = 1,
-      worldWidthPx = 2048,
-      worldHeightPx = 2048,
+      worldWidthPx = levelWorldSize.widthPx,
+      worldHeightPx = levelWorldSize.heightPx,
     } = {}) {
       if (!stageRefs.world) return;
-      stageRefs.world.style.setProperty("--orb-stage-world-width", `${Math.max(1, Number(worldWidthPx) || 2048)}px`);
-      stageRefs.world.style.setProperty("--orb-stage-world-height", `${Math.max(1, Number(worldHeightPx) || 2048)}px`);
-      stageRefs.world.style.setProperty("--orb-stage-world-x", `${(-Number(camLeft || 0) * Number(zoom || 1)).toFixed(2)}px`);
-      stageRefs.world.style.setProperty("--orb-stage-world-y", `${(-Number(camTop || 0) * Number(zoom || 1)).toFixed(2)}px`);
-      stageRefs.world.style.setProperty("--orb-stage-world-zoom", `${Number(zoom || 1)}`);
-      applyAuthoredStarsFieldParallax(localBackdropState.starsParallaxRefs, {
-        camLeft: Number(camLeft || 0),
-        camTop: Number(camTop || 0),
-        zoom: Number(zoom || 1),
+      applyAuthoredStageCameraVars({
+        refs: stageRefs,
+        starsParallaxRefs: localBackdropState.starsParallaxRefs,
+        worldWidthPx,
+        worldHeightPx,
+        camLeft,
+        camTop,
+        zoom,
         viewportWidthPx: Math.max(0, Number(localBackdropState.width) || 0),
         viewportHeightPx: Math.max(0, Number(localBackdropState.height) || 0),
       });

@@ -1,9 +1,10 @@
-import { LEVEL_MVP } from "./level-mvp/level-mvp.js";
-import { ORB_STAGE_LEVEL } from "./orb-stage-level/orb-stage-level.js";
+import { REACTOR_SHAFT } from "./reactor-shaft/reactor-shaft.js";
+import { ORB_HANGAR } from "./orb-hangar/orb-hangar.js";
+import { normalizeLevelDefinition } from "../../game-runtime/level/normalize-level-definition.js";
 
 export const LEVELS = Object.freeze([
-  LEVEL_MVP,
-  ORB_STAGE_LEVEL,
+  normalizeLevelDefinition(REACTOR_SHAFT),
+  normalizeLevelDefinition(ORB_HANGAR),
 ]);
 
 export const LEVELS_BY_ID = Object.freeze(

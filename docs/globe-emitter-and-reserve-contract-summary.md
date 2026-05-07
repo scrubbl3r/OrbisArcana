@@ -291,7 +291,7 @@ The current flow is roughly:
 
 Relevant current files:
 
-- `src/content/levels/orb-stage-level/orb-stage-level.js`
+- `src/content/levels/orb-hangar/orb-hangar.js`
 - `src/content/world-items/default-world-items.js`
 - `src/runtime-shell/staging/bootstrap-staging-runtime-context.js`
 - `src/game-runtime/world/world-system.js`
@@ -351,7 +351,7 @@ The clean architecture should separate world-side ecology from orb-side inventor
 Home:
 
 - `src/content/world-items/`
-- level-specific authored level packages such as `src/content/levels/orb-stage-level/`
+- level-specific authored level packages such as `src/content/levels/orb-hangar/`
 
 Responsibilities:
 
@@ -483,7 +483,7 @@ The first implementation slice established the archetype seam in code.
 
 ### Content
 
-`orb-stage-level` now authors the orb-stage exemplar as an emitter:
+`orb-hangar` now authors the orb-stage exemplar as an emitter:
 
 - `kind: "energy_globe_emitter"`
 - `capacity: 1`

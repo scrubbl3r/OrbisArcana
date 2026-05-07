@@ -1,6 +1,6 @@
 export const STAGING_SHELL_MODE = Object.freeze({
   splitLab: "split-lab",
-  levelStage: "level-stage",
+  gameStage: "game-stage",
 });
 
 export const STAGING_DEV_STAGE_VISIBILITY = Object.freeze({
@@ -9,8 +9,8 @@ export const STAGING_DEV_STAGE_VISIBILITY = Object.freeze({
 });
 
 function normalizeMode(mode) {
-  return String(mode || "").trim().toLowerCase() === STAGING_SHELL_MODE.levelStage
-    ? STAGING_SHELL_MODE.levelStage
+  return String(mode || "").trim().toLowerCase() === STAGING_SHELL_MODE.gameStage
+    ? STAGING_SHELL_MODE.gameStage
     : STAGING_SHELL_MODE.splitLab;
 }
 
@@ -76,7 +76,7 @@ export function createStagingShellModeController({
   }
 
   function toggleDevStageVisibility() {
-    if (mode !== STAGING_SHELL_MODE.levelStage) return getState();
+    if (mode !== STAGING_SHELL_MODE.gameStage) return getState();
     return setDevStageVisibility(
       devStageVisibility === STAGING_DEV_STAGE_VISIBILITY.hidden
         ? STAGING_DEV_STAGE_VISIBILITY.shown

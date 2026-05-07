@@ -3,14 +3,14 @@ The staging shell composes staging environments into a single hosted surface.
 Planned responsibilities:
 - own the top-level staging page
 - create shared runtime/session context for staging surfaces
-- mount `dev-staging` and `orb-stage`
-- control presentation modes such as `split-lab` and `level-stage`
+- mount `dev-staging`, `orb-stage`, and `game-stage`
+- control presentation modes such as `split-lab` and `game-stage`
 
 The shell should orchestrate staging surfaces, not own deep gameplay logic.
 
 Current shell mode policy:
 - `split-lab` is the default bounded workbench: `dev-stage` left, `orb-stage` right
-- `level-stage` is the immersive shell mode: full-window main stage with toggleable dev-stage rail
+- `game-stage` is the immersive shell mode: full-window main stage with toggleable dev-stage rail
 - shell hotkeys are guarded behind `Cmd+Shift+1`, `Cmd+Shift+2`, and `Cmd+Shift+D`
 
 Current testing policy:

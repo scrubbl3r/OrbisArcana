@@ -1,4 +1,5 @@
 import { resolveLevelSpawnPoint, resolveLevelCameraAnchor } from "./resolve-level-spawn-point.js";
+import { LEVEL_CAMERA_INITIAL_TARGET_FALLBACK } from "./normalize-level-definition.js";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -55,11 +56,11 @@ export function buildAuthoredLevelSceneModel({
 export function resolveAuthoredLevelCameraTarget({
   level = null,
   sceneModel = null,
-  initialTarget = "spawn",
+  initialTarget = LEVEL_CAMERA_INITIAL_TARGET_FALLBACK,
   worldWidthPx = 0,
   worldHeightPx = 0,
 } = {}) {
-  const normalizedTarget = String(initialTarget || "spawn").trim().toLowerCase();
+  const normalizedTarget = String(initialTarget || LEVEL_CAMERA_INITIAL_TARGET_FALLBACK).trim().toLowerCase();
   const spawn = sceneModel && sceneModel.spawn && sceneModel.spawn.worldCenter ? sceneModel.spawn.worldCenter : null;
   const anchorTarget = normalizedTarget.startsWith("anchor:")
     ? resolveLevelCameraAnchor(level, normalizedTarget.slice("anchor:".length), {
@@ -68,7 +69,7 @@ export function resolveAuthoredLevelCameraTarget({
         svgAnchors: sceneModel && Array.isArray(sceneModel.cameraAnchors) ? sceneModel.cameraAnchors : [],
       })
     : null;
-  if (normalizedTarget === "spawn" && spawn) return spawn;
+  if (normalizedTarget === LEVEL_CAMERA_INITIAL_TARGET_FALLBACK && spawn) return spawn;
   if (anchorTarget && anchorTarget.point) return anchorTarget.point;
   if (spawn) return spawn;
   return Object.freeze({
