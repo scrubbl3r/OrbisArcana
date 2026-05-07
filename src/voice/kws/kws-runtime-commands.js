@@ -1,4 +1,4 @@
-export function createKwsMvpCommands({
+export function createKwsRuntimeCommands({
   kwsRuntimeController,
   kwsListenPolicyController,
   defaultBackendKey = "openwakeword_browser",

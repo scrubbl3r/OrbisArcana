@@ -7,7 +7,7 @@ export function bootstrapKwsStaging({
   createDevStagingPanelElements,
   getKwsWordProvider = () => null,
   getKwsVoiceProvider = () => null,
-  getMvp = () => null,
+  getReceiverRuntime = () => null,
   readTuneFromUi = () => ({ inferThreshold: null, inferCooldownMs: null }),
   refreshKwsMicBtn = () => {},
   readout = {},
@@ -120,22 +120,22 @@ export function bootstrapKwsStaging({
     getKwsWordProvider,
     getKwsVoiceProvider,
     onGateOpened: (payload = {}) => {
-      const mvp = getMvp();
-      if (mvp && mvp.eventBus) mvp.eventBus.emit("voice.gate_opened", payload);
+      const receiverRuntime = getReceiverRuntime();
+      if (receiverRuntime && receiverRuntime.eventBus) receiverRuntime.eventBus.emit("voice.gate_opened", payload);
     },
     onGateClosed: (payload = {}) => {
-      const mvp = getMvp();
-      if (mvp && mvp.eventBus) mvp.eventBus.emit("voice.gate_closed", payload);
+      const receiverRuntime = getReceiverRuntime();
+      if (receiverRuntime && receiverRuntime.eventBus) receiverRuntime.eventBus.emit("voice.gate_closed", payload);
     },
     onApplyTune: (nextTune = {}) => {
-      const mvp = getMvp();
-      if (!mvp || typeof mvp.setKwsBackendConfig !== "function") return null;
-      return mvp.setKwsBackendConfig(nextTune);
+      const receiverRuntime = getReceiverRuntime();
+      if (!receiverRuntime || typeof receiverRuntime.setKwsBackendConfig !== "function") return null;
+      return receiverRuntime.setKwsBackendConfig(nextTune);
     },
     getListenPolicyStatus: () => {
-      const mvp = getMvp();
-      if (!mvp || typeof mvp.getKwsListenPolicyStatus !== "function") return null;
-      return mvp.getKwsListenPolicyStatus();
+      const receiverRuntime = getReceiverRuntime();
+      if (!receiverRuntime || typeof receiverRuntime.getKwsListenPolicyStatus !== "function") return null;
+      return receiverRuntime.getKwsListenPolicyStatus();
     },
   });
 
@@ -173,8 +173,8 @@ export function bootstrapKwsStaging({
         if (typeof readout.setDebugBackend === "function") readout.setDebugBackend(key);
       },
       emitVoiceSetMode: (mode) => {
-        const mvp = getMvp();
-        const bus = mvp && mvp.eventBus;
+        const receiverRuntime = getReceiverRuntime();
+        const bus = receiverRuntime && receiverRuntime.eventBus;
         if (bus && typeof bus.emit === "function" && readout.receiverEvents && readout.receiverEvents.EVT_VOICE_SET_MODE) {
           bus.emit(readout.receiverEvents.EVT_VOICE_SET_MODE, { mode });
         }

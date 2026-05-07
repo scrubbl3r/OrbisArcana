@@ -32,6 +32,9 @@ export async function bootstrapShellKwsRuntimeBase({
   const createKwsReceiverBridge =
     sharedModules.kwsReceiverBridgeModule &&
     sharedModules.kwsReceiverBridgeModule.createKwsReceiverBridge;
+  const createKwsRuntimeCommands =
+    sharedModules.kwsRuntimeCommandsModule &&
+    sharedModules.kwsRuntimeCommandsModule.createKwsRuntimeCommands;
   const receiverEventsModule = sharedModules.receiverEventsModule || {};
   const RECEIVER_EVENTS = {
     ...(receiverEventsModule.RECEIVER_EVENTS && typeof receiverEventsModule.RECEIVER_EVENTS === "object"
@@ -52,6 +55,7 @@ export async function bootstrapShellKwsRuntimeBase({
     typeof bootstrapKwsVoiceRuntime !== "function" ||
     typeof createKwsRuntimeConfig !== "function" ||
     typeof createKwsReceiverBridge !== "function" ||
+    typeof createKwsRuntimeCommands !== "function" ||
     typeof loadReceiverInitModules !== "function"
   ) {
     return null;
@@ -96,7 +100,7 @@ export async function bootstrapShellKwsRuntimeBase({
     createDevStagingPanelElements: () => createDevStagingPanelElements(devRefs),
     getKwsWordProvider: () => kwsWordProvider,
     getKwsVoiceProvider: () => kwsVoiceProvider,
-    getMvp: () => runtime.receiverRuntime || runtime.mvp,
+    getReceiverRuntime: () => runtime.receiverRuntime || runtime.mvp,
     readTuneFromUi: () => ({
       inferThreshold: readNumberInputOrNull(devRefs.kwsTokenThrInput),
       inferCooldownMs: readNumberInputOrNull(devRefs.kwsCooldownMsInput),
@@ -154,6 +158,17 @@ export async function bootstrapShellKwsRuntimeBase({
     );
   }
 
+  const kwsRuntimeCommands = createKwsRuntimeCommands({
+    kwsRuntimeController,
+    kwsListenPolicyController,
+    defaultBackendKey: runtimeConfig.defaultBackendKey,
+    getCurrentBackendKey: () => kwsBackendKey,
+    setCurrentBackendKey: (nextBackendKey) => {
+      kwsBackendKey = String(nextBackendKey || runtimeConfig.defaultBackendKey || "openwakeword_browser");
+      kwsDebugState.backend = kwsBackendKey;
+    },
+  });
+
   return {
     eventBus,
     receiverMods,
@@ -166,6 +181,7 @@ export async function bootstrapShellKwsRuntimeBase({
     kwsVoiceProvider,
     voiceProviderManager,
     kwsListenPolicyController,
+    kwsRuntimeCommands,
     kwsDebugState,
     kwsBackendKey,
     runtimeConfig,

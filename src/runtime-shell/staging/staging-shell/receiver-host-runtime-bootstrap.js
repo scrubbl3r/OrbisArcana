@@ -372,7 +372,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     kwsWordProvider: shellKws.kwsWordProvider,
     voiceProviderManager: shellKws.voiceProviderManager,
     kwsVoiceProvider: shellKws.kwsVoiceProvider,
-    kwsRuntimeCommands: {},
+    kwsRuntimeCommands: shellKws.kwsRuntimeCommands || {},
     kwsBootOrchestrator: shellKws.kwsBootOrchestrator,
     grantOrbGrace: (grace) => {
       if (shellHooks && typeof shellHooks.grantOrbGrace === "function") shellHooks.grantOrbGrace(grace);
