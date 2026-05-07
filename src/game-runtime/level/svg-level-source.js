@@ -143,10 +143,10 @@ function parseDepthLayerLabel(label = "") {
   const metadata = parseSvgLabelMetadata(label);
   const entries = metadata.entries || {};
   const text = String(label || "").trim();
-  const legacyMatch = text.match(/^depth\s*:\s*([^,\s]+)/i);
-  const name = String(metadata.kind || (legacyMatch && legacyMatch[1]) || metadata.id || "").trim();
+  const depthLabelMatch = text.match(/^depth\s*:\s*([^,\s]+)/i);
+  const name = String(metadata.kind || (depthLabelMatch && depthLabelMatch[1]) || metadata.id || "").trim();
   if (!name) return null;
-  if (metadata.role !== "depth" && !legacyMatch) return null;
+  if (metadata.role !== "depth" && !depthLabelMatch) return null;
   return Object.freeze({
     id: name,
     label: text,
