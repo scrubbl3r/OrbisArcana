@@ -108,15 +108,15 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     return typeof hook === "function" ? hook(...args) : undefined;
   };
 
-  const renderLegacyDomOrbDamageVisuals = () => {
+  const renderOrbStageLegacyDomOrbDamageVisuals = () => {
     callShellHook("renderLegacyDomOrbDamageVisuals");
   };
 
-  const spawnLegacyDomOrbShatterShardVfx = (payload) => {
+  const spawnOrbStageLegacyDomOrbShatterShardVfx = (payload) => {
     callShellHook("spawnLegacyDomOrbShatterShardVfx", payload);
   };
 
-  const stopLegacyDomOrbShatterShardSim = () => {
+  const stopOrbStageLegacyDomOrbShatterShardSim = () => {
     callShellHook("stopLegacyDomOrbShatterShardSim");
   };
 
@@ -315,8 +315,8 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     clearFloatGrace: () => {
       if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace();
     },
-    renderLegacyDomOrbDamageVisuals,
-    spawnLegacyDomOrbShatterShardVfx,
+    renderLegacyDomOrbDamageVisuals: renderOrbStageLegacyDomOrbDamageVisuals,
+    spawnLegacyDomOrbShatterShardVfx: spawnOrbStageLegacyDomOrbShatterShardVfx,
     clearOrbDeathRuntimeVfx: () => {
       if (shellHooks && typeof shellHooks.clearOrbDeathRuntimeVfx === "function") shellHooks.clearOrbDeathRuntimeVfx();
     },
@@ -327,7 +327,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
     },
     legacyDomOrbShatterController: shellHooks && shellHooks.legacyDomOrbShatterController ? shellHooks.legacyDomOrbShatterController : null,
-    stopLegacyDomOrbShatterShardSim,
+    stopLegacyDomOrbShatterShardSim: stopOrbStageLegacyDomOrbShatterShardSim,
     worldSystem: stageAdapters && typeof stageAdapters.getWorldSystem === "function" ? stageAdapters.getWorldSystem() : null,
     resetOrbStrokeColor: () => {
       if (shellHooks && typeof shellHooks.resetOrbStrokeColor === "function") shellHooks.resetOrbStrokeColor();
@@ -391,7 +391,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     closeDeathOverlay: () => {
       if (shellHooks && typeof shellHooks.closeDeathOverlay === "function") shellHooks.closeDeathOverlay();
     },
-    renderLegacyDomOrbDamageVisuals,
+    renderLegacyDomOrbDamageVisuals: renderOrbStageLegacyDomOrbDamageVisuals,
     updateDebugReadout: () => {
       if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
     },
