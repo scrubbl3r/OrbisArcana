@@ -87,8 +87,8 @@ export function createOrbStageRuntimeAdapter({
         gameStageAdapter.applyOrbTransform(args);
       }
     },
-    renderLegacyDomOrbDamageVisuals: orbStageLegacyDomAdapter.renderLegacyDomOrbDamageVisuals,
-    createLegacyDomOrbShatterController: orbStageLegacyDomAdapter.createLegacyDomOrbShatterController,
+    renderOrbStageLegacyDomOrbDamageVisuals: orbStageLegacyDomAdapter.renderLegacyDomOrbDamageVisuals,
+    createOrbStageLegacyDomOrbShatterController: orbStageLegacyDomAdapter.createLegacyDomOrbShatterController,
     getOrbStageLegacyDomElements() {
       return Object.freeze(collectOrbStageLegacyDomRefs(stageRefs));
     },

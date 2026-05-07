@@ -11,7 +11,7 @@ import {
   resolveStageCameraZoom,
 } from "../../../game-runtime/level/authored-level-camera.js?v=20260506a";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260507u";
+import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260507v";
 import { createGameStageDepth3dLayer } from "../game-stage/game-stage-depth3d.js?v=20260506e";
 import {
   applyOrbBaseVisualCssVars,
