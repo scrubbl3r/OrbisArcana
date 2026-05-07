@@ -18,10 +18,11 @@ The stage is an adapter and coordinator. It wires authored presets, runtime
 events, and visible hosts together, delegates shared stage behavior through the
 game-stage adapter, and delegates effect internals to their domain runtime.
 
-- DOM/SVG receiver effects may use `src/vfx/effects/` dispatch runtimes.
+- Temporary DOM/SVG receiver compatibility effects may use `src/vfx/effects/`
+  dispatch runtimes while their authored 3D replacements land.
 - True 3D orb effects should use `src/game-runtime/orb/` runtimes.
 - DOM compatibility versions of 3D-authored effects should be named as
-  fallbacks, not as the canonical 3D implementation.
+  temporary legacy DOM compatibility, not as the canonical 3D implementation.
 - SVG level schema, hidden-layer hydration rules, and authored read-model
   access belong to `src/game-runtime/level/` and `src/content/levels/schema/`.
 
