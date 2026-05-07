@@ -284,7 +284,7 @@ export function initOrbStageReceiverVfxRuntime({
     ),
   });
 
-  function directPlayShock() {
+  function playOrbStageShockFallback() {
     if (stageVfx.legacyDomShockwaveRuntime && typeof stageVfx.legacyDomShockwaveRuntime.play === "function") {
       stageVfx.legacyDomShockwaveRuntime.play();
       return { handled: true };
@@ -292,7 +292,7 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function directPlayShockwave3d(payload = {}) {
+  function playOrbStageShockwave3dFallback(payload = {}) {
     if (typeof playShockwave3dRuntime === "function") {
       const result = playShockwave3dRuntime({
         ...(vfxDefaults && vfxDefaults.shock3d && typeof vfxDefaults.shock3d === "object"
@@ -305,13 +305,13 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function directTriggerShockwave() {
-    const shockwave3dResult = directPlayShockwave3d();
+  function triggerOrbStageShockwaveFallback() {
+    const shockwave3dResult = playOrbStageShockwave3dFallback();
     if (shockwave3dResult && shockwave3dResult.handled) return shockwave3dResult;
     if (typeof triggerShockwaveRuntime === "function") {
       const result = triggerShockwaveRuntime({
         legacyDomShockwaveRuntime: stageVfx.legacyDomShockwaveRuntime,
-        playShock: () => directPlayShock(),
+        playShock: () => playOrbStageShockFallback(),
       });
       if (result && result.handled) return result;
     }
@@ -319,10 +319,10 @@ export function initOrbStageReceiverVfxRuntime({
       stageVfx.legacyDomShockwaveRuntime.trigger();
       return { handled: true };
     }
-    return directPlayShock();
+    return playOrbStageShockFallback();
   }
 
-  function directPlayElectricAoe() {
+  function playOrbStageElectricAoeFallback() {
     if (typeof playElectricAoeRuntime === "function") {
       const result = playElectricAoeRuntime({
         legacyDomElectricAoeRuntime: stageVfx.legacyDomElectricAoeRuntime,
@@ -336,7 +336,7 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function directPlayFlameAoe() {
+  function playOrbStageFlameAoeFallback() {
     if (typeof playFlameAoe3dRuntime === "function") {
       const result = playFlameAoe3dRuntime(
         (vfxDefaults && vfxDefaults.flame3d && typeof vfxDefaults.flame3d === "object")
@@ -358,7 +358,7 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function directActivateBubbleShield({ durationMs } = {}) {
+  function activateOrbStageBubbleShieldFallback({ durationMs } = {}) {
     const resolvedDurationMs = Math.max(150, Number(durationMs) || Number(vfxDefaults.shield.durationMs) || 8000);
     markTrace("orbStage.bubbleShield.activate.request", {
       durationMs: resolvedDurationMs,
@@ -415,14 +415,14 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function directPlayOrbNod(payload = {}) {
+  function playOrbStageOrbNodFallback(payload = {}) {
     if (stageVfx.legacyDomOrbNodRuntime && typeof stageVfx.legacyDomOrbNodRuntime.play === "function") {
       return stageVfx.legacyDomOrbNodRuntime.play(payload);
     }
     return { handled: false };
   }
 
-  function directPlayOrbNod3d(payload = {}) {
+  function playOrbStageOrbNod3dFallback(payload = {}) {
     if (typeof playOrbNod3dRuntime === "function") {
       const result = playOrbNod3dRuntime({
         ...payload,
@@ -441,7 +441,7 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function directPlayTeleport(payload = {}) {
+  function playOrbStageTeleportFallback(payload = {}) {
     if (typeof playOrbTeleport3dRuntime === "function") {
       const result = teleport3dSequenceRuntime.play(payload);
       if (result && result.handled) return result;
@@ -479,80 +479,80 @@ export function initOrbStageReceiverVfxRuntime({
     clearLegacyDomOrbShatterRuntime,
     getLegacyDomOrbShatterRuntime,
     playShock() {
-      return directPlayShock();
+      return playOrbStageShockFallback();
     },
     triggerShockwave() {
       const dispatched = dispatchRuntimeEffect({
         targetKind: "spell",
         targetId: "shockwave",
         runtime: {
-          playFlameAoe: () => directPlayFlameAoe(),
-          playElectricAoe: () => directPlayElectricAoe(),
-          playShockwave3d: (payload = {}) => directPlayShockwave3d(payload),
-          triggerShockwave: () => directTriggerShockwave(),
-          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
+          playFlameAoe: () => playOrbStageFlameAoeFallback(),
+          playElectricAoe: () => playOrbStageElectricAoeFallback(),
+          playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
+          triggerShockwave: () => triggerOrbStageShockwaveFallback(),
+          activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
         },
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return directTriggerShockwave();
+      return triggerOrbStageShockwaveFallback();
     },
     playElectricAoe() {
       const dispatched = dispatchRuntimeEffect({
         targetKind: "spell",
         targetId: "aoe_electric",
         runtime: {
-          playFlameAoe: () => directPlayFlameAoe(),
-          playElectricAoe: () => directPlayElectricAoe(),
-          playShockwave3d: (payload = {}) => directPlayShockwave3d(payload),
-          triggerShockwave: () => directTriggerShockwave(),
-          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
+          playFlameAoe: () => playOrbStageFlameAoeFallback(),
+          playElectricAoe: () => playOrbStageElectricAoeFallback(),
+          playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
+          triggerShockwave: () => triggerOrbStageShockwaveFallback(),
+          activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
         },
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return directPlayElectricAoe();
+      return playOrbStageElectricAoeFallback();
     },
     playFlameAoe() {
       const dispatched = dispatchRuntimeEffect({
         targetKind: "spell",
         targetId: "aoe_flame",
         runtime: {
-          playFlameAoe: () => directPlayFlameAoe(),
-          playElectricAoe: () => directPlayElectricAoe(),
-          playShockwave3d: (payload = {}) => directPlayShockwave3d(payload),
-          triggerShockwave: () => directTriggerShockwave(),
-          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
+          playFlameAoe: () => playOrbStageFlameAoeFallback(),
+          playElectricAoe: () => playOrbStageElectricAoeFallback(),
+          playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
+          triggerShockwave: () => triggerOrbStageShockwaveFallback(),
+          activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
         },
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return directPlayFlameAoe();
+      return playOrbStageFlameAoeFallback();
     },
     activateBubbleShield({ durationMs } = {}) {
       const dispatched = dispatchRuntimeEffect({
         targetKind: "spell",
         targetId: "bubble_shield",
         runtime: {
-          playFlameAoe: () => directPlayFlameAoe(),
-          playElectricAoe: () => directPlayElectricAoe(),
-          playShockwave3d: (payload = {}) => directPlayShockwave3d(payload),
-          triggerShockwave: () => directTriggerShockwave(),
-          activateBubbleShield: (payload = {}) => directActivateBubbleShield(payload),
+          playFlameAoe: () => playOrbStageFlameAoeFallback(),
+          playElectricAoe: () => playOrbStageElectricAoeFallback(),
+          playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
+          triggerShockwave: () => triggerOrbStageShockwaveFallback(),
+          activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
         },
         payload: { durationMs },
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return directActivateBubbleShield({ durationMs });
+      return activateOrbStageBubbleShieldFallback({ durationMs });
     },
     playTeleport(payload = {}) {
       const dispatched = dispatchRuntimeEffect({
         targetKind: "spell",
         targetId: "teleport",
         runtime: {
-          playTeleport: (nextPayload = {}) => directPlayTeleport(nextPayload),
+          playTeleport: (nextPayload = {}) => playOrbStageTeleportFallback(nextPayload),
         },
         payload,
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return directPlayTeleport(payload);
+      return playOrbStageTeleportFallback(payload);
     },
     playOrbShatter(payload = {}) {
       const dispatched = dispatchRuntimeEffect({
@@ -571,16 +571,16 @@ export function initOrbStageReceiverVfxRuntime({
         targetKind: "orb-state",
         targetId: "nod",
         runtime: {
-          playOrbNod: (nextPayload = {}) => directPlayOrbNod(nextPayload),
-          playOrbNod3d: (nextPayload = {}) => directPlayOrbNod3d(nextPayload),
+          playOrbNod: (nextPayload = {}) => playOrbStageOrbNodFallback(nextPayload),
+          playOrbNod3d: (nextPayload = {}) => playOrbStageOrbNod3dFallback(nextPayload),
         },
         payload,
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return directPlayOrbNod(payload);
+      return playOrbStageOrbNodFallback(payload);
     },
     playOrbNod3d(payload = {}) {
-      return directPlayOrbNod3d(payload);
+      return playOrbStageOrbNod3dFallback(payload);
     },
   };
 
