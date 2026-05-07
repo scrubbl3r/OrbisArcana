@@ -313,7 +313,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     updateDebugReadout: () => {
       if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
     },
-    legacyDomOrbShatterController: shellHooks && shellHooks.orbShatterController ? shellHooks.orbShatterController : null,
+    legacyDomOrbShatterController: shellHooks && shellHooks.legacyDomOrbShatterController ? shellHooks.legacyDomOrbShatterController : null,
     stopShardSim: () => {
       if (shellHooks && typeof shellHooks.stopShardSim === "function") shellHooks.stopShardSim();
     },
