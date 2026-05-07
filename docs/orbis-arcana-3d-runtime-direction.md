@@ -29,7 +29,7 @@ Bounds and depth are intentionally separate authoring concepts, even when they a
 
 - `depth:*` layers describe visual/spatial 3D relief or object form.
 - `bounds` describes the simplified gameplay collision contract.
-- `line_art` describes authored visual detail.
+- `art` describes authored visual detail.
 - Future object layers may add placed geometry, hazards, pickups, occluders, doors, props, or bespoke collision.
 
 Do not permanently combine bounds and depth. They may be identical in early maps, but separating them preserves the ability to author rich visual geometry with simple, intentional collision geometry.
