@@ -69,7 +69,7 @@ const summary = summarizeSvgLevelSource({
 
 assert.equal(summary.loopCount, 1, "visible bounds layer should hydrate");
 assert.deepEqual(
-  summary.spawnMarkers.map((spawn) => spawn.id),
+  summary.spawnPoints.map((spawn) => spawn.id),
   ["spawn_01"],
   "visible spawns layer should hydrate"
 );

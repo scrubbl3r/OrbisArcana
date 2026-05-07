@@ -96,13 +96,13 @@ const report = {
         }
       : null,
   })),
-  spawnMarkers: summary.spawnMarkers.map((spawn) => ({
+  spawnPoints: summary.spawnPoints.map((spawn) => ({
     id: spawn.id,
     authoredCenter: spawn.authoredCenter,
     authoredRadius: spawn.authoredRadius,
     worldCenter: spawn.worldCenter,
   })),
-  spawnCount: summary.spawnMarkers.length,
+  spawnCount: summary.spawnPoints.length,
   cameraAnchors: summary.cameraAnchors.map((anchor) => ({
     id: anchor.id,
     authoredCenter: anchor.authoredCenter,

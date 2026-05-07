@@ -15,10 +15,10 @@ export function buildAuthoredLevelSceneModel({
 } = {}) {
   const safeSummary = summary && typeof summary === "object" ? summary : null;
   const cameraAnchors = Array.isArray(safeSummary && safeSummary.cameraAnchors) ? safeSummary.cameraAnchors : [];
-  const spawnMarkers = Array.isArray(safeSummary && safeSummary.spawnMarkers) ? safeSummary.spawnMarkers : [];
+  const spawnPoints = Array.isArray(safeSummary && safeSummary.spawnPoints) ? safeSummary.spawnPoints : [];
   const artShapes = Array.isArray(safeSummary && safeSummary.artShapes) ? safeSummary.artShapes : [];
-  const spawn = spawnMarkers.length
-    ? spawnMarkers[0]
+  const spawn = spawnPoints.length
+    ? spawnPoints[0]
     : (() => {
         const resolvedSpawn = resolveLevelSpawnPoint(level, {
           worldWidthPx,
@@ -44,7 +44,7 @@ export function buildAuthoredLevelSceneModel({
     cameraBoundaryLoops: Array.isArray(safeSummary && safeSummary.cameraBoundaryLoops) ? safeSummary.cameraBoundaryLoops : [],
     cameraBoundaryBox: safeSummary && safeSummary.cameraBoundaryBox ? safeSummary.cameraBoundaryBox : null,
     spawn,
-    spawnMarkers: spawnMarkers,
+    spawnPoints: spawnPoints,
     cameraAnchors,
     worldItemSpawns: Array.isArray(safeSummary && safeSummary.worldItemSpawns) ? safeSummary.worldItemSpawns : [],
     props: Array.isArray(safeSummary && safeSummary.props) ? safeSummary.props : [],

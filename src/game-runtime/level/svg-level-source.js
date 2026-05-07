@@ -574,7 +574,7 @@ export function resolveBoundaryBoxFromLoops(loops = []) {
   });
 }
 
-export function buildSvgSpawnMarkers({
+export function buildSvgSpawnPoints({
   svgText = "",
   worldWidthPx = 0,
   worldHeightPx = 0,
@@ -595,11 +595,11 @@ export function buildSvgSpawnMarkers({
         ...resolveSvgSourceStack(layer, index),
       })));
   }
-  const markerId = String(primarySpawnId || "").trim();
-  if (markerId) {
+  const spawnId = String(primarySpawnId || "").trim();
+  if (spawnId) {
     circles = circles.filter((circle) => (
-      String(circle && circle.id || "").trim() === markerId ||
-      resolveSvgMetadataId(circle) === markerId
+      String(circle && circle.id || "").trim() === spawnId ||
+      resolveSvgMetadataId(circle) === spawnId
     ));
   }
   return Object.freeze(circles.map((circle, index) => {
@@ -1193,7 +1193,7 @@ export function summarizeSvgLevelSource({
     boundaryPathIds,
     boundaryLayerLabels,
   });
-  const spawnMarkers = buildSvgSpawnMarkers({
+  const spawnPoints = buildSvgSpawnPoints({
     svgText,
     worldWidthPx,
     worldHeightPx,
@@ -1253,7 +1253,7 @@ export function summarizeSvgLevelSource({
     viewBox,
     loopCount: loops.length,
     loops,
-    spawnMarkers: Object.freeze(spawnMarkers),
+    spawnPoints: Object.freeze(spawnPoints),
     cameraAnchors: Object.freeze(cameraAnchors),
     cameraBoundaryLoops: Object.freeze(cameraBoundaryLoops),
     cameraBoundaryBox,

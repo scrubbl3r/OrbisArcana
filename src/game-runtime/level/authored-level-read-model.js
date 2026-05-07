@@ -1,5 +1,5 @@
 export const AUTHORED_LEVEL_READ_MODEL_KEY_LOOPS = "loops";
-export const AUTHORED_LEVEL_READ_MODEL_KEY_SPAWN_MARKERS = "spawnMarkers";
+export const AUTHORED_LEVEL_READ_MODEL_KEY_SPAWN_POINTS = "spawnPoints";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_ANCHORS = "cameraAnchors";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_BOUNDARY_BOX = "boundaryBox";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX = "cameraBoundaryBox";
@@ -35,8 +35,8 @@ export function resolveAuthoredLevelReadModelBox(runtimeOrReadModel = null, key 
 export function resolveAuthoredLevelReadModelPrimarySpawn(runtimeOrReadModel = null) {
   const readModel = resolveAuthoredLevelReadModel(runtimeOrReadModel);
   if (readModel.sceneModel && readModel.sceneModel.spawn) return readModel.sceneModel.spawn;
-  const spawnMarkers = resolveAuthoredLevelReadModelArray(readModel, AUTHORED_LEVEL_READ_MODEL_KEY_SPAWN_MARKERS);
-  return spawnMarkers[0] || null;
+  const spawnPoints = resolveAuthoredLevelReadModelArray(readModel, AUTHORED_LEVEL_READ_MODEL_KEY_SPAWN_POINTS);
+  return spawnPoints[0] || null;
 }
 
 export function resolveAuthoredLevelReadModelSpawn(runtimeOrReadModel = null) {

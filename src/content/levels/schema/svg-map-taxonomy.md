@@ -11,7 +11,7 @@ child `inkscape:label` metadata defines item identity and actor-depth behavior.
 - `art`: authored visual detail.
 - `props`: world props that render in the actor lane unless specified otherwise.
 - `fields`: non-collision field regions, such as star/ambient regions.
-- `spawns`: player spawn markers.
+- `spawns`: player spawn points.
 - `cameras`: camera anchors.
 - `globes`: globe pickup/emitter actors.
 

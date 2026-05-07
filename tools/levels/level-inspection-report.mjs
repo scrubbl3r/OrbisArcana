@@ -1,5 +1,5 @@
 export function readLevelInspectionReportValue(report = {}, key = "") {
-  if (key === "spawnCount") return Number(report.spawnCount) || (Array.isArray(report.spawnMarkers) ? report.spawnMarkers.length : 0);
+  if (key === "spawnCount") return Number(report.spawnCount) || (Array.isArray(report.spawnPoints) ? report.spawnPoints.length : 0);
   if (key === "worldItemSpawnCount") return Array.isArray(report.worldItemSpawns) ? report.worldItemSpawns.length : 0;
   if (key === "occupiedTileCount") {
     return Number(report.boundaryTileMask && report.boundaryTileMask.occupiedTileCount) || 0;
