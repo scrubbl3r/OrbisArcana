@@ -1,9 +1,12 @@
-Orb-stage is the playable runtime harness used during development.
+Orb-stage is a staging surface for orb-focused runtime work. It is mounted by
+the staging shell, uses authored level data from the shared level domain, and
+currently keeps the legacy DOM orb surface wired while the 3D migration is
+prepared.
 
 This area should host:
-- the runtime play/test surface
-- stage-specific presentation code
-- staging-only orchestration around the playable runtime
+- orb-stage adapter code
+- stage-specific orb presentation code
+- staging-only orchestration around the orb surface
 
 Reusable gameplay systems and authored content should remain outside staging and
 be imported into this harness.
@@ -18,11 +21,13 @@ domain runtime.
 - True 3D orb effects should use `src/game-runtime/orb/` runtimes.
 - DOM compatibility versions of 3D-authored effects should be named as
   fallbacks, not as the canonical 3D implementation.
+- SVG level schema, hidden-layer hydration rules, and authored read-model
+  access belong to `src/game-runtime/level/` and `src/content/levels/schema/`.
 
 Current extraction boundary inside the staging shell:
-- the right-hand orb-stage card
-- stage canvases and ground line
-- orb/VFX DOM stack
+- the orb-stage mounted surface
+- authored backdrop/camera adapter hooks
+- legacy orb/VFX DOM stack
 - death overlay
 
 Intentionally kept outside orb-stage:
@@ -30,3 +35,4 @@ Intentionally kept outside orb-stage:
 - shell-owned pairing/session overlays
 - shell-owned calibration and onboarding flow
 - shared runtime systems and receiver/transmitter orchestration
+- the canonical level/game-stage rendering schema
