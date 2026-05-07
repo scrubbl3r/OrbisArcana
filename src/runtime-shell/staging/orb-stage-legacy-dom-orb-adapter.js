@@ -5,7 +5,7 @@ function lineToPath(seg) {
   return `M ${Number(seg.a.x).toFixed(2)} ${Number(seg.a.y).toFixed(2)} L ${Number(seg.b.x).toFixed(2)} ${Number(seg.b.y).toFixed(2)}`;
 }
 
-export function createLegacyDomOrbStageAdapter({
+export function createOrbStageLegacyDomOrbAdapter({
   refs = {},
   getOrbWrapPosition = null,
 } = {}) {
