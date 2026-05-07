@@ -41,7 +41,7 @@ These parts look like true receiver-host bootstrap and should eventually move in
   - `ruleEnginePreviewSystem`
   - `orbSystemsBundle`
 - binding receiver runtime events via `bindStagingRuntimeEvents(...)`
-- bootstrapping MVP via `bootstrapStagingMvp(...)`
+- bootstrapping the receiver runtime bundle via `bootstrapStagingRuntimeBundle(...)`
 - publishing `runtime.receiverHostRuntime`
 
 This is the clearest candidate for a future shared helper.

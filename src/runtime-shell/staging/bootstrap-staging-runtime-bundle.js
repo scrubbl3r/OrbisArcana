@@ -1,4 +1,4 @@
-export function bootstrapStagingMvp({
+export function bootstrapStagingRuntimeBundle({
   eventBus,
   gameState,
   orbSystem,
@@ -31,7 +31,7 @@ export function bootstrapStagingMvp({
   updateDebugReadout = () => {},
   setOrbInputSuppressed = () => {},
 } = {}) {
-  const ruleEngineMvpState = {
+  const ruleEngineRuntimeState = {
     ruleSchema,
     ruleEnginePreviewSystem,
     ruleEngineExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS,
@@ -48,7 +48,7 @@ export function bootstrapStagingMvp({
     inputDynamicsSystem,
     inputGestureSystem,
     orbRuntimeState,
-    ...ruleEngineMvpState,
+    ...ruleEngineRuntimeState,
     resourcesSystem,
     orbFxSystem,
     orbSystemsBundle,

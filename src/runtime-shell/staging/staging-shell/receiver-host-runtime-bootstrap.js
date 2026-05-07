@@ -18,16 +18,16 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   const bindStagingRuntimeEvents =
     sharedModules.bindStagingRuntimeEventsModule &&
     sharedModules.bindStagingRuntimeEventsModule.bindStagingRuntimeEvents;
-  const bootstrapStagingMvp =
-    sharedModules.bootstrapStagingMvpModule &&
-    sharedModules.bootstrapStagingMvpModule.bootstrapStagingMvp;
+  const bootstrapStagingRuntimeBundle =
+    sharedModules.bootstrapStagingRuntimeBundleModule &&
+    sharedModules.bootstrapStagingRuntimeBundleModule.bootstrapStagingRuntimeBundle;
   const loadReceiverInitModules =
     receiverBootstrapModule &&
     receiverBootstrapModule.loadReceiverInitModules;
   if (
     typeof bootstrapStagingRuntimeContext !== "function" ||
     typeof bindStagingRuntimeEvents !== "function" ||
-    typeof bootstrapStagingMvp !== "function" ||
+    typeof bootstrapStagingRuntimeBundle !== "function" ||
     typeof loadReceiverInitModules !== "function"
   ) {
     return null;
@@ -350,7 +350,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     ),
   });
 
-  const mvp = bootstrapStagingMvp({
+  const mvp = bootstrapStagingRuntimeBundle({
     eventBus: runtime.eventBus,
     gameState: runtimeContext.gameState,
     orbSystem: runtimeContext.orbSystem,
