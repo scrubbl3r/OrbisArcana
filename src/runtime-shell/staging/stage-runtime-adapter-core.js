@@ -14,7 +14,10 @@ export function createStageRuntimeAdapterCore({
     level,
     getStageElements() {
       return {
+        root: refs.root || null,
         physStage: refs.physStage || null,
+        world: refs.world || null,
+        worldOverlay: refs.worldOverlay || null,
         deathPanel: refs.deathPanel || null,
         tryAgainBtn: refs.tryAgainBtn || null,
       };
