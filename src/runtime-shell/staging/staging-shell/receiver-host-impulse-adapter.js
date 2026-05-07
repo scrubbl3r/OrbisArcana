@@ -1,5 +1,6 @@
 export function attachShellReceiverHostImpulseAdapter({
-  receiverHostState = null,
+  runtimeContext = null,
+  stabilityVisualState = null,
   runtime = null,
   runInputFramePipelineImported = null,
   inputDynamicsConfig = null,
@@ -7,14 +8,14 @@ export function attachShellReceiverHostImpulseAdapter({
   computeLift01 = null,
   pickShakeMetric = null,
 } = {}) {
-  if (!receiverHostState || !runtime || typeof runInputFramePipelineImported !== "function") {
+  if (!runtimeContext || !runtime || typeof runInputFramePipelineImported !== "function") {
     return null;
   }
 
   const processIncomingImpulse = (d = {}) => {
-    const inputSystem = receiverHostState.inputSystem;
-    const inputGestureSystem = receiverHostState.inputGestureSystem;
-    const inputDynamicsSystem = receiverHostState.inputDynamicsSystem;
+    const inputSystem = runtimeContext.inputSystem;
+    const inputGestureSystem = runtimeContext.inputGestureSystem;
+    const inputDynamicsSystem = runtimeContext.inputDynamicsSystem;
     const nowMs = performance.now();
 
     function pick01NewOrOld(newKey, oldKey) {
@@ -58,7 +59,7 @@ export function attachShellReceiverHostImpulseAdapter({
       hooks: {
         computeLift01,
         setStabilityVisualGate: (next) => {
-          receiverHostState.stabilityVisualGate = !!next;
+          if (stabilityVisualState) stabilityVisualState.stabilityVisualGate = !!next;
         },
         applyStabilityVisuals,
         processShakeDoubleBang: (shakeVal01, atMs, groove01) => {

@@ -81,6 +81,7 @@ They belong either in `staging-shell` or in an explicit shell hook object passed
 These parts look transitional and likely should not survive as-is:
 
 - shell-owned `processIncomingImpulse(...)` assignment after adapter construction
+- shell-specific reset paths that still reach through `receiverHostRuntime.runtimeContext`
 
 These are the most obvious cleanup targets once the main extraction seam is chosen.
 

@@ -73,15 +73,20 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     INPUT_DYNAMICS_CFG,
   } = receiverConfigs || {};
 
-  const receiverHostState = {
+  const stabilityVisualState = {
     stabilityVisualGate: true,
   };
+  let receiverRuntimeContext = null;
 
   const receiverStabilityVisualController =
     typeof createReceiverStabilityVisualController === "function"
       ? createReceiverStabilityVisualController({
-          getInputDynamicsSystem: () => receiverHostState.inputDynamicsSystem,
-          getStabilityVisualGate: () => receiverHostState.stabilityVisualGate,
+          getInputDynamicsSystem: () => (
+            receiverRuntimeContext && receiverRuntimeContext.inputDynamicsSystem
+              ? receiverRuntimeContext.inputDynamicsSystem
+              : null
+          ),
+          getStabilityVisualGate: () => stabilityVisualState.stabilityVisualGate,
           getRefs: () => ((shellContext && shellContext.refs) ? shellContext.refs.dev : null),
           setLamp,
         })
@@ -208,37 +213,28 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       },
     },
   });
+  receiverRuntimeContext = runtimeContext;
 
-  receiverHostState.inputSystemsBundle = runtimeContext.inputSystemsBundle;
-  receiverHostState.inputSystem = runtimeContext.inputSystem;
-  receiverHostState.inputDynamicsSystem = runtimeContext.inputDynamicsSystem;
-  receiverHostState.inputGestureSystem = runtimeContext.inputGestureSystem;
-  receiverHostState.resourcesSystem = runtimeContext.resourcesSystem;
-  receiverHostState.spellDispatchSystem = runtimeContext.spellDispatchSystem;
-  receiverHostState.orbDamageVisualsRuntime = runtimeContext.orbDamageVisualsRuntime;
-  receiverHostState.audioSystem = runtimeContext.audioSystem;
-  receiverHostState.orbSystemsBundle = runtimeContext.orbSystemsBundle;
-
-  if (receiverHostState.orbDamageVisualsRuntime && typeof receiverHostState.orbDamageVisualsRuntime.start === "function") {
-    receiverHostState.orbDamageVisualsRuntime.start();
+  if (runtimeContext.orbDamageVisualsRuntime && typeof runtimeContext.orbDamageVisualsRuntime.start === "function") {
+    runtimeContext.orbDamageVisualsRuntime.start();
   }
-  if (receiverHostState.audioSystem && typeof receiverHostState.audioSystem.start === "function") {
-    receiverHostState.audioSystem.start();
+  if (runtimeContext.audioSystem && typeof runtimeContext.audioSystem.start === "function") {
+    runtimeContext.audioSystem.start();
   }
-  if (receiverHostState.inputSystemsBundle && typeof receiverHostState.inputSystemsBundle.start === "function") {
-    receiverHostState.inputSystemsBundle.start();
+  if (runtimeContext.inputSystemsBundle && typeof runtimeContext.inputSystemsBundle.start === "function") {
+    runtimeContext.inputSystemsBundle.start();
   }
-  if (receiverHostState.resourcesSystem && typeof receiverHostState.resourcesSystem.start === "function") {
-    receiverHostState.resourcesSystem.start();
+  if (runtimeContext.resourcesSystem && typeof runtimeContext.resourcesSystem.start === "function") {
+    runtimeContext.resourcesSystem.start();
   }
-  if (receiverHostState.spellDispatchSystem && typeof receiverHostState.spellDispatchSystem.start === "function") {
-    receiverHostState.spellDispatchSystem.start();
+  if (runtimeContext.spellDispatchSystem && typeof runtimeContext.spellDispatchSystem.start === "function") {
+    runtimeContext.spellDispatchSystem.start();
   }
   if (runtimeContext.ruleEnginePreviewSystem && typeof runtimeContext.ruleEnginePreviewSystem.start === "function") {
     runtimeContext.ruleEnginePreviewSystem.start();
   }
-  if (receiverHostState.orbSystemsBundle && typeof receiverHostState.orbSystemsBundle.start === "function") {
-    receiverHostState.orbSystemsBundle.start();
+  if (runtimeContext.orbSystemsBundle && typeof runtimeContext.orbSystemsBundle.start === "function") {
+    runtimeContext.orbSystemsBundle.start();
   }
 
   if (shellKws.ruleEnginePreviewSystem && typeof shellKws.ruleEnginePreviewSystem.stop === "function") {
@@ -393,7 +389,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   runtime.receiverRuntime = receiverRuntime;
 
   runtime.receiverHostRuntime = {
-    ...receiverHostState,
     runtimeContext,
     eventBinder,
     receiverRuntime,
@@ -401,7 +396,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
 
   return {
     receiverHostRuntime: runtime.receiverHostRuntime,
-    receiverHostState,
+    stabilityVisualState,
     runtimeContext,
     eventBinder,
     receiverRuntime,

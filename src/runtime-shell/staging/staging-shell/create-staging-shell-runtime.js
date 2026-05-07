@@ -1888,30 +1888,33 @@ function clearShellOrbRuntimeFxForDeath(shellContext) {
 function resetShellInputProcessingState(shellContext, atMs = performance.now()) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
+  const runtimeContext = receiverHostRuntime && receiverHostRuntime.runtimeContext
+    ? receiverHostRuntime.runtimeContext
+    : null;
   if (
-    receiverHostRuntime &&
-    receiverHostRuntime.inputSystemsBundle &&
-    typeof receiverHostRuntime.inputSystemsBundle.resetProcessingState === "function"
+    runtimeContext &&
+    runtimeContext.inputSystemsBundle &&
+    typeof runtimeContext.inputSystemsBundle.resetProcessingState === "function"
   ) {
-    receiverHostRuntime.inputSystemsBundle.resetProcessingState(atMs);
+    runtimeContext.inputSystemsBundle.resetProcessingState(atMs);
     return;
   }
-  if (receiverHostRuntime && receiverHostRuntime.inputSystem && typeof receiverHostRuntime.inputSystem.reset === "function") {
-    receiverHostRuntime.inputSystem.reset(atMs);
+  if (runtimeContext && runtimeContext.inputSystem && typeof runtimeContext.inputSystem.reset === "function") {
+    runtimeContext.inputSystem.reset(atMs);
   }
   if (
-    receiverHostRuntime &&
-    receiverHostRuntime.inputDynamicsSystem &&
-    typeof receiverHostRuntime.inputDynamicsSystem.reset === "function"
+    runtimeContext &&
+    runtimeContext.inputDynamicsSystem &&
+    typeof runtimeContext.inputDynamicsSystem.reset === "function"
   ) {
-    receiverHostRuntime.inputDynamicsSystem.reset(atMs);
+    runtimeContext.inputDynamicsSystem.reset(atMs);
   }
   if (
-    receiverHostRuntime &&
-    receiverHostRuntime.inputGestureSystem &&
-    typeof receiverHostRuntime.inputGestureSystem.reset === "function"
+    runtimeContext &&
+    runtimeContext.inputGestureSystem &&
+    typeof runtimeContext.inputGestureSystem.reset === "function"
   ) {
-    receiverHostRuntime.inputGestureSystem.reset(atMs);
+    runtimeContext.inputGestureSystem.reset(atMs);
   }
 }
 
@@ -2318,7 +2321,7 @@ async function initShellReceiverHostRuntime(shellContext) {
   if (!assembly) return null;
 
   const {
-    receiverHostState,
+    stabilityVisualState,
     runtimeContext,
     runInputFramePipelineImported,
     applyStabilityVisuals,
@@ -2329,7 +2332,8 @@ async function initShellReceiverHostRuntime(shellContext) {
   }
 
   const processIncomingImpulse = attachShellReceiverHostImpulseAdapter({
-    receiverHostState,
+    runtimeContext,
+    stabilityVisualState,
     runtime,
     runInputFramePipelineImported,
     inputDynamicsConfig: INPUT_DYNAMICS_CFG,
