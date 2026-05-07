@@ -21,21 +21,6 @@ export function createGameStageRuntimeAdapter({
     refs,
     level,
     state,
-    getOrbWrapPosition: ({ top = 0, left = "50%", xW = null, yW = null } = {}) => {
-      const orbRadiusWorldUnits = Math.max(1, Number(orbDiameterWorldUnits) || GAME_STAGE_ORB_DIAMETER_WORLD_UNITS) * 0.5;
-      if (Number.isFinite(Number(xW)) && Number.isFinite(Number(yW))) {
-        return {
-          left: `${Number(xW).toFixed(2)}px`,
-          transform: `translate(-50%, ${Math.max(0, Number(yW) - orbRadiusWorldUnits).toFixed(2)}px)`,
-        };
-      }
-      return {
-        left: (typeof left === "number")
-          ? `${Number(left || 0).toFixed(2)}px`
-          : String(left || "50%"),
-        transform: `translate(-50%, ${Number(top || 0).toFixed(2)}px)`,
-      };
-    },
   });
   return Object.freeze({
     ...core,
@@ -47,7 +32,6 @@ export function createGameStageRuntimeAdapter({
           bo: orbDiameterWorldUnits,
         });
       }
-      core.applyOrbTransform(args);
     },
     playOrbNod3d(payload = {}) {
       return depth3dRuntime && typeof depth3dRuntime.playOrbNod3d === "function"

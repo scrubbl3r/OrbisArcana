@@ -1,19 +1,13 @@
 import { normalizeLevelWorldItemSpawn } from "../../game-runtime/level/normalize-level-world-item-spawn.js";
-import { createDomOrbStageAdapter } from "./dom-orb-stage-adapter.js";
 import { createStageUiOverlayAdapter } from "./stage-ui-overlay-adapter.js";
 
 export function createStageRuntimeAdapterCore({
   refs = {},
   level = null,
   state = null,
-  getOrbWrapPosition = null,
   onTraceLoggerSet = null,
 } = {}) {
   let primaryGlobeEl = refs.testGlobe || null;
-  const domOrbAdapter = createDomOrbStageAdapter({
-    refs,
-    getOrbWrapPosition,
-  });
   const uiOverlayAdapter = createStageUiOverlayAdapter({ refs });
 
   return {
@@ -59,11 +53,8 @@ export function createStageRuntimeAdapterCore({
     setPrimaryGlobeEl(el) {
       primaryGlobeEl = el || null;
     },
-    applyOrbTransform: domOrbAdapter.applyOrbTransform,
-    renderOrbDamageVisuals: domOrbAdapter.renderOrbDamageVisuals,
     openDeathOverlay: uiOverlayAdapter.openDeathOverlay,
     closeDeathOverlay: uiOverlayAdapter.closeDeathOverlay,
-    createOrbShatterController: domOrbAdapter.createOrbShatterController,
     setTraceLogger(fn) {
       if (!state) return;
       state.traceLog = typeof fn === "function" ? fn : null;

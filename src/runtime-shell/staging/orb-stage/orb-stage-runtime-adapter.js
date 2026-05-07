@@ -1,4 +1,5 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
+import { createDomOrbStageAdapter } from "../dom-orb-stage-adapter.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
 import {
   captureAuthoredStarsFieldParallaxRefs,
@@ -30,6 +31,9 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
   const core = createStageRuntimeAdapterCore({
     refs: stageRefs,
     level,
+  });
+  const domOrbAdapter = createDomOrbStageAdapter({
+    refs: stageRefs,
     getOrbWrapPosition: ({ top = 0, left = "50%" } = {}) => ({
       left: (typeof left === "number")
         ? `${Number(left || 0).toFixed(2)}px`
@@ -40,6 +44,9 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
 
   return Object.freeze({
     ...core,
+    applyOrbTransform: domOrbAdapter.applyOrbTransform,
+    renderOrbDamageVisuals: domOrbAdapter.renderOrbDamageVisuals,
+    createOrbShatterController: domOrbAdapter.createOrbShatterController,
     getOrbVisualRefs() {
       return Object.freeze({
         orbWrap: stageRefs.orbWrap,
