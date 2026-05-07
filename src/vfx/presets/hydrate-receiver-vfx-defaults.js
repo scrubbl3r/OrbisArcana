@@ -54,8 +54,8 @@ export function hydrateReceiverVfxDefaults(vfxDefaults, presets = {}) {
   if (orbNod3d && vfxDefaults.nod3d && typeof vfxDefaults.nod3d === "object") {
     Object.assign(vfxDefaults.nod3d, orbNod3d);
   }
-  if (orbSpawn && vfxDefaults.spawn && typeof vfxDefaults.spawn === "object") {
-    Object.assign(vfxDefaults.spawn, orbSpawn);
+  if (orbSpawn && vfxDefaults.orbSpawn && typeof vfxDefaults.orbSpawn === "object") {
+    Object.assign(vfxDefaults.orbSpawn, orbSpawn);
   }
 
   return vfxDefaults;

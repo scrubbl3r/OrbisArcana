@@ -1500,9 +1500,9 @@ function startShellStageLoop(shellContext) {
     },
     getSpawnHoldConfig: () => (
       runtime.vfxDefaults &&
-      runtime.vfxDefaults.spawn &&
-      typeof runtime.vfxDefaults.spawn === "object"
-        ? runtime.vfxDefaults.spawn
+      runtime.vfxDefaults.orbSpawn &&
+      typeof runtime.vfxDefaults.orbSpawn === "object"
+        ? runtime.vfxDefaults.orbSpawn
         : Object.create(null)
     ),
     isFloatGraceActive: (frameNowMs) => {
