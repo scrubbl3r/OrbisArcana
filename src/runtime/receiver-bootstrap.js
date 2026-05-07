@@ -270,18 +270,13 @@ export async function loadReceiverInitModules() {
     { executeColorize },
     { createSpellCastExecutor },
     { runOrbRuntimePipeline: runOrbRuntimePipelineImported },
-    { buildOrbBaseVisualState, applyOrbBaseVisualCssVars, getCanonicalOrbBaseRadiusPx },
     { createOrbColorRuntime },
     { createOrbShatterRuntimeController },
-    { ORB_RUNTIME_CONFIG_DEFAULT },
-    { ORB_STATUS_CONFIG_DEFAULT },
     { GAME_THEME_DEFAULT },
     { applyGameThemeCssVars },
     { applyDevConsoleThemeCssVars },
     { runInputFramePipeline: runInputFramePipelineImported },
     { BUBBLE_SHIELD_PRESET_DEFAULT, BUBBLE_SHIELD_3D_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, SHOCKWAVE_3D_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, FLAME_AOE_3D_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, TELEPORT_PRESET_DEFAULT, ORB_NOD_PRESET_DEFAULT, ORB_NOD_3D_PRESET_DEFAULT, ORB_SPAWN_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
-    { INPUT_GESTURE_CONFIG_DEFAULT },
-    { INPUT_DYNAMICS_CONFIG_DEFAULT },
     { CAST_ACTION_REGISTRY_BY_ID },
     { RUNTIME_WORDS_BY_ID },
     { validateSpellRuntimeRouting },
@@ -325,18 +320,13 @@ export async function loadReceiverInitModules() {
     import("../runtime-effects/colorize.js"),
     import("../game-runtime/triggers/spell-cast-executor.js"),
     import(`../game-runtime/orb/orb-runtime-pipeline.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
-    import("../game-runtime/orb/orb-base-state.js"),
     import("../game-runtime/orb/orb-color-runtime.js"),
     import("../game-runtime/orb/orb-shatter-runtime.js"),
-    import(`../content/orb/orb-runtime-config-default.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
-    import("../content/orb/orb-status-config-default.js"),
     import("../content/theme/game-theme-default.js"),
     import("../ui/theme/apply-game-theme-css-vars.js"),
     import("../ui/dev-console/apply-dev-console-theme-css-vars.js"),
     import("../game-runtime/input/input-frame-pipeline.js"),
     import("../vfx/presets/index.js?v=20260506e"),
-    import("../content/input/gesture-config-default.js"),
-    import("../content/input/dynamics-config-default.js"),
     import("../content/spells/cast-action-registry.js"),
     import("../content/spells/runtime-spells.js"),
     import("../content/spells/validate-spell-runtime-routing.js"),
@@ -390,13 +380,8 @@ export async function loadReceiverInitModules() {
     executeColorize,
     createSpellCastExecutor,
     runOrbRuntimePipelineImported,
-    buildOrbBaseVisualState,
-    applyOrbBaseVisualCssVars,
-    getCanonicalOrbBaseRadiusPx,
     createOrbColorRuntime,
     createOrbShatterRuntimeController,
-    ORB_RUNTIME_CONFIG_DEFAULT,
-    ORB_STATUS_CONFIG_DEFAULT,
     GAME_THEME_DEFAULT,
     applyGameThemeCssVars,
     applyDevConsoleThemeCssVars,
@@ -413,8 +398,6 @@ export async function loadReceiverInitModules() {
     ORB_NOD_3D_PRESET_DEFAULT,
     ORB_SPAWN_PRESET_DEFAULT,
     hydrateReceiverVfxDefaults,
-    INPUT_GESTURE_CONFIG_DEFAULT,
-    INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_WORDS_BY_ID,
     validateSpellRuntimeRouting,
@@ -430,20 +413,9 @@ export async function loadReceiverInitModules() {
 
 /**
  * @typedef {Object} ReceiverBootstrapContext
- * @property {(theme:Object) => void} [applyRuntimeTheme]
- * @property {() => {PHYS:Object, SHIELD_DESCENT:Object, IMPACT_MODEL:Object, IMPACT_TH:number}} [getOrbRuntimeConfig]
- * @property {(next:{PHYS?:Object, SHIELD_DESCENT?:Object, IMPACT_MODEL?:Object, IMPACT_TH?:number}) => void} [setOrbRuntimeConfig]
- * @property {() => {GRACE_DEFAULT_TTL_MS:number}} [getOrbStatusConfig]
- * @property {(next:{GRACE_DEFAULT_TTL_MS?:number}) => void} [setOrbStatusConfig]
  * @property {Object} [vfxDefaults] Receiver VFX defaults object mutated by preset hydration.
- * @property {() => {INPUT_GESTURE_CFG:Object, INPUT_DYNAMICS_CFG:Object}} [getInputConfigs]
- * @property {(next:{INPUT_GESTURE_CFG?:Object, INPUT_DYNAMICS_CFG?:Object}) => void} [setInputConfigs]
  * @property {(next:{runtimeWordIndex?:Object, runtimeSpellIndex?:Object, castActionRegistryIndex?:Object}) => void} [setRuntimeWordIndexes]
  * @property {(next:{source?:string, signals?:Object[], windows?:Object[], events?:Object[], rules?:Object[], eventRuntimeBindings?:Object}) => void} [setRuleSchema]
- * @property {() => void} [initWordActionHandlers]
- * @property {() => Object} [createSpellCastExecutorContext]
- * @property {(executor:Object) => void} [setSpellCastExecutor]
- * @property {(ready:boolean) => void} [setReceiverModulesReady]
  */
 
 /**
@@ -460,9 +432,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     GAME_THEME_DEFAULT,
     applyGameThemeCssVars,
     applyDevConsoleThemeCssVars,
-    ORB_RUNTIME_CONFIG_DEFAULT,
-    ORB_STATUS_CONFIG_DEFAULT,
-    getCanonicalOrbBaseRadiusPx,
     hydrateReceiverVfxDefaults,
     BUBBLE_SHIELD_PRESET_DEFAULT,
     BUBBLE_SHIELD_3D_PRESET_DEFAULT,
@@ -475,8 +444,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     ORB_NOD_PRESET_DEFAULT,
     ORB_NOD_3D_PRESET_DEFAULT,
     ORB_SPAWN_PRESET_DEFAULT,
-    INPUT_GESTURE_CONFIG_DEFAULT,
-    INPUT_DYNAMICS_CONFIG_DEFAULT,
     CAST_ACTION_REGISTRY_BY_ID,
     RUNTIME_WORDS_BY_ID,
     validateSpellRuntimeRouting,
@@ -488,24 +455,12 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     buildRuleEngineFromCompiledInteractionGraphV2,
     validateCompiledInteractionGraphV2,
     validateWordbookV2,
-    createSpellCastExecutor,
   } = mods || {};
 
   const {
-    applyRuntimeTheme,
-    getOrbRuntimeConfig,
-    setOrbRuntimeConfig,
-    getOrbStatusConfig,
-    setOrbStatusConfig,
     vfxDefaults,
-    getInputConfigs,
-    setInputConfigs,
     setRuntimeWordIndexes,
     setRuleSchema,
-    initWordActionHandlers,
-    createSpellCastExecutorContext,
-    setSpellCastExecutor,
-    setReceiverModulesReady,
   } = ctx;
 
   function buildSafeDisabledRuleSchema() {
@@ -619,38 +574,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
   if (GAME_THEME_DEFAULT) {
     if (typeof applyGameThemeCssVars === "function") applyGameThemeCssVars(GAME_THEME_DEFAULT);
     if (typeof applyDevConsoleThemeCssVars === "function") applyDevConsoleThemeCssVars(GAME_THEME_DEFAULT);
-    if (typeof applyRuntimeTheme === "function") applyRuntimeTheme(GAME_THEME_DEFAULT);
-  }
-
-  if (isObjectLike(ORB_RUNTIME_CONFIG_DEFAULT) &&
-      typeof getOrbRuntimeConfig === "function" && typeof setOrbRuntimeConfig === "function") {
-    const current = getOrbRuntimeConfig() || {};
-    const cfg = ORB_RUNTIME_CONFIG_DEFAULT;
-    setOrbRuntimeConfig({
-      PHYS: isObjectLike(cfg.physics)
-        ? {
-            ...(current.PHYS || {}),
-            ...cfg.physics,
-            orbRadiusPx: getCanonicalOrbBaseRadiusPx(),
-          }
-        : current.PHYS,
-      SHIELD_DESCENT: isObjectLike(cfg.shieldDescent) ? { ...(current.SHIELD_DESCENT || {}), ...cfg.shieldDescent } : current.SHIELD_DESCENT,
-      IMPACT_MODEL: isObjectLike(cfg.impact?.model) ? { ...(current.IMPACT_MODEL || {}), ...cfg.impact.model } : current.IMPACT_MODEL,
-      IMPACT_TH: (cfg.impact && Number.isFinite(Number(cfg.impact.threshold))) ? Number(cfg.impact.threshold) : current.IMPACT_TH,
-    });
-  }
-
-  if (isObjectLike(ORB_STATUS_CONFIG_DEFAULT) &&
-      typeof getOrbStatusConfig === "function" && typeof setOrbStatusConfig === "function") {
-    const current = getOrbStatusConfig() || {};
-    const fg = isObjectLike(ORB_STATUS_CONFIG_DEFAULT.grace)
-      ? ORB_STATUS_CONFIG_DEFAULT.grace
-      : {};
-    setOrbStatusConfig({
-      GRACE_DEFAULT_TTL_MS: Number.isFinite(Number(fg.defaultTtlMs))
-        ? Number(fg.defaultTtlMs)
-        : current.GRACE_DEFAULT_TTL_MS,
-    });
   }
 
   if (typeof hydrateReceiverVfxDefaults === "function" && vfxDefaults) {
@@ -667,21 +590,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
       orbNod3d: ORB_NOD_3D_PRESET_DEFAULT,
       orbSpawn: ORB_SPAWN_PRESET_DEFAULT,
     });
-  }
-
-  if (isObjectLike(INPUT_GESTURE_CONFIG_DEFAULT) ||
-      isObjectLike(INPUT_DYNAMICS_CONFIG_DEFAULT)) {
-    const currentInputCfg = (typeof getInputConfigs === "function" ? getInputConfigs() : {}) || {};
-    if (typeof setInputConfigs === "function") {
-      setInputConfigs({
-        INPUT_GESTURE_CFG: isObjectLike(INPUT_GESTURE_CONFIG_DEFAULT)
-          ? INPUT_GESTURE_CONFIG_DEFAULT
-          : currentInputCfg.INPUT_GESTURE_CFG,
-        INPUT_DYNAMICS_CFG: isObjectLike(INPUT_DYNAMICS_CONFIG_DEFAULT)
-          ? INPUT_DYNAMICS_CONFIG_DEFAULT
-          : currentInputCfg.INPUT_DYNAMICS_CFG,
-      });
-    }
   }
 
   const runtimeWordIndex = (RUNTIME_WORDS_BY_ID && typeof RUNTIME_WORDS_BY_ID === "object")
@@ -772,17 +680,4 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     );
   }
 
-  if (typeof initWordActionHandlers === "function") {
-    initWordActionHandlers();
-  }
-
-  if (typeof createSpellCastExecutor === "function" &&
-      typeof createSpellCastExecutorContext === "function" &&
-      typeof setSpellCastExecutor === "function") {
-    setSpellCastExecutor(createSpellCastExecutor(createSpellCastExecutorContext()));
-  }
-
-  if (typeof setReceiverModulesReady === "function") {
-    setReceiverModulesReady(true);
-  }
 }

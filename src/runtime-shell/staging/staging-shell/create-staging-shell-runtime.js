@@ -3139,16 +3139,7 @@ async function initShellKwsRuntime(shellContext) {
         ...receiverMods,
       },
       {
-        applyRuntimeTheme: () => {},
-        getOrbRuntimeConfig: () => ({ PHYS: {}, SHIELD_DESCENT: {}, IMPACT_MODEL: {}, IMPACT_TH: 0 }),
-        setOrbRuntimeConfig: () => {},
-        getOrbStatusConfig: () => ({
-          GRACE_DEFAULT_TTL_MS: 0,
-        }),
-        setOrbStatusConfig: () => {},
         vfxDefaults,
-        getInputConfigs: () => ({ INPUT_GESTURE_CFG: {}, INPUT_DYNAMICS_CFG: {} }),
-        setInputConfigs: () => {},
         setRuntimeWordIndexes: (next = {}) => {
           runtimeWordIndex = next.runtimeWordIndex || Object.create(null);
           runtimeSpellIndex = next.runtimeSpellIndex || runtimeWordIndex;
@@ -3156,10 +3147,6 @@ async function initShellKwsRuntime(shellContext) {
         setRuleSchema: (next = {}) => {
           ruleSchema = next && typeof next === "object" ? { ...next } : null;
         },
-        initWordActionHandlers: () => {},
-        createSpellCastExecutorContext: () => ({}),
-        setSpellCastExecutor: () => {},
-        setReceiverModulesReady: () => {},
       }
     );
   }
