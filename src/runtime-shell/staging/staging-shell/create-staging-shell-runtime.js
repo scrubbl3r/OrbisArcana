@@ -35,6 +35,7 @@ import {
   handleShellVoiceSpellCast,
 } from "./shell-voice-spell-runtime.js";
 import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js";
+import { bindShellKwsEventRuntime } from "./shell-kws-event-runtime.js";
 import { bindShellKwsTraceRuntime } from "./shell-kws-trace-runtime.js";
 import {
   createStagingShellModeController,
@@ -2824,52 +2825,16 @@ async function initShellKwsRuntime(shellContext) {
     }
   }
 
-  const kwsEventRuntime = bindKwsEventHandlers({
+  const kwsEventRuntime = bindShellKwsEventRuntime({
+    bindKwsEventHandlers,
     eventBus,
-    events: RECEIVER_EVENTS,
-    state: kwsDebugState,
-    deps: {
-      canonicalKwsToken: (token) => kwsBridge.canonicalToken(token),
-      flashKwsToken: (token, ms) => kwsBridge.flashToken(token, ms),
-      isWakeWindowActive: () => kwsBridge.isWakeWindowActive(),
-      markHeardWakeWindowToken: (axis, token) => {
-        if (kwsPanelController && typeof kwsPanelController.markHeardWakeWindowToken === "function") {
-          kwsPanelController.markHeardWakeWindowToken(axis, token);
-        }
-      },
-      getActiveSpinAxis: () => (kwsTokenUiState ? String(kwsTokenUiState.activeSpinAxis || "") : ""),
-      openKwsWakeHudGate: (timeoutMs) => kwsBridge.openWakeHudGate(timeoutMs),
-      shouldLogHeardWakeword: (rawToken) => kwsBridge.shouldLogHeardWakeword(rawToken),
-      pushKwsLogLine: (text, kind) => kwsBridge.pushLogLine(text, kind),
-      updateKwsReadout: () => kwsBridge.updateReadout(),
-      isUngatedToken: () => false,
-      setActiveSpinAxis: (axis) => {
-        if (kwsPanelController && typeof kwsPanelController.setActiveSpinAxis === "function") {
-          kwsPanelController.setActiveSpinAxis(axis);
-        }
-      },
-      clearActiveSpinState: () => {
-        if (kwsPanelController && typeof kwsPanelController.clearActiveSpinState === "function") {
-          kwsPanelController.clearActiveSpinState();
-        } else {
-          kwsBridge.resetHeardWakeWindowTokensAllAxes();
-        }
-      },
-      resetHeardWakeWindowTokensForAxis: (axis) => kwsBridge.resetHeardWakeWindowTokensForAxis(axis),
-      resetHeardWakeWindowTokensAllAxes: () => kwsBridge.resetHeardWakeWindowTokensAllAxes(),
-      setSelectedSpinWord: (axis, spinWord) => {
-        if (kwsPanelController && typeof kwsPanelController.setSelectedSpinWord === "function") {
-          kwsPanelController.setSelectedSpinWord(axis, spinWord);
-        }
-      },
-      getKwsMode: () => String(kwsDebugState.mode || ""),
-      getListenPolicyStatus: () => (
-        kwsListenPolicyController && typeof kwsListenPolicyController.getStatus === "function"
-          ? kwsListenPolicyController.getStatus()
-          : null
-      ),
-      gateTimeoutMs: Math.max(0, Number(runtimeConfig.gateTimeoutMs) || 1500),
-    },
+    receiverEvents: RECEIVER_EVENTS,
+    kwsDebugState,
+    kwsBridge,
+    kwsPanelController,
+    kwsTokenUiState,
+    kwsListenPolicyController,
+    runtimeConfig,
   });
 
   const kwsTraceRuntime = bindShellKwsTraceRuntime({
