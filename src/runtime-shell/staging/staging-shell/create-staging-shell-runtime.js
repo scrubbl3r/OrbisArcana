@@ -362,8 +362,7 @@ function initializeShellStageRuntime(shellContext) {
 }
 
 function getShellOrbScaleFactor(shellContext) {
-  const visualState = getShellOrbBaseVisualState(shellContext);
-  return Math.max(0.01, Number(visualState && visualState.diameterPx) || 100) / 100;
+  return Math.max(0.01, shellOrbVisualDiameterPx(shellContext)) / 100;
 }
 
 function shellStageRect(shellContext) {
@@ -605,6 +604,11 @@ function shellOrbVisualRadiusPx(shellContext) {
   if (Number.isFinite(visualRadiusPx) && visualRadiusPx > 0) return visualRadiusPx;
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   return Number(stage && stage.phys && stage.phys.orbRadiusPx) || 0;
+}
+
+function shellOrbVisualDiameterPx(shellContext) {
+  const visualState = getShellOrbBaseVisualState(shellContext);
+  return Math.max(1, Number(visualState && visualState.diameterPx) || 100);
 }
 
 function shellStageCenterX(shellContext) {
@@ -1946,10 +1950,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     evenStroke,
     rand,
     getOrbScaleFactor: () => getShellOrbScaleFactor(shellContext),
-    getOrbDiameterPx: () => {
-      const visualState = getShellOrbBaseVisualState(shellContext);
-      return Math.max(1, Number(visualState && visualState.diameterPx) || 100);
-    },
+    getOrbDiameterPx: () => shellOrbVisualDiameterPx(shellContext),
     requestCameraTravel: (payload = {}) => {
       const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
       return cameraRuntime && typeof cameraRuntime.requestTravel === "function"
