@@ -395,8 +395,8 @@ export function initOrbStageReceiverVfxRuntime({
 
   function playLegacyDomOrbShatterFallback(payload = {}) {
     const controller = runtime && runtime.legacyDomOrbShatterController;
-    if (controller && typeof controller.spawnShardFx === "function") {
-      controller.spawnShardFx(payload);
+    if (controller && typeof controller.spawnShardVfx === "function") {
+      controller.spawnShardVfx(payload);
       return { handled: true };
     }
     return { handled: false };

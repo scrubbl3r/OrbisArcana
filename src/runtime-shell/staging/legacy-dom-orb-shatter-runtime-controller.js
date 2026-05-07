@@ -66,7 +66,7 @@ export function createLegacyDomOrbShatterRuntimeController({
     };
   }
 
-  function spawnShardFx(piecePayload) {
+  function spawnShardVfx(piecePayload) {
     const palette = shardPaletteSnapshot || captureCurrentOrbPalette();
     const runtime = typeof getOrbShatterRuntime === "function" ? getOrbShatterRuntime() : null;
     if (!palette || !runtime || typeof runtime.spawnPiece !== "function") return false;
@@ -103,7 +103,7 @@ export function createLegacyDomOrbShatterRuntimeController({
 
   return {
     captureCurrentOrbPalette,
-    spawnShardFx,
+    spawnShardVfx,
     stopShardSim,
     handleOrbDied,
     handleOrbRevived,

@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507r";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507s";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -17,7 +17,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507z";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507aa";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507d";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507j";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507bt";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507bu";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1727,8 +1727,8 @@ function spawnShellLegacyDomOrbShatterShardVfx(shellContext, payload) {
     if (result && result.handled) return;
   }
   const controller = runtime && runtime.legacyDomOrbShatterController;
-  if (!controller || typeof controller.spawnShardFx !== "function") return;
-  controller.spawnShardFx(payload);
+  if (!controller || typeof controller.spawnShardVfx !== "function") return;
+  controller.spawnShardVfx(payload);
 }
 
 function clearShellOrbDeathRuntimeVfx(shellContext) {
@@ -2887,7 +2887,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507y",
+  moduleCacheBustV = "20260507z",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
