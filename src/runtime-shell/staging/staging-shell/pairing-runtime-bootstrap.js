@@ -240,7 +240,6 @@ export async function bootstrapShellPairingRuntime({
     uiOverlaysSystem,
     mobileImpulseSystem,
     lanSession,
-    kwsPanelController: shellKws ? shellKws.kwsPanelController : null,
     launchLanPairingFlow,
     sendCalibrationTrigger,
     hideStartScreen,
