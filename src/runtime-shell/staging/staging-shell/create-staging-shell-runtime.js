@@ -1183,13 +1183,33 @@ function computeShellImpactMetric(shellContext, rawImpactV) {
 const SHELL_STAGE_FLOOR_CONTACT_EPSILON_PX = 0.25;
 const SHELL_STAGE_CEIL_CONTACT_EPSILON_PX = 0.25;
 
-function activateShellStageVisuals(shellContext) {
+function redrawShellStageVisuals(shellContext, {
+  clearFrameCache = false,
+  resetOrbToGround = false,
+  applyOrbFrame = false,
+} = {}) {
+  if (!shellContext) return;
+  const runtime = shellContext.runtime || null;
+  if (clearFrameCache && runtime) {
+    runtime.stageRectCache = null;
+    runtime.frameMetrics = null;
+  }
   updateShellFrameMetrics(shellContext, performance.now());
   ensureShellStageBackdrop(shellContext);
-  resetShellOrbToGround(shellContext);
+  if (resetOrbToGround) {
+    resetShellOrbToGround(shellContext);
+  }
   updateShellStageReadouts(shellContext);
   drawShellStars(shellContext);
   drawShellBackdrop(shellContext);
+  if (applyOrbFrame) {
+    applyShellGroundLine(shellContext);
+    applyShellOrbTransform(shellContext);
+  }
+}
+
+function activateShellStageVisuals(shellContext) {
+  redrawShellStageVisuals(shellContext, { resetOrbToGround: true });
 }
 
 function tickShellStageRuntime(shellContext, dt) {
@@ -2422,19 +2442,10 @@ function syncActiveShellStage(shellContext) {
 }
 
 function refreshShellOverlayLayout(shellContext) {
-  if (!shellContext) return;
-  const runtime = shellContext.runtime || null;
-  if (runtime) {
-    runtime.stageRectCache = null;
-    runtime.frameMetrics = null;
-  }
-  updateShellFrameMetrics(shellContext, performance.now());
-  ensureShellStageBackdrop(shellContext);
-  updateShellStageReadouts(shellContext);
-  drawShellStars(shellContext);
-  drawShellBackdrop(shellContext);
-  applyShellGroundLine(shellContext);
-  applyShellOrbTransform(shellContext);
+  redrawShellStageVisuals(shellContext, {
+    clearFrameCache: true,
+    applyOrbFrame: true,
+  });
 }
 
 function shellActiveStageLevel(shellContext) {
