@@ -197,7 +197,7 @@ export function initOrbStageReceiverVfxRuntime({
         ? vfxDefaults.nod
         : Object.create(null),
     }),
-    orbNod3dRuntime: createOrbNod3dDomFallbackRuntime({
+    orbNod3dDomFallbackRuntime: createOrbNod3dDomFallbackRuntime({
       orbEl: domStageEls.orb,
       mountEl: domStageEls.orb ? domStageEls.orb.parentElement : null,
       orbInteriorEl: domStageEls.orbInterior,
@@ -364,7 +364,7 @@ export function initOrbStageReceiverVfxRuntime({
     markTrace("orbStage.bubbleShield.activate.request", {
       durationMs: resolvedDurationMs,
       has3dRuntime: typeof playBubbleShield3dRuntime === "function",
-      hasDomRuntime: !!(stageVfx.bubbleShieldRuntime && typeof stageVfx.bubbleShieldRuntime.activate === "function"),
+      hasLegacyDomRuntime: !!(stageVfx.bubbleShieldRuntime && typeof stageVfx.bubbleShieldRuntime.activate === "function"),
     });
     if (typeof playBubbleShield3dRuntime === "function") {
       const result = playBubbleShield3dRuntime({
@@ -383,7 +383,7 @@ export function initOrbStageReceiverVfxRuntime({
       stageVfx.bubbleShieldRuntime.activate({
         durationMs: resolvedDurationMs,
       });
-      markTrace("orbStage.bubbleShield.activate.dom_fallback", {
+      markTrace("orbStage.bubbleShield.activate.legacy_dom_fallback", {
         durationMs: resolvedDurationMs,
       });
       return { handled: true };
@@ -420,8 +420,11 @@ export function initOrbStageReceiverVfxRuntime({
       });
       if (result && result.handled) return result;
     }
-    if (stageVfx.orbNod3dRuntime && typeof stageVfx.orbNod3dRuntime.play === "function") {
-      return stageVfx.orbNod3dRuntime.play(payload);
+    if (
+      stageVfx.orbNod3dDomFallbackRuntime &&
+      typeof stageVfx.orbNod3dDomFallbackRuntime.play === "function"
+    ) {
+      return stageVfx.orbNod3dDomFallbackRuntime.play(payload);
     }
     return { handled: false };
   }
