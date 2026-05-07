@@ -13,11 +13,11 @@ export function executeShockwave({
 }
 
 export function triggerShockwaveRuntime({
-  shockwaveRuntime,
+  legacyDomShockwaveRuntime,
   playShock,
 } = {}) {
-  if (shockwaveRuntime && typeof shockwaveRuntime.trigger === "function") {
-    shockwaveRuntime.trigger();
+  if (legacyDomShockwaveRuntime && typeof legacyDomShockwaveRuntime.trigger === "function") {
+    legacyDomShockwaveRuntime.trigger();
     return { handled: true, mode: "runtime_trigger" };
   }
   if (typeof playShock === "function") {

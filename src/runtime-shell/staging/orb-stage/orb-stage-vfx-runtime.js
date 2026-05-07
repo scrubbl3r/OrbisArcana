@@ -310,7 +310,7 @@ export function initOrbStageReceiverVfxRuntime({
     if (shockwave3dResult && shockwave3dResult.handled) return shockwave3dResult;
     if (typeof triggerShockwaveRuntime === "function") {
       const result = triggerShockwaveRuntime({
-        shockwaveRuntime: stageVfx.legacyDomShockwaveRuntime,
+        legacyDomShockwaveRuntime: stageVfx.legacyDomShockwaveRuntime,
         playShock: () => directPlayShock(),
       });
       if (result && result.handled) return result;
@@ -325,7 +325,7 @@ export function initOrbStageReceiverVfxRuntime({
   function directPlayElectricAoe() {
     if (typeof playElectricAoeRuntime === "function") {
       const result = playElectricAoeRuntime({
-        electricAoeRuntime: stageVfx.legacyDomElectricAoeRuntime,
+        legacyDomElectricAoeRuntime: stageVfx.legacyDomElectricAoeRuntime,
       });
       if (result && result.handled) return result;
     }
@@ -347,7 +347,7 @@ export function initOrbStageReceiverVfxRuntime({
     }
     if (typeof playFlameAoeRuntime === "function") {
       const result = playFlameAoeRuntime({
-        flameAoeRuntime: stageVfx.legacyDomFlameAoeRuntime,
+        legacyDomFlameAoeRuntime: stageVfx.legacyDomFlameAoeRuntime,
       });
       if (result && result.handled) return result;
     }

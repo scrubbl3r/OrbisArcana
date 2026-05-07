@@ -13,11 +13,11 @@ export function executeAoeFlame({
 }
 
 export function playFlameAoeRuntime({
-  flameAoeRuntime,
+  legacyDomFlameAoeRuntime,
 } = {}) {
-  if (!flameAoeRuntime || typeof flameAoeRuntime.play !== "function") {
+  if (!legacyDomFlameAoeRuntime || typeof legacyDomFlameAoeRuntime.play !== "function") {
     return { handled: false };
   }
-  flameAoeRuntime.play();
+  legacyDomFlameAoeRuntime.play();
   return { handled: true };
 }

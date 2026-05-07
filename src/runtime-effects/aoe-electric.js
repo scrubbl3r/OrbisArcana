@@ -12,11 +12,11 @@ export function executeAoeElectric({
 }
 
 export function playElectricAoeRuntime({
-  electricAoeRuntime,
+  legacyDomElectricAoeRuntime,
 } = {}) {
-  if (!electricAoeRuntime || typeof electricAoeRuntime.play !== "function") {
+  if (!legacyDomElectricAoeRuntime || typeof legacyDomElectricAoeRuntime.play !== "function") {
     return { handled: false };
   }
-  electricAoeRuntime.play();
+  legacyDomElectricAoeRuntime.play();
   return { handled: true };
 }
