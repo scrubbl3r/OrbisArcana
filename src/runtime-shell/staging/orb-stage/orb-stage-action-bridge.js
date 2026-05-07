@@ -9,15 +9,15 @@ function activateLegacyDomBubbleShieldFallback({
   shieldEl.classList.add("on");
   shieldEl.style.opacity = "1";
   shieldEl.style.transition = "opacity 120ms linear";
-  if (runtime && runtime.legacyDomBubbleShieldFallbackTimer) {
-    clearTimeout(runtime.legacyDomBubbleShieldFallbackTimer);
+  if (runtime && runtime.orbStageLegacyDomBubbleShieldFallbackTimer) {
+    clearTimeout(runtime.orbStageLegacyDomBubbleShieldFallbackTimer);
   }
   if (runtime) {
-    runtime.legacyDomBubbleShieldFallbackTimer = setTimeout(() => {
+    runtime.orbStageLegacyDomBubbleShieldFallbackTimer = setTimeout(() => {
       shieldEl.classList.remove("on");
       shieldEl.style.transition = "opacity 420ms linear";
       shieldEl.style.opacity = "0";
-      runtime.legacyDomBubbleShieldFallbackTimer = 0;
+      runtime.orbStageLegacyDomBubbleShieldFallbackTimer = 0;
     }, Math.max(200, Number(durationMs) || 8000));
   }
   return { handled: true };

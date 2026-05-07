@@ -18,7 +18,7 @@ import {
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507ab";
-import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507d";
+import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507e";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507j";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507k";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507bv";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507bw";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
