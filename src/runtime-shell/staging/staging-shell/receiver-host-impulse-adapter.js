@@ -35,10 +35,8 @@ export function attachShellReceiverHostImpulseAdapter({
       : null;
     runInputFramePipelineImported({
       d,
-      frame,
       nowMs,
       values: {
-        energyFromPhone: frame ? frame.energy01 : pick01NewOrOld("energy01", "energy"),
         groove: frame ? frame.groove01 : pick01NewOrOld("groove01", "groove"),
         dynamics: frame ? frame.dynamics01 : pick01NewOrOld("dynamics01", "orbit01"),
         smooth: frame ? frame.smooth01 : pick01NewOrOld("smooth01", "smooth"),
@@ -46,7 +44,6 @@ export function attachShellReceiverHostImpulseAdapter({
         shake: frame ? frame.shake01 : (
           typeof pickShakeMetric === "function" ? pickShakeMetric(d, "shake01", "shake") : 0
         ),
-        locked: frame ? !!frame.locked : !!d.locked,
       },
       systems: {
         inputGestureSystem,

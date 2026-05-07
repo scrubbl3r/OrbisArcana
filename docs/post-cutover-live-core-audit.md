@@ -111,10 +111,9 @@ This is now low-risk cleanup, not a live behavior problem.
 
 These are still around, but they look more like cleanup polish than major architecture blockers:
 
-- `shieldRgb01` in legacy HUD/pipeline return shaping
-  - mostly inert / compatibility-oriented
 - `energyUI01` naming
   - now just raw normalized energy, not bank UI
+- legacy HUD/pipeline return shaping removed from `runInputFramePipeline(...)`
 - legacy HUD view-model builder removed from the active bootstrap path
 - staging bootstrap no longer accepts the old energy config constants
 
