@@ -1,4 +1,3 @@
-import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
 import { createGameStageRuntimeAdapter } from "../game-stage/game-stage-runtime-adapter.js?v=20260506a";
 import { createDomOrbStageAdapter } from "../dom-orb-stage-adapter.js";
 
@@ -67,11 +66,6 @@ export function createOrbStageRuntimeAdapter({
   unbindResize = () => {},
 } = {}) {
   const stageRefs = Object.freeze(collectOrbStageRefs(refs));
-  const legacyCore = createStageRuntimeAdapterCore({
-    refs: stageRefs,
-    level,
-    state,
-  });
   const shared3dAdapter = createGameStageRuntimeAdapter({
     refs: stageRefs,
     level,
@@ -97,7 +91,7 @@ export function createOrbStageRuntimeAdapter({
     createOrbShatterController: domOrbAdapter.createOrbShatterController,
     getStageElements() {
       return Object.freeze({
-        ...legacyCore.getStageElements(),
+        ...shared3dAdapter.getStageElements(),
         ...collectOrbStageVisualRefs(stageRefs),
       });
     },
