@@ -2,7 +2,7 @@ import { resolveOrbGraceDefaultTtlMs, resolveOrbGracePayload } from "../../../ga
 
 export function createOrbStageActionBridge({
   runtime = null,
-  shieldEl = null,
+  legacyDomShieldEl = null,
   patchOrbRuntime = () => {},
   getOrbRuntime = () => null,
   applyOrbTransform = () => {},
@@ -27,18 +27,18 @@ export function createOrbStageActionBridge({
         const result = shellVfx.activateBubbleShield({ durationMs });
         if (result && result.handled) return result;
       }
-      if (!shieldEl) return { handled: false };
-      shieldEl.classList.add("on");
-      shieldEl.style.opacity = "1";
-      shieldEl.style.transition = "opacity 120ms linear";
+      if (!legacyDomShieldEl) return { handled: false };
+      legacyDomShieldEl.classList.add("on");
+      legacyDomShieldEl.style.opacity = "1";
+      legacyDomShieldEl.style.transition = "opacity 120ms linear";
       if (runtime && runtime.bubbleShieldTimer) {
         clearTimeout(runtime.bubbleShieldTimer);
       }
       if (runtime) {
         runtime.bubbleShieldTimer = setTimeout(() => {
-          shieldEl.classList.remove("on");
-          shieldEl.style.transition = "opacity 420ms linear";
-          shieldEl.style.opacity = "0";
+          legacyDomShieldEl.classList.remove("on");
+          legacyDomShieldEl.style.transition = "opacity 420ms linear";
+          legacyDomShieldEl.style.opacity = "0";
           runtime.bubbleShieldTimer = 0;
         }, Math.max(200, Number(durationMs) || 8000));
       }
