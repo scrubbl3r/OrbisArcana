@@ -2317,18 +2317,10 @@ function assignShellStageElements(shellContext, nextStageEls = {}) {
   return target;
 }
 
-function refreshShellActiveStageRuntimeBindings(shellContext) {
-  if (!shellContext) return;
-  const runtime = shellContext.runtime || null;
-  const activeStageEls = getActiveShellStageElements(shellContext);
-  assignShellStageElements(shellContext, activeStageEls);
-  if (!runtime) return;
-
-  if (runtime.vfxDefaults && runtime.shellVfxMods) {
-    initShellReceiverVfxRuntime(shellContext, runtime.shellVfxMods);
-  }
-
-  runtime.orbStageActions = createOrbStageActionBridge({
+function createShellOrbStageActions(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (!runtime) return null;
+  return createOrbStageActionBridge({
     runtime,
     shieldEl: shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null,
     patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
@@ -2341,6 +2333,20 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
     performanceNow: () => performance.now(),
     clamp,
   });
+}
+
+function refreshShellActiveStageRuntimeBindings(shellContext) {
+  if (!shellContext) return;
+  const runtime = shellContext.runtime || null;
+  const activeStageEls = getActiveShellStageElements(shellContext);
+  assignShellStageElements(shellContext, activeStageEls);
+  if (!runtime) return;
+
+  if (runtime.vfxDefaults && runtime.shellVfxMods) {
+    initShellReceiverVfxRuntime(shellContext, runtime.shellVfxMods);
+  }
+
+  runtime.orbStageActions = createShellOrbStageActions(shellContext);
 
   const activeAdapter = getActiveShellStageAdapter(shellContext);
   const activeRoot = activeAdapter && activeAdapter.refs ? activeAdapter.refs.root : null;
@@ -2802,19 +2808,7 @@ async function initShellKwsRuntime(shellContext) {
   const getRuntimeVfx = () => (
     runtime && runtime.vfx ? runtime.vfx : shellVfx || null
   );
-  runtime.orbStageActions = createOrbStageActionBridge({
-    runtime,
-    shieldEl: shellContext && shellContext.stageEls ? shellContext.stageEls.shield : null,
-    patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
-    getOrbRuntime: () => getShellOrbRuntime(shellContext),
-    applyOrbTransform: () => applyShellOrbTransform(shellContext),
-    applyGroundLine: () => applyShellGroundLine(shellContext),
-    groundCenterWorld: () => shellGroundCenterWorld(shellContext),
-    updateDebugReadout: () => updateShellStageReadouts(shellContext),
-    resetInputProcessingState: (atMs) => resetShellInputProcessingState(shellContext, atMs),
-    performanceNow: () => performance.now(),
-    clamp,
-  });
+  runtime.orbStageActions = createShellOrbStageActions(shellContext);
 
   let ruleEnginePreviewSystem = null;
   if (ruleSchema) {
