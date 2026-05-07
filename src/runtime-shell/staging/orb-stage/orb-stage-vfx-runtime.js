@@ -182,7 +182,6 @@ export function initOrbStageReceiverVfxRuntime({
 
   const stageVfx = {
     vfxDefaults,
-    legacyDomVfxRuntimesBundle,
     legacyDomBubbleShieldRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.bubbleShieldRuntime,
     legacyDomShockwaveRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.shockwaveRuntime,
     legacyDomOrbShatterRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.orbShatterRuntime,
