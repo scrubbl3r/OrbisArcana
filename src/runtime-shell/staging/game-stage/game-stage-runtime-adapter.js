@@ -1,6 +1,6 @@
 import { createStageRuntimeAdapterCore } from "../stage-runtime-adapter-core.js";
 import { applyAuthoredStageCameraVars } from "../../../game-runtime/stage/authored-stage-frame.js";
-import { resolveAuthoredLevelReadModelSpawnMarker } from "../../../game-runtime/level/authored-level-read-model.js";
+import { resolveAuthoredLevelReadModelPrimarySpawn } from "../../../game-runtime/level/authored-level-read-model.js";
 
 const GAME_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
@@ -89,8 +89,8 @@ export function createGameStageRuntimeAdapter({
         depth3dRuntime.bindGlobe3dRuntime(args);
       }
     },
-    getSpawnMarker() {
-      return resolveAuthoredLevelReadModelSpawnMarker(state);
+    getPrimarySpawn() {
+      return resolveAuthoredLevelReadModelPrimarySpawn(state);
     },
     getPreviewZoom() {
       return state ? state.previewZoom : 0;

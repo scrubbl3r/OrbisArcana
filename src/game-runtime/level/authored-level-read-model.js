@@ -32,7 +32,7 @@ export function resolveAuthoredLevelReadModelBox(runtimeOrReadModel = null, key 
   return null;
 }
 
-export function resolveAuthoredLevelReadModelSpawnMarker(runtimeOrReadModel = null) {
+export function resolveAuthoredLevelReadModelPrimarySpawn(runtimeOrReadModel = null) {
   const readModel = resolveAuthoredLevelReadModel(runtimeOrReadModel);
   if (readModel.sceneModel && readModel.sceneModel.spawn) return readModel.sceneModel.spawn;
   const spawnMarkers = resolveAuthoredLevelReadModelArray(readModel, AUTHORED_LEVEL_READ_MODEL_KEY_SPAWN_MARKERS);
@@ -40,11 +40,11 @@ export function resolveAuthoredLevelReadModelSpawnMarker(runtimeOrReadModel = nu
 }
 
 export function resolveAuthoredLevelReadModelSpawn(runtimeOrReadModel = null) {
-  const spawnMarker = resolveAuthoredLevelReadModelSpawnMarker(runtimeOrReadModel);
-  if (spawnMarker && spawnMarker.worldCenter) {
+  const primarySpawn = resolveAuthoredLevelReadModelPrimarySpawn(runtimeOrReadModel);
+  if (primarySpawn && primarySpawn.worldCenter) {
     return Object.freeze({
-      xW: Number(spawnMarker.worldCenter.xW) || 0,
-      yW: Number(spawnMarker.worldCenter.yW) || 0,
+      xW: Number(primarySpawn.worldCenter.xW) || 0,
+      yW: Number(primarySpawn.worldCenter.yW) || 0,
     });
   }
   return null;

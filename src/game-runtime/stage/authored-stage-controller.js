@@ -9,7 +9,7 @@ import {
   AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX,
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelBox,
-  resolveAuthoredLevelReadModelSpawnMarker,
+  resolveAuthoredLevelReadModelPrimarySpawn,
 } from "../level/authored-level-read-model.js";
 import {
   resolveStageCameraClampBounds,
@@ -121,8 +121,8 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25, onCa
   }
 
   if (refs.labelMeta) {
-    const spawnMarker = resolveAuthoredLevelReadModelSpawnMarker(state);
-    const authoredSpawn = spawnMarker && spawnMarker.authoredCenter ? spawnMarker.authoredCenter : null;
+    const primarySpawn = resolveAuthoredLevelReadModelPrimarySpawn(state);
+    const authoredSpawn = primarySpawn && primarySpawn.authoredCenter ? primarySpawn.authoredCenter : null;
     refs.labelMeta.textContent = authoredSpawn
       ? `${state.previewFollowMode} | zoom ${frame.zoom.toFixed(2)} | spawn ${Math.round(authoredSpawn.x)}, ${Math.round(authoredSpawn.y)}`
       : `${state.previewFollowMode} | zoom ${frame.zoom.toFixed(2)} | spawn unresolved`;
