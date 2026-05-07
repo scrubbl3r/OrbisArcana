@@ -103,6 +103,23 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       : false
   );
 
+  const callShellHook = (name, ...args) => {
+    const hook = shellHooks && name ? shellHooks[name] : null;
+    return typeof hook === "function" ? hook(...args) : undefined;
+  };
+
+  const renderLegacyDomOrbDamageVisuals = () => {
+    callShellHook("renderLegacyDomOrbDamageVisuals");
+  };
+
+  const spawnLegacyDomOrbShatterShardFx = (payload) => {
+    callShellHook("spawnLegacyDomOrbShatterShardFx", payload);
+  };
+
+  const stopLegacyDomOrbShatterShardSim = () => {
+    callShellHook("stopLegacyDomOrbShatterShardSim");
+  };
+
   const stageWorldItems =
     stageAdapters && typeof stageAdapters.getWorldItems === "function"
       ? stageAdapters.getWorldItems()
@@ -298,17 +315,8 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     clearFloatGrace: () => {
       if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace();
     },
-    renderLegacyDomOrbDamageVisuals: () => {
-      if (
-        shellHooks &&
-        typeof shellHooks.renderLegacyDomOrbDamageVisuals === "function"
-      ) {
-        shellHooks.renderLegacyDomOrbDamageVisuals();
-      }
-    },
-    spawnLegacyDomOrbShatterShardFx: (payload) => {
-      if (shellHooks && typeof shellHooks.spawnLegacyDomOrbShatterShardFx === "function") shellHooks.spawnLegacyDomOrbShatterShardFx(payload);
-    },
+    renderLegacyDomOrbDamageVisuals,
+    spawnLegacyDomOrbShatterShardFx,
     clearOrbDeathRuntimeFx: () => {
       if (shellHooks && typeof shellHooks.clearOrbDeathRuntimeFx === "function") shellHooks.clearOrbDeathRuntimeFx();
     },
@@ -319,9 +327,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
     },
     legacyDomOrbShatterController: shellHooks && shellHooks.legacyDomOrbShatterController ? shellHooks.legacyDomOrbShatterController : null,
-    stopLegacyDomOrbShatterShardSim: () => {
-      if (shellHooks && typeof shellHooks.stopLegacyDomOrbShatterShardSim === "function") shellHooks.stopLegacyDomOrbShatterShardSim();
-    },
+    stopLegacyDomOrbShatterShardSim,
     worldSystem: stageAdapters && typeof stageAdapters.getWorldSystem === "function" ? stageAdapters.getWorldSystem() : null,
     resetOrbStrokeColor: () => {
       if (shellHooks && typeof shellHooks.resetOrbStrokeColor === "function") shellHooks.resetOrbStrokeColor();
@@ -385,14 +391,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     closeDeathOverlay: () => {
       if (shellHooks && typeof shellHooks.closeDeathOverlay === "function") shellHooks.closeDeathOverlay();
     },
-    renderLegacyDomOrbDamageVisuals: () => {
-      if (
-        shellHooks &&
-        typeof shellHooks.renderLegacyDomOrbDamageVisuals === "function"
-      ) {
-        shellHooks.renderLegacyDomOrbDamageVisuals();
-      }
-    },
+    renderLegacyDomOrbDamageVisuals,
     updateDebugReadout: () => {
       if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
     },
