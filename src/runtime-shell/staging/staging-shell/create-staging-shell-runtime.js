@@ -35,6 +35,7 @@ import {
   handleShellVoiceSpellCast,
 } from "./shell-voice-spell-runtime.js";
 import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js";
+import { bindShellKwsTraceRuntime } from "./shell-kws-trace-runtime.js";
 import {
   createStagingShellModeController,
   STAGING_DEV_STAGE_VISIBILITY,
@@ -2871,21 +2872,16 @@ async function initShellKwsRuntime(shellContext) {
     },
   });
 
-  const kwsListenPolicySyncOff = eventBus.on("voice.kws_listen_policy_changed", (payload = {}) => {
-    const tokens = Array.isArray(payload.listenableTokens) ? payload.listenableTokens : [];
-    if (kwsPanelController && typeof kwsPanelController.setManualListenableTokens === "function") {
-      kwsPanelController.setManualListenableTokens(tokens);
-    }
-    if (kwsPanelController && typeof kwsPanelController.refreshPathBoard === "function") {
-      kwsPanelController.refreshPathBoard();
-    }
-    if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
-      kwsBridge.pushLogLine(
-        `TRACE tree.policy tokens:${tokens.length ? tokens.join(",") : "-"}`,
-        "muted"
-      );
-    }
+  const kwsTraceRuntime = bindShellKwsTraceRuntime({
+    eventBus,
+    kwsPanelController,
+    kwsBridge,
   });
+  const {
+    kwsListenPolicySyncOff,
+    kwsRuleTraceOff,
+    kwsActionTraceOff,
+  } = kwsTraceRuntime;
 
   const kwsRootWakeBridge = bindShellRootWakeWindows({
     eventBus,
@@ -2898,17 +2894,6 @@ async function initShellKwsRuntime(shellContext) {
     kwsBridge,
   });
 
-  const kwsRuleTraceOff = eventBus.on("rule_engine.preview_matched", (payload = {}) => {
-    const ruleId = String(payload.ruleId || "").trim().toLowerCase();
-    if (!ruleId || !kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
-    kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
-  });
-  const kwsActionTraceOff = eventBus.on("rule_engine.action_executed", (payload = {}) => {
-    const actionType = String(payload.actionType || "").trim().toLowerCase();
-    const actionId = String(payload.actionId || "").trim().toLowerCase();
-    if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
-    kwsBridge.pushLogLine(`TRACE action:${actionType}:${actionId}`, "ok");
-  });
   runtime.eventBus = eventBus;
 
   const shellVoiceSpellCastOff = eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (payload = {}) => {
