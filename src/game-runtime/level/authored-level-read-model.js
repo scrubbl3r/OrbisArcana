@@ -6,7 +6,6 @@ export const AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX = "cameraBoundary
 export const AUTHORED_LEVEL_READ_MODEL_KEY_WORLD_ITEM_SPAWNS = "worldItemSpawns";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_PROPS = "props";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES = "artShapes";
-export const AUTHORED_LEVEL_READ_MODEL_KEY_LINE_ART_SHAPES = "lineArtShapes";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_STARS_FIELD_REGIONS = "starsFieldRegions";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS = "depthLayers";
 

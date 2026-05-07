@@ -58,15 +58,12 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
       runtime = null,
       rect = null,
       artShapes = [],
-      lineArtShapes = null,
     } = {}) {
       if (!runtime || !stageRefs.world || !stageRefs.worldOverlay || !rect) return;
       const width = Math.max(1, Math.floor(Number(rect.width) || 0));
       const height = Math.max(1, Math.floor(Number(rect.height) || 0));
       const stageBackdrop = runtime.stageBackdrop || (runtime.stageBackdrop = localBackdropState);
-      const nextArtShapes = (Array.isArray(artShapes)
-        ? artShapes
-        : (Array.isArray(lineArtShapes) ? lineArtShapes : [])).slice();
+      const nextArtShapes = (Array.isArray(artShapes) ? artShapes : []).slice();
       const nextArtKey = nextArtShapes.map((shape = {}) => String(shape.id || "")).join("|");
       const worldWidth = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldWidthPx) || levelWorldSize.widthPx);
       const worldHeight = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldHeightPx) || levelWorldSize.heightPx);

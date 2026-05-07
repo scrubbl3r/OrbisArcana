@@ -62,13 +62,12 @@ function resolveTravelRange(cameraMin = 0, cameraMax = 0, viewportSpan = 0, fall
 export function buildAuthoredLevelOverlayMarkup({
   starsField = null,
   loops = [],
-  artShapes = null,
-  lineArtShapes = [],
+  artShapes = [],
   overlayId = "authoredOverlay",
   worldWidthPx = 0,
   worldHeightPx = 0,
 } = {}) {
-  const authoredArtShapes = Array.isArray(artShapes) ? artShapes : lineArtShapes;
+  const authoredArtShapes = Array.isArray(artShapes) ? artShapes : [];
   const clipRegions = Array.isArray(starsField && starsField.regions) ? starsField.regions : [];
   const layerBoxes = Array.isArray(starsField && starsField.layers) ? starsField.layers : [];
   const stars = Array.isArray(starsField && starsField.stars) ? starsField.stars : [];
