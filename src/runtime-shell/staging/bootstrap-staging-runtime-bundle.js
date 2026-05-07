@@ -1,7 +1,7 @@
 function clearOrbStageLegacyDomOrbShatterPresentation({
-  clearLegacyDomOrbShatterRuntime = () => {},
+  clearLegacyDomOrbShatterRuntime: clearOrbStageLegacyDomOrbShatterRuntime = () => {},
 } = {}) {
-  clearLegacyDomOrbShatterRuntime();
+  clearOrbStageLegacyDomOrbShatterRuntime();
 }
 
 export function bootstrapStagingRuntimeBundle({
@@ -29,11 +29,11 @@ export function bootstrapStagingRuntimeBundle({
   kwsRuntimeCommands = {},
   kwsBootOrchestrator = null,
   grantOrbGrace = () => {},
-  clearLegacyDomOrbShatterRuntime = () => {},
+  clearLegacyDomOrbShatterRuntime: clearOrbStageLegacyDomOrbShatterRuntime = () => {},
   worldSystem = null,
   clearDeathOverlaySchedule = () => {},
   closeDeathOverlay = () => {},
-  renderLegacyDomOrbDamageVisuals = () => {},
+  renderLegacyDomOrbDamageVisuals: renderOrbStageLegacyDomOrbDamageVisuals = () => {},
   updateDebugReadout = () => {},
   setOrbInputSuppressed = () => {},
 } = {}) {
@@ -76,7 +76,7 @@ export function bootstrapStagingRuntimeBundle({
         atMs: performance.now(),
       };
       orbSystem.applyImpact({ impact, source, atMs: performance.now() });
-      renderLegacyDomOrbDamageVisuals();
+      renderOrbStageLegacyDomOrbDamageVisuals();
       updateDebugReadout();
     },
   };
@@ -89,14 +89,14 @@ export function bootstrapStagingRuntimeBundle({
   }
   receiverRuntime.lastImpact = null;
   clearOrbStageLegacyDomOrbShatterPresentation({
-    clearLegacyDomOrbShatterRuntime,
+    clearLegacyDomOrbShatterRuntime: clearOrbStageLegacyDomOrbShatterRuntime,
   });
   setOrbInputSuppressed(false);
   if (orbFxSystem && typeof orbFxSystem.reset === "function") orbFxSystem.reset();
   if (worldSystem && typeof worldSystem.reset === "function") worldSystem.reset(performance.now());
   clearDeathOverlaySchedule();
   closeDeathOverlay();
-  renderLegacyDomOrbDamageVisuals();
+  renderOrbStageLegacyDomOrbDamageVisuals();
   updateDebugReadout();
 
   return receiverRuntime;
