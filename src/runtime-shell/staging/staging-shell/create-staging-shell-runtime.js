@@ -2280,15 +2280,14 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
 
   runtime.orbStageActions = createShellOrbStageActions(shellContext);
 
-  const activeAdapter = getActiveShellStageAdapter(shellContext);
+  const createOrbShatterController = getActiveShellStageMethod(shellContext, "createOrbShatterController");
   const activeRoot = getActiveShellStageRoot(shellContext);
   runtime.orbShatterController = (
-    activeAdapter &&
-    typeof activeAdapter.createOrbShatterController === "function" &&
+    createOrbShatterController &&
     runtime.vfx &&
     runtime.vfx.orbShatterRuntime
   )
-    ? activeAdapter.createOrbShatterController({
+    ? createOrbShatterController.method.call(createOrbShatterController.activeAdapter, {
         root: activeRoot,
         getOrbShatterRuntime: () => (
           runtime && runtime.vfx
