@@ -12,7 +12,7 @@ Reassess what still meaningfully lives in:
 after extracting:
 
 - `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/runtime-shell/staging/staging-shell/receiver-host-runtime-bootstrap.js`
-- `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/runtime-shell/staging/staging-shell/receiver-host-impulse-adapter.js`
+- `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/src/runtime-shell/staging/staging-shell/receiver-impulse-adapter.js`
 
 ## Current File Shape
 
@@ -20,7 +20,7 @@ Line counts:
 
 - `create-staging-shell-runtime.js`: ~2229 lines
 - `receiver-host-runtime-bootstrap.js`: ~352 lines
-- `receiver-host-impulse-adapter.js`: ~97 lines
+- `receiver-impulse-adapter.js`: ~97 lines
 
 This means real extraction has happened, but `create-staging-shell-runtime.js` is still large because it still owns several distinct shell domains.
 

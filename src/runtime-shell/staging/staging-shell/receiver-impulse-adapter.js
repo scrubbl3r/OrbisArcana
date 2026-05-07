@@ -1,4 +1,4 @@
-export function attachShellReceiverHostImpulseAdapter({
+export function attachShellReceiverImpulseAdapter({
   runtimeContext = null,
   stabilityVisualState = null,
   runtime = null,

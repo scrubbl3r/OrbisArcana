@@ -1,4 +1,4 @@
-import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
+import { attachShellReceiverImpulseAdapter } from "./receiver-impulse-adapter.js";
 
 export async function bootstrapShellReceiverHostRuntimeAssembly({
   shellContext = null,
@@ -392,7 +392,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   runtime.receiverRuntime = receiverRuntime;
 
   runtime.receiverImpulseRuntime = {};
-  const processIncomingImpulse = attachShellReceiverHostImpulseAdapter({
+  const processIncomingImpulse = attachShellReceiverImpulseAdapter({
     runtimeContext,
     stabilityVisualState,
     runtime,
