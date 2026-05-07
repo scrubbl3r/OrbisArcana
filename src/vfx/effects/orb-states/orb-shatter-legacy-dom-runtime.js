@@ -8,7 +8,7 @@
  */
 
 /**
- * @typedef {Object} CreateOrbShatterRuntimeOptions
+ * @typedef {Object} CreateLegacyDomOrbShatterRuntimeOptions
  * @property {SVGElement|HTMLElement} layerEl SVG layer element for shard paths.
  * @property {(n:number, min:number, max:number) => number} [clamp]
  * @property {number} [gravityPxS2]
@@ -19,9 +19,9 @@
  *
  * Palette capture remains receiver-owned; caller passes a frozen palette into `spawnPiece`.
  *
- * @param {CreateOrbShatterRuntimeOptions} options
+ * @param {CreateLegacyDomOrbShatterRuntimeOptions} options
  */
-export function createOrbShatterRuntime({
+export function createLegacyDomOrbShatterRuntime({
   layerEl,
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
   gravityPxS2 = 980,

@@ -7,7 +7,7 @@ import {
   createRng,
   makeVoronoiLayout,
 } from "../../../src/game-runtime/orb/orb-lifecycle-vfx-runtime.js";
-import { createOrbShatterRuntime } from "../../../src/vfx/effects/orb-states/orb-shatter-runtime.js";
+import { createLegacyDomOrbShatterRuntime } from "../../../src/vfx/effects/orb-states/orb-shatter-legacy-dom-runtime.js";
 
 const AUTHORING_ORB_RADIUS_PX = ORB_BASE_SCALE_REFERENCE_DIAMETER_PX * 0.5;
 
@@ -40,7 +40,7 @@ export function createOrbLifecyclePreview({ els } = {}) {
   let currentHitTotal = 3;
   let currentHits = 0;
   let currentLayout = null;
-  const shatterRuntime = createOrbShatterRuntime({
+  const shatterRuntime = createLegacyDomOrbShatterRuntime({
     layerEl: els && els.orbShatterLayer,
   });
 

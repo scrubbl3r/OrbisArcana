@@ -1,6 +1,6 @@
 import { createBubbleShieldRuntime } from "./spells/bubble-shield-runtime.js";
 import { createShockwaveRuntime } from "./spells/shockwave-runtime.js";
-import { createOrbShatterRuntime } from "./orb-states/orb-shatter-runtime.js";
+import { createLegacyDomOrbShatterRuntime } from "./orb-states/orb-shatter-legacy-dom-runtime.js";
 import { createFlameAoeRuntime } from "./spells/flame-aoe-runtime.js";
 import { createElectricAoeRuntime } from "./spells/electric-aoe-runtime.js";
 
@@ -32,7 +32,7 @@ import { createElectricAoeRuntime } from "./spells/electric-aoe-runtime.js";
 export function createVfxRuntimesBundle(options = {}) {
   const bubbleShieldRuntime = options.bubbleShield ? createBubbleShieldRuntime(options.bubbleShield) : null;
   const shockwaveRuntime = options.shockwave ? createShockwaveRuntime(options.shockwave) : null;
-  const orbShatterRuntime = options.orbShatter ? createOrbShatterRuntime(options.orbShatter) : null;
+  const orbShatterRuntime = options.orbShatter ? createLegacyDomOrbShatterRuntime(options.orbShatter) : null;
   const flameAoeRuntime = options.flameAoe ? createFlameAoeRuntime(options.flameAoe) : null;
   const electricAoeRuntime = options.electricAoe ? createElectricAoeRuntime(options.electricAoe) : null;
 
