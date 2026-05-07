@@ -63,11 +63,11 @@ import {
 } from "../../../game-runtime/level/authored-level-camera.js?v=20260506a";
 import { createPerfTrace } from "../perf-trace.js?v=20260430b";
 import {
-  drawLegacyShellBackdrop,
-  drawLegacyShellStars,
-  ensureLegacyShellStageBackdrop,
-  legacyShellGroundLineScreenY,
-} from "./legacy-shell-stage-backdrop.js";
+  drawShellBackdrop as drawShellStageBackdrop,
+  drawShellStars as drawShellStageStars,
+  ensureShellStageBackdrop as ensureShellStageBackdropSurface,
+  shellGroundLineScreenY as resolveShellGroundLineScreenY,
+} from "./shell-stage-backdrop.js";
 
 globalThis.__orbisStagingShellRuntimeVersion = "20260506d";
 
@@ -3003,7 +3003,7 @@ function formatPhoneImpulseLogLine(d) {
 }
 
 function ensureShellStageBackdrop(shellContext) {
-  ensureLegacyShellStageBackdrop(shellContext, {
+  ensureShellStageBackdropSurface(shellContext, {
     getActiveShellStageAdapter,
     shellStageRect,
     shellActiveStageLevel,
@@ -3013,7 +3013,7 @@ function ensureShellStageBackdrop(shellContext) {
 }
 
 function shellGroundLineScreenY(shellContext) {
-  return legacyShellGroundLineScreenY(shellContext, {
+  return resolveShellGroundLineScreenY(shellContext, {
     shellStageRect,
     shellGroundCenterWorld,
     shellCameraTopFor,
@@ -3021,14 +3021,14 @@ function shellGroundLineScreenY(shellContext) {
 }
 
 function drawShellStars(shellContext) {
-  drawLegacyShellStars(shellContext, {
+  drawShellStageStars(shellContext, {
     getActiveShellStageAdapter,
     shellCameraTopFor,
   });
 }
 
 function drawShellBackdrop(shellContext) {
-  drawLegacyShellBackdrop(shellContext, {
+  drawShellStageBackdrop(shellContext, {
     getActiveShellStageAdapter,
     groundLineScreenY: shellGroundLineScreenY,
   });

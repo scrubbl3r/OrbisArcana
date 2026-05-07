@@ -3,7 +3,7 @@ import {
   resolveAuthoredLevelReadModelArray,
 } from "../../../game-runtime/level/authored-level-read-model.js";
 
-export function ensureLegacyShellStageBackdrop(shellContext, {
+export function ensureShellStageBackdrop(shellContext, {
   getActiveShellStageAdapter = () => null,
   shellStageRect = () => ({ width: 0, height: 0 }),
   shellActiveStageLevel = () => null,
@@ -31,7 +31,7 @@ export function ensureLegacyShellStageBackdrop(shellContext, {
   });
 }
 
-export function legacyShellGroundLineScreenY(shellContext, {
+export function shellGroundLineScreenY(shellContext, {
   shellStageRect = () => ({ width: 0, height: 0 }),
   shellGroundCenterWorld = () => 0,
   shellCameraTopFor = () => 0,
@@ -46,7 +46,7 @@ export function legacyShellGroundLineScreenY(shellContext, {
   return groundLineWorldY - camTop;
 }
 
-export function drawLegacyShellStars(shellContext, {
+export function drawShellStars(shellContext, {
   getActiveShellStageAdapter = () => null,
   shellCameraTopFor = () => 0,
 } = {}) {
@@ -62,7 +62,7 @@ export function drawLegacyShellStars(shellContext, {
   });
 }
 
-export function drawLegacyShellBackdrop(shellContext, {
+export function drawShellBackdrop(shellContext, {
   getActiveShellStageAdapter = () => null,
   groundLineScreenY = () => 0,
 } = {}) {
