@@ -1607,12 +1607,8 @@ function startShellStageLoop(shellContext) {
       }
       traceMeasure("frame.metrics", () => updateShellFrameMetrics(shellContext, nowMs));
       const cameraTrace = traceShellCameraInput(shellContext, nowMs);
-      const receiverHostRuntime = runtime.receiverHostRuntime || null;
       const receiverRuntime = resolveShellReceiverRuntime(runtime);
-      const orbFxSystem =
-        (receiverHostRuntime && receiverHostRuntime.runtimeContext && receiverHostRuntime.runtimeContext.orbFxSystem) ||
-        (receiverRuntime && receiverRuntime.orbFxSystem) ||
-        null;
+      const orbFxSystem = receiverRuntime && receiverRuntime.orbFxSystem ? receiverRuntime.orbFxSystem : null;
       traceMeasure("orb.pipeline", () => runOrbRuntimePipeline({
         ts,
         dt,
@@ -1717,7 +1713,6 @@ function bindShellStageActions(shellContext) {
   if (!buttons.length) return;
   const onTryAgain = () => {
     const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-    const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
     const receiverRuntime = resolveShellReceiverRuntime(runtime);
     resetShellOrbToGround(shellContext);
     const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
@@ -1730,10 +1725,7 @@ function bindShellStageActions(shellContext) {
     if (stage && stage.worldSystem && typeof stage.worldSystem.reset === "function") {
       stage.worldSystem.reset(performance.now());
     }
-    const orbFxSystem =
-      (receiverHostRuntime && receiverHostRuntime.runtimeContext && receiverHostRuntime.runtimeContext.orbFxSystem) ||
-      (receiverRuntime && receiverRuntime.orbFxSystem) ||
-      null;
+    const orbFxSystem = receiverRuntime && receiverRuntime.orbFxSystem ? receiverRuntime.orbFxSystem : null;
     if (orbFxSystem && typeof orbFxSystem.reset === "function") {
       orbFxSystem.reset();
     }
@@ -1887,34 +1879,31 @@ function clearShellOrbRuntimeFxForDeath(shellContext) {
 
 function resetShellInputProcessingState(shellContext, atMs = performance.now()) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
-  const runtimeContext = receiverHostRuntime && receiverHostRuntime.runtimeContext
-    ? receiverHostRuntime.runtimeContext
-    : null;
+  const receiverRuntime = resolveShellReceiverRuntime(runtime);
   if (
-    runtimeContext &&
-    runtimeContext.inputSystemsBundle &&
-    typeof runtimeContext.inputSystemsBundle.resetProcessingState === "function"
+    receiverRuntime &&
+    receiverRuntime.inputSystemsBundle &&
+    typeof receiverRuntime.inputSystemsBundle.resetProcessingState === "function"
   ) {
-    runtimeContext.inputSystemsBundle.resetProcessingState(atMs);
+    receiverRuntime.inputSystemsBundle.resetProcessingState(atMs);
     return;
   }
-  if (runtimeContext && runtimeContext.inputSystem && typeof runtimeContext.inputSystem.reset === "function") {
-    runtimeContext.inputSystem.reset(atMs);
+  if (receiverRuntime && receiverRuntime.inputSystem && typeof receiverRuntime.inputSystem.reset === "function") {
+    receiverRuntime.inputSystem.reset(atMs);
   }
   if (
-    runtimeContext &&
-    runtimeContext.inputDynamicsSystem &&
-    typeof runtimeContext.inputDynamicsSystem.reset === "function"
+    receiverRuntime &&
+    receiverRuntime.inputDynamicsSystem &&
+    typeof receiverRuntime.inputDynamicsSystem.reset === "function"
   ) {
-    runtimeContext.inputDynamicsSystem.reset(atMs);
+    receiverRuntime.inputDynamicsSystem.reset(atMs);
   }
   if (
-    runtimeContext &&
-    runtimeContext.inputGestureSystem &&
-    typeof runtimeContext.inputGestureSystem.reset === "function"
+    receiverRuntime &&
+    receiverRuntime.inputGestureSystem &&
+    typeof receiverRuntime.inputGestureSystem.reset === "function"
   ) {
-    runtimeContext.inputGestureSystem.reset(atMs);
+    receiverRuntime.inputGestureSystem.reset(atMs);
   }
 }
 
@@ -3348,10 +3337,8 @@ async function initShellKwsRuntime(shellContext) {
     handlers: shellSpellActionHandlers,
     grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
     getCastGateState: () => {
-      const runtimeContext = runtime && runtime.receiverHostRuntime && runtime.receiverHostRuntime.runtimeContext
-        ? runtime.receiverHostRuntime.runtimeContext
-        : null;
-      const orb = runtimeContext && runtimeContext.gameState ? runtimeContext.gameState.orb : null;
+      const receiverRuntime = resolveShellReceiverRuntime(runtime);
+      const orb = receiverRuntime && receiverRuntime.gameState ? receiverRuntime.gameState.orb : null;
       return getSharedOrbCastGateState(orb);
     },
     defaultGraceTtlMs: getShellDefaultGraceTtlMs(),
