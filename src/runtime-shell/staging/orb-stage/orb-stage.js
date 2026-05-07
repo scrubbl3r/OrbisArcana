@@ -4,7 +4,7 @@ import {
   normalizeLevelDefinition,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260424h";
+import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260507a";
 import {
   applyOrbBaseVisualCssVars,
   buildOrbBaseVisualState,
