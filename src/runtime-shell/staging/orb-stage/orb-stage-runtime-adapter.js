@@ -89,7 +89,7 @@ export function createOrbStageRuntimeAdapter({
     },
     renderLegacyDomOrbDamageVisuals: legacyDomOrbAdapter.renderLegacyDomOrbDamageVisuals,
     createLegacyDomOrbShatterController: legacyDomOrbAdapter.createLegacyDomOrbShatterController,
-    getLegacyDomStageElements() {
+    getOrbStageLegacyDomElements() {
       return Object.freeze(collectLegacyDomOrbRefs(stageRefs));
     },
     getStageElements() {

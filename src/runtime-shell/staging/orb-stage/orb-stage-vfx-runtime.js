@@ -96,7 +96,7 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
 
 export function initOrbStageReceiverVfxRuntime({
   runtime = null,
-  legacyDomStageEls = {},
+  orbStageLegacyDomEls = {},
   createLegacyDomVfxRuntimesBundle = null,
   rootStyle = null,
   vfxDefaults = null,
@@ -119,7 +119,7 @@ export function initOrbStageReceiverVfxRuntime({
   cancelCameraTravel = null,
 } = {}) {
   if (!runtime || typeof createLegacyDomVfxRuntimesBundle !== "function" || !vfxDefaults) return null;
-  const legacyDomEls = legacyDomStageEls || {};
+  const legacyDomEls = orbStageLegacyDomEls || {};
   const readOrbDiameterPx = () => Math.max(
     1,
     Number(getOrbDiameterPx()) || (Math.max(0.01, Number(getOrbScaleFactor()) || 1) * 100)

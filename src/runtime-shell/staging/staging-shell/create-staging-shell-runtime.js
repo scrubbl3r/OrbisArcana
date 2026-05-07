@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507s";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507t";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -17,7 +17,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507ab";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507ac";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507e";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507j";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507bw";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507bx";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1905,7 +1905,7 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
   const vfxDefaults = runtime.vfxDefaults || createShellReceiverVfxDefaults();
   return initOrbStageReceiverVfxRuntime({
     runtime,
-    legacyDomStageEls: getShellLegacyDomStageElements(shellContext),
+    orbStageLegacyDomEls: getShellOrbStageLegacyDomElements(shellContext),
     createLegacyDomVfxRuntimesBundle,
     rootStyle,
     vfxDefaults,
@@ -2183,10 +2183,10 @@ function getActiveShellStageElements(shellContext) {
     : {};
 }
 
-function getShellLegacyDomStageElements(shellContext) {
+function getShellOrbStageLegacyDomElements(shellContext) {
   const adapter = getActiveShellStageAdapter(shellContext);
-  return adapter && typeof adapter.getLegacyDomStageElements === "function"
-    ? adapter.getLegacyDomStageElements()
+  return adapter && typeof adapter.getOrbStageLegacyDomElements === "function"
+    ? adapter.getOrbStageLegacyDomElements()
     : {};
 }
 
@@ -2276,7 +2276,7 @@ function createShellOrbStageActions(shellContext) {
   if (!runtime) return null;
   return createOrbStageActionBridge({
     runtime,
-    legacyDomBubbleShieldEl: getShellLegacyDomStageElements(shellContext).shield || null,
+    legacyDomBubbleShieldEl: getShellOrbStageLegacyDomElements(shellContext).shield || null,
     patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
     getOrbRuntime: () => getShellOrbRuntime(shellContext),
     applyOrbTransform: () => applyShellOrbTransform(shellContext),
