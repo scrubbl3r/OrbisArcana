@@ -43,7 +43,7 @@ These parts look like true receiver-host bootstrap and should eventually move in
 - binding receiver runtime events via `bindStagingRuntimeEvents(...)`
 - bootstrapping the receiver runtime bundle via `bootstrapStagingRuntimeBundle(...)`
 - publishing `runtime.receiverRuntime` and the host-facing
-  `runtime.receiverHostRuntime.processIncomingImpulse(...)` adapter
+  `runtime.receiverImpulseRuntime.processIncomingImpulse(...)` adapter
 
 This is the clearest candidate for a future shared helper.
 
@@ -110,7 +110,7 @@ This should stay explicit and injected, not hidden.
 
 ### Seam 3: Impulse processing adapter
 
-`receiverHostRuntime.processIncomingImpulse(...)` is its own seam:
+`receiverImpulseRuntime.processIncomingImpulse(...)` is its own seam:
 
 - ingest input packet
 - update stability visuals

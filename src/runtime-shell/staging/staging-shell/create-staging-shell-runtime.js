@@ -21,7 +21,7 @@ import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } fro
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260504a";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260506a";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260506b";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import {
@@ -1354,7 +1354,7 @@ function createShellReceiverConfigs() {
 function handleShellImpulseFrame(shellContext, data) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
-  const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
+  const receiverImpulseRuntime = runtime && runtime.receiverImpulseRuntime ? runtime.receiverImpulseRuntime : null;
   let inputPayload = data;
 
   if (runtime && runtime.signalProcessor && runtime.motionStore) {
@@ -1379,8 +1379,8 @@ function handleShellImpulseFrame(shellContext, data) {
     }
   }
 
-  if (receiverHostRuntime && typeof receiverHostRuntime.processIncomingImpulse === "function") {
-    receiverHostRuntime.processIncomingImpulse(inputPayload);
+  if (receiverImpulseRuntime && typeof receiverImpulseRuntime.processIncomingImpulse === "function") {
+    receiverImpulseRuntime.processIncomingImpulse(inputPayload);
     renderShellHudFromMotionStore(shellContext);
     runtime.liveInputStatusShown = true;
     return;
@@ -2315,7 +2315,7 @@ async function initShellReceiverHostRuntime(shellContext) {
     runtime.stage.worldSystem = runtimeContext && runtimeContext.worldSystem ? runtimeContext.worldSystem : null;
   }
 
-  return runtime.receiverHostRuntime;
+  return runtime.receiverImpulseRuntime;
 }
 
 function bindShellRuleActionRuntime({

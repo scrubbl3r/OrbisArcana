@@ -391,7 +391,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   });
   runtime.receiverRuntime = receiverRuntime;
 
-  runtime.receiverHostRuntime = {};
+  runtime.receiverImpulseRuntime = {};
   const processIncomingImpulse = attachShellReceiverHostImpulseAdapter({
     runtimeContext,
     stabilityVisualState,
@@ -407,11 +407,11 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       : null,
   });
   if (typeof processIncomingImpulse === "function") {
-    runtime.receiverHostRuntime.processIncomingImpulse = processIncomingImpulse;
+    runtime.receiverImpulseRuntime.processIncomingImpulse = processIncomingImpulse;
   }
 
   return {
-    receiverHostRuntime: runtime.receiverHostRuntime,
+    receiverImpulseRuntime: runtime.receiverImpulseRuntime,
     runtimeContext,
     receiverRuntime,
   };
