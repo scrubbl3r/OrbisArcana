@@ -110,7 +110,7 @@ const report = {
     worldCenter: anchor.worldCenter,
   })),
   cameraBoundaryLoopCount: summary.cameraBoundaryLoops.length,
-  worldItemSpawns: summary.worldItemSpawns.map((spawn) => ({
+  worldItems: summary.worldItems.map((spawn) => ({
     id: spawn.id,
     kind: spawn.kind,
     authoredCenter: spawn.authoredCenter,

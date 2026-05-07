@@ -36,7 +36,7 @@ export function createStageRuntimeAdapterCore({
       }
       return refs.physStage.getBoundingClientRect();
     },
-    getWorldItemSpawns() {
+    getWorldItems() {
       return Array.isArray(level && level.elements && level.elements.worldItemSpawns)
         ? level.elements.worldItemSpawns
         : [];

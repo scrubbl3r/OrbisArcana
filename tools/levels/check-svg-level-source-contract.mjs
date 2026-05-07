@@ -84,7 +84,7 @@ assert.deepEqual(
   "hidden fields layers must not hydrate stars field regions"
 );
 assert.deepEqual(
-  summary.worldItemSpawns.map((spawn) => spawn.id),
+  summary.worldItems.map((spawn) => spawn.id),
   ["globe_visible"],
   "hidden globes layers must not hydrate world item spawns"
 );

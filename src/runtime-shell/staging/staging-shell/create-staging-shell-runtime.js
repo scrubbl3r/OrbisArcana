@@ -50,7 +50,7 @@ import {
   AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX,
   AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
   AUTHORED_LEVEL_READ_MODEL_KEY_LOOPS,
-  AUTHORED_LEVEL_READ_MODEL_KEY_WORLD_ITEM_SPAWNS,
+  AUTHORED_LEVEL_READ_MODEL_KEY_WORLD_ITEMS,
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelBox,
   resolveAuthoredLevelReadModelSpawn,
@@ -506,16 +506,16 @@ function applyShellCurrentLevelReadModel(runtime = null, readModel = null) {
   return summary;
 }
 
-function shellResolvedWorldItemSpawns(shellContext) {
+function shellResolvedWorldItems(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const readModelSpawns = resolveAuthoredLevelReadModelArray(runtime, AUTHORED_LEVEL_READ_MODEL_KEY_WORLD_ITEM_SPAWNS);
-  if (readModelSpawns.length) return readModelSpawns;
+  const readModelWorldItems = resolveAuthoredLevelReadModelArray(runtime, AUTHORED_LEVEL_READ_MODEL_KEY_WORLD_ITEMS);
+  if (readModelWorldItems.length) return readModelWorldItems;
   const activeStageAdapter = getActiveShellStageAdapter(shellContext);
   return (
     activeStageAdapter &&
-    typeof activeStageAdapter.getWorldItemSpawns === "function"
+    typeof activeStageAdapter.getWorldItems === "function"
   )
-    ? activeStageAdapter.getWorldItemSpawns()
+    ? activeStageAdapter.getWorldItems()
     : [];
 }
 
@@ -2277,7 +2277,7 @@ async function initShellReceiverHostRuntime(shellContext) {
       ),
       getPhys: () => (runtime.stage ? runtime.stage.phys : {}),
       getWorldSystem: () => (runtime.stage ? runtime.stage.worldSystem : null),
-      getWorldItemSpawns: () => shellResolvedWorldItemSpawns(shellContext),
+      getWorldItems: () => shellResolvedWorldItems(shellContext),
       getOrbRuntimeLoop: () => runtime.orbRuntimeLoop,
     },
     shellHooks: {
@@ -2560,7 +2560,7 @@ function syncGameStageGlobe3dRuntime(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const gameAdapter = shellContext && shellContext.gameStageAdapter ? shellContext.gameStageAdapter : null;
   if (!runtime || !gameAdapter || typeof gameAdapter.bindGlobe3dRuntime !== "function") return;
-  const spawns = shellResolvedWorldItemSpawns(shellContext);
+  const spawns = shellResolvedWorldItems(shellContext);
   gameAdapter.bindGlobe3dRuntime({
     eventBus: runtime.eventBus,
     spawns,
@@ -2587,7 +2587,7 @@ function syncActiveShellStage(shellContext) {
       stage.phys.worldWidthPx = shellWorldWidth(shellContext);
     }
     if (stage && stage.worldSystem && typeof stage.worldSystem.setSpawns === "function") {
-      const nextSpawns = shellResolvedWorldItemSpawns(shellContext);
+      const nextSpawns = shellResolvedWorldItems(shellContext);
       stage.worldSystem.setSpawns(nextSpawns, performance.now());
       syncGameStageGlobe3dRuntime(shellContext);
     }

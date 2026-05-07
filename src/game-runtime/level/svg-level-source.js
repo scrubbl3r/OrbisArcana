@@ -727,7 +727,7 @@ export function buildSvgCameraBoundaryLoops({
   });
 }
 
-export function buildSvgWorldItemSpawns({
+export function buildSvgWorldItems({
   svgText = "",
   worldWidthPx = 0,
   worldHeightPx = 0,
@@ -1212,7 +1212,7 @@ export function summarizeSvgLevelSource({
     worldHeightPx,
     cameraBoundaryLayerLabels,
   });
-  const worldItemSpawns = buildSvgWorldItemSpawns({
+  const worldItems = buildSvgWorldItems({
     svgText,
     worldWidthPx,
     worldHeightPx,
@@ -1257,7 +1257,7 @@ export function summarizeSvgLevelSource({
     cameraAnchors: Object.freeze(cameraAnchors),
     cameraBoundaryLoops: Object.freeze(cameraBoundaryLoops),
     cameraBoundaryBox,
-    worldItemSpawns: Object.freeze(worldItemSpawns),
+    worldItems: Object.freeze(worldItems),
     props: Object.freeze(props),
     artShapes,
     starsFieldRegions: Object.freeze(starsFieldRegions),
