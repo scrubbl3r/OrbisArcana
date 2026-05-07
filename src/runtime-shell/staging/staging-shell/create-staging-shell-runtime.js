@@ -2042,9 +2042,8 @@ async function initShellReceiverHostRuntime(shellContext) {
       getOrbVisualRadiusPx: () => shellOrbVisualRadiusPx(shellContext),
       axisToColor01,
       bindGlobe3dRuntime: (args = {}) => (
-        shellContext.gameStageAdapter &&
-        typeof shellContext.gameStageAdapter.bindGlobe3dRuntime === "function"
-          ? shellContext.gameStageAdapter.bindGlobe3dRuntime(args)
+        getActiveShellStageMethod(shellContext, "bindGlobe3dRuntime")
+          ? callActiveShellStageMethod(shellContext, "bindGlobe3dRuntime", args)
           : null
       ),
       getPhys: () => (runtime.stage ? runtime.stage.phys : {}),
@@ -2308,12 +2307,12 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
     : null;
 }
 
-function syncGameStageGlobe3dRuntime(shellContext) {
+function syncActiveStageGlobe3dRuntime(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const gameAdapter = shellContext && shellContext.gameStageAdapter ? shellContext.gameStageAdapter : null;
-  if (!runtime || !gameAdapter || typeof gameAdapter.bindGlobe3dRuntime !== "function") return;
+  const bindGlobe3dRuntime = getActiveShellStageMethod(shellContext, "bindGlobe3dRuntime");
+  if (!runtime || !bindGlobe3dRuntime) return;
   const spawns = shellResolvedWorldItems(shellContext);
-  gameAdapter.bindGlobe3dRuntime({
+  bindGlobe3dRuntime.method.call(bindGlobe3dRuntime.activeAdapter, {
     eventBus: runtime.eventBus,
     spawns,
   });
@@ -2339,7 +2338,7 @@ function syncActiveShellStage(shellContext) {
     if (stage && stage.worldSystem && typeof stage.worldSystem.setSpawns === "function") {
       const nextSpawns = shellResolvedWorldItems(shellContext);
       stage.worldSystem.setSpawns(nextSpawns, performance.now());
-      syncGameStageGlobe3dRuntime(shellContext);
+      syncActiveStageGlobe3dRuntime(shellContext);
     }
     if (runtime && runtime.cameraRuntime && typeof runtime.cameraRuntime.reset === "function") {
       runtime.cameraRuntime.reset();
@@ -3070,7 +3069,7 @@ export async function createStagingShellRuntime({
     await initShellKwsRuntime(shellContext);
     await hydrateShellAuthoredLevelReadModel(shellContext);
     initializeShellStageRuntime(shellContext);
-    syncGameStageGlobe3dRuntime(shellContext);
+    syncActiveStageGlobe3dRuntime(shellContext);
     await initShellReceiverHostRuntime(shellContext);
     refreshShellActiveStageRuntimeBindings(shellContext);
     activateShellStageVisuals(shellContext);
