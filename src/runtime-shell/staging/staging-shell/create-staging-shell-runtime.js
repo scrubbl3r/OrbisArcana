@@ -1682,22 +1682,17 @@ function updateShellOrbStrokeColor(shellContext, dt) {
 function renderShellOrbDamageVisuals(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const receiverRuntime = resolveShellReceiverRuntime(runtime);
-  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-  if (!receiverRuntime || !receiverRuntime.orbDamageVisualsRuntime || !activeStageAdapter || typeof activeStageAdapter.renderOrbDamageVisuals !== "function") return;
+  if (!receiverRuntime || !receiverRuntime.orbDamageVisualsRuntime) return;
   const fx = receiverRuntime.orbDamageVisualsRuntime.getState();
-  activeStageAdapter.renderOrbDamageVisuals({ fx });
+  callActiveShellStageMethod(shellContext, "renderOrbDamageVisuals", { fx });
 }
 
 function openShellDeathOverlay(shellContext) {
-  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-  if (!activeStageAdapter || typeof activeStageAdapter.openDeathOverlay !== "function") return;
-  activeStageAdapter.openDeathOverlay();
+  callActiveShellStageVoidMethod(shellContext, "openDeathOverlay");
 }
 
 function closeShellDeathOverlay(shellContext) {
-  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-  if (!activeStageAdapter || typeof activeStageAdapter.closeDeathOverlay !== "function") return;
-  activeStageAdapter.closeDeathOverlay();
+  callActiveShellStageVoidMethod(shellContext, "closeDeathOverlay");
 }
 
 function clearShellDeathOverlaySchedule(shellContext) {
@@ -2227,11 +2222,22 @@ function getShellOrbStageActions(shellContext) {
   return runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
 }
 
-function callActiveShellStageMethod(shellContext, methodName, payload = {}, skipped = "active_stage_method_missing") {
+function getActiveShellStageMethod(shellContext, methodName) {
   const activeAdapter = getActiveShellStageAdapter(shellContext);
-  return activeAdapter && typeof activeAdapter[methodName] === "function"
-    ? activeAdapter[methodName](payload)
+  const method = activeAdapter && methodName ? activeAdapter[methodName] : null;
+  return typeof method === "function" ? { activeAdapter, method } : null;
+}
+
+function callActiveShellStageMethod(shellContext, methodName, payload = {}, skipped = "active_stage_method_missing") {
+  const target = getActiveShellStageMethod(shellContext, methodName);
+  return target
+    ? target.method.call(target.activeAdapter, payload)
     : { handled: false, skipped };
+}
+
+function callActiveShellStageVoidMethod(shellContext, methodName) {
+  const target = getActiveShellStageMethod(shellContext, methodName);
+  if (target) target.method.call(target.activeAdapter);
 }
 
 function assignShellStageElements(shellContext, nextStageEls = {}) {
