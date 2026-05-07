@@ -6,6 +6,25 @@ import {
 } from "../../../game-runtime/stage/authored-level-overlay.js?v=20260506a";
 import { applyAuthoredStageCameraVars } from "../../../game-runtime/stage/authored-stage-frame.js";
 
+const ORB_STAGE_VISUAL_REF_KEYS = Object.freeze([
+  "orbWrap",
+  "orb",
+  "orbInterior",
+  "orbCracks",
+  "orbShards",
+  "shield",
+  "shockLayer",
+  "flameLayer",
+  "electricLayer",
+]);
+
+function collectOrbStageVisualRefs(stageRefs = {}) {
+  return ORB_STAGE_VISUAL_REF_KEYS.reduce((acc, key) => {
+    acc[key] = stageRefs[key] || null;
+    return acc;
+  }, {});
+}
+
 export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOverlayMarkup = () => "" } = {}) {
   const localBackdropState = Object.create(null);
   let activeBackdropState = localBackdropState;
@@ -50,28 +69,12 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
     getStageElements() {
       return Object.freeze({
         ...core.getStageElements(),
-        orbWrap: stageRefs.orbWrap,
-        orb: stageRefs.orb,
-        orbInterior: stageRefs.orbInterior,
-        orbCracks: stageRefs.orbCracks,
-        orbShards: stageRefs.orbShards,
-        shield: stageRefs.shield,
-        shockLayer: stageRefs.shockLayer,
-        flameLayer: stageRefs.flameLayer,
-        electricLayer: stageRefs.electricLayer,
+        ...collectOrbStageVisualRefs(stageRefs),
       });
     },
     getOrbVisualRefs() {
       return Object.freeze({
-        orbWrap: stageRefs.orbWrap,
-        orb: stageRefs.orb,
-        orbInterior: stageRefs.orbInterior,
-        orbCracks: stageRefs.orbCracks,
-        orbShards: stageRefs.orbShards,
-        shield: stageRefs.shield,
-        shockLayer: stageRefs.shockLayer,
-        flameLayer: stageRefs.flameLayer,
-        electricLayer: stageRefs.electricLayer,
+        ...collectOrbStageVisualRefs(stageRefs),
         deathPanel: stageRefs.deathPanel,
       });
     },
