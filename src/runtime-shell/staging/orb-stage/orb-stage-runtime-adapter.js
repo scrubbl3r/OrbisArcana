@@ -25,6 +25,20 @@ function collectOrbStageVisualRefs(stageRefs = {}) {
   }, {});
 }
 
+function resolveOrbStageBackdropWorldSize(runtime = null, levelWorldSize = {}) {
+  const frameMetrics = runtime && runtime.frameMetrics ? runtime.frameMetrics : null;
+  return {
+    widthPx: Math.max(1, Number(frameMetrics && frameMetrics.worldWidthPx) || levelWorldSize.widthPx),
+    heightPx: Math.max(1, Number(frameMetrics && frameMetrics.worldHeightPx) || levelWorldSize.heightPx),
+  };
+}
+
+function buildOrbStageArtKey(artShapes = []) {
+  return (Array.isArray(artShapes) ? artShapes : [])
+    .map((shape = {}) => String(shape.id || ""))
+    .join("|");
+}
+
 export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOverlayMarkup = () => "" } = {}) {
   const localBackdropState = Object.create(null);
   let activeBackdropState = localBackdropState;
@@ -89,9 +103,8 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
       const stageBackdrop = runtime.stageBackdrop || (runtime.stageBackdrop = localBackdropState);
       activeBackdropState = stageBackdrop;
       const nextArtShapes = (Array.isArray(artShapes) ? artShapes : []).slice();
-      const nextArtKey = nextArtShapes.map((shape = {}) => String(shape.id || "")).join("|");
-      const worldWidth = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldWidthPx) || levelWorldSize.widthPx);
-      const worldHeight = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldHeightPx) || levelWorldSize.heightPx);
+      const nextArtKey = buildOrbStageArtKey(nextArtShapes);
+      const worldSize = resolveOrbStageBackdropWorldSize(runtime, levelWorldSize);
 
       if (stageBackdrop.artKey !== nextArtKey) {
         stageBackdrop.artShapes = nextArtShapes;
@@ -100,8 +113,8 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
           starsField: null,
           loops: [],
           artShapes: nextArtShapes,
-          worldWidthPx: worldWidth,
-          worldHeightPx: worldHeight,
+          worldWidthPx: worldSize.widthPx,
+          worldHeightPx: worldSize.heightPx,
         });
         stageBackdrop.starsParallaxRefs = captureAuthoredStarsFieldParallaxRefs(stageRefs.worldOverlay);
       }
@@ -110,7 +123,7 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
         stageBackdrop.width = width;
         stageBackdrop.height = height;
       }
-      stageRefs.worldOverlay.setAttribute("viewBox", `0 0 ${worldWidth} ${worldHeight}`);
+      stageRefs.worldOverlay.setAttribute("viewBox", `0 0 ${worldSize.widthPx} ${worldSize.heightPx}`);
     },
     applyCameraFrame({
       camLeft = 0,
