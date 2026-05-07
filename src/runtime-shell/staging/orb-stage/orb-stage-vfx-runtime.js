@@ -215,28 +215,6 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function playOrbStageLegacyDomOrbShatterFallback(payload = {}) {
-    const controller = runtime && runtime.orbStageLegacyDomOrbShatterController;
-    if (controller && typeof controller.spawnShardVfx === "function") {
-      controller.spawnShardVfx(payload);
-      return { handled: true };
-    }
-    return { handled: false };
-  }
-
-  function getOrbStageLegacyDomOrbShatterRuntime() {
-    return null;
-  }
-
-  function clearOrbStageLegacyDomOrbShatterRuntime() {
-    const shatterRuntime = getOrbStageLegacyDomOrbShatterRuntime();
-    if (shatterRuntime && typeof shatterRuntime.clear === "function") {
-      shatterRuntime.clear();
-      return { handled: true };
-    }
-    return { handled: false };
-  }
-
   function playOrbStageOrbNod3dFallback(payload = {}) {
     if (typeof playOrbNod3dRuntime === "function") {
       const result = playOrbNod3dRuntime({
@@ -261,8 +239,6 @@ export function initOrbStageReceiverVfxRuntime({
   const shellVfx = {
     vfxDefaults,
     clearLegacyDomOrbDeathVfx: () => {},
-    clearOrbStageLegacyDomOrbShatterRuntime,
-    getOrbStageLegacyDomOrbShatterRuntime,
     playShock() {
       return playOrbStageShockwave3dFallback();
     },
@@ -338,18 +314,6 @@ export function initOrbStageReceiverVfxRuntime({
       });
       if (dispatched && dispatched.handled) return dispatched;
       return playOrbStageTeleportFallback(payload);
-    },
-    playOrbShatter(payload = {}) {
-      const dispatched = dispatchRuntimeEffect({
-        targetKind: "orb-state",
-        targetId: "shattered",
-        runtime: {
-          playOrbShatter: (nextPayload = {}) => playOrbStageLegacyDomOrbShatterFallback(nextPayload),
-        },
-        payload,
-      });
-      if (dispatched && dispatched.handled) return dispatched;
-      return playOrbStageLegacyDomOrbShatterFallback(payload);
     },
     playOrbNod(payload = {}) {
       const dispatched = dispatchRuntimeEffect({

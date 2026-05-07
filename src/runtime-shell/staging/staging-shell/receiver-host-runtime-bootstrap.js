@@ -112,14 +112,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     callShellHook("renderOrbStageLegacyDomOrbDamageVisuals");
   };
 
-  const spawnOrbStageLegacyDomOrbShatterShardVfx = (payload) => {
-    callShellHook("spawnOrbStageLegacyDomOrbShatterShardVfx", payload);
-  };
-
-  const stopOrbStageLegacyDomOrbShatterShardSim = () => {
-    callShellHook("stopOrbStageLegacyDomOrbShatterShardSim");
-  };
-
   const stageWorldItems =
     stageAdapters && typeof stageAdapters.getWorldItems === "function"
       ? stageAdapters.getWorldItems()
@@ -316,7 +308,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace();
     },
     renderOrbStageLegacyDomOrbDamageVisuals,
-    spawnOrbStageLegacyDomOrbShatterShardVfx,
     clearOrbDeathRuntimeVfx: () => {
       if (shellHooks && typeof shellHooks.clearOrbDeathRuntimeVfx === "function") shellHooks.clearOrbDeathRuntimeVfx();
     },
@@ -326,8 +317,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     updateDebugReadout: () => {
       if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
     },
-    orbStageLegacyDomOrbShatterController: shellHooks && shellHooks.orbStageLegacyDomOrbShatterController ? shellHooks.orbStageLegacyDomOrbShatterController : null,
-    stopOrbStageLegacyDomOrbShatterShardSim,
     worldSystem: stageAdapters && typeof stageAdapters.getWorldSystem === "function" ? stageAdapters.getWorldSystem() : null,
     resetOrbStrokeColor: () => {
       if (shellHooks && typeof shellHooks.resetOrbStrokeColor === "function") shellHooks.resetOrbStrokeColor();
@@ -375,14 +364,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     kwsBootOrchestrator: shellKws.kwsBootOrchestrator,
     grantOrbGrace: (grace) => {
       if (shellHooks && typeof shellHooks.grantOrbGrace === "function") shellHooks.grantOrbGrace(grace);
-    },
-    clearOrbStageLegacyDomOrbShatterRuntime: () => {
-      if (
-        runtime.vfx &&
-        typeof runtime.vfx.clearOrbStageLegacyDomOrbShatterRuntime === "function"
-      ) {
-        runtime.vfx.clearOrbStageLegacyDomOrbShatterRuntime();
-      }
     },
     worldSystem: stageAdapters && typeof stageAdapters.getWorldSystem === "function" ? stageAdapters.getWorldSystem() : null,
     clearDeathOverlaySchedule: () => {

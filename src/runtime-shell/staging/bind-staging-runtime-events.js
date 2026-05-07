@@ -24,12 +24,9 @@ export function bindStagingRuntimeEvents({
   playOrbNod = () => {},
   clearFloatGrace = () => {},
   renderOrbStageLegacyDomOrbDamageVisuals = () => {},
-  spawnOrbStageLegacyDomOrbShatterShardVfx = () => {},
   clearOrbDeathRuntimeVfx = () => {},
   scheduleDeathOverlay = () => {},
   updateDebugReadout = () => {},
-  orbStageLegacyDomOrbShatterController = null,
-  stopOrbStageLegacyDomOrbShatterShardSim = () => {},
   worldSystem = null,
   resetOrbStrokeColor = () => {},
   clearDeathOverlaySchedule = () => {},
@@ -59,39 +56,8 @@ export function bindStagingRuntimeEvents({
     return true;
   }
 
-  function handleOrbStageLegacyDomOrbDied() {
-    if (
-      orbStageLegacyDomOrbShatterController &&
-      typeof orbStageLegacyDomOrbShatterController.handleOrbDied === "function"
-    ) {
-      orbStageLegacyDomOrbShatterController.handleOrbDied();
-    }
-  }
-
-  function handleOrbStageLegacyDomOrbRevived() {
-    if (
-      orbStageLegacyDomOrbShatterController &&
-      typeof orbStageLegacyDomOrbShatterController.handleOrbRevived === "function"
-    ) {
-      orbStageLegacyDomOrbShatterController.handleOrbRevived();
-    }
-  }
-
-  function handleOrbStageLegacyDomOrbShatterComplete() {
-    if (
-      orbStageLegacyDomOrbShatterController &&
-      typeof orbStageLegacyDomOrbShatterController.handleOrbShatterComplete === "function"
-    ) {
-      orbStageLegacyDomOrbShatterController.handleOrbShatterComplete();
-    } else {
-      stopOrbStageLegacyDomOrbShatterShardSim();
-    }
-  }
-
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderOrbStageLegacyDomOrbDamageVisuals);
-  eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnOrbStageLegacyDomOrbShatterShardVfx);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
-    handleOrbStageLegacyDomOrbDied();
     setOrbInputSuppressed(true);
     clearFloatGrace();
     clearOrbDeathRuntimeVfx();
@@ -99,7 +65,6 @@ export function bindStagingRuntimeEvents({
     updateDebugReadout();
   });
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_REVIVED, () => {
-    handleOrbStageLegacyDomOrbRevived();
     setOrbInputSuppressed(false);
     clearFloatGrace();
     clearDeathOverlaySchedule();
@@ -121,9 +86,6 @@ export function bindStagingRuntimeEvents({
       source: String(p.source || "kws"),
       providerId: String(p.providerId || ""),
     });
-  });
-  eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
-    handleOrbStageLegacyDomOrbShatterComplete();
   });
   if (!skipVoiceSpellCastBinding) {
     eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
