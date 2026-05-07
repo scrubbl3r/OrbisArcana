@@ -108,7 +108,7 @@ export function buildAuthoredLevelOverlayMarkup({
     .filter(Boolean)
     .join("");
 
-  const lineArtMarkup = (Array.isArray(lineArtShapes) ? lineArtShapes : [])
+  const artMarkup = (Array.isArray(lineArtShapes) ? lineArtShapes : [])
     .map((shape = {}, index) => {
       const pathData = buildLoopPathData(shape.worldPoints);
       if (!pathData) return "";
@@ -117,7 +117,7 @@ export function buildAuthoredLevelOverlayMarkup({
       const fillOpacity = Math.max(0, Math.min(1, clampNumber(shape.fillOpacity, 1)));
       const strokeOpacity = Math.max(0, Math.min(1, clampNumber(shape.strokeOpacity, 1)));
       const strokeWidth = Math.max(0, clampNumber(shape.worldStrokeWidth, 1));
-      return `<path class="authoredLineArtPath gameStageLineArtPath" data-line-art-id="${String(shape.id || `line_art_${index + 1}`)}" d="${pathData}" style="fill:${fill};fill-opacity:${fillOpacity};stroke:${stroke};stroke-opacity:${strokeOpacity};stroke-width:${strokeWidth};"></path>`;
+      return `<path class="authoredArtPath gameStageArtPath" data-authored-art-id="${String(shape.id || `art_${index + 1}`)}" d="${pathData}" style="fill:${fill};fill-opacity:${fillOpacity};stroke:${stroke};stroke-opacity:${strokeOpacity};stroke-width:${strokeWidth};"></path>`;
     })
     .filter(Boolean)
     .join("");
@@ -126,7 +126,7 @@ export function buildAuthoredLevelOverlayMarkup({
     ? `<defs><clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">${clipPathMarkup}</clipPath></defs><g data-stars-field-root="true" clip-path="url(#${clipId})">${layerBoxMarkup}</g>`
     : layerBoxMarkup;
 
-  return `${lineArtMarkup}${clippedStarsMarkup}`;
+  return `${artMarkup}${clippedStarsMarkup}`;
 }
 
 export function captureAuthoredStarsFieldParallaxRefs(overlayEl = null) {

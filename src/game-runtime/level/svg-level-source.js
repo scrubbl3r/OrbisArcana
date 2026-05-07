@@ -944,7 +944,7 @@ export function buildSvgLineArtShapes({
       if (authoredPoints.length < 2) return null;
       const style = parseSvgInlineStyle(path && path.style);
       return Object.freeze({
-        id: String(metadata.id || path && path.id || `${String(layer && layer.label || "line_art").trim()}_${index + 1}`),
+        id: String(metadata.id || path && path.id || `${String(layer && layer.label || "art").trim()}_${index + 1}`),
         ...sourceStack,
         authoredPoints,
         worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {

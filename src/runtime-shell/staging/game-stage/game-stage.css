@@ -105,8 +105,8 @@
   vector-effect: non-scaling-stroke;
 }
 
-.authoredLineArtPath,
-.gameStageLineArtPath {
+.authoredArtPath,
+.gameStageArtPath {
   vector-effect: non-scaling-stroke;
   stroke-linejoin: round;
   stroke-linecap: round;
