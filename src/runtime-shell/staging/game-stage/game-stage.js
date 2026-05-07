@@ -1,11 +1,4 @@
-import {
-  applyOrbBaseVisualCssVars,
-  buildOrbBaseVisualState,
-} from "../../../game-runtime/orb/orb-base-state.js";
-import {
-  applyOrbFractureVisualCssVars,
-  buildOrbFractureVisualState,
-} from "../../../game-runtime/orb/orb-fracture-base-state.js";
+import { buildOrbBaseVisualState } from "../../../game-runtime/orb/orb-base-state.js";
 import { createGameStageRuntimeAdapter } from "./game-stage-runtime-adapter.js?v=20260506a";
 import { createGameStageDepth3dLayer } from "./game-stage-depth3d.js?v=20260506e";
 import { buildAuthoredLevelOverlayMarkup } from "../../../game-runtime/stage/authored-level-overlay.js?v=20260506a";
@@ -21,12 +14,6 @@ import {
   normalizeLevelDefinition,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import {
-  GAME_STAGE_GLOBE_FALLBACK_MARKUP,
-  GAME_STAGE_ORB_FALLBACK_MARKUP,
-  resolveGameStage2dGlobeEnabled,
-  resolveGameStage2dOrbEnabled,
-} from "./game-stage-2d-fallback.js";
 
 const GAME_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
 
@@ -41,8 +28,6 @@ function resolvePreviewFollowMode(level = null) {
 export function renderGameStage(root, {
   level = null,
   externalCameraAuthority = false,
-  enable2dOrb = null,
-  enable2dGlobe = null,
   perfTrace = null,
 } = {}) {
   if (!root) return null;
@@ -51,10 +36,7 @@ export function renderGameStage(root, {
   const worldSize = resolveLevelWorldSize(resolvedLevel, mapSource);
   const previewZoom = resolvePreviewZoom(resolvedLevel);
   const previewFollowMode = resolvePreviewFollowMode(resolvedLevel);
-  const enable2dOrbFallback = resolveGameStage2dOrbEnabled({ level: resolvedLevel, enable2dOrb });
-  const enable2dGlobeFallback = resolveGameStage2dGlobeEnabled({ level: resolvedLevel, enable2dGlobe });
   const orbBaseVisualState = buildOrbBaseVisualState();
-  const orbFractureVisualState = enable2dOrbFallback ? buildOrbFractureVisualState() : null;
   root.innerHTML = `
     <section class="gameStage" aria-label="Game stage">
       <div class="gameStageViewport">
@@ -65,10 +47,7 @@ export function renderGameStage(root, {
           </div>
         </div>
         <div class="gameStageActorDock" aria-hidden="true">
-          <div class="gameStageActorWorld">
-            ${enable2dOrbFallback ? GAME_STAGE_ORB_FALLBACK_MARKUP : ""}
-            ${enable2dGlobeFallback ? GAME_STAGE_GLOBE_FALLBACK_MARKUP : ""}
-          </div>
+          <div class="gameStageActorWorld"></div>
         </div>
         <div class="gameStageTopArtDock" aria-hidden="true">
           <div class="gameStageTopArtWorld">
@@ -89,12 +68,6 @@ export function renderGameStage(root, {
       </div>
     </section>
   `;
-  root.dataset.gameStage2dOrb = enable2dOrbFallback ? "true" : "false";
-  root.dataset.gameStage2dGlobe = enable2dGlobeFallback ? "true" : "false";
-  if (enable2dOrbFallback) {
-    applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
-    applyOrbFractureVisualCssVars(orbFractureVisualState, { root });
-  }
 
   const refs = {
     root,
@@ -109,16 +82,6 @@ export function renderGameStage(root, {
     topArtOverlay: root.querySelector(".gameStageTopArtOverlay"),
     labelMeta: root.querySelector(".gameStageLabelMeta"),
     depthReadout: root.querySelector("[data-game-stage-depth-readout='true']"),
-    orbWrap: root.querySelector("[data-game-stage-orb-wrap='true']"),
-    orb: root.querySelector("[data-game-stage-orb='true']"),
-    orbInterior: root.querySelector("[data-game-stage-orb-interior='true']"),
-    orbCracks: root.querySelector("[data-game-stage-orb-cracks='true']"),
-    orbShards: root.querySelector("[data-game-stage-orb-shards='true']"),
-    testGlobe: root.querySelector("[data-game-stage-test-globe='true']"),
-    shield: root.querySelector("[data-game-stage-shield='true']"),
-    shockLayer: root.querySelector("[data-game-stage-shock-layer='true']"),
-    flameLayer: root.querySelector("[data-game-stage-flame-layer='true']"),
-    electricLayer: root.querySelector("[data-game-stage-electric-layer='true']"),
     deathPanel: root.querySelector("[data-game-stage-death-panel='true']"),
     tryAgainBtn: root.querySelector("[data-game-stage-try-again='true']"),
   };

@@ -11,17 +11,6 @@
   background: #000;
 }
 
-.gameStageOrbLayer {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.gameStageOrbWrap {
-  z-index: 4;
-}
-
 .gameStageWorldDock {
   position: absolute;
   inset: 0;
