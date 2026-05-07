@@ -1,5 +1,28 @@
 import { resolveOrbGraceDefaultTtlMs, resolveOrbGracePayload } from "../../../game-runtime/orb/orb-grace.js";
 
+function activateLegacyDomBubbleShieldFallback({
+  runtime = null,
+  shieldEl = null,
+  durationMs = 8000,
+} = {}) {
+  if (!shieldEl) return { handled: false };
+  shieldEl.classList.add("on");
+  shieldEl.style.opacity = "1";
+  shieldEl.style.transition = "opacity 120ms linear";
+  if (runtime && runtime.legacyDomBubbleShieldFallbackTimer) {
+    clearTimeout(runtime.legacyDomBubbleShieldFallbackTimer);
+  }
+  if (runtime) {
+    runtime.legacyDomBubbleShieldFallbackTimer = setTimeout(() => {
+      shieldEl.classList.remove("on");
+      shieldEl.style.transition = "opacity 420ms linear";
+      shieldEl.style.opacity = "0";
+      runtime.legacyDomBubbleShieldFallbackTimer = 0;
+    }, Math.max(200, Number(durationMs) || 8000));
+  }
+  return { handled: true };
+}
+
 export function createOrbStageActionBridge({
   runtime = null,
   legacyDomBubbleShieldEl = null,
@@ -27,22 +50,11 @@ export function createOrbStageActionBridge({
         const result = shellVfx.activateBubbleShield({ durationMs });
         if (result && result.handled) return result;
       }
-      if (!legacyDomBubbleShieldEl) return { handled: false };
-      legacyDomBubbleShieldEl.classList.add("on");
-      legacyDomBubbleShieldEl.style.opacity = "1";
-      legacyDomBubbleShieldEl.style.transition = "opacity 120ms linear";
-      if (runtime && runtime.legacyDomBubbleShieldTimer) {
-        clearTimeout(runtime.legacyDomBubbleShieldTimer);
-      }
-      if (runtime) {
-        runtime.legacyDomBubbleShieldTimer = setTimeout(() => {
-          legacyDomBubbleShieldEl.classList.remove("on");
-          legacyDomBubbleShieldEl.style.transition = "opacity 420ms linear";
-          legacyDomBubbleShieldEl.style.opacity = "0";
-          runtime.legacyDomBubbleShieldTimer = 0;
-        }, Math.max(200, Number(durationMs) || 8000));
-      }
-      return { handled: true };
+      return activateLegacyDomBubbleShieldFallback({
+        runtime,
+        shieldEl: legacyDomBubbleShieldEl,
+        durationMs,
+      });
     },
     applyColorize(payload = {}) {
       const orbColorRuntime = runtime && runtime.orbColorRuntime;
