@@ -1230,6 +1230,7 @@ export function summarizeSvgLevelSource({
     worldHeightPx,
     lineArtLayerLabels,
   });
+  const artShapes = Object.freeze(lineArtShapes);
   const starsFieldRegions = buildSvgStarsFieldRegions({
     svgText,
     worldWidthPx,
@@ -1259,7 +1260,8 @@ export function summarizeSvgLevelSource({
     cameraBoundaryBox,
     worldItemSpawns: Object.freeze(worldItemSpawns),
     props: Object.freeze(props),
-    lineArtShapes: Object.freeze(lineArtShapes),
+    artShapes,
+    lineArtShapes: artShapes,
     starsFieldRegions: Object.freeze(starsFieldRegions),
     depthLayers: Object.freeze(depthLayers),
     boundaryBox,

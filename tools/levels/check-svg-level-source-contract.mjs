@@ -74,9 +74,9 @@ assert.deepEqual(
   "visible spawns layer should hydrate"
 );
 assert.deepEqual(
-  summary.lineArtShapes.map((shape) => shape.id),
+  summary.artShapes.map((shape) => shape.id),
   ["art_visible_path"],
-  "hidden art layers must not hydrate line art"
+  "hidden art layers must not hydrate authored art"
 );
 assert.deepEqual(
   summary.starsFieldRegions.map((region) => region.sourceLayerId),
