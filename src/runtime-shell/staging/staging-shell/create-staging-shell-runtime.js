@@ -34,6 +34,7 @@ import {
   executeShellWordCastAction,
   handleShellVoiceSpellCast,
 } from "./shell-voice-spell-runtime.js";
+import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js";
 import {
   createStagingShellModeController,
   STAGING_DEV_STAGE_VISIBILITY,
@@ -41,8 +42,6 @@ import {
 } from "./staging-shell-mode-controller.js?v=20260421a";
 import { renderGameStage } from "../game-stage/game-stage.js?v=20260506e";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
-import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
-import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
 import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260501e";
@@ -2915,60 +2914,38 @@ async function initShellKwsRuntime(shellContext) {
   const shellVoiceSpellCastOff = eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (payload = {}) => {
     handleShellVoiceSpellCast(shellContext, payload);
   });
-  runtime.receiverSpellRuntime = {
-    teleportOrbRuntimeToSpawn: (typeof teleportOrbRuntimeToSpawn === "function") ? teleportOrbRuntimeToSpawn : null,
-    grantOrbGraceRuntime: (typeof grantOrbGraceRuntime === "function") ? grantOrbGraceRuntime : null,
-  };
-  const shellSpellActionHandlers = createSpellActionHandlersImported({
+  const shellSpellRuntime = createShellSpellActionRuntime({
+    runtime,
     eventBus,
-    playElectricAoe: () => (
-      getRuntimeVfx() && typeof getRuntimeVfx().playElectricAoe === "function"
-        ? getRuntimeVfx().playElectricAoe()
-        : { handled: false }
-    ),
-    playFlameAoe: (payload = {}) => (
-      shellPlayFlameAoe(shellContext, payload)
-    ),
-    playTeleport: (payload = {}) => (
-      getRuntimeVfx() && typeof getRuntimeVfx().playTeleport === "function"
-        ? getRuntimeVfx().playTeleport(payload)
-        : { handled: false }
-    ),
-    playFrostAoe: null,
-    executeAoeElectric,
-    executeAoeFlame,
-    executeAoeFrost: null,
-    executeTeleport,
-    executeShockwave,
-    executeBubbleShield,
-    executeColorize,
-    triggerShockwave: () => (
-      getRuntimeVfx() && typeof getRuntimeVfx().triggerShockwave === "function"
-        ? getRuntimeVfx().triggerShockwave()
-        : { handled: false }
-    ),
-    teleportOrbToSpawnNeutralizePhysics: (aboveGroundPx) => shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx),
-    activateBubbleShield: ({ durationMs } = {}) => shellActivateBubbleShield(shellContext, { durationMs }),
-    applyColorize: (payload) => shellApplyColorize(shellContext, payload),
-    clearColorize: () => shellClearColorize(shellContext),
-    domusTeleportAboveGroundPx: 0,
-    bubbleShieldMs: 8000,
-  });
-  const getShellDefaultGraceTtlMs = () => resolveOrbGraceDefaultTtlMs(
-    runtime && runtime.stage ? runtime.stage.statusConfig : null,
-    2500
-  );
-  const shellSpellCastExecutor = createSpellCastExecutor({
     castActionRegistryById: CAST_ACTION_REGISTRY_BY_ID,
-    handlers: shellSpellActionHandlers,
-    grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
-    getCastGateState: () => {
-      const receiverRuntime = resolveShellReceiverRuntime(runtime);
-      const orb = receiverRuntime && receiverRuntime.gameState ? receiverRuntime.gameState.orb : null;
-      return getSharedOrbCastGateState(orb);
+    createSpellActionHandlersImported,
+    createSpellCastExecutor,
+    receiverSpellRuntime: {
+      teleportOrbRuntimeToSpawn,
+      grantOrbGraceRuntime,
     },
-    defaultGraceTtlMs: getShellDefaultGraceTtlMs(),
+    executors: {
+      executeAoeElectric,
+      executeAoeFlame,
+      executeTeleport,
+      executeShockwave,
+      executeBubbleShield,
+      executeColorize,
+    },
+    getRuntimeVfx,
+    shellActions: {
+      playFlameAoe: (payload = {}) => shellPlayFlameAoe(shellContext, payload),
+      teleportOrbToSpawnNeutralizePhysics: (aboveGroundPx) => shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx),
+      activateBubbleShield: ({ durationMs } = {}) => shellActivateBubbleShield(shellContext, { durationMs }),
+      applyColorize: (payload) => shellApplyColorize(shellContext, payload),
+      clearColorize: () => shellClearColorize(shellContext),
+      grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
+      resolveReceiverRuntime: resolveShellReceiverRuntime,
+    },
   });
+  if (!shellSpellRuntime) return null;
+  runtime.receiverSpellRuntime = shellSpellRuntime.receiverSpellRuntime;
+  const { shellSpellActionHandlers, shellSpellCastExecutor } = shellSpellRuntime;
   const executeShellWordCastActionForRule = (castActionId, context = {}) => {
     return executeShellWordCastAction(shellContext, castActionId, context);
   };
