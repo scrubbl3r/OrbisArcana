@@ -31,15 +31,15 @@ export function createOrbStageActionBridge({
       legacyDomShieldEl.classList.add("on");
       legacyDomShieldEl.style.opacity = "1";
       legacyDomShieldEl.style.transition = "opacity 120ms linear";
-      if (runtime && runtime.bubbleShieldTimer) {
-        clearTimeout(runtime.bubbleShieldTimer);
+      if (runtime && runtime.legacyDomBubbleShieldTimer) {
+        clearTimeout(runtime.legacyDomBubbleShieldTimer);
       }
       if (runtime) {
-        runtime.bubbleShieldTimer = setTimeout(() => {
+        runtime.legacyDomBubbleShieldTimer = setTimeout(() => {
           legacyDomShieldEl.classList.remove("on");
           legacyDomShieldEl.style.transition = "opacity 420ms linear";
           legacyDomShieldEl.style.opacity = "0";
-          runtime.bubbleShieldTimer = 0;
+          runtime.legacyDomBubbleShieldTimer = 0;
         }, Math.max(200, Number(durationMs) || 8000));
       }
       return { handled: true };
