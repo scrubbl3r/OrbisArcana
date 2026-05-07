@@ -24,7 +24,7 @@ export function bindStagingRuntimeEvents({
   playOrbNod = () => {},
   clearFloatGrace = () => {},
   renderLegacyDomOrbDamageVisuals = () => {},
-  spawnLegacyDomOrbShatterShardFx = () => {},
+  spawnLegacyDomOrbShatterShardVfx = () => {},
   clearOrbDeathRuntimeVfx = () => {},
   scheduleDeathOverlay = () => {},
   updateDebugReadout = () => {},
@@ -89,7 +89,7 @@ export function bindStagingRuntimeEvents({
   }
 
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderLegacyDomOrbDamageVisuals);
-  eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnLegacyDomOrbShatterShardFx);
+  eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnLegacyDomOrbShatterShardVfx);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
     handleLegacyDomOrbDied();
     setOrbInputSuppressed(true);

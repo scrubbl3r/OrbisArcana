@@ -112,8 +112,8 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     callShellHook("renderLegacyDomOrbDamageVisuals");
   };
 
-  const spawnLegacyDomOrbShatterShardFx = (payload) => {
-    callShellHook("spawnLegacyDomOrbShatterShardFx", payload);
+  const spawnLegacyDomOrbShatterShardVfx = (payload) => {
+    callShellHook("spawnLegacyDomOrbShatterShardVfx", payload);
   };
 
   const stopLegacyDomOrbShatterShardSim = () => {
@@ -316,7 +316,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace();
     },
     renderLegacyDomOrbDamageVisuals,
-    spawnLegacyDomOrbShatterShardFx,
+    spawnLegacyDomOrbShatterShardVfx,
     clearOrbDeathRuntimeVfx: () => {
       if (shellHooks && typeof shellHooks.clearOrbDeathRuntimeVfx === "function") shellHooks.clearOrbDeathRuntimeVfx();
     },
