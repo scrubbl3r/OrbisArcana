@@ -17,7 +17,7 @@ export function ensureShellStageBackdrop(shellContext, {
 
   const rect = shellStageRect(shellContext);
   const activeLevel = shellActiveStageLevel(shellContext);
-  const terrainProfile = Array.isArray(activeLevel && activeLevel.terrain && activeLevel.terrain.profile)
+  const terrainEntries = Array.isArray(activeLevel && activeLevel.terrain && activeLevel.terrain.profile)
     ? activeLevel.terrain.profile
     : [];
   activeStageAdapter.ensureBackdrop({
@@ -25,7 +25,7 @@ export function ensureShellStageBackdrop(shellContext, {
     rootDocument,
     rect,
     worldHeight: shellWorldHeight(shellContext),
-    terrainProfile,
+    terrainProfile: terrainEntries,
     artShapes: resolveAuthoredLevelReadModelArray(runtime, AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES),
     clamp01,
   });
