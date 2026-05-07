@@ -197,7 +197,7 @@ export function initOrbStageReceiverVfxRuntime({
         ? vfxDefaults.nod
         : Object.create(null),
     }),
-    orbNod3dDomFallbackRuntime: createOrbNod3dDomFallbackRuntime({
+    legacyDomOrbNod3dFallbackRuntime: createOrbNod3dDomFallbackRuntime({
       orbEl: legacyDomEls.orb,
       mountEl: legacyDomEls.orb ? legacyDomEls.orb.parentElement : null,
       orbInteriorEl: legacyDomEls.orbInterior,
@@ -434,10 +434,10 @@ export function initOrbStageReceiverVfxRuntime({
       if (result && result.handled) return result;
     }
     if (
-      stageVfx.orbNod3dDomFallbackRuntime &&
-      typeof stageVfx.orbNod3dDomFallbackRuntime.play === "function"
+      stageVfx.legacyDomOrbNod3dFallbackRuntime &&
+      typeof stageVfx.legacyDomOrbNod3dFallbackRuntime.play === "function"
     ) {
-      return stageVfx.orbNod3dDomFallbackRuntime.play(payload);
+      return stageVfx.legacyDomOrbNod3dFallbackRuntime.play(payload);
     }
     return { handled: false };
   }
