@@ -95,7 +95,8 @@ It mixes:
 
 ### 4. Pairing / calibration / mobile impulse boot
 
-`initShellPairingRuntime(...)` still owns:
+`initShellPairingRuntime(...)` now delegates to `bootstrapShellPairingRuntime(...)`,
+which owns:
 
 - UI overlay system boot
 - mobile impulse runtime boot
@@ -103,7 +104,8 @@ It mixes:
 - QR launch choreography
 - calibration trigger wiring
 
-This is still a meaningful host bootstrap seam and a likely future extraction candidate.
+This is now a meaningful extracted host bootstrap seam. Remaining cleanup here
+should be opportunistic surface trimming, not a primary architecture lane.
 
 ### 5. Top-level host composition
 
@@ -142,51 +144,25 @@ KWS boot still directly constructs panel elements and dev-surface couplings.
 
 This is likely the biggest remaining mixed-responsibility residue in the file.
 
-### B. Pairing orchestration embedded directly in shell file
+### B. Pairing bootstrap surface polish
 
-Pairing is still host-appropriate, but the direct embedded implementation is still a likely future extraction seam if we want a thinner host composer.
+Pairing is now extracted into `pairing-runtime-bootstrap.js`. Any remaining
+work should focus on trimming its returned runtime surface or moving truly
+generic LAN/calibration concerns deeper into their existing systems.
 
 ## Recommendation
 
-At this point, there are two realistic next directions.
+At this point, the next major direction is a deliberate KWS boot/runtime
+breakup.
 
-### Option 1: Extract pairing bootstrap next
+Recommended next step:
 
-Pros:
-
-- continues the host-bootstrap cleanup lane
-- keeps momentum on making `staging-shell` the primary host
-- pairing/calibration is a clean host seam
-
-Cons:
-
-- KWS remains the densest mixed domain
-
-### Option 2: Extract/classify KWS boot next
-
-Pros:
-
-- targets the biggest remaining mixed responsibility
-- likely the highest-value architectural cleanup now
-
-Cons:
-
-- KWS is denser and riskier than pairing
-- likely needs more care and more decisions
-
-## Best Recommendation
-
-I recommend **Option 1 first**:
-
-- extract pairing/bootstrap next
-
-Reason:
-
-- it continues the same host-bootstrap cleanup pattern
-- it is lower risk than immediately entering the KWS knot
-- it gets us closer to a thin host composer faster
-
-After that, the next major phase should probably be a deliberate KWS boot/runtime breakup.
+- classify `initShellKwsRuntime(...)` the same way the receiver host lane was
+  classified
+- separate reusable KWS runtime boot from shell-specific dev panel, VFX, and
+  spell-action wiring
+- keep pairing changes to opportunistic cleanup unless a concrete runtime bug
+  appears
 
 ## Decision Guidance
 
@@ -194,12 +170,8 @@ You do **not** need to decide whether the remaining shell-stage code should move
 
 From a design standpoint, that stage/runtime visual code looks legitimately shell-owned.
 
-The real decisions now are:
+The real decision now is how aggressively to enter the KWS boot/runtime
+breakup. Recommended answer:
 
-1. pairing extraction next, or KWS extraction next
-2. whether shell receiver configs should be cleaned up opportunistically, or deferred
-
-Recommended answers:
-
-1. pairing next
-2. config cleanup later
+1. audit/classify KWS first
+2. extract only after the reusable KWS boot seam is clear
