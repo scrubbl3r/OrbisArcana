@@ -6,51 +6,51 @@ export function createKwsBootOrchestrator({
   const DEFAULT_VOICE_ENGINE = String(constants.defaultVoiceEngine || "kws");
   void DEFAULT_VOICE_ENGINE;
 
-  function resolveKwsProvider(mvp) {
-    return (mvp && (mvp.kwsWordProvider || mvp.kwsVoiceProvider)) || null;
+  function resolveKwsProvider(receiverRuntime) {
+    return (receiverRuntime && (receiverRuntime.kwsWordProvider || receiverRuntime.kwsVoiceProvider)) || null;
   }
 
-  function emitWakeMode(mvp) {
+  function emitWakeMode(receiverRuntime) {
     if (typeof callbacks.emitWakeMode === "function") {
-      callbacks.emitWakeMode(mvp);
+      callbacks.emitWakeMode(receiverRuntime);
       return;
     }
-    const bus = mvp && mvp.eventBus;
+    const bus = receiverRuntime && receiverRuntime.eventBus;
     if (bus && typeof bus.emit === "function") {
       bus.emit("voice.set_mode", { mode: "wake_token_open_world" });
     }
   }
 
-  function getKwsBootErrorReason(mvp) {
-    const provider = resolveKwsProvider(mvp);
+  function getKwsBootErrorReason(receiverRuntime) {
+    const provider = resolveKwsProvider(receiverRuntime);
     const status = provider && typeof provider.getStatus === "function"
       ? provider.getStatus()
       : null;
     return status && status.micError ? String(status.micError) : "kws_link_start_failed";
   }
 
-  async function bootNow(mvp) {
-    if (!mvp) return false;
-    if (typeof mvp.setKwsBackend === "function") await mvp.setKwsBackend(DEFAULT_KWS_BACKEND_KEY);
-    if (typeof mvp.setVoiceEngine === "function") mvp.setVoiceEngine();
-    const micOk = (typeof mvp.setKwsMicEnabled === "function")
-      ? await mvp.setKwsMicEnabled(true)
+  async function bootNow(receiverRuntime) {
+    if (!receiverRuntime) return false;
+    if (typeof receiverRuntime.setKwsBackend === "function") await receiverRuntime.setKwsBackend(DEFAULT_KWS_BACKEND_KEY);
+    if (typeof receiverRuntime.setVoiceEngine === "function") receiverRuntime.setVoiceEngine();
+    const micOk = (typeof receiverRuntime.setKwsMicEnabled === "function")
+      ? await receiverRuntime.setKwsMicEnabled(true)
       : true;
-    if (micOk === false) throw new Error(getKwsBootErrorReason(mvp));
+    if (micOk === false) throw new Error(getKwsBootErrorReason(receiverRuntime));
 
-    const provider = resolveKwsProvider(mvp);
+    const provider = resolveKwsProvider(receiverRuntime);
     if (provider && typeof provider.setEnabled === "function") provider.setEnabled(true);
     if (provider && typeof provider.setMode === "function") provider.setMode("active");
-    emitWakeMode(mvp);
+    emitWakeMode(receiverRuntime);
 
-    if (typeof callbacks.onBootSuccess === "function") callbacks.onBootSuccess(mvp);
+    if (typeof callbacks.onBootSuccess === "function") callbacks.onBootSuccess(receiverRuntime);
     return true;
   }
 
-  function bootAndAutostart(mvp) {
-    if (!mvp) return;
+  function bootAndAutostart(receiverRuntime) {
+    if (!receiverRuntime) return;
     Promise.resolve()
-      .then(() => bootNow(mvp))
+      .then(() => bootNow(receiverRuntime))
       .catch((err) => {
         if (typeof callbacks.onBootFailed === "function") callbacks.onBootFailed(err);
         else console.warn("KWS boot auto-init failed:", err);

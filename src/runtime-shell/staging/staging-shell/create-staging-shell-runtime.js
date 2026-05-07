@@ -1624,7 +1624,7 @@ function startShellStageLoop(shellContext) {
         orbRuntimeState: runtime.orbRuntimeState,
         phys: runtime.stage ? runtime.stage.phys : {},
         shieldDescent: runtime.stage ? runtime.stage.shieldDescent : {},
-        mvp: receiverRuntime,
+        receiverRuntime,
         orbFxSystem,
         worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
         hooks: pipelineHooks,

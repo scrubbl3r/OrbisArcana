@@ -67,7 +67,8 @@ const CEIL_CONTACT_EPSILON_PX = 0.25;
  * @property {{get?:() => Object}} [orbRuntimeState] Orb runtime state owner API (preferred)
  * @property {Object} phys Orb runtime physics config
  * @property {{vDownThr:number, graceMs:number}} shieldDescent Shield descent gate tuning
- * @property {Object} [mvp] Receiver MVP container (used for orb tick + impact application)
+ * @property {Object} [receiverRuntime] Receiver runtime container (used for orb tick + impact application)
+ * @property {Object} [mvp] Legacy alias for receiverRuntime
  * @property {Object} [orbFxSystem] Orb FX runtime system
  * @property {Object} [worldSystem] World runtime system
  * @property {Object} hooks Receiver-provided functions for math/helpers/render calls
@@ -91,11 +92,13 @@ export function runOrbRuntimePipeline({
   orbRuntimeState,
   phys,
   shieldDescent,
+  receiverRuntime,
   mvp,
   orbFxSystem,
   worldSystem,
   hooks,
 } = {}){
+  const runtime = receiverRuntime || mvp || null;
   const state = (orbRuntimeState && typeof orbRuntimeState.get === "function")
     ? orbRuntimeState.get()
     : physState;
@@ -122,8 +125,8 @@ export function runOrbRuntimePipeline({
     ? hooks.traceMeasure
     : (_name, fn) => (typeof fn === "function" ? fn() : undefined);
 
-  if (mvp && mvp.orbSystem && typeof mvp.orbSystem.tick === "function") {
-    traceMeasure("mvp.orbSystem", () => mvp.orbSystem.tick(nowMs));
+  if (runtime && runtime.orbSystem && typeof runtime.orbSystem.tick === "function") {
+    traceMeasure("receiverRuntime.orbSystem", () => runtime.orbSystem.tick(nowMs));
   }
 
   if (state.spawnHoldActive) {
@@ -333,9 +336,9 @@ export function runOrbRuntimePipeline({
     if (state.v < 0) state.v = -state.v * phys.bounce;
   }
 
-  if (mvp && impactMag > 0 && typeof computeImpactMetric === "function" && typeof mvp.applyImpact === "function") {
+  if (runtime && impactMag > 0 && typeof computeImpactMetric === "function" && typeof runtime.applyImpact === "function") {
     const impactMetric = computeImpactMetric(impactMag);
-    mvp.applyImpact(impactMetric, impactSrc || "boundary", {
+    runtime.applyImpact(impactMetric, impactSrc || "boundary", {
       rawImpact: impactMag,
       gravityMul: state.gravityMul,
       fallDrag: phys.downDrag,

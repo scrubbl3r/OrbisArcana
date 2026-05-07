@@ -19,9 +19,11 @@ export function bootstrapOrbStageRuntime({
   runOrbRuntimePipelineModule = null,
   PHYS = null,
   SHIELD_DESCENT = null,
+  receiverRuntime = null,
   mvp = null,
   orbFxSystem = null,
   worldSystem = null,
+  getReceiverRuntime = null,
   getMvp = null,
   getOrbFxSystem = null,
   getWorldSystem = null,
@@ -188,7 +190,9 @@ export function bootstrapOrbStageRuntime({
           orbRuntimeState,
           phys: (typeof getPhys === "function" ? getPhys() : PHYS),
           shieldDescent: (typeof getShieldDescent === "function" ? getShieldDescent() : SHIELD_DESCENT),
-          mvp: (typeof getMvp === "function" ? getMvp() : mvp),
+          receiverRuntime: (typeof getReceiverRuntime === "function"
+            ? getReceiverRuntime()
+            : (receiverRuntime || (typeof getMvp === "function" ? getMvp() : mvp))),
           orbFxSystem: (typeof getOrbFxSystem === "function" ? getOrbFxSystem() : orbFxSystem),
           worldSystem: (typeof getWorldSystem === "function" ? getWorldSystem() : worldSystem),
           hooks: {
