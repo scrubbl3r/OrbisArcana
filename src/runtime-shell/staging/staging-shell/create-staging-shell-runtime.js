@@ -17,7 +17,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507c";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507d";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507a";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-stage-backdrop.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507n";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507o";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1705,7 +1705,7 @@ function scheduleShellDeathOverlay(shellContext, delayMs = 3000) {
 
 function stopShellShardSim(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const controller = runtime && runtime.orbShatterController;
+  const controller = runtime && runtime.legacyDomOrbShatterController;
   if (controller && typeof controller.stopShardSim === "function") {
     controller.stopShardSim();
     return;
@@ -1723,7 +1723,7 @@ function spawnShellShardFx(shellContext, payload) {
     const result = shellVfx.playOrbShatter(payload);
     if (result && result.handled) return;
   }
-  const controller = runtime && runtime.orbShatterController;
+  const controller = runtime && runtime.legacyDomOrbShatterController;
   if (!controller || typeof controller.spawnShardFx !== "function") return;
   controller.spawnShardFx(payload);
 }
@@ -2063,7 +2063,7 @@ async function initShellReceiverHostRuntime(shellContext) {
       clearDeathOverlaySchedule: () => clearShellDeathOverlaySchedule(shellContext),
       closeDeathOverlay: () => closeShellDeathOverlay(shellContext),
       stopShardSim: () => stopShellShardSim(shellContext),
-      orbShatterController: runtime.orbShatterController || null,
+      orbShatterController: runtime.legacyDomOrbShatterController || null,
       setOrbInputSuppressed: (next) => { runtime.orbInputSuppressed = !!next; },
       playElectricAoe: () => {
         const shellVfx = runtime.vfx || null;
@@ -2277,7 +2277,7 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
 
   const createOrbShatterController = getActiveShellStageMethod(shellContext, "createOrbShatterController");
   const activeRoot = getActiveShellStageRoot(shellContext);
-  runtime.orbShatterController = (
+  runtime.legacyDomOrbShatterController = (
     createOrbShatterController &&
     runtime.vfx &&
     runtime.vfx.orbShatterRuntime
@@ -2424,6 +2424,7 @@ function createStagingShellContext({
       shellModeController: modeController,
       shellModeHotkeyOff: null,
       shellModeOff: null,
+      legacyDomOrbShatterController: null,
     },
   };
 }
