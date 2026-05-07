@@ -42,7 +42,8 @@ These parts look like true receiver-host bootstrap and should eventually move in
   - `orbSystemsBundle`
 - binding receiver runtime events via `bindStagingRuntimeEvents(...)`
 - bootstrapping the receiver runtime bundle via `bootstrapStagingRuntimeBundle(...)`
-- publishing `runtime.receiverHostRuntime`
+- publishing `runtime.receiverHostRuntime` with the host-facing event binder,
+  receiver runtime, and impulse handler
 
 This is the clearest candidate for a future shared helper.
 

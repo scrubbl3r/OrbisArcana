@@ -392,7 +392,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   runtime.receiverRuntime = receiverRuntime;
 
   runtime.receiverHostRuntime = {
-    runtimeContext,
     eventBinder,
     receiverRuntime,
   };
