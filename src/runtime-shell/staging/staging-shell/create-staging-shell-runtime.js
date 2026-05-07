@@ -31,6 +31,10 @@ import {
 } from "./kws-wake-window-bridge.js";
 import { bindShellRuleActionRuntime } from "./shell-rule-action-runtime.js";
 import {
+  executeShellWordCastAction,
+  handleShellVoiceSpellCast,
+} from "./shell-voice-spell-runtime.js";
+import {
   createStagingShellModeController,
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
@@ -2066,73 +2070,6 @@ function shellClearColorize(shellContext) {
   orbStageActions.clearColorize();
 }
 
-function shellExecuteWordCastAction(shellContext, castActionId, context = {}) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const shellKws = runtime && runtime.kws ? runtime.kws : null;
-  const shellSpellCastExecutor = shellKws && shellKws.shellSpellCastExecutor ? shellKws.shellSpellCastExecutor : null;
-  if (!shellSpellCastExecutor || typeof shellSpellCastExecutor.execute !== "function") {
-    return { handled: false, skipped: "executor_unavailable" };
-  }
-  try {
-    const result = shellSpellCastExecutor.execute(castActionId, context);
-    return result && typeof result === "object" ? result : { handled: !!result };
-  } catch (error) {
-    return {
-      handled: false,
-      skipped: "action_threw",
-      reason: error && error.message ? String(error.message) : String(error || "unknown_error"),
-    };
-  }
-}
-
-function shellHandleVoiceSpellCast(shellContext, payload = {}) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const shellKws = runtime && runtime.kws ? runtime.kws : null;
-  if (!runtime || !shellKws) return { handled: false, skipped: "shell_kws_unavailable" };
-  const runtimeWordIndex = shellKws.runtimeWordIndex || Object.create(null);
-  const runtimeSpellIndex = shellKws.runtimeSpellIndex || runtimeWordIndex;
-  const intent = String(payload.intent || "");
-  const wordId = String((payload.sourceWordId || payload.wordId || payload.spellId) || "").trim().toLowerCase();
-  const payloadCastActionId = String(payload.castActionId || "").trim().toLowerCase();
-  const wordDef = runtimeWordIndex[wordId] || runtimeSpellIndex[wordId] || null;
-  const castActionId = payloadCastActionId || String((wordDef && wordDef.castActionId) || wordId || "");
-  if (runtime.perfTrace && typeof runtime.perfTrace.mark === "function") {
-    runtime.perfTrace.mark("spell.voice_cast", {
-      wordId,
-      castActionId,
-      slot: String(payload.slot || payload.directionGroup || ""),
-      trigger: String(payload.trigger || ""),
-    });
-  }
-  const result = shellExecuteWordCastAction(shellContext, castActionId, { payload, intent });
-  if (runtime.perfTrace && typeof runtime.perfTrace.mark === "function") {
-    runtime.perfTrace.mark("spell.action_result", {
-      castActionId,
-      handled: !!(result && result.handled),
-      skipped: String(result && result.skipped || ""),
-      blocked: !!(result && result.blocked),
-      reason: String(result && result.reason || ""),
-    });
-  }
-  if (!(result && result.handled) || !wordDef) return result;
-  const postCastActions = Array.isArray(wordDef.postCastActions) ? wordDef.postCastActions : null;
-  if (postCastActions) {
-    for (const action of postCastActions) {
-      const actionId = String(action && action.id || "");
-      if (!actionId) continue;
-      const nextPayload = (action && typeof action.payload === "object" && action.payload)
-        ? { ...payload, ...action.payload }
-        : payload;
-      shellExecuteWordCastAction(shellContext, actionId, { payload: nextPayload, intent });
-    }
-  } else if (Array.isArray(wordDef.postCastActionIds)) {
-    for (const actionId of wordDef.postCastActionIds) {
-      shellExecuteWordCastAction(shellContext, String(actionId || ""), { payload, intent });
-    }
-  }
-  return result;
-}
-
 async function initShellReceiverHostRuntime(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const sharedModules = shellContext && shellContext.sharedModules ? shellContext.sharedModules : null;
@@ -2239,7 +2176,7 @@ async function initShellReceiverHostRuntime(shellContext) {
         const shellVfx = runtime.vfx || null;
         return shellVfx && typeof shellVfx.playOrbNod === "function" ? shellVfx.playOrbNod(payload) : { handled: false };
       },
-      executeWordCastAction: (castActionId, context = {}) => shellExecuteWordCastAction(shellContext, castActionId, context),
+      executeWordCastAction: (castActionId, context = {}) => executeShellWordCastAction(shellContext, castActionId, context),
       grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
       clearFloatGrace: () => {
         patchShellOrbRuntime(shellContext, { floatGraceActive: false, floatGraceUntilMs: 0 });
@@ -2976,7 +2913,7 @@ async function initShellKwsRuntime(shellContext) {
   runtime.eventBus = eventBus;
 
   const shellVoiceSpellCastOff = eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (payload = {}) => {
-    shellHandleVoiceSpellCast(shellContext, payload);
+    handleShellVoiceSpellCast(shellContext, payload);
   });
   runtime.receiverSpellRuntime = {
     teleportOrbRuntimeToSpawn: (typeof teleportOrbRuntimeToSpawn === "function") ? teleportOrbRuntimeToSpawn : null,
@@ -3032,13 +2969,13 @@ async function initShellKwsRuntime(shellContext) {
     },
     defaultGraceTtlMs: getShellDefaultGraceTtlMs(),
   });
-  const executeShellWordCastAction = (castActionId, context = {}) => {
-    return shellExecuteWordCastAction(shellContext, castActionId, context);
+  const executeShellWordCastActionForRule = (castActionId, context = {}) => {
+    return executeShellWordCastAction(shellContext, castActionId, context);
   };
   const shellRuleActionRuntime = bindShellRuleActionRuntime({
     eventBus,
     ruleSchema,
-    executeWordCastAction: executeShellWordCastAction,
+    executeWordCastAction: executeShellWordCastActionForRule,
     kwsBridge,
   });
 
