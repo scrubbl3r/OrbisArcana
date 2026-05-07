@@ -1,5 +1,5 @@
 function clearOrbStageLegacyDomOrbShatterPresentation({
-  clearLegacyDomOrbShatterRuntime: clearOrbStageLegacyDomOrbShatterRuntime = () => {},
+  clearOrbStageLegacyDomOrbShatterRuntime = () => {},
 } = {}) {
   clearOrbStageLegacyDomOrbShatterRuntime();
 }
@@ -29,7 +29,7 @@ export function bootstrapStagingRuntimeBundle({
   kwsRuntimeCommands = {},
   kwsBootOrchestrator = null,
   grantOrbGrace = () => {},
-  clearLegacyDomOrbShatterRuntime: clearOrbStageLegacyDomOrbShatterRuntime = () => {},
+  clearOrbStageLegacyDomOrbShatterRuntime = () => {},
   worldSystem = null,
   clearDeathOverlaySchedule = () => {},
   closeDeathOverlay = () => {},
@@ -89,7 +89,7 @@ export function bootstrapStagingRuntimeBundle({
   }
   receiverRuntime.lastImpact = null;
   clearOrbStageLegacyDomOrbShatterPresentation({
-    clearLegacyDomOrbShatterRuntime: clearOrbStageLegacyDomOrbShatterRuntime,
+    clearOrbStageLegacyDomOrbShatterRuntime,
   });
   setOrbInputSuppressed(false);
   if (orbFxSystem && typeof orbFxSystem.reset === "function") orbFxSystem.reset();

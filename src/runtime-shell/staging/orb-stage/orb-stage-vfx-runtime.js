@@ -476,8 +476,8 @@ export function initOrbStageReceiverVfxRuntime({
   const shellVfx = {
     vfxDefaults,
     clearLegacyDomOrbDeathVfx: clearOrbStageLegacyDomOrbDeathVfx,
-    clearLegacyDomOrbShatterRuntime: clearOrbStageLegacyDomOrbShatterRuntime,
-    getLegacyDomOrbShatterRuntime: getOrbStageLegacyDomOrbShatterRuntime,
+    clearOrbStageLegacyDomOrbShatterRuntime,
+    getOrbStageLegacyDomOrbShatterRuntime,
     playShock() {
       return playOrbStageShockFallback();
     },
