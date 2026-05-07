@@ -93,10 +93,7 @@ export function createOrbStageRuntimeAdapter({
       return Object.freeze(collectLegacyDomOrbRefs(stageRefs));
     },
     getStageElements() {
-      return Object.freeze({
-        ...shared3dAdapter.getStageElements(),
-        ...collectLegacyDomOrbRefs(stageRefs),
-      });
+      return Object.freeze(shared3dAdapter.getStageElements());
     },
   });
 }
