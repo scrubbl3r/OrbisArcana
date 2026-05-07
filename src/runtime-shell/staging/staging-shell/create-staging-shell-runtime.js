@@ -17,7 +17,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507ai";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507aj";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507f";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507l";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507cq";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507cr";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1910,8 +1910,6 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     playBubbleShield3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playBubbleShield3d", payload, "active_stage_bubble_shield3d_missing"),
     playShockwave3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playShockwave3d", payload, "active_stage_shockwave3d_missing"),
     playFlameAoe3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playFlameAoe3d", payload, "active_stage_flame_aoe3d_missing"),
-    getOrbScaleFactor: () => getShellOrbScaleFactor(shellContext),
-    getOrbDiameterPx: () => shellOrbVisualDiameterPx(shellContext),
     requestCameraTravel: (payload = {}) => {
       const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
       return cameraRuntime && typeof cameraRuntime.requestTravel === "function"
@@ -2875,7 +2873,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507ai",
+  moduleCacheBustV = "20260507aj",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

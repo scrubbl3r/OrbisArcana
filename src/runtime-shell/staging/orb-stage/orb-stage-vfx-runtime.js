@@ -1,6 +1,4 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js?v=20260506a";
-import { createLegacyDomOrbNod3dRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-legacy-dom-runtime.js";
-import { createLegacyDomOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-legacy-dom-runtime.js";
 import { createLegacyDomTeleportRuntime } from "../../../vfx/effects/spells/teleport-legacy-dom-runtime.js";
 import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js?v=20260501a";
 import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/teleport-behavior-state.js?v=20260501a";
@@ -100,17 +98,11 @@ export function initOrbStageReceiverVfxRuntime({
   playBubbleShield3dRuntime = null,
   playShockwave3dRuntime = null,
   playFlameAoe3dRuntime = null,
-  getOrbScaleFactor = () => 1,
-  getOrbDiameterPx = () => Math.max(1, Number(getOrbScaleFactor()) || 1) * 100,
   requestCameraTravel = null,
   cancelCameraTravel = null,
 } = {}) {
   if (!runtime || !vfxDefaults) return null;
   const orbStageLegacyDomElements = orbStageLegacyDomEls || {};
-  const readOrbDiameterPx = () => Math.max(
-    1,
-    Number(getOrbDiameterPx()) || (Math.max(0.01, Number(getOrbScaleFactor()) || 1) * 100)
-  );
   const markTrace = (name, value = {}) => {
     const perfTrace = runtime && runtime.perfTrace;
     if (perfTrace && typeof perfTrace.mark === "function") {
@@ -120,28 +112,6 @@ export function initOrbStageReceiverVfxRuntime({
 
   const stageVfx = {
     vfxDefaults,
-    legacyDomOrbNodRuntime: createLegacyDomOrbNodRuntime({
-      orbEl: orbStageLegacyDomElements.orb,
-      mountEl: orbStageLegacyDomElements.orb ? orbStageLegacyDomElements.orb.parentElement : null,
-      orbInteriorEl: orbStageLegacyDomElements.orbInterior,
-      orbCracksEl: orbStageLegacyDomElements.orbCracks,
-      orbShardsEl: orbStageLegacyDomElements.orbShards,
-      getOrbDiameterPx: readOrbDiameterPx,
-      getConfig: () => (vfxDefaults && vfxDefaults.nod && typeof vfxDefaults.nod === "object")
-        ? vfxDefaults.nod
-        : Object.create(null),
-    }),
-    legacyDomOrbNod3dRuntime: createLegacyDomOrbNod3dRuntime({
-      orbEl: orbStageLegacyDomElements.orb,
-      mountEl: orbStageLegacyDomElements.orb ? orbStageLegacyDomElements.orb.parentElement : null,
-      orbInteriorEl: orbStageLegacyDomElements.orbInterior,
-      orbCracksEl: orbStageLegacyDomElements.orbCracks,
-      orbShardsEl: orbStageLegacyDomElements.orbShards,
-      getOrbDiameterPx: readOrbDiameterPx,
-      getConfig: () => (vfxDefaults && vfxDefaults.nod3d && typeof vfxDefaults.nod3d === "object")
-        ? vfxDefaults.nod3d
-        : Object.create(null),
-    }),
     legacyDomTeleportRuntime: createLegacyDomTeleportRuntime({
       orbEl: orbStageLegacyDomElements.orb,
       orbInteriorEl: orbStageLegacyDomElements.orbInterior,
@@ -311,13 +281,6 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function playOrbStageOrbNodFallback(payload = {}) {
-    if (stageVfx.legacyDomOrbNodRuntime && typeof stageVfx.legacyDomOrbNodRuntime.play === "function") {
-      return stageVfx.legacyDomOrbNodRuntime.play(payload);
-    }
-    return { handled: false };
-  }
-
   function playOrbStageOrbNod3dFallback(payload = {}) {
     if (typeof playOrbNod3dRuntime === "function") {
       const result = playOrbNod3dRuntime({
@@ -327,12 +290,6 @@ export function initOrbStageReceiverVfxRuntime({
           : Object.create(null),
       });
       if (result && result.handled) return result;
-    }
-    if (
-      stageVfx.legacyDomOrbNod3dRuntime &&
-      typeof stageVfx.legacyDomOrbNod3dRuntime.play === "function"
-    ) {
-      return stageVfx.legacyDomOrbNod3dRuntime.play(payload);
     }
     return { handled: false };
   }
@@ -349,9 +306,6 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function clearOrbStageLegacyDomOrbDeathVfx() {
-    if (stageVfx.legacyDomOrbNodRuntime && typeof stageVfx.legacyDomOrbNodRuntime.clear === "function") {
-      stageVfx.legacyDomOrbNodRuntime.clear();
-    }
     if (stageVfx.legacyDomTeleportRuntime && typeof stageVfx.legacyDomTeleportRuntime.clear === "function") {
       stageVfx.legacyDomTeleportRuntime.clear();
     }
@@ -455,13 +409,13 @@ export function initOrbStageReceiverVfxRuntime({
         targetKind: "orb-state",
         targetId: "nod",
         runtime: {
-          playOrbNod: (nextPayload = {}) => playOrbStageOrbNodFallback(nextPayload),
+          playOrbNod: (nextPayload = {}) => playOrbStageOrbNod3dFallback(nextPayload),
           playOrbNod3d: (nextPayload = {}) => playOrbStageOrbNod3dFallback(nextPayload),
         },
         payload,
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return playOrbStageOrbNodFallback(payload);
+      return playOrbStageOrbNod3dFallback(payload);
     },
     playOrbNod3d(payload = {}) {
       return playOrbStageOrbNod3dFallback(payload);
