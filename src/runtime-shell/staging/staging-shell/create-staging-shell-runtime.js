@@ -3160,33 +3160,8 @@ export async function createStagingShellRuntime({
     await hydrateShellAuthoredLevelReadModel(shellContext);
     initializeShellStageRuntime(shellContext);
     syncGameStageGlobe3dRuntime(shellContext);
-    const orbStageAdapter = shellContext.orbStageAdapter || null;
-    shellContext.runtime.orbShatterController = (
-      orbStageAdapter &&
-      typeof orbStageAdapter.createOrbShatterController === "function" &&
-      shellContext.runtime.vfx &&
-      shellContext.runtime.vfx.orbShatterRuntime
-    )
-      ? orbStageAdapter.createOrbShatterController({
-          root: orbStageRoot,
-          getOrbShatterRuntime: () => (
-            shellContext.runtime && shellContext.runtime.vfx
-              ? shellContext.runtime.vfx.orbShatterRuntime
-              : null
-          ),
-          getOrbColorState: () => (
-            shellContext.runtime &&
-            shellContext.runtime.orbColorRuntime &&
-            typeof shellContext.runtime.orbColorRuntime.getCurrentState === "function"
-              ? shellContext.runtime.orbColorRuntime.getCurrentState()
-              : null
-          ),
-          getBaseFillAlpha: () => 0.20,
-          clamp,
-          clamp01,
-        })
-      : null;
     await initShellReceiverHostRuntime(shellContext);
+    refreshShellActiveStageRuntimeBindings(shellContext);
     activateShellStageVisuals(shellContext);
     bindShellStageResize(shellContext);
     bindShellStageActions(shellContext);
