@@ -2217,6 +2217,11 @@ function getActiveShellStageElements(shellContext) {
     : {};
 }
 
+function getActiveShellStageRoot(shellContext) {
+  const adapter = getActiveShellStageAdapter(shellContext);
+  return adapter && adapter.refs ? adapter.refs.root || null : null;
+}
+
 function getShellOrbStageActions(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   return runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
@@ -2278,7 +2283,7 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
   runtime.orbStageActions = createShellOrbStageActions(shellContext);
 
   const activeAdapter = getActiveShellStageAdapter(shellContext);
-  const activeRoot = activeAdapter && activeAdapter.refs ? activeAdapter.refs.root : null;
+  const activeRoot = getActiveShellStageRoot(shellContext);
   runtime.orbShatterController = (
     activeAdapter &&
     typeof activeAdapter.createOrbShatterController === "function" &&
@@ -3022,9 +3027,7 @@ export async function createStagingShellRuntime({
       ? createOrbColorRuntime({
           root: orbStageRoot,
           getRoot: () => {
-            const activeAdapter = getActiveShellStageAdapter(shellContext);
-            const activeRoot = activeAdapter && activeAdapter.refs ? activeAdapter.refs.root : null;
-            return activeRoot || orbStageRoot || null;
+            return getActiveShellStageRoot(shellContext) || orbStageRoot || null;
           },
           getBaseVisualState: () => getShellOrbBaseVisualState(shellContext),
         })
