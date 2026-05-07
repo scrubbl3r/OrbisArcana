@@ -7,7 +7,6 @@ export function createStageRuntimeAdapterCore({
   state = null,
   onTraceLoggerSet = null,
 } = {}) {
-  let primaryGlobeEl = refs.testGlobe || null;
   const uiOverlayAdapter = createStageUiOverlayAdapter({ refs });
 
   return {
@@ -36,12 +35,6 @@ export function createStageRuntimeAdapterCore({
     },
     pickupScreenY(yW, { camTop = 0 } = {}) {
       return Number(yW || 0) - Number(camTop || 0);
-    },
-    getPrimaryGlobeEl() {
-      return primaryGlobeEl;
-    },
-    setPrimaryGlobeEl(el) {
-      primaryGlobeEl = el || null;
     },
     openDeathOverlay: uiOverlayAdapter.openDeathOverlay,
     closeDeathOverlay: uiOverlayAdapter.closeDeathOverlay,
