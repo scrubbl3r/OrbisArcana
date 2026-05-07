@@ -17,7 +17,6 @@ export async function bootstrapShellPairingRuntime({
   const cameraInputRuntime = shellContext.runtime && shellContext.runtime.cameraInput
     ? shellContext.runtime.cameraInput
     : null;
-  const statusSet = () => {};
 
   const startScreenEl = rootDocument.getElementById("startScreen");
   const startQr = rootDocument.getElementById("startQr");
@@ -132,7 +131,7 @@ export async function bootstrapShellPairingRuntime({
     },
     mobilePageBaseUrl: () => stagingMobilePageBaseUrl(rootDocument),
     syncStartQrSizeToTitlePx: () => syncStartQrSize(rootDocument),
-    setStatus: statusSet,
+    setStatus: () => {},
     onImpulse: (payload) => {
       if (mobileImpulseSystem) mobileImpulseSystem.ingestImpulse(payload);
     },
@@ -186,14 +185,6 @@ export async function bootstrapShellPairingRuntime({
     if (calibBtnEl) calibBtnEl.disabled = !canRunCalibration() || calibInFlight;
   };
 
-  const describeCameraState = (state = null) => {
-    const snapshot = state || (cameraInputRuntime && typeof cameraInputRuntime.getState === "function"
-      ? cameraInputRuntime.getState()
-      : null);
-    if (!snapshot) return "cam:unavailable";
-    return String(snapshot.debug && snapshot.debug.statusLine || "cam:idle");
-  };
-
   const syncCameraReadout = (state = null) => {
     const snapshot = state || (cameraInputRuntime && typeof cameraInputRuntime.getState === "function"
       ? cameraInputRuntime.getState()
@@ -210,12 +201,6 @@ export async function bootstrapShellPairingRuntime({
       }
     } else if (calibStatusEl && phoneReady) {
       setCalibStatus(isCameraReady() ? "Ready" : "Loading camera input…");
-    }
-    if (phoneReady) {
-      statusSet(
-        `Phone ready <span class="devStagingDim">(${describeCameraState(snapshot)})</span>`,
-        "devStagingDim"
-      );
     }
   };
 
@@ -240,10 +225,6 @@ export async function bootstrapShellPairingRuntime({
         calibInFlight = false;
         syncCalibAvailability();
         setCalibStatus("Camera access required");
-        statusSet(
-          `Camera input blocked <span class="devStagingDim">(${error && error.message ? String(error.message) : "unknown"})</span>`,
-          "devStagingFatal on"
-        );
         return;
       }
       const ok = sendCalibrationTrigger();
