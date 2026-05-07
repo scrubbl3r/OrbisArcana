@@ -11,24 +11,9 @@ import {
   resolveStageCameraZoom,
 } from "../../../game-runtime/level/authored-level-camera.js?v=20260506a";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260507y";
+import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260507z";
 import { createGameStageDepth3dLayer } from "../game-stage/game-stage-depth3d.js?v=20260506e";
-import {
-  applyOrbBaseVisualCssVars,
-  buildOrbBaseVisualState,
-} from "../../../game-runtime/orb/orb-base-state.js";
-import {
-  applyOrbFractureVisualCssVars,
-  buildOrbFractureVisualState,
-} from "../../../game-runtime/orb/orb-fracture-base-state.js";
-import {
-  applyOrbGlobeVisualCssVars,
-  buildOrbGlobeVisualState,
-} from "../../../game-runtime/orb/orb-globe-base-state.js?v=20260418a";
-import {
-  applyWorldGlobeVisualCssVars,
-  buildWorldGlobeVisualState,
-} from "../../../game-runtime/world/world-globe-state.js?v=20260418a";
+import { buildOrbBaseVisualState } from "../../../game-runtime/orb/orb-base-state.js";
 import { buildAuthoredLevelOverlayMarkup } from "../../../game-runtime/stage/authored-level-overlay.js?v=20260506a";
 import { createAuthoredStageController } from "../../../game-runtime/stage/authored-stage-controller.js?v=20260506a";
 
@@ -56,19 +41,6 @@ function buildOrbStageTemplate({ worldWidthPx = 2048, worldHeightPx = 2048 } = {
         <div class="orbStageWorldDock" aria-hidden="true">
           <div class="orbStageWorld">
             <svg id="orbStageWorldOverlay" class="orbStageWorldOverlay" viewBox="0 0 ${Number(worldWidthPx) || 2048} ${Number(worldHeightPx) || 2048}" preserveAspectRatio="none" aria-hidden="true"></svg>
-          </div>
-        </div>
-
-        <div id="orbWrap" class="orbWrap" aria-hidden="true">
-          <div id="origin" class="origin" aria-hidden="true">
-            <div id="electricLayer" class="electricLayer" aria-hidden="true"></div>
-            <div id="flameLayer" class="flameLayer" aria-hidden="true"></div>
-            <div id="shockLayer" class="shockLayer" aria-hidden="true"></div>
-            <div id="shield" class="shield atOrigin" aria-label="Stability shield"></div>
-            <div id="orb" class="orb atOrigin" aria-label="Orb"></div>
-            <svg id="orbCracks" class="orbCracks atOrigin" viewBox="-50 -50 100 100" aria-hidden="true"></svg>
-            <div id="orbInterior" class="orbInterior atOrigin" aria-hidden="true"></div>
-            <svg id="orbShards" class="orbShards atOrigin" viewBox="-80 -80 160 160" aria-hidden="true"></svg>
           </div>
         </div>
 
@@ -102,17 +74,8 @@ export function renderOrbStage(root, {
   });
   const stage = resolvedLevel && resolvedLevel.stage ? resolvedLevel.stage : {};
   const orbBaseVisualState = buildOrbBaseVisualState();
-  const orbFractureVisualState = buildOrbFractureVisualState();
-  const orbGlobeVisualState = buildOrbGlobeVisualState();
-  const worldGlobeVisualState = buildWorldGlobeVisualState(null, {
-    orbDiameterPx: orbBaseVisualState.diameterPx,
-  });
   root.dataset.levelId = String(resolvedLevel && resolvedLevel.id || "orb-hangar");
   root.style.setProperty("--orb-stage-panel-height", `${Number(stage.panelHeightPx) || LEVEL_STAGE_PANEL_HEIGHT_FALLBACK_PX}px`);
-  applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
-  applyOrbFractureVisualCssVars(orbFractureVisualState, { root });
-  applyOrbGlobeVisualCssVars(orbGlobeVisualState, { root, orbRadiusPx: orbBaseVisualState.radiusPx });
-  applyWorldGlobeVisualCssVars(worldGlobeVisualState, { root });
 
   const refs = {
     root,
@@ -124,15 +87,6 @@ export function renderOrbStage(root, {
     worldOverlay: root.querySelector("#orbStageWorldOverlay"),
     labelMeta: root.querySelector("[data-orb-stage-label-meta='true']"),
     depthReadout: root.querySelector("[data-orb-stage-depth-readout='true']"),
-    orbWrap: root.querySelector("#orbWrap"),
-    orb: root.querySelector("#orb"),
-    orbInterior: root.querySelector("#orbInterior"),
-    orbCracks: root.querySelector("#orbCracks"),
-    orbShards: root.querySelector("#orbShards"),
-    shield: root.querySelector("#shield"),
-    shockLayer: root.querySelector("#shockLayer"),
-    flameLayer: root.querySelector("#flameLayer"),
-    electricLayer: root.querySelector("#electricLayer"),
     deathPanel: root.querySelector("#deathPanel"),
     tryAgainBtn: root.querySelector("#tryAgainBtn"),
   };
