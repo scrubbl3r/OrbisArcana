@@ -350,7 +350,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     ),
   });
 
-  const mvp = bootstrapStagingRuntimeBundle({
+  const receiverRuntime = bootstrapStagingRuntimeBundle({
     eventBus: runtime.eventBus,
     gameState: runtimeContext.gameState,
     orbSystem: runtimeContext.orbSystem,
@@ -372,7 +372,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     kwsWordProvider: shellKws.kwsWordProvider,
     voiceProviderManager: shellKws.voiceProviderManager,
     kwsVoiceProvider: shellKws.kwsVoiceProvider,
-    kwsMvpCommands: {},
+    kwsRuntimeCommands: {},
     kwsBootOrchestrator: shellKws.kwsBootOrchestrator,
     grantOrbGrace: (grace) => {
       if (shellHooks && typeof shellHooks.grantOrbGrace === "function") shellHooks.grantOrbGrace(grace);
@@ -397,13 +397,15 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       if (shellHooks && typeof shellHooks.setOrbInputSuppressed === "function") shellHooks.setOrbInputSuppressed(next);
     },
   });
-  runtime.mvp = mvp;
+  runtime.receiverRuntime = receiverRuntime;
+  runtime.mvp = receiverRuntime;
 
   runtime.receiverHostRuntime = {
     ...receiverHostState,
     runtimeContext,
     eventBinder,
-    mvp,
+    receiverRuntime,
+    mvp: receiverRuntime,
   };
 
   return {
@@ -411,7 +413,8 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     receiverHostState,
     runtimeContext,
     eventBinder,
-    mvp,
+    receiverRuntime,
+    mvp: receiverRuntime,
     runInputFramePipelineImported,
     buildInputHudViewModel,
     INPUT_GESTURE_CFG,

@@ -20,6 +20,7 @@ export function bootstrapStagingRuntimeBundle({
   kwsWordProvider = null,
   voiceProviderManager = null,
   kwsVoiceProvider = null,
+  kwsRuntimeCommands = {},
   kwsMvpCommands = {},
   kwsBootOrchestrator = null,
   grantOrbGrace = () => {},
@@ -37,7 +38,7 @@ export function bootstrapStagingRuntimeBundle({
     ruleEngineExecuteActions: RULE_ENGINE_EXECUTE_ACTIONS,
   };
 
-  const mvp = {
+  const receiverRuntime = {
     eventBus,
     gameState,
     orbSystem,
@@ -58,6 +59,7 @@ export function bootstrapStagingRuntimeBundle({
     voiceProviderManager,
     kwsVoiceProvider,
     ...kwsMvpCommands,
+    ...kwsRuntimeCommands,
     grantOrbGrace,
     lastImpact: null,
     applyImpact(impact, source, meta = {}) {
@@ -75,13 +77,13 @@ export function bootstrapStagingRuntimeBundle({
     },
   };
 
-  if (mvp && kwsBootOrchestrator && typeof kwsBootOrchestrator.bootAndAutostart === "function") {
-    kwsBootOrchestrator.bootAndAutostart(mvp);
+  if (receiverRuntime && kwsBootOrchestrator && typeof kwsBootOrchestrator.bootAndAutostart === "function") {
+    kwsBootOrchestrator.bootAndAutostart(receiverRuntime);
   }
-  if (mvp && mvp.orbSystem && typeof mvp.orbSystem.revive === "function") {
-    mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
+  if (receiverRuntime && receiverRuntime.orbSystem && typeof receiverRuntime.orbSystem.revive === "function") {
+    receiverRuntime.orbSystem.revive({ health: 300, atMs: performance.now() });
   }
-  mvp.lastImpact = null;
+  receiverRuntime.lastImpact = null;
   if (orbShatterRuntime && typeof orbShatterRuntime.clear === "function") orbShatterRuntime.clear();
   setOrbInputSuppressed(false);
   if (orbFxSystem && typeof orbFxSystem.reset === "function") orbFxSystem.reset();
@@ -91,5 +93,5 @@ export function bootstrapStagingRuntimeBundle({
   renderOrbDamageVisuals();
   updateDebugReadout();
 
-  return mvp;
+  return receiverRuntime;
 }

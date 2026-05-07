@@ -101,7 +101,7 @@ This is the most shared part:
 - create runtime context
 - start systems
 - bind runtime events
-- create MVP
+- create receiver runtime
 
 This is the best candidate for the **first shared bootstrap extraction**.
 
@@ -154,7 +154,7 @@ Create a helper with a shape roughly like:
   - `runtimeContext`
   - started systems
   - `eventBinder`
-  - `mvp`
+  - `receiverRuntime`
   - a `processIncomingImpulse(...)` function or the pieces needed to build it
 
 The first version can still live close to `staging-shell`, but it should be a distinct bootstrap seam rather than inline shell code.

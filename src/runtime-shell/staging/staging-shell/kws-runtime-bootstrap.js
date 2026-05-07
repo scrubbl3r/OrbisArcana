@@ -96,7 +96,7 @@ export async function bootstrapShellKwsRuntimeBase({
     createDevStagingPanelElements: () => createDevStagingPanelElements(devRefs),
     getKwsWordProvider: () => kwsWordProvider,
     getKwsVoiceProvider: () => kwsVoiceProvider,
-    getMvp: () => runtime.mvp,
+    getMvp: () => runtime.receiverRuntime || runtime.mvp,
     readTuneFromUi: () => ({
       inferThreshold: readNumberInputOrNull(devRefs.kwsTokenThrInput),
       inferCooldownMs: readNumberInputOrNull(devRefs.kwsCooldownMsInput),

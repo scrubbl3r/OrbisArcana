@@ -1611,10 +1611,10 @@ function startShellStageLoop(shellContext) {
       traceMeasure("frame.metrics", () => updateShellFrameMetrics(shellContext, nowMs));
       const cameraTrace = traceShellCameraInput(shellContext, nowMs);
       const receiverHostRuntime = runtime.receiverHostRuntime || null;
-      const mvp = (receiverHostRuntime && receiverHostRuntime.mvp) || runtime.mvp || null;
+      const receiverRuntime = resolveShellReceiverRuntime(runtime);
       const orbFxSystem =
         (receiverHostRuntime && receiverHostRuntime.runtimeContext && receiverHostRuntime.runtimeContext.orbFxSystem) ||
-        (mvp && mvp.orbFxSystem) ||
+        (receiverRuntime && receiverRuntime.orbFxSystem) ||
         null;
       traceMeasure("orb.pipeline", () => runOrbRuntimePipeline({
         ts,
@@ -1624,7 +1624,7 @@ function startShellStageLoop(shellContext) {
         orbRuntimeState: runtime.orbRuntimeState,
         phys: runtime.stage ? runtime.stage.phys : {},
         shieldDescent: runtime.stage ? runtime.stage.shieldDescent : {},
-        mvp,
+        mvp: receiverRuntime,
         orbFxSystem,
         worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
         hooks: pipelineHooks,
@@ -1721,13 +1721,13 @@ function bindShellStageActions(shellContext) {
   const onTryAgain = () => {
     const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
     const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
-    const mvp = (receiverHostRuntime && receiverHostRuntime.mvp) || (runtime && runtime.mvp) || null;
+    const receiverRuntime = resolveShellReceiverRuntime(runtime);
     resetShellOrbToGround(shellContext);
     const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
     clearShellDeathOverlaySchedule(shellContext);
-    if (mvp && mvp.orbSystem && typeof mvp.orbSystem.revive === "function") {
-      mvp.orbSystem.revive({ health: 300, atMs: performance.now() });
-      mvp.lastImpact = null;
+    if (receiverRuntime && receiverRuntime.orbSystem && typeof receiverRuntime.orbSystem.revive === "function") {
+      receiverRuntime.orbSystem.revive({ health: 300, atMs: performance.now() });
+      receiverRuntime.lastImpact = null;
     }
     stopShellShardSim(shellContext);
     if (stage && stage.worldSystem && typeof stage.worldSystem.reset === "function") {
@@ -1735,7 +1735,7 @@ function bindShellStageActions(shellContext) {
     }
     const orbFxSystem =
       (receiverHostRuntime && receiverHostRuntime.runtimeContext && receiverHostRuntime.runtimeContext.orbFxSystem) ||
-      (mvp && mvp.orbFxSystem) ||
+      (receiverRuntime && receiverRuntime.orbFxSystem) ||
       null;
     if (orbFxSystem && typeof orbFxSystem.reset === "function") {
       orbFxSystem.reset();
@@ -1746,6 +1746,15 @@ function bindShellStageActions(shellContext) {
   for (const button of buttons) {
     button.addEventListener("click", onTryAgain);
   }
+}
+
+function resolveShellReceiverRuntime(runtime = null) {
+  const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
+  return (
+    (receiverHostRuntime && (receiverHostRuntime.receiverRuntime || receiverHostRuntime.mvp)) ||
+    (runtime && (runtime.receiverRuntime || runtime.mvp)) ||
+    null
+  );
 }
 
 function patchShellOrbRuntime(shellContext, patch = {}) {
@@ -1786,10 +1795,10 @@ function updateShellOrbStrokeColor(shellContext, dt) {
 
 function renderShellOrbDamageVisuals(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const mvp = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime.mvp : (runtime && runtime.mvp ? runtime.mvp : null);
+  const receiverRuntime = resolveShellReceiverRuntime(runtime);
   const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-  if (!mvp || !mvp.orbDamageVisualsRuntime || !activeStageAdapter || typeof activeStageAdapter.renderOrbDamageVisuals !== "function") return;
-  const fx = mvp.orbDamageVisualsRuntime.getState();
+  if (!receiverRuntime || !receiverRuntime.orbDamageVisualsRuntime || !activeStageAdapter || typeof activeStageAdapter.renderOrbDamageVisuals !== "function") return;
+  const fx = receiverRuntime.orbDamageVisualsRuntime.getState();
   activeStageAdapter.renderOrbDamageVisuals({ fx });
 }
 
@@ -2860,6 +2869,7 @@ function createStagingShellContext({
       }),
       cameraInput: null,
       cameraInputOrbBridge: null,
+      receiverRuntime: null,
       mvp: null,
       frameMetrics: null,
       stageRectCache: null,
@@ -3463,8 +3473,9 @@ async function initShellPairingRuntime(shellContext) {
     onVoiceModeOpenWorld: () => {
       const shellKws = shellContext.runtime && shellContext.runtime.kws ? shellContext.runtime.kws : null;
       const receiverEvents = shellKws && shellKws.receiverEvents ? shellKws.receiverEvents : null;
-      if (runtime && runtime.mvp && runtime.mvp.eventBus && receiverEvents && receiverEvents.EVT_VOICE_SET_MODE) {
-        runtime.mvp.eventBus.emit(receiverEvents.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
+      const receiverRuntime = resolveShellReceiverRuntime(runtime);
+      if (receiverRuntime && receiverRuntime.eventBus && receiverEvents && receiverEvents.EVT_VOICE_SET_MODE) {
+        receiverRuntime.eventBus.emit(receiverEvents.EVT_VOICE_SET_MODE, { mode: "wake_token_open_world" });
       }
     },
   });
