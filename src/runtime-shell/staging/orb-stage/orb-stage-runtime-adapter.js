@@ -89,6 +89,9 @@ export function createOrbStageRuntimeAdapter({
     },
     renderLegacyDomOrbDamageVisuals: legacyDomOrbAdapter.renderLegacyDomOrbDamageVisuals,
     createLegacyDomOrbShatterController: legacyDomOrbAdapter.createLegacyDomOrbShatterController,
+    getLegacyDomStageElements() {
+      return Object.freeze(collectLegacyDomOrbRefs(stageRefs));
+    },
     getStageElements() {
       return Object.freeze({
         ...shared3dAdapter.getStageElements(),

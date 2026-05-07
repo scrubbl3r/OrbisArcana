@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507l";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507m";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507al";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507am";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2184,7 +2184,10 @@ function getActiveShellStageElements(shellContext) {
 }
 
 function getShellLegacyDomStageElements(shellContext) {
-  return shellContext && shellContext.stageEls ? shellContext.stageEls : {};
+  const adapter = getActiveShellStageAdapter(shellContext);
+  return adapter && typeof adapter.getLegacyDomStageElements === "function"
+    ? adapter.getLegacyDomStageElements()
+    : {};
 }
 
 function getActiveShellStageRoot(shellContext) {
