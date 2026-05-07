@@ -132,7 +132,7 @@ export function initOrbStageReceiverVfxRuntime({
   };
 
   const legacyDomVfxRuntimesBundle = createLegacyDomVfxRuntimesBundle({
-    bubbleShield: {
+    legacyDomBubbleShield: {
       shieldEl: legacyDomEls.shield,
       getConfig: () => resolveBubbleShieldGeometry(vfxDefaults.shield, {
         orbDiameterPx: readOrbDiameterPx(),
@@ -147,7 +147,7 @@ export function initOrbStageReceiverVfxRuntime({
       decayMs: 2000,
       onDecayActiveChange: () => {},
     },
-    shockwave: {
+    legacyDomShockwave: {
       layerEl: legacyDomEls.shockLayer,
       getConfig: () => resolveShockwaveGeometry(vfxDefaults.shock, {
         orbDiameterPx: readOrbDiameterPx(),
@@ -160,7 +160,7 @@ export function initOrbStageReceiverVfxRuntime({
       layerEl: legacyDomEls.orbShards,
       clamp,
     },
-    flameAoe: {
+    legacyDomFlameAoe: {
       layerEl: legacyDomEls.flameLayer,
       getConfig: () => resolveFlameAoeGeometry(vfxDefaults.flame, {
         orbDiameterPx: readOrbDiameterPx(),
@@ -169,7 +169,7 @@ export function initOrbStageReceiverVfxRuntime({
       evenPx,
       showCore: false,
     },
-    electricAoe: {
+    legacyDomElectricAoe: {
       layerEl: legacyDomEls.electricLayer,
       getConfig: () => resolveElectricAoeGeometry(vfxDefaults.electric, {
         orbDiameterPx: readOrbDiameterPx(),

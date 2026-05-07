@@ -22,21 +22,29 @@ import { createLegacyDomElectricAoeRuntime } from "./spells/electric-aoe-legacy-
  * Missing/invalid options simply skip that runtime and return `null` for it.
  *
  * @param {Object} [options]
- * @param {Object} [options.bubbleShield]
- * @param {Object} [options.shockwave]
+ * @param {Object} [options.legacyDomBubbleShield]
+ * @param {Object} [options.legacyDomShockwave]
  * @param {Object} [options.legacyDomOrbShatter]
- * @param {Object} [options.flameAoe]
- * @param {Object} [options.electricAoe]
+ * @param {Object} [options.legacyDomFlameAoe]
+ * @param {Object} [options.legacyDomElectricAoe]
  * @returns {LegacyDomVfxRuntimesBundle}
  */
 export function createLegacyDomVfxRuntimesBundle(options = {}) {
-  const legacyDomBubbleShieldRuntime = options.bubbleShield ? createLegacyDomBubbleShieldRuntime(options.bubbleShield) : null;
-  const legacyDomShockwaveRuntime = options.shockwave ? createLegacyDomShockwaveRuntime(options.shockwave) : null;
+  const legacyDomBubbleShieldRuntime = options.legacyDomBubbleShield
+    ? createLegacyDomBubbleShieldRuntime(options.legacyDomBubbleShield)
+    : null;
+  const legacyDomShockwaveRuntime = options.legacyDomShockwave
+    ? createLegacyDomShockwaveRuntime(options.legacyDomShockwave)
+    : null;
   const legacyDomOrbShatterRuntime = options.legacyDomOrbShatter
     ? createLegacyDomOrbShatterRuntime(options.legacyDomOrbShatter)
     : null;
-  const legacyDomFlameAoeRuntime = options.flameAoe ? createLegacyDomFlameAoeRuntime(options.flameAoe) : null;
-  const legacyDomElectricAoeRuntime = options.electricAoe ? createLegacyDomElectricAoeRuntime(options.electricAoe) : null;
+  const legacyDomFlameAoeRuntime = options.legacyDomFlameAoe
+    ? createLegacyDomFlameAoeRuntime(options.legacyDomFlameAoe)
+    : null;
+  const legacyDomElectricAoeRuntime = options.legacyDomElectricAoe
+    ? createLegacyDomElectricAoeRuntime(options.legacyDomElectricAoe)
+    : null;
 
   function clearAll() {
     try { legacyDomShockwaveRuntime && typeof legacyDomShockwaveRuntime.clear === "function" && legacyDomShockwaveRuntime.clear(); } catch (_) {}
