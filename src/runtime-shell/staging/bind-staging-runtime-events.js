@@ -28,7 +28,7 @@ export function bindStagingRuntimeEvents({
   clearOrbDeathRuntimeVfx = () => {},
   scheduleDeathOverlay = () => {},
   updateDebugReadout = () => {},
-  legacyDomOrbShatterController = null,
+  legacyDomOrbShatterController: orbStageLegacyDomOrbShatterController = null,
   stopLegacyDomOrbShatterShardSim = () => {},
   worldSystem = null,
   resetOrbStrokeColor = () => {},
@@ -61,28 +61,28 @@ export function bindStagingRuntimeEvents({
 
   function handleOrbStageLegacyDomOrbDied() {
     if (
-      legacyDomOrbShatterController &&
-      typeof legacyDomOrbShatterController.handleOrbDied === "function"
+      orbStageLegacyDomOrbShatterController &&
+      typeof orbStageLegacyDomOrbShatterController.handleOrbDied === "function"
     ) {
-      legacyDomOrbShatterController.handleOrbDied();
+      orbStageLegacyDomOrbShatterController.handleOrbDied();
     }
   }
 
   function handleOrbStageLegacyDomOrbRevived() {
     if (
-      legacyDomOrbShatterController &&
-      typeof legacyDomOrbShatterController.handleOrbRevived === "function"
+      orbStageLegacyDomOrbShatterController &&
+      typeof orbStageLegacyDomOrbShatterController.handleOrbRevived === "function"
     ) {
-      legacyDomOrbShatterController.handleOrbRevived();
+      orbStageLegacyDomOrbShatterController.handleOrbRevived();
     }
   }
 
   function handleOrbStageLegacyDomOrbShatterComplete() {
     if (
-      legacyDomOrbShatterController &&
-      typeof legacyDomOrbShatterController.handleOrbShatterComplete === "function"
+      orbStageLegacyDomOrbShatterController &&
+      typeof orbStageLegacyDomOrbShatterController.handleOrbShatterComplete === "function"
     ) {
-      legacyDomOrbShatterController.handleOrbShatterComplete();
+      orbStageLegacyDomOrbShatterController.handleOrbShatterComplete();
     } else {
       stopLegacyDomOrbShatterShardSim();
     }
