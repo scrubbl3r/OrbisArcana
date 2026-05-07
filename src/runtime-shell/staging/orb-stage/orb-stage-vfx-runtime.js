@@ -1,6 +1,6 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js?v=20260506a";
-import { createOrbNod3dLegacyDomRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-legacy-dom-runtime.js";
-import { createOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-runtime.js";
+import { createLegacyDomOrbNod3dRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-legacy-dom-runtime.js";
+import { createLegacyDomOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-legacy-dom-runtime.js";
 import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runtime.js";
 import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js?v=20260501a";
 import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/teleport-behavior-state.js?v=20260501a";
@@ -185,7 +185,7 @@ export function initOrbStageReceiverVfxRuntime({
     legacyDomBubbleShieldRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomBubbleShieldRuntime,
     legacyDomShockwaveRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomShockwaveRuntime,
     legacyDomOrbShatterRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomOrbShatterRuntime,
-    legacyDomOrbNodRuntime: createOrbNodRuntime({
+    legacyDomOrbNodRuntime: createLegacyDomOrbNodRuntime({
       orbEl: legacyDomEls.orb,
       mountEl: legacyDomEls.orb ? legacyDomEls.orb.parentElement : null,
       orbInteriorEl: legacyDomEls.orbInterior,
@@ -196,7 +196,7 @@ export function initOrbStageReceiverVfxRuntime({
         ? vfxDefaults.nod
         : Object.create(null),
     }),
-    legacyDomOrbNod3dRuntime: createOrbNod3dLegacyDomRuntime({
+    legacyDomOrbNod3dRuntime: createLegacyDomOrbNod3dRuntime({
       orbEl: legacyDomEls.orb,
       mountEl: legacyDomEls.orb ? legacyDomEls.orb.parentElement : null,
       orbInteriorEl: legacyDomEls.orbInterior,

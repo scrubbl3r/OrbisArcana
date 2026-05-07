@@ -59,7 +59,7 @@ function readCurrentFillAlpha(orbEl) {
   return parseRgba(styles.backgroundColor || styles.background || "", 0.2).a;
 }
 
-export function createOrbNodRuntime({
+export function createLegacyDomOrbNodRuntime({
   orbEl = null,
   mountEl = null,
   orbInteriorEl = null,

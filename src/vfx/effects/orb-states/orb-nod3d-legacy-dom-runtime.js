@@ -1,4 +1,4 @@
-import { createOrbNodRuntime } from "./orb-nod-runtime.js";
+import { createLegacyDomOrbNodRuntime } from "./orb-nod-legacy-dom-runtime.js";
 
 function mapNod3dConfigToLegacyNodConfig(raw = {}, { getOrbDiameterPx = () => 72 } = {}) {
   const orbDiameterPx = Math.max(1, Number(getOrbDiameterPx()) || 72);
@@ -13,12 +13,12 @@ function mapNod3dConfigToLegacyNodConfig(raw = {}, { getOrbDiameterPx = () => 72
   };
 }
 
-export function createOrbNod3dLegacyDomRuntime({
+export function createLegacyDomOrbNod3dRuntime({
   getConfig = () => ({}),
   getOrbDiameterPx = () => 72,
   ...runtimeOptions
 } = {}) {
-  return createOrbNodRuntime({
+  return createLegacyDomOrbNodRuntime({
     ...runtimeOptions,
     getOrbDiameterPx,
     getConfig: () => mapNod3dConfigToLegacyNodConfig(
