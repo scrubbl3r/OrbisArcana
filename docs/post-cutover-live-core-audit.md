@@ -115,6 +115,7 @@ These are still around, but they look more like cleanup polish than major archit
   - mostly inert / compatibility-oriented
 - `energyUI01` naming
   - now just raw normalized energy, not bank UI
+- legacy HUD view-model builder removed from the active bootstrap path
 - staging bootstrap no longer accepts the old energy config constants
 
 ## Recommended Next Targets

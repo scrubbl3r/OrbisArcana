@@ -3140,7 +3140,6 @@ async function initShellKwsRuntime(shellContext) {
       },
       {
         applyRuntimeTheme: () => {},
-        setBuildInputHudViewModelModule: () => {},
         setCreateSpellActionHandlersModule: () => {},
         setRunInputFramePipelineModule: () => {},
         setRunOrbRuntimePipelineModule: () => {},

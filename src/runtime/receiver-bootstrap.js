@@ -284,7 +284,6 @@ export async function loadReceiverInitModules() {
     { GAME_THEME_DEFAULT },
     { applyGameThemeCssVars },
     { applyDevConsoleThemeCssVars },
-    { buildInputHudViewModel: buildInputHudViewModelImported },
     { runInputFramePipeline: runInputFramePipelineImported },
     { BUBBLE_SHIELD_PRESET_DEFAULT, BUBBLE_SHIELD_3D_PRESET_DEFAULT, SHOCKWAVE_PRESET_DEFAULT, SHOCKWAVE_3D_PRESET_DEFAULT, FLAME_AOE_PRESET_DEFAULT, FLAME_AOE_3D_PRESET_DEFAULT, ELECTRIC_AOE_PRESET_DEFAULT, TELEPORT_PRESET_DEFAULT, ORB_NOD_PRESET_DEFAULT, ORB_NOD_3D_PRESET_DEFAULT, ORB_SPAWN_PRESET_DEFAULT, hydrateReceiverVfxDefaults },
     { INPUT_GESTURE_CONFIG_DEFAULT },
@@ -340,7 +339,6 @@ export async function loadReceiverInitModules() {
     import("../content/theme/game-theme-default.js"),
     import("../ui/theme/apply-game-theme-css-vars.js"),
     import("../ui/dev-console/apply-dev-console-theme-css-vars.js"),
-    import("../ui/build-input-hud-view-model.js"),
     import("../game-runtime/input/input-frame-pipeline.js"),
     import("../vfx/presets/index.js?v=20260506e"),
     import("../content/input/gesture-config-default.js"),
@@ -408,7 +406,6 @@ export async function loadReceiverInitModules() {
     GAME_THEME_DEFAULT,
     applyGameThemeCssVars,
     applyDevConsoleThemeCssVars,
-    buildInputHudViewModelImported,
     runInputFramePipelineImported,
     BUBBLE_SHIELD_PRESET_DEFAULT,
     BUBBLE_SHIELD_3D_PRESET_DEFAULT,
@@ -440,7 +437,6 @@ export async function loadReceiverInitModules() {
 /**
  * @typedef {Object} ReceiverBootstrapContext
  * @property {(theme:Object) => void} [applyRuntimeTheme]
- * @property {(fn:Function) => void} [setBuildInputHudViewModelModule]
  * @property {(fn:Function) => void} [setCreateSpellActionHandlersModule]
  * @property {(fn:Function) => void} [setRunInputFramePipelineModule]
  * @property {(fn:Function) => void} [setRunOrbRuntimePipelineModule]
@@ -473,7 +469,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     GAME_THEME_DEFAULT,
     applyGameThemeCssVars,
     applyDevConsoleThemeCssVars,
-    buildInputHudViewModelImported,
     createSpellActionHandlersImported,
     runInputFramePipelineImported,
     runOrbRuntimePipelineImported,
@@ -510,7 +505,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
 
   const {
     applyRuntimeTheme,
-    setBuildInputHudViewModelModule,
     setCreateSpellActionHandlersModule,
     setRunInputFramePipelineModule,
     setRunOrbRuntimePipelineModule,
@@ -643,7 +637,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     if (typeof applyRuntimeTheme === "function") applyRuntimeTheme(GAME_THEME_DEFAULT);
   }
 
-  setModuleIfFunction(setBuildInputHudViewModelModule, buildInputHudViewModelImported);
   setModuleIfFunction(setCreateSpellActionHandlersModule, createSpellActionHandlersImported);
   setModuleIfFunction(setRunInputFramePipelineModule, runInputFramePipelineImported);
   setModuleIfFunction(setRunOrbRuntimePipelineModule, runOrbRuntimePipelineImported);
