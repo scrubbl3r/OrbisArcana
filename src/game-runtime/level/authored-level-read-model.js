@@ -11,10 +11,13 @@ export const AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS = "depthLayers";
 
 export function resolveAuthoredLevelReadModel(runtimeOrReadModel = null) {
   const source = runtimeOrReadModel && typeof runtimeOrReadModel === "object" ? runtimeOrReadModel : {};
+  if (source.authoredLevelReadModel && typeof source.authoredLevelReadModel === "object") {
+    return resolveAuthoredLevelReadModel(source.authoredLevelReadModel);
+  }
   return Object.freeze({
-    summary: source.currentLevelSummary || source.summary || null,
-    sceneModel: source.currentLevelSceneModel || source.sceneModel || null,
-    levelGraphicsModel: source.currentLevelGraphicsModel || source.levelGraphicsModel || null,
+    summary: source.summary || null,
+    sceneModel: source.sceneModel || null,
+    levelGraphicsModel: source.levelGraphicsModel || null,
   });
 }
 

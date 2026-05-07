@@ -478,8 +478,8 @@ function shellResolvedCollisionBox(shellContext) {
 
 function shellResolvedBoundarySegments(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  return Array.isArray(runtime && runtime.currentLevelBoundarySegments)
-    ? runtime.currentLevelBoundarySegments
+  return Array.isArray(runtime && runtime.authoredLevelBoundarySegments)
+    ? runtime.authoredLevelBoundarySegments
     : [];
 }
 
@@ -488,21 +488,17 @@ function buildShellBoundarySegmentsFromReadModel(readModel = null) {
   return buildBoundarySegmentsFromLoops(loops);
 }
 
-function clearShellCurrentLevelReadModel(runtime = null) {
+function clearShellAuthoredLevelReadModel(runtime = null) {
   if (!runtime) return;
-  runtime.currentLevelSummary = null;
-  runtime.currentLevelSceneModel = null;
-  runtime.currentLevelGraphicsModel = null;
-  runtime.currentLevelBoundarySegments = null;
+  runtime.authoredLevelReadModel = null;
+  runtime.authoredLevelBoundarySegments = null;
 }
 
-function applyShellCurrentLevelReadModel(runtime = null, readModel = null) {
+function applyShellAuthoredLevelReadModel(runtime = null, readModel = null) {
   if (!runtime) return null;
   const summary = readModel && readModel.summary ? readModel.summary : null;
-  runtime.currentLevelSummary = summary;
-  runtime.currentLevelSceneModel = readModel && readModel.sceneModel ? readModel.sceneModel : null;
-  runtime.currentLevelGraphicsModel = readModel && readModel.levelGraphicsModel ? readModel.levelGraphicsModel : null;
-  runtime.currentLevelBoundarySegments = buildShellBoundarySegmentsFromReadModel(readModel);
+  runtime.authoredLevelReadModel = readModel || null;
+  runtime.authoredLevelBoundarySegments = buildShellBoundarySegmentsFromReadModel(readModel);
   return summary;
 }
 
@@ -2580,7 +2576,7 @@ function syncActiveShellStage(shellContext) {
     runtime.stageRectCache = null;
     runtime.frameMetrics = null;
   }
-  void hydrateShellCurrentLevelReadModel(shellContext).then(() => {
+  void hydrateShellAuthoredLevelReadModel(shellContext).then(() => {
     const stage = runtime && runtime.stage ? runtime.stage : null;
     if (stage && stage.phys) {
       stage.phys.worldHeightPx = shellWorldHeight(shellContext);
@@ -2873,10 +2869,8 @@ function createStagingShellContext({
       orbRuntimeLoop: null,
       orbRuntimeState: null,
       stage: null,
-      currentLevelSummary: null,
-      currentLevelSceneModel: null,
-      currentLevelGraphicsModel: null,
-      currentLevelBoundarySegments: null,
+      authoredLevelReadModel: null,
+      authoredLevelBoundarySegments: null,
       shellVfxMods: null,
       shellModeController: modeController,
       shellModeHotkeyOff: null,
@@ -2885,13 +2879,13 @@ function createStagingShellContext({
   };
 }
 
-async function hydrateShellCurrentLevelReadModel(shellContext) {
+async function hydrateShellAuthoredLevelReadModel(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const level = shellActiveStageLevel(shellContext);
   const mapSource = level && typeof level.mapSource === "object" ? level.mapSource : null;
   const assetUrl = String(mapSource && mapSource.assetUrl || "").trim();
   if (!runtime || !mapSource || !assetUrl) {
-    clearShellCurrentLevelReadModel(runtime);
+    clearShellAuthoredLevelReadModel(runtime);
     return null;
   }
   try {
@@ -2910,16 +2904,16 @@ async function hydrateShellCurrentLevelReadModel(shellContext) {
       ""
     ).trim();
     if (adapterReadModel && adapterReadModel.summary && adapterAssetUrl === assetUrl) {
-      return applyShellCurrentLevelReadModel(runtime, adapterReadModel);
+      return applyShellAuthoredLevelReadModel(runtime, adapterReadModel);
     }
     const authoredScene = await loadAuthoredLevelScene({
       level,
       worldWidthPx: shellWorldWidth(shellContext),
       worldHeightPx: shellWorldHeight(shellContext),
     });
-    return applyShellCurrentLevelReadModel(runtime, authoredScene);
+    return applyShellAuthoredLevelReadModel(runtime, authoredScene);
   } catch (error) {
-    clearShellCurrentLevelReadModel(runtime);
+    clearShellAuthoredLevelReadModel(runtime);
     try { console.warn("[staging-shell] failed to hydrate level read model", error); } catch (_) {}
     return null;
   }
@@ -3635,7 +3629,7 @@ export async function createStagingShellRuntime({
       });
     }
     await initShellKwsRuntime(shellContext);
-    await hydrateShellCurrentLevelReadModel(shellContext);
+    await hydrateShellAuthoredLevelReadModel(shellContext);
     initializeShellStageRuntime(shellContext);
     syncGameStageGlobe3dRuntime(shellContext);
     const orbStageAdapter = shellContext.orbStageAdapter || null;
