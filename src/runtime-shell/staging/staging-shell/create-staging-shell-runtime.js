@@ -1650,10 +1650,7 @@ function bindShellStageResize(shellContext) {
 }
 
 function bindShellStageActions(shellContext) {
-  const adapters = [
-    shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null,
-    shellContext && shellContext.gameStageAdapter ? shellContext.gameStageAdapter : null,
-  ].filter(Boolean);
+  const adapters = getShellStageAdapters(shellContext);
   const buttons = adapters
     .map((adapter) => (
       adapter && typeof adapter.getStageElements === "function"
@@ -2281,6 +2278,21 @@ function getActiveShellStageAdapter(shellContext) {
   return shellContext && shellContext.activeStageAdapter ? shellContext.activeStageAdapter : null;
 }
 
+function getShellStageAdapters(shellContext) {
+  return [
+    shellContext && shellContext.orbStageAdapter ? shellContext.orbStageAdapter : null,
+    shellContext && shellContext.gameStageAdapter ? shellContext.gameStageAdapter : null,
+  ].filter(Boolean);
+}
+
+function resolveShellStageAdapterForMode(shellContext, modeState = null) {
+  if (!shellContext) return null;
+  const mode = modeState && modeState.mode ? modeState.mode : STAGING_SHELL_MODE.splitLab;
+  return mode === STAGING_SHELL_MODE.gameStage
+    ? shellContext.gameStageAdapter
+    : shellContext.orbStageAdapter;
+}
+
 function getActiveShellStageElements(shellContext) {
   const adapter = getActiveShellStageAdapter(shellContext);
   return adapter && typeof adapter.getStageElements === "function"
@@ -2373,9 +2385,7 @@ function syncGameStageGlobe3dRuntime(shellContext) {
 function syncActiveShellStage(shellContext) {
   if (!shellContext) return null;
   const modeState = getShellModeState(shellContext);
-  const activeStageAdapter = modeState.mode === STAGING_SHELL_MODE.gameStage
-    ? shellContext.gameStageAdapter
-    : shellContext.orbStageAdapter;
+  const activeStageAdapter = resolveShellStageAdapterForMode(shellContext, modeState);
   shellContext.activeStageAdapter = activeStageAdapter || shellContext.orbStageAdapter || null;
   refreshShellActiveStageRuntimeBindings(shellContext);
   const runtime = shellContext.runtime || null;
