@@ -767,74 +767,22 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
   const stage = runtime.stage ? runtime.stage : null;
   const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
-  const cameraConfig = shellActiveStageCameraConfig(shellContext);
-  const clampBounds = shellActiveStageCameraClampBounds(shellContext);
   const collisionBox = shellResolvedCollisionBox(shellContext);
   const target = shellActiveStageCameraTarget(shellContext, orbState);
   const perfTrace = runtime.perfTrace || null;
+  const cameraResolveArgs = buildShellCameraResolveArgs(shellContext, {
+    targetXW: target.xW,
+    targetYW: target.yW,
+    viewportWidthPx: safeRect.width || 0,
+    viewportHeightPx: safeRect.height || 0,
+    nowMs,
+    target: scratch.cameraResolvedFrame,
+  });
   const frame = cameraRuntime && typeof cameraRuntime.resolveFrame === "function"
     ? (
         perfTrace && typeof perfTrace.measure === "function"
-          ? perfTrace.measure("camera.resolve", () => cameraRuntime.resolveFrame({
-              targetXW: target.xW,
-              targetYW: target.yW,
-              viewportWidthPx: safeRect.width || 0,
-              viewportHeightPx: safeRect.height || 0,
-              worldWidthPx: shellWorldWidth(shellContext),
-              worldHeightPx: shellWorldHeight(shellContext),
-              zoom: shellActiveStageCameraZoom(shellContext),
-              followMode: shellActiveStageCameraFollowMode(shellContext),
-              fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
-              fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
-              screenAnchorX: cameraConfig.screenAnchorX,
-              screenAnchorY: cameraConfig.screenAnchorY,
-              deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
-              deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
-              deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
-              deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
-              followLerpX: cameraConfig.followLerpX,
-              followLerpY: cameraConfig.followLerpY,
-              clampLeftXW: clampBounds.leftXW,
-              clampRightXW: clampBounds.rightXW,
-              clampTopYW: clampBounds.topYW,
-              clampBottomYW: clampBounds.bottomYW,
-              clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
-              clampInsetRightPx: cameraConfig.clampInsetRightPx,
-              clampInsetTopPx: cameraConfig.clampInsetTopPx,
-              clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
-              nowMs,
-              target: scratch.cameraResolvedFrame,
-            }))
-          : cameraRuntime.resolveFrame({
-        targetXW: target.xW,
-        targetYW: target.yW,
-        viewportWidthPx: safeRect.width || 0,
-        viewportHeightPx: safeRect.height || 0,
-        worldWidthPx: shellWorldWidth(shellContext),
-        worldHeightPx: shellWorldHeight(shellContext),
-        zoom: shellActiveStageCameraZoom(shellContext),
-        followMode: shellActiveStageCameraFollowMode(shellContext),
-        fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
-        fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
-        screenAnchorX: cameraConfig.screenAnchorX,
-        screenAnchorY: cameraConfig.screenAnchorY,
-        deadzoneWidthPx: cameraConfig.deadzoneWidthPx,
-        deadzoneHeightPx: cameraConfig.deadzoneHeightPx,
-        deadzoneWidthRatio: cameraConfig.deadzoneWidthRatio,
-        deadzoneHeightRatio: cameraConfig.deadzoneHeightRatio,
-        followLerpX: cameraConfig.followLerpX,
-        followLerpY: cameraConfig.followLerpY,
-        clampLeftXW: clampBounds.leftXW,
-        clampRightXW: clampBounds.rightXW,
-        clampTopYW: clampBounds.topYW,
-        clampBottomYW: clampBounds.bottomYW,
-        clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
-        clampInsetRightPx: cameraConfig.clampInsetRightPx,
-        clampInsetTopPx: cameraConfig.clampInsetTopPx,
-        clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
-        nowMs,
-        target: scratch.cameraResolvedFrame,
-      })
+          ? perfTrace.measure("camera.resolve", () => cameraRuntime.resolveFrame(cameraResolveArgs))
+          : cameraRuntime.resolveFrame(cameraResolveArgs)
       )
     : null;
   const camLeft = Number(frame && frame.camLeft) || 0;
