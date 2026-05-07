@@ -66,7 +66,7 @@ export function createOrbStageRuntimeAdapter({
   unbindResize = () => {},
 } = {}) {
   const stageRefs = Object.freeze(collectOrbStageRefs(refs));
-  const shared3dAdapter = createGameStageRuntimeAdapter({
+  const gameStageAdapter = createGameStageRuntimeAdapter({
     refs: stageRefs,
     level,
     state,
@@ -80,11 +80,11 @@ export function createOrbStageRuntimeAdapter({
   });
 
   return Object.freeze({
-    ...shared3dAdapter,
+    ...gameStageAdapter,
     applyOrbTransform(args = {}) {
       legacyDomOrbAdapter.applyLegacyDomOrbTransform(args);
-      if (typeof shared3dAdapter.applyOrbTransform === "function") {
-        shared3dAdapter.applyOrbTransform(args);
+      if (typeof gameStageAdapter.applyOrbTransform === "function") {
+        gameStageAdapter.applyOrbTransform(args);
       }
     },
     renderLegacyDomOrbDamageVisuals: legacyDomOrbAdapter.renderLegacyDomOrbDamageVisuals,
@@ -93,7 +93,7 @@ export function createOrbStageRuntimeAdapter({
       return Object.freeze(collectLegacyDomOrbRefs(stageRefs));
     },
     getStageElements() {
-      return Object.freeze(shared3dAdapter.getStageElements());
+      return Object.freeze(gameStageAdapter.getStageElements());
     },
   });
 }
