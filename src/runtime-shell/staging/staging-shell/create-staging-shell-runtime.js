@@ -573,7 +573,7 @@ function shellGroundCenterWorld(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   const collisionBox = shellResolvedCollisionBox(shellContext);
   if (collisionBox && stage && stage.phys) {
-    return Math.max(0, Number(collisionBox.bottomYW) - (Number(stage.phys.orbRadiusPx) || 50));
+    return Math.max(0, Number(collisionBox.bottomYW) - shellOrbRadiusPx(shellContext));
   }
   if (!stage || !stage.phys) return 0;
   const WORLD_H = Number(stage.phys.worldHeightPx) || shellWorldHeight(shellContext);
@@ -581,7 +581,7 @@ function shellGroundCenterWorld(shellContext) {
   return WORLD_H - (
     (Number(phys.groundFromBottomPx) || 17) +
     (Number(phys.groundLinePx) || 2) +
-    (Number(phys.orbRadiusPx) || 50)
+    shellOrbRadiusPx(shellContext)
   );
 }
 
@@ -589,8 +589,13 @@ function shellCeilingWorld(shellContext) {
   const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   const collisionBox = shellResolvedCollisionBox(shellContext);
   if (collisionBox && stage && stage.phys) {
-    return Math.max(0, Number(collisionBox.topYW) + (Number(stage.phys.orbRadiusPx) || 50));
+    return Math.max(0, Number(collisionBox.topYW) + shellOrbRadiusPx(shellContext));
   }
+  return shellOrbRadiusPx(shellContext);
+}
+
+function shellOrbRadiusPx(shellContext) {
+  const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
   return Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
 }
 
@@ -608,8 +613,7 @@ function shellLateralBounds(shellContext) {
   if (runtime && runtime.frameMetrics && runtime.frameMetrics.lateralBounds) {
     return runtime.frameMetrics.lateralBounds;
   }
-  const stage = runtime && runtime.stage ? runtime.stage : null;
-  const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
+  const orbRadiusPx = shellOrbRadiusPx(shellContext);
   const collisionBox = shellResolvedCollisionBox(shellContext);
   if (collisionBox) {
     return {
@@ -748,7 +752,7 @@ function updateShellFrameMetrics(shellContext, nowMs = performance.now()) {
     ? runtime.orbRuntimeState.get()
     : null;
   const stage = runtime.stage ? runtime.stage : null;
-  const orbRadiusPx = Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
+  const orbRadiusPx = shellOrbRadiusPx(shellContext);
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   const collisionBox = shellResolvedCollisionBox(shellContext);
   const target = shellActiveStageCameraTarget(shellContext, orbState);
@@ -998,7 +1002,7 @@ function applyShellGroundLine(shellContext) {
   if (!stage || !stage.phys || !activeStageAdapter || typeof activeStageAdapter.applyGroundLine !== "function") return;
   const rect = shellStageRect(shellContext);
   const groundLineWorldY = shellGroundCenterWorld(shellContext) +
-    (Number(stage.phys.orbRadiusPx) || 50) +
+    shellOrbRadiusPx(shellContext) +
     ((Number(stage.phys.groundLinePx) || 2) * 0.5);
   const camTop = shellCameraTopFor(shellContext, stage.orbRuntimeState.get().yW, rect.height || 0);
   const groundY = groundLineWorldY - camTop;
@@ -1023,7 +1027,7 @@ function applyShellOrbTransform(shellContext) {
   const y = runtime.frameMetrics && Number.isFinite(Number(runtime.frameMetrics.orbScreenY))
     ? Number(runtime.frameMetrics.orbScreenY)
     : shellOrbScreenY(shellContext);
-  const top = y - (Number(runtime.stage.phys.orbRadiusPx) || 50);
+  const top = y - shellOrbRadiusPx(shellContext);
   const scratch = ensureShellFrameScratch(runtime);
   const args = scratch.orbTransformArgs;
   const xW = Number(orbState && orbState.xW);
