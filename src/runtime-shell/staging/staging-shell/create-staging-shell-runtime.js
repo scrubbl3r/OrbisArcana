@@ -17,9 +17,9 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507s";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507t";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507c";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507g";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507h";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507j";
 import { createShellReceiverConfigs } from "./receiver-configs.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507bc";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507bd";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2887,7 +2887,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507p",
+  moduleCacheBustV = "20260507q",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

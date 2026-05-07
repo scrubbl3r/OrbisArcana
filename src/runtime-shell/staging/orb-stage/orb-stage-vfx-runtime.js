@@ -182,8 +182,8 @@ export function initOrbStageReceiverVfxRuntime({
 
   const stageVfx = {
     vfxDefaults,
-    legacyDomBubbleShieldRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.bubbleShieldRuntime,
-    legacyDomShockwaveRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.shockwaveRuntime,
+    legacyDomBubbleShieldRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomBubbleShieldRuntime,
+    legacyDomShockwaveRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomShockwaveRuntime,
     legacyDomOrbShatterRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomOrbShatterRuntime,
     legacyDomOrbNodRuntime: createOrbNodRuntime({
       orbEl: legacyDomEls.orb,
@@ -245,8 +245,8 @@ export function initOrbStageReceiverVfxRuntime({
         ),
       }),
     }),
-    legacyDomFlameAoeRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.flameAoeRuntime,
-    legacyDomElectricAoeRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.electricAoeRuntime,
+    legacyDomFlameAoeRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomFlameAoeRuntime,
+    legacyDomElectricAoeRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomElectricAoeRuntime,
   };
   const getTeleportRuntimeConfig = () => ({
     ...(
