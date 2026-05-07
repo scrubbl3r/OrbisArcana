@@ -407,6 +407,19 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
+  function getLegacyDomOrbShatterRuntime() {
+    return stageVfx.orbShatterRuntime || null;
+  }
+
+  function clearLegacyDomOrbShatterRuntime() {
+    const shatterRuntime = getLegacyDomOrbShatterRuntime();
+    if (shatterRuntime && typeof shatterRuntime.clear === "function") {
+      shatterRuntime.clear();
+      return { handled: true };
+    }
+    return { handled: false };
+  }
+
   function directPlayOrbNod(payload = {}) {
     if (stageVfx.orbNodRuntime && typeof stageVfx.orbNodRuntime.play === "function") {
       return stageVfx.orbNodRuntime.play(payload);
@@ -468,6 +481,8 @@ export function initOrbStageReceiverVfxRuntime({
   const shellVfx = {
     ...stageVfx,
     clearLegacyDomOrbRuntimeFx,
+    clearLegacyDomOrbShatterRuntime,
+    getLegacyDomOrbShatterRuntime,
     playShock() {
       return directPlayShock();
     },

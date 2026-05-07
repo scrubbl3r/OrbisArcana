@@ -17,7 +17,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507g";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507h";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507a";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-stage-backdrop.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507r";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507s";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1710,9 +1710,9 @@ function stopShellShardSim(shellContext) {
     controller.stopShardSim();
     return;
   }
-  const shatterRuntime = runtime && runtime.vfx && runtime.vfx.orbShatterRuntime;
-  if (shatterRuntime && typeof shatterRuntime.clear === "function") {
-    shatterRuntime.clear();
+  const shellVfx = runtime && runtime.vfx ? runtime.vfx : null;
+  if (shellVfx && typeof shellVfx.clearLegacyDomOrbShatterRuntime === "function") {
+    shellVfx.clearLegacyDomOrbShatterRuntime();
   }
 }
 
@@ -2261,17 +2261,24 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
   runtime.orbStageActions = createShellOrbStageActions(shellContext);
 
   const createOrbShatterController = getActiveShellStageMethod(shellContext, "createOrbShatterController");
+  const legacyDomOrbShatterRuntime = (
+    runtime.vfx &&
+    typeof runtime.vfx.getLegacyDomOrbShatterRuntime === "function"
+  )
+    ? runtime.vfx.getLegacyDomOrbShatterRuntime()
+    : null;
   const activeRoot = getActiveShellStageRoot(shellContext);
   runtime.legacyDomOrbShatterController = (
     createOrbShatterController &&
-    runtime.vfx &&
-    runtime.vfx.orbShatterRuntime
+    legacyDomOrbShatterRuntime
   )
     ? createOrbShatterController.method.call(createOrbShatterController.activeAdapter, {
         root: activeRoot,
         getOrbShatterRuntime: () => (
-          runtime && runtime.vfx
-            ? runtime.vfx.orbShatterRuntime
+          runtime &&
+          runtime.vfx &&
+          typeof runtime.vfx.getLegacyDomOrbShatterRuntime === "function"
+            ? runtime.vfx.getLegacyDomOrbShatterRuntime()
             : null
         ),
         getOrbColorState: () => (
