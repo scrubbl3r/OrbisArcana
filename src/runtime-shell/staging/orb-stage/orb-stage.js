@@ -97,7 +97,6 @@ export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
     orbInterior: root.querySelector("#orbInterior"),
     orbCracks: root.querySelector("#orbCracks"),
     orbShards: root.querySelector("#orbShards"),
-    testGlobe: root.querySelector("#testGlobe"),
     shield: root.querySelector("#shield"),
     shockLayer: root.querySelector("#shockLayer"),
     flameLayer: root.querySelector("#flameLayer"),
