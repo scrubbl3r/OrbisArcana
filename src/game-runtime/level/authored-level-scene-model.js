@@ -16,6 +16,7 @@ export function buildAuthoredLevelSceneModel({
   const safeSummary = summary && typeof summary === "object" ? summary : null;
   const cameraAnchors = Array.isArray(safeSummary && safeSummary.cameraAnchors) ? safeSummary.cameraAnchors : [];
   const spawnMarkers = Array.isArray(safeSummary && safeSummary.spawnMarkers) ? safeSummary.spawnMarkers : [];
+  const artShapes = Array.isArray(safeSummary && safeSummary.lineArtShapes) ? safeSummary.lineArtShapes : [];
   const spawn = spawnMarkers.length
     ? spawnMarkers[0]
     : (() => {
@@ -47,7 +48,8 @@ export function buildAuthoredLevelSceneModel({
     cameraAnchors,
     worldItemSpawns: Array.isArray(safeSummary && safeSummary.worldItemSpawns) ? safeSummary.worldItemSpawns : [],
     props: Array.isArray(safeSummary && safeSummary.props) ? safeSummary.props : [],
-    lineArtShapes: Array.isArray(safeSummary && safeSummary.lineArtShapes) ? safeSummary.lineArtShapes : [],
+    artShapes,
+    lineArtShapes: artShapes,
     starsFieldRegions: Array.isArray(safeSummary && safeSummary.starsFieldRegions) ? safeSummary.starsFieldRegions : [],
     depthLayers: Array.isArray(safeSummary && safeSummary.depthLayers) ? safeSummary.depthLayers : [],
   });

@@ -1,5 +1,5 @@
 import {
-  AUTHORED_LEVEL_READ_MODEL_KEY_LINE_ART_SHAPES,
+  AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES,
   resolveAuthoredLevelReadModelArray,
 } from "../../../game-runtime/level/authored-level-read-model.js";
 
@@ -28,7 +28,7 @@ export function ensureLegacyShellStageBackdrop(shellContext, {
     rect,
     worldHeight: shellWorldHeight(shellContext),
     terrainProfile,
-    lineArtShapes: resolveAuthoredLevelReadModelArray(runtime, AUTHORED_LEVEL_READ_MODEL_KEY_LINE_ART_SHAPES),
+    artShapes: resolveAuthoredLevelReadModelArray(runtime, AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES),
     clamp01,
   });
 }

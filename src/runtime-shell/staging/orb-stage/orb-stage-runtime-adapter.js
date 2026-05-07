@@ -57,21 +57,24 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
     ensureBackdrop({
       runtime = null,
       rect = null,
-      lineArtShapes = [],
+      artShapes = [],
+      lineArtShapes = null,
     } = {}) {
       if (!runtime || !stageRefs.world || !stageRefs.worldOverlay || !rect) return;
       const width = Math.max(1, Math.floor(Number(rect.width) || 0));
       const height = Math.max(1, Math.floor(Number(rect.height) || 0));
       const stageBackdrop = runtime.stageBackdrop || (runtime.stageBackdrop = localBackdropState);
-      const nextLineArtShapes = Array.isArray(lineArtShapes) ? lineArtShapes.slice() : [];
-      const nextLineArtKey = nextLineArtShapes.map((shape = {}) => String(shape.id || "")).join("|");
+      const nextArtShapes = (Array.isArray(artShapes)
+        ? artShapes
+        : (Array.isArray(lineArtShapes) ? lineArtShapes : [])).slice();
+      const nextArtKey = nextArtShapes.map((shape = {}) => String(shape.id || "")).join("|");
       const worldWidth = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldWidthPx) || levelWorldSize.widthPx);
       const worldHeight = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldHeightPx) || levelWorldSize.heightPx);
 
-      if (stageBackdrop.lineArtKey !== nextLineArtKey) {
-        stageBackdrop.lineArtShapes = nextLineArtShapes;
-        stageBackdrop.lineArtKey = nextLineArtKey;
-        stageRefs.worldOverlay.innerHTML = buildOverlayMarkup(nextLineArtShapes, null, {
+      if (stageBackdrop.artKey !== nextArtKey) {
+        stageBackdrop.artShapes = nextArtShapes;
+        stageBackdrop.artKey = nextArtKey;
+        stageRefs.worldOverlay.innerHTML = buildOverlayMarkup(nextArtShapes, null, {
           worldWidthPx: worldWidth,
           worldHeightPx: worldHeight,
         });

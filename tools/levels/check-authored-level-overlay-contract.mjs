@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { buildAuthoredLevelOverlayMarkup } from "../../src/game-runtime/stage/authored-level-overlay.js";
 
 const markup = buildAuthoredLevelOverlayMarkup({
-  lineArtShapes: [
+  artShapes: [
     Object.freeze({
       id: "art_fixture_01",
       worldPoints: Object.freeze([

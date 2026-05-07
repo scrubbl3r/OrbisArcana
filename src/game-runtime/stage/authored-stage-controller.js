@@ -205,7 +205,7 @@ export function createAuthoredStageController({
           ? state.levelGraphicsModel.starsField
           : null,
         loops: state.sceneModel.loops,
-        lineArtShapes: [],
+        artShapes: [],
         worldWidthPx: state.worldWidthPx,
         worldHeightPx: state.worldHeightPx,
       });
@@ -214,7 +214,7 @@ export function createAuthoredStageController({
         refs.topArtOverlay.innerHTML = buildOverlayMarkup({
           starsField: null,
           loops: [],
-          lineArtShapes: state.sceneModel.lineArtShapes,
+          artShapes: state.sceneModel.artShapes,
           worldWidthPx: state.worldWidthPx,
           worldHeightPx: state.worldHeightPx,
         });

@@ -112,10 +112,10 @@ export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
     adapter: createOrbStageRuntimeAdapter({
       refs,
       level: resolvedLevel,
-      buildOverlayMarkup: (lineArtShapes = [], starsField = null, options = {}) => buildAuthoredLevelOverlayMarkup({
+      buildOverlayMarkup: (artShapes = [], starsField = null, options = {}) => buildAuthoredLevelOverlayMarkup({
         starsField,
         loops: [],
-        lineArtShapes,
+        artShapes,
         overlayId: "orbStageWorldOverlay",
         worldWidthPx: options.worldWidthPx,
         worldHeightPx: options.worldHeightPx,
