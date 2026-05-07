@@ -20,7 +20,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260507a";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260507b";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -248,8 +248,6 @@ export async function loadReceiverInitModules() {
     { createInputSystemsBundle },
     { createWorldSystem },
     { createResourcesSystem },
-    { createOrbSystemsBundle },
-    { createOrbFxSystem },
     { createVoiceProviderManager },
     { createKwsProvider },
     { createOpenWakeWordBrowserBackendFactory },
@@ -301,8 +299,6 @@ export async function loadReceiverInitModules() {
     import("../game-runtime/input/input-systems-bundle.js"),
     import(`../game-runtime/world/world-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import(`../game-runtime/resources/resources-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
-    import("../game-runtime/orb/orb-systems-bundle.js"),
-    import(`../game-runtime/orb/orb-globes-runtime.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../voice/providers/voice-provider-manager.js"),
     import("../voice/providers/kws-provider.js"),
     import(`../voice/kws/openwakeword-browser-backend.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
@@ -354,8 +350,6 @@ export async function loadReceiverInitModules() {
     createInputSystemsBundle,
     createWorldSystem,
     createResourcesSystem,
-    createOrbSystemsBundle,
-    createOrbFxSystem,
     createVoiceProviderManager,
     createKwsProvider,
     createOpenWakeWordBrowserBackendFactory,
