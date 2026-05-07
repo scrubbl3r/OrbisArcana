@@ -1,5 +1,4 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js?v=20260506a";
-import { createLegacyDomTeleportRuntime } from "../../../vfx/effects/spells/teleport-legacy-dom-runtime.js";
 import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js?v=20260501a";
 import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/teleport-behavior-state.js?v=20260501a";
 import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501d";
@@ -88,7 +87,6 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
 
 export function initOrbStageReceiverVfxRuntime({
   runtime = null,
-  orbStageLegacyDomEls = {},
   vfxDefaults = null,
   playElectricAoeRuntime = null,
   playFlameAoeRuntime = null,
@@ -102,7 +100,6 @@ export function initOrbStageReceiverVfxRuntime({
   cancelCameraTravel = null,
 } = {}) {
   if (!runtime || !vfxDefaults) return null;
-  const orbStageLegacyDomElements = orbStageLegacyDomEls || {};
   const markTrace = (name, value = {}) => {
     const perfTrace = runtime && runtime.perfTrace;
     if (perfTrace && typeof perfTrace.mark === "function") {
@@ -110,47 +107,6 @@ export function initOrbStageReceiverVfxRuntime({
     }
   };
 
-  const stageVfx = {
-    vfxDefaults,
-    legacyDomTeleportRuntime: createLegacyDomTeleportRuntime({
-      orbEl: orbStageLegacyDomElements.orb,
-      orbInteriorEl: orbStageLegacyDomElements.orbInterior,
-      orbCracksEl: orbStageLegacyDomElements.orbCracks,
-      getOrbRuntime: () => (
-        runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.get === "function"
-          ? runtime.stage.orbRuntimeState.get()
-          : null
-      ),
-      patchOrbRuntime: (patch = {}) => (
-        runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.patch === "function"
-          ? runtime.stage.orbRuntimeState.patch(patch)
-          : null
-      ),
-      requestCameraTravel: (payload = {}) => (
-        typeof requestCameraTravel === "function"
-          ? requestCameraTravel(payload)
-          : Promise.resolve({ handled: false })
-      ),
-      cancelCameraTravel: () => {
-        if (typeof cancelCameraTravel === "function") cancelCameraTravel();
-      },
-      getConfig: () => ({
-        ...(
-          vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object"
-            ? vfxDefaults.teleport
-            : Object.create(null)
-        ),
-        ...buildTeleportBehaviorConfig(
-          vfxDefaults &&
-          vfxDefaults.behaviors &&
-          vfxDefaults.behaviors.teleport &&
-          typeof vfxDefaults.behaviors.teleport === "object"
-            ? vfxDefaults.behaviors.teleport
-            : Object.create(null)
-        ),
-      }),
-    }),
-  };
   const getTeleportRuntimeConfig = () => ({
     ...(
       vfxDefaults && vfxDefaults.teleport && typeof vfxDefaults.teleport === "object"
@@ -299,21 +255,12 @@ export function initOrbStageReceiverVfxRuntime({
       const result = teleport3dSequenceRuntime.play(payload);
       if (result && result.handled) return result;
     }
-    if (stageVfx.legacyDomTeleportRuntime && typeof stageVfx.legacyDomTeleportRuntime.play === "function") {
-      return stageVfx.legacyDomTeleportRuntime.play(payload);
-    }
     return { handled: false };
-  }
-
-  function clearOrbStageLegacyDomOrbDeathVfx() {
-    if (stageVfx.legacyDomTeleportRuntime && typeof stageVfx.legacyDomTeleportRuntime.clear === "function") {
-      stageVfx.legacyDomTeleportRuntime.clear();
-    }
   }
 
   const shellVfx = {
     vfxDefaults,
-    clearLegacyDomOrbDeathVfx: clearOrbStageLegacyDomOrbDeathVfx,
+    clearLegacyDomOrbDeathVfx: () => {},
     clearOrbStageLegacyDomOrbShatterRuntime,
     getOrbStageLegacyDomOrbShatterRuntime,
     playShock() {
