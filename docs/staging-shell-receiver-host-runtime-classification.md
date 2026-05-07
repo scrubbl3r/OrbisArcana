@@ -80,7 +80,7 @@ They belong either in `staging-shell` or in an explicit shell hook object passed
 
 These parts look transitional and likely should not survive as-is:
 
-- direct inline `processIncomingImpulse(...)` definition inside the bootstrap function
+- shell-owned `processIncomingImpulse(...)` assignment after adapter construction
 
 These are the most obvious cleanup targets once the main extraction seam is chosen.
 
@@ -111,13 +111,12 @@ This should stay explicit and injected, not hidden.
 
 ### Seam 3: Impulse processing adapter
 
-`receiverHostState.processIncomingImpulse(...)` is its own seam:
+`receiverHostRuntime.processIncomingImpulse(...)` is its own seam:
 
 - ingest input packet
-- compute processed frame
 - update stability visuals
 - route shake sample
-- render HUD
+- leave HUD rendering in the shell-owned `MotionStore` path
 
 This is partly shared receiver behavior and partly shell-view glue.
 
@@ -147,7 +146,7 @@ Create a helper with a shape roughly like:
   - started systems
   - `eventBinder`
   - `receiverRuntime`
-  - a `processIncomingImpulse(...)` function or the pieces needed to build it
+- a `processIncomingImpulse(...)` function or the pieces needed to build it
 
 The first version can still live close to `staging-shell`, but it should be a distinct bootstrap seam rather than inline shell code.
 
@@ -156,7 +155,7 @@ The first version can still live close to `staging-shell`, but it should be a di
 If we want the safest next code step:
 
 - extract the receiver runtime assembly/startup portion into one dedicated helper
-- leave `processIncomingImpulse(...)` in `staging-shell` for one more cycle
+- leave `processIncomingImpulse(...)` attached by `staging-shell` for one more cycle
 - leave shell gesture/lamp/float hooks in `staging-shell`
 
 That gives us the cleanest low-risk path toward making `staging-shell` the real primary host without destabilizing the active behavior.

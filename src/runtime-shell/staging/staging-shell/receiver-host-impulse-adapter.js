@@ -11,7 +11,7 @@ export function attachShellReceiverHostImpulseAdapter({
     return null;
   }
 
-  receiverHostState.processIncomingImpulse = (d = {}) => {
+  const processIncomingImpulse = (d = {}) => {
     const inputSystem = receiverHostState.inputSystem;
     const inputGestureSystem = receiverHostState.inputGestureSystem;
     const inputDynamicsSystem = receiverHostState.inputDynamicsSystem;
@@ -75,5 +75,5 @@ export function attachShellReceiverHostImpulseAdapter({
 
   };
 
-  return receiverHostState.processIncomingImpulse;
+  return processIncomingImpulse;
 }
