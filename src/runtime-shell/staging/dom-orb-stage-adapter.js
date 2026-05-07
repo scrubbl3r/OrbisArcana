@@ -5,7 +5,7 @@ function lineToPath(seg) {
   return `M ${Number(seg.a.x).toFixed(2)} ${Number(seg.a.y).toFixed(2)} L ${Number(seg.b.x).toFixed(2)} ${Number(seg.b.y).toFixed(2)}`;
 }
 
-export function createDomOrbStageAdapter({
+export function createLegacyDomOrbStageAdapter({
   refs = {},
   getOrbWrapPosition = null,
 } = {}) {
@@ -41,7 +41,7 @@ export function createDomOrbStageAdapter({
         refs.orbWrap.style.transform = nextTransform;
       }
     },
-    renderOrbDamageVisuals({
+    renderLegacyDomOrbDamageVisuals({
       fx = null,
     } = {}) {
       if (!refs.orb || !refs.orbCracks) return;
@@ -103,7 +103,7 @@ export function createDomOrbStageAdapter({
         refs.orbCracks.innerHTML = nextMarkup;
       }
     },
-    createOrbShatterController({
+    createLegacyDomOrbShatterController({
       root = refs.root,
       getOrbShatterRuntime = () => null,
       getOrbColorState = () => null,

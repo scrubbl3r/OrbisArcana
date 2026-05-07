@@ -1,5 +1,5 @@
 import { createGameStageRuntimeAdapter } from "../game-stage/game-stage-runtime-adapter.js?v=20260506a";
-import { createDomOrbStageAdapter as createLegacyDomOrbStageAdapter } from "../dom-orb-stage-adapter.js";
+import { createLegacyDomOrbStageAdapter } from "../dom-orb-stage-adapter.js";
 
 const ORB_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 
@@ -87,8 +87,8 @@ export function createOrbStageRuntimeAdapter({
         shared3dAdapter.applyOrbTransform(args);
       }
     },
-    renderLegacyDomOrbDamageVisuals: legacyDomOrbAdapter.renderOrbDamageVisuals,
-    createLegacyDomOrbShatterController: legacyDomOrbAdapter.createOrbShatterController,
+    renderLegacyDomOrbDamageVisuals: legacyDomOrbAdapter.renderLegacyDomOrbDamageVisuals,
+    createLegacyDomOrbShatterController: legacyDomOrbAdapter.createLegacyDomOrbShatterController,
     getStageElements() {
       return Object.freeze({
         ...shared3dAdapter.getStageElements(),
