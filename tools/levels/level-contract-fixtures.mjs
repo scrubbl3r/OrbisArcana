@@ -23,6 +23,19 @@ export const EXPECTED_LEVEL_SEMANTIC_LAYERS = Object.freeze([
   }),
 ]);
 
+export const DEPRECATED_LEVEL_SEMANTIC_LAYER_KEYS = Object.freeze([
+  "actorItems",
+  "bounds",
+  "boundsCam",
+  "camera",
+  "camera_boundary",
+  "depth",
+  "globes",
+  "lineArt",
+  "spawn",
+  "starsField",
+]);
+
 export const EXPECTED_LEVEL_WORLD_SIZES = Object.freeze({
   "reactor-shaft": Object.freeze({
     widthPx: 8192,

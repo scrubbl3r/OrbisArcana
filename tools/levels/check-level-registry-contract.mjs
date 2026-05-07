@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { LEVELS, LEVELS_BY_ID, getLevelById } from "../../src/content/levels/registry.js";
 import {
   CANONICAL_LEVEL_IDS,
+  DEPRECATED_LEVEL_SEMANTIC_LAYER_KEYS,
   EXPECTED_LEVEL_SEMANTIC_LAYERS,
 } from "./level-contract-fixtures.mjs";
 import {
@@ -52,6 +53,16 @@ for (const expectation of EXPECTED_LEVEL_SEMANTIC_LAYERS) {
     expectation.labels,
     `${expectation.levelId} should expose normalized ${expectation.key} labels`
   );
+}
+for (const id of CANONICAL_LEVEL_IDS) {
+  const semanticLayers = getLevelById(id).mapSource.semanticLayers;
+  for (const key of DEPRECATED_LEVEL_SEMANTIC_LAYER_KEYS) {
+    assert.equal(
+      Object.hasOwn(semanticLayers, key),
+      false,
+      `${id} normalized semanticLayers should not expose deprecated ${key} alias`
+    );
+  }
 }
 assert.deepEqual(
   normalizeLevelDefinition({}).stage,

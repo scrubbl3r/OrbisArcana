@@ -66,20 +66,6 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
     semanticLayers.actorItems,
     semanticLayers.globes
   );
-  const actorItemLayers = normalizeLayerLabels(
-    semanticLayers.actorItems,
-    semanticLayers.worldItems,
-    semanticLayers.globes
-  );
-  const globeLayers = normalizeLayerLabels(
-    semanticLayers.globes,
-    semanticLayers.worldItems,
-    semanticLayers.actorItems
-  );
-  const lineArtLayers = normalizeLayerLabels(semanticLayers.lineArt, semanticLayers.art);
-  const artLayers = normalizeLayerLabels(semanticLayers.art, semanticLayers.lineArt);
-  const starsFieldLayers = normalizeLayerLabels(semanticLayers.starsField, semanticLayers.fields);
-  const fieldLayers = normalizeLayerLabels(semanticLayers.fields, semanticLayers.starsField);
   const cameraBoundsLayers = normalizeLayerLabels(semanticLayers.cameraBounds, semanticLayers.boundsCam);
   return Object.freeze({
     kind: String(mapSource.kind || "").trim(),
@@ -103,26 +89,14 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
     }),
     semanticLayers: Object.freeze({
       boundary: normalizeLayerLabels(semanticLayers.boundary, semanticLayers.bounds),
-      bounds: normalizeLayerLabels(semanticLayers.bounds, semanticLayers.boundary),
-      spawn: normalizeLayerLabels(semanticLayers.spawn, semanticLayers.spawns),
       spawns: normalizeLayerLabels(semanticLayers.spawns, semanticLayers.spawn),
-      camera: normalizeLayerLabels(semanticLayers.camera, semanticLayers.cameras),
       cameras: normalizeLayerLabels(semanticLayers.cameras, semanticLayers.camera),
       cameraBounds: cameraBoundsLayers,
-      depth: normalizeLayerLabels(semanticLayers.depth, semanticLayers.depths),
       depths: normalizeLayerLabels(semanticLayers.depths, semanticLayers.depth),
       worldItems: worldItemLayers,
-      actorItems: actorItemLayers,
-      globes: globeLayers,
       props: normalizeLayerLabels(semanticLayers.props),
-      lineArt: lineArtLayers,
-      art: artLayers,
-      starsField: starsFieldLayers,
-      fields: fieldLayers,
-      // Compatibility aliases while callers migrate from older field names.
-      boundsCam: cameraBoundsLayers,
-      // Compatibility alias while authored content migrates.
-      camera_boundary: cameraBoundsLayers,
+      art: normalizeLayerLabels(semanticLayers.art, semanticLayers.lineArt),
+      fields: normalizeLayerLabels(semanticLayers.fields, semanticLayers.starsField),
     }),
     spawnMarker: Object.freeze({
       id: String(mapSource.spawnMarker && mapSource.spawnMarker.id || "").trim(),
