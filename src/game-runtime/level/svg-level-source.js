@@ -579,6 +579,7 @@ export function buildSvgSpawnMarkers({
   worldWidthPx = 0,
   worldHeightPx = 0,
   spawnLayerLabels = [],
+  primarySpawnId = "",
   spawnMarkerId = "",
 } = {}) {
   const viewBox = parseSvgViewBox(svgText);
@@ -595,7 +596,7 @@ export function buildSvgSpawnMarkers({
         ...resolveSvgSourceStack(layer, index),
       })));
   }
-  const markerId = String(spawnMarkerId || "").trim();
+  const markerId = String(primarySpawnId || spawnMarkerId || "").trim();
   if (markerId) {
     circles = circles.filter((circle) => (
       String(circle && circle.id || "").trim() === markerId ||
@@ -1182,6 +1183,7 @@ export function summarizeSvgLevelSource({
   propLayerLabels = [],
   artLayerLabels = [],
   starsFieldLayerLabels = [],
+  primarySpawnId = "",
   spawnMarkerId = "",
   tileSizePx = LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX,
 } = {}) {
@@ -1198,6 +1200,7 @@ export function summarizeSvgLevelSource({
     worldWidthPx,
     worldHeightPx,
     spawnLayerLabels,
+    primarySpawnId,
     spawnMarkerId,
   });
   const cameraAnchors = buildSvgCameraAnchors({
