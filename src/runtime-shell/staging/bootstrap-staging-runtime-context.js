@@ -19,9 +19,6 @@ export function bootstrapStagingRuntimeContext({
   IMPACT_TH = 0,
   INPUT_DYNAMICS_CFG = {},
   INPUT_GESTURE_CFG = {},
-  ENERGY_BANK_CAP = 0,
-  ENERGY_SHAKE_COST = 0,
-  ENERGY_CHARGE_RATE_PPS = 0,
   ruleSchema = null,
   RULE_ENGINE_EXECUTE_ACTIONS = false,
   DEFAULT_KWS_LISTEN_POLICY_MODE = "A",
@@ -100,14 +97,7 @@ export function bootstrapStagingRuntimeContext({
   const inputSystem = inputSystemsBundle.inputSystem;
   const inputDynamicsSystem = inputSystemsBundle.inputDynamicsSystem;
   const inputGestureSystem = inputSystemsBundle.inputGestureSystem;
-  const resourcesSystem = createResourcesSystem({
-    eventBus,
-    config: {
-      energyBankCap: ENERGY_BANK_CAP,
-      energyShakeCost: ENERGY_SHAKE_COST,
-      energyChargeRatePps: ENERGY_CHARGE_RATE_PPS,
-    },
-  });
+  const resourcesSystem = createResourcesSystem({ eventBus });
 
   const spellDispatchSystem = createSpellDispatchSystem({
     eventBus,

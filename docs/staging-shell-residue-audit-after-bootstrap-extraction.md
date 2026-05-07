@@ -140,13 +140,7 @@ So even though the file is still large, it is less architecturally confused than
 
 `createShellReceiverConfigs()` still looks like duplicated policy/config residue.
 
-Notably:
-
-- `ENERGY_BANK_CAP`
-- `ENERGY_SHAKE_COST`
-- `ENERGY_CHARGE_RATE_PPS`
-
-Those names are legacy-shaped and do not reflect current design direction.
+The old energy-shaped constants have been removed from this config surface.
 
 This is a good cleanup target later, but not necessarily the highest-value next move.
 

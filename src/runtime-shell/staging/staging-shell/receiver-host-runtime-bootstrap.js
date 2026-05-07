@@ -70,9 +70,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
 
   const {
     IMPACT_TH,
-    ENERGY_BANK_CAP,
-    ENERGY_SHAKE_COST,
-    ENERGY_CHARGE_RATE_PPS,
     INPUT_GESTURE_CFG,
     INPUT_DYNAMICS_CFG,
   } = receiverConfigs || {};
@@ -125,9 +122,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     IMPACT_TH,
     INPUT_DYNAMICS_CFG,
     INPUT_GESTURE_CFG,
-    ENERGY_BANK_CAP,
-    ENERGY_SHAKE_COST,
-    ENERGY_CHARGE_RATE_PPS,
     ruleSchema: shellKws.ruleSchema,
     RULE_ENGINE_EXECUTE_ACTIONS: true,
     DEFAULT_KWS_LISTEN_POLICY_MODE: "A",

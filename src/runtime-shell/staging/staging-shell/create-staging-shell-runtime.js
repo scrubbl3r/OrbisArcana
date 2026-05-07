@@ -1314,9 +1314,6 @@ function forceShellShakeLampOff(shellContext) {
 function createShellReceiverConfigs() {
   return {
     IMPACT_TH: 750,
-    ENERGY_BANK_CAP: 1000,
-    ENERGY_SHAKE_COST: 100,
-    ENERGY_CHARGE_RATE_PPS: 160,
     INPUT_GESTURE_CFG: {
       shake: {
         cooldownMs: 2500,
@@ -2211,9 +2208,6 @@ async function initShellReceiverHostRuntime(shellContext) {
 
   const {
     IMPACT_TH,
-    ENERGY_BANK_CAP,
-    ENERGY_SHAKE_COST,
-    ENERGY_CHARGE_RATE_PPS,
     INPUT_GESTURE_CFG,
     INPUT_DYNAMICS_CFG,
   } = createShellReceiverConfigs();
@@ -2224,9 +2218,6 @@ async function initShellReceiverHostRuntime(shellContext) {
     sharedModules,
     shellKws,
     receiverConfigs: {
-      ENERGY_BANK_CAP,
-      ENERGY_SHAKE_COST,
-      ENERGY_CHARGE_RATE_PPS,
       IMPACT_TH,
       INPUT_GESTURE_CFG,
       INPUT_DYNAMICS_CFG,

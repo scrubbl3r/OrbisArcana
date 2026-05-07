@@ -80,10 +80,6 @@ They belong either in `staging-shell` or in an explicit shell hook object passed
 
 These parts look transitional and likely should not survive as-is:
 
-- old energy-oriented config names:
-  - `ENERGY_BANK_CAP`
-  - `ENERGY_SHAKE_COST`
-  - `ENERGY_CHARGE_RATE_PPS`
 - direct HUD rendering inside impulse ingestion:
   - `buildInputHudViewModel(...)`
   - `devStagingView.renderInputHud(...)`

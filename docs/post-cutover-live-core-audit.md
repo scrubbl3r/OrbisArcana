@@ -102,7 +102,7 @@ What remains valid:
 
 What looks like cleanup residue:
 
-- staging bootstrap still passes legacy energy config fields into `createResourcesSystem(...)`
+- staging bootstrap no longer passes legacy energy config fields into `createResourcesSystem(...)`
 - the system still travels through runtime context under the old broader “resources” framing
 
 This is now low-risk cleanup, not a live behavior problem.
@@ -115,11 +115,7 @@ These are still around, but they look more like cleanup polish than major archit
   - mostly inert / compatibility-oriented
 - `energyUI01` naming
   - now just raw normalized energy, not bank UI
-- staging bootstrap still accepts:
-  - `ENERGY_BANK_CAP`
-  - `ENERGY_SHAKE_COST`
-  - `ENERGY_CHARGE_RATE_PPS`
-  even though active runtime meaning has been removed
+- staging bootstrap no longer accepts the old energy config constants
 
 ## Recommended Next Targets
 
