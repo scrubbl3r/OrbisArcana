@@ -599,6 +599,14 @@ function shellOrbRadiusPx(shellContext) {
   return Number(stage && stage.phys && stage.phys.orbRadiusPx) || 50;
 }
 
+function shellOrbVisualRadiusPx(shellContext) {
+  const visualState = getShellOrbBaseVisualState(shellContext);
+  const visualRadiusPx = Number(visualState && visualState.radiusPx);
+  if (Number.isFinite(visualRadiusPx) && visualRadiusPx > 0) return visualRadiusPx;
+  const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
+  return Number(stage && stage.phys && stage.phys.orbRadiusPx) || 0;
+}
+
 function shellStageCenterX(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   if (runtime && runtime.frameMetrics && Number.isFinite(Number(runtime.frameMetrics.centerX))) {
@@ -2072,12 +2080,7 @@ async function initShellReceiverHostRuntime(shellContext) {
         return shellStageCenterX(shellContext);
       },
       getOrbScreenY: () => shellOrbScreenY(shellContext),
-      getOrbVisualRadiusPx: () => {
-        const visualState = getShellOrbBaseVisualState(shellContext);
-        const visualRadiusPx = Number(visualState && visualState.radiusPx);
-        if (Number.isFinite(visualRadiusPx) && visualRadiusPx > 0) return visualRadiusPx;
-        return Number(runtime.stage && runtime.stage.phys && runtime.stage.phys.orbRadiusPx) || 0;
-      },
+      getOrbVisualRadiusPx: () => shellOrbVisualRadiusPx(shellContext),
       axisToColor01,
       bindGlobe3dRuntime: (args = {}) => (
         shellContext.gameStageAdapter &&
