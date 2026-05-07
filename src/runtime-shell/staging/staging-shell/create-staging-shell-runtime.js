@@ -1739,8 +1739,8 @@ function bindShellStageActions(shellContext) {
 function resolveShellReceiverRuntime(runtime = null) {
   const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
   return (
-    (receiverHostRuntime && (receiverHostRuntime.receiverRuntime || receiverHostRuntime.mvp)) ||
-    (runtime && (runtime.receiverRuntime || runtime.mvp)) ||
+    (receiverHostRuntime && receiverHostRuntime.receiverRuntime) ||
+    (runtime && runtime.receiverRuntime) ||
     null
   );
 }

@@ -68,7 +68,6 @@ const CEIL_CONTACT_EPSILON_PX = 0.25;
  * @property {Object} phys Orb runtime physics config
  * @property {{vDownThr:number, graceMs:number}} shieldDescent Shield descent gate tuning
  * @property {Object} [receiverRuntime] Receiver runtime container (used for orb tick + impact application)
- * @property {Object} [mvp] Legacy alias for receiverRuntime
  * @property {Object} [orbFxSystem] Orb FX runtime system
  * @property {Object} [worldSystem] World runtime system
  * @property {Object} hooks Receiver-provided functions for math/helpers/render calls
@@ -93,12 +92,11 @@ export function runOrbRuntimePipeline({
   phys,
   shieldDescent,
   receiverRuntime,
-  mvp,
   orbFxSystem,
   worldSystem,
   hooks,
 } = {}){
-  const runtime = receiverRuntime || mvp || null;
+  const runtime = receiverRuntime || null;
   const state = (orbRuntimeState && typeof orbRuntimeState.get === "function")
     ? orbRuntimeState.get()
     : physState;
