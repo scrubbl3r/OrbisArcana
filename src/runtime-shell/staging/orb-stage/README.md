@@ -1,12 +1,11 @@
 Orb-stage is a staging surface for orb-focused runtime work. It is mounted by
 the staging shell, uses authored level data from the shared level domain, and
 hydrates that authored data through the shared stage controller and 3D depth
-runtime. The legacy DOM orb surface is still wired as a temporary compatibility
-layer while the migration finishes.
+runtime. The legacy DOM orb surface is not mounted here.
 
 This area should host:
 - orb-stage adapter code
-- stage-specific orb presentation code
+- stage-specific orb presentation hooks
 - staging-only orchestration around the orb surface
 
 Reusable gameplay systems and authored content should remain outside staging and
@@ -18,11 +17,9 @@ The stage is an adapter and coordinator. It wires authored presets, runtime
 events, and visible hosts together, delegates shared stage behavior through the
 game-stage adapter, and delegates effect internals to their domain runtime.
 
-- Temporary DOM/SVG receiver compatibility effects may use `src/vfx/effects/`
-  dispatch runtimes while their authored 3D replacements land.
 - True 3D orb effects should use `src/game-runtime/orb/` runtimes.
-- DOM compatibility versions of 3D-authored effects should be named as
-  temporary legacy DOM compatibility, not as the canonical 3D implementation.
+- Legacy DOM effect runtimes may remain in `src/vfx/effects/` for lab previews,
+  but orb-stage should not wire them as runtime fallbacks.
 - SVG level schema, hidden-layer hydration rules, and authored read-model
   access belong to `src/game-runtime/level/` and `src/content/levels/schema/`.
 
@@ -30,7 +27,6 @@ Current extraction boundary inside the staging shell:
 - the orb-stage mounted surface
 - authored stage controller, SVG overlay hydration, camera frame forwarding, and
   Three depth runtime
-- legacy DOM orb/VFX compatibility stack
 - death overlay
 
 Intentionally kept outside orb-stage:

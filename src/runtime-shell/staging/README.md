@@ -12,7 +12,8 @@ Current taxonomy:
 - `staging-shell` owns composition, mode switching, and shared staging runtime
   wiring.
 - `game-stage` is the canonical authored SVG/Three stage surface.
-- `orb-stage` is an orb-focused staging surface that now hydrates authored SVG
-  data through the shared stage controller and shared 3D adapter, while keeping
-  the legacy DOM orb path wired as a temporary compatibility layer.
+- `orb-stage` is an orb-focused staging surface that hydrates authored SVG data
+  through the shared stage controller, shared game-stage adapter, and shared
+  Three depth runtime. It does not mount the legacy DOM orb or DOM VFX fallback
+  stack.
 - `dev-staging` owns developer/operator panels.
