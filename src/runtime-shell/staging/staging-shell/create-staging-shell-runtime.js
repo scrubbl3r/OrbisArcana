@@ -1802,7 +1802,7 @@ function resetShellInputProcessingState(shellContext, atMs = performance.now()) 
 
 function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 0) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  const orbStageActions = getShellOrbStageActions(shellContext);
   if (!orbStageActions || typeof orbStageActions.teleportOrbToSpawnNeutralizePhysics !== "function") {
     return { handled: false };
   }
@@ -1883,7 +1883,7 @@ function bindShellPerfTraceControls(shellContext) {
 
 function shellGrantOrbGrace(shellContext, grace = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  const orbStageActions = getShellOrbStageActions(shellContext);
   if (!orbStageActions || typeof orbStageActions.grantOrbGrace !== "function") return;
   orbStageActions.grantOrbGrace({
     grace,
@@ -1991,29 +1991,25 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
 }
 
 function shellActivateBubbleShield(shellContext, { durationMs = 8000 } = {}) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  const orbStageActions = getShellOrbStageActions(shellContext);
   if (!orbStageActions || typeof orbStageActions.activateBubbleShield !== "function") return;
   orbStageActions.activateBubbleShield({ durationMs });
 }
 
 function shellPlayFlameAoe(shellContext, payload = {}) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  const orbStageActions = getShellOrbStageActions(shellContext);
   if (!orbStageActions || typeof orbStageActions.playFlameAoe !== "function") return { handled: false };
   return orbStageActions.playFlameAoe(payload);
 }
 
 function shellApplyColorize(shellContext, payload = {}) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  const orbStageActions = getShellOrbStageActions(shellContext);
   if (!orbStageActions || typeof orbStageActions.applyColorize !== "function") return;
   orbStageActions.applyColorize(payload);
 }
 
 function shellClearColorize(shellContext) {
-  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
-  const orbStageActions = runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+  const orbStageActions = getShellOrbStageActions(shellContext);
   if (!orbStageActions || typeof orbStageActions.clearColorize !== "function") return;
   orbStageActions.clearColorize();
 }
@@ -2243,6 +2239,11 @@ function getActiveShellStageElements(shellContext) {
   return adapter && typeof adapter.getStageElements === "function"
     ? adapter.getStageElements()
     : {};
+}
+
+function getShellOrbStageActions(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  return runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
 }
 
 function assignShellStageElements(shellContext, nextStageEls = {}) {
