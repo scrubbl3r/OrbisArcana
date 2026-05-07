@@ -1,7 +1,8 @@
 Orb-stage is a staging surface for orb-focused runtime work. It is mounted by
 the staging shell, uses authored level data from the shared level domain, and
-currently keeps the legacy DOM orb surface wired while the 3D migration is
-prepared.
+hydrates that authored data through the shared stage controller and 3D depth
+runtime. The legacy DOM orb surface is still wired as a temporary compatibility
+layer while the migration finishes.
 
 This area should host:
 - orb-stage adapter code
@@ -14,8 +15,8 @@ be imported into this harness.
 ## VFX Boundary
 
 The stage is an adapter and coordinator. It wires authored presets, runtime
-events, and visible hosts together, then delegates effect internals to their
-domain runtime.
+events, and visible hosts together, delegates shared stage behavior through the
+game-stage adapter, and delegates effect internals to their domain runtime.
 
 - DOM/SVG receiver effects may use `src/vfx/effects/` dispatch runtimes.
 - True 3D orb effects should use `src/game-runtime/orb/` runtimes.
@@ -26,8 +27,9 @@ domain runtime.
 
 Current extraction boundary inside the staging shell:
 - the orb-stage mounted surface
-- authored backdrop/camera adapter hooks
-- legacy orb/VFX DOM stack
+- authored stage controller, SVG overlay hydration, camera frame forwarding, and
+  Three depth runtime
+- legacy DOM orb/VFX compatibility stack
 - death overlay
 
 Intentionally kept outside orb-stage:
