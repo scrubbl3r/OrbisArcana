@@ -1,3 +1,9 @@
+function clearLegacyDomOrbShatterPresentation({
+  clearLegacyDomOrbShatterRuntime = () => {},
+} = {}) {
+  clearLegacyDomOrbShatterRuntime();
+}
+
 export function bootstrapStagingRuntimeBundle({
   eventBus,
   gameState,
@@ -82,7 +88,9 @@ export function bootstrapStagingRuntimeBundle({
     receiverRuntime.orbSystem.revive({ health: 300, atMs: performance.now() });
   }
   receiverRuntime.lastImpact = null;
-  clearLegacyDomOrbShatterRuntime();
+  clearLegacyDomOrbShatterPresentation({
+    clearLegacyDomOrbShatterRuntime,
+  });
   setOrbInputSuppressed(false);
   if (orbFxSystem && typeof orbFxSystem.reset === "function") orbFxSystem.reset();
   if (worldSystem && typeof worldSystem.reset === "function") worldSystem.reset(performance.now());
