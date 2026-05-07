@@ -491,12 +491,9 @@ function shellResolvedWorldItems(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const readModelWorldItems = resolveAuthoredLevelReadModelArray(runtime, AUTHORED_LEVEL_READ_MODEL_KEY_WORLD_ITEMS);
   if (readModelWorldItems.length) return readModelWorldItems;
-  const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-  return (
-    activeStageAdapter &&
-    typeof activeStageAdapter.getWorldItems === "function"
-  )
-    ? activeStageAdapter.getWorldItems()
+  const getWorldItems = getActiveShellStageMethod(shellContext, "getWorldItems");
+  return getWorldItems
+    ? getWorldItems.method.call(getWorldItems.activeAdapter)
     : [];
 }
 
@@ -2453,12 +2450,9 @@ async function hydrateShellAuthoredLevelReadModel(shellContext) {
     return null;
   }
   try {
-    const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-    const adapterReadModel = (
-      activeStageAdapter &&
-      typeof activeStageAdapter.getAuthoredSceneReadModel === "function"
-    )
-      ? activeStageAdapter.getAuthoredSceneReadModel()
+    const getAuthoredSceneReadModel = getActiveShellStageMethod(shellContext, "getAuthoredSceneReadModel");
+    const adapterReadModel = getAuthoredSceneReadModel
+      ? getAuthoredSceneReadModel.method.call(getAuthoredSceneReadModel.activeAdapter)
       : null;
     const adapterLevel = adapterReadModel && adapterReadModel.level ? adapterReadModel.level : null;
     const adapterAssetUrl = String(
