@@ -8,12 +8,6 @@ import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/t
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
-import {
-  resolveBubbleShieldGeometry,
-  resolveElectricAoeGeometry,
-  resolveFlameAoeGeometry,
-  resolveShockwaveGeometry,
-} from "../../../game-runtime/orb/orb-spell-geometry.js";
 
 export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => value } = {}) {
   const defaults = {
@@ -97,8 +91,6 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
 export function initOrbStageReceiverVfxRuntime({
   runtime = null,
   orbStageLegacyDomEls = {},
-  createLegacyDomVfxRuntimesBundle = null,
-  rootStyle = null,
   vfxDefaults = null,
   playElectricAoeRuntime = null,
   playFlameAoeRuntime = null,
@@ -108,11 +100,6 @@ export function initOrbStageReceiverVfxRuntime({
   playBubbleShield3dRuntime = null,
   playShockwave3dRuntime = null,
   playFlameAoe3dRuntime = null,
-  clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
-  clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
-  evenPx = (value) => value,
-  evenStroke = (value) => value,
-  rand = (min, max) => Number(min) + (Math.random() * (Number(max) - Number(min))),
   getOrbScaleFactor = () => 1,
   getOrbDiameterPx = () => Math.max(1, Number(getOrbScaleFactor()) || 1) * 100,
   requestCameraTravel = null,
@@ -131,62 +118,8 @@ export function initOrbStageReceiverVfxRuntime({
     }
   };
 
-  const orbStageLegacyDomVfxRuntimesBundle = typeof createLegacyDomVfxRuntimesBundle === "function"
-    ? createLegacyDomVfxRuntimesBundle({
-        legacyDomBubbleShield: {
-          shieldEl: orbStageLegacyDomElements.shield,
-          getConfig: () => resolveBubbleShieldGeometry(vfxDefaults.shield, {
-            orbDiameterPx: readOrbDiameterPx(),
-            normalizeStroke: (value) => evenStroke(value, 1, 64),
-          }),
-          setCssVar: (name, value) => {
-            if (rootStyle) rootStyle.setProperty(name, value);
-          },
-          clamp,
-          clamp01,
-          fadeInMs: 750,
-          decayMs: 2000,
-          onDecayActiveChange: () => {},
-        },
-        legacyDomShockwave: {
-          layerEl: orbStageLegacyDomElements.shockLayer,
-          getConfig: () => resolveShockwaveGeometry(vfxDefaults.shock, {
-            orbDiameterPx: readOrbDiameterPx(),
-            normalizeStroke: (value) => evenStroke(value, 1, 64),
-          }),
-          clamp,
-          normalizeStroke: evenStroke,
-        },
-        legacyDomOrbShatter: {
-          layerEl: orbStageLegacyDomElements.orbShards,
-          clamp,
-        },
-        legacyDomFlameAoe: {
-          layerEl: orbStageLegacyDomElements.flameLayer,
-          getConfig: () => resolveFlameAoeGeometry(vfxDefaults.flame, {
-            orbDiameterPx: readOrbDiameterPx(),
-          }),
-          clamp,
-          evenPx,
-          showCore: false,
-        },
-        legacyDomElectricAoe: {
-          layerEl: orbStageLegacyDomElements.electricLayer,
-          getConfig: () => resolveElectricAoeGeometry(vfxDefaults.electric, {
-            orbDiameterPx: readOrbDiameterPx(),
-          }),
-          clamp,
-          evenPx,
-          rand,
-        },
-      })
-    : null;
-
   const stageVfx = {
     vfxDefaults,
-    legacyDomBubbleShieldRuntime: orbStageLegacyDomVfxRuntimesBundle && orbStageLegacyDomVfxRuntimesBundle.legacyDomBubbleShieldRuntime,
-    legacyDomShockwaveRuntime: orbStageLegacyDomVfxRuntimesBundle && orbStageLegacyDomVfxRuntimesBundle.legacyDomShockwaveRuntime,
-    legacyDomOrbShatterRuntime: orbStageLegacyDomVfxRuntimesBundle && orbStageLegacyDomVfxRuntimesBundle.legacyDomOrbShatterRuntime,
     legacyDomOrbNodRuntime: createLegacyDomOrbNodRuntime({
       orbEl: orbStageLegacyDomElements.orb,
       mountEl: orbStageLegacyDomElements.orb ? orbStageLegacyDomElements.orb.parentElement : null,
@@ -247,8 +180,6 @@ export function initOrbStageReceiverVfxRuntime({
         ),
       }),
     }),
-    legacyDomFlameAoeRuntime: orbStageLegacyDomVfxRuntimesBundle && orbStageLegacyDomVfxRuntimesBundle.legacyDomFlameAoeRuntime,
-    legacyDomElectricAoeRuntime: orbStageLegacyDomVfxRuntimesBundle && orbStageLegacyDomVfxRuntimesBundle.legacyDomElectricAoeRuntime,
   };
   const getTeleportRuntimeConfig = () => ({
     ...(
@@ -286,14 +217,6 @@ export function initOrbStageReceiverVfxRuntime({
     ),
   });
 
-  function playOrbStageShockFallback() {
-    if (stageVfx.legacyDomShockwaveRuntime && typeof stageVfx.legacyDomShockwaveRuntime.play === "function") {
-      stageVfx.legacyDomShockwaveRuntime.play();
-      return { handled: true };
-    }
-    return { handled: false };
-  }
-
   function playOrbStageShockwave3dFallback(payload = {}) {
     if (typeof playShockwave3dRuntime === "function") {
       const result = playShockwave3dRuntime({
@@ -311,29 +234,16 @@ export function initOrbStageReceiverVfxRuntime({
     const shockwave3dResult = playOrbStageShockwave3dFallback();
     if (shockwave3dResult && shockwave3dResult.handled) return shockwave3dResult;
     if (typeof triggerShockwaveRuntime === "function") {
-      const result = triggerShockwaveRuntime({
-        legacyDomShockwaveRuntime: stageVfx.legacyDomShockwaveRuntime,
-        playShock: () => playOrbStageShockFallback(),
-      });
+      const result = triggerShockwaveRuntime();
       if (result && result.handled) return result;
     }
-    if (stageVfx.legacyDomShockwaveRuntime && typeof stageVfx.legacyDomShockwaveRuntime.trigger === "function") {
-      stageVfx.legacyDomShockwaveRuntime.trigger();
-      return { handled: true };
-    }
-    return playOrbStageShockFallback();
+    return { handled: false };
   }
 
   function playOrbStageElectricAoeFallback() {
     if (typeof playElectricAoeRuntime === "function") {
-      const result = playElectricAoeRuntime({
-        legacyDomElectricAoeRuntime: stageVfx.legacyDomElectricAoeRuntime,
-      });
+      const result = playElectricAoeRuntime();
       if (result && result.handled) return result;
-    }
-    if (stageVfx.legacyDomElectricAoeRuntime && typeof stageVfx.legacyDomElectricAoeRuntime.play === "function") {
-      stageVfx.legacyDomElectricAoeRuntime.play();
-      return { handled: true };
     }
     return { handled: false };
   }
@@ -348,14 +258,8 @@ export function initOrbStageReceiverVfxRuntime({
       if (result && result.handled) return result;
     }
     if (typeof playFlameAoeRuntime === "function") {
-      const result = playFlameAoeRuntime({
-        legacyDomFlameAoeRuntime: stageVfx.legacyDomFlameAoeRuntime,
-      });
+      const result = playFlameAoeRuntime();
       if (result && result.handled) return result;
-    }
-    if (stageVfx.legacyDomFlameAoeRuntime && typeof stageVfx.legacyDomFlameAoeRuntime.play === "function") {
-      stageVfx.legacyDomFlameAoeRuntime.play();
-      return { handled: true };
     }
     return { handled: false };
   }
@@ -365,7 +269,6 @@ export function initOrbStageReceiverVfxRuntime({
     markTrace("orbStage.bubbleShield.activate.request", {
       durationMs: resolvedDurationMs,
       has3dRuntime: typeof playBubbleShield3dRuntime === "function",
-      hasLegacyDomRuntime: !!(stageVfx.legacyDomBubbleShieldRuntime && typeof stageVfx.legacyDomBubbleShieldRuntime.activate === "function"),
     });
     if (typeof playBubbleShield3dRuntime === "function") {
       const result = playBubbleShield3dRuntime({
@@ -379,15 +282,6 @@ export function initOrbStageReceiverVfxRuntime({
         skipped: String(result && result.skipped || ""),
       });
       if (result && result.handled) return result;
-    }
-    if (stageVfx.legacyDomBubbleShieldRuntime && typeof stageVfx.legacyDomBubbleShieldRuntime.activate === "function") {
-      stageVfx.legacyDomBubbleShieldRuntime.activate({
-        durationMs: resolvedDurationMs,
-      });
-      markTrace("orbStage.bubbleShield.activate.legacy_dom_runtime", {
-        durationMs: resolvedDurationMs,
-      });
-      return { handled: true };
     }
     markTrace("orbStage.bubbleShield.activate.failed", {
       durationMs: resolvedDurationMs,
@@ -405,7 +299,7 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function getOrbStageLegacyDomOrbShatterRuntime() {
-    return stageVfx.legacyDomOrbShatterRuntime || null;
+    return null;
   }
 
   function clearOrbStageLegacyDomOrbShatterRuntime() {
@@ -455,18 +349,6 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function clearOrbStageLegacyDomOrbDeathVfx() {
-    if (stageVfx.legacyDomShockwaveRuntime && typeof stageVfx.legacyDomShockwaveRuntime.clear === "function") {
-      stageVfx.legacyDomShockwaveRuntime.clear();
-    }
-    if (stageVfx.legacyDomFlameAoeRuntime && typeof stageVfx.legacyDomFlameAoeRuntime.clear === "function") {
-      stageVfx.legacyDomFlameAoeRuntime.clear();
-    }
-    if (stageVfx.legacyDomElectricAoeRuntime && typeof stageVfx.legacyDomElectricAoeRuntime.clear === "function") {
-      stageVfx.legacyDomElectricAoeRuntime.clear();
-    }
-    if (stageVfx.legacyDomBubbleShieldRuntime && typeof stageVfx.legacyDomBubbleShieldRuntime.off === "function") {
-      stageVfx.legacyDomBubbleShieldRuntime.off();
-    }
     if (stageVfx.legacyDomOrbNodRuntime && typeof stageVfx.legacyDomOrbNodRuntime.clear === "function") {
       stageVfx.legacyDomOrbNodRuntime.clear();
     }
@@ -481,7 +363,7 @@ export function initOrbStageReceiverVfxRuntime({
     clearOrbStageLegacyDomOrbShatterRuntime,
     getOrbStageLegacyDomOrbShatterRuntime,
     playShock() {
-      return playOrbStageShockFallback();
+      return playOrbStageShockwave3dFallback();
     },
     triggerShockwave() {
       const dispatched = dispatchRuntimeEffect({
