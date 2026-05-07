@@ -102,6 +102,14 @@ assert.equal(
   LEVEL_POINT_Y_MODE_FALLBACK,
   "normalized spawn yMode should use named point fallback"
 );
+assert.deepEqual(
+  normalizeLevelDefinition({
+    terrain: { profile: ["canonical"] },
+    terrainProfile: ["deprecated"],
+  }).terrain.profile,
+  ["canonical"],
+  "normalized terrain profile should use terrain.profile only"
+);
 assert.equal(
   normalizeLevelWorldItemSpawn({
     kind: LEVEL_WORLD_ITEM_KIND_ENERGY_GLOBE_EMITTER,

@@ -133,8 +133,9 @@ export function normalizeLevelDefinition(level = {}) {
   const spawn = cloneJsonLike(source.spawn, {});
   const cameraAnchors = Array.isArray(source.cameraAnchors) ? source.cameraAnchors.slice() : [];
   const mapSource = cloneJsonLike(source.mapSource, {});
+  const sourceTerrain = cloneJsonLike(source.terrain, {});
   const sourceElements = cloneJsonLike(source.elements, {});
-  const terrainProfile = Array.isArray(source.terrainProfile) ? source.terrainProfile.slice() : [];
+  const terrainProfile = Array.isArray(sourceTerrain.profile) ? sourceTerrain.profile.slice() : [];
   const worldItemSpawns = Array.isArray(sourceElements.worldItemSpawns)
     ? sourceElements.worldItemSpawns.slice()
     : [];
