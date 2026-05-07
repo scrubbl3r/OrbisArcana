@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507i";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507j";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-stage-backdrop.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507w";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507x";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1677,9 +1677,7 @@ function renderShellOrbDamageVisuals(shellContext) {
   const legacyDomRenderMethod = getActiveShellStageMethod(shellContext, "renderLegacyDomOrbDamageVisuals");
   if (legacyDomRenderMethod) {
     legacyDomRenderMethod.method.call(legacyDomRenderMethod.activeAdapter, { fx });
-    return;
   }
-  callActiveShellStageMethod(shellContext, "renderOrbDamageVisuals", { fx });
 }
 
 function openShellDeathOverlay(shellContext) {
@@ -2265,9 +2263,9 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
 
   runtime.orbStageActions = createShellOrbStageActions(shellContext);
 
-  const createOrbShatterController = (
-    getActiveShellStageMethod(shellContext, "createLegacyDomOrbShatterController") ||
-    getActiveShellStageMethod(shellContext, "createOrbShatterController")
+  const createOrbShatterController = getActiveShellStageMethod(
+    shellContext,
+    "createLegacyDomOrbShatterController"
   );
   const legacyDomOrbShatterRuntime = (
     runtime.vfx &&
