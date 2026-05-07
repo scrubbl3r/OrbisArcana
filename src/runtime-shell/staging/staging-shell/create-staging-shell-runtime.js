@@ -29,6 +29,7 @@ import {
   bindShellRootWakeWindows,
   bindShellWakeWindowVisuals,
 } from "./kws-wake-window-bridge.js";
+import { bindShellRuleActionRuntime } from "./shell-rule-action-runtime.js";
 import {
   createStagingShellModeController,
   STAGING_DEV_STAGE_VISIBILITY,
@@ -2264,52 +2265,6 @@ async function initShellReceiverHostRuntime(shellContext) {
   return runtime.receiverImpulseRuntime;
 }
 
-function bindShellRuleActionRuntime({
-  shellContext,
-  eventBus,
-  ruleSchema = null,
-  executeWordCastAction = () => ({ handled: false }),
-  kwsBridge = null,
-} = {}) {
-  if (!eventBus || typeof eventBus.on !== "function") {
-    return { dispose() {} };
-  }
-  const bindings = (ruleSchema && ruleSchema.eventRuntimeBindings && typeof ruleSchema.eventRuntimeBindings === "object")
-    ? ruleSchema.eventRuntimeBindings
-    : Object.create(null);
-  const off = eventBus.on("rule_engine.action_executed", (p = {}) => {
-    const actionType = String(p.actionType || "").trim().toLowerCase();
-    const actionId = String(p.actionId || "").trim().toLowerCase();
-    if (actionType !== "event") return;
-    const binding = bindings[actionId] || null;
-    const runtime = binding && binding.runtime && typeof binding.runtime === "object"
-      ? binding.runtime
-      : null;
-    const kind = String(runtime && runtime.kind || "").trim().toLowerCase();
-    if (kind !== "cast_action") return;
-    const castActionId = String(runtime && runtime.castActionId || "").trim().toLowerCase();
-    if (!castActionId) return;
-    const result = executeWordCastAction(castActionId, {
-      intent: "rule_engine.event",
-      payload: {
-        trigger: "rule_engine",
-        actionId,
-        ruleId: String(p.ruleId || ""),
-        atMs: Number(p.atMs) || performance.now(),
-        ...(p && typeof p.args === "object" ? p.args : {}),
-      },
-    });
-    if (kwsBridge && typeof kwsBridge.pushLogLine === "function") {
-      kwsBridge.pushLogLine(`TRACE exec:${castActionId}:${result && result.handled ? "ok" : "miss"}`, result && result.handled ? "ok" : "warn");
-    }
-  });
-  return {
-    dispose() {
-      try { off(); } catch (_) {}
-    },
-  };
-}
-
 function createShellSurfaceRefs({ devStagingView, orbStageView, gameStageView } = {}) {
   return {
     dev: devStagingView && devStagingView.refs ? devStagingView.refs : Object.create(null),
@@ -3081,7 +3036,6 @@ async function initShellKwsRuntime(shellContext) {
     return shellExecuteWordCastAction(shellContext, castActionId, context);
   };
   const shellRuleActionRuntime = bindShellRuleActionRuntime({
-    shellContext,
     eventBus,
     ruleSchema,
     executeWordCastAction: executeShellWordCastAction,
