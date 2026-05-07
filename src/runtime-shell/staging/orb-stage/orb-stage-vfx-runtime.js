@@ -476,7 +476,6 @@ export function initOrbStageReceiverVfxRuntime({
 
   const shellVfx = {
     vfxDefaults,
-    legacyDomVfxRuntimesBundle,
     clearLegacyDomOrbRuntimeFx,
     clearLegacyDomOrbShatterRuntime,
     getLegacyDomOrbShatterRuntime,

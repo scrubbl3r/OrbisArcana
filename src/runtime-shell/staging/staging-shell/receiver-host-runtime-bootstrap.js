@@ -343,9 +343,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     ),
   });
 
-  const legacyDomVfxRuntimesBundle = runtime.vfx
-    ? runtime.vfx.legacyDomVfxRuntimesBundle
-    : null;
   const receiverRuntime = bootstrapStagingRuntimeBundle({
     eventBus: runtime.eventBus,
     gameState: runtimeContext.gameState,
@@ -373,8 +370,11 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     grantOrbGrace: (grace) => {
       if (shellHooks && typeof shellHooks.grantOrbGrace === "function") shellHooks.grantOrbGrace(grace);
     },
-    legacyDomOrbShatterRuntime: legacyDomVfxRuntimesBundle
-      ? legacyDomVfxRuntimesBundle.orbShatterRuntime
+    legacyDomOrbShatterRuntime: (
+      runtime.vfx &&
+      typeof runtime.vfx.getLegacyDomOrbShatterRuntime === "function"
+    )
+      ? runtime.vfx.getLegacyDomOrbShatterRuntime()
       : null,
     worldSystem: stageAdapters && typeof stageAdapters.getWorldSystem === "function" ? stageAdapters.getWorldSystem() : null,
     clearDeathOverlaySchedule: () => {
