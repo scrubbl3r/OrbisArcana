@@ -48,7 +48,7 @@ function collectLegacyDomOrbRefs(stageRefs = {}) {
   return collectOrbStageRefs(stageRefs, ORB_STAGE_LEGACY_DOM_ORB_REF_KEYS);
 }
 
-function resolveDomOrbWrapPosition({ top = 0, left = "50%" } = {}) {
+function resolveLegacyDomOrbWrapPosition({ top = 0, left = "50%" } = {}) {
   return {
     left: (typeof left === "number")
       ? `${Number(left || 0).toFixed(2)}px`
@@ -76,7 +76,7 @@ export function createOrbStageRuntimeAdapter({
   });
   const legacyDomOrbAdapter = createLegacyDomOrbStageAdapter({
     refs: stageRefs,
-    getOrbWrapPosition: resolveDomOrbWrapPosition,
+    getOrbWrapPosition: resolveLegacyDomOrbWrapPosition,
   });
 
   return Object.freeze({
