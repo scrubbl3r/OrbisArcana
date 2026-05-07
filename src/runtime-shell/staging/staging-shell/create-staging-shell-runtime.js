@@ -22,6 +22,7 @@ import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260506b";
+import { createShellReceiverConfigs } from "./receiver-configs.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import {
@@ -1308,47 +1309,6 @@ function forceShellShakeLampOff(shellContext) {
   const refs = shellContext && shellContext.refs ? shellContext.refs.dev : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   forceDevStagingShakeLampOff(refs, runtime);
-}
-
-function createShellReceiverConfigs() {
-  return {
-    IMPACT_TH: 750,
-    INPUT_GESTURE_CFG: {
-      shake: {
-        cooldownMs: 2500,
-        mode: 2,
-        grooveGate: 0.20,
-        lampThreshold: 1.65,
-        directionRecentMs: 750,
-        rearmThreshold: 0.10,
-      },
-      flatSpin: {
-        dominanceOn: 0.72,
-        dominanceOff: 0.60,
-        dominanceGapOn: 0.14,
-        dominanceGapOff: 0.09,
-        onHoldMs: 200,
-        offHoldMs: 280,
-        gateRefreshMs: 1100,
-        minSpeed01: 0.02,
-      },
-    },
-    INPUT_DYNAMICS_CFG: {
-      stability: {
-        avgMs: 250,
-        armMs: 220,
-        onThreshold: 0.08,
-        offThreshold: 0.10,
-        speedMin01: 0.02,
-      },
-      variability: {
-        avgMs: 250,
-        armMs: 220,
-        onThreshold: 0.80,
-        offThreshold: 0.78,
-      },
-    },
-  };
 }
 
 function handleShellImpulseFrame(shellContext, data) {

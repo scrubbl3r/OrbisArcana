@@ -136,21 +136,13 @@ So even though the file is still large, it is less architecturally confused than
 
 ## What Still Looks Like Real Residue
 
-### A. Shell receiver config policy
-
-`createShellReceiverConfigs()` still looks like duplicated policy/config residue.
-
-The old energy-shaped constants have been removed from this config surface.
-
-This is a good cleanup target later, but not necessarily the highest-value next move.
-
-### B. KWS/dev-surface bridge inside shell boot
+### A. KWS/dev-surface bridge inside shell boot
 
 KWS boot still directly constructs panel elements and dev-surface couplings.
 
 This is likely the biggest remaining mixed-responsibility residue in the file.
 
-### C. Pairing orchestration embedded directly in shell file
+### B. Pairing orchestration embedded directly in shell file
 
 Pairing is still host-appropriate, but the direct embedded implementation is still a likely future extraction seam if we want a thinner host composer.
 
