@@ -183,10 +183,10 @@ export function initOrbStageReceiverVfxRuntime({
   const stageVfx = {
     vfxDefaults,
     legacyDomVfxRuntimesBundle,
-    bubbleShieldRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.bubbleShieldRuntime,
-    shockwaveRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.shockwaveRuntime,
-    orbShatterRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.orbShatterRuntime,
-    orbNodRuntime: createOrbNodRuntime({
+    legacyDomBubbleShieldRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.bubbleShieldRuntime,
+    legacyDomShockwaveRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.shockwaveRuntime,
+    legacyDomOrbShatterRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.orbShatterRuntime,
+    legacyDomOrbNodRuntime: createOrbNodRuntime({
       orbEl: legacyDomEls.orb,
       mountEl: legacyDomEls.orb ? legacyDomEls.orb.parentElement : null,
       orbInteriorEl: legacyDomEls.orbInterior,
@@ -208,7 +208,7 @@ export function initOrbStageReceiverVfxRuntime({
         ? vfxDefaults.nod3d
         : Object.create(null),
     }),
-    teleportRuntime: createTeleportRuntime({
+    legacyDomTeleportRuntime: createTeleportRuntime({
       orbEl: legacyDomEls.orb,
       orbInteriorEl: legacyDomEls.orbInterior,
       orbCracksEl: legacyDomEls.orbCracks,
@@ -246,8 +246,8 @@ export function initOrbStageReceiverVfxRuntime({
         ),
       }),
     }),
-    flameAoeRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.flameAoeRuntime,
-    electricAoeRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.electricAoeRuntime,
+    legacyDomFlameAoeRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.flameAoeRuntime,
+    legacyDomElectricAoeRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.electricAoeRuntime,
   };
   const getTeleportRuntimeConfig = () => ({
     ...(
@@ -286,8 +286,8 @@ export function initOrbStageReceiverVfxRuntime({
   });
 
   function directPlayShock() {
-    if (stageVfx.shockwaveRuntime && typeof stageVfx.shockwaveRuntime.play === "function") {
-      stageVfx.shockwaveRuntime.play();
+    if (stageVfx.legacyDomShockwaveRuntime && typeof stageVfx.legacyDomShockwaveRuntime.play === "function") {
+      stageVfx.legacyDomShockwaveRuntime.play();
       return { handled: true };
     }
     return { handled: false };
@@ -311,13 +311,13 @@ export function initOrbStageReceiverVfxRuntime({
     if (shockwave3dResult && shockwave3dResult.handled) return shockwave3dResult;
     if (typeof triggerShockwaveRuntime === "function") {
       const result = triggerShockwaveRuntime({
-        shockwaveRuntime: stageVfx.shockwaveRuntime,
+        shockwaveRuntime: stageVfx.legacyDomShockwaveRuntime,
         playShock: () => directPlayShock(),
       });
       if (result && result.handled) return result;
     }
-    if (stageVfx.shockwaveRuntime && typeof stageVfx.shockwaveRuntime.trigger === "function") {
-      stageVfx.shockwaveRuntime.trigger();
+    if (stageVfx.legacyDomShockwaveRuntime && typeof stageVfx.legacyDomShockwaveRuntime.trigger === "function") {
+      stageVfx.legacyDomShockwaveRuntime.trigger();
       return { handled: true };
     }
     return directPlayShock();
@@ -326,12 +326,12 @@ export function initOrbStageReceiverVfxRuntime({
   function directPlayElectricAoe() {
     if (typeof playElectricAoeRuntime === "function") {
       const result = playElectricAoeRuntime({
-        electricAoeRuntime: stageVfx.electricAoeRuntime,
+        electricAoeRuntime: stageVfx.legacyDomElectricAoeRuntime,
       });
       if (result && result.handled) return result;
     }
-    if (stageVfx.electricAoeRuntime && typeof stageVfx.electricAoeRuntime.play === "function") {
-      stageVfx.electricAoeRuntime.play();
+    if (stageVfx.legacyDomElectricAoeRuntime && typeof stageVfx.legacyDomElectricAoeRuntime.play === "function") {
+      stageVfx.legacyDomElectricAoeRuntime.play();
       return { handled: true };
     }
     return { handled: false };
@@ -348,12 +348,12 @@ export function initOrbStageReceiverVfxRuntime({
     }
     if (typeof playFlameAoeRuntime === "function") {
       const result = playFlameAoeRuntime({
-        flameAoeRuntime: stageVfx.flameAoeRuntime,
+        flameAoeRuntime: stageVfx.legacyDomFlameAoeRuntime,
       });
       if (result && result.handled) return result;
     }
-    if (stageVfx.flameAoeRuntime && typeof stageVfx.flameAoeRuntime.play === "function") {
-      stageVfx.flameAoeRuntime.play();
+    if (stageVfx.legacyDomFlameAoeRuntime && typeof stageVfx.legacyDomFlameAoeRuntime.play === "function") {
+      stageVfx.legacyDomFlameAoeRuntime.play();
       return { handled: true };
     }
     return { handled: false };
@@ -364,7 +364,7 @@ export function initOrbStageReceiverVfxRuntime({
     markTrace("orbStage.bubbleShield.activate.request", {
       durationMs: resolvedDurationMs,
       has3dRuntime: typeof playBubbleShield3dRuntime === "function",
-      hasLegacyDomRuntime: !!(stageVfx.bubbleShieldRuntime && typeof stageVfx.bubbleShieldRuntime.activate === "function"),
+      hasLegacyDomRuntime: !!(stageVfx.legacyDomBubbleShieldRuntime && typeof stageVfx.legacyDomBubbleShieldRuntime.activate === "function"),
     });
     if (typeof playBubbleShield3dRuntime === "function") {
       const result = playBubbleShield3dRuntime({
@@ -379,8 +379,8 @@ export function initOrbStageReceiverVfxRuntime({
       });
       if (result && result.handled) return result;
     }
-    if (stageVfx.bubbleShieldRuntime && typeof stageVfx.bubbleShieldRuntime.activate === "function") {
-      stageVfx.bubbleShieldRuntime.activate({
+    if (stageVfx.legacyDomBubbleShieldRuntime && typeof stageVfx.legacyDomBubbleShieldRuntime.activate === "function") {
+      stageVfx.legacyDomBubbleShieldRuntime.activate({
         durationMs: resolvedDurationMs,
       });
       markTrace("orbStage.bubbleShield.activate.legacy_dom_fallback", {
@@ -404,7 +404,7 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function getLegacyDomOrbShatterRuntime() {
-    return stageVfx.orbShatterRuntime || null;
+    return stageVfx.legacyDomOrbShatterRuntime || null;
   }
 
   function clearLegacyDomOrbShatterRuntime() {
@@ -417,8 +417,8 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function directPlayOrbNod(payload = {}) {
-    if (stageVfx.orbNodRuntime && typeof stageVfx.orbNodRuntime.play === "function") {
-      return stageVfx.orbNodRuntime.play(payload);
+    if (stageVfx.legacyDomOrbNodRuntime && typeof stageVfx.legacyDomOrbNodRuntime.play === "function") {
+      return stageVfx.legacyDomOrbNodRuntime.play(payload);
     }
     return { handled: false };
   }
@@ -447,30 +447,30 @@ export function initOrbStageReceiverVfxRuntime({
       const result = teleport3dSequenceRuntime.play(payload);
       if (result && result.handled) return result;
     }
-    if (stageVfx.teleportRuntime && typeof stageVfx.teleportRuntime.play === "function") {
-      return stageVfx.teleportRuntime.play(payload);
+    if (stageVfx.legacyDomTeleportRuntime && typeof stageVfx.legacyDomTeleportRuntime.play === "function") {
+      return stageVfx.legacyDomTeleportRuntime.play(payload);
     }
     return { handled: false };
   }
 
   function clearLegacyDomOrbRuntimeFx() {
-    if (stageVfx.shockwaveRuntime && typeof stageVfx.shockwaveRuntime.clear === "function") {
-      stageVfx.shockwaveRuntime.clear();
+    if (stageVfx.legacyDomShockwaveRuntime && typeof stageVfx.legacyDomShockwaveRuntime.clear === "function") {
+      stageVfx.legacyDomShockwaveRuntime.clear();
     }
-    if (stageVfx.flameAoeRuntime && typeof stageVfx.flameAoeRuntime.clear === "function") {
-      stageVfx.flameAoeRuntime.clear();
+    if (stageVfx.legacyDomFlameAoeRuntime && typeof stageVfx.legacyDomFlameAoeRuntime.clear === "function") {
+      stageVfx.legacyDomFlameAoeRuntime.clear();
     }
-    if (stageVfx.electricAoeRuntime && typeof stageVfx.electricAoeRuntime.clear === "function") {
-      stageVfx.electricAoeRuntime.clear();
+    if (stageVfx.legacyDomElectricAoeRuntime && typeof stageVfx.legacyDomElectricAoeRuntime.clear === "function") {
+      stageVfx.legacyDomElectricAoeRuntime.clear();
     }
-    if (stageVfx.bubbleShieldRuntime && typeof stageVfx.bubbleShieldRuntime.off === "function") {
-      stageVfx.bubbleShieldRuntime.off();
+    if (stageVfx.legacyDomBubbleShieldRuntime && typeof stageVfx.legacyDomBubbleShieldRuntime.off === "function") {
+      stageVfx.legacyDomBubbleShieldRuntime.off();
     }
-    if (stageVfx.orbNodRuntime && typeof stageVfx.orbNodRuntime.clear === "function") {
-      stageVfx.orbNodRuntime.clear();
+    if (stageVfx.legacyDomOrbNodRuntime && typeof stageVfx.legacyDomOrbNodRuntime.clear === "function") {
+      stageVfx.legacyDomOrbNodRuntime.clear();
     }
-    if (stageVfx.teleportRuntime && typeof stageVfx.teleportRuntime.clear === "function") {
-      stageVfx.teleportRuntime.clear();
+    if (stageVfx.legacyDomTeleportRuntime && typeof stageVfx.legacyDomTeleportRuntime.clear === "function") {
+      stageVfx.legacyDomTeleportRuntime.clear();
     }
   }
 
