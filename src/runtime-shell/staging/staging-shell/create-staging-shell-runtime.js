@@ -571,12 +571,6 @@ function shellActiveStageCameraTarget(shellContext, orbState = null) {
         }
       )
     : null;
-  if (initialTarget === "orb" && orbState) {
-    return {
-      xW: Number(orbState.xW) || shellStageCenterX(shellContext),
-      yW: Number(orbState.yW) || shellGroundCenterWorld(shellContext),
-    };
-  }
   if (orbState) {
     return {
       xW: Number(orbState.xW) || shellStageCenterX(shellContext),
