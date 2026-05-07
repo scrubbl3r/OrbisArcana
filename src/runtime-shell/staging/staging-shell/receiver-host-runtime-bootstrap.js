@@ -338,10 +338,9 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     ),
   });
 
-  const legacyDomVfxRuntimesBundle = runtime.vfx && (
-    runtime.vfx.legacyDomVfxRuntimesBundle ||
-    runtime.vfx.vfxRuntimesBundle
-  );
+  const legacyDomVfxRuntimesBundle = runtime.vfx
+    ? runtime.vfx.legacyDomVfxRuntimesBundle
+    : null;
   const receiverRuntime = bootstrapStagingRuntimeBundle({
     eventBus: runtime.eventBus,
     gameState: runtimeContext.gameState,
