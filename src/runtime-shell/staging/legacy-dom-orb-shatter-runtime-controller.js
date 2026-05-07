@@ -1,6 +1,6 @@
 import {
   ORB_LIFECYCLE_SHARD_STYLE_DEFAULT,
-} from "./orb-lifecycle-vfx-runtime.js?v=20260418b";
+} from "../../game-runtime/orb/orb-lifecycle-vfx-runtime.js?v=20260418b";
 
 function defaultClamp01(v) {
   const n = Number(v);
@@ -28,7 +28,7 @@ function colorPart(value, fallback, clamp = defaultClamp) {
   return clamp(Number.isFinite(n) ? n : fallback, 0, 255);
 }
 
-export function createOrbShatterRuntimeController({
+export function createLegacyDomOrbShatterRuntimeController({
   root = globalThis.document && globalThis.document.documentElement,
   getOrbEl,
   getOrbShatterRuntime,

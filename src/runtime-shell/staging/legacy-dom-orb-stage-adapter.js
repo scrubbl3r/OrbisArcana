@@ -1,4 +1,4 @@
-import { createOrbShatterRuntimeController } from "../../game-runtime/orb/orb-shatter-runtime.js";
+import { createLegacyDomOrbShatterRuntimeController } from "./legacy-dom-orb-shatter-runtime-controller.js";
 
 function lineToPath(seg) {
   if (!seg || !seg.a || !seg.b) return "";
@@ -111,8 +111,8 @@ export function createLegacyDomOrbStageAdapter({
       clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
       clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
     } = {}) {
-      if (!refs.orb || typeof createOrbShatterRuntimeController !== "function") return null;
-      return createOrbShatterRuntimeController({
+      if (!refs.orb || typeof createLegacyDomOrbShatterRuntimeController !== "function") return null;
+      return createLegacyDomOrbShatterRuntimeController({
         root,
         getOrbEl: () => refs.orb,
         getOrbShatterRuntime,
