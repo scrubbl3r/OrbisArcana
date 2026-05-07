@@ -72,9 +72,9 @@ import {
 import { createPerfTrace } from "../perf-trace.js?v=20260430b";
 import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
-} from "./shell-stage-backdrop.js";
+} from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507ad";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507ae";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
