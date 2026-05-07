@@ -119,6 +119,7 @@ export function initOrbStageReceiverVfxRuntime({
   cancelCameraTravel = null,
 } = {}) {
   if (!runtime || typeof createVfxRuntimesBundle !== "function" || !vfxDefaults) return null;
+  const legacyDomStageEls = stageEls || {};
   const readOrbDiameterPx = () => Math.max(
     1,
     Number(getOrbDiameterPx()) || (Math.max(0.01, Number(getOrbScaleFactor()) || 1) * 100)
@@ -132,7 +133,7 @@ export function initOrbStageReceiverVfxRuntime({
 
   const vfxRuntimesBundle = createVfxRuntimesBundle({
     bubbleShield: {
-      shieldEl: stageEls.shield,
+      shieldEl: legacyDomStageEls.shield,
       getConfig: () => resolveBubbleShieldGeometry(vfxDefaults.shield, {
         orbDiameterPx: readOrbDiameterPx(),
         normalizeStroke: (value) => evenStroke(value, 1, 64),
@@ -147,7 +148,7 @@ export function initOrbStageReceiverVfxRuntime({
       onDecayActiveChange: () => {},
     },
     shockwave: {
-      layerEl: stageEls.shockLayer,
+      layerEl: legacyDomStageEls.shockLayer,
       getConfig: () => resolveShockwaveGeometry(vfxDefaults.shock, {
         orbDiameterPx: readOrbDiameterPx(),
         normalizeStroke: (value) => evenStroke(value, 1, 64),
@@ -156,11 +157,11 @@ export function initOrbStageReceiverVfxRuntime({
       normalizeStroke: evenStroke,
     },
     orbShatter: {
-      layerEl: stageEls.orbShards,
+      layerEl: legacyDomStageEls.orbShards,
       clamp,
     },
     flameAoe: {
-      layerEl: stageEls.flameLayer,
+      layerEl: legacyDomStageEls.flameLayer,
       getConfig: () => resolveFlameAoeGeometry(vfxDefaults.flame, {
         orbDiameterPx: readOrbDiameterPx(),
       }),
@@ -169,7 +170,7 @@ export function initOrbStageReceiverVfxRuntime({
       showCore: false,
     },
     electricAoe: {
-      layerEl: stageEls.electricLayer,
+      layerEl: legacyDomStageEls.electricLayer,
       getConfig: () => resolveElectricAoeGeometry(vfxDefaults.electric, {
         orbDiameterPx: readOrbDiameterPx(),
       }),
@@ -186,31 +187,31 @@ export function initOrbStageReceiverVfxRuntime({
     shockwaveRuntime: vfxRuntimesBundle && vfxRuntimesBundle.shockwaveRuntime,
     orbShatterRuntime: vfxRuntimesBundle && vfxRuntimesBundle.orbShatterRuntime,
     orbNodRuntime: createOrbNodRuntime({
-      orbEl: stageEls.orb,
-      mountEl: stageEls.orb ? stageEls.orb.parentElement : null,
-      orbInteriorEl: stageEls.orbInterior,
-      orbCracksEl: stageEls.orbCracks,
-      orbShardsEl: stageEls.orbShards,
+      orbEl: legacyDomStageEls.orb,
+      mountEl: legacyDomStageEls.orb ? legacyDomStageEls.orb.parentElement : null,
+      orbInteriorEl: legacyDomStageEls.orbInterior,
+      orbCracksEl: legacyDomStageEls.orbCracks,
+      orbShardsEl: legacyDomStageEls.orbShards,
       getOrbDiameterPx: readOrbDiameterPx,
       getConfig: () => (vfxDefaults && vfxDefaults.nod && typeof vfxDefaults.nod === "object")
         ? vfxDefaults.nod
         : Object.create(null),
     }),
     orbNod3dRuntime: createOrbNod3dDomFallbackRuntime({
-      orbEl: stageEls.orb,
-      mountEl: stageEls.orb ? stageEls.orb.parentElement : null,
-      orbInteriorEl: stageEls.orbInterior,
-      orbCracksEl: stageEls.orbCracks,
-      orbShardsEl: stageEls.orbShards,
+      orbEl: legacyDomStageEls.orb,
+      mountEl: legacyDomStageEls.orb ? legacyDomStageEls.orb.parentElement : null,
+      orbInteriorEl: legacyDomStageEls.orbInterior,
+      orbCracksEl: legacyDomStageEls.orbCracks,
+      orbShardsEl: legacyDomStageEls.orbShards,
       getOrbDiameterPx: readOrbDiameterPx,
       getConfig: () => (vfxDefaults && vfxDefaults.nod3d && typeof vfxDefaults.nod3d === "object")
         ? vfxDefaults.nod3d
         : Object.create(null),
     }),
     teleportRuntime: createTeleportRuntime({
-      orbEl: stageEls.orb,
-      orbInteriorEl: stageEls.orbInterior,
-      orbCracksEl: stageEls.orbCracks,
+      orbEl: legacyDomStageEls.orb,
+      orbInteriorEl: legacyDomStageEls.orbInterior,
+      orbCracksEl: legacyDomStageEls.orbCracks,
       getOrbRuntime: () => (
         runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.get === "function"
           ? runtime.stage.orbRuntimeState.get()
