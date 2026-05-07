@@ -159,12 +159,6 @@ function safeConsoleInfo(message) {
   } catch (_) {}
 }
 
-function setModuleIfFunction(setter, importedFn) {
-  if (typeof setter === "function" && typeof importedFn === "function") {
-    setter(importedFn);
-  }
-}
-
 function warnWithErrorCount(prefix, count) {
   safeConsoleWarn(`${prefix} (${count} errors)`);
 }
@@ -437,9 +431,6 @@ export async function loadReceiverInitModules() {
 /**
  * @typedef {Object} ReceiverBootstrapContext
  * @property {(theme:Object) => void} [applyRuntimeTheme]
- * @property {(fn:Function) => void} [setCreateSpellActionHandlersModule]
- * @property {(fn:Function) => void} [setRunInputFramePipelineModule]
- * @property {(fn:Function) => void} [setRunOrbRuntimePipelineModule]
  * @property {() => {PHYS:Object, SHIELD_DESCENT:Object, IMPACT_MODEL:Object, IMPACT_TH:number}} [getOrbRuntimeConfig]
  * @property {(next:{PHYS?:Object, SHIELD_DESCENT?:Object, IMPACT_MODEL?:Object, IMPACT_TH?:number}) => void} [setOrbRuntimeConfig]
  * @property {() => {GRACE_DEFAULT_TTL_MS:number}} [getOrbStatusConfig]
@@ -469,9 +460,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     GAME_THEME_DEFAULT,
     applyGameThemeCssVars,
     applyDevConsoleThemeCssVars,
-    createSpellActionHandlersImported,
-    runInputFramePipelineImported,
-    runOrbRuntimePipelineImported,
     ORB_RUNTIME_CONFIG_DEFAULT,
     ORB_STATUS_CONFIG_DEFAULT,
     getCanonicalOrbBaseRadiusPx,
@@ -505,9 +493,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
 
   const {
     applyRuntimeTheme,
-    setCreateSpellActionHandlersModule,
-    setRunInputFramePipelineModule,
-    setRunOrbRuntimePipelineModule,
     getOrbRuntimeConfig,
     setOrbRuntimeConfig,
     getOrbStatusConfig,
@@ -636,10 +621,6 @@ export function hydrateReceiverBootstrapState(mods, ctx = {}) {
     if (typeof applyDevConsoleThemeCssVars === "function") applyDevConsoleThemeCssVars(GAME_THEME_DEFAULT);
     if (typeof applyRuntimeTheme === "function") applyRuntimeTheme(GAME_THEME_DEFAULT);
   }
-
-  setModuleIfFunction(setCreateSpellActionHandlersModule, createSpellActionHandlersImported);
-  setModuleIfFunction(setRunInputFramePipelineModule, runInputFramePipelineImported);
-  setModuleIfFunction(setRunOrbRuntimePipelineModule, runOrbRuntimePipelineImported);
 
   if (isObjectLike(ORB_RUNTIME_CONFIG_DEFAULT) &&
       typeof getOrbRuntimeConfig === "function" && typeof setOrbRuntimeConfig === "function") {

@@ -76,7 +76,7 @@ It is the shell/dev-surface bridge.
 
 These parts are clearly shell/game integration and should not be hidden inside generic KWS bootstrap:
 
-- `hydrateReceiverBootstrapState(...)` with shell-specific no-op setters
+- `hydrateReceiverBootstrapState(...)` with shell-specific state capture
 - shell VFX default hydration
 - `initShellReceiverVfxRuntime(...)`
 - shell spell action handlers:

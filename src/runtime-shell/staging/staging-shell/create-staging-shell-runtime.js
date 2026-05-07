@@ -3140,9 +3140,6 @@ async function initShellKwsRuntime(shellContext) {
       },
       {
         applyRuntimeTheme: () => {},
-        setCreateSpellActionHandlersModule: () => {},
-        setRunInputFramePipelineModule: () => {},
-        setRunOrbRuntimePipelineModule: () => {},
         getOrbRuntimeConfig: () => ({ PHYS: {}, SHIELD_DESCENT: {}, IMPACT_MODEL: {}, IMPACT_TH: 0 }),
         setOrbRuntimeConfig: () => {},
         getOrbStatusConfig: () => ({
