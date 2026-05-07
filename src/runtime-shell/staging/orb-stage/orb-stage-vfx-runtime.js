@@ -119,7 +119,7 @@ export function initOrbStageReceiverVfxRuntime({
   cancelCameraTravel = null,
 } = {}) {
   if (!runtime || typeof createLegacyDomVfxRuntimesBundle !== "function" || !vfxDefaults) return null;
-  const legacyDomEls = orbStageLegacyDomEls || {};
+  const orbStageLegacyDomElements = orbStageLegacyDomEls || {};
   const readOrbDiameterPx = () => Math.max(
     1,
     Number(getOrbDiameterPx()) || (Math.max(0.01, Number(getOrbScaleFactor()) || 1) * 100)
@@ -131,9 +131,9 @@ export function initOrbStageReceiverVfxRuntime({
     }
   };
 
-  const legacyDomVfxRuntimesBundle = createLegacyDomVfxRuntimesBundle({
+  const orbStageLegacyDomVfxRuntimesBundle = createLegacyDomVfxRuntimesBundle({
     legacyDomBubbleShield: {
-      shieldEl: legacyDomEls.shield,
+      shieldEl: orbStageLegacyDomElements.shield,
       getConfig: () => resolveBubbleShieldGeometry(vfxDefaults.shield, {
         orbDiameterPx: readOrbDiameterPx(),
         normalizeStroke: (value) => evenStroke(value, 1, 64),
@@ -148,7 +148,7 @@ export function initOrbStageReceiverVfxRuntime({
       onDecayActiveChange: () => {},
     },
     legacyDomShockwave: {
-      layerEl: legacyDomEls.shockLayer,
+      layerEl: orbStageLegacyDomElements.shockLayer,
       getConfig: () => resolveShockwaveGeometry(vfxDefaults.shock, {
         orbDiameterPx: readOrbDiameterPx(),
         normalizeStroke: (value) => evenStroke(value, 1, 64),
@@ -157,11 +157,11 @@ export function initOrbStageReceiverVfxRuntime({
       normalizeStroke: evenStroke,
     },
     legacyDomOrbShatter: {
-      layerEl: legacyDomEls.orbShards,
+      layerEl: orbStageLegacyDomElements.orbShards,
       clamp,
     },
     legacyDomFlameAoe: {
-      layerEl: legacyDomEls.flameLayer,
+      layerEl: orbStageLegacyDomElements.flameLayer,
       getConfig: () => resolveFlameAoeGeometry(vfxDefaults.flame, {
         orbDiameterPx: readOrbDiameterPx(),
       }),
@@ -170,7 +170,7 @@ export function initOrbStageReceiverVfxRuntime({
       showCore: false,
     },
     legacyDomElectricAoe: {
-      layerEl: legacyDomEls.electricLayer,
+      layerEl: orbStageLegacyDomElements.electricLayer,
       getConfig: () => resolveElectricAoeGeometry(vfxDefaults.electric, {
         orbDiameterPx: readOrbDiameterPx(),
       }),
@@ -182,35 +182,35 @@ export function initOrbStageReceiverVfxRuntime({
 
   const stageVfx = {
     vfxDefaults,
-    legacyDomBubbleShieldRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomBubbleShieldRuntime,
-    legacyDomShockwaveRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomShockwaveRuntime,
-    legacyDomOrbShatterRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomOrbShatterRuntime,
+    legacyDomBubbleShieldRuntime: orbStageLegacyDomVfxRuntimesBundle && orbStageLegacyDomVfxRuntimesBundle.legacyDomBubbleShieldRuntime,
+    legacyDomShockwaveRuntime: orbStageLegacyDomVfxRuntimesBundle && orbStageLegacyDomVfxRuntimesBundle.legacyDomShockwaveRuntime,
+    legacyDomOrbShatterRuntime: orbStageLegacyDomVfxRuntimesBundle && orbStageLegacyDomVfxRuntimesBundle.legacyDomOrbShatterRuntime,
     legacyDomOrbNodRuntime: createLegacyDomOrbNodRuntime({
-      orbEl: legacyDomEls.orb,
-      mountEl: legacyDomEls.orb ? legacyDomEls.orb.parentElement : null,
-      orbInteriorEl: legacyDomEls.orbInterior,
-      orbCracksEl: legacyDomEls.orbCracks,
-      orbShardsEl: legacyDomEls.orbShards,
+      orbEl: orbStageLegacyDomElements.orb,
+      mountEl: orbStageLegacyDomElements.orb ? orbStageLegacyDomElements.orb.parentElement : null,
+      orbInteriorEl: orbStageLegacyDomElements.orbInterior,
+      orbCracksEl: orbStageLegacyDomElements.orbCracks,
+      orbShardsEl: orbStageLegacyDomElements.orbShards,
       getOrbDiameterPx: readOrbDiameterPx,
       getConfig: () => (vfxDefaults && vfxDefaults.nod && typeof vfxDefaults.nod === "object")
         ? vfxDefaults.nod
         : Object.create(null),
     }),
     legacyDomOrbNod3dRuntime: createLegacyDomOrbNod3dRuntime({
-      orbEl: legacyDomEls.orb,
-      mountEl: legacyDomEls.orb ? legacyDomEls.orb.parentElement : null,
-      orbInteriorEl: legacyDomEls.orbInterior,
-      orbCracksEl: legacyDomEls.orbCracks,
-      orbShardsEl: legacyDomEls.orbShards,
+      orbEl: orbStageLegacyDomElements.orb,
+      mountEl: orbStageLegacyDomElements.orb ? orbStageLegacyDomElements.orb.parentElement : null,
+      orbInteriorEl: orbStageLegacyDomElements.orbInterior,
+      orbCracksEl: orbStageLegacyDomElements.orbCracks,
+      orbShardsEl: orbStageLegacyDomElements.orbShards,
       getOrbDiameterPx: readOrbDiameterPx,
       getConfig: () => (vfxDefaults && vfxDefaults.nod3d && typeof vfxDefaults.nod3d === "object")
         ? vfxDefaults.nod3d
         : Object.create(null),
     }),
     legacyDomTeleportRuntime: createLegacyDomTeleportRuntime({
-      orbEl: legacyDomEls.orb,
-      orbInteriorEl: legacyDomEls.orbInterior,
-      orbCracksEl: legacyDomEls.orbCracks,
+      orbEl: orbStageLegacyDomElements.orb,
+      orbInteriorEl: orbStageLegacyDomElements.orbInterior,
+      orbCracksEl: orbStageLegacyDomElements.orbCracks,
       getOrbRuntime: () => (
         runtime && runtime.stage && runtime.stage.orbRuntimeState && typeof runtime.stage.orbRuntimeState.get === "function"
           ? runtime.stage.orbRuntimeState.get()
@@ -245,8 +245,8 @@ export function initOrbStageReceiverVfxRuntime({
         ),
       }),
     }),
-    legacyDomFlameAoeRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomFlameAoeRuntime,
-    legacyDomElectricAoeRuntime: legacyDomVfxRuntimesBundle && legacyDomVfxRuntimesBundle.legacyDomElectricAoeRuntime,
+    legacyDomFlameAoeRuntime: orbStageLegacyDomVfxRuntimesBundle && orbStageLegacyDomVfxRuntimesBundle.legacyDomFlameAoeRuntime,
+    legacyDomElectricAoeRuntime: orbStageLegacyDomVfxRuntimesBundle && orbStageLegacyDomVfxRuntimesBundle.legacyDomElectricAoeRuntime,
   };
   const getTeleportRuntimeConfig = () => ({
     ...(
