@@ -8,6 +8,7 @@ import { applyAuthoredStageCameraVars } from "../../../game-runtime/stage/author
 
 export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOverlayMarkup = () => "" } = {}) {
   const localBackdropState = Object.create(null);
+  let activeBackdropState = localBackdropState;
   const levelWorldSize = resolveLevelWorldSize(level);
   const stageRefs = Object.freeze({
     root: refs.root || null,
@@ -83,6 +84,7 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
       const width = Math.max(1, Math.floor(Number(rect.width) || 0));
       const height = Math.max(1, Math.floor(Number(rect.height) || 0));
       const stageBackdrop = runtime.stageBackdrop || (runtime.stageBackdrop = localBackdropState);
+      activeBackdropState = stageBackdrop;
       const nextArtShapes = (Array.isArray(artShapes) ? artShapes : []).slice();
       const nextArtKey = nextArtShapes.map((shape = {}) => String(shape.id || "")).join("|");
       const worldWidth = Math.max(1, Number(runtime && runtime.frameMetrics && runtime.frameMetrics.worldWidthPx) || levelWorldSize.widthPx);
@@ -117,14 +119,14 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
       if (!stageRefs.world) return;
       applyAuthoredStageCameraVars({
         refs: stageRefs,
-        starsParallaxRefs: localBackdropState.starsParallaxRefs,
+        starsParallaxRefs: activeBackdropState.starsParallaxRefs,
         worldWidthPx,
         worldHeightPx,
         camLeft,
         camTop,
         zoom,
-        viewportWidthPx: Math.max(0, Number(localBackdropState.width) || 0),
-        viewportHeightPx: Math.max(0, Number(localBackdropState.height) || 0),
+        viewportWidthPx: Math.max(0, Number(activeBackdropState.width) || 0),
+        viewportHeightPx: Math.max(0, Number(activeBackdropState.height) || 0),
       });
     },
   });
