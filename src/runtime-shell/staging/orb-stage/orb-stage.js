@@ -1,6 +1,5 @@
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
-  LEVEL_STAGE_BOX_HEIGHT_FALLBACK_PX,
   LEVEL_STAGE_PANEL_HEIGHT_FALLBACK_PX,
   normalizeLevelDefinition,
 } from "../../../game-runtime/level/normalize-level-definition.js";
@@ -80,7 +79,6 @@ export function renderOrbStage(root, { level = DEFAULT_LEVEL } = {}) {
   });
   root.dataset.levelId = String(resolvedLevel && resolvedLevel.id || "orb-hangar");
   root.style.setProperty("--orb-stage-panel-height", `${Number(stage.panelHeightPx) || LEVEL_STAGE_PANEL_HEIGHT_FALLBACK_PX}px`);
-  root.style.setProperty("--orb-hangar-box-height", `${Number(stage.levelBoxHeightPx) || LEVEL_STAGE_BOX_HEIGHT_FALLBACK_PX}px`);
   applyOrbBaseVisualCssVars(orbBaseVisualState, { root });
   applyOrbFractureVisualCssVars(orbFractureVisualState, { root });
   applyOrbGlobeVisualCssVars(orbGlobeVisualState, { root, orbRadiusPx: orbBaseVisualState.radiusPx });
