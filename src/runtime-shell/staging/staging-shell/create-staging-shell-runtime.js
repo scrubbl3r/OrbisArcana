@@ -2260,23 +2260,13 @@ function bindShellModeHotkeys(shellContext) {
   };
 }
 
-function createOrbStageAdapter(orbStageView = null) {
+function createShellStageAdapter(stageView = null) {
   return (
-    orbStageView &&
-    orbStageView.adapter &&
-    typeof orbStageView.adapter.getStageElements === "function"
+    stageView &&
+    stageView.adapter &&
+    typeof stageView.adapter.getStageElements === "function"
   )
-    ? orbStageView.adapter
-    : null;
-}
-
-function createGameStageAdapter(gameStageView = null) {
-  return (
-    gameStageView &&
-    gameStageView.adapter &&
-    typeof gameStageView.adapter.getStageElements === "function"
-  )
-    ? gameStageView.adapter
+    ? stageView.adapter
     : null;
 }
 
@@ -2452,8 +2442,8 @@ function createStagingShellContext({
   perfTrace = null,
 } = {}) {
   const surfaceRefs = createShellSurfaceRefs({ devStagingView, orbStageView, gameStageView });
-  const orbStageAdapter = createOrbStageAdapter(orbStageView);
-  const gameStageAdapter = createGameStageAdapter(gameStageView);
+  const orbStageAdapter = createShellStageAdapter(orbStageView);
+  const gameStageAdapter = createShellStageAdapter(gameStageView);
   const activeStageAdapter = orbStageAdapter || gameStageAdapter || null;
   const stageEls = (
     activeStageAdapter && typeof activeStageAdapter.getStageElements === "function"
