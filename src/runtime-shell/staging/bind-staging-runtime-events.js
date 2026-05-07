@@ -59,7 +59,7 @@ export function bindStagingRuntimeEvents({
     return true;
   }
 
-  function handleLegacyDomOrbDied() {
+  function handleOrbStageLegacyDomOrbDied() {
     if (
       legacyDomOrbShatterController &&
       typeof legacyDomOrbShatterController.handleOrbDied === "function"
@@ -68,7 +68,7 @@ export function bindStagingRuntimeEvents({
     }
   }
 
-  function handleLegacyDomOrbRevived() {
+  function handleOrbStageLegacyDomOrbRevived() {
     if (
       legacyDomOrbShatterController &&
       typeof legacyDomOrbShatterController.handleOrbRevived === "function"
@@ -77,7 +77,7 @@ export function bindStagingRuntimeEvents({
     }
   }
 
-  function handleLegacyDomOrbShatterComplete() {
+  function handleOrbStageLegacyDomOrbShatterComplete() {
     if (
       legacyDomOrbShatterController &&
       typeof legacyDomOrbShatterController.handleOrbShatterComplete === "function"
@@ -91,7 +91,7 @@ export function bindStagingRuntimeEvents({
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderLegacyDomOrbDamageVisuals);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnLegacyDomOrbShatterShardVfx);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
-    handleLegacyDomOrbDied();
+    handleOrbStageLegacyDomOrbDied();
     setOrbInputSuppressed(true);
     clearFloatGrace();
     clearOrbDeathRuntimeVfx();
@@ -99,7 +99,7 @@ export function bindStagingRuntimeEvents({
     updateDebugReadout();
   });
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_REVIVED, () => {
-    handleLegacyDomOrbRevived();
+    handleOrbStageLegacyDomOrbRevived();
     setOrbInputSuppressed(false);
     clearFloatGrace();
     clearDeathOverlaySchedule();
@@ -123,7 +123,7 @@ export function bindStagingRuntimeEvents({
     });
   });
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
-    handleLegacyDomOrbShatterComplete();
+    handleOrbStageLegacyDomOrbShatterComplete();
   });
   if (!skipVoiceSpellCastBinding) {
     eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (p = {}) => {
