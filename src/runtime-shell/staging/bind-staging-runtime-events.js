@@ -25,7 +25,7 @@ export function bindStagingRuntimeEvents({
   clearFloatGrace = () => {},
   renderLegacyDomOrbDamageVisuals = () => {},
   spawnLegacyDomOrbShardFx = () => {},
-  clearOrbRuntimeFxForDeath = () => {},
+  clearOrbDeathRuntimeFx = () => {},
   scheduleDeathOverlay = () => {},
   updateDebugReadout = () => {},
   legacyDomOrbShatterController = null,
@@ -70,7 +70,7 @@ export function bindStagingRuntimeEvents({
     }
     setOrbInputSuppressed(true);
     clearFloatGrace();
-    clearOrbRuntimeFxForDeath();
+    clearOrbDeathRuntimeFx();
     scheduleDeathOverlay();
     updateDebugReadout();
   });

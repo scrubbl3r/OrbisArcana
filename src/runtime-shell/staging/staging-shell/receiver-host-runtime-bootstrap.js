@@ -309,8 +309,8 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     spawnLegacyDomOrbShardFx: (payload) => {
       if (shellHooks && typeof shellHooks.spawnLegacyDomOrbShardFx === "function") shellHooks.spawnLegacyDomOrbShardFx(payload);
     },
-    clearOrbRuntimeFxForDeath: () => {
-      if (shellHooks && typeof shellHooks.clearOrbRuntimeFxForDeath === "function") shellHooks.clearOrbRuntimeFxForDeath();
+    clearOrbDeathRuntimeFx: () => {
+      if (shellHooks && typeof shellHooks.clearOrbDeathRuntimeFx === "function") shellHooks.clearOrbDeathRuntimeFx();
     },
     scheduleDeathOverlay: () => {
       if (shellHooks && typeof shellHooks.scheduleDeathOverlay === "function") shellHooks.scheduleDeathOverlay();
