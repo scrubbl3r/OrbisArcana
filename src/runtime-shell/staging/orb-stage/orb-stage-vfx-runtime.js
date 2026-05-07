@@ -88,9 +88,6 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
 export function initOrbStageReceiverVfxRuntime({
   runtime = null,
   vfxDefaults = null,
-  playElectricAoeRuntime = null,
-  playFlameAoeRuntime = null,
-  triggerShockwaveRuntime = null,
   playOrbNod3dRuntime = null,
   playOrbTeleport3dRuntime = null,
   playBubbleShield3dRuntime = null,
@@ -159,18 +156,10 @@ export function initOrbStageReceiverVfxRuntime({
   function triggerOrbStageShockwaveFallback() {
     const shockwave3dResult = playOrbStageShockwave3dFallback();
     if (shockwave3dResult && shockwave3dResult.handled) return shockwave3dResult;
-    if (typeof triggerShockwaveRuntime === "function") {
-      const result = triggerShockwaveRuntime();
-      if (result && result.handled) return result;
-    }
     return { handled: false };
   }
 
   function playOrbStageElectricAoeFallback() {
-    if (typeof playElectricAoeRuntime === "function") {
-      const result = playElectricAoeRuntime();
-      if (result && result.handled) return result;
-    }
     return { handled: false };
   }
 
@@ -181,10 +170,6 @@ export function initOrbStageReceiverVfxRuntime({
           ? vfxDefaults.flame3d
           : Object.create(null)
       );
-      if (result && result.handled) return result;
-    }
-    if (typeof playFlameAoeRuntime === "function") {
-      const result = playFlameAoeRuntime();
       if (result && result.handled) return result;
     }
     return { handled: false };

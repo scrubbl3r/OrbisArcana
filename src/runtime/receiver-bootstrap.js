@@ -20,7 +20,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260507b";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260507c";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -254,11 +254,11 @@ export async function loadReceiverInitModules() {
     { createSpellDispatchSystem },
     { createRuleEnginePreviewSystem },
     { createSpellActionHandlers: createSpellActionHandlersImported },
-    { executeAoeElectric, playElectricAoeRuntime },
-    { executeAoeFlame, playFlameAoeRuntime },
+    { executeAoeElectric },
+    { executeAoeFlame },
     { executeAoeFrost },
     { executeTeleport, teleportOrbRuntimeToSpawn },
-    { executeShockwave, triggerShockwaveRuntime },
+    { executeShockwave },
     { executeBubbleShield },
     {
       clearOrbGraceRuntime,
@@ -357,14 +357,11 @@ export async function loadReceiverInitModules() {
     ...ruleEngineExports,
     createSpellActionHandlersImported,
     executeAoeElectric,
-    playElectricAoeRuntime,
     executeAoeFlame,
-    playFlameAoeRuntime,
     executeAoeFrost,
     executeTeleport,
     teleportOrbRuntimeToSpawn,
     executeShockwave,
-    triggerShockwaveRuntime,
     executeBubbleShield,
     clearOrbGraceRuntime,
     grantOrbGraceRuntime,

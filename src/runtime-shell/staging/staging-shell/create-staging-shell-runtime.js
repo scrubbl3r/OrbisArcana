@@ -17,7 +17,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507al";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507am";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507l";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507db";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507dc";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1827,29 +1827,14 @@ function createShellReceiverVfxDefaults() {
   return createOrbStageReceiverVfxDefaults({ evenStroke });
 }
 
-function initShellReceiverVfxRuntime(shellContext, mods = {}) {
+function initShellReceiverVfxRuntime(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   if (!runtime) return null;
 
-  const {
-    playElectricAoeRuntime,
-    playFlameAoeRuntime,
-    triggerShockwaveRuntime,
-  } = mods || {};
-  if (runtime) {
-    runtime.shellVfxMods = {
-      playElectricAoeRuntime,
-      playFlameAoeRuntime,
-      triggerShockwaveRuntime,
-    };
-  }
   const vfxDefaults = runtime.vfxDefaults || createShellReceiverVfxDefaults();
   return initOrbStageReceiverVfxRuntime({
     runtime,
     vfxDefaults,
-    playElectricAoeRuntime,
-    playFlameAoeRuntime,
-    triggerShockwaveRuntime,
     playOrbNod3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playOrbNod3d", payload, "active_stage_orb_nod3d_missing"),
     playOrbTeleport3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playOrbTeleport3d", payload, "active_stage_orb_teleport3d_missing"),
     playBubbleShield3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playBubbleShield3d", payload, "active_stage_bubble_shield3d_missing"),
@@ -2179,10 +2164,6 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
   assignShellStageElements(shellContext, activeStageEls);
   if (!runtime) return;
 
-  if (runtime.vfxDefaults && runtime.shellVfxMods) {
-    initShellReceiverVfxRuntime(shellContext, runtime.shellVfxMods);
-  }
-
   runtime.orbStageActions = createShellOrbStageActions(shellContext);
 }
 
@@ -2303,7 +2284,6 @@ function createStagingShellContext({
       stage: null,
       authoredLevelReadModel: null,
       authoredLevelBoundarySegments: null,
-      shellVfxMods: null,
       shellModeController: modeController,
       shellModeHotkeyOff: null,
       shellModeOff: null,
@@ -2505,9 +2485,6 @@ async function initShellKwsRuntime(shellContext) {
     executeColorize,
     executeShockwave,
     CAST_ACTION_REGISTRY_BY_ID,
-    playElectricAoeRuntime,
-    playFlameAoeRuntime,
-    triggerShockwaveRuntime,
     teleportOrbRuntimeToSpawn,
     grantOrbGraceRuntime,
     hydrateReceiverVfxDefaults,
@@ -2574,11 +2551,7 @@ async function initShellKwsRuntime(shellContext) {
     });
   }
   runtime.vfxDefaults = vfxDefaults;
-  const shellVfx = initShellReceiverVfxRuntime(shellContext, {
-    playElectricAoeRuntime,
-    playFlameAoeRuntime,
-    triggerShockwaveRuntime,
-  });
+  const shellVfx = initShellReceiverVfxRuntime(shellContext);
   const getRuntimeVfx = () => (
     runtime && runtime.vfx ? runtime.vfx : shellVfx || null
   );
@@ -2768,7 +2741,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507ar",
+  moduleCacheBustV = "20260507as",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
