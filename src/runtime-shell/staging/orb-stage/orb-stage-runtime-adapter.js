@@ -82,7 +82,7 @@ export function createOrbStageRuntimeAdapter({
   return Object.freeze({
     ...shared3dAdapter,
     applyOrbTransform(args = {}) {
-      legacyDomOrbAdapter.applyOrbTransform(args);
+      legacyDomOrbAdapter.applyLegacyDomOrbTransform(args);
       if (typeof shared3dAdapter.applyOrbTransform === "function") {
         shared3dAdapter.applyOrbTransform(args);
       }

@@ -17,7 +17,7 @@ export function createLegacyDomOrbStageAdapter({
   let lastCrackMarkup = "";
 
   return Object.freeze({
-    applyOrbTransform({
+    applyLegacyDomOrbTransform({
       top = 0,
       left = "50%",
       xW = null,
