@@ -78,11 +78,9 @@ They belong either in `staging-shell` or in an explicit shell hook object passed
 
 ### C. Transitional glue / likely temporary residue
 
-These parts look transitional and likely should not survive as-is:
-
-- shell-owned `processIncomingImpulse(...)` assignment after adapter construction
-
-These are the most obvious cleanup targets once the main extraction seam is chosen.
+The obvious receiver-host assembly residue has been folded into explicit
+bootstrap seams. Future cleanup should focus on reducing shell hook breadth
+after the shared extraction point is stable.
 
 ## The Three Internal Seams
 
@@ -146,7 +144,7 @@ Create a helper with a shape roughly like:
   - started systems
   - `eventBinder`
   - `receiverRuntime`
-- a `processIncomingImpulse(...)` function or the pieces needed to build it
+- a `processIncomingImpulse(...)` function
 
 The first version can still live close to `staging-shell`, but it should be a distinct bootstrap seam rather than inline shell code.
 
@@ -155,7 +153,7 @@ The first version can still live close to `staging-shell`, but it should be a di
 If we want the safest next code step:
 
 - extract the receiver runtime assembly/startup portion into one dedicated helper
-- leave `processIncomingImpulse(...)` attached by `staging-shell` for one more cycle
+- attach `processIncomingImpulse(...)` from the receiver-host bootstrap
 - leave shell gesture/lamp/float hooks in `staging-shell`
 
 That gives us the cleanest low-risk path toward making `staging-shell` the real primary host without destabilizing the active behavior.

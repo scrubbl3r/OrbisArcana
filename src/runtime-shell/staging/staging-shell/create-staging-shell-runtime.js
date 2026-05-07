@@ -21,8 +21,7 @@ import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } fro
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260504a";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260428a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260429c";
-import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260506a";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import {
@@ -2306,33 +2305,21 @@ async function initShellReceiverHostRuntime(shellContext) {
       resetOrbStrokeColor: () => shellClearColorize(shellContext),
       updateDebugReadout: () => {},
     },
+    impulseAdapterHooks: {
+      computeLift01,
+      pickShakeMetric,
+    },
   });
   if (!assembly) return null;
 
   const {
-    stabilityVisualState,
     runtimeContext,
-    runInputFramePipelineImported,
-    applyStabilityVisuals,
   } = assembly;
 
   if (runtime.stage) {
     runtime.stage.worldSystem = runtimeContext && runtimeContext.worldSystem ? runtimeContext.worldSystem : null;
   }
 
-  const processIncomingImpulse = attachShellReceiverHostImpulseAdapter({
-    runtimeContext,
-    stabilityVisualState,
-    runtime,
-    runInputFramePipelineImported,
-    inputDynamicsConfig: INPUT_DYNAMICS_CFG,
-    applyStabilityVisuals,
-    computeLift01,
-    pickShakeMetric,
-  });
-  if (runtime.receiverHostRuntime && typeof processIncomingImpulse === "function") {
-    runtime.receiverHostRuntime.processIncomingImpulse = processIncomingImpulse;
-  }
   return runtime.receiverHostRuntime;
 }
 

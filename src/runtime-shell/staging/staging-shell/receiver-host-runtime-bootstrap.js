@@ -1,3 +1,5 @@
+import { attachShellReceiverHostImpulseAdapter } from "./receiver-host-impulse-adapter.js";
+
 export async function bootstrapShellReceiverHostRuntimeAssembly({
   shellContext = null,
   runtime = null,
@@ -8,6 +10,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   setLamp = null,
   stageAdapters = null,
   shellHooks = null,
+  impulseAdapterHooks = null,
 } = {}) {
   if (!runtime || !sharedModules || !shellKws) return null;
 
@@ -393,16 +396,28 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     eventBinder,
     receiverRuntime,
   };
+  const processIncomingImpulse = attachShellReceiverHostImpulseAdapter({
+    runtimeContext,
+    stabilityVisualState,
+    runtime,
+    runInputFramePipelineImported,
+    inputDynamicsConfig: INPUT_DYNAMICS_CFG,
+    applyStabilityVisuals,
+    computeLift01: impulseAdapterHooks && typeof impulseAdapterHooks.computeLift01 === "function"
+      ? impulseAdapterHooks.computeLift01
+      : null,
+    pickShakeMetric: impulseAdapterHooks && typeof impulseAdapterHooks.pickShakeMetric === "function"
+      ? impulseAdapterHooks.pickShakeMetric
+      : null,
+  });
+  if (typeof processIncomingImpulse === "function") {
+    runtime.receiverHostRuntime.processIncomingImpulse = processIncomingImpulse;
+  }
 
   return {
     receiverHostRuntime: runtime.receiverHostRuntime,
-    stabilityVisualState,
     runtimeContext,
     eventBinder,
     receiverRuntime,
-    runInputFramePipelineImported,
-    INPUT_GESTURE_CFG,
-    INPUT_DYNAMICS_CFG,
-    applyStabilityVisuals,
   };
 }
