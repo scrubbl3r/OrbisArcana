@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507bj";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507bk";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2206,6 +2206,42 @@ function getActiveShellStageMethod(shellContext, methodName) {
   return typeof method === "function" ? { activeAdapter, method } : null;
 }
 
+function createShellLegacyDomOrbShatterController(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  if (!runtime) return null;
+  const createLegacyDomOrbShatterController = getActiveShellStageMethod(
+    shellContext,
+    "createLegacyDomOrbShatterController"
+  );
+  const legacyDomOrbShatterRuntime = (
+    runtime.vfx &&
+    typeof runtime.vfx.getLegacyDomOrbShatterRuntime === "function"
+  )
+    ? runtime.vfx.getLegacyDomOrbShatterRuntime()
+    : null;
+  if (!createLegacyDomOrbShatterController || !legacyDomOrbShatterRuntime) return null;
+  return createLegacyDomOrbShatterController.method.call(createLegacyDomOrbShatterController.activeAdapter, {
+    root: getActiveShellStageRoot(shellContext),
+    getOrbShatterRuntime: () => (
+      runtime &&
+      runtime.vfx &&
+      typeof runtime.vfx.getLegacyDomOrbShatterRuntime === "function"
+        ? runtime.vfx.getLegacyDomOrbShatterRuntime()
+        : null
+    ),
+    getOrbColorState: () => (
+      runtime &&
+      runtime.orbColorRuntime &&
+      typeof runtime.orbColorRuntime.getCurrentState === "function"
+        ? runtime.orbColorRuntime.getCurrentState()
+        : null
+    ),
+    getBaseFillAlpha: () => 0.20,
+    clamp,
+    clamp01,
+  });
+}
+
 function callActiveShellStageMethod(shellContext, methodName, payload = {}, skipped = "active_stage_method_missing") {
   const target = getActiveShellStageMethod(shellContext, methodName);
   return target
@@ -2265,43 +2301,7 @@ function refreshShellActiveStageRuntimeBindings(shellContext) {
   }
 
   runtime.orbStageActions = createShellOrbStageActions(shellContext);
-
-  const createOrbShatterController = getActiveShellStageMethod(
-    shellContext,
-    "createLegacyDomOrbShatterController"
-  );
-  const legacyDomOrbShatterRuntime = (
-    runtime.vfx &&
-    typeof runtime.vfx.getLegacyDomOrbShatterRuntime === "function"
-  )
-    ? runtime.vfx.getLegacyDomOrbShatterRuntime()
-    : null;
-  const activeRoot = getActiveShellStageRoot(shellContext);
-  runtime.legacyDomOrbShatterController = (
-    createOrbShatterController &&
-    legacyDomOrbShatterRuntime
-  )
-    ? createOrbShatterController.method.call(createOrbShatterController.activeAdapter, {
-        root: activeRoot,
-        getOrbShatterRuntime: () => (
-          runtime &&
-          runtime.vfx &&
-          typeof runtime.vfx.getLegacyDomOrbShatterRuntime === "function"
-            ? runtime.vfx.getLegacyDomOrbShatterRuntime()
-            : null
-        ),
-        getOrbColorState: () => (
-          runtime &&
-          runtime.orbColorRuntime &&
-          typeof runtime.orbColorRuntime.getCurrentState === "function"
-            ? runtime.orbColorRuntime.getCurrentState()
-            : null
-        ),
-        getBaseFillAlpha: () => 0.20,
-        clamp,
-        clamp01,
-      })
-    : null;
+  runtime.legacyDomOrbShatterController = createShellLegacyDomOrbShatterController(shellContext);
 }
 
 function syncActiveStageGlobe3dRuntime(shellContext) {
