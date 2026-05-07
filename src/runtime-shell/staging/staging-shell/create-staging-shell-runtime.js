@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507ai";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507aj";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1622,7 +1622,7 @@ function bindShellStageActions(shellContext) {
       orbFxSystem.reset();
     }
     closeShellDeathOverlay(shellContext);
-    renderShellOrbDamageVisuals(shellContext);
+    renderShellLegacyDomOrbDamageVisuals(shellContext);
   };
   for (const button of buttons) {
     button.addEventListener("click", onTryAgain);
@@ -1669,7 +1669,7 @@ function updateShellOrbStrokeColor(shellContext, dt) {
   }
 }
 
-function renderShellOrbDamageVisuals(shellContext) {
+function renderShellLegacyDomOrbDamageVisuals(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const receiverRuntime = resolveShellReceiverRuntime(runtime);
   if (!receiverRuntime || !receiverRuntime.orbDamageVisualsRuntime) return;
@@ -2044,7 +2044,7 @@ async function initShellReceiverHostRuntime(shellContext) {
       allDirLampOff: () => allShellDirectionLampsOff(shellContext),
       flashDirLampPair: (a, b, ms) => flashShellDirectionLampPair(shellContext, a, b, ms),
       flashDirLampSingle: (code, ms) => flashShellDirectionLampSingle(shellContext, code, ms),
-      renderLegacyDomOrbDamageVisuals: () => renderShellOrbDamageVisuals(shellContext),
+      renderLegacyDomOrbDamageVisuals: () => renderShellLegacyDomOrbDamageVisuals(shellContext),
       spawnShardFx: (payload) => spawnShellShardFx(shellContext, payload),
       clearOrbRuntimeFxForDeath: () => clearShellOrbRuntimeFxForDeath(shellContext),
       scheduleDeathOverlay: () => scheduleShellDeathOverlay(shellContext, 3000),
