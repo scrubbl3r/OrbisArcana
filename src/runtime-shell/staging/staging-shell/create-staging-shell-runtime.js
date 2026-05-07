@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507cw";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507cx";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2774,7 +2774,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507am",
+  moduleCacheBustV = "20260507an",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

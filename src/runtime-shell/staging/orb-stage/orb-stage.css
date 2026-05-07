@@ -123,21 +123,6 @@ body {
   pointer-events: none;
 }
 
-.pickupGlobe {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: var(--world-globe-idle-d, var(--orb-globe-pickup-d));
-  height: var(--world-globe-idle-d, var(--orb-globe-pickup-d));
-  border-radius: 999px;
-  border: var(--world-globe-idle-stroke-w, 2px) solid var(--world-globe-idle-stroke, rgba(255,214,64,0.96));
-  background: var(--world-globe-idle-fill, rgba(255,214,64,0.42));
-  transform: translate(-50%, 0);
-  box-sizing: border-box;
-  z-index: 6;
-  pointer-events: none;
-}
-
 .deathPanel {
   position: absolute;
   inset: 0;
