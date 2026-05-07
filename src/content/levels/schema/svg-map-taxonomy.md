@@ -8,7 +8,7 @@ child `inkscape:label` metadata defines item identity and actor-depth behavior.
 - `bounds`: playable collision/world boundary loops.
 - `bounds_cam`: camera clamp boundary loops.
 - `depths`: authored 3D depth surfaces. Child paths/rects own depth metadata.
-- `art`: authored decorative line art.
+- `art`: authored visual detail.
 - `props`: world props that render in the actor lane unless specified otherwise.
 - `fields`: non-collision field regions, such as star/ambient regions.
 - `spawns`: player spawn markers.

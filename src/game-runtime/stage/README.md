@@ -4,7 +4,7 @@ This domain is for code that turns authored level read models into stage-facing
 DOM/SVG presentation state without belonging to one staging shell surface.
 
 Current responsibilities:
-- authored overlay markup for line art and generated stars
+- authored overlay markup for art shapes and generated stars
 - authored stage camera CSS variable application
 - authored stage scene hydration/controller glue
 

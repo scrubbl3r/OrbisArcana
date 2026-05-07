@@ -9,9 +9,10 @@ This is the home for:
 Current intended authored level shape:
 - identity: `id`, `label`
 - world: dimensions and broad world bounds
-- terrain: ground/mountain profile data
-- authored elements: spawns, boundaries, hazards, triggers, decorators
-- optional metadata/debug annotations
+- terrain: `terrain.profile`
+- map source: SVG asset, canonical semantic layer buckets, and `primarySpawn`
+- authored elements: `elements.boundaries`, `elements.worldItemSpawns`, and future hazards, triggers, decorators
+- optional metadata/debug annotations that do not duplicate runtime buckets
 
 This folder is for schema guidance and adjacent helpers, not live runtime logic.
 
