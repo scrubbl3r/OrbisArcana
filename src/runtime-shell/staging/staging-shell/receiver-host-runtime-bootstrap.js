@@ -398,14 +398,12 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     },
   });
   runtime.receiverRuntime = receiverRuntime;
-  runtime.mvp = receiverRuntime;
 
   runtime.receiverHostRuntime = {
     ...receiverHostState,
     runtimeContext,
     eventBinder,
     receiverRuntime,
-    mvp: receiverRuntime,
   };
 
   return {
@@ -414,7 +412,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     runtimeContext,
     eventBinder,
     receiverRuntime,
-    mvp: receiverRuntime,
     runInputFramePipelineImported,
     buildInputHudViewModel,
     INPUT_GESTURE_CFG,

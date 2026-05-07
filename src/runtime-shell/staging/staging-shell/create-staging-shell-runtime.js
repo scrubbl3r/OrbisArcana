@@ -2870,7 +2870,6 @@ function createStagingShellContext({
       cameraInput: null,
       cameraInputOrbBridge: null,
       receiverRuntime: null,
-      mvp: null,
       frameMetrics: null,
       stageRectCache: null,
       perfTrace,
