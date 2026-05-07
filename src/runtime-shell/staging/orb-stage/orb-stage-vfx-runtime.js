@@ -1,5 +1,5 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js?v=20260506a";
-import { createOrbNod3dDomFallbackRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-dom-fallback-runtime.js";
+import { createOrbNod3dLegacyDomRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-legacy-dom-runtime.js";
 import { createOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-runtime.js";
 import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runtime.js";
 import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js?v=20260501a";
@@ -196,7 +196,7 @@ export function initOrbStageReceiverVfxRuntime({
         ? vfxDefaults.nod
         : Object.create(null),
     }),
-    legacyDomOrbNod3dFallbackRuntime: createOrbNod3dDomFallbackRuntime({
+    legacyDomOrbNod3dRuntime: createOrbNod3dLegacyDomRuntime({
       orbEl: legacyDomEls.orb,
       mountEl: legacyDomEls.orb ? legacyDomEls.orb.parentElement : null,
       orbInteriorEl: legacyDomEls.orbInterior,
@@ -382,7 +382,7 @@ export function initOrbStageReceiverVfxRuntime({
       stageVfx.legacyDomBubbleShieldRuntime.activate({
         durationMs: resolvedDurationMs,
       });
-      markTrace("orbStage.bubbleShield.activate.legacy_dom_fallback", {
+      markTrace("orbStage.bubbleShield.activate.legacy_dom_runtime", {
         durationMs: resolvedDurationMs,
       });
       return { handled: true };
@@ -433,10 +433,10 @@ export function initOrbStageReceiverVfxRuntime({
       if (result && result.handled) return result;
     }
     if (
-      stageVfx.legacyDomOrbNod3dFallbackRuntime &&
-      typeof stageVfx.legacyDomOrbNod3dFallbackRuntime.play === "function"
+      stageVfx.legacyDomOrbNod3dRuntime &&
+      typeof stageVfx.legacyDomOrbNod3dRuntime.play === "function"
     ) {
-      return stageVfx.legacyDomOrbNod3dFallbackRuntime.play(payload);
+      return stageVfx.legacyDomOrbNod3dRuntime.play(payload);
     }
     return { handled: false };
   }

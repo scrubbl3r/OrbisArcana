@@ -13,7 +13,7 @@ function mapNod3dConfigToLegacyNodConfig(raw = {}, { getOrbDiameterPx = () => 72
   };
 }
 
-export function createOrbNod3dDomFallbackRuntime({
+export function createOrbNod3dLegacyDomRuntime({
   getConfig = () => ({}),
   getOrbDiameterPx = () => 72,
   ...runtimeOptions
@@ -27,4 +27,3 @@ export function createOrbNod3dDomFallbackRuntime({
     ),
   });
 }
-
