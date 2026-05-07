@@ -1935,36 +1935,11 @@ function initShellReceiverVfxRuntime(shellContext, mods = {}) {
     playElectricAoeRuntime,
     playFlameAoeRuntime,
     triggerShockwaveRuntime,
-    playOrbNod3dRuntime: (payload = {}) => {
-      const activeAdapter = getActiveShellStageAdapter(shellContext);
-      return activeAdapter && typeof activeAdapter.playOrbNod3d === "function"
-        ? activeAdapter.playOrbNod3d(payload)
-        : { handled: false, skipped: "active_stage_orb_nod3d_missing" };
-    },
-    playOrbTeleport3dRuntime: (payload = {}) => {
-      const activeAdapter = getActiveShellStageAdapter(shellContext);
-      return activeAdapter && typeof activeAdapter.playOrbTeleport3d === "function"
-        ? activeAdapter.playOrbTeleport3d(payload)
-        : { handled: false, skipped: "active_stage_orb_teleport3d_missing" };
-    },
-    playBubbleShield3dRuntime: (payload = {}) => {
-      const activeAdapter = getActiveShellStageAdapter(shellContext);
-      return activeAdapter && typeof activeAdapter.playBubbleShield3d === "function"
-        ? activeAdapter.playBubbleShield3d(payload)
-        : { handled: false, skipped: "active_stage_bubble_shield3d_missing" };
-    },
-    playShockwave3dRuntime: (payload = {}) => {
-      const activeAdapter = getActiveShellStageAdapter(shellContext);
-      return activeAdapter && typeof activeAdapter.playShockwave3d === "function"
-        ? activeAdapter.playShockwave3d(payload)
-        : { handled: false, skipped: "active_stage_shockwave3d_missing" };
-    },
-    playFlameAoe3dRuntime: (payload = {}) => {
-      const activeAdapter = getActiveShellStageAdapter(shellContext);
-      return activeAdapter && typeof activeAdapter.playFlameAoe3d === "function"
-        ? activeAdapter.playFlameAoe3d(payload)
-        : { handled: false, skipped: "active_stage_flame_aoe3d_missing" };
-    },
+    playOrbNod3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playOrbNod3d", payload, "active_stage_orb_nod3d_missing"),
+    playOrbTeleport3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playOrbTeleport3d", payload, "active_stage_orb_teleport3d_missing"),
+    playBubbleShield3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playBubbleShield3d", payload, "active_stage_bubble_shield3d_missing"),
+    playShockwave3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playShockwave3d", payload, "active_stage_shockwave3d_missing"),
+    playFlameAoe3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playFlameAoe3d", payload, "active_stage_flame_aoe3d_missing"),
     clamp,
     clamp01,
     evenPx,
@@ -2244,6 +2219,13 @@ function getActiveShellStageElements(shellContext) {
 function getShellOrbStageActions(shellContext) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   return runtime && runtime.orbStageActions ? runtime.orbStageActions : null;
+}
+
+function callActiveShellStageMethod(shellContext, methodName, payload = {}, skipped = "active_stage_method_missing") {
+  const activeAdapter = getActiveShellStageAdapter(shellContext);
+  return activeAdapter && typeof activeAdapter[methodName] === "function"
+    ? activeAdapter[methodName](payload)
+    : { handled: false, skipped };
 }
 
 function assignShellStageElements(shellContext, nextStageEls = {}) {
