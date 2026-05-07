@@ -91,7 +91,7 @@ export const ORB_HANGAR = Object.freeze({
       art: Object.freeze([LEVEL_SVG_LAYER_ART]),
       fields: Object.freeze([LEVEL_SVG_LAYER_FIELDS]),
     }),
-    spawnMarker: Object.freeze({
+    primarySpawn: Object.freeze({
       id: "spawn_01",
     }),
   }),

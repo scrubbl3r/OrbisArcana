@@ -22,7 +22,9 @@ export function buildSvgLevelSummaryOptions({
     propLayerLabels: semanticLayers.props || [],
     artLayerLabels: semanticLayers.art || [],
     starsFieldLayerLabels: semanticLayers.fields || [],
-    spawnMarkerId: safeMapSource.spawnMarker && safeMapSource.spawnMarker.id,
+    spawnMarkerId:
+      safeMapSource.primarySpawn && safeMapSource.primarySpawn.id ||
+      safeMapSource.spawnMarker && safeMapSource.spawnMarker.id,
     tileSizePx: Number(safeMapSource.scale && safeMapSource.scale.boundaryTileSizePx) || LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX,
   });
 }

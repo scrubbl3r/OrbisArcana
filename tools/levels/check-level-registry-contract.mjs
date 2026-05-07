@@ -44,6 +44,9 @@ for (const id of CANONICAL_LEVEL_IDS) {
   assert.equal(Object.isFrozen(level), true, `${id} should be normalized and frozen`);
   assert.equal(Object.isFrozen(level.mapSource), true, `${id} mapSource should be frozen`);
   assert.equal(Object.isFrozen(level.mapSource.semanticLayers), true, `${id} semanticLayers should be frozen`);
+  assert.equal(Object.isFrozen(level.mapSource.primarySpawn), true, `${id} primarySpawn should be frozen`);
+  assert.equal(level.mapSource.primarySpawn.id, "spawn_01", `${id} should expose canonical primary spawn id`);
+  assert.equal(Object.hasOwn(level.mapSource, "spawnMarker"), false, `${id} should not expose deprecated spawnMarker config`);
 }
 
 for (const expectation of EXPECTED_LEVEL_SEMANTIC_LAYERS) {

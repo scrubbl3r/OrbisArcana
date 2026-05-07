@@ -92,8 +92,12 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
       art: normalizeLayerLabels(semanticLayers.art),
       fields: normalizeLayerLabels(semanticLayers.fields),
     }),
-    spawnMarker: Object.freeze({
-      id: String(mapSource.spawnMarker && mapSource.spawnMarker.id || "").trim(),
+    primarySpawn: Object.freeze({
+      id: String(
+        mapSource.primarySpawn && mapSource.primarySpawn.id ||
+        mapSource.spawnMarker && mapSource.spawnMarker.id ||
+        ""
+      ).trim(),
     }),
   });
 }
