@@ -80,10 +80,6 @@ They belong either in `staging-shell` or in an explicit shell hook object passed
 
 These parts look transitional and likely should not survive as-is:
 
-- direct HUD rendering inside impulse ingestion:
-  - `buildInputHudViewModel(...)`
-  - `devStagingView.renderInputHud(...)`
-- shell-local `setBgFromEnergy` / `setAudio` no-op hook plumbing
 - direct inline `processIncomingImpulse(...)` definition inside the bootstrap function
 
 These are the most obvious cleanup targets once the main extraction seam is chosen.

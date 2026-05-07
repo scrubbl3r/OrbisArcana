@@ -3,7 +3,6 @@ export function attachShellReceiverHostImpulseAdapter({
   runtime = null,
   runInputFramePipelineImported = null,
   inputDynamicsConfig = null,
-  inputGestureConfig = null,
   applyStabilityVisuals = null,
   computeLift01 = null,
   pickShakeMetric = null,
@@ -34,7 +33,7 @@ export function attachShellReceiverHostImpulseAdapter({
     const frame = (inputSystem && typeof inputSystem.getLatest === "function")
       ? inputSystem.getLatest()
       : null;
-    const processed = runInputFramePipelineImported({
+    runInputFramePipelineImported({
       d,
       frame,
       nowMs,
@@ -61,7 +60,6 @@ export function attachShellReceiverHostImpulseAdapter({
       },
       hooks: {
         computeLift01,
-        setBgFromEnergy: () => {},
         setStabilityVisualGate: (next) => {
           receiverHostState.stabilityVisualGate = !!next;
         },
@@ -75,7 +73,6 @@ export function attachShellReceiverHostImpulseAdapter({
             });
           }
         },
-        setAudio: () => {},
       },
     });
 

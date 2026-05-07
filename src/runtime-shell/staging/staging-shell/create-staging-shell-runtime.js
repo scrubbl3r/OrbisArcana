@@ -2333,7 +2333,6 @@ async function initShellReceiverHostRuntime(shellContext) {
     runtime,
     runInputFramePipelineImported,
     inputDynamicsConfig: INPUT_DYNAMICS_CFG,
-    inputGestureConfig: INPUT_GESTURE_CFG,
     applyStabilityVisuals,
     computeLift01,
     pickShakeMetric,

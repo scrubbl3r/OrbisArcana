@@ -37,7 +37,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   shellKws.receiverMods = mods;
 
   const {
-    buildInputHudViewModelImported: buildInputHudViewModel,
     createGameState,
     createOrbDamageVisualsRuntime,
     createAudioSystem,
@@ -407,7 +406,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     eventBinder,
     receiverRuntime,
     runInputFramePipelineImported,
-    buildInputHudViewModel,
     INPUT_GESTURE_CFG,
     INPUT_DYNAMICS_CFG,
     applyStabilityVisuals,
