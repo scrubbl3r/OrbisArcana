@@ -11,8 +11,8 @@ import { createLegacyDomElectricAoeRuntime } from "./spells/electric-aoe-legacy-
  * @property {Object|null} legacyDomOrbShatterRuntime
  * @property {Object|null} legacyDomFlameAoeRuntime
  * @property {Object|null} legacyDomElectricAoeRuntime
- * @property {() => void} clearAll
- * @property {() => void} destroy
+ * @property {() => void} clearLegacyDomVfxRuntimes
+ * @property {() => void} destroyLegacyDomVfxRuntimes
  */
 
 /**
@@ -46,7 +46,7 @@ export function createLegacyDomVfxRuntimesBundle(options = {}) {
     ? createLegacyDomElectricAoeRuntime(options.legacyDomElectricAoe)
     : null;
 
-  function clearAll() {
+  function clearLegacyDomVfxRuntimes() {
     try { legacyDomShockwaveRuntime && typeof legacyDomShockwaveRuntime.clear === "function" && legacyDomShockwaveRuntime.clear(); } catch (_) {}
     try { legacyDomBubbleShieldRuntime && typeof legacyDomBubbleShieldRuntime.off === "function" && legacyDomBubbleShieldRuntime.off(); } catch (_) {}
     try { legacyDomOrbShatterRuntime && typeof legacyDomOrbShatterRuntime.clear === "function" && legacyDomOrbShatterRuntime.clear(); } catch (_) {}
@@ -54,7 +54,7 @@ export function createLegacyDomVfxRuntimesBundle(options = {}) {
     try { legacyDomElectricAoeRuntime && typeof legacyDomElectricAoeRuntime.clear === "function" && legacyDomElectricAoeRuntime.clear(); } catch (_) {}
   }
 
-  function destroy() {
+  function destroyLegacyDomVfxRuntimes() {
     try { legacyDomBubbleShieldRuntime && typeof legacyDomBubbleShieldRuntime.destroy === "function" && legacyDomBubbleShieldRuntime.destroy(); } catch (_) {}
     try { legacyDomShockwaveRuntime && typeof legacyDomShockwaveRuntime.destroy === "function" && legacyDomShockwaveRuntime.destroy(); } catch (_) {}
     try { legacyDomOrbShatterRuntime && typeof legacyDomOrbShatterRuntime.destroy === "function" && legacyDomOrbShatterRuntime.destroy(); } catch (_) {}
@@ -68,7 +68,7 @@ export function createLegacyDomVfxRuntimesBundle(options = {}) {
     legacyDomOrbShatterRuntime,
     legacyDomFlameAoeRuntime,
     legacyDomElectricAoeRuntime,
-    clearAll,
-    destroy,
+    clearLegacyDomVfxRuntimes,
+    destroyLegacyDomVfxRuntimes,
   };
 }
