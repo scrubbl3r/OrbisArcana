@@ -44,11 +44,11 @@ function collectOrbStageRefs(sourceRefs = {}, keys = ORB_STAGE_REF_KEYS) {
   }, {});
 }
 
-function collectLegacyDomOrbRefs(stageRefs = {}) {
+function collectOrbStageLegacyDomRefs(stageRefs = {}) {
   return collectOrbStageRefs(stageRefs, ORB_STAGE_LEGACY_DOM_ORB_REF_KEYS);
 }
 
-function resolveLegacyDomOrbWrapPosition({ top = 0, left = "50%" } = {}) {
+function resolveOrbStageLegacyDomOrbWrapPosition({ top = 0, left = "50%" } = {}) {
   return {
     left: (typeof left === "number")
       ? `${Number(left || 0).toFixed(2)}px`
@@ -74,23 +74,23 @@ export function createOrbStageRuntimeAdapter({
     orbDiameterWorldUnits,
     unbindResize,
   });
-  const legacyDomOrbAdapter = createLegacyDomOrbStageAdapter({
+  const orbStageLegacyDomAdapter = createLegacyDomOrbStageAdapter({
     refs: stageRefs,
-    getOrbWrapPosition: resolveLegacyDomOrbWrapPosition,
+    getOrbWrapPosition: resolveOrbStageLegacyDomOrbWrapPosition,
   });
 
   return Object.freeze({
     ...gameStageAdapter,
     applyOrbTransform(args = {}) {
-      legacyDomOrbAdapter.applyLegacyDomOrbTransform(args);
+      orbStageLegacyDomAdapter.applyLegacyDomOrbTransform(args);
       if (typeof gameStageAdapter.applyOrbTransform === "function") {
         gameStageAdapter.applyOrbTransform(args);
       }
     },
-    renderLegacyDomOrbDamageVisuals: legacyDomOrbAdapter.renderLegacyDomOrbDamageVisuals,
-    createLegacyDomOrbShatterController: legacyDomOrbAdapter.createLegacyDomOrbShatterController,
+    renderLegacyDomOrbDamageVisuals: orbStageLegacyDomAdapter.renderLegacyDomOrbDamageVisuals,
+    createLegacyDomOrbShatterController: orbStageLegacyDomAdapter.createLegacyDomOrbShatterController,
     getOrbStageLegacyDomElements() {
-      return Object.freeze(collectLegacyDomOrbRefs(stageRefs));
+      return Object.freeze(collectOrbStageLegacyDomRefs(stageRefs));
     },
     getStageElements() {
       return Object.freeze(gameStageAdapter.getStageElements());
