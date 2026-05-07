@@ -12,7 +12,6 @@ export function bootstrapStagingRuntimeContext({
   createSpellDispatchSystem,
   createRuleEnginePreviewSystem = null,
   createWorldSystem,
-  createOrbSystemsBundle,
   createOrbSystem,
   els = {},
   IMPACT_TH = 0,
@@ -209,12 +208,10 @@ export function bootstrapStagingRuntimeContext({
     });
   }
 
-  const orbSystemsBundle = createOrbSystemsBundle({
-    createOrbSystem,
+  const orbSystem = typeof createOrbSystem === "function" ? createOrbSystem({
     gameState,
     eventBus,
-  });
-  const orbSystem = orbSystemsBundle && orbSystemsBundle.orbSystem;
+  }) : null;
 
   return {
     eventBus,
@@ -229,7 +226,6 @@ export function bootstrapStagingRuntimeContext({
     spellDispatchSystem,
     ruleEnginePreviewSystem,
     worldSystem,
-    orbSystemsBundle,
     orbSystem,
   };
 }

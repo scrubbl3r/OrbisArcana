@@ -47,7 +47,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     createResourcesSystem,
     createSpellDispatchSystem,
     createWorldSystem,
-    createOrbSystemsBundle,
     createOrbSystem,
     createRuleEnginePreviewSystem,
     runInputFramePipelineImported,
@@ -61,7 +60,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     typeof createResourcesSystem !== "function" ||
     typeof createSpellDispatchSystem !== "function" ||
     typeof createWorldSystem !== "function" ||
-    typeof createOrbSystemsBundle !== "function" ||
     typeof createOrbSystem !== "function" ||
     typeof runInputFramePipelineImported !== "function"
   ) {
@@ -116,7 +114,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     createSpellDispatchSystem,
     createRuleEnginePreviewSystem,
     createWorldSystem,
-    createOrbSystemsBundle,
     createOrbSystem,
     els: shellContext.stageEls,
     IMPACT_TH,
@@ -228,10 +225,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   if (runtimeContext.ruleEnginePreviewSystem && typeof runtimeContext.ruleEnginePreviewSystem.start === "function") {
     runtimeContext.ruleEnginePreviewSystem.start();
   }
-  if (runtimeContext.orbSystemsBundle && typeof runtimeContext.orbSystemsBundle.start === "function") {
-    runtimeContext.orbSystemsBundle.start();
-  }
-
   if (shellKws.ruleEnginePreviewSystem && typeof shellKws.ruleEnginePreviewSystem.stop === "function") {
     shellKws.ruleEnginePreviewSystem.stop();
   }
@@ -339,7 +332,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     ruleEnginePreviewSystem: shellKws.ruleEnginePreviewSystem,
     RULE_ENGINE_EXECUTE_ACTIONS: true,
     resourcesSystem: runtimeContext.resourcesSystem,
-    orbSystemsBundle: runtimeContext.orbSystemsBundle,
     orbRuntimeLoop: stageAdapters && typeof stageAdapters.getOrbRuntimeLoop === "function" ? stageAdapters.getOrbRuntimeLoop() : null,
     spellDispatchSystem: runtimeContext.spellDispatchSystem,
     kwsWordProvider: shellKws.kwsWordProvider,
