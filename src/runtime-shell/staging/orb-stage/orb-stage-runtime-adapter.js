@@ -6,6 +6,24 @@ import {
 } from "../../../game-runtime/stage/authored-level-overlay.js?v=20260506a";
 import { applyAuthoredStageCameraVars } from "../../../game-runtime/stage/authored-stage-frame.js";
 
+const ORB_STAGE_REF_KEYS = Object.freeze([
+  "root",
+  "physStage",
+  "world",
+  "worldOverlay",
+  "orbWrap",
+  "orb",
+  "orbInterior",
+  "orbCracks",
+  "orbShards",
+  "shield",
+  "shockLayer",
+  "flameLayer",
+  "electricLayer",
+  "deathPanel",
+  "tryAgainBtn",
+]);
+
 const ORB_STAGE_VISUAL_REF_KEYS = Object.freeze([
   "orbWrap",
   "orb",
@@ -18,11 +36,15 @@ const ORB_STAGE_VISUAL_REF_KEYS = Object.freeze([
   "electricLayer",
 ]);
 
-function collectOrbStageVisualRefs(stageRefs = {}) {
-  return ORB_STAGE_VISUAL_REF_KEYS.reduce((acc, key) => {
-    acc[key] = stageRefs[key] || null;
+function collectOrbStageRefs(sourceRefs = {}, keys = ORB_STAGE_REF_KEYS) {
+  return keys.reduce((acc, key) => {
+    acc[key] = sourceRefs[key] || null;
     return acc;
   }, {});
+}
+
+function collectOrbStageVisualRefs(stageRefs = {}) {
+  return collectOrbStageRefs(stageRefs, ORB_STAGE_VISUAL_REF_KEYS);
 }
 
 function resolveOrbStageBackdropWorldSize(runtime = null, levelWorldSize = {}) {
@@ -43,23 +65,7 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
   const localBackdropState = Object.create(null);
   let activeBackdropState = localBackdropState;
   const levelWorldSize = resolveLevelWorldSize(level);
-  const stageRefs = Object.freeze({
-    root: refs.root || null,
-    physStage: refs.physStage || null,
-    world: refs.world || null,
-    worldOverlay: refs.worldOverlay || null,
-    orbWrap: refs.orbWrap || null,
-    orb: refs.orb || null,
-    orbInterior: refs.orbInterior || null,
-    orbCracks: refs.orbCracks || null,
-    orbShards: refs.orbShards || null,
-    shield: refs.shield || null,
-    shockLayer: refs.shockLayer || null,
-    flameLayer: refs.flameLayer || null,
-    electricLayer: refs.electricLayer || null,
-    deathPanel: refs.deathPanel || null,
-    tryAgainBtn: refs.tryAgainBtn || null,
-  });
+  const stageRefs = Object.freeze(collectOrbStageRefs(refs));
 
   const core = createStageRuntimeAdapterCore({
     refs: stageRefs,
