@@ -91,7 +91,10 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
       if (stageBackdrop.artKey !== nextArtKey) {
         stageBackdrop.artShapes = nextArtShapes;
         stageBackdrop.artKey = nextArtKey;
-        stageRefs.worldOverlay.innerHTML = buildOverlayMarkup(nextArtShapes, null, {
+        stageRefs.worldOverlay.innerHTML = buildOverlayMarkup({
+          starsField: null,
+          loops: [],
+          artShapes: nextArtShapes,
           worldWidthPx: worldWidth,
           worldHeightPx: worldHeight,
         });
