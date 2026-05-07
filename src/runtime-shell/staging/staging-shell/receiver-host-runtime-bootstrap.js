@@ -339,7 +339,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     ruleEnginePreviewSystem: shellKws.ruleEnginePreviewSystem,
     RULE_ENGINE_EXECUTE_ACTIONS: true,
     resourcesSystem: runtimeContext.resourcesSystem,
-    orbFxSystem: runtimeContext.orbFxSystem,
     orbSystemsBundle: runtimeContext.orbSystemsBundle,
     orbRuntimeLoop: stageAdapters && typeof stageAdapters.getOrbRuntimeLoop === "function" ? stageAdapters.getOrbRuntimeLoop() : null,
     spellDispatchSystem: runtimeContext.spellDispatchSystem,

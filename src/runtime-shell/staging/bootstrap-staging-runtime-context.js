@@ -215,7 +215,6 @@ export function bootstrapStagingRuntimeContext({
     eventBus,
   });
   const orbSystem = orbSystemsBundle && orbSystemsBundle.orbSystem;
-  const orbFxSystem = orbSystemsBundle && orbSystemsBundle.orbFxSystem;
 
   return {
     eventBus,
@@ -232,6 +231,5 @@ export function bootstrapStagingRuntimeContext({
     worldSystem,
     orbSystemsBundle,
     orbSystem,
-    orbFxSystem,
   };
 }

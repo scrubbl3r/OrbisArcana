@@ -13,7 +13,6 @@ export function bootstrapStagingRuntimeBundle({
   ruleEnginePreviewSystem = null,
   RULE_ENGINE_EXECUTE_ACTIONS = false,
   resourcesSystem = null,
-  orbFxSystem = null,
   orbSystemsBundle = null,
   orbRuntimeLoop = null,
   spellDispatchSystem = null,
@@ -48,7 +47,6 @@ export function bootstrapStagingRuntimeBundle({
     orbRuntimeState,
     ...ruleEngineRuntimeState,
     resourcesSystem,
-    orbFxSystem,
     orbSystemsBundle,
     orbRuntimeLoop,
     spellDispatchSystem,
@@ -80,7 +78,6 @@ export function bootstrapStagingRuntimeBundle({
   }
   receiverRuntime.lastImpact = null;
   setOrbInputSuppressed(false);
-  if (orbFxSystem && typeof orbFxSystem.reset === "function") orbFxSystem.reset();
   if (worldSystem && typeof worldSystem.reset === "function") worldSystem.reset(performance.now());
   clearDeathOverlaySchedule();
   closeDeathOverlay();

@@ -21,7 +21,7 @@ import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } fro
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507l";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507p";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507q";
 import { createShellReceiverConfigs } from "./receiver-configs.js";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507cy";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507cz";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1503,7 +1503,6 @@ function startShellStageLoop(shellContext) {
       traceMeasure("frame.metrics", () => updateShellFrameMetrics(shellContext, nowMs));
       const cameraTrace = traceShellCameraInput(shellContext, nowMs);
       const receiverRuntime = resolveShellReceiverRuntime(runtime);
-      const orbFxSystem = receiverRuntime && receiverRuntime.orbFxSystem ? receiverRuntime.orbFxSystem : null;
       traceMeasure("orb.pipeline", () => runOrbRuntimePipeline({
         ts,
         dt,
@@ -1513,7 +1512,6 @@ function startShellStageLoop(shellContext) {
         phys: runtime.stage ? runtime.stage.phys : {},
         shieldDescent: runtime.stage ? runtime.stage.shieldDescent : {},
         receiverRuntime,
-        orbFxSystem,
         worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
         hooks: pipelineHooks,
       }));
@@ -1615,10 +1613,6 @@ function bindShellStageActions(shellContext) {
     }
     if (stage && stage.worldSystem && typeof stage.worldSystem.reset === "function") {
       stage.worldSystem.reset(performance.now());
-    }
-    const orbFxSystem = receiverRuntime && receiverRuntime.orbFxSystem ? receiverRuntime.orbFxSystem : null;
-    if (orbFxSystem && typeof orbFxSystem.reset === "function") {
-      orbFxSystem.reset();
     }
     closeShellDeathOverlay(shellContext);
   };
@@ -2774,7 +2768,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507ao",
+  moduleCacheBustV = "20260507ap",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
