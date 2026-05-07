@@ -14,7 +14,6 @@ export function bootstrapStagingRuntimeContext({
   createWorldSystem,
   createOrbSystemsBundle,
   createOrbSystem,
-  createOrbFxSystem,
   els = {},
   IMPACT_TH = 0,
   INPUT_DYNAMICS_CFG = {},
@@ -38,7 +37,6 @@ export function bootstrapStagingRuntimeContext({
   getOrbVisualRadiusPx = null,
   axisToColor01 = () => 0,
   bindGlobe3dRuntime = null,
-  enableLegacyOrbFxRuntime = null,
   gestureHooks = {},
 } = {}) {
   const eventBus = createEventBus();
@@ -203,9 +201,6 @@ export function bootstrapStagingRuntimeContext({
       orbDiameterPx: getOrbFxRadiusPx() * 2,
     }),
   });
-  const orbFxWorldGlobeVisualState = buildWorldGlobeVisualState(null, {
-    orbDiameterPx: getOrbFxRadiusPx() * 2,
-  });
   if (typeof bindGlobe3dRuntime === "function") {
     bindGlobe3dRuntime({
       eventBus,
@@ -214,26 +209,10 @@ export function bootstrapStagingRuntimeContext({
     });
   }
 
-  const shouldCreateLegacyOrbFxRuntime = typeof enableLegacyOrbFxRuntime === "boolean"
-    ? enableLegacyOrbFxRuntime
-    : !!(els.orbInterior && els.physStage);
   const orbSystemsBundle = createOrbSystemsBundle({
     createOrbSystem,
-    createOrbFxSystem: shouldCreateLegacyOrbFxRuntime ? createOrbFxSystem : null,
     gameState,
     eventBus,
-    orbFxOptions: {
-      orbInteriorEl: els.orbInterior,
-      getOrbInteriorEl: () => els.orbInterior,
-      stageEl: els.physStage,
-      getStageEl: () => els.physStage,
-      getOrbScreenX,
-      getOrbScreenY,
-      orbRadiusPx: getOrbFxRadiusPx(),
-      getOrbRadiusPx: getOrbFxRadiusPx,
-      getAxisColor01: (axis) => axisToColor01(axis),
-      worldGlobeVisualState: orbFxWorldGlobeVisualState,
-    },
   });
   const orbSystem = orbSystemsBundle && orbSystemsBundle.orbSystem;
   const orbFxSystem = orbSystemsBundle && orbSystemsBundle.orbFxSystem;

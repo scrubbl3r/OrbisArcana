@@ -49,7 +49,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     createWorldSystem,
     createOrbSystemsBundle,
     createOrbSystem,
-    createOrbFxSystem,
     createRuleEnginePreviewSystem,
     runInputFramePipelineImported,
     WORLD_ITEMS,
@@ -64,7 +63,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     typeof createWorldSystem !== "function" ||
     typeof createOrbSystemsBundle !== "function" ||
     typeof createOrbSystem !== "function" ||
-    typeof createOrbFxSystem !== "function" ||
     typeof runInputFramePipelineImported !== "function"
   ) {
     return null;
@@ -120,7 +118,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     createWorldSystem,
     createOrbSystemsBundle,
     createOrbSystem,
-    createOrbFxSystem,
     els: shellContext.stageEls,
     IMPACT_TH,
     INPUT_DYNAMICS_CFG,
@@ -186,7 +183,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
         stageAdapters.bindGlobe3dRuntime(args);
       }
     },
-    enableLegacyOrbFxRuntime: false,
     gestureHooks: {
       isDiversityLampLit,
       flashShakeLamp: () => {
