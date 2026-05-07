@@ -66,7 +66,6 @@ export function createOrbStageRuntimeAdapter({
   orbDiameterWorldUnits = ORB_STAGE_ORB_DIAMETER_WORLD_UNITS,
   unbindResize = () => {},
 } = {}) {
-  const localBackdropState = Object.create(null);
   const stageRefs = Object.freeze(collectOrbStageRefs(refs));
   const legacyCore = createStageRuntimeAdapterCore({
     refs: stageRefs,
@@ -107,19 +106,6 @@ export function createOrbStageRuntimeAdapter({
         ...collectOrbStageVisualRefs(stageRefs),
         deathPanel: stageRefs.deathPanel,
       });
-    },
-    ensureBackdrop({
-      runtime = null,
-      rect = null,
-    } = {}) {
-      if (!runtime || !rect) return;
-      const width = Math.max(1, Math.floor(Number(rect.width) || 0));
-      const height = Math.max(1, Math.floor(Number(rect.height) || 0));
-      const stageBackdrop = runtime.stageBackdrop || (runtime.stageBackdrop = localBackdropState);
-      if (stageBackdrop.width !== width || stageBackdrop.height !== height) {
-        stageBackdrop.width = width;
-        stageBackdrop.height = height;
-      }
     },
   });
 }

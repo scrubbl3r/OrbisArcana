@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507d";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260507e";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -71,13 +71,10 @@ import {
 } from "../../../game-runtime/level/authored-level-camera.js?v=20260506a";
 import { createPerfTrace } from "../perf-trace.js?v=20260430b";
 import {
-  drawShellBackdrop as drawShellStageBackdrop,
-  drawShellStars as drawShellStageStars,
-  ensureShellStageBackdrop as ensureShellStageBackdropSurface,
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-stage-backdrop.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260506d";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507f";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1126,13 +1123,10 @@ function redrawShellStageVisuals(shellContext, {
     runtime.frameMetrics = null;
   }
   updateShellFrameMetrics(shellContext, performance.now());
-  ensureShellStageBackdrop(shellContext);
   if (resetOrbToGround) {
     resetShellOrbToGround(shellContext);
   }
   updateShellStageReadouts(shellContext);
-  drawShellStars(shellContext);
-  drawShellBackdrop(shellContext);
   if (applyOrbFrame) {
     applyShellGroundLine(shellContext);
     applyShellOrbTransform(shellContext);
@@ -1471,8 +1465,6 @@ function startShellStageLoop(shellContext) {
     },
     groundCenterWorld: () => traceMeasure("world.groundCenter", () => shellGroundCenterWorld(shellContext)),
     computeImpactMetric: (rawImpactV) => traceMeasure("impact.metric", () => computeShellImpactMetric(shellContext, rawImpactV)),
-    drawStars: () => traceMeasure("draw.stars", () => drawShellStars(shellContext)),
-    drawWorldBackdrop: () => traceMeasure("draw.backdrop", () => drawShellBackdrop(shellContext)),
     updateOrbStrokeColor: (frameDt) => traceMeasure("orb.stroke", () => updateShellOrbStrokeColor(shellContext, frameDt)),
     applyOrbTransform: () => traceMeasure("orb.applyTransform", () => {
       applyShellGroundLine(shellContext);
@@ -2546,34 +2538,11 @@ function formatPhoneImpulseLogLine(d) {
   return `PHONE speed:${speed} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} locked:${locked} hz:${hz}`;
 }
 
-function ensureShellStageBackdrop(shellContext) {
-  ensureShellStageBackdropSurface(shellContext, {
-    getActiveShellStageMethod,
-    shellStageRect,
-    shellWorldHeight,
-    clamp01,
-  });
-}
-
 function shellGroundLineScreenY(shellContext) {
   return resolveShellGroundLineScreenY(shellContext, {
     shellStageRect,
     shellGroundCenterWorld,
     shellCameraTopFor,
-  });
-}
-
-function drawShellStars(shellContext) {
-  drawShellStageStars(shellContext, {
-    getActiveShellStageMethod,
-    shellCameraTopFor,
-  });
-}
-
-function drawShellBackdrop(shellContext) {
-  drawShellStageBackdrop(shellContext, {
-    getActiveShellStageMethod,
-    groundLineScreenY: shellGroundLineScreenY,
   });
 }
 
