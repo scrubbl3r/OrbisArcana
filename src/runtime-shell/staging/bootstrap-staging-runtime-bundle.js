@@ -23,7 +23,7 @@ export function bootstrapStagingRuntimeBundle({
   kwsRuntimeCommands = {},
   kwsBootOrchestrator = null,
   grantOrbGrace = () => {},
-  orbShatterRuntime = null,
+  legacyDomOrbShatterRuntime = null,
   worldSystem = null,
   clearDeathOverlaySchedule = () => {},
   closeDeathOverlay = () => {},
@@ -82,7 +82,12 @@ export function bootstrapStagingRuntimeBundle({
     receiverRuntime.orbSystem.revive({ health: 300, atMs: performance.now() });
   }
   receiverRuntime.lastImpact = null;
-  if (orbShatterRuntime && typeof orbShatterRuntime.clear === "function") orbShatterRuntime.clear();
+  if (
+    legacyDomOrbShatterRuntime &&
+    typeof legacyDomOrbShatterRuntime.clear === "function"
+  ) {
+    legacyDomOrbShatterRuntime.clear();
+  }
   setOrbInputSuppressed(false);
   if (orbFxSystem && typeof orbFxSystem.reset === "function") orbFxSystem.reset();
   if (worldSystem && typeof worldSystem.reset === "function") worldSystem.reset(performance.now());

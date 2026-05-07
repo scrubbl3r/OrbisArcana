@@ -313,7 +313,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     updateDebugReadout: () => {
       if (shellHooks && typeof shellHooks.updateDebugReadout === "function") shellHooks.updateDebugReadout();
     },
-    orbShatterController: shellHooks && shellHooks.orbShatterController ? shellHooks.orbShatterController : null,
+    legacyDomOrbShatterController: shellHooks && shellHooks.orbShatterController ? shellHooks.orbShatterController : null,
     stopShardSim: () => {
       if (shellHooks && typeof shellHooks.stopShardSim === "function") shellHooks.stopShardSim();
     },
@@ -368,7 +368,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     grantOrbGrace: (grace) => {
       if (shellHooks && typeof shellHooks.grantOrbGrace === "function") shellHooks.grantOrbGrace(grace);
     },
-    orbShatterRuntime: legacyDomVfxRuntimesBundle
+    legacyDomOrbShatterRuntime: legacyDomVfxRuntimesBundle
       ? legacyDomVfxRuntimesBundle.orbShatterRuntime
       : null,
     worldSystem: stageAdapters && typeof stageAdapters.getWorldSystem === "function" ? stageAdapters.getWorldSystem() : null,

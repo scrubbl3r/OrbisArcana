@@ -28,7 +28,7 @@ export function bindStagingRuntimeEvents({
   clearOrbRuntimeFxForDeath = () => {},
   scheduleDeathOverlay = () => {},
   updateDebugReadout = () => {},
-  orbShatterController = null,
+  legacyDomOrbShatterController = null,
   stopShardSim = () => {},
   worldSystem = null,
   resetOrbStrokeColor = () => {},
@@ -62,8 +62,11 @@ export function bindStagingRuntimeEvents({
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_VISUAL_STATE_CHANGED, renderOrbDamageVisuals);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_PIECE_SPAWNED, spawnShardFx);
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
-    if (orbShatterController && typeof orbShatterController.handleOrbDied === "function") {
-      orbShatterController.handleOrbDied();
+    if (
+      legacyDomOrbShatterController &&
+      typeof legacyDomOrbShatterController.handleOrbDied === "function"
+    ) {
+      legacyDomOrbShatterController.handleOrbDied();
     }
     setOrbInputSuppressed(true);
     clearFloatGrace();
@@ -72,8 +75,11 @@ export function bindStagingRuntimeEvents({
     updateDebugReadout();
   });
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_REVIVED, () => {
-    if (orbShatterController && typeof orbShatterController.handleOrbRevived === "function") {
-      orbShatterController.handleOrbRevived();
+    if (
+      legacyDomOrbShatterController &&
+      typeof legacyDomOrbShatterController.handleOrbRevived === "function"
+    ) {
+      legacyDomOrbShatterController.handleOrbRevived();
     }
     setOrbInputSuppressed(false);
     clearFloatGrace();
@@ -98,8 +104,11 @@ export function bindStagingRuntimeEvents({
     });
   });
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_SHATTER_COMPLETE, () => {
-    if (orbShatterController && typeof orbShatterController.handleOrbShatterComplete === "function") {
-      orbShatterController.handleOrbShatterComplete();
+    if (
+      legacyDomOrbShatterController &&
+      typeof legacyDomOrbShatterController.handleOrbShatterComplete === "function"
+    ) {
+      legacyDomOrbShatterController.handleOrbShatterComplete();
     } else {
       stopShardSim();
     }
