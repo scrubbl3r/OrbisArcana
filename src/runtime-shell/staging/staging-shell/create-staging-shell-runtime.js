@@ -18,7 +18,7 @@ import {
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507al";
-import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507f";
+import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507l";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507n";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507ct";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507cu";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2133,13 +2133,6 @@ function getActiveShellStageElements(shellContext) {
     : {};
 }
 
-function getShellOrbStageLegacyDomElements(shellContext) {
-  const adapter = getActiveShellStageAdapter(shellContext);
-  return adapter && typeof adapter.getOrbStageLegacyDomElements === "function"
-    ? adapter.getOrbStageLegacyDomElements()
-    : {};
-}
-
 function getActiveShellStageRoot(shellContext) {
   const adapter = getActiveShellStageAdapter(shellContext);
   return adapter && adapter.refs ? adapter.refs.root || null : null;
@@ -2190,7 +2183,6 @@ function createShellOrbStageActions(shellContext) {
   if (!runtime) return null;
   return createOrbStageActionBridge({
     runtime,
-    orbStageLegacyDomBubbleShieldEl: getShellOrbStageLegacyDomElements(shellContext).shield || null,
     patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
     getOrbRuntime: () => getShellOrbRuntime(shellContext),
     applyOrbTransform: () => applyShellOrbTransform(shellContext),

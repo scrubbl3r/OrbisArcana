@@ -1,31 +1,7 @@
 import { resolveOrbGraceDefaultTtlMs, resolveOrbGracePayload } from "../../../game-runtime/orb/orb-grace.js";
 
-function activateOrbStageLegacyDomBubbleShieldFallback({
-  runtime = null,
-  shieldEl = null,
-  durationMs = 8000,
-} = {}) {
-  if (!shieldEl) return { handled: false };
-  shieldEl.classList.add("on");
-  shieldEl.style.opacity = "1";
-  shieldEl.style.transition = "opacity 120ms linear";
-  if (runtime && runtime.orbStageLegacyDomBubbleShieldFallbackTimer) {
-    clearTimeout(runtime.orbStageLegacyDomBubbleShieldFallbackTimer);
-  }
-  if (runtime) {
-    runtime.orbStageLegacyDomBubbleShieldFallbackTimer = setTimeout(() => {
-      shieldEl.classList.remove("on");
-      shieldEl.style.transition = "opacity 420ms linear";
-      shieldEl.style.opacity = "0";
-      runtime.orbStageLegacyDomBubbleShieldFallbackTimer = 0;
-    }, Math.max(200, Number(durationMs) || 8000));
-  }
-  return { handled: true };
-}
-
 export function createOrbStageActionBridge({
   runtime = null,
-  orbStageLegacyDomBubbleShieldEl = null,
   patchOrbRuntime = () => {},
   getOrbRuntime = () => null,
   applyOrbTransform = () => {},
@@ -50,11 +26,7 @@ export function createOrbStageActionBridge({
         const result = shellVfx.activateBubbleShield({ durationMs });
         if (result && result.handled) return result;
       }
-      return activateOrbStageLegacyDomBubbleShieldFallback({
-        runtime,
-        shieldEl: orbStageLegacyDomBubbleShieldEl,
-        durationMs,
-      });
+      return { handled: false };
     },
     applyColorize(payload = {}) {
       const orbColorRuntime = runtime && runtime.orbColorRuntime;
