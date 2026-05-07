@@ -391,9 +391,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   });
   runtime.receiverRuntime = receiverRuntime;
 
-  runtime.receiverHostRuntime = {
-    receiverRuntime,
-  };
+  runtime.receiverHostRuntime = {};
   const processIncomingImpulse = attachShellReceiverHostImpulseAdapter({
     runtimeContext,
     stabilityVisualState,

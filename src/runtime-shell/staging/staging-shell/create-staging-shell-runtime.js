@@ -1737,12 +1737,7 @@ function bindShellStageActions(shellContext) {
 }
 
 function resolveShellReceiverRuntime(runtime = null) {
-  const receiverHostRuntime = runtime && runtime.receiverHostRuntime ? runtime.receiverHostRuntime : null;
-  return (
-    (receiverHostRuntime && receiverHostRuntime.receiverRuntime) ||
-    (runtime && runtime.receiverRuntime) ||
-    null
-  );
+  return runtime && runtime.receiverRuntime ? runtime.receiverRuntime : null;
 }
 
 function patchShellOrbRuntime(shellContext, patch = {}) {
