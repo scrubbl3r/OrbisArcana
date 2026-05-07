@@ -18,7 +18,7 @@ import {
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507q";
-import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507b";
+import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507c";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507c";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507i";
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260507av";
+globalThis.__orbisStagingShellRuntimeVersion = "20260507aw";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2240,7 +2240,7 @@ function createShellOrbStageActions(shellContext) {
   if (!runtime) return null;
   return createOrbStageActionBridge({
     runtime,
-    legacyDomShieldEl: getShellLegacyDomStageElements(shellContext).shield || null,
+    legacyDomBubbleShieldEl: getShellLegacyDomStageElements(shellContext).shield || null,
     patchOrbRuntime: (patch = {}) => patchShellOrbRuntime(shellContext, patch),
     getOrbRuntime: () => getShellOrbRuntime(shellContext),
     applyOrbTransform: () => applyShellOrbTransform(shellContext),
@@ -2887,7 +2887,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260507i",
+  moduleCacheBustV = "20260507j",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

@@ -2,7 +2,7 @@ import { resolveOrbGraceDefaultTtlMs, resolveOrbGracePayload } from "../../../ga
 
 export function createOrbStageActionBridge({
   runtime = null,
-  legacyDomShieldEl = null,
+  legacyDomBubbleShieldEl = null,
   patchOrbRuntime = () => {},
   getOrbRuntime = () => null,
   applyOrbTransform = () => {},
@@ -27,18 +27,18 @@ export function createOrbStageActionBridge({
         const result = shellVfx.activateBubbleShield({ durationMs });
         if (result && result.handled) return result;
       }
-      if (!legacyDomShieldEl) return { handled: false };
-      legacyDomShieldEl.classList.add("on");
-      legacyDomShieldEl.style.opacity = "1";
-      legacyDomShieldEl.style.transition = "opacity 120ms linear";
+      if (!legacyDomBubbleShieldEl) return { handled: false };
+      legacyDomBubbleShieldEl.classList.add("on");
+      legacyDomBubbleShieldEl.style.opacity = "1";
+      legacyDomBubbleShieldEl.style.transition = "opacity 120ms linear";
       if (runtime && runtime.legacyDomBubbleShieldTimer) {
         clearTimeout(runtime.legacyDomBubbleShieldTimer);
       }
       if (runtime) {
         runtime.legacyDomBubbleShieldTimer = setTimeout(() => {
-          legacyDomShieldEl.classList.remove("on");
-          legacyDomShieldEl.style.transition = "opacity 420ms linear";
-          legacyDomShieldEl.style.opacity = "0";
+          legacyDomBubbleShieldEl.classList.remove("on");
+          legacyDomBubbleShieldEl.style.transition = "opacity 420ms linear";
+          legacyDomBubbleShieldEl.style.opacity = "0";
           runtime.legacyDomBubbleShieldTimer = 0;
         }, Math.max(200, Number(durationMs) || 8000));
       }
