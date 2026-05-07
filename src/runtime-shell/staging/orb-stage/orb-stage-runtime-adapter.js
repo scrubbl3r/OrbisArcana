@@ -47,6 +47,21 @@ export function createOrbStageRuntimeAdapter({ refs = {}, level = null, buildOve
     applyOrbTransform: domOrbAdapter.applyOrbTransform,
     renderOrbDamageVisuals: domOrbAdapter.renderOrbDamageVisuals,
     createOrbShatterController: domOrbAdapter.createOrbShatterController,
+    getStageElements() {
+      return Object.freeze({
+        ...core.getStageElements(),
+        orbWrap: stageRefs.orbWrap,
+        orb: stageRefs.orb,
+        orbInterior: stageRefs.orbInterior,
+        orbCracks: stageRefs.orbCracks,
+        orbShards: stageRefs.orbShards,
+        testGlobe: stageRefs.testGlobe,
+        shield: stageRefs.shield,
+        shockLayer: stageRefs.shockLayer,
+        flameLayer: stageRefs.flameLayer,
+        electricLayer: stageRefs.electricLayer,
+      });
+    },
     getOrbVisualRefs() {
       return Object.freeze({
         orbWrap: stageRefs.orbWrap,

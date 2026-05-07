@@ -16,16 +16,6 @@ export function createStageRuntimeAdapterCore({
     getStageElements() {
       return {
         physStage: refs.physStage || null,
-        orbWrap: refs.orbWrap || null,
-        orb: refs.orb || null,
-        orbInterior: refs.orbInterior || null,
-        orbCracks: refs.orbCracks || null,
-        orbShards: refs.orbShards || null,
-        testGlobe: refs.testGlobe || null,
-        shield: refs.shield || null,
-        shockLayer: refs.shockLayer || null,
-        flameLayer: refs.flameLayer || null,
-        electricLayer: refs.electricLayer || null,
         deathPanel: refs.deathPanel || null,
         tryAgainBtn: refs.tryAgainBtn || null,
       };
