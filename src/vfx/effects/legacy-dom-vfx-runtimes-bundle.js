@@ -1,8 +1,8 @@
-import { createBubbleShieldRuntime } from "./spells/bubble-shield-runtime.js";
-import { createShockwaveRuntime } from "./spells/shockwave-runtime.js";
+import { createLegacyDomBubbleShieldRuntime } from "./spells/bubble-shield-legacy-dom-runtime.js";
+import { createLegacyDomShockwaveRuntime } from "./spells/shockwave-legacy-dom-runtime.js";
 import { createLegacyDomOrbShatterRuntime } from "./orb-states/orb-shatter-legacy-dom-runtime.js";
-import { createFlameAoeRuntime } from "./spells/flame-aoe-runtime.js";
-import { createElectricAoeRuntime } from "./spells/electric-aoe-runtime.js";
+import { createLegacyDomFlameAoeRuntime } from "./spells/flame-aoe-legacy-dom-runtime.js";
+import { createLegacyDomElectricAoeRuntime } from "./spells/electric-aoe-legacy-dom-runtime.js";
 
 /**
  * @typedef {Object} LegacyDomVfxRuntimesBundle
@@ -30,13 +30,13 @@ import { createElectricAoeRuntime } from "./spells/electric-aoe-runtime.js";
  * @returns {LegacyDomVfxRuntimesBundle}
  */
 export function createLegacyDomVfxRuntimesBundle(options = {}) {
-  const legacyDomBubbleShieldRuntime = options.bubbleShield ? createBubbleShieldRuntime(options.bubbleShield) : null;
-  const legacyDomShockwaveRuntime = options.shockwave ? createShockwaveRuntime(options.shockwave) : null;
+  const legacyDomBubbleShieldRuntime = options.bubbleShield ? createLegacyDomBubbleShieldRuntime(options.bubbleShield) : null;
+  const legacyDomShockwaveRuntime = options.shockwave ? createLegacyDomShockwaveRuntime(options.shockwave) : null;
   const legacyDomOrbShatterRuntime = options.legacyDomOrbShatter
     ? createLegacyDomOrbShatterRuntime(options.legacyDomOrbShatter)
     : null;
-  const legacyDomFlameAoeRuntime = options.flameAoe ? createFlameAoeRuntime(options.flameAoe) : null;
-  const legacyDomElectricAoeRuntime = options.electricAoe ? createElectricAoeRuntime(options.electricAoe) : null;
+  const legacyDomFlameAoeRuntime = options.flameAoe ? createLegacyDomFlameAoeRuntime(options.flameAoe) : null;
+  const legacyDomElectricAoeRuntime = options.electricAoe ? createLegacyDomElectricAoeRuntime(options.electricAoe) : null;
 
   function clearAll() {
     try { legacyDomShockwaveRuntime && typeof legacyDomShockwaveRuntime.clear === "function" && legacyDomShockwaveRuntime.clear(); } catch (_) {}

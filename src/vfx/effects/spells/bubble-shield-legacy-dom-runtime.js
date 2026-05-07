@@ -11,7 +11,7 @@
  */
 
 /**
- * @typedef {Object} CreateBubbleShieldRuntimeOptions
+ * @typedef {Object} CreateLegacyDomBubbleShieldRuntimeOptions
  * @property {HTMLElement} shieldEl
  * @property {() => BubbleShieldRuntimeConfig} getConfig
  * @property {(name:string, value:string) => void} setCssVar
@@ -23,12 +23,12 @@
  */
 
 /**
- * Generic bubble-shield DOM runtime (fade-in, decay, and pulse CSS var hydration).
+ * Legacy DOM bubble-shield runtime (fade-in, decay, and pulse CSS var hydration).
  * Sanctum-specific color/size/lock behavior stays in the receiver shell.
  *
- * @param {CreateBubbleShieldRuntimeOptions} options
+ * @param {CreateLegacyDomBubbleShieldRuntimeOptions} options
  */
-export function createBubbleShieldRuntime({
+export function createLegacyDomBubbleShieldRuntime({
   shieldEl,
   getConfig,
   setCssVar,

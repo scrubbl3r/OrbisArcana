@@ -7,7 +7,7 @@
  */
 
 /**
- * @typedef {Object} CreateFlameAoeRuntimeOptions
+ * @typedef {Object} CreateLegacyDomFlameAoeRuntimeOptions
  * @property {HTMLElement} layerEl
  * @property {() => FlameAoeRuntimeConfig} getConfig
  * @property {(n:number, min:number, max:number) => number} [clamp]
@@ -16,11 +16,11 @@
  */
 
 /**
- * Flame AOE SVG runtime.
+ * Legacy DOM flame AOE SVG runtime.
  *
- * @param {CreateFlameAoeRuntimeOptions} options
+ * @param {CreateLegacyDomFlameAoeRuntimeOptions} options
  */
-export function createFlameAoeRuntime({
+export function createLegacyDomFlameAoeRuntime({
   layerEl,
   getConfig,
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),

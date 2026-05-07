@@ -11,7 +11,7 @@
  */
 
 /**
- * @typedef {Object} CreateElectricAoeRuntimeOptions
+ * @typedef {Object} CreateLegacyDomElectricAoeRuntimeOptions
  * @property {HTMLElement} layerEl
  * @property {() => ElectricAoeRuntimeConfig} getConfig
  * @property {(n:number, min:number, max:number) => number} [clamp]
@@ -20,11 +20,11 @@
  */
 
 /**
- * Electric AOE canvas runtime (ported from lab logic, receiver-independent via injected config/layer).
+ * Legacy DOM electric AOE canvas runtime (ported from lab logic, receiver-independent via injected config/layer).
  *
- * @param {CreateElectricAoeRuntimeOptions} options
+ * @param {CreateLegacyDomElectricAoeRuntimeOptions} options
  */
-export function createElectricAoeRuntime({
+export function createLegacyDomElectricAoeRuntime({
   layerEl,
   getConfig,
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
@@ -273,4 +273,3 @@ export function createElectricAoeRuntime({
     destroy: clear,
   };
 }
-

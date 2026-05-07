@@ -10,7 +10,7 @@
  */
 
 /**
- * @typedef {Object} CreateShockwaveRuntimeOptions
+ * @typedef {Object} CreateLegacyDomShockwaveRuntimeOptions
  * @property {HTMLElement} layerEl DOM layer where the shockwave SVG is mounted.
  * @property {() => ShockwaveRuntimeConfig} getConfig Returns runtime config (already sourced from SSOT/defaults).
  * @property {(n:number, min:number, max:number) => number} [clamp]
@@ -18,11 +18,11 @@
  */
 
 /**
- * Shockwave VFX runtime (receiver/lab-agnostic implementation with injected DOM/config hooks).
+ * Legacy DOM shockwave VFX runtime (receiver/lab-agnostic implementation with injected DOM/config hooks).
  *
- * @param {CreateShockwaveRuntimeOptions} options
+ * @param {CreateLegacyDomShockwaveRuntimeOptions} options
  */
-export function createShockwaveRuntime({
+export function createLegacyDomShockwaveRuntime({
   layerEl,
   getConfig,
   clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0)),
