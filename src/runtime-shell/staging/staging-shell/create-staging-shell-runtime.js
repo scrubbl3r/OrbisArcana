@@ -2009,29 +2009,23 @@ async function initShellReceiverHostRuntime(shellContext) {
     setLamp: setDevStagingLamp,
     stageAdapters: {
       normalizeWorldItemSpawn: (item) => {
-        const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-        return (
-          activeStageAdapter &&
-          typeof activeStageAdapter.normalizeWorldItemSpawn === "function"
-            ? activeStageAdapter.normalizeWorldItemSpawn(item, {
+        const normalizeWorldItemSpawn = getActiveShellStageMethod(shellContext, "normalizeWorldItemSpawn");
+        return normalizeWorldItemSpawn
+          ? normalizeWorldItemSpawn.method.call(normalizeWorldItemSpawn.activeAdapter, item, {
               groundCenterWorld: () => shellGroundCenterWorld(shellContext),
               clamp,
             })
-            : null
-        );
+          : null;
       },
       groundCenterWorld: () => shellGroundCenterWorld(shellContext),
       stageRect: () => shellStageRect(shellContext),
       pickupScreenY: (yW) => {
         const rect = shellStageRect(shellContext);
         const camTop = shellCameraTopFor(shellContext, runtime.orbRuntimeState.get().yW, rect.height || 0);
-        const activeStageAdapter = getActiveShellStageAdapter(shellContext);
-        return (
-          activeStageAdapter &&
-          typeof activeStageAdapter.pickupScreenY === "function"
-            ? activeStageAdapter.pickupScreenY(yW, { camTop })
-            : (Number(yW || 0) - camTop)
-        );
+        const pickupScreenY = getActiveShellStageMethod(shellContext, "pickupScreenY");
+        return pickupScreenY
+          ? pickupScreenY.method.call(pickupScreenY.activeAdapter, yW, { camTop })
+          : (Number(yW || 0) - camTop);
       },
       getOrbRuntime: () => (
         runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
