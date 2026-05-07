@@ -1,7 +1,7 @@
 import { dispatchRuntimeEffect } from "../../../vfx/dispatch-runtime-effect.js?v=20260506a";
 import { createLegacyDomOrbNod3dRuntime } from "../../../vfx/effects/orb-states/orb-nod3d-legacy-dom-runtime.js";
 import { createLegacyDomOrbNodRuntime } from "../../../vfx/effects/orb-states/orb-nod-legacy-dom-runtime.js";
-import { createTeleportRuntime } from "../../../vfx/effects/spells/teleport-runtime.js";
+import { createLegacyDomTeleportRuntime } from "../../../vfx/effects/spells/teleport-legacy-dom-runtime.js";
 import { TELEPORT_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/teleport-behavior-default.js?v=20260501a";
 import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/teleport-behavior-state.js?v=20260501a";
 import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501d";
@@ -207,7 +207,7 @@ export function initOrbStageReceiverVfxRuntime({
         ? vfxDefaults.nod3d
         : Object.create(null),
     }),
-    legacyDomTeleportRuntime: createTeleportRuntime({
+    legacyDomTeleportRuntime: createLegacyDomTeleportRuntime({
       orbEl: legacyDomEls.orb,
       orbInteriorEl: legacyDomEls.orbInterior,
       orbCracksEl: legacyDomEls.orbCracks,

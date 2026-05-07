@@ -10,7 +10,7 @@ function buildFlickerMask(elapsedMs, onMs, offMs) {
   return phaseMs < Number(onMs) ? 1 : 0;
 }
 
-export function createTeleportRuntime({
+export function createLegacyDomTeleportRuntime({
   orbEl = null,
   orbInteriorEl = null,
   orbCracksEl = null,
