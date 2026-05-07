@@ -331,37 +331,20 @@ function initializeShellStageRuntime(shellContext) {
   }
   if (cameraRuntime && typeof cameraRuntime.resolveFrame === "function") {
     const bootRect = shellStageRect(shellContext);
-    const cameraConfig = shellActiveStageCameraConfig(shellContext);
-    const clampBounds = shellActiveStageCameraClampBounds(shellContext);
     const bootTarget = spawnPoint || shellActiveStageCameraTarget(shellContext, initialState);
-    cameraRuntime.resolveFrame({
+    cameraRuntime.resolveFrame(buildShellCameraResolveArgs(shellContext, {
       targetXW: bootTarget.xW,
       targetYW: bootTarget.yW,
       viewportWidthPx: bootRect.width || 0,
       viewportHeightPx: bootRect.height || 0,
-      worldWidthPx: shellWorldWidth(shellContext),
-      worldHeightPx: shellWorldHeight(shellContext),
-      zoom: shellActiveStageCameraZoom(shellContext),
       followMode: LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
-      fixedFrameCenterXW: cameraConfig.fixedFrameCenterXW,
-      fixedFrameCenterYW: cameraConfig.fixedFrameCenterYW,
-      screenAnchorX: cameraConfig.screenAnchorX,
-      screenAnchorY: cameraConfig.screenAnchorY,
       deadzoneWidthPx: 0,
       deadzoneHeightPx: 0,
       deadzoneWidthRatio: 0,
       deadzoneHeightRatio: 0,
       followLerpX: 1,
       followLerpY: 1,
-      clampLeftXW: clampBounds.leftXW,
-      clampRightXW: clampBounds.rightXW,
-      clampTopYW: clampBounds.topYW,
-      clampBottomYW: clampBounds.bottomYW,
-      clampInsetLeftPx: cameraConfig.clampInsetLeftPx,
-      clampInsetRightPx: cameraConfig.clampInsetRightPx,
-      clampInsetTopPx: cameraConfig.clampInsetTopPx,
-      clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
-    });
+    }));
   }
 
   runtime.stage = {
@@ -667,7 +650,6 @@ function buildShellCameraResolveArgs(shellContext, args = {}) {
   const cameraConfig = shellActiveStageCameraConfig(shellContext);
   const clampBounds = shellActiveStageCameraClampBounds(shellContext);
   return {
-    ...args,
     worldWidthPx: shellWorldWidth(shellContext),
     worldHeightPx: shellWorldHeight(shellContext),
     zoom: shellActiveStageCameraZoom(shellContext),
@@ -690,6 +672,7 @@ function buildShellCameraResolveArgs(shellContext, args = {}) {
     clampInsetRightPx: cameraConfig.clampInsetRightPx,
     clampInsetTopPx: cameraConfig.clampInsetTopPx,
     clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
+    ...args,
   };
 }
 
