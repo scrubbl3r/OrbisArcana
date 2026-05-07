@@ -6,7 +6,6 @@ import {
 export function ensureShellStageBackdrop(shellContext, {
   getActiveShellStageAdapter = () => null,
   shellStageRect = () => ({ width: 0, height: 0 }),
-  shellActiveStageLevel = () => null,
   shellWorldHeight = () => 0,
   clamp01 = (n) => Math.max(0, Math.min(1, Number(n) || 0)),
 } = {}) {
@@ -16,16 +15,11 @@ export function ensureShellStageBackdrop(shellContext, {
   if (!runtime || !activeStageAdapter || typeof activeStageAdapter.ensureBackdrop !== "function" || !rootDocument) return;
 
   const rect = shellStageRect(shellContext);
-  const activeLevel = shellActiveStageLevel(shellContext);
-  const terrainEntries = Array.isArray(activeLevel && activeLevel.terrain && activeLevel.terrain.profile)
-    ? activeLevel.terrain.profile
-    : [];
   activeStageAdapter.ensureBackdrop({
     runtime,
     rootDocument,
     rect,
     worldHeight: shellWorldHeight(shellContext),
-    terrainProfile: terrainEntries,
     artShapes: resolveAuthoredLevelReadModelArray(runtime, AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES),
     clamp01,
   });

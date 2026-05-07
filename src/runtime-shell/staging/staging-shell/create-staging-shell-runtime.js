@@ -3006,7 +3006,6 @@ function ensureShellStageBackdrop(shellContext) {
   ensureShellStageBackdropSurface(shellContext, {
     getActiveShellStageAdapter,
     shellStageRect,
-    shellActiveStageLevel,
     shellWorldHeight,
     clamp01,
   });
