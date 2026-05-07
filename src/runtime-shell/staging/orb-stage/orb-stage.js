@@ -11,7 +11,7 @@ import {
   resolveStageCameraZoom,
 } from "../../../game-runtime/level/authored-level-camera.js?v=20260506a";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260507c";
+import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260507d";
 import { createGameStageDepth3dLayer } from "../game-stage/game-stage-depth3d.js?v=20260506e";
 import {
   applyOrbBaseVisualCssVars,
@@ -188,10 +188,6 @@ export function renderOrbStage(root, {
       state,
       depth3dRuntime,
       orbDiameterWorldUnits: orbBaseVisualState.diameterPx,
-      buildOverlayMarkup: (args = {}) => buildAuthoredLevelOverlayMarkup({
-        ...args,
-        overlayId: "orbStageWorldOverlay",
-      }),
       unbindResize: () => controller.dispose(),
     }),
     level: resolvedLevel,
