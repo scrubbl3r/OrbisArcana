@@ -79,16 +79,12 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
   const stabilityVisualState = {
     stabilityVisualGate: true,
   };
-  let receiverRuntimeContext = null;
+  let stabilityInputDynamicsSystem = null;
 
   const receiverStabilityVisualController =
     typeof createReceiverStabilityVisualController === "function"
       ? createReceiverStabilityVisualController({
-          getInputDynamicsSystem: () => (
-            receiverRuntimeContext && receiverRuntimeContext.inputDynamicsSystem
-              ? receiverRuntimeContext.inputDynamicsSystem
-              : null
-          ),
+          getInputDynamicsSystem: () => stabilityInputDynamicsSystem,
           getStabilityVisualGate: () => stabilityVisualState.stabilityVisualGate,
           getRefs: () => ((shellContext && shellContext.refs) ? shellContext.refs.dev : null),
           setLamp,
@@ -216,7 +212,7 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       },
     },
   });
-  receiverRuntimeContext = runtimeContext;
+  stabilityInputDynamicsSystem = runtimeContext.inputDynamicsSystem || null;
 
   if (runtimeContext.orbDamageVisualsRuntime && typeof runtimeContext.orbDamageVisualsRuntime.start === "function") {
     runtimeContext.orbDamageVisualsRuntime.start();
