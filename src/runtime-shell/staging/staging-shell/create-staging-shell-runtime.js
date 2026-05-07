@@ -3223,10 +3223,6 @@ async function initShellKwsRuntime(shellContext) {
     if (!kwsBridge || typeof kwsBridge.pushLogLine !== "function") return;
     kwsBridge.pushLogLine(`TRACE action:${actionType}:${actionId}`, "ok");
   });
-  const orbVisualTraceOff = () => {};
-  const orbDiedTraceOff = () => {};
-  const orbShatterStartTraceOff = () => {};
-  const orbShatterCompleteTraceOff = () => {};
   runtime.eventBus = eventBus;
 
   const shellVoiceSpellCastOff = eventBus.on(RECEIVER_EVENTS.EVT_VOICE_SPELL_CAST, (payload = {}) => {
@@ -3303,6 +3299,7 @@ async function initShellKwsRuntime(shellContext) {
     kwsTokenUiState,
     kwsRuntimeController,
     kwsBootOrchestrator,
+    runtimeConfig,
     kwsWordProvider,
     kwsVoiceProvider,
     voiceProviderManager,
@@ -3318,10 +3315,6 @@ async function initShellKwsRuntime(shellContext) {
     kwsWakeWindowVisuals,
     kwsRuleTraceOff,
     kwsActionTraceOff,
-    orbVisualTraceOff,
-    orbDiedTraceOff,
-    orbShatterStartTraceOff,
-    orbShatterCompleteTraceOff,
     shellSpellActionHandlers,
     shellSpellCastExecutor,
     shellRuleActionRuntime,
