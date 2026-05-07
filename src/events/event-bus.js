@@ -1,5 +1,5 @@
 // Lightweight pub/sub bus for decoupling gameplay systems.
-// Intentionally minimal for MVP scaffolding.
+// Intentionally minimal for receiver runtime scaffolding.
 export function createEventBus() {
   const listeners = new Map();
 

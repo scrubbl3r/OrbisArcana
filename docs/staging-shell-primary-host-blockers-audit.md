@@ -64,7 +64,7 @@ This is the biggest architectural blocker.
 - creates runtime configs
 - bootstraps staging runtime context
 - binds staging runtime events
-- bootstraps MVP
+- bootstraps the receiver runtime
 - processes incoming impulses
 - renders HUD through the dev surface
 

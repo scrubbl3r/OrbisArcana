@@ -54,7 +54,7 @@ Important note:
 Path:
 
 - `/Users/garthwilliams/Desktop/__DEV__/OrbisArcana/game-receiver.js`
-- `resourcesSystem` integration inside MVP runtime boot
+- `resourcesSystem` integration inside receiver runtime boot
 
 Still active for:
 
