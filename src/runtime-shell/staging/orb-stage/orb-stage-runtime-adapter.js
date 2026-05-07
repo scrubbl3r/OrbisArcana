@@ -87,7 +87,9 @@ export function createOrbStageRuntimeAdapter({
         shared3dAdapter.applyOrbTransform(args);
       }
     },
+    renderLegacyDomOrbDamageVisuals: legacyDomOrbAdapter.renderOrbDamageVisuals,
     renderOrbDamageVisuals: legacyDomOrbAdapter.renderOrbDamageVisuals,
+    createLegacyDomOrbShatterController: legacyDomOrbAdapter.createOrbShatterController,
     createOrbShatterController: legacyDomOrbAdapter.createOrbShatterController,
     getStageElements() {
       return Object.freeze({
