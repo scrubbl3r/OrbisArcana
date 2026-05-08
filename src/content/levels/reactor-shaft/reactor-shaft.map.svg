@@ -24,8 +24,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="0.31366212"
-     inkscape:cx="929.34397"
-     inkscape:cy="1284.822"
+     inkscape:cx="1178.0192"
+     inkscape:cy="1004.2654"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="56"
@@ -158,13 +158,14 @@
      inkscape:groupmode="layer"
      id="layer18"
      inkscape:label="art"
-     style="display:none"
+     style="display:inline"
      sodipodi:insensitive="true">
     <path
        id="rect1"
        style="fill:#222222;fill-opacity:1;stroke:#5f5f5f;stroke-width:1.88976"
-       d="M 191.21419,262.17192 V 1673.0547 H 1899.5891 V 262.17192 Z M 1709.0618,392.00004 V 1612.2617 H 380.81185 V 1162.75 h 320 v 320 h 767.99995 l -192,-384 -305.24995,2.625 113.24995,-706.62496 z"
-       inkscape:label="id:art_01" />
+       d="M 31.21419,22.17192 V 2013.0547 H 2019.5891 V 22.17192 Z M 1709.0618,392.00004 V 1612.2617 H 380.81185 V 1162.75 h 320 v 320 h 767.99995 l -192,-384 -305.24995,2.625 113.24995,-706.62496 z"
+       inkscape:label="id:art_panel z=3bo material=flat color=#272727 opacity=0.8&#10;"
+       sodipodi:nodetypes="cccccccccccccccc" />
   </g>
   <g
      inkscape:groupmode="layer"
