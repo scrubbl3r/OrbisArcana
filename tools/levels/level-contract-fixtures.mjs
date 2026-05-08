@@ -19,7 +19,7 @@ export const EXPECTED_LEVEL_SEMANTIC_LAYERS = Object.freeze([
   Object.freeze({
     levelId: "orb-hangar",
     key: "fields",
-    labels: Object.freeze(["fields"]),
+    labels: Object.freeze(["fields", "star_field"]),
   }),
 ]);
 

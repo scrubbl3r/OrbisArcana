@@ -44,12 +44,15 @@ export function createGameStageDepth3dScene({
   key.castShadow = false;
   scene.add(key);
 
+  const backgroundGroup = new THREE.Group();
   const depthGroup = new THREE.Group();
   const propsGroup = new THREE.Group();
   const actorGroup = new THREE.Group();
   const globeGroup = new THREE.Group();
+  backgroundGroup.name = "star_field:background_layer";
   globeGroup.name = "globe3d:runtime_layer";
   actorGroup.add(globeGroup);
+  scene.add(backgroundGroup);
   scene.add(depthGroup);
   scene.add(propsGroup);
   scene.add(actorGroup);
@@ -59,6 +62,7 @@ export function createGameStageDepth3dScene({
     scene,
     camera,
     environmentMode,
+    backgroundGroup,
     depthGroup,
     propsGroup,
     actorGroup,

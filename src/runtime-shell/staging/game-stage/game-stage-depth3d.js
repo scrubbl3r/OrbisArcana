@@ -17,6 +17,7 @@ import {
 import {
   buildDepthLayerMesh,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260508b";
+import { createStarField3dRuntime } from "../../../game-runtime/level-graphics/star-field-3d-runtime.js?v=20260507a";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
   AUTHORED_LEVEL_READ_MODEL_KEY_ORB_DEPTH,
@@ -50,7 +51,7 @@ import {
   publishDepth3dModuleVersion,
 } from "./game-stage-depth3d-debug.js";
 import { createGameStageDepth3dRenderLoop } from "./game-stage-depth3d-render-loop.js?v=20260430b";
-import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260505c";
+import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260508a";
 import { createGameStageDepth3dTelemetry } from "./game-stage-depth3d-telemetry.js?v=20260430b";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
@@ -119,6 +120,7 @@ export function createGameStageDepth3dLayer({
     scene,
     camera,
     environmentMode,
+    backgroundGroup,
     depthGroup: group,
     propsGroup,
     actorGroup,
@@ -267,6 +269,18 @@ export function createGameStageDepth3dLayer({
     }),
     onCountChange: telemetry.setPropCount,
   });
+  const starField3dRuntime = createStarField3dRuntime({
+    group: backgroundGroup,
+    getBo: () => baseOrbWorldUnits,
+    toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
+      x: toDepthThreeX(xW, worldWidthPx),
+      y: toDepthThreeY(yW, worldHeightPx),
+      z,
+    }),
+    onCountChange: (count) => {
+      root.dataset.starFieldCount = String(Math.max(0, Math.floor(Number(count) || 0)));
+    },
+  });
 
   function clearGroup() {
     while (group.children.length) {
@@ -326,6 +340,7 @@ export function createGameStageDepth3dLayer({
 
   function syncRootVisibility() {
     root.hidden = depthLayerCount <= 0
+      && !backgroundGroup.children.length
       && propsGroup.children.length <= 0
       && !orb3dActorRuntime.hasModel()
       && !globe3dGroup.children.length;
@@ -446,15 +461,19 @@ export function createGameStageDepth3dLayer({
       if (disposed) return;
       clearGroup();
       clearPropsGroup();
+      starField3dRuntime.clear();
       const summary = resolveSceneSummary(authoredScene);
       const layers = resolveSceneDepthLayers(authoredScene);
       const props = resolveSceneProps(authoredScene);
       const orbDepth = resolveSceneOrbDepth(authoredScene);
+      const levelGraphicsModel = authoredScene && authoredScene.levelGraphicsModel ? authoredScene.levelGraphicsModel : null;
+      const starField = levelGraphicsModel && (levelGraphicsModel.starField || levelGraphicsModel.starsField);
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;
       currentOrbZBO = resolveOrbTravelZBO({ depthLayers: layers, orbDepth }, LEVEL_DEPTH_DEFAULT_ORB_Z_BO);
       telemetry.setDepthLayerLabel(layers);
+      starField3dRuntime.load(starField);
       for (const layer of layers) {
         const mesh = await buildDepthLayerMesh({
           layer,
@@ -479,7 +498,7 @@ export function createGameStageDepth3dLayer({
         depthLayerCount: group.children.length,
         depthStatus: group.children.length ? "ready" : "empty",
       });
-      if (group.children.length) {
+      if (group.children.length || backgroundGroup.children.length) {
         renderLoop.renderFrame(renderLoop.getLastFrame() || {
           ...resolveDepthBootFrame({ depthLayers: layers, root }),
           isBootFrame: true,
@@ -607,6 +626,7 @@ export function createGameStageDepth3dLayer({
       flameAoe3dRuntime.destroy();
       shockwave3dRuntime.destroy();
       orbLifecycle3dRuntime.dispose();
+      starField3dRuntime.dispose();
       clearGlobe3dObjects();
       orb3dActorRuntime.dispose();
       clearGroup();

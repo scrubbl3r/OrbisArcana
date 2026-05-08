@@ -34,6 +34,7 @@ export const LEVEL_SVG_LAYER_GLOBES = "globes";
 export const LEVEL_SVG_LAYER_PROPS = "props";
 export const LEVEL_SVG_LAYER_ART = "art";
 export const LEVEL_SVG_LAYER_FIELDS = "fields";
+export const LEVEL_SVG_LAYER_STAR_FIELD = "star_field";
 export const LEVEL_SVG_LAYER_ORB = "orb";
 
 function cloneJsonLike(value, fallback = {}) {

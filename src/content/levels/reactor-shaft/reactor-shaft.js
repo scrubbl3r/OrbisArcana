@@ -10,6 +10,7 @@ import {
   LEVEL_SVG_LAYER_ORB,
   LEVEL_SVG_LAYER_PROPS,
   LEVEL_SVG_LAYER_SPAWNS,
+  LEVEL_SVG_LAYER_STAR_FIELD,
   LEVEL_WORLD_ITEM_KIND_ENERGY_GLOBE_EMITTER,
   LEVEL_WORLD_ITEM_REGEN_TRIGGER_GLOBE_SPENT,
 } from "../../../game-runtime/level/normalize-level-definition.js";
@@ -101,7 +102,7 @@ export const REACTOR_SHAFT = Object.freeze({
       worldItems: Object.freeze([LEVEL_SVG_LAYER_GLOBES]),
       props: Object.freeze([LEVEL_SVG_LAYER_PROPS]),
       art: Object.freeze([LEVEL_SVG_LAYER_ART]),
-      fields: Object.freeze([LEVEL_SVG_LAYER_FIELDS]),
+      fields: Object.freeze([LEVEL_SVG_LAYER_FIELDS, LEVEL_SVG_LAYER_STAR_FIELD]),
       orb: Object.freeze([LEVEL_SVG_LAYER_ORB]),
     }),
     primarySpawn: Object.freeze({

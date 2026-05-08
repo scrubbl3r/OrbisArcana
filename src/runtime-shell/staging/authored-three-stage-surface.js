@@ -223,6 +223,7 @@ export function renderAuthoredThreeStageSurface(root, {
     ).trim().toLowerCase(),
     buildOverlayMarkup: (args = {}) => buildAuthoredLevelOverlayMarkup({
       ...args,
+      starsField: null,
       overlayId: resolvedSurface.overlayId,
     }),
     stageStateDatasetKey: resolvedSurface.stageStateDatasetKey,

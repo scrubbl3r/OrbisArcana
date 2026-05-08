@@ -8,6 +8,7 @@ import {
   LEVEL_SVG_LAYER_ORB,
   LEVEL_SVG_LAYER_PROPS,
   LEVEL_SVG_LAYER_SPAWNS,
+  LEVEL_SVG_LAYER_STAR_FIELD,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 
 const ORB_HANGAR_MAP_ASSET_URL = new URL("./orb-hangar.map.svg", import.meta.url).toString();
@@ -90,7 +91,7 @@ export const ORB_HANGAR = Object.freeze({
       worldItems: Object.freeze([LEVEL_SVG_LAYER_GLOBES]),
       props: Object.freeze([LEVEL_SVG_LAYER_PROPS]),
       art: Object.freeze([LEVEL_SVG_LAYER_ART]),
-      fields: Object.freeze([LEVEL_SVG_LAYER_FIELDS]),
+      fields: Object.freeze([LEVEL_SVG_LAYER_FIELDS, LEVEL_SVG_LAYER_STAR_FIELD]),
       orb: Object.freeze([LEVEL_SVG_LAYER_ORB]),
     }),
     primarySpawn: Object.freeze({

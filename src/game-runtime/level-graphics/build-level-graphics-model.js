@@ -17,10 +17,12 @@ export function buildLevelGraphicsModel({
 } = {}) {
   const readModel = { sceneModel, summary };
   const starsFieldRegions = resolveAuthoredLevelReadModelArray(readModel, AUTHORED_LEVEL_READ_MODEL_KEY_STARS_FIELD_REGIONS);
+  const starField = buildStarsFieldModel({
+    regions: starsFieldRegions,
+    cameraBoundaryBox: resolveAuthoredLevelReadModelBox(readModel, AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX),
+  });
   return Object.freeze({
-    starsField: buildStarsFieldModel({
-      regions: starsFieldRegions,
-      cameraBoundaryBox: resolveAuthoredLevelReadModelBox(readModel, AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX),
-    }),
+    starField,
+    starsField: starField,
   });
 }
