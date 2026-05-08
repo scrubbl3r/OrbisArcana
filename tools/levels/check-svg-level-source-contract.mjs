@@ -29,7 +29,7 @@ const SVG_CONTRACT_FIXTURE = `
     <path id="art_hidden_path" d="M 40 40 L 60 60" style="fill:none;stroke:#fff;stroke-width:2" />
   </g>
   <g id="fields_visible" inkscape:groupmode="layer" inkscape:label="${LEVEL_SVG_LAYER_FIELDS}">
-    <rect id="field_visible_rect" x="10" y="10" width="30" height="30" />
+    <rect id="field_visible_rect" x="10" y="10" width="30" height="30" inkscape:label="id:star_field z=12bo depth=40bo density=0.7" />
   </g>
   <g id="fields_hidden" inkscape:groupmode="layer" inkscape:label="${LEVEL_SVG_LAYER_FIELDS}" style="visibility:hidden">
     <rect id="field_hidden_rect" x="50" y="10" width="30" height="30" />
@@ -85,6 +85,11 @@ assert.deepEqual(
   summary.starsFieldRegions.map((region) => region.sourceLayerId),
   ["fields_visible"],
   "hidden fields layers must not hydrate stars field regions"
+);
+assert.deepEqual(
+  summary.starsFieldRegions.map((region) => [region.id, region.zBO, region.depthBO, region.density]),
+  [["star_field", 12, 40, 0.7]],
+  "stars field regions should hydrate authored 3d volume metadata"
 );
 assert.deepEqual(
   summary.worldItems.map((spawn) => spawn.id),

@@ -1137,6 +1137,7 @@ export function buildSvgStarsFieldRegions({
     .flatMap((layer) => {
       const pathLoops = (Array.isArray(layer && layer.paths) ? layer.paths : []).map((path, index) => {
         const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
+        const entries = metadata.entries || {};
         const sourceStack = resolveSvgSourceStack(layer, index);
         const authoredPoints = translatePolylinePoints(
           parseSvgPolylinePath(path && path.d) || [],
@@ -1146,6 +1147,9 @@ export function buildSvgStarsFieldRegions({
         return Object.freeze({
           id: String(metadata.id || path && path.id || `stars_field_path_${index + 1}`),
           kind: "path_loop",
+          zBO: Math.max(0, parseBoValue(entries.z || entries.zbo || "", 12)),
+          depthBO: Math.max(0.001, parseBoValue(entries.depth || entries.depthbo || entries.far || "", 40)),
+          density: Math.max(0, clampNumber(entries.density, 1)),
           ...sourceStack,
           authoredPoints,
           worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
@@ -1157,6 +1161,7 @@ export function buildSvgStarsFieldRegions({
       });
       const rectLoops = (Array.isArray(layer && layer.rects) ? layer.rects : []).map((rect, index) => {
         const metadata = parseSvgLabelMetadata(rect && rect.label, rect && rect.id);
+        const entries = metadata.entries || {};
         const sourceStack = resolveSvgSourceStack(layer, index);
         const authoredRect = translateRect(rect, layer && layer.translate);
         const authoredPoints = buildClosedRectPolyline(authoredRect) || [];
@@ -1164,6 +1169,9 @@ export function buildSvgStarsFieldRegions({
         return Object.freeze({
           id: String(metadata.id || rect && rect.id || `stars_field_rect_${index + 1}`),
           kind: "rect_loop",
+          zBO: Math.max(0, parseBoValue(entries.z || entries.zbo || "", 12)),
+          depthBO: Math.max(0.001, parseBoValue(entries.depth || entries.depthbo || entries.far || "", 40)),
+          density: Math.max(0, clampNumber(entries.density, 1)),
           ...sourceStack,
           authoredPoints,
           worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
@@ -1183,6 +1191,9 @@ export function buildSvgStarsFieldRegions({
     sourceLayerIndex: clampNumber(loop && loop.sourceLayerIndex, 0),
     sourceStackIndex: clampNumber(loop && loop.sourceStackIndex, 0),
     sourceElementIndex: clampNumber(loop && loop.sourceElementIndex, index),
+    zBO: Math.max(0, clampNumber(loop && loop.zBO, 12)),
+    depthBO: Math.max(0.001, clampNumber(loop && loop.depthBO, 40)),
+    density: Math.max(0, clampNumber(loop && loop.density, 1)),
     authoredPoints: Array.isArray(loop && loop.authoredPoints) ? loop.authoredPoints : [],
     worldPoints: Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [],
     boundaryBox: resolveBoundaryBoxFromLoops([loop]),

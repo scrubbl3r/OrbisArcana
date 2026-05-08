@@ -17,7 +17,7 @@ import {
 import {
   buildDepthLayerMesh,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260508b";
-import { createStarField3dRuntime } from "../../../game-runtime/level-graphics/star-field-3d-runtime.js?v=20260507a";
+import { createStarField3dRuntime } from "../../../game-runtime/level-graphics/star-field-3d-runtime.js?v=20260508a";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
   AUTHORED_LEVEL_READ_MODEL_KEY_ORB_DEPTH,

@@ -1,4 +1,4 @@
-import { buildStarsFieldModel } from "./stars-field.js?v=20260425l";
+import { buildStarsFieldModel } from "./stars-field.js?v=20260508a";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX,
   AUTHORED_LEVEL_READ_MODEL_KEY_STARS_FIELD_REGIONS,

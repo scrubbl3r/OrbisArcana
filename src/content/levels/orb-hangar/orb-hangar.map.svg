@@ -24,14 +24,14 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.1521069"
-     inkscape:cx="817.19845"
-     inkscape:cy="1648.2845"
+     inkscape:cx="1127.9335"
+     inkscape:cy="1681.2676"
      inkscape:window-width="1616"
      inkscape:window-height="887"
-     inkscape:window-x="16"
-     inkscape:window-y="89"
+     inkscape:window-x="153"
+     inkscape:window-y="80"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer5"
+     inkscape:current-layer="layer4"
      showgrid="true">
     <inkscape:grid
        id="grid1"
@@ -63,22 +63,22 @@
      inkscape:groupmode="layer"
      id="layer4"
      inkscape:label="fields"
-     style="display:none"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <rect
-       style="display:inline;fill:#333333;fill-opacity:1;stroke:#000000;stroke-width:0.805239;stroke-opacity:1"
+       style="display:inline;fill:#333333;fill-opacity:1;stroke:#000000;stroke-width:0.232419;stroke-opacity:1"
        id="rect1-3-3"
-       width="166.85287"
-       height="749.19476"
-       x="940.57355"
-       y="1146.4026"
-       inkscape:label="id:star_field" />
+       width="121.42303"
+       height="85.766747"
+       x="963.72241"
+       y="1692.0725"
+       inkscape:label="id:star_field z=18bo depth=40bo density=0.7" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="depths"
-     style="display:inline">
+     style="display:inline"
+     sodipodi:insensitive="true">
     <rect
        style="display:inline;fill:#0000c8;fill-opacity:1;stroke:#000000;stroke-width:0.805239;stroke-opacity:1"
        id="rect1-3"

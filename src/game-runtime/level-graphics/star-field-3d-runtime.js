@@ -59,6 +59,10 @@ function resolveStarZWorld(star = {}, {
   bandConfig = STAR_FIELD_3D_CONFIG.defaultDepthBand,
   bo = 72,
 } = {}) {
+  const authoredZBO = Number(star && star.zBO);
+  if (Number.isFinite(authoredZBO)) {
+    return -Math.max(0, authoredZBO) * Math.max(1, clampNumber(bo, 72));
+  }
   const minZBO = Math.max(0, clampNumber(bandConfig && bandConfig.minZBO, 8));
   const maxZBO = Math.max(minZBO, clampNumber(bandConfig && bandConfig.maxZBO, minZBO));
   const t = hashToUnit(`${star.id || "star"}:z`);

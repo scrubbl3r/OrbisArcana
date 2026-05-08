@@ -94,6 +94,9 @@ function deriveLayerRegion(region = null, layer = null, cameraBoundaryBox = null
     cameraBoundaryBox: cameraBox,
     sourceWorldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
     worldPoints: Array.isArray(region && region.worldPoints) ? region.worldPoints : [],
+    zBO: Math.max(0, clampNumber(region && region.zBO, 12)),
+    depthBO: Math.max(0.001, clampNumber(region && region.depthBO, 40)),
+    density: Math.max(0, clampNumber(region && region.density, 1)),
     boundaryBox: expandedBoundaryBox,
     generationBox: expandedBoundaryBox,
     overscanMarginXW: marginXW,
@@ -141,6 +144,9 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
   const score = Math.max(0, scoreBase - ordinalPenalty);
   const localWidth = Math.max(1, clampNumber(generationBox.widthW, 1));
   const localHeight = Math.max(1, clampNumber(generationBox.heightW, 1));
+  const nearZBO = Math.max(0, clampNumber(region && region.zBO, 12));
+  const depthBO = Math.max(0.001, clampNumber(region && region.depthBO, 40));
+  const zBO = nearZBO + (hashToUnit(`${region.id}:${cellX}:${cellY}:${ordinal}:z`) * depthBO);
   return Object.freeze({
     id: `${region.id}:star:${cellX}:${cellY}:${ordinal}`,
     regionId: region.id,
@@ -156,6 +162,9 @@ function buildStarCandidate(region, cellX, cellY, ordinal, config) {
     radiusPx: baseRadius * radiusMultiplier,
     opacity: clamp01(baseOpacity + opacityBoost),
     color: String(palette[paletteIndex] || palette[0] || "#ffffff"),
+    zBO,
+    nearZBO,
+    depthBO,
     depthBand: String(region.layerId || "layer_1"),
     parallaxRatio: clamp01(clampNumber(region.parallaxRatio, 0.22)),
     isHighlight,
@@ -237,7 +246,8 @@ export function buildStarsFieldModel({
     const generationBox = region && region.generationBox ? region.generationBox : null;
     if (!generationBox) continue;
     const layerWeight = Math.max(0, clampNumber(region.starCountWeight, 0));
-    const targetForRegion = Math.max(0, Math.round(targetStarCount * (layerWeight / totalWeight)));
+    const density = Math.max(0, clampNumber(region.density, 1));
+    const targetForRegion = Math.max(0, Math.round(targetStarCount * density * (layerWeight / totalWeight)));
     const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 76));
     const cols = Math.max(1, Math.ceil(clampNumber(generationBox.widthW, cellSize) / cellSize));
     const rows = Math.max(1, Math.ceil(clampNumber(generationBox.heightW, cellSize) / cellSize));
@@ -266,6 +276,9 @@ export function buildStarsFieldModel({
       opacityRange: Array.isArray(region.opacityRange) ? region.opacityRange : Object.freeze([0.2, 0.5]),
       palette: Array.isArray(region.palette) ? region.palette : Object.freeze(["#ffffff"]),
       highlightChance: clamp01(region.highlightChance),
+      zBO: Math.max(0, clampNumber(region.zBO, 12)),
+      depthBO: Math.max(0.001, clampNumber(region.depthBO, 40)),
+      density: Math.max(0, clampNumber(region.density, 1)),
       boundaryBox: region.boundaryBox,
       sourceBoundaryBox: region.sourceBoundaryBox || null,
       cameraBoundaryBox: region.cameraBoundaryBox || null,
