@@ -247,18 +247,29 @@ function toThreePointFromWorld(point = {}, worldWidthPx = 1, worldHeightPx = 1, 
   });
 }
 
-function buildVectorLoopShape(loop = {}, worldWidthPx = 1, worldHeightPx = 1) {
+function areWorldPointsNear(a = {}, b = {}, epsilon = 0.001) {
+  return (
+    Math.abs(clampNumber(a && a.xW, 0) - clampNumber(b && b.xW, 0)) <= epsilon
+    && Math.abs(clampNumber(a && a.yW, 0) - clampNumber(b && b.yW, 0)) <= epsilon
+  );
+}
+
+function resolveVectorLoopRingPoints(loop = {}) {
   const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
-  const cleanPoints = points.length > 1
-    ? points.filter((point, index) => {
-        if (index <= 0) return true;
-        const prev = points[index - 1] || {};
-        return (
-          Math.abs(clampNumber(point && point.xW, 0) - clampNumber(prev && prev.xW, 0)) > 0.001
-          || Math.abs(clampNumber(point && point.yW, 0) - clampNumber(prev && prev.yW, 0)) > 0.001
-        );
-      })
-    : points;
+  const cleanPoints = [];
+  for (const point of points) {
+    const previous = cleanPoints[cleanPoints.length - 1] || null;
+    if (previous && areWorldPointsNear(point, previous)) continue;
+    cleanPoints.push(point);
+  }
+  if (cleanPoints.length > 2 && areWorldPointsNear(cleanPoints[0], cleanPoints[cleanPoints.length - 1])) {
+    cleanPoints.pop();
+  }
+  return cleanPoints.length >= 3 ? cleanPoints : [];
+}
+
+function buildVectorLoopShape(loop = {}, worldWidthPx = 1, worldHeightPx = 1) {
+  const cleanPoints = resolveVectorLoopRingPoints(loop);
   if (cleanPoints.length < 3) return null;
   const start = toThreePointFromWorld(cleanPoints[0], worldWidthPx, worldHeightPx, 0);
   const shape = new THREE.Shape();
@@ -272,7 +283,7 @@ function buildVectorLoopShape(loop = {}, worldWidthPx = 1, worldHeightPx = 1) {
 }
 
 function buildVectorLoopPath(loop = {}, worldWidthPx = 1, worldHeightPx = 1) {
-  const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
+  const points = resolveVectorLoopRingPoints(loop);
   if (points.length < 3) return null;
   const start = toThreePointFromWorld(points[0], worldWidthPx, worldHeightPx, 0);
   const path = new THREE.Path();
@@ -290,15 +301,15 @@ function buildVectorWallGeometry(loop = {}, depthPx = 0, worldWidthPx = 1, world
 }
 
 function buildVectorWallGeometryBetween(loop = {}, frontZ = 0, backZ = 0, worldWidthPx = 1, worldHeightPx = 1) {
-  const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
+  const points = resolveVectorLoopRingPoints(loop);
   const positions = [];
   const indices = [];
   const colors = [];
   const wallColor = new THREE.Color(0x2b3137);
   if (points.length < 3) return null;
-  for (let i = 1; i < points.length; i += 1) {
-    const aTop = toThreePointFromWorld(points[i - 1], worldWidthPx, worldHeightPx, frontZ);
-    const bTop = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, frontZ);
+  for (let i = 0; i < points.length; i += 1) {
+    const aTop = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, frontZ);
+    const bTop = toThreePointFromWorld(points[(i + 1) % points.length], worldWidthPx, worldHeightPx, frontZ);
     const bBack = Object.freeze({ ...bTop, z: backZ });
     const aBack = Object.freeze({ ...aTop, z: backZ });
     addQuad(positions, indices, colors, aTop, bTop, bBack, aBack, wallColor);
@@ -313,12 +324,12 @@ function buildVectorWallGeometryBetween(loop = {}, frontZ = 0, backZ = 0, worldW
 }
 
 function buildVectorLoopEdges(loop = {}, depthPx = 0, worldWidthPx = 1, worldHeightPx = 1) {
-  const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
+  const points = resolveVectorLoopRingPoints(loop);
   const positions = [];
   if (points.length < 2) return null;
-  for (let i = 1; i < points.length; i += 1) {
-    const a = toThreePointFromWorld(points[i - 1], worldWidthPx, worldHeightPx, 1);
-    const b = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 1);
+  for (let i = 0; i < points.length; i += 1) {
+    const a = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 1);
+    const b = toThreePointFromWorld(points[(i + 1) % points.length], worldWidthPx, worldHeightPx, 1);
     positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
     positions.push(a.x, a.y, -depthPx, b.x, b.y, -depthPx);
   }

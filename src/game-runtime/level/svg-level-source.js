@@ -256,6 +256,24 @@ export function parseSvgCircleElements(svgText = "") {
   return Object.freeze(circles);
 }
 
+export function parseSvgEllipseElements(svgText = "") {
+  const matches = String(svgText || "").matchAll(/<ellipse\b([^>]*)\/?>/gi);
+  const ellipses = [];
+  for (const match of matches) {
+    const attrs = String(match && match[1] || "");
+    ellipses.push(Object.freeze({
+      id: readAttr(attrs, "id"),
+      label: readAttr(attrs, "inkscape:label"),
+      cx: clampNumber(readAttr(attrs, "cx"), 0),
+      cy: clampNumber(readAttr(attrs, "cy"), 0),
+      rx: clampNumber(readAttr(attrs, "rx"), 0),
+      ry: clampNumber(readAttr(attrs, "ry"), 0),
+      style: readAttr(attrs, "style"),
+    }));
+  }
+  return Object.freeze(ellipses);
+}
+
 export function parseSvgRectElements(svgText = "") {
   const matches = String(svgText || "").matchAll(/<rect\b([^>]*)\/?>/gi);
   const rects = [];
@@ -296,6 +314,7 @@ export function parseSvgLayerElements(svgText = "") {
       body,
       paths: parseSvgPathElements(body),
       circles: parseSvgCircleElements(body),
+      ellipses: parseSvgEllipseElements(body),
       rects: parseSvgRectElements(body),
     }));
   }
@@ -317,6 +336,7 @@ export function parseSvgLayerElements(svgText = "") {
       body: "",
       paths: Object.freeze([]),
       circles: Object.freeze([]),
+      ellipses: Object.freeze([]),
       rects: Object.freeze([]),
     }));
   }
@@ -460,6 +480,14 @@ function translateCircle(circle = {}, translate = {}) {
   });
 }
 
+function translateEllipse(ellipse = {}, translate = {}) {
+  return Object.freeze({
+    ...ellipse,
+    cx: clampNumber(ellipse && ellipse.cx, 0) + clampNumber(translate && translate.x, 0),
+    cy: clampNumber(ellipse && ellipse.cy, 0) + clampNumber(translate && translate.y, 0),
+  });
+}
+
 export function scaleAuthoringPointToWorld(
   point = {},
   {
@@ -491,6 +519,33 @@ function buildClosedRectPolyline(rect = {}) {
     Object.freeze({ x, y: y + height }),
     Object.freeze({ x, y }),
   ]);
+}
+
+function buildClosedEllipsePolyline(ellipse = {}, segments = LEVEL_SVG_DEPTH_TESSELLATION_FALLBACK * 2) {
+  const cx = clampNumber(ellipse && ellipse.cx, 0);
+  const cy = clampNumber(ellipse && ellipse.cy, 0);
+  const rx = Math.max(0, clampNumber(ellipse && (ellipse.rx ?? ellipse.r), 0));
+  const ry = Math.max(0, clampNumber(ellipse && (ellipse.ry ?? ellipse.r), 0));
+  const steps = Math.max(12, Math.round(clampNumber(segments, LEVEL_SVG_DEPTH_TESSELLATION_FALLBACK * 2)));
+  if (rx <= 0 || ry <= 0) return null;
+  const points = [];
+  for (let i = 0; i < steps; i += 1) {
+    const angle = (i / steps) * Math.PI * 2;
+    points.push(Object.freeze({
+      x: cx + Math.cos(angle) * rx,
+      y: cy + Math.sin(angle) * ry,
+    }));
+  }
+  points.push(points[0]);
+  return Object.freeze(points);
+}
+
+function buildClosedCirclePolyline(circle = {}, segments = LEVEL_SVG_DEPTH_TESSELLATION_FALLBACK * 2) {
+  return buildClosedEllipsePolyline({
+    ...circle,
+    rx: clampNumber(circle && circle.r, 0),
+    ry: clampNumber(circle && circle.r, 0),
+  }, segments);
 }
 
 function readSvgElementFillColor(source = {}) {
@@ -530,6 +585,29 @@ function resolveDepthChannelScale(source = {}, channel = "blue") {
     ? clampNumber(color.r, 0)
     : clampNumber(color.b, 0);
   return value > 0 ? Math.max(0, Math.min(255, value)) / 255 : null;
+}
+
+function getDepthSourceKey(source = {}) {
+  const paths = (Array.isArray(source && source.paths) ? source.paths : [])
+    .map((path) => `p:${String(path && path.d || "").replace(/\s+/g, " ").trim()}`);
+  const rects = (Array.isArray(source && source.rects) ? source.rects : [])
+    .map((rect) => `r:${clampNumber(rect && rect.x, 0)},${clampNumber(rect && rect.y, 0)},${clampNumber(rect && rect.width, 0)},${clampNumber(rect && rect.height, 0)}`);
+  const circles = (Array.isArray(source && source.circles) ? source.circles : [])
+    .map((circle) => `c:${clampNumber(circle && circle.cx, 0)},${clampNumber(circle && circle.cy, 0)},${clampNumber(circle && circle.r, 0)}`);
+  const ellipses = (Array.isArray(source && source.ellipses) ? source.ellipses : [])
+    .map((ellipse) => `e:${clampNumber(ellipse && ellipse.cx, 0)},${clampNumber(ellipse && ellipse.cy, 0)},${clampNumber(ellipse && ellipse.rx, 0)},${clampNumber(ellipse && ellipse.ry, 0)}`);
+  return [...paths, ...rects, ...circles, ...ellipses].join("|");
+}
+
+function dedupeDepthSources(sources = []) {
+  const seen = new Set();
+  return Object.freeze((Array.isArray(sources) ? sources : []).filter((source) => {
+    const config = source && source.config;
+    const key = `${config && config.id || "depth"}:${getDepthSourceKey(source)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }));
 }
 
 export function buildSvgBoundaryLoops({
@@ -1124,40 +1202,91 @@ export function buildSvgDepthLayers({
     const layer = authoredLayers[index];
     if (!isSvgRenderLayerVisible(layer)) continue;
     const layerConfig = parseDepthLayerLabel(layer && layer.label);
-    const depthSources = layerConfig
+    const depthSources = dedupeDepthSources(layerConfig
       ? [Object.freeze({
           config: layerConfig,
-          paths: Array.isArray(layer.paths) ? layer.paths : [],
-          rects: Array.isArray(layer.rects) ? layer.rects : [],
+          paths: (Array.isArray(layer.paths) ? layer.paths : []).filter((path) => resolveDepthChannelRole(path) !== "red"),
+          rects: (Array.isArray(layer.rects) ? layer.rects : []).filter((rect) => resolveDepthChannelRole(rect) !== "red"),
+          circles: (Array.isArray(layer.circles) ? layer.circles : []).filter((circle) => resolveDepthChannelRole(circle) !== "red"),
+          ellipses: (Array.isArray(layer.ellipses) ? layer.ellipses : []).filter((ellipse) => resolveDepthChannelRole(ellipse) !== "red"),
           redPaths: [],
           redRects: [],
+          redCircles: [],
+          redEllipses: [],
         })]
       : [
           ...(Array.isArray(layer.paths) ? layer.paths : []).map((path, sourceElementIndex) => Object.freeze({
             config: parseDepthLayerLabel(path && path.label),
             paths: [path],
             rects: [],
+            circles: [],
+            ellipses: [],
             redPaths: [],
             redRects: [],
+            redCircles: [],
+            redEllipses: [],
             sourceElementIndex,
           })).filter((source) => source.config && resolveDepthChannelRole(source.paths[0]) !== "red"),
           ...(Array.isArray(layer.rects) ? layer.rects : []).map((rect, sourceElementIndex) => Object.freeze({
             config: parseDepthLayerLabel(rect && rect.label),
             paths: [],
             rects: [rect],
+            circles: [],
+            ellipses: [],
             redPaths: [],
             redRects: [],
+            redCircles: [],
+            redEllipses: [],
             sourceElementIndex,
           })).filter((source) => source.config && resolveDepthChannelRole(source.rects[0]) !== "red"),
-        ];
-    const redOperationPaths = !layerConfig
+          ...(Array.isArray(layer.circles) ? layer.circles : []).map((circle, sourceElementIndex) => Object.freeze({
+            config: parseDepthLayerLabel(circle && circle.label),
+            paths: [],
+            rects: [],
+            circles: [circle],
+            ellipses: [],
+            redPaths: [],
+            redRects: [],
+            redCircles: [],
+            redEllipses: [],
+            sourceElementIndex,
+          })).filter((source) => source.config && resolveDepthChannelRole(source.circles[0]) !== "red"),
+          ...(Array.isArray(layer.ellipses) ? layer.ellipses : []).map((ellipse, sourceElementIndex) => Object.freeze({
+            config: parseDepthLayerLabel(ellipse && ellipse.label),
+            paths: [],
+            rects: [],
+            circles: [],
+            ellipses: [ellipse],
+            redPaths: [],
+            redRects: [],
+            redCircles: [],
+            redEllipses: [],
+            sourceElementIndex,
+          })).filter((source) => source.config && resolveDepthChannelRole(source.ellipses[0]) !== "red"),
+        ]);
+    const collectUnlabeledRedOperations = depthSources.length > 0;
+    const redOperationPaths = layerConfig || collectUnlabeledRedOperations
       ? (Array.isArray(layer.paths) ? layer.paths : []).filter((path) => (
-          parseDepthLayerLabel(path && path.label) && resolveDepthChannelRole(path) === "red"
+          resolveDepthChannelRole(path) === "red"
+          && (collectUnlabeledRedOperations || parseDepthLayerLabel(path && path.label))
         ))
       : [];
-    const redOperationRects = !layerConfig
+    const redOperationRects = layerConfig || collectUnlabeledRedOperations
       ? (Array.isArray(layer.rects) ? layer.rects : []).filter((rect) => (
-          parseDepthLayerLabel(rect && rect.label) && resolveDepthChannelRole(rect) === "red"
+          resolveDepthChannelRole(rect) === "red"
+          && (collectUnlabeledRedOperations || parseDepthLayerLabel(rect && rect.label))
+        ))
+      : [];
+    const redOperationCircles = layerConfig || collectUnlabeledRedOperations
+      ? (Array.isArray(layer.circles) ? layer.circles : []).filter((circle) => (
+          resolveDepthChannelRole(circle) === "red"
+          && (collectUnlabeledRedOperations || parseDepthLayerLabel(circle && circle.label))
+        ))
+      : [];
+    const redOperationEllipses = layerConfig || collectUnlabeledRedOperations
+      ? (Array.isArray(layer.ellipses) ? layer.ellipses : []).filter((ellipse) => (
+          resolveDepthChannelRole(ellipse) === "red"
+          && (collectUnlabeledRedOperations || parseDepthLayerLabel(ellipse && ellipse.label))
         ))
       : [];
 
@@ -1208,8 +1337,48 @@ export function buildSvgDepthLayers({
             }))),
           });
         })),
+        ...((Array.isArray(source.circles) ? source.circles : []).map((circle, circleIndex) => {
+          const authoredCircle = translateCircle(circle, layer && layer.translate);
+          const authoredPoints = buildClosedCirclePolyline(authoredCircle, config.tessellation * 2) || [];
+          if (authoredPoints.length < 4) return null;
+          const metadata = parseSvgLabelMetadata(circle && circle.label, circle && circle.id);
+          return Object.freeze({
+            id: String(metadata.id || circle && circle.id || `${config.id}_circle_${circleIndex + 1}`),
+            kind: "circle_loop",
+            channel: resolveDepthChannelRole(circle),
+            channelDepthScale: resolveDepthChannelScale(circle, "blue"),
+            ...sourceStack,
+            sourceElementIndex: circleIndex,
+            authoredPoints,
+            worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+              viewBox,
+              worldWidthPx,
+              worldHeightPx,
+            }))),
+          });
+        })),
+        ...((Array.isArray(source.ellipses) ? source.ellipses : []).map((ellipse, ellipseIndex) => {
+          const authoredEllipse = translateEllipse(ellipse, layer && layer.translate);
+          const authoredPoints = buildClosedEllipsePolyline(authoredEllipse, config.tessellation * 2) || [];
+          if (authoredPoints.length < 4) return null;
+          const metadata = parseSvgLabelMetadata(ellipse && ellipse.label, ellipse && ellipse.id);
+          return Object.freeze({
+            id: String(metadata.id || ellipse && ellipse.id || `${config.id}_ellipse_${ellipseIndex + 1}`),
+            kind: "ellipse_loop",
+            channel: resolveDepthChannelRole(ellipse),
+            channelDepthScale: resolveDepthChannelScale(ellipse, "blue"),
+            ...sourceStack,
+            sourceElementIndex: ellipseIndex,
+            authoredPoints,
+            worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+              viewBox,
+              worldWidthPx,
+              worldHeightPx,
+            }))),
+          });
+        })),
       ].filter(Boolean);
-      const redOperations = [
+      const redOperations = dedupeDepthSources([
         ...redOperationPaths.map((path, pathIndex) => {
           const authoredPoints = translatePolylinePoints(
             parseSvgPolylinePath(path && path.d) || [],
@@ -1222,6 +1391,7 @@ export function buildSvgDepthLayers({
             kind: "path_loop",
             channel: "red",
             targetDepthScale: resolveDepthChannelScale(path, "red"),
+            paths: [path],
             authoredPoints,
             worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
               viewBox,
@@ -1240,6 +1410,7 @@ export function buildSvgDepthLayers({
             kind: "rect_loop",
             channel: "red",
             targetDepthScale: resolveDepthChannelScale(rect, "red"),
+            rects: [rect],
             authoredPoints,
             worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
               viewBox,
@@ -1248,7 +1419,45 @@ export function buildSvgDepthLayers({
             }))),
           });
         }),
-      ].filter(Boolean);
+        ...redOperationCircles.map((circle, circleIndex) => {
+          const authoredCircle = translateCircle(circle, layer && layer.translate);
+          const authoredPoints = buildClosedCirclePolyline(authoredCircle, config.tessellation * 2) || [];
+          if (authoredPoints.length < 4) return null;
+          const metadata = parseSvgLabelMetadata(circle && circle.label, circle && circle.id);
+          return Object.freeze({
+            id: String(metadata.id || circle && circle.id || `${config.id}_red_circle_${circleIndex + 1}`),
+            kind: "circle_loop",
+            channel: "red",
+            targetDepthScale: resolveDepthChannelScale(circle, "red"),
+            circles: [circle],
+            authoredPoints,
+            worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+              viewBox,
+              worldWidthPx,
+              worldHeightPx,
+            }))),
+          });
+        }),
+        ...redOperationEllipses.map((ellipse, ellipseIndex) => {
+          const authoredEllipse = translateEllipse(ellipse, layer && layer.translate);
+          const authoredPoints = buildClosedEllipsePolyline(authoredEllipse, config.tessellation * 2) || [];
+          if (authoredPoints.length < 4) return null;
+          const metadata = parseSvgLabelMetadata(ellipse && ellipse.label, ellipse && ellipse.id);
+          return Object.freeze({
+            id: String(metadata.id || ellipse && ellipse.id || `${config.id}_red_ellipse_${ellipseIndex + 1}`),
+            kind: "ellipse_loop",
+            channel: "red",
+            targetDepthScale: resolveDepthChannelScale(ellipse, "red"),
+            ellipses: [ellipse],
+            authoredPoints,
+            worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+              viewBox,
+              worldWidthPx,
+              worldHeightPx,
+            }))),
+          });
+        }),
+      ].filter(Boolean));
       depthLayers.push(Object.freeze({
         ...config,
         ...sourceStack,
