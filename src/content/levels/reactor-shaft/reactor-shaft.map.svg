@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.44358522"
-     inkscape:cx="975.00993"
-     inkscape:cy="1465.3328"
+     inkscape:zoom="0.31366212"
+     inkscape:cx="929.34397"
+     inkscape:cy="1284.822"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="56"
@@ -58,11 +58,10 @@
      sodipodi:insensitive="true">
     <path
        style="fill:none;stroke:#000000;stroke-opacity:1"
-       d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
+       d="M 380.81185,1610.75 H 1709.0618 V 392.00004 l -624.25,2.75 -113.24995,706.62496 305.24995,-2.625 192,384 H 700.81185 v -320 h -320 z"
        id="path1"
        sodipodi:nodetypes="ccccccccccc"
-       inkscape:label="id:bounds_01"
-       sodipodi:insensitive="true" />
+       inkscape:label="id:bounds_01" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -73,7 +72,7 @@
     <path
        id="path1-4-1"
        style="fill:none;stroke:#f90000;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1"
-       d="M 1050.4961,586.22656 906.61133,1469.1914 1244.3164,1466.2871 1378.1465,1734 H 762 V 1414 H 266 v 564 H 1858.2402 V 582.9768 Z"
+       d="m 1047.3079,276.9766 -143.88472,882.9648 337.70502,-2.9043 133.8301,267.7129 H 758.81185 v -320 h -496 v 564 H 1855.052 V 273.72684 Z"
        sodipodi:nodetypes="ccccccccccc"
        inkscape:label="id:cam_bounds_01" />
   </g>
@@ -83,12 +82,14 @@
      inkscape:label="fields"
      style="display:inline"
      sodipodi:insensitive="true">
-    <path
-       style="display:inline;fill:#ff6600;fill-opacity:1;stroke-width:4.2602"
-       d="m 385.49526,1696.4046 v -222.0543 h 157.80507 157.80508 v 160.0594 160.0594 h 386.62239 c 212.6424,0 386.6225,-0.5056 386.6225,-1.1236 0,-0.6181 -43.3682,-87.9965 -96.3738,-194.1744 l -96.3738,-193.0507 -151.6056,1.299 c -116.6431,0.9995 -151.62639,0.6787 -151.69565,-1.3912 -0.0495,-1.4796 25.02885,-159.6781 55.72975,-351.5521 l 55.8197,-348.86197 h 100.5751 c 55.3164,0 195.088,-0.67451 310.6036,-1.4989 l 210.0283,-1.4989 v 607.92127 607.9213 H 1136.1965 561.3352 v -39.4513 -39.4513 h -22.54358 -22.54359 v 39.4513 39.4513 h -65.37638 -65.37639 z m 1203.31064,148.0831 c 0.4908,-1.4723 -0.7138,-2.677 -2.677,-2.677 -1.9632,0 -3.5694,1.6062 -3.5694,3.5694 0,3.981 4.8531,3.2877 6.2464,-0.8924 z M 553.38588,1803.4204 c 6.34391,-6.3439 6.04407,-20.8759 -0.56715,-27.4871 -6.38335,-6.3833 -20.66752,-6.8577 -27.24542,-0.9048 -9.74961,8.8233 -6.90324,28.0763 4.8825,33.0255 6.8505,2.8768 17.58986,0.7066 22.93007,-4.6336 z m -6.09346,-178.4508 c -1.39336,-4.1801 -6.24645,-4.8734 -6.24645,-0.8924 0,1.9632 1.60623,3.5694 3.5694,3.5694 1.96318,0 3.16785,-1.2046 2.67705,-2.677 z"
-       id="path20"
-       inkscape:label="id:star_field z=12bo depth=40bo density=0.7"
-       sodipodi:insensitive="true" />
+    <rect
+       style="display:inline;fill:#ff6600;fill-opacity:1;stroke-width:1.88976"
+       id="rect20"
+       width="1788.5488"
+       height="1686.5282"
+       x="146.65463"
+       y="162.59534"
+       inkscape:label="id:star_field z=12bo depth=40bo density=0.7" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -98,58 +99,58 @@
      sodipodi:insensitive="true">
     <path
        style="display:inline;fill:#0000be;fill-opacity:1;stroke:none;stroke-opacity:1"
-       d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
+       d="M 380.81185,1610.75 H 1709.0618 V 392.00004 l -624.25,2.75 -113.24995,706.62496 305.24995,-2.625 192,384 H 700.81185 v -320 h -320 z"
        id="path8"
        sodipodi:nodetypes="ccccccccccc"
        inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
     <path
        style="fill:#ff0000;fill-opacity:1;stroke-width:0.926189"
-       d="m 471.20454,1565.7472 150.97564,-27.9585 -31.00358,29.6133 z"
+       d="m 468.01639,1256.4972 150.97564,-27.9585 -31.00358,29.6133 z"
        id="path9"
        sodipodi:nodetypes="cccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        style="fill:#ff0000;fill-opacity:1;stroke-width:1.15724"
-       d="m 637.47033,1552.854 -30.43384,26.3005 33.69522,144.1438 23.98431,-120.917 z"
+       d="m 634.28218,1243.604 -30.43384,26.3005 33.69522,144.1438 23.98431,-120.917 z"
        id="path10"
        sodipodi:nodetypes="ccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
-       d="m 591.24225,1586.8901 -115.58965,-0.7305 76.42161,85.6226 60.8013,1.2543 z"
+       d="m 588.0541,1277.6401 -115.58965,-0.7305 76.42161,85.6226 60.8013,1.2543 z"
        id="path11"
        sodipodi:nodetypes="ccccc"
        inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
     <path
        style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:0.676288"
-       d="m 614.06121,1692.2139 -63.0474,-1.8343 66.80244,92.6026 9.94317,-45.5295 z"
+       d="m 610.87306,1382.9639 -63.0474,-1.8343 66.80244,92.6026 9.94317,-45.5295 z"
        id="path12"
        sodipodi:nodetypes="ccccc"
        inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
     <ellipse
        style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:0.500868"
        id="path15-8"
-       cx="1594.0721"
-       cy="1510.1609"
+       cx="1590.884"
+       cy="1200.9109"
        rx="27.09922"
        ry="28.693293"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
-       d="m 1075.9986,1163.6725 78.1096,-374.60687 290.121,-7.97035 z"
+       d="m 1072.8104,854.42254 78.1096,-374.60687 290.121,-7.97035 z"
        id="path16"
        sodipodi:nodetypes="cccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
-       d="m 1074.4045,1224.2473 484.5979,-433.58759 87.674,-4.78222 3.1881,197.66493 z"
+       d="m 1071.2163,914.99734 484.5979,-433.58759 87.674,-4.78222 3.1881,197.66493 z"
        id="path17"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <circle
        style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
        id="path18"
-       cx="1509.5862"
-       cy="1280.0398"
+       cx="1506.3981"
+       cy="970.78986"
        r="132.30797"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
   </g>
@@ -162,22 +163,22 @@
     <path
        id="rect1"
        style="fill:#222222;fill-opacity:1;stroke:#5f5f5f;stroke-width:1.88976"
-       d="M 194.40234,571.42188 V 1982.3047 H 1902.7773 V 571.42188 Z M 1712.25,701.25 V 1921.5117 H 384 V 1472 h 320 v 320 h 768 L 1280,1408 974.75,1410.625 1088,704 Z"
+       d="M 191.21419,262.17192 V 1673.0547 H 1899.5891 V 262.17192 Z M 1709.0618,392.00004 V 1612.2617 H 380.81185 V 1162.75 h 320 v 320 h 767.99995 l -192,-384 -305.24995,2.625 113.24995,-706.62496 z"
        inkscape:label="id:art_01" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer4"
      inkscape:label="props"
-     sodipodi:insensitive="true"
-     style="display:inline">
+     style="display:inline"
+     sodipodi:insensitive="true">
     <rect
        style="fill:#d4aa00;stroke-width:7.29432"
        id="rect2"
        width="41"
        height="80"
-       x="518.34814"
-       y="1840.1136"
+       x="515.16003"
+       y="1530.8636"
        inkscape:label="id: plinth_01  z:orb,  anchor:bottom" />
   </g>
   <g
@@ -189,8 +190,8 @@
     <circle
        style="fill:#ff0000;stroke:none;stroke-width:1.48875"
        id="path2-9"
-       cx="538.84814"
-       cy="1789.9618"
+       cx="535.66003"
+       cy="1480.7118"
        r="18.5"
        inkscape:label="id: spawn_01, z:orb" />
   </g>
@@ -198,13 +199,13 @@
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="cameras"
-     sodipodi:insensitive="true"
-     style="display:none">
+     style="display:none"
+     sodipodi:insensitive="true">
     <circle
        style="fill:#000000;stroke-width:0.680124"
        id="path3"
-       cx="1280"
-       cy="1385.4688"
+       cx="1276.8119"
+       cy="1076.2188"
        r="5"
        inkscape:label="id:camera_anchor_01" />
   </g>
@@ -217,15 +218,15 @@
     <circle
        style="fill:#0000ff;stroke:none;stroke-width:0.201182"
        id="path2-9-6"
-       cx="543.5"
-       cy="1624.5"
+       cx="540.31189"
+       cy="1315.25"
        r="2.5"
        inkscape:label="id: globe_02, z:orb" />
     <circle
        style="display:inline;fill:#0000ff;stroke:none;stroke-width:0.201182"
        id="path2-9-6-7"
-       cx="1585.5"
-       cy="1844.5"
+       cx="1582.3119"
+       cy="1535.25"
        r="2.5"
        inkscape:label="id: globe_01, z:orb" />
   </g>
@@ -233,6 +234,5 @@
      inkscape:groupmode="layer"
      id="layer7"
      inkscape:label="orb: z=4BO"
-     sodipodi:insensitive="true"
      style="display:inline" />
 </svg>
