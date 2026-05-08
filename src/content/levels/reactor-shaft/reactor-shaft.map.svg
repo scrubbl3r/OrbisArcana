@@ -23,13 +23,13 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="2.0138062"
-     inkscape:cx="417.86543"
-     inkscape:cy="1799.0808"
+     inkscape:zoom="0.62732424"
+     inkscape:cx="220.77897"
+     inkscape:cy="1578.1313"
      inkscape:window-width="1616"
      inkscape:window-height="887"
-     inkscape:window-x="1"
-     inkscape:window-y="34"
+     inkscape:window-x="84"
+     inkscape:window-y="219"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer17"
      showgrid="false">
@@ -87,7 +87,7 @@
        d="M 384,1921.5118 H 1712.25 V 701.25002 L 1088,704.00002 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
        id="path1-4-0"
        sodipodi:nodetypes="ccccccccccc"
-       inkscape:label="id:stars_field" />
+       inkscape:label="id:star_field" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -95,11 +95,36 @@
      inkscape:label="depths"
      style="display:inline">
     <path
-       style="display:inline;fill:#0000ff;fill-opacity:1;stroke:none;stroke-opacity:1"
+       style="display:inline;fill:#0000be;fill-opacity:1;stroke:none;stroke-opacity:1"
        d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
        id="path1-3"
        sodipodi:nodetypes="ccccccccccc"
-       inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24" />
+       inkscape:label="depth:reactor max=10bo material=graphite tess=24"
+       sodipodi:insensitive="true" />
+    <path
+       style="fill:#ff0000;fill-opacity:1;stroke-width:0.926189"
+       d="m 471.20454,1565.7472 150.97564,-27.9585 -31.00358,29.6133 z"
+       id="path2"
+       sodipodi:nodetypes="cccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       style="fill:#ff0000;fill-opacity:1;stroke-width:1.15724"
+       d="m 637.47033,1552.854 -30.43384,26.3005 33.69522,144.1438 23.98431,-120.917 z"
+       id="path5"
+       sodipodi:nodetypes="ccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
+       d="m 591.24225,1586.8901 -115.58965,-0.7305 76.42161,85.6226 60.8013,1.2543 z"
+       id="path6"
+       sodipodi:nodetypes="ccccc"
+       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       style="fill:#ff0000;fill-opacity:1;stroke-width:0.676288"
+       d="m 614.06121,1692.2139 -63.0474,-1.8343 66.80244,92.6026 9.94317,-45.5295 z"
+       id="path7"
+       sodipodi:nodetypes="ccccc"
+       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -174,4 +199,9 @@
        r="2.5"
        inkscape:label="id: globe_01, z:orb" />
   </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer7"
+     inkscape:label="orb: z=4BO"
+     sodipodi:insensitive="true" />
 </svg>
