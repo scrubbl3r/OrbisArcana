@@ -124,20 +124,47 @@ function isRedBlueChannelColor(color = null) {
     && (Math.abs(r - g) > DEPTH_LAYER_CHANNEL_THRESHOLD || Math.abs(b - g) > DEPTH_LAYER_CHANNEL_THRESHOLD);
 }
 
-function usesChannelDepthEncoding(layer = {}) {
+function readDepthLayerFillColors(layer = {}) {
   const body = String(layer && layer.authoredBody || "").toLowerCase();
   const fillMatches = body.matchAll(/fill\s*(?::|=)\s*["']?(#[0-9a-f]{3,8}|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[\d.]+)?\s*\))/g);
+  const colors = [];
   for (const match of fillMatches) {
     const raw = String(match && match[1] || "").trim();
-    if (raw.startsWith("#") && isRedBlueChannelColor(parseHexColorChannels(raw))) return true;
+    const hexColor = raw.startsWith("#") ? parseHexColorChannels(raw) : null;
+    if (hexColor) {
+      colors.push(hexColor);
+      continue;
+    }
     const rgbMatch = raw.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
-    if (rgbMatch && isRedBlueChannelColor({
-      r: Number(rgbMatch[1]),
-      g: Number(rgbMatch[2]),
-      b: Number(rgbMatch[3]),
-    })) return true;
+    if (rgbMatch) {
+      colors.push(Object.freeze({
+        r: Number(rgbMatch[1]),
+        g: Number(rgbMatch[2]),
+        b: Number(rgbMatch[3]),
+      }));
+    }
   }
-  return false;
+  return Object.freeze(colors);
+}
+
+function usesChannelDepthEncoding(layer = {}) {
+  return readDepthLayerFillColors(layer).some((color) => isRedBlueChannelColor(color));
+}
+
+function resolveUniformBlueDepthScale(layer = {}) {
+  const colors = readDepthLayerFillColors(layer)
+    .filter((color) => isRedBlueChannelColor(color));
+  if (!colors.length) return null;
+  const blueColors = colors.filter((color) => (
+    clampNumber(color.b, 0) > DEPTH_LAYER_CHANNEL_THRESHOLD
+    && clampNumber(color.r, 0) <= DEPTH_LAYER_CHANNEL_THRESHOLD
+  ));
+  if (blueColors.length !== colors.length) return null;
+  const firstBlue = Math.round(clampNumber(blueColors[0] && blueColors[0].b, 0));
+  const hasSingleDepth = blueColors.every((color) => (
+    Math.round(clampNumber(color.b, 0)) === firstBlue
+  ));
+  return hasSingleDepth ? clamp01(firstBlue / 255) : null;
 }
 
 export function resolveDepthEnvironmentMode() {
@@ -436,8 +463,15 @@ export async function buildDepthLayerMesh({
   environmentMode = DEPTH_ENVIRONMENT_MODE.runtime,
   boWorldUnits = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
 }) {
-  if (!usesChannelDepthEncoding(layer)) {
-    const vectorMesh = buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environmentMode, boWorldUnits });
+  const uniformBlueDepthScale = resolveUniformBlueDepthScale(layer);
+  if (!usesChannelDepthEncoding(layer) || uniformBlueDepthScale != null) {
+    const vectorLayer = uniformBlueDepthScale == null
+      ? layer
+      : Object.freeze({
+          ...layer,
+          maxDepthBO: Math.max(0, clampNumber(layer && layer.maxDepthBO, 10)) * uniformBlueDepthScale,
+        });
+    const vectorMesh = buildVectorDepthLayerMesh({ layer: vectorLayer, worldWidthPx, worldHeightPx, environmentMode, boWorldUnits });
     if (vectorMesh) return vectorMesh;
   }
 
