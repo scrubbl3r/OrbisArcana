@@ -34,6 +34,7 @@ export const LEVEL_SVG_LAYER_GLOBES = "globes";
 export const LEVEL_SVG_LAYER_PROPS = "props";
 export const LEVEL_SVG_LAYER_ART = "art";
 export const LEVEL_SVG_LAYER_FIELDS = "fields";
+export const LEVEL_SVG_LAYER_ORB = "orb";
 
 function cloneJsonLike(value, fallback = {}) {
   if (!value || typeof value !== "object") return { ...fallback };
@@ -91,6 +92,7 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
       props: normalizeLayerLabels(semanticLayers.props),
       art: normalizeLayerLabels(semanticLayers.art),
       fields: normalizeLayerLabels(semanticLayers.fields),
+      orb: normalizeLayerLabels(semanticLayers.orb),
     }),
     primarySpawn: Object.freeze({
       id: String(mapSource.primarySpawn && mapSource.primarySpawn.id || "").trim(),

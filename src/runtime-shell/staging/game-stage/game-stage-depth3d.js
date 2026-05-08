@@ -4,7 +4,7 @@ import {
   LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
   LEVEL_DEPTH_DEFAULT_ORB_Z_BO,
   resolveOrbTravelZBO,
-} from "../../../game-runtime/level/depth-projection.js";
+} from "../../../game-runtime/level/depth-projection.js?v=20260508a";
 import {
   resolveDepthBootFrame,
   resolveDepthCameraFrame,
@@ -19,8 +19,10 @@ import {
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260507b";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
+  AUTHORED_LEVEL_READ_MODEL_KEY_ORB_DEPTH,
   AUTHORED_LEVEL_READ_MODEL_KEY_PROPS,
   resolveAuthoredLevelReadModelArray,
+  resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
 import {
   applyThreeMeshFlags,
@@ -74,6 +76,10 @@ function resolveSceneDepthLayers(authoredScene = null) {
 
 function resolveSceneProps(authoredScene = null) {
   return resolveAuthoredLevelReadModelArray(authoredScene, AUTHORED_LEVEL_READ_MODEL_KEY_PROPS);
+}
+
+function resolveSceneOrbDepth(authoredScene = null) {
+  return resolveAuthoredLevelReadModelObject(authoredScene, AUTHORED_LEVEL_READ_MODEL_KEY_ORB_DEPTH);
 }
 
 function resolveWorldGlobeDepthZ({
@@ -443,10 +449,11 @@ export function createGameStageDepth3dLayer({
       const summary = resolveSceneSummary(authoredScene);
       const layers = resolveSceneDepthLayers(authoredScene);
       const props = resolveSceneProps(authoredScene);
+      const orbDepth = resolveSceneOrbDepth(authoredScene);
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;
-      currentOrbZBO = resolveOrbTravelZBO({ depthLayers: layers }, LEVEL_DEPTH_DEFAULT_ORB_Z_BO);
+      currentOrbZBO = resolveOrbTravelZBO({ depthLayers: layers, orbDepth }, LEVEL_DEPTH_DEFAULT_ORB_Z_BO);
       telemetry.setDepthLayerLabel(layers);
       for (const layer of layers) {
         const mesh = await buildDepthLayerMesh({

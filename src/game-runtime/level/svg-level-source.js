@@ -157,6 +157,23 @@ function parseDepthLayerLabel(label = "") {
   });
 }
 
+function parseOrbLayerLabel(label = "") {
+  const metadata = parseSvgLabelMetadata(label);
+  const text = String(label || "").trim();
+  if (!/^orb\b\s*:?/i.test(text)) return null;
+  const entries = metadata.entries || {};
+  const zMatch = text.match(/(?:^|\s)z(?:bo)?\s*[:=]\s*(-?(?:\d*\.\d+|\d+)\s*bo?)/i);
+  const zBO = Math.max(0, parseBoValue(
+    (zMatch && zMatch[1]) || entries.z || entries.zbo || entries.depth || "",
+    4
+  ));
+  return Object.freeze({
+    id: String(metadata.id || "orb").trim(),
+    label: text,
+    zBO,
+  });
+}
+
 function parsePropLabelText(label = "", fallbackId = "") {
   const metadata = parseSvgLabelMetadata(label, fallbackId);
   return Object.freeze({
@@ -280,6 +297,27 @@ export function parseSvgLayerElements(svgText = "") {
       paths: parseSvgPathElements(body),
       circles: parseSvgCircleElements(body),
       rects: parseSvgRectElements(body),
+    }));
+  }
+  const selfClosingMatches = String(svgText || "").matchAll(/<g\b([^>]*)\/>/gi);
+  for (const match of selfClosingMatches) {
+    const attrs = String(match && match[1] || "");
+    if (String(readAttr(attrs, "inkscape:groupmode") || "").trim().toLowerCase() !== "layer") continue;
+    const translate = parseTranslateTransform(readAttr(attrs, "transform"));
+    const sourceLayerIndex = layers.length;
+    layers.push(Object.freeze({
+      id: readAttr(attrs, "id"),
+      label: readAttr(attrs, "inkscape:label"),
+      sourceLayerIndex,
+      sourceStackIndex: sourceLayerIndex,
+      style: readAttr(attrs, "style"),
+      display: readAttr(attrs, "display"),
+      visibility: readAttr(attrs, "visibility"),
+      translate,
+      body: "",
+      paths: Object.freeze([]),
+      circles: Object.freeze([]),
+      rects: Object.freeze([]),
     }));
   }
   return Object.freeze(layers);
@@ -453,6 +491,36 @@ function buildClosedRectPolyline(rect = {}) {
     Object.freeze({ x, y: y + height }),
     Object.freeze({ x, y }),
   ]);
+}
+
+function readSvgElementFillColor(source = {}) {
+  const style = parseSvgInlineStyle(source && source.style);
+  const raw = String(style.fill || "").trim().toLowerCase();
+  const hex = raw.match(/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
+  if (!hex) return null;
+  const value = String(hex[1] || "");
+  if (value.length === 3) {
+    return Object.freeze({
+      r: Number.parseInt(value[0] + value[0], 16),
+      g: Number.parseInt(value[1] + value[1], 16),
+      b: Number.parseInt(value[2] + value[2], 16),
+    });
+  }
+  return Object.freeze({
+    r: Number.parseInt(value.slice(0, 2), 16),
+    g: Number.parseInt(value.slice(2, 4), 16),
+    b: Number.parseInt(value.slice(4, 6), 16),
+  });
+}
+
+function resolveDepthChannelRole(source = {}) {
+  const color = readSvgElementFillColor(source);
+  if (!color) return "legacy";
+  const r = clampNumber(color.r, 0);
+  const b = clampNumber(color.b, 0);
+  if (r > 0 && r >= b) return "red";
+  if (b > 0) return "blue";
+  return "legacy";
 }
 
 export function buildSvgBoundaryLoops({
@@ -1052,21 +1120,37 @@ export function buildSvgDepthLayers({
           config: layerConfig,
           paths: Array.isArray(layer.paths) ? layer.paths : [],
           rects: Array.isArray(layer.rects) ? layer.rects : [],
+          redPaths: [],
+          redRects: [],
         })]
       : [
           ...(Array.isArray(layer.paths) ? layer.paths : []).map((path, sourceElementIndex) => Object.freeze({
             config: parseDepthLayerLabel(path && path.label),
             paths: [path],
             rects: [],
+            redPaths: [],
+            redRects: [],
             sourceElementIndex,
-          })),
+          })).filter((source) => source.config && resolveDepthChannelRole(source.paths[0]) !== "red"),
           ...(Array.isArray(layer.rects) ? layer.rects : []).map((rect, sourceElementIndex) => Object.freeze({
             config: parseDepthLayerLabel(rect && rect.label),
             paths: [],
             rects: [rect],
+            redPaths: [],
+            redRects: [],
             sourceElementIndex,
-          })),
+          })).filter((source) => source.config && resolveDepthChannelRole(source.rects[0]) !== "red"),
         ];
+    const redOperationPaths = !layerConfig
+      ? (Array.isArray(layer.paths) ? layer.paths : []).filter((path) => (
+          parseDepthLayerLabel(path && path.label) && resolveDepthChannelRole(path) === "red"
+        ))
+      : [];
+    const redOperationRects = !layerConfig
+      ? (Array.isArray(layer.rects) ? layer.rects : []).filter((rect) => (
+          parseDepthLayerLabel(rect && rect.label) && resolveDepthChannelRole(rect) === "red"
+        ))
+      : [];
 
     for (const source of depthSources) {
       const config = source && source.config;
@@ -1112,6 +1196,44 @@ export function buildSvgDepthLayers({
           });
         })),
       ].filter(Boolean);
+      const redOperations = [
+        ...redOperationPaths.map((path, pathIndex) => {
+          const authoredPoints = translatePolylinePoints(
+            parseSvgPolylinePath(path && path.d) || [],
+            layer && layer.translate
+          );
+          if (authoredPoints.length < 3) return null;
+          const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
+          return Object.freeze({
+            id: String(metadata.id || path && path.id || `${config.id}_red_path_${pathIndex + 1}`),
+            kind: "path_loop",
+            channel: "red",
+            authoredPoints,
+            worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+              viewBox,
+              worldWidthPx,
+              worldHeightPx,
+            }))),
+          });
+        }),
+        ...redOperationRects.map((rect, rectIndex) => {
+          const authoredRect = translateRect(rect, layer && layer.translate);
+          const authoredPoints = buildClosedRectPolyline(authoredRect) || [];
+          if (authoredPoints.length < 4) return null;
+          const metadata = parseSvgLabelMetadata(rect && rect.label, rect && rect.id);
+          return Object.freeze({
+            id: String(metadata.id || rect && rect.id || `${config.id}_red_rect_${rectIndex + 1}`),
+            kind: "rect_loop",
+            channel: "red",
+            authoredPoints,
+            worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
+              viewBox,
+              worldWidthPx,
+              worldHeightPx,
+            }))),
+          });
+        }),
+      ].filter(Boolean);
       depthLayers.push(Object.freeze({
         ...config,
         ...sourceStack,
@@ -1121,10 +1243,39 @@ export function buildSvgDepthLayers({
         defsMarkup,
         boundaryBox: resolveBoundaryBoxFromLoops(loops),
         loops: Object.freeze(loops),
+        redOperations: Object.freeze(redOperations),
       }));
     }
   }
   return Object.freeze(depthLayers);
+}
+
+export function buildSvgOrbDepth({
+  svgText = "",
+  orbLayerLabels = [],
+} = {}) {
+  const authoredLayers = parseSvgLayerElements(svgText);
+  const allowedLabels = new Set(
+    (Array.isArray(orbLayerLabels) ? orbLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+  );
+  for (const layer of authoredLayers) {
+    if (!isSvgRenderLayerVisible(layer)) continue;
+    const label = String(layer && layer.label || "").trim();
+    const normalizedLabel = label.toLowerCase();
+    if (allowedLabels.size && !Array.from(allowedLabels).some((allowed) => normalizedLabel === allowed || normalizedLabel.startsWith(`${allowed}:`))) {
+      continue;
+    }
+    const config = parseOrbLayerLabel(label);
+    if (!config) continue;
+    return Object.freeze({
+      ...config,
+      sourceLayerId: String(layer && layer.id || "orb"),
+      sourceLayerLabel: label,
+      sourceLayerIndex: clampNumber(layer && layer.sourceLayerIndex, 0),
+      sourceStackIndex: clampNumber(layer && layer.sourceStackIndex, 0),
+    });
+  }
+  return null;
 }
 
 export function buildBoundaryTileMask({
@@ -1182,6 +1333,7 @@ export function summarizeSvgLevelSource({
   propLayerLabels = [],
   artLayerLabels = [],
   starsFieldLayerLabels = [],
+  orbLayerLabels = [],
   primarySpawnId = "",
   tileSizePx = LEVEL_BOUNDARY_TILE_SIZE_FALLBACK_PX,
 } = {}) {
@@ -1241,6 +1393,10 @@ export function summarizeSvgLevelSource({
     worldWidthPx,
     worldHeightPx,
   });
+  const orbDepth = buildSvgOrbDepth({
+    svgText,
+    orbLayerLabels,
+  });
   const boundaryTileMask = buildBoundaryTileMask({
     loops,
     worldWidthPx,
@@ -1262,6 +1418,7 @@ export function summarizeSvgLevelSource({
     artShapes,
     starsFieldRegions: Object.freeze(starsFieldRegions),
     depthLayers: Object.freeze(depthLayers),
+    orbDepth,
     boundaryBox,
     boundaryTileMask,
   });

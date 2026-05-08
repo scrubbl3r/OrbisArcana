@@ -14,6 +14,7 @@ child `inkscape:label` metadata defines item identity and actor-depth behavior.
 - `spawns`: player spawn points.
 - `cameras`: camera anchors.
 - `globes`: globe pickup/emitter actors.
+- `orb`: authored orb-lane metadata, such as the default orb z depth.
 
 Hidden visual layers are not hydrated into runtime visual output. Hidden
 `fields` can remain in the SVG as authoring/data scaffolding, but they do not
@@ -34,6 +35,7 @@ Examples:
 id: globe_01, z:orb
 id: plinth_01 z:orb anchor:bottom
 depth:reactor max=10bo z=4bo material=graphite tess=24
+orb: z=4bo
 ```
 
 Important keys:
@@ -43,6 +45,8 @@ Important keys:
 - `z:4bo`: places the item at an explicit fixed depth.
 - `anchor`: prop placement anchor, currently `center`, `top`, `bottom`, or `base`.
 - `depth:<name>`: marks a child shape as a depth layer source.
+- `orb: z=<n>bo`: defines the default orb travel depth independently of
+  depth geometry.
 - `max`, `material`, `tess`: depth-layer rendering metadata.
 
 Authoring rule: actor items such as props, globes, pickups, enemies, and

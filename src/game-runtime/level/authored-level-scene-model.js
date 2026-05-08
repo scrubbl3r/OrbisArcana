@@ -51,6 +51,7 @@ export function buildAuthoredLevelSceneModel({
     artShapes,
     starsFieldRegions: Array.isArray(safeSummary && safeSummary.starsFieldRegions) ? safeSummary.starsFieldRegions : [],
     depthLayers: Array.isArray(safeSummary && safeSummary.depthLayers) ? safeSummary.depthLayers : [],
+    orbDepth: safeSummary && safeSummary.orbDepth ? safeSummary.orbDepth : null,
   });
 }
 

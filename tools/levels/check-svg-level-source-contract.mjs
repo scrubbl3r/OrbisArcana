@@ -7,6 +7,7 @@ import {
   LEVEL_SVG_LAYER_BOUNDS,
   LEVEL_SVG_LAYER_FIELDS,
   LEVEL_SVG_LAYER_GLOBES,
+  LEVEL_SVG_LAYER_ORB,
   LEVEL_SVG_LAYER_PROPS,
   LEVEL_SVG_LAYER_SPAWNS,
 } from "../../src/game-runtime/level/normalize-level-definition.js";
@@ -51,6 +52,7 @@ const SVG_CONTRACT_FIXTURE = `
   <g id="depth_hidden" inkscape:groupmode="layer" inkscape:label="depth:hidden max=2bo z=1bo" style="display:none">
     <rect id="depth_hidden_rect" x="30" y="5" width="20" height="20" />
   </g>
+  <g id="orb_depth" inkscape:groupmode="layer" inkscape:label="${LEVEL_SVG_LAYER_ORB}: z=6bo" />
 </svg>`;
 
 const summary = summarizeSvgLevelSource({
@@ -63,6 +65,7 @@ const summary = summarizeSvgLevelSource({
   propLayerLabels: [LEVEL_SVG_LAYER_PROPS],
   artLayerLabels: [LEVEL_SVG_LAYER_ART],
   starsFieldLayerLabels: [LEVEL_SVG_LAYER_FIELDS],
+  orbLayerLabels: [LEVEL_SVG_LAYER_ORB],
   primarySpawnId: "spawn_01",
   tileSizePx: 100,
 });
@@ -97,6 +100,11 @@ assert.deepEqual(
   summary.depthLayers.map((layer) => layer.id),
   ["visible"],
   "hidden depth layers must not hydrate depth surfaces"
+);
+assert.equal(
+  summary.orbDepth && summary.orbDepth.zBO,
+  6,
+  "self-closing orb layer should hydrate authored orb z"
 );
 
 console.log("svg-level-source contract ok");

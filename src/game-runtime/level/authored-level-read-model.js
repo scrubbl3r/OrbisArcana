@@ -8,6 +8,7 @@ export const AUTHORED_LEVEL_READ_MODEL_KEY_PROPS = "props";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES = "artShapes";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_STARS_FIELD_REGIONS = "starsFieldRegions";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS = "depthLayers";
+export const AUTHORED_LEVEL_READ_MODEL_KEY_ORB_DEPTH = "orbDepth";
 
 export function resolveAuthoredLevelReadModel(runtimeOrReadModel = null) {
   const source = runtimeOrReadModel && typeof runtimeOrReadModel === "object" ? runtimeOrReadModel : {};
@@ -29,6 +30,13 @@ export function resolveAuthoredLevelReadModelArray(runtimeOrReadModel = null, ke
 }
 
 export function resolveAuthoredLevelReadModelBox(runtimeOrReadModel = null, key = "") {
+  const readModel = resolveAuthoredLevelReadModel(runtimeOrReadModel);
+  if (readModel.sceneModel && readModel.sceneModel[key]) return readModel.sceneModel[key];
+  if (readModel.summary && readModel.summary[key]) return readModel.summary[key];
+  return null;
+}
+
+export function resolveAuthoredLevelReadModelObject(runtimeOrReadModel = null, key = "") {
   const readModel = resolveAuthoredLevelReadModel(runtimeOrReadModel);
   if (readModel.sceneModel && readModel.sceneModel[key]) return readModel.sceneModel[key];
   if (readModel.summary && readModel.summary[key]) return readModel.summary[key];

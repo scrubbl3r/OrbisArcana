@@ -86,7 +86,7 @@
        height="1487.5974"
        x="940.57355"
        y="408"
-       inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24" />
+       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
     <rect
        style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
        id="rect2"
@@ -94,7 +94,7 @@
        height="71.17395"
        x="976.95941"
        y="1699.495"
-       inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24" />
+       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -179,4 +179,9 @@
        r="8.6518793"
        inkscape:label="id: spawn_01, z:orb" />
   </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5"
+     inkscape:label="orb: z=4BO"
+     sodipodi:insensitive="true" />
 </svg>

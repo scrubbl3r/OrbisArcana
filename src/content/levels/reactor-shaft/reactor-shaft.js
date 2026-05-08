@@ -7,6 +7,7 @@ import {
   LEVEL_SVG_LAYER_DEPTHS,
   LEVEL_SVG_LAYER_FIELDS,
   LEVEL_SVG_LAYER_GLOBES,
+  LEVEL_SVG_LAYER_ORB,
   LEVEL_SVG_LAYER_PROPS,
   LEVEL_SVG_LAYER_SPAWNS,
   LEVEL_WORLD_ITEM_KIND_ENERGY_GLOBE_EMITTER,
@@ -101,6 +102,7 @@ export const REACTOR_SHAFT = Object.freeze({
       props: Object.freeze([LEVEL_SVG_LAYER_PROPS]),
       art: Object.freeze([LEVEL_SVG_LAYER_ART]),
       fields: Object.freeze([LEVEL_SVG_LAYER_FIELDS]),
+      orb: Object.freeze([LEVEL_SVG_LAYER_ORB]),
     }),
     primarySpawn: Object.freeze({
       id: "spawn_01",

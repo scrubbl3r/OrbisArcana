@@ -38,6 +38,8 @@ export function resolveApparentDepthScale({
 }
 
 export function resolveOrbTravelZBO(summary = null, fallback = LEVEL_DEPTH_DEFAULT_ORB_Z_BO) {
+  const orbDepthZBO = Number(summary && summary.orbDepth && summary.orbDepth.zBO);
+  if (Number.isFinite(orbDepthZBO) && orbDepthZBO >= 0) return orbDepthZBO;
   const layers = Array.isArray(summary && summary.depthLayers) ? summary.depthLayers : [];
   for (const layer of layers) {
     const zBO = Number(layer && layer.orbZBO);

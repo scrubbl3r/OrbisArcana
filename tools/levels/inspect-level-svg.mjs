@@ -121,6 +121,12 @@ const report = {
   artShapeCount: summary.artShapes.length,
   starsFieldRegionCount: summary.starsFieldRegions.length,
   depthLayerCount: summary.depthLayers.length,
+  orbDepth: summary.orbDepth ? {
+    id: summary.orbDepth.id,
+    label: summary.orbDepth.label,
+    zBO: summary.orbDepth.zBO,
+    sourceLayerId: summary.orbDepth.sourceLayerId,
+  } : null,
   boundaryTileMask: {
     tileSizePx: summary.boundaryTileMask.tileSizePx,
     cols: summary.boundaryTileMask.cols,
