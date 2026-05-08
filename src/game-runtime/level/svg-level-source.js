@@ -523,6 +523,15 @@ function resolveDepthChannelRole(source = {}) {
   return "legacy";
 }
 
+function resolveDepthChannelScale(source = {}, channel = "blue") {
+  const color = readSvgElementFillColor(source);
+  if (!color) return null;
+  const value = String(channel || "").toLowerCase() === "red"
+    ? clampNumber(color.r, 0)
+    : clampNumber(color.b, 0);
+  return value > 0 ? Math.max(0, Math.min(255, value)) / 255 : null;
+}
+
 export function buildSvgBoundaryLoops({
   svgText = "",
   worldWidthPx = 0,
@@ -1167,6 +1176,8 @@ export function buildSvgDepthLayers({
           return Object.freeze({
             id: String(metadata.id || path && path.id || `${config.id}_path_${pathIndex + 1}`),
             kind: "path_loop",
+            channel: resolveDepthChannelRole(path),
+            channelDepthScale: resolveDepthChannelScale(path, "blue"),
             ...sourceStack,
             sourceElementIndex: pathIndex,
             authoredPoints,
@@ -1185,6 +1196,8 @@ export function buildSvgDepthLayers({
           return Object.freeze({
             id: String(metadata.id || rect && rect.id || `${config.id}_rect_${rectIndex + 1}`),
             kind: "rect_loop",
+            channel: resolveDepthChannelRole(rect),
+            channelDepthScale: resolveDepthChannelScale(rect, "blue"),
             ...sourceStack,
             sourceElementIndex: rectIndex,
             authoredPoints,
@@ -1208,6 +1221,7 @@ export function buildSvgDepthLayers({
             id: String(metadata.id || path && path.id || `${config.id}_red_path_${pathIndex + 1}`),
             kind: "path_loop",
             channel: "red",
+            targetDepthScale: resolveDepthChannelScale(path, "red"),
             authoredPoints,
             worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
               viewBox,
@@ -1225,6 +1239,7 @@ export function buildSvgDepthLayers({
             id: String(metadata.id || rect && rect.id || `${config.id}_red_rect_${rectIndex + 1}`),
             kind: "rect_loop",
             channel: "red",
+            targetDepthScale: resolveDepthChannelScale(rect, "red"),
             authoredPoints,
             worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
               viewBox,

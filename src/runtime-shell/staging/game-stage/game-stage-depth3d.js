@@ -16,7 +16,7 @@ import {
 } from "../../../game-runtime/level/depth-runtime-coordinates.js?v=20260430b";
 import {
   buildDepthLayerMesh,
-} from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260507b";
+} from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260508b";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
   AUTHORED_LEVEL_READ_MODEL_KEY_ORB_DEPTH,

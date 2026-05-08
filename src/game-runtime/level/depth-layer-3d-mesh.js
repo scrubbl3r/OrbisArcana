@@ -167,6 +167,18 @@ function resolveUniformBlueDepthScale(layer = {}) {
   return hasSingleDepth ? clamp01(firstBlue / 255) : null;
 }
 
+function resolveVectorBlueDepthScale(layer = {}) {
+  const loops = Array.isArray(layer && layer.loops) ? layer.loops : [];
+  const blueScales = loops
+    .map((loop) => Number(loop && loop.channelDepthScale))
+    .filter((scale) => Number.isFinite(scale) && scale > 0);
+  if (!blueScales.length) return resolveUniformBlueDepthScale(layer);
+  const firstScale = blueScales[0];
+  return blueScales.every((scale) => Math.abs(scale - firstScale) < 0.001)
+    ? clamp01(firstScale)
+    : null;
+}
+
 export function resolveDepthEnvironmentMode() {
   try {
     const params = new URLSearchParams(globalThis.location && globalThis.location.search || "");
@@ -259,7 +271,25 @@ function buildVectorLoopShape(loop = {}, worldWidthPx = 1, worldHeightPx = 1) {
   return shape;
 }
 
+function buildVectorLoopPath(loop = {}, worldWidthPx = 1, worldHeightPx = 1) {
+  const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
+  if (points.length < 3) return null;
+  const start = toThreePointFromWorld(points[0], worldWidthPx, worldHeightPx, 0);
+  const path = new THREE.Path();
+  path.moveTo(start.x, start.y);
+  for (let i = 1; i < points.length; i += 1) {
+    const p = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 0);
+    path.lineTo(p.x, p.y);
+  }
+  path.closePath();
+  return path;
+}
+
 function buildVectorWallGeometry(loop = {}, depthPx = 0, worldWidthPx = 1, worldHeightPx = 1) {
+  return buildVectorWallGeometryBetween(loop, 0, -depthPx, worldWidthPx, worldHeightPx);
+}
+
+function buildVectorWallGeometryBetween(loop = {}, frontZ = 0, backZ = 0, worldWidthPx = 1, worldHeightPx = 1) {
   const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
   const positions = [];
   const indices = [];
@@ -267,10 +297,10 @@ function buildVectorWallGeometry(loop = {}, depthPx = 0, worldWidthPx = 1, world
   const wallColor = new THREE.Color(0x2b3137);
   if (points.length < 3) return null;
   for (let i = 1; i < points.length; i += 1) {
-    const aTop = toThreePointFromWorld(points[i - 1], worldWidthPx, worldHeightPx, 0);
-    const bTop = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, 0);
-    const bBack = Object.freeze({ ...bTop, z: -depthPx });
-    const aBack = Object.freeze({ ...aTop, z: -depthPx });
+    const aTop = toThreePointFromWorld(points[i - 1], worldWidthPx, worldHeightPx, frontZ);
+    const bTop = toThreePointFromWorld(points[i], worldWidthPx, worldHeightPx, frontZ);
+    const bBack = Object.freeze({ ...bTop, z: backZ });
+    const aBack = Object.freeze({ ...aTop, z: backZ });
     addQuad(positions, indices, colors, aTop, bTop, bBack, aBack, wallColor);
   }
   if (!positions.length) return null;
@@ -313,10 +343,16 @@ function buildVectorDepthLayerMesh({
   boWorldUnits = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
 }) {
   const loops = Array.isArray(layer && layer.loops) ? layer.loops : [];
+  const redOperations = Array.isArray(layer && layer.redOperations) ? layer.redOperations : [];
   const primaryLoop = loops[0] || null;
   const shape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx);
   if (!shape) return null;
   const depthPx = Math.max(0, clampNumber(layer && layer.maxDepthBO, 10)) * resolveBoWorldUnits(boWorldUnits);
+  const sourceMaxDepthPx = Math.max(0, clampNumber(layer && layer.sourceMaxDepthBO, layer && layer.maxDepthBO || 10)) * resolveBoWorldUnits(boWorldUnits);
+  const backWallHoles = redOperations.filter((operation) => {
+    const targetDepthPx = Math.max(0, clampNumber(operation && operation.targetDepthScale, 0)) * sourceMaxDepthPx;
+    return targetDepthPx + 0.001 >= depthPx;
+  });
   const model = new THREE.Group();
   model.name = `depth:${String(layer && layer.id || "layer")}:vector_volume`;
   model.userData.depthLayer = layer;
@@ -326,6 +362,10 @@ function buildVectorDepthLayerMesh({
   const baseRenderOrder = resolveAuthoredRenderOrder(layer, { fallback: 1 });
 
   const floorShape = buildVectorLoopShape(primaryLoop, worldWidthPx, worldHeightPx);
+  for (const operation of backWallHoles) {
+    const hole = buildVectorLoopPath(operation, worldWidthPx, worldHeightPx);
+    if (hole && floorShape) floorShape.holes.push(hole);
+  }
   const floorGeometry = new THREE.ShapeGeometry(floorShape || shape);
   floorGeometry.translate(0, 0, -depthPx);
   const floorMaterial = buildGraphiteMaterial({ opacity: 0.58, color: 0x303941, environmentMode });
@@ -365,6 +405,20 @@ function buildVectorDepthLayerMesh({
       edges.userData.loop = loop;
       model.add(edges);
     }
+  }
+
+  for (const operation of redOperations) {
+    const targetDepthPx = Math.max(0, clampNumber(operation && operation.targetDepthScale, 0)) * sourceMaxDepthPx;
+    if (targetDepthPx <= depthPx + 0.001) continue;
+    const revealGeometry = buildVectorWallGeometryBetween(operation, -depthPx, -targetDepthPx, worldWidthPx, worldHeightPx);
+    if (!revealGeometry) continue;
+    const revealMaterial = buildGraphiteMaterial({ opacity: 0.78, color: 0x20272e, environmentMode });
+    if (environmentMode === DEPTH_ENVIRONMENT_MODE.debug) revealMaterial.depthWrite = false;
+    const reveal = new THREE.Mesh(revealGeometry, revealMaterial);
+    reveal.renderOrder = baseRenderOrder + 0.15;
+    reveal.name = `${model.name}:red_reveal`;
+    reveal.userData.operation = operation;
+    model.add(reveal);
   }
 
   return model;
@@ -463,13 +517,16 @@ export async function buildDepthLayerMesh({
   environmentMode = DEPTH_ENVIRONMENT_MODE.runtime,
   boWorldUnits = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
 }) {
-  const uniformBlueDepthScale = resolveUniformBlueDepthScale(layer);
-  if (!usesChannelDepthEncoding(layer) || uniformBlueDepthScale != null) {
-    const vectorLayer = uniformBlueDepthScale == null
+  const redOperations = Array.isArray(layer && layer.redOperations) ? layer.redOperations : [];
+  const vectorBlueDepthScale = resolveVectorBlueDepthScale(layer);
+  if (!usesChannelDepthEncoding(layer) || vectorBlueDepthScale != null || redOperations.length) {
+    const resolvedBlueDepthScale = vectorBlueDepthScale == null ? 1 : vectorBlueDepthScale;
+    const vectorLayer = vectorBlueDepthScale == null
       ? layer
       : Object.freeze({
           ...layer,
-          maxDepthBO: Math.max(0, clampNumber(layer && layer.maxDepthBO, 10)) * uniformBlueDepthScale,
+          sourceMaxDepthBO: Math.max(0, clampNumber(layer && layer.maxDepthBO, 10)),
+          maxDepthBO: Math.max(0, clampNumber(layer && layer.maxDepthBO, 10)) * resolvedBlueDepthScale,
         });
     const vectorMesh = buildVectorDepthLayerMesh({ layer: vectorLayer, worldWidthPx, worldHeightPx, environmentMode, boWorldUnits });
     if (vectorMesh) return vectorMesh;
