@@ -24,8 +24,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="0.62732424"
-     inkscape:cx="1084.766"
-     inkscape:cy="1425.1004"
+     inkscape:cx="1107.083"
+     inkscape:cy="1249.7524"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="50"
@@ -166,31 +166,31 @@
        id="path12"
        sodipodi:nodetypes="ccccc"
        inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
-    <path
-       style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:4.87887"
-       d="m 1052.04,1340.486 616.4447,-327.41 -317.181,321.3286 z"
-       id="path13"
-       sodipodi:nodetypes="cccc"
-       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
-    <path
-       style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.28392"
-       d="m 1663.4691,975.57717 1.2191,-66.87042 -561.2597,10.33806 -49.7297,380.43999 z"
-       id="path14"
-       sodipodi:nodetypes="ccccc"
-       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
     <circle
        style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
        id="path15"
        cx="1506.3981"
-       cy="1411.1595"
-       r="105.20875" />
+       cy="1291.1595"
+       r="105.20875"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <ellipse
        style="fill:#ff0000;fill-opacity:1;stroke-width:0.500868"
        id="path15-8"
        cx="1594.0721"
-       cy="1570.1609"
+       cy="1510.1609"
        rx="27.09922"
-       ry="28.693293" />
+       ry="28.693293"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
+       d="m 1075.9986,1163.6725 78.1096,-374.60687 290.121,-7.97035 z"
+       id="path16"
+       sodipodi:nodetypes="cccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
+       d="m 1074.4045,1224.2473 484.5979,-433.58759 87.674,-4.78222 3.1881,197.66493 z"
+       id="path17" />
   </g>
   <g
      inkscape:groupmode="layer"
