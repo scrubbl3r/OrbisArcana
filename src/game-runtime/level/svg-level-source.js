@@ -380,10 +380,29 @@ export function parseSvgPolylinePath(pathData = "") {
   let y = 0;
   let startX = 0;
   let startY = 0;
+  let closed = false;
+
+  const closePath = () => {
+    if (!points.length) return false;
+    if (x !== startX || y !== startY) {
+      x = startX;
+      y = startY;
+      points.push({ x, y });
+    }
+    closed = true;
+    return true;
+  };
 
   while (cursor.index < tokens.length) {
     const raw = tokens[cursor.index];
     if (/^[a-zA-Z]$/.test(raw)) {
+      if (raw === "Z" || raw === "z") {
+        cursor.index += 1;
+        if (!closePath()) return null;
+        cmd = "";
+        continue;
+      }
+      if (closed) break;
       cmd = raw;
       cursor.index += 1;
       continue;
@@ -429,25 +448,7 @@ export function parseSvgPolylinePath(pathData = "") {
       continue;
     }
 
-    if (cmd === "Z" || cmd === "z") {
-      if (!points.length) return null;
-      if (x !== startX || y !== startY) {
-        x = startX;
-        y = startY;
-        points.push({ x, y });
-      }
-      cursor.index += 1;
-      continue;
-    }
-
-    return null;
-  }
-
-  if ((cmd === "Z" || cmd === "z") && points.length) {
-    const last = points[points.length - 1];
-    if (last.x !== startX || last.y !== startY) {
-      points.push({ x: startX, y: startY });
-    }
+    return points.length >= 3 ? Object.freeze(points.map((point) => Object.freeze(point))) : null;
   }
 
   return points.length >= 2 ? Object.freeze(points.map((point) => Object.freeze(point))) : null;

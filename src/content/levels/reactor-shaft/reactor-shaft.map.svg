@@ -28,8 +28,8 @@
      inkscape:cy="1465.3328"
      inkscape:window-width="1616"
      inkscape:window-height="887"
-     inkscape:window-x="50"
-     inkscape:window-y="108"
+     inkscape:window-x="56"
+     inkscape:window-y="200"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer13"
      showgrid="false">
@@ -157,7 +157,7 @@
      inkscape:groupmode="layer"
      id="layer18"
      inkscape:label="art"
-     style="display:none"
+     style="display:inline"
      sodipodi:insensitive="true">
     <path
        id="rect1"
