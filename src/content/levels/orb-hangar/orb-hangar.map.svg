@@ -24,8 +24,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.1521069"
-     inkscape:cx="811.9906"
-     inkscape:cy="1370.5325"
+     inkscape:cx="817.19845"
+     inkscape:cy="1648.2845"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="16"
@@ -80,12 +80,20 @@
      inkscape:label="depths"
      style="display:inline">
     <rect
-       style="display:inline;fill:#0000ff;fill-opacity:1;stroke:#000000;stroke-width:0.805239;stroke-opacity:1"
+       style="display:inline;fill:#0000c8;fill-opacity:1;stroke:#000000;stroke-width:0.805239;stroke-opacity:1"
        id="rect1-3"
        width="166.85284"
        height="1487.5974"
        x="940.57355"
        y="408"
+       inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24" />
+    <rect
+       style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
+       id="rect2"
+       width="98.081177"
+       height="71.17395"
+       x="976.95941"
+       y="1699.495"
        inkscape:label="depth:reactor max=10bo z=4bo material=graphite tess=24" />
   </g>
   <g
