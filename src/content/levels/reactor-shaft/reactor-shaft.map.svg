@@ -97,48 +97,6 @@
     <path
        style="display:inline;fill:#0000be;fill-opacity:1;stroke:none;stroke-opacity:1"
        d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
-       id="path1-3"
-       sodipodi:nodetypes="ccccccccccc"
-       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
-    <path
-       style="fill:#ff0000;fill-opacity:1;stroke-width:0.926189"
-       d="m 471.20454,1565.7472 150.97564,-27.9585 -31.00358,29.6133 z"
-       id="path2"
-       sodipodi:nodetypes="cccc"
-       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
-    <path
-       style="fill:#ff0000;fill-opacity:1;stroke-width:1.15724"
-       d="m 637.47033,1552.854 -30.43384,26.3005 33.69522,144.1438 23.98431,-120.917 z"
-       id="path5"
-       sodipodi:nodetypes="ccccc"
-       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
-    <path
-       style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
-       d="m 591.24225,1586.8901 -115.58965,-0.7305 76.42161,85.6226 60.8013,1.2543 z"
-       id="path6"
-       sodipodi:nodetypes="ccccc"
-       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
-    <path
-       style="fill:#ff0000;fill-opacity:1;stroke-width:0.676288"
-       d="m 614.06121,1692.2139 -63.0474,-1.8343 66.80244,92.6026 9.94317,-45.5295 z"
-       id="path7"
-       sodipodi:nodetypes="ccccc"
-       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
-    <path
-       style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:4.87887"
-       d="m 1063.1984,1356.4267 605.2862,-193.5079 -124.2982,204.9613 z"
-       id="path2-5"
-       sodipodi:nodetypes="cccc"
-       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
-    <path
-       style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.28392"
-       d="m 1669.8454,1125.42 6.0013,-216.71325 -672.8447,466.24265 473.1259,-416.59615 z"
-       id="path7-9"
-       sodipodi:nodetypes="ccccc"
-       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
-    <path
-       style="display:inline;fill:#0000be;fill-opacity:1;stroke:none;stroke-opacity:1"
-       d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
        id="path8"
        sodipodi:nodetypes="ccccccccccc"
        inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
@@ -166,13 +124,6 @@
        id="path12"
        sodipodi:nodetypes="ccccc"
        inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
-    <circle
-       style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
-       id="path15"
-       cx="1506.3981"
-       cy="1291.1595"
-       r="105.20875"
-       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <ellipse
        style="fill:#ff0000;fill-opacity:1;stroke-width:0.500868"
        id="path15-8"
@@ -182,15 +133,23 @@
        ry="28.693293"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
-       style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
+       style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
        d="m 1075.9986,1163.6725 78.1096,-374.60687 290.121,-7.97035 z"
        id="path16"
        sodipodi:nodetypes="cccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
-       style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
+       style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
        d="m 1074.4045,1224.2473 484.5979,-433.58759 87.674,-4.78222 3.1881,197.66493 z"
-       id="path17" />
+       id="path17"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <circle
+       style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
+       id="path18"
+       cx="1509.5862"
+       cy="1280.0398"
+       r="132.30797"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
   </g>
   <g
      inkscape:groupmode="layer"
