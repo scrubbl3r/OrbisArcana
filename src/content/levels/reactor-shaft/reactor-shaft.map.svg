@@ -24,14 +24,14 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="2.0138062"
-     inkscape:cx="417.61715"
+     inkscape:cx="417.86543"
      inkscape:cy="1799.0808"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="1"
      inkscape:window-y="34"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="layer17"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -93,10 +93,9 @@
      inkscape:groupmode="layer"
      id="layer17"
      inkscape:label="depths"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <path
-       style="display:inline;fill:#333333;fill-opacity:1;stroke:none;stroke-opacity:1"
+       style="display:inline;fill:#0000ff;fill-opacity:1;stroke:none;stroke-opacity:1"
        d="M 384,1920 H 1712.25 V 701.25 L 1088,704 974.75,1410.625 1280,1408 1472,1792 H 704 V 1472 H 384 Z"
        id="path1-3"
        sodipodi:nodetypes="ccccccccccc"

@@ -10,6 +10,7 @@ import { GRAPHITE_CONFIG } from "../rendering/three/materials/graphite-config.js
 
 const PREVIEW_RASTER_SIZE = 384;
 const DEPTH_LAYER_ALPHA_THRESHOLD = 8;
+const DEPTH_LAYER_CHANNEL_THRESHOLD = 8;
 
 export const DEPTH_ENVIRONMENT_MODE = Object.freeze({
   runtime: "runtime",
@@ -55,6 +56,16 @@ function loadImageFromSvgMarkup(markup = "") {
   });
 }
 
+function resolveDepthSampleFromRgba(r = 0, g = 0, b = 0, a = 0) {
+  const alpha = clampNumber(a, 0) / 255;
+  const blue = clampNumber(b, 0) / 255;
+  const active = a > DEPTH_LAYER_ALPHA_THRESHOLD && b > DEPTH_LAYER_CHANNEL_THRESHOLD;
+  return Object.freeze({
+    alpha: active ? alpha : 0,
+    depth: active ? clamp01(blue) : 0,
+  });
+}
+
 function resolveRasterBox(imageData, width, height) {
   let minX = width;
   let minY = height;
@@ -64,8 +75,9 @@ function resolveRasterBox(imageData, width, height) {
   if (!data) return null;
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const alpha = data[((y * width) + x) * 4 + 3];
-      if (alpha <= DEPTH_LAYER_ALPHA_THRESHOLD) continue;
+      const index = ((y * width) + x) * 4;
+      const sample = resolveDepthSampleFromRgba(data[index], data[index + 1], data[index + 2], data[index + 3]);
+      if (sample.alpha <= 0.03) continue;
       if (x < minX) minX = x;
       if (y < minY) minY = y;
       if (x > maxX) maxX = x;
@@ -81,16 +93,51 @@ function samplePixel(imageData, width, height, x, y) {
   const py = Math.max(0, Math.min(height - 1, Math.round(y)));
   const index = ((py * width) + px) * 4;
   const data = imageData.data;
-  const alpha = clampNumber(data[index + 3], 0) / 255;
-  const luma = (
-    clampNumber(data[index], 255) * 0.2126
-    + clampNumber(data[index + 1], 255) * 0.7152
-    + clampNumber(data[index + 2], 255) * 0.0722
-  ) / 255;
-  return Object.freeze({
-    alpha,
-    depth: alpha > 0.03 ? (1 - clamp01(luma)) : 0,
-  });
+  return resolveDepthSampleFromRgba(data[index], data[index + 1], data[index + 2], data[index + 3]);
+}
+
+function parseHexColorChannels(hex = "") {
+  const raw = String(hex || "").trim().toLowerCase().replace(/^#/, "");
+  if (raw.length === 3 || raw.length === 4) {
+    return Object.freeze({
+      r: Number.parseInt(raw[0] + raw[0], 16),
+      g: Number.parseInt(raw[1] + raw[1], 16),
+      b: Number.parseInt(raw[2] + raw[2], 16),
+    });
+  }
+  if (raw.length === 6 || raw.length === 8) {
+    return Object.freeze({
+      r: Number.parseInt(raw.slice(0, 2), 16),
+      g: Number.parseInt(raw.slice(2, 4), 16),
+      b: Number.parseInt(raw.slice(4, 6), 16),
+    });
+  }
+  return null;
+}
+
+function isRedBlueChannelColor(color = null) {
+  if (!color) return false;
+  const r = clampNumber(color.r, 0);
+  const g = clampNumber(color.g, 0);
+  const b = clampNumber(color.b, 0);
+  return (r > DEPTH_LAYER_CHANNEL_THRESHOLD || b > DEPTH_LAYER_CHANNEL_THRESHOLD)
+    && (Math.abs(r - g) > DEPTH_LAYER_CHANNEL_THRESHOLD || Math.abs(b - g) > DEPTH_LAYER_CHANNEL_THRESHOLD);
+}
+
+function usesChannelDepthEncoding(layer = {}) {
+  const body = String(layer && layer.authoredBody || "").toLowerCase();
+  const fillMatches = body.matchAll(/fill\s*(?::|=)\s*["']?(#[0-9a-f]{3,8}|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[\d.]+)?\s*\))/g);
+  for (const match of fillMatches) {
+    const raw = String(match && match[1] || "").trim();
+    if (raw.startsWith("#") && isRedBlueChannelColor(parseHexColorChannels(raw))) return true;
+    const rgbMatch = raw.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    if (rgbMatch && isRedBlueChannelColor({
+      r: Number(rgbMatch[1]),
+      g: Number(rgbMatch[2]),
+      b: Number(rgbMatch[3]),
+    })) return true;
+  }
+  return false;
 }
 
 export function resolveDepthEnvironmentMode() {
@@ -389,8 +436,10 @@ export async function buildDepthLayerMesh({
   environmentMode = DEPTH_ENVIRONMENT_MODE.runtime,
   boWorldUnits = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
 }) {
-  const vectorMesh = buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environmentMode, boWorldUnits });
-  if (vectorMesh) return vectorMesh;
+  if (!usesChannelDepthEncoding(layer)) {
+    const vectorMesh = buildVectorDepthLayerMesh({ layer, worldWidthPx, worldHeightPx, environmentMode, boWorldUnits });
+    if (vectorMesh) return vectorMesh;
+  }
 
   const aspect = Math.max(0.1, clampNumber(viewBox.width, 1) / Math.max(1, clampNumber(viewBox.height, 1)));
   const rasterWidth = aspect >= 1 ? PREVIEW_RASTER_SIZE : Math.max(64, Math.round(PREVIEW_RASTER_SIZE * aspect));
