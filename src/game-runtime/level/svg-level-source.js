@@ -68,12 +68,12 @@ function parseBoValue(value = "", fallback = 0) {
 }
 
 function parseSvgLabelMetadata(label = "", fallbackId = "") {
-  const text = String(label || "").trim();
+  const text = String(label || "").replace(/&#(?:x0*a|10);/ig, " ").trim();
   const entries = Object.create(null);
   const pairMatches = text.matchAll(/([a-zA-Z_][\w-]*)\s*(?::|=)\s*([^,\s]+)/g);
   for (const match of pairMatches) {
     const key = String(match && match[1] || "").trim().toLowerCase();
-    const value = String(match && match[2] || "").trim();
+    const value = String(match && match[2] || "").replace(/&#(?:x0*a|10);/ig, "").trim();
     if (!key || !value) continue;
     entries[key] = value.replace(/^["']|["']$/g, "");
   }
@@ -452,6 +452,93 @@ export function parseSvgPolylinePath(pathData = "") {
   }
 
   return points.length >= 2 ? Object.freeze(points.map((point) => Object.freeze(point))) : null;
+}
+
+export function parseSvgClosedSubpaths(pathData = "") {
+  const tokens = tokenizePathData(pathData);
+  const subpaths = [];
+  const cursor = { index: 0 };
+  let cmd = "";
+  let points = [];
+  let x = 0;
+  let y = 0;
+  let startX = 0;
+  let startY = 0;
+
+  const closeCurrent = () => {
+    if (!points.length) return false;
+    if (x !== startX || y !== startY) {
+      x = startX;
+      y = startY;
+      points.push({ x, y });
+    }
+    if (points.length >= 4) {
+      subpaths.push(Object.freeze(points.map((point) => Object.freeze(point))));
+    }
+    points = [];
+    return true;
+  };
+
+  while (cursor.index < tokens.length) {
+    const raw = tokens[cursor.index];
+    if (/^[a-zA-Z]$/.test(raw)) {
+      if (raw === "Z" || raw === "z") {
+        cursor.index += 1;
+        closeCurrent();
+        cmd = "";
+        continue;
+      }
+      cmd = raw;
+      cursor.index += 1;
+      continue;
+    }
+    if (!cmd) return Object.freeze(subpaths);
+
+    if (cmd === "M" || cmd === "m") {
+      if (points.length) closeCurrent();
+      const xNext = readNumberToken(tokens, cursor);
+      const yNext = readNumberToken(tokens, cursor);
+      if (xNext == null || yNext == null) return Object.freeze(subpaths);
+      x = (cmd === "m") ? (x + xNext) : xNext;
+      y = (cmd === "m") ? (y + yNext) : yNext;
+      startX = x;
+      startY = y;
+      points.push({ x, y });
+      cmd = (cmd === "m") ? "l" : "L";
+      continue;
+    }
+
+    if (cmd === "L" || cmd === "l") {
+      const xNext = readNumberToken(tokens, cursor);
+      const yNext = readNumberToken(tokens, cursor);
+      if (xNext == null || yNext == null) return Object.freeze(subpaths);
+      x = (cmd === "l") ? (x + xNext) : xNext;
+      y = (cmd === "l") ? (y + yNext) : yNext;
+      points.push({ x, y });
+      continue;
+    }
+
+    if (cmd === "H" || cmd === "h") {
+      const xNext = readNumberToken(tokens, cursor);
+      if (xNext == null) return Object.freeze(subpaths);
+      x = (cmd === "h") ? (x + xNext) : xNext;
+      points.push({ x, y });
+      continue;
+    }
+
+    if (cmd === "V" || cmd === "v") {
+      const yNext = readNumberToken(tokens, cursor);
+      if (yNext == null) return Object.freeze(subpaths);
+      y = (cmd === "v") ? (y + yNext) : yNext;
+      points.push({ x, y });
+      continue;
+    }
+
+    return Object.freeze(subpaths);
+  }
+
+  if (points.length) closeCurrent();
+  return Object.freeze(subpaths);
 }
 
 function translatePoint(point = {}, translate = {}) {
@@ -1092,24 +1179,36 @@ export function buildSvgArtShapes({
     const paths = Array.isArray(layer && layer.paths) ? layer.paths : [];
     return paths.map((path, index) => {
       const metadata = parseSvgLabelMetadata(path && path.label, path && path.id);
+      const entries = metadata.entries || {};
       const sourceStack = resolveSvgSourceStack(layer, index);
-      const authoredPoints = translatePolylinePoints(
+      const authoredSubpaths = Object.freeze(parseSvgClosedSubpaths(path && path.d)
+        .map((subpath) => translatePolylinePoints(subpath, layer && layer.translate))
+        .filter((subpath) => subpath.length >= 4));
+      const authoredPoints = authoredSubpaths[0] || translatePolylinePoints(
         parseSvgPolylinePath(path && path.d) || [],
         layer && layer.translate
       );
       if (authoredPoints.length < 2) return null;
       const style = parseSvgInlineStyle(path && path.style);
+      const worldSubpaths = Object.freeze(authoredSubpaths.map((subpath) => Object.freeze(subpath.map((point) => scaleAuthoringPointToWorld(point, {
+        viewBox,
+        worldWidthPx,
+        worldHeightPx,
+      })))));
       return Object.freeze({
         id: String(metadata.id || path && path.id || `${String(layer && layer.label || "art").trim()}_${index + 1}`),
         ...sourceStack,
+        zBO: Math.max(0, parseBoValue(entries.z || entries.zbo || "", 1)),
+        material: String(entries.material || entries.mat || "flat").trim().toLowerCase(),
         authoredPoints,
         worldPoints: Object.freeze(authoredPoints.map((point) => scaleAuthoringPointToWorld(point, {
           viewBox,
           worldWidthPx,
           worldHeightPx,
         }))),
-        fill: String(style.fill || "none"),
-        fillOpacity: clampNumber(style["fill-opacity"], 1),
+        worldSubpaths,
+        fill: String(entries.color || entries.fill || style.fill || "none"),
+        fillOpacity: clampNumber(entries.opacity ?? style["fill-opacity"], 1),
         stroke: String(style.stroke || "none"),
         strokeOpacity: clampNumber(style["stroke-opacity"], 1),
         authoredStrokeWidth: clampNumber(style["stroke-width"], 0),

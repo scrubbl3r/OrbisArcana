@@ -1,5 +1,5 @@
 import { getLevelById } from "../../../content/levels/registry.js";
-import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260508b";
+import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260508i";
 import { createOrbStageRuntimeAdapter } from "./orb-stage-runtime-adapter.js?v=20260507aa";
 
 const DEFAULT_LEVEL = getLevelById("orb-hangar");

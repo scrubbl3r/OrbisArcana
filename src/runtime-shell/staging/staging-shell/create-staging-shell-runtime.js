@@ -9,7 +9,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260508a";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260508h";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -42,7 +42,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260508a";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260508h";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
@@ -52,7 +52,7 @@ import {
   resolveLevelSpawnPoint,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260423g";
-import { loadAuthoredLevelScene } from "../../../game-runtime/level/load-authored-level-scene.js?v=20260508a";
+import { loadAuthoredLevelScene } from "../../../game-runtime/level/load-authored-level-scene.js?v=20260508b";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_BOUNDARY_BOX,
   AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260508a";
+globalThis.__orbisStagingShellRuntimeVersion = "20260508h";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1535,6 +1535,7 @@ function startShellStageLoop(shellContext) {
             lastSize: bloomTrace.lastSize,
             sceneChildren: bloomTrace.sceneChildren,
             sceneObjectNames: bloomTrace.sceneObjectNames,
+            artPlane: bloomTrace.artPlane || null,
             camera: bloomTrace.camera,
           } : null,
         });
@@ -2741,7 +2742,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260508a",
+  moduleCacheBustV = "20260508h",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

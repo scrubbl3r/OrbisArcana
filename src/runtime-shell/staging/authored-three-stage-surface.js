@@ -1,6 +1,6 @@
 import { buildOrbBaseVisualState } from "../../game-runtime/orb/orb-base-state.js";
 import { buildAuthoredLevelOverlayMarkup } from "../../game-runtime/stage/authored-level-overlay.js?v=20260507a";
-import { createAuthoredStageController } from "../../game-runtime/stage/authored-stage-controller.js?v=20260508a";
+import { createAuthoredStageController } from "../../game-runtime/stage/authored-stage-controller.js?v=20260508b";
 import {
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,
@@ -13,7 +13,7 @@ import {
   normalizeLevelDefinition,
 } from "../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../game-runtime/level/resolve-level-world-size.js";
-import { createGameStageDepth3dLayer } from "./game-stage/game-stage-depth3d.js?v=20260508a";
+import { createGameStageDepth3dLayer } from "./game-stage/game-stage-depth3d.js?v=20260508h";
 
 const AUTHORED_THREE_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
 

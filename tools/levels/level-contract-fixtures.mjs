@@ -64,7 +64,7 @@ export const EXPECTED_LEVEL_SVG_REPORTS = Object.freeze({
     artShapeCount: 1,
     starsFieldRegionCount: 1,
     depthLayerCount: 1,
-    occupiedTileCount: 204,
+    occupiedTileCount: 209,
   }),
   "orb-hangar": Object.freeze({
     levelId: "orb-hangar",

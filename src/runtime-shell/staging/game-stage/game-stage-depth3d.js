@@ -17,8 +17,10 @@ import {
 import {
   buildDepthLayerMesh,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260508b";
+import { createArtPlane3dRuntime } from "../../../game-runtime/level-graphics/art-plane-3d-runtime.js?v=20260508f";
 import { createStarField3dRuntime } from "../../../game-runtime/level-graphics/star-field-3d-runtime.js?v=20260508a";
 import {
+  AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES,
   AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
   AUTHORED_LEVEL_READ_MODEL_KEY_ORB_DEPTH,
   AUTHORED_LEVEL_READ_MODEL_KEY_PROPS,
@@ -49,9 +51,9 @@ import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=202
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,
   publishDepth3dModuleVersion,
-} from "./game-stage-depth3d-debug.js";
+} from "./game-stage-depth3d-debug.js?v=20260508a";
 import { createGameStageDepth3dRenderLoop } from "./game-stage-depth3d-render-loop.js?v=20260430b";
-import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260508a";
+import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260508b";
 import { createGameStageDepth3dTelemetry } from "./game-stage-depth3d-telemetry.js?v=20260430b";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
@@ -73,6 +75,10 @@ function resolveSceneSummary(authoredScene = null) {
 
 function resolveSceneDepthLayers(authoredScene = null) {
   return resolveAuthoredLevelReadModelArray(authoredScene, AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS);
+}
+
+function resolveSceneArtShapes(authoredScene = null) {
+  return resolveAuthoredLevelReadModelArray(authoredScene, AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES);
 }
 
 function resolveSceneProps(authoredScene = null) {
@@ -122,6 +128,7 @@ export function createGameStageDepth3dLayer({
     environmentMode,
     backgroundGroup,
     depthGroup: group,
+    artGroup,
     propsGroup,
     actorGroup,
     globeGroup: globe3dGroup,
@@ -269,6 +276,20 @@ export function createGameStageDepth3dLayer({
     }),
     onCountChange: telemetry.setPropCount,
   });
+  const artPlane3dRuntime = createArtPlane3dRuntime({
+    group: artGroup,
+    getBo: () => baseOrbWorldUnits,
+    toRuntimePosition: ({ xW = 0, yW = 0 } = {}) => ({
+      x: toDepthThreeX(xW, worldWidthPx),
+      y: toDepthThreeY(yW, worldHeightPx),
+    }),
+    onCountChange: (count) => {
+      root.dataset.artPlaneCount = String(Math.max(0, Math.floor(Number(count) || 0)));
+    },
+    traceMark: perfTrace && typeof perfTrace.mark === "function"
+      ? (event, trace) => perfTrace.mark(event, trace)
+      : null,
+  });
   const starField3dRuntime = createStarField3dRuntime({
     group: backgroundGroup,
     getBo: () => baseOrbWorldUnits,
@@ -341,6 +362,7 @@ export function createGameStageDepth3dLayer({
   function syncRootVisibility() {
     root.hidden = depthLayerCount <= 0
       && !backgroundGroup.children.length
+      && artGroup.children.length <= 0
       && propsGroup.children.length <= 0
       && !orb3dActorRuntime.hasModel()
       && !globe3dGroup.children.length;
@@ -361,6 +383,7 @@ export function createGameStageDepth3dLayer({
       `t:${trace.config && trace.config.threshold}`,
       `px:${trace.config && trace.config.pixelRatio}`,
     ].join(",");
+    trace.artPlane = typeof artPlane3dRuntime.getTrace === "function" ? artPlane3dRuntime.getTrace() : null;
     if (!bloomMarkedReady && perfTrace && typeof perfTrace.mark === "function") {
       bloomMarkedReady = true;
       perfTrace.mark("depth3d.bloom.ready", {
@@ -377,6 +400,7 @@ export function createGameStageDepth3dLayer({
         size: trace.lastSize,
         sceneChildren: trace.sceneChildren,
         sceneObjectNames: trace.sceneObjectNames,
+        artPlane: trace.artPlane,
         camera: trace.camera,
       });
     }
@@ -461,9 +485,11 @@ export function createGameStageDepth3dLayer({
       if (disposed) return;
       clearGroup();
       clearPropsGroup();
+      artPlane3dRuntime.clear();
       starField3dRuntime.clear();
       const summary = resolveSceneSummary(authoredScene);
       const layers = resolveSceneDepthLayers(authoredScene);
+      const artShapes = resolveSceneArtShapes(authoredScene);
       const props = resolveSceneProps(authoredScene);
       const orbDepth = resolveSceneOrbDepth(authoredScene);
       const levelGraphicsModel = authoredScene && authoredScene.levelGraphicsModel ? authoredScene.levelGraphicsModel : null;
@@ -474,6 +500,14 @@ export function createGameStageDepth3dLayer({
       currentOrbZBO = resolveOrbTravelZBO({ depthLayers: layers, orbDepth }, LEVEL_DEPTH_DEFAULT_ORB_Z_BO);
       telemetry.setDepthLayerLabel(layers);
       starField3dRuntime.load(starField);
+      artPlane3dRuntime.load(artShapes);
+      const artTrace = typeof artPlane3dRuntime.getTrace === "function" ? artPlane3dRuntime.getTrace() : null;
+      if (artTrace && artTrace.shapes && artTrace.shapes[0]) {
+        const first = artTrace.shapes[0];
+        root.dataset.artPlaneMode = String(first.mode || "");
+        root.dataset.artPlaneHoles = String(first.holeCount || 0);
+        root.dataset.artPlaneHoleAlpha = String((first.texture && first.texture.firstHoleSampleAlpha) ?? "");
+      }
       for (const layer of layers) {
         const mesh = await buildDepthLayerMesh({
           layer,
@@ -498,7 +532,7 @@ export function createGameStageDepth3dLayer({
         depthLayerCount: group.children.length,
         depthStatus: group.children.length ? "ready" : "empty",
       });
-      if (group.children.length || backgroundGroup.children.length) {
+      if (group.children.length || backgroundGroup.children.length || artGroup.children.length) {
         renderLoop.renderFrame(renderLoop.getLastFrame() || {
           ...resolveDepthBootFrame({ depthLayers: layers, root }),
           isBootFrame: true,
@@ -626,6 +660,7 @@ export function createGameStageDepth3dLayer({
       flameAoe3dRuntime.destroy();
       shockwave3dRuntime.destroy();
       orbLifecycle3dRuntime.dispose();
+      artPlane3dRuntime.dispose();
       starField3dRuntime.dispose();
       clearGlobe3dObjects();
       orb3dActorRuntime.dispose();

@@ -2,7 +2,7 @@ import { createCameraRuntime } from "../camera/camera-runtime.js";
 import {
   resolveAuthoredLevelCameraTarget,
 } from "../level/authored-level-scene-model.js";
-import { loadAuthoredLevelScene } from "../level/load-authored-level-scene.js?v=20260508a";
+import { loadAuthoredLevelScene } from "../level/load-authored-level-scene.js?v=20260508b";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_BOUNDARY_BOX,
   AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_ANCHORS,
@@ -214,7 +214,7 @@ export function createAuthoredStageController({
         refs.topArtOverlay.innerHTML = buildOverlayMarkup({
           starsField: null,
           loops: [],
-          artShapes: state.sceneModel.artShapes,
+          artShapes: [],
           worldWidthPx: state.worldWidthPx,
           worldHeightPx: state.worldHeightPx,
         });

@@ -1,4 +1,4 @@
-export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260505y";
+export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260508-art-trace-a";
 
 export function publishDepth3dModuleVersion(version = GAME_STAGE_DEPTH3D_TRACE_VERSION) {
   globalThis.__orbisDepth3dModuleVersion = String(version || "");
@@ -84,7 +84,7 @@ export function updateDepth3dBloomTraceScene(trace, scene = null, camera = null)
   const names = [];
   if (scene && typeof scene.traverse === "function") {
     scene.traverse((child) => {
-      if (names.length >= 24) return;
+      if (names.length >= 96) return;
       const name = String(child && child.name || "").trim();
       if (name) names.push(name);
     });

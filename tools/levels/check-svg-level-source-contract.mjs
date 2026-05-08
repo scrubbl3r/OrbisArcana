@@ -23,7 +23,7 @@ const SVG_CONTRACT_FIXTURE = `
     <circle id="spawn_01" cx="20" cy="80" r="4" />
   </g>
   <g id="art_visible" inkscape:groupmode="layer" inkscape:label="${LEVEL_SVG_LAYER_ART}">
-    <path id="art_visible_path" d="M 15 15 L 35 35" style="fill:none;stroke:#fff;stroke-width:2" />
+    <path id="art_visible_path" d="M 15 15 L 35 15 L 35 35 L 15 35 Z M 20 20 L 30 20 L 30 30 L 20 30 Z" style="fill:#222;fill-opacity:0.5;stroke:#fff;stroke-width:2" inkscape:label="id:art_panel z=2bo material=flat color=#333333 opacity=0.7" />
   </g>
   <g id="art_hidden" inkscape:groupmode="layer" inkscape:label="${LEVEL_SVG_LAYER_ART}" style="display:none">
     <path id="art_hidden_path" d="M 40 40 L 60 60" style="fill:none;stroke:#fff;stroke-width:2" />
@@ -78,8 +78,13 @@ assert.deepEqual(
 );
 assert.deepEqual(
   summary.artShapes.map((shape) => shape.id),
-  ["art_visible_path"],
+  ["art_panel"],
   "hidden art layers must not hydrate authored art"
+);
+assert.deepEqual(
+  summary.artShapes.map((shape) => [shape.zBO, shape.material, shape.fill, shape.fillOpacity, shape.worldSubpaths.length]),
+  [[2, "flat", "#333333", 0.7, 2]],
+  "art shapes should hydrate flat 3d plane metadata with compound matte subpaths"
 );
 assert.deepEqual(
   summary.starsFieldRegions.map((region) => region.sourceLayerId),
