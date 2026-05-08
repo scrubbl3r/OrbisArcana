@@ -1,6 +1,6 @@
 import { buildOrbBaseVisualState } from "../../game-runtime/orb/orb-base-state.js";
 import { buildAuthoredLevelOverlayMarkup } from "../../game-runtime/stage/authored-level-overlay.js?v=20260507a";
-import { createAuthoredStageController } from "../../game-runtime/stage/authored-stage-controller.js?v=20260507a";
+import { createAuthoredStageController } from "../../game-runtime/stage/authored-stage-controller.js?v=20260508a";
 import {
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,

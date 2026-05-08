@@ -31,7 +31,7 @@
      inkscape:window-x="56"
      inkscape:window-y="200"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer13"
+     inkscape:current-layer="layer18"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -157,7 +157,7 @@
      inkscape:groupmode="layer"
      id="layer18"
      inkscape:label="art"
-     style="display:inline"
+     style="display:none"
      sodipodi:insensitive="true">
     <path
        id="rect1"

@@ -1,8 +1,8 @@
-import { buildLevelGraphicsModel } from "../level-graphics/build-level-graphics-model.js";
+import { buildLevelGraphicsModel } from "../level-graphics/build-level-graphics-model.js?v=20260508a";
 import { buildAuthoredLevelSceneModel } from "./authored-level-scene-model.js";
 import { normalizeLevelDefinition } from "./normalize-level-definition.js";
 import { buildSvgLevelSummaryOptions } from "./svg-level-summary-options.js";
-import { summarizeSvgLevelSource } from "./svg-level-source.js";
+import { summarizeSvgLevelSource } from "./svg-level-source.js?v=20260508a";
 
 const IN_FLIGHT_AUTHORED_LEVEL_SCENE_LOADS = new Map();
 
