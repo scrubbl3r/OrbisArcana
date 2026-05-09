@@ -213,23 +213,19 @@ export async function bootstrapShellPairingRuntime({
       if (calibInFlight) return;
       calibInFlight = true;
       syncCalibAvailability();
-      try {
-        if (cameraInputRuntime && typeof cameraInputRuntime.startCalibrationCapture === "function") {
-          setCalibStatus("Starting camera + phone calibration…");
-          await cameraInputRuntime.startCalibrationCapture();
-        }
-      } catch (error) {
-        calibInFlight = false;
-        syncCalibAvailability();
-        setCalibStatus("Camera access required");
-        return;
-      }
       const ok = sendCalibrationTrigger();
       if (!ok) {
         calibInFlight = false;
         setCalibStatus("Phone calibration unavailable");
         syncCalibAvailability();
         return;
+      }
+      if (cameraInputRuntime && typeof cameraInputRuntime.startCalibrationCapture === "function") {
+        setCalibStatus("Calibrating… (2s) + starting camera");
+        cameraInputRuntime.startCalibrationCapture().catch(() => {
+          if (!calibInFlight) return;
+          setCalibStatus("Calibrating… phone live, camera access required");
+        });
       }
       syncCalibAvailability();
       setCalibStatus("Calibrating… (2s) + camera live");
