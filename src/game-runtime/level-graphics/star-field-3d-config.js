@@ -29,7 +29,8 @@ export const STAR_FIELD_3D_CONFIG = Object.freeze({
   sizeBucketsPx: Object.freeze([1.0, 1.35, 1.8, 2.4, 3.2, 4.2, 5.6]),
   spriteTextureSizePx: 64,
   chunkSizeW: 960,
-  cullOverscanW: 640,
+  cullOverscanW: 1920,
+  chunkBoundsPaddingW: 480,
   haloSizeMultiplier: 2.4,
   haloOpacityScale: 0.14,
 });

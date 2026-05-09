@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
-import { STAR_FIELD_3D_CONFIG } from "./star-field-3d-config.js?v=20260508b";
+import { STAR_FIELD_3D_CONFIG } from "./star-field-3d-config.js?v=20260508c";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -128,8 +128,9 @@ function createStarSpriteTexture({
   return texture;
 }
 
-function resolveStarBounds(stars = []) {
+function resolveStarBounds(stars = [], paddingW = 0) {
   const safeStars = Array.isArray(stars) ? stars : [];
+  const padding = Math.max(0, clampNumber(paddingW, 0));
   let leftXW = Infinity;
   let rightXW = -Infinity;
   let topYW = Infinity;
@@ -144,10 +145,10 @@ function resolveStarBounds(stars = []) {
   }
   if (![leftXW, rightXW, topYW, bottomYW].every(Number.isFinite)) return null;
   return Object.freeze({
-    leftXW,
-    rightXW,
-    topYW,
-    bottomYW,
+    leftXW: leftXW - padding,
+    rightXW: rightXW + padding,
+    topYW: topYW - padding,
+    bottomYW: bottomYW + padding,
   });
 }
 
@@ -175,6 +176,7 @@ function buildPoints({
   opacityScale = 1,
   zOpacityScale = 1,
   spriteTexture = null,
+  boundsPaddingW = 0,
   toRuntimePosition = ({ xW = 0, yW = 0, z = 0 } = {}) => ({ x: xW, y: -yW, z }),
 } = {}) {
   const count = Array.isArray(stars) ? stars.length : 0;
@@ -218,7 +220,7 @@ function buildPoints({
   const points = new THREE.Points(geometry, material);
   points.name = name;
   points.frustumCulled = true;
-  points.userData.starFieldBounds = resolveStarBounds(stars);
+  points.userData.starFieldBounds = resolveStarBounds(stars, boundsPaddingW);
   points.userData.starFieldCount = count;
   return points;
 }
@@ -343,6 +345,7 @@ export function createStarField3dRuntime({
         size,
         opacityScale,
         spriteTexture,
+        boundsPaddingW: config.chunkBoundsPaddingW,
         toRuntimePosition,
       });
       if (points) root.add(points);
@@ -356,6 +359,7 @@ export function createStarField3dRuntime({
         size,
         opacityScale,
         spriteTexture,
+        boundsPaddingW: config.chunkBoundsPaddingW,
         toRuntimePosition,
       });
       if (points) root.add(points);
