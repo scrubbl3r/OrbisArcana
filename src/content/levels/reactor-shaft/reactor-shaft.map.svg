@@ -23,15 +23,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.64300352"
-     inkscape:cx="957.22649"
-     inkscape:cy="1478.9966"
+     inkscape:zoom="1.286007"
+     inkscape:cx="1405.5133"
+     inkscape:cy="1416.7885"
      inkscape:window-width="1616"
      inkscape:window-height="887"
-     inkscape:window-x="56"
-     inkscape:window-y="200"
+     inkscape:window-x="17"
+     inkscape:window-y="163"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer18"
+     inkscape:current-layer="layer13"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -89,7 +89,7 @@
        height="1686.5282"
        x="146.65463"
        y="162.59534"
-       inkscape:label="id:star_field z=12bo depth=40bo density=0.7" />
+       inkscape:label="id:star_field z=12bo depth=40bo density=8" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -229,7 +229,8 @@
      inkscape:groupmode="layer"
      id="layer18"
      inkscape:label="art"
-     style="display:inline">
+     style="display:inline"
+     sodipodi:insensitive="true">
     <path
        id="rect1"
        style="fill:#272727;fill-opacity:1;stroke:#5f5f5f;stroke-width:1.88976"
@@ -305,5 +306,6 @@
      inkscape:groupmode="layer"
      id="layer7"
      inkscape:label="orb: z=4BO"
-     style="display:inline" />
+     style="display:inline"
+     sodipodi:insensitive="true" />
 </svg>
