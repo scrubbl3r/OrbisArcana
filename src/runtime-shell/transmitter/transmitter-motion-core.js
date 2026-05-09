@@ -30,6 +30,8 @@ export function createTransmitterMotionCore({
   const MIN_OMEGA = 0.02; // 0.02
   const LOCK_ON = 0.1;
   const LOCK_OFF = 0.05;
+  const GROOVE_FLOOR = 0.15;
+  const GROOVE_FULL = 0.85;
   const MIN_HZ = 0.55;
   const MAX_HZ = 2.3;
   const JERK_TIGHT = 220.0;
@@ -234,6 +236,12 @@ export function createTransmitterMotionCore({
   function smoothnessFromJerk(avgJerk) {
     const t = (JERK_LOOSE - avgJerk) / (JERK_LOOSE - JERK_TIGHT);
     return clamp01(t);
+  }
+
+  function mapGroove01(rawGroove) {
+    const floor = clamp01(GROOVE_FLOOR);
+    const full = Math.max(floor + 1e-6, clamp01(GROOVE_FULL));
+    return clamp01((clamp01(rawGroove) - floor) / (full - floor));
   }
 
   function dynamicsActivityGate(speed01) {
@@ -647,6 +655,7 @@ export function createTransmitterMotionCore({
 
       const ac = autocorrPeak(omegaNorm, dtMean);
       lockStrength = lerp(lockStrength, ac.peak, LOCK_SMOOTH);
+      const groove01 = mapGroove01(lockStrength);
       grooveHz = ac.hz;
 
       const jerkWindow = jerkBuf.slice(-Math.min(jerkBuf.length, 70));
@@ -661,7 +670,7 @@ export function createTransmitterMotionCore({
       const dynamicsUI = clamp01(DYNAMICS_UI_GAIN * Math.pow(shapedCore, DYNAMICS_UI_EXP));
 
       meterHoldLeft = METER_HOLD_SEC;
-      lastGrooveUI = lockStrength;
+      lastGrooveUI = groove01;
       lastDynamicsUI = dynamicsUI;
       lastSmoothUI = smoothScore;
 
@@ -693,7 +702,7 @@ export function createTransmitterMotionCore({
       }
 
       if (dt > 0) {
-        const grooveTerm = Math.pow(clamp01(lockStrength), GROOVE_EXP);
+        const grooveTerm = Math.pow(clamp01(groove01), GROOVE_EXP);
         const smoothTerm = Math.pow(clamp01(smoothScore), SMOOTH_EXP);
         const dynamicsTerm = Math.pow(clamp01(dynamicsBonus), DYNAMICS_EXP);
         const qualityTerm = grooveTerm * smoothTerm;
@@ -731,7 +740,7 @@ export function createTransmitterMotionCore({
         wFilt: sv.wFilt,
         cap: sv.cap,
         energy01: energyUI,
-        groove01: lockStrength,
+        groove01,
         dynamics01: dynamicsUI,
         smooth01: smoothScore,
         speed01: sv.speed,
@@ -755,7 +764,7 @@ export function createTransmitterMotionCore({
       }, dt, forceSend);
 
       setBgFromEnergy(clamp01(energyUI));
-      setAudio(energyUI, lockStrength, lockedNow);
+      setAudio(energyUI, groove01, lockedNow);
     } catch (err) {
       console.error("[onMotion crash]", err);
     }
