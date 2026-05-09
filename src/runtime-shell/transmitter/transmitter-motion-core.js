@@ -31,7 +31,7 @@ export function createTransmitterMotionCore({
   const LOCK_ON = 0.1;
   const LOCK_OFF = 0.05;
   const GROOVE_FLOOR = 0;
-  const GROOVE_FULL = 1.0;
+  const GROOVE_FULL = 0.30;
   const MIN_HZ = 0.55;
   const MAX_HZ = 2.3;
   const JERK_TIGHT = 150.0; //220.0
@@ -609,7 +609,7 @@ export function createTransmitterMotionCore({
         if (jerkBuf.length) jerkBuf.shift();
       }
 
-      const inStableMode = lock || graceLeft > 0;
+      const inStableMode = false;
       const windowSec = inStableMode ? STABLE_WINDOW_SEC : HUNT_WINDOW_SEC;
       const nTarget = trimToWindow(dtMean, windowSec);
 
