@@ -34,7 +34,7 @@ export function createTransmitterMotionCore({
   const GROOVE_FULL = 0.85;
   const MIN_HZ = 0.55;
   const MAX_HZ = 2.3;
-  const JERK_TIGHT = 220.0;
+  const JERK_TIGHT = 150.0; //220.0
   const JERK_LOOSE = 2600.0;
 
   const DYNAMICS_WINDOW_SEC = 1.0;
