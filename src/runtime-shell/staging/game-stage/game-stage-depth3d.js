@@ -18,7 +18,7 @@ import {
   buildDepthLayerMesh,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260508b";
 import { createArtPlane3dRuntime } from "../../../game-runtime/level-graphics/art-plane-3d-runtime.js?v=20260508f";
-import { createStarField3dRuntime } from "../../../game-runtime/level-graphics/star-field-3d-runtime.js?v=20260508b";
+import { createStarField3dRuntime } from "../../../game-runtime/level-graphics/star-field-3d-runtime.js?v=20260508c";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES,
   AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
@@ -457,6 +457,14 @@ export function createGameStageDepth3dLayer({
     lastCameraX = cameraFrame.x;
     lastCameraY = cameraFrame.y;
     lastCameraZ = cameraFrame.z;
+    starField3dRuntime.updateCameraWindow({
+      camLeft,
+      camTop,
+      zoom,
+      viewportWidthPx,
+      viewportHeightPx,
+    });
+    root.dataset.starFieldVisibleObjects = String(starField3dRuntime.getVisibleObjectCount());
     const measure = perfTrace && typeof perfTrace.measure === "function"
       ? perfTrace.measure
       : null;

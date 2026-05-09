@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
-import { STAR_FIELD_3D_CONFIG } from "./star-field-3d-config.js?v=20260508a";
+import { STAR_FIELD_3D_CONFIG } from "./star-field-3d-config.js?v=20260508b";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -128,12 +128,53 @@ function createStarSpriteTexture({
   return texture;
 }
 
+function resolveStarBounds(stars = []) {
+  const safeStars = Array.isArray(stars) ? stars : [];
+  let leftXW = Infinity;
+  let rightXW = -Infinity;
+  let topYW = Infinity;
+  let bottomYW = -Infinity;
+  for (const star of safeStars) {
+    const xW = clampNumber(star && star.xW, 0);
+    const yW = clampNumber(star && star.yW, 0);
+    leftXW = Math.min(leftXW, xW);
+    rightXW = Math.max(rightXW, xW);
+    topYW = Math.min(topYW, yW);
+    bottomYW = Math.max(bottomYW, yW);
+  }
+  if (![leftXW, rightXW, topYW, bottomYW].every(Number.isFinite)) return null;
+  return Object.freeze({
+    leftXW,
+    rightXW,
+    topYW,
+    bottomYW,
+  });
+}
+
+function intersectsWorldBox(a = null, b = null) {
+  if (!a || !b) return true;
+  return !(
+    clampNumber(a.rightXW, 0) < clampNumber(b.leftXW, 0)
+    || clampNumber(a.leftXW, 0) > clampNumber(b.rightXW, 0)
+    || clampNumber(a.bottomYW, 0) < clampNumber(b.topYW, 0)
+    || clampNumber(a.topYW, 0) > clampNumber(b.bottomYW, 0)
+  );
+}
+
+function resolveStarChunkKey(star = {}, config = STAR_FIELD_3D_CONFIG) {
+  const chunkSize = Math.max(1, clampNumber(config && config.chunkSizeW, 960));
+  const chunkX = Math.floor(clampNumber(star && star.xW, 0) / chunkSize);
+  const chunkY = Math.floor(clampNumber(star && star.yW, 0) / chunkSize);
+  return `${chunkX}:${chunkY}`;
+}
+
 function buildPoints({
   name = "star_field:points",
   stars = [],
   size = 1,
   opacityScale = 1,
   zOpacityScale = 1,
+  spriteTexture = null,
   toRuntimePosition = ({ xW = 0, yW = 0, z = 0 } = {}) => ({ x: xW, y: -yW, z }),
 } = {}) {
   const count = Array.isArray(stars) ? stars.length : 0;
@@ -162,7 +203,6 @@ function buildPoints({
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-  const spriteTexture = createStarSpriteTexture();
   const material = new THREE.PointsMaterial({
     size: Math.max(0.1, clampNumber(size, 1)),
     map: spriteTexture,
@@ -178,6 +218,8 @@ function buildPoints({
   const points = new THREE.Points(geometry, material);
   points.name = name;
   points.frustumCulled = true;
+  points.userData.starFieldBounds = resolveStarBounds(stars);
+  points.userData.starFieldCount = count;
   return points;
 }
 
@@ -211,6 +253,8 @@ export function createStarField3dRuntime({
   root.name = root.name || "star_field:runtime_layer";
   let disposed = false;
   let starCount = 0;
+  let visibleObjectCount = 0;
+  let lastCameraBox = null;
 
   function clear() {
     while (root.children.length) {
@@ -219,7 +263,46 @@ export function createStarField3dRuntime({
       disposeThreeObject(child);
     }
     starCount = 0;
+    visibleObjectCount = 0;
+    lastCameraBox = null;
     if (typeof onCountChange === "function") onCountChange(0);
+  }
+
+  function applyCameraWindow(cameraBox = null) {
+    lastCameraBox = cameraBox;
+    let visible = 0;
+    for (const child of root.children) {
+      const bounds = child && child.userData ? child.userData.starFieldBounds : null;
+      const nextVisible = intersectsWorldBox(bounds, cameraBox);
+      child.visible = nextVisible;
+      if (nextVisible) visible += 1;
+    }
+    visibleObjectCount = visible;
+  }
+
+  function updateCameraWindow({
+    camLeft = 0,
+    camTop = 0,
+    zoom = 1,
+    viewportWidthPx = 0,
+    viewportHeightPx = 0,
+  } = {}) {
+    if (disposed || !root.children.length) return;
+    const config = getConfig() || STAR_FIELD_3D_CONFIG;
+    const safeZoom = Math.max(0.05, clampNumber(zoom, 1));
+    const viewW = Math.max(1, clampNumber(viewportWidthPx, 0) / safeZoom);
+    const viewH = Math.max(1, clampNumber(viewportHeightPx, 0) / safeZoom);
+    if (viewW <= 1 || viewH <= 1) {
+      applyCameraWindow(null);
+      return;
+    }
+    const overscan = Math.max(0, clampNumber(config && config.cullOverscanW, 640));
+    applyCameraWindow(Object.freeze({
+      leftXW: clampNumber(camLeft, 0) - overscan,
+      rightXW: clampNumber(camLeft, 0) + viewW + overscan,
+      topYW: clampNumber(camTop, 0) - overscan,
+      bottomYW: clampNumber(camTop, 0) + viewH + overscan,
+    }));
   }
 
   function load(starField = null) {
@@ -231,18 +314,22 @@ export function createStarField3dRuntime({
     const bo = Math.max(1, clampNumber(getBo(), 72));
     const buckets = new Map();
     const haloBuckets = new Map();
+    const spriteTexture = createStarSpriteTexture({
+      sizePx: config.spriteTextureSizePx,
+    });
     for (const sourceStar of sourceStars) {
       const bandConfig = resolveBandConfig(sourceStar && sourceStar.depthBand, config);
       const star = buildRenderableStar(sourceStar, { bandConfig, bo, config });
       const opacityScale = clampNumber(bandConfig && bandConfig.opacityScale, 1);
-      const key = `${star.depthBand || "default"}:${star.sizePx}:${opacityScale.toFixed(3)}`;
+      const chunkKey = resolveStarChunkKey(star, config);
+      const key = `${chunkKey}:${star.depthBand || "default"}:${star.sizePx}:${opacityScale.toFixed(3)}`;
       addStarToBuckets(buckets, key, { ...star, opacityScale });
       if (star.isHighlight) {
         const haloSize = nearestSizeBucket(
           star.sizePx * clampNumber(config.haloSizeMultiplier, 3.2),
           config.sizeBucketsPx
         );
-        const haloKey = `${star.depthBand || "default"}:halo:${haloSize}:${opacityScale.toFixed(3)}`;
+        const haloKey = `${chunkKey}:${star.depthBand || "default"}:halo:${haloSize}:${opacityScale.toFixed(3)}`;
         addStarToBuckets(haloBuckets, haloKey, { ...star, sizePx: haloSize, opacityScale });
       }
     }
@@ -255,6 +342,7 @@ export function createStarField3dRuntime({
         stars,
         size,
         opacityScale,
+        spriteTexture,
         toRuntimePosition,
       });
       if (points) root.add(points);
@@ -267,12 +355,14 @@ export function createStarField3dRuntime({
         stars,
         size,
         opacityScale,
+        spriteTexture,
         toRuntimePosition,
       });
       if (points) root.add(points);
     }
 
     starCount = sourceStars.length;
+    applyCameraWindow(lastCameraBox);
     if (typeof onCountChange === "function") onCountChange(starCount);
   }
 
@@ -280,10 +370,12 @@ export function createStarField3dRuntime({
     group: root,
     load,
     clear,
+    updateCameraWindow,
     dispose() {
       disposed = true;
       clear();
     },
     getStarCount: () => starCount,
+    getVisibleObjectCount: () => visibleObjectCount,
   });
 }
