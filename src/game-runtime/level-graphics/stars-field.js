@@ -1,4 +1,5 @@
-import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260425i";
+import { LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS } from "../level/depth-projection.js";
+import { STARS_FIELD_CONFIG } from "./stars-field.config.js?v=20260508a";
 
 // Exemplar contract for future generative graphics:
 // - authored SVG semantics define the visible/meaningful region
@@ -225,6 +226,19 @@ function selectStratifiedCandidates(candidates = [], targetCount = 0) {
   return selected;
 }
 
+function resolveRegionDensityTargetCount(region = {}, layerWeight = 0, totalWeight = 1, config = STARS_FIELD_CONFIG) {
+  const generationBox = region && region.generationBox ? region.generationBox : null;
+  if (!generationBox) return 0;
+  const boWorldUnits = Math.max(1, clampNumber(config && config.boWorldUnits, LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS));
+  const densityAreaBO2 = Math.max(0.001, clampNumber(config && config.densityAreaBO2, 100));
+  const widthBO = Math.max(0, clampNumber(generationBox.widthW, 0) / boWorldUnits);
+  const heightBO = Math.max(0, clampNumber(generationBox.heightW, 0) / boWorldUnits);
+  const areaBO2 = widthBO * heightBO;
+  const densityPerArea = Math.max(0, clampNumber(region && region.density, 1));
+  const weightRatio = Math.max(0, clampNumber(layerWeight, 0)) / Math.max(0.001, clampNumber(totalWeight, 1));
+  return Math.max(0, Math.round(areaBO2 * (densityPerArea / densityAreaBO2) * weightRatio));
+}
+
 export function buildStarsFieldModel({
   regions = [],
   cameraBoundaryBox = null,
@@ -239,15 +253,13 @@ export function buildStarsFieldModel({
     safeRegions.map((region = {}) => deriveLayerRegion(region, layer, cameraBoundaryBox, config)).filter(Boolean)
   );
   const totalWeight = activeLayers.reduce((sum, layer = {}) => sum + Math.max(0, clampNumber(layer.starCountWeight, 0)), 0) || 1;
-  const targetStarCount = Math.max(0, Math.floor(clampNumber(config && config.targetStarCount, 0)));
   const stars = [];
   for (let regionIndex = 0; regionIndex < layerRegions.length; regionIndex += 1) {
     const region = layerRegions[regionIndex];
     const generationBox = region && region.generationBox ? region.generationBox : null;
     if (!generationBox) continue;
     const layerWeight = Math.max(0, clampNumber(region.starCountWeight, 0));
-    const density = Math.max(0, clampNumber(region.density, 1));
-    const targetForRegion = Math.max(0, Math.round(targetStarCount * density * (layerWeight / totalWeight)));
+    const targetForRegion = resolveRegionDensityTargetCount(region, layerWeight, totalWeight, config);
     const cellSize = Math.max(1, clampNumber(config.targetCellSizeW, 76));
     const cols = Math.max(1, Math.ceil(clampNumber(generationBox.widthW, cellSize) / cellSize));
     const rows = Math.max(1, Math.ceil(clampNumber(generationBox.heightW, cellSize) / cellSize));

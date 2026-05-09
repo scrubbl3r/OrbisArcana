@@ -73,7 +73,7 @@ export const EXPECTED_LEVEL_SVG_REPORTS = Object.freeze({
     spawnCount: 1,
     worldItemCount: 2,
     propCount: 0,
-    artShapeCount: 0,
+    artShapeCount: 1,
     starsFieldRegionCount: 1,
     depthLayerCount: 1,
     occupiedTileCount: 104,

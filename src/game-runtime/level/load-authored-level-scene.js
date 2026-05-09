@@ -1,4 +1,4 @@
-import { buildLevelGraphicsModel } from "../level-graphics/build-level-graphics-model.js?v=20260508a";
+import { buildLevelGraphicsModel } from "../level-graphics/build-level-graphics-model.js?v=20260508b";
 import { buildAuthoredLevelSceneModel } from "./authored-level-scene-model.js";
 import { normalizeLevelDefinition } from "./normalize-level-definition.js";
 import { buildSvgLevelSummaryOptions } from "./svg-level-summary-options.js";

@@ -1,5 +1,6 @@
 export const STARS_FIELD_CONFIG = Object.freeze({
-  targetStarCount: 3000,
+  densityAreaBO2: 100,
+  boWorldUnits: 72,
   targetCellSizeW: 76,
   overscanScale: 1.0,
   candidateOrdinals: 4,
