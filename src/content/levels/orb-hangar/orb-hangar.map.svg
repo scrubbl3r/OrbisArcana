@@ -23,16 +23,16 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.28802673"
-     inkscape:cx="696.11594"
-     inkscape:cy="930.46919"
+     inkscape:zoom="0.57605346"
+     inkscape:cx="799.40497"
+     inkscape:cy="1992.8706"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="94"
      inkscape:window-y="132"
      inkscape:window-maximized="0"
      showgrid="true"
-     inkscape:current-layer="layer3">
+     inkscape:current-layer="layer4">
     <inkscape:grid
        id="grid1"
        units="px"
@@ -66,19 +66,20 @@
      style="display:inline"
      sodipodi:insensitive="true">
     <rect
-       style="display:inline;fill:#333333;fill-opacity:1;stroke:#000000;stroke-width:0.232419;stroke-opacity:1"
+       style="display:inline;fill:#333333;fill-opacity:1;stroke:#000000;stroke-width:1.26997;stroke-opacity:1"
        id="rect1-3-3"
-       width="121.42303"
-       height="85.766747"
-       x="963.72241"
-       y="1692.0725"
+       width="201.97513"
+       height="1539.4553"
+       x="922.57843"
+       y="388.89282"
        inkscape:label="id:star_field z=12bo depth=40bo density=0.7" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="depths"
-     style="display:inline">
+     style="display:inline"
+     sodipodi:insensitive="true">
     <rect
        style="display:inline;fill:#0000c8;fill-opacity:1;stroke:#000000;stroke-width:0.805239;stroke-opacity:1"
        id="rect1-3"
@@ -89,12 +90,12 @@
        inkscape:label="depth:hangar max=10bo material=graphite tess=24" />
     <path
        id="rect2"
-       style="display:inline;fill:#e60000;stroke-width:0.756526;fill-opacity:1"
+       style="display:inline;fill:#e60000;fill-opacity:1;stroke-width:0.756526"
        inkscape:label="depth:hangar max=10bo material=graphite tess=24"
        d="m 967.41168,1761.1212 h 117.17662 v 9.5477 H 967.41168 Z" />
     <path
        id="rect2-4"
-       style="display:inline;fill:#e60000;stroke-width:2.8581;fill-opacity:1"
+       style="display:inline;fill:#e60000;fill-opacity:1;stroke-width:2.8581"
        inkscape:label="depth:hangar max=10bo material=graphite tess=24"
        d="M 967.41168,453.12122 H 1084.5883 V 589.3933 H 967.41168 Z" />
     <path
