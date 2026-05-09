@@ -69,7 +69,7 @@ export function createTransmitterMotionCore({
   const SPEED_ADAPT_START_DPS = 18.0;
   const SPEED_ADAPT_END_DPS = 130.0;
   const SPEED_ADAPT_POW = 1.0;
-  const SPEED_NORM_DPS = 300.0;
+  const SPEED_NORM_DPS = 180.0;
   const SPEED_MAP_POW = 1.1;
   const SPEED_ATTACK_HZ = 5.0;
   const SPEED_RELEASE_HZ = 8.0;
