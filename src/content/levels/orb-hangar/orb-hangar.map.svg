@@ -23,16 +23,16 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="1.1521069"
-     inkscape:cx="1127.9335"
-     inkscape:cy="1681.2676"
+     inkscape:zoom="0.28802673"
+     inkscape:cx="696.11594"
+     inkscape:cy="930.46919"
      inkscape:window-width="1616"
      inkscape:window-height="887"
-     inkscape:window-x="153"
-     inkscape:window-y="80"
+     inkscape:window-x="94"
+     inkscape:window-y="132"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer4"
-     showgrid="true">
+     showgrid="true"
+     inkscape:current-layer="layer3">
     <inkscape:grid
        id="grid1"
        units="px"
@@ -63,7 +63,8 @@
      inkscape:groupmode="layer"
      id="layer4"
      inkscape:label="fields"
-     style="display:inline">
+     style="display:inline"
+     sodipodi:insensitive="true">
     <rect
        style="display:inline;fill:#333333;fill-opacity:1;stroke:#000000;stroke-width:0.232419;stroke-opacity:1"
        id="rect1-3-3"
@@ -71,14 +72,13 @@
        height="85.766747"
        x="963.72241"
        y="1692.0725"
-       inkscape:label="id:star_field z=18bo depth=40bo density=0.7" />
+       inkscape:label="id:star_field z=12bo depth=40bo density=0.7" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="depths"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <rect
        style="display:inline;fill:#0000c8;fill-opacity:1;stroke:#000000;stroke-width:0.805239;stroke-opacity:1"
        id="rect1-3"
@@ -86,36 +86,69 @@
        height="1487.5974"
        x="940.57355"
        y="408"
-       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
-    <rect
-       style="fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24" />
+    <path
        id="rect2"
-       width="98.081177"
-       height="71.17395"
-       x="976.95941"
-       y="1699.495"
-       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
+       style="display:inline;fill:#e60000;stroke-width:0.756526;fill-opacity:1"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24"
+       d="m 967.41168,1761.1212 h 117.17662 v 9.5477 H 967.41168 Z" />
+    <path
+       id="rect2-4"
+       style="display:inline;fill:#e60000;stroke-width:2.8581;fill-opacity:1"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24"
+       d="M 967.41168,453.12122 H 1084.5883 V 589.3933 H 967.41168 Z" />
+    <path
+       d="M 967.412,634.167 H 1084.59 V 752.899 H 967.412 Z"
+       style="display:inline;fill:#e60000;fill-opacity:1;stroke-width:2.56721px"
+       id="path77"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24" />
+    <path
+       d="M 967.412,790.965 H 1084.59 V 894.506 H 967.412 Z"
+       style="display:inline;fill:#e60000;fill-opacity:1;stroke-width:2.31528px"
+       id="path78"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24" />
+    <path
+       d="m 967.412,939.751 h 117.178 v 89.129 H 967.412 Z"
+       style="display:inline;fill:#e60000;fill-opacity:1;stroke-width:2.07623px"
+       id="path79"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24" />
+    <path
+       d="m 967.412,1083.56 h 117.178 v 75.19 H 967.412 Z"
+       style="display:inline;fill:#e60000;fill-opacity:1;stroke-width:1.84517px"
+       id="path80"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24" />
+    <path
+       d="m 967.412,1223.78 h 117.178 v 61.61 H 967.412 Z"
+       style="display:inline;fill:#e60000;fill-opacity:1;stroke-width:1.61988px"
+       id="path81"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24" />
+    <path
+       d="m 967.412,1361.2 h 117.178 v 48.3 H 967.412 Z"
+       style="display:inline;fill:#e60000;fill-opacity:1;stroke-width:1.39908px"
+       id="path82"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24" />
+    <path
+       d="m 967.412,1496.35 h 117.178 v 35.2 H 967.412 Z"
+       style="display:inline;fill:#e60000;fill-opacity:1;stroke-width:1.18194px"
+       id="path83"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24" />
+    <path
+       d="m 967.412,1629.56 h 117.178 v 22.3 H 967.412 Z"
+       style="display:inline;fill:#e60000;fill-opacity:1;stroke-width:0.967901px"
+       id="path84"
+       inkscape:label="depth:hangar max=10bo material=graphite tess=24" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer7"
      inkscape:label="art"
-     style="display:none"
+     style="display:inline"
      sodipodi:insensitive="true">
     <path
-       style="fill:#003301;fill-opacity:1;stroke:#08fe00;stroke-width:0.240548;stroke-dasharray:none;stroke-opacity:1"
-       d="m 1104.0566,1858.6326 -15.1679,15.2765 -11.0483,-11.1273 -9.1756,9.2414 -33.3321,-33.571 -18.3514,18.483 -10.7556,-10.8329 -18.04544,18.1747 -3.22014,-1.8725 -7.49034,7.544 -18.72587,-18.8601 -17.78958,18.1057 v 26.4042 h 166.47297 v -40.9264 z"
-       id="path3"
-       sodipodi:nodetypes="cccccccccccccccc"
-       inkscape:label="id:art_02" />
-    <rect
-       style="display:inline;fill:#55d400;fill-opacity:0.00392157;stroke:#20f219;stroke-width:0.805239;stroke-opacity:1"
-       id="rect1-24"
-       width="166.85287"
-       height="749.19476"
-       x="940.57355"
-       y="1146.4026"
-       inkscape:label="id:art_01" />
+       id="rect3"
+       style="fill:#ff6600;fill-opacity:1;stroke-width:3.61321"
+       d="M 906.16602,334.16992 V 1974.6426 H 1142.2559 V 334.16992 Z M 940.57422,408 H 1107.4258 V 1895.5977 H 940.57422 Z"
+       inkscape:label="id:art_panel z=0bo material=flat color=#272727 opacity=1" />
   </g>
   <g
      inkscape:label="bounds"
