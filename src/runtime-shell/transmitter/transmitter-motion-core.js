@@ -23,8 +23,8 @@ export function createTransmitterMotionCore({
   const SD_SLOP_GATE = 0.18;
 
   const OMEGA_LPF = 0.22;
-  const HUNT_WINDOW_SEC = 0.8;
-  const STABLE_WINDOW_SEC = 1.6;
+  const HUNT_WINDOW_SEC = 0.5; // 0.8
+  const STABLE_WINDOW_SEC = 1.6; // 1.6
   const MIN_WINDOW_SAMPLES = 28;
   const MAX_WINDOW_SAMPLES = 260;
   const MIN_OMEGA = 0.02; // 0.02
