@@ -27,7 +27,7 @@ export function createTransmitterMotionCore({
   const STABLE_WINDOW_SEC = 1.6;
   const MIN_WINDOW_SAMPLES = 28;
   const MAX_WINDOW_SAMPLES = 260;
-  const MIN_OMEGA = 2.; // 0.02
+  const MIN_OMEGA = 0.02; // 0.02
   const LOCK_ON = 0.1;
   const LOCK_OFF = 0.05;
   const MIN_HZ = 0.55;
