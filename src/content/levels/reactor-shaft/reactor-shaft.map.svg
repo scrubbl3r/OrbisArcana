@@ -24,8 +24,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="0.64300352"
-     inkscape:cx="1008.5481"
-     inkscape:cy="1430.7853"
+     inkscape:cx="957.22649"
+     inkscape:cy="1478.9966"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="56"
@@ -95,8 +95,7 @@
      inkscape:groupmode="layer"
      id="layer17"
      inkscape:label="depths"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <path
        style="display:inline;fill:#0000be;fill-opacity:1;stroke:none;stroke-opacity:1"
        d="M 380.81185,1610.75 H 1709.0618 V 392.00004 l -624.25,2.75 -113.24995,706.62496 305.24995,-2.625 192,384 H 700.81185 v -320 h -320 z"
@@ -152,6 +151,78 @@
        cx="1506.3981"
        cy="970.78986"
        r="132.30797"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20"
+       style="fill:#ff0000;stroke-width:0.609715"
+       d="m 823.98471,1570.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 863.98471,1570.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9-4"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 903.98471,1570.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9-4-7"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 943.98471,1570.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9-4-7-5"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 983.98471,1570.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9-4-7-5-3"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 1023.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9-4-7-5-3-7"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 1063.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9-4-7-5-3-7-2"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 1103.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9-4-7-5-3-7-2-7"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 1143.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9-4-7-5-3-7-2-7-9"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 1183.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9-4-7-5-3-7-2-7-9-4"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 1223.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+    <path
+       id="path20-9-4-7-5-3-7-2-7-9-4-9"
+       style="display:inline;fill:#ff0000;stroke-width:0.609715"
+       d="m 1263.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
   </g>
   <g
