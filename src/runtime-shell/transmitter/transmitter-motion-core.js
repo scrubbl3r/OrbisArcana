@@ -30,8 +30,8 @@ export function createTransmitterMotionCore({
   const MIN_OMEGA = 0.02; // 0.02
   const LOCK_ON = 0.1;
   const LOCK_OFF = 0.05;
-  const GROOVE_FLOOR = 0.15;
-  const GROOVE_FULL = 0.85;
+  const GROOVE_FLOOR = 0;
+  const GROOVE_FULL = 1.0;
   const MIN_HZ = 0.55;
   const MAX_HZ = 2.3;
   const JERK_TIGHT = 150.0; //220.0
@@ -705,16 +705,7 @@ export function createTransmitterMotionCore({
       }
 
       if (dt > 0) {
-        const badGroove = lockStrength <= RECENTER_GROOVE_MAX;
-        const notLockedNow = !lock;
-        if (badGroove && notLockedNow) recenterBadTime += dt;
-        else recenterBadTime = Math.max(0, recenterBadTime - 1.5 * dt);
-        if (recenterBadTime >= RECENTER_SEC) {
-          flushHistorySoft();
-          grooveFlushCount += 1;
-          lastGrooveFlushAtMs = nowMs;
-          recenterBadTime = 0;
-        }
+        recenterBadTime = 0;
       }
 
       if (dt > 0) {
