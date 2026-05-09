@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260509d";
+globalThis.__orbisStagingShellRuntimeVersion = "20260509g";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1269,8 +1269,14 @@ function traceShellGrooveAcquisition(shellContext, data, nowMs = performance.now
   if (!due && !changed) return;
 
   runtime.lastGrooveAcquisitionTrace = { atMs: nowMs, flush, win, stable, locked };
+  const groove01 = clamp01(Number(data.groove01) || 0);
+  const smooth01 = clamp01(Number(data.smooth01) || 0);
+  const speed01 = clamp01(Number(data.speed01) || 0);
   perfTrace.mark("groove.acquisition", {
-    groove01: Math.round((Number(data.groove01) || 0) * 1000) / 1000,
+    groove01: Math.round(groove01 * 1000) / 1000,
+    smooth01: Math.round(smooth01 * 1000) / 1000,
+    speed01: Math.round(speed01 * 1000) / 1000,
+    lift01: Math.round(computeLift01(groove01, smooth01, speed01) * 1000) / 1000,
     raw: Math.round((Number(data.g_raw) || 0) * 1000) / 1000,
     lockStrength: Math.round((Number(data.g_lock) || 0) * 1000) / 1000,
     samples: Math.round(Number(data.g_n) || 0),
@@ -2781,7 +2787,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260509d",
+  moduleCacheBustV = "20260509g",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
