@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260508l";
+globalThis.__orbisStagingShellRuntimeVersion = "20260509d";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1248,11 +1248,50 @@ function forceShellShakeLampOff(shellContext) {
   forceDevStagingShakeLampOff(refs, runtime);
 }
 
+function traceShellGrooveAcquisition(shellContext, data, nowMs = performance.now()) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const perfTrace = runtime && runtime.perfTrace ? runtime.perfTrace : null;
+  if (!runtime || !perfTrace || typeof perfTrace.mark !== "function" || !data) return;
+  if (data.g_n == null && data.g_raw == null && data.g_lock == null) return;
+
+  const last = runtime.lastGrooveAcquisitionTrace || {};
+  const flush = Math.round(Number(data.g_flush) || 0);
+  const win = Number(data.g_win) || 0;
+  const stable = !!Number(data.g_stable);
+  const locked = !!data.locked;
+  const due = !last.atMs || (nowMs - last.atMs) >= 500;
+  const changed =
+    flush !== last.flush ||
+    Math.abs(win - (Number(last.win) || 0)) > 0.01 ||
+    stable !== last.stable ||
+    locked !== last.locked;
+
+  if (!due && !changed) return;
+
+  runtime.lastGrooveAcquisitionTrace = { atMs: nowMs, flush, win, stable, locked };
+  perfTrace.mark("groove.acquisition", {
+    groove01: Math.round((Number(data.groove01) || 0) * 1000) / 1000,
+    raw: Math.round((Number(data.g_raw) || 0) * 1000) / 1000,
+    lockStrength: Math.round((Number(data.g_lock) || 0) * 1000) / 1000,
+    samples: Math.round(Number(data.g_n) || 0),
+    target: Math.round(Number(data.g_target) || 0),
+    windowSec: Math.round(win * 1000) / 1000,
+    stable,
+    locked,
+    recenterSec: Math.round((Number(data.g_recenter) || 0) * 1000) / 1000,
+    flush,
+    flushAgeMs: Math.round(Number(data.g_flush_age) || 0),
+    omegaOK: data.omegaOK == null ? null : !!Number(data.omegaOK),
+    hz: Math.round((Number(data.hz) || 0) * 1000) / 1000,
+  });
+}
+
 function handleShellImpulseFrame(shellContext, data) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const devView = shellContext && shellContext.views ? shellContext.views.devStagingView : null;
   const receiverImpulseRuntime = runtime && runtime.receiverImpulseRuntime ? runtime.receiverImpulseRuntime : null;
   let inputPayload = data;
+  traceShellGrooveAcquisition(shellContext, data);
 
   if (runtime && runtime.signalProcessor && runtime.motionStore) {
     try {
@@ -2742,7 +2781,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260508l",
+  moduleCacheBustV = "20260509d",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

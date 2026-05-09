@@ -38,6 +38,15 @@ export function createTransmitterPacketPublisher({
       rrx: roundN(rr[0], 1),
       rry: roundN(rr[1], 1),
       rrz: roundN(rr[2], 1),
+      g_raw: roundN(payload.g_raw, 4),
+      g_lock: roundN(payload.g_lock, 4),
+      g_n: Math.round(Number(payload.g_n) || 0),
+      g_target: Math.round(Number(payload.g_target) || 0),
+      g_win: roundN(payload.g_win, 3),
+      g_stable: !!payload.g_stable,
+      g_recenter: roundN(payload.g_recenter, 3),
+      g_flush: Math.round(Number(payload.g_flush) || 0),
+      g_flush_age: roundN(payload.g_flush_age, 1),
     };
   }
 
@@ -62,6 +71,15 @@ export function createTransmitterPacketPublisher({
     if (Math.abs(sig.rrx - lastSig.rrx) > eps.rr) return true;
     if (Math.abs(sig.rry - lastSig.rry) > eps.rr) return true;
     if (Math.abs(sig.rrz - lastSig.rrz) > eps.rr) return true;
+
+    if (Math.abs(sig.g_raw - lastSig.g_raw) > 0.02) return true;
+    if (Math.abs(sig.g_lock - lastSig.g_lock) > 0.01) return true;
+    if (sig.g_n !== lastSig.g_n) return true;
+    if (sig.g_target !== lastSig.g_target) return true;
+    if (Math.abs(sig.g_win - lastSig.g_win) > 0.01) return true;
+    if (sig.g_stable !== lastSig.g_stable) return true;
+    if (Math.abs(sig.g_recenter - lastSig.g_recenter) > 0.1) return true;
+    if (sig.g_flush !== lastSig.g_flush) return true;
 
     return false;
   }
@@ -97,6 +115,15 @@ export function createTransmitterPacketPublisher({
       hz: sig.hz,
       a: [sig.agx, sig.agy, sig.agz],
       r: [sig.rrx, sig.rry, sig.rrz],
+      g_raw: sig.g_raw,
+      g_lock: sig.g_lock,
+      g_n: sig.g_n,
+      g_target: sig.g_target,
+      g_win: sig.g_win,
+      g_stable: sig.g_stable ? 1 : 0,
+      g_recenter: sig.g_recenter,
+      g_flush: sig.g_flush,
+      g_flush_age: sig.g_flush_age,
     };
 
     if (payload.sd) out.sd = payload.sd;

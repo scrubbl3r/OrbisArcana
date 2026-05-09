@@ -115,6 +115,8 @@ export function createTransmitterMotionCore({
   let grooveHz = 0;
   let graceLeft = 0;
   let recenterBadTime = 0;
+  let grooveFlushCount = 0;
+  let lastGrooveFlushAtMs = 0;
   let energy = 0;
   let energyUI = 0;
   let mSpeedEMA = 0;
@@ -638,7 +640,19 @@ export function createTransmitterMotionCore({
           spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
           spinDirection,
           dbgTag: versionText,
-          ...(debugShield ? { calibOK: isCalibrationReady() ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
+          ...(debugShield ? {
+            calibOK: isCalibrationReady() ? 1 : 0,
+            omegaOK: (mStability > MIN_OMEGA) ? 1 : 0,
+            g_raw: 0,
+            g_lock: lockStrength,
+            g_n: omegaNorm.length,
+            g_target: nTarget,
+            g_win: windowSec,
+            g_stable: inStableMode ? 1 : 0,
+            g_recenter: recenterBadTime,
+            g_flush: grooveFlushCount,
+            g_flush_age: lastGrooveFlushAtMs ? Math.max(0, nowMs - lastGrooveFlushAtMs) : -1,
+          } : {}),
           ag: [agx, agy, agz],
           rr: [rrx, rry, rrz],
           d_r2: 0,
@@ -697,6 +711,8 @@ export function createTransmitterMotionCore({
         else recenterBadTime = Math.max(0, recenterBadTime - 1.5 * dt);
         if (recenterBadTime >= RECENTER_SEC) {
           flushHistorySoft();
+          grooveFlushCount += 1;
+          lastGrooveFlushAtMs = nowMs;
           recenterBadTime = 0;
         }
       }
@@ -753,7 +769,19 @@ export function createTransmitterMotionCore({
         spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
         spinDirection,
         dbgTag: versionText,
-        ...(debugShield ? { calibOK: isCalibrationReady() ? 1 : 0, omegaOK: (mStability > MIN_OMEGA) ? 1 : 0 } : {}),
+        ...(debugShield ? {
+          calibOK: isCalibrationReady() ? 1 : 0,
+          omegaOK: (mStability > MIN_OMEGA) ? 1 : 0,
+          g_raw: ac.peak,
+          g_lock: lockStrength,
+          g_n: omegaNorm.length,
+          g_target: nTarget,
+          g_win: windowSec,
+          g_stable: inStableMode ? 1 : 0,
+          g_recenter: recenterBadTime,
+          g_flush: grooveFlushCount,
+          g_flush_age: lastGrooveFlushAtMs ? Math.max(0, nowMs - lastGrooveFlushAtMs) : -1,
+        } : {}),
         ag: [agx, agy, agz],
         rr: [rrx, rry, rrz],
         d_r2: dDiv.R,
@@ -795,6 +823,8 @@ export function createTransmitterMotionCore({
     grooveHz = 0;
     graceLeft = 0;
     recenterBadTime = 0;
+    grooveFlushCount = 0;
+    lastGrooveFlushAtMs = 0;
     energy = 0;
     energyUI = 0;
     mSpeedEMA = 0;
