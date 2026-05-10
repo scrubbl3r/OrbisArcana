@@ -58,7 +58,7 @@ export function createTransmitterMotionCore({
   const NORM_ALPHA = 0.1;
 
   const SPEED_FLOOR_DPS = 8.0;
-  const SPEED_FULL_DPS = 180.0;
+  const SPEED_FULL_DPS = 140.0; // 180.
   const SPEED_LIMIT_DPS = 360.0;
   const SPEED_RESPONSE_CURVE = 1.1;
   const SPEED_RISE_HZ = 5.0;
