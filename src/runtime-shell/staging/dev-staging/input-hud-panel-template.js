@@ -37,6 +37,10 @@ export const INPUT_HUD_PANEL_TEMPLATE = `
       <div id="dynLampVar" class="devStagingLamp" aria-hidden="true"></div>
       <div id="vDynamics" class="devStagingMeterVal">0%</div>
     </div>
+    <div class="devStagingReadoutRow">
+      <span>Catch Coeff <strong id="vFallCatch">0%</strong></span>
+      <span>Sim Fall Drag <strong id="vSimFallDrag">-1.70</strong></span>
+    </div>
 
     <div class="devStagingBarLabel"><div>Energy</div><span class="devStagingDim"> </span></div>
     <div class="devStagingMeterRow">

@@ -9,6 +9,8 @@ export function createInputHudPanelRefs(root) {
     vSmooth: $("vSmooth"),
     vSpeed: $("vSpeed"),
     vDynamics: $("vDynamics"),
+    vFallCatch: $("vFallCatch"),
+    vSimFallDrag: $("vSimFallDrag"),
     vEnergy: $("vEnergy"),
     vShake: $("vShake"),
     bLift: $("bLift"),

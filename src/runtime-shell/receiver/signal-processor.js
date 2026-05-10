@@ -339,6 +339,7 @@
       const speed01 = clamp01(pick01NewOrOld(packet, "speed01", "speed"));
       const dynamics01 = clamp01(pick01NewOrOld(packet, "dynamics01", "orbit01"));
       const motionTrust01 = clamp01(pick01NewOrOld(packet, "motionTrust01", "motionTrust"));
+      const fallCatch01 = clamp01(motionTrust01 * (1 - dynamics01));
       const energy01 = clamp01(pick01NewOrOld(packet, "energy01", "energy"));
       const shake01 = Math.max(0, Number(pick01NewOrOld(packet, "shake01", "shake")) || 0);
       const locked = !!(packet && packet.locked);
@@ -375,6 +376,7 @@
           groove01,
           dynamics01,
           motionTrust01,
+          fallCatch01,
           smooth01,
           speed01,
           shake01,
@@ -401,6 +403,7 @@
           spinAxisLabel: spin.label,
           spinDirection: spin.direction,
           motionTrust01,
+          fallCatch01,
           calibOK: (packet && packet.calibOK != null) ? Number(packet.calibOK) || 0 : null,
           omegaOK: (packet && packet.omegaOK != null) ? Number(packet.omegaOK) || 0 : null,
           tag: (packet && packet.dbgTag != null) ? String(packet.dbgTag) : null,

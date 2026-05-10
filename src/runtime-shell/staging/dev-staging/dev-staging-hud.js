@@ -21,6 +21,8 @@ export function renderDevStagingHud(refs, vm) {
   setText(refs.vSmooth, `${vm.sP}%`);
   setText(refs.vSpeed, `${vm.sp}%`);
   setText(refs.vDynamics, `${vm.dP}%`);
+  setText(refs.vFallCatch, `${vm.fcP || 0}%`);
+  setText(refs.vSimFallDrag, Number.isFinite(Number(vm.simFallDrag)) ? Number(vm.simFallDrag).toFixed(2) : "-1.70");
   setText(refs.vEnergy, `${vm.ePts}`);
   setText(refs.vShake, `${Math.max(0, vm.sh).toFixed(2)}`);
 
@@ -50,6 +52,8 @@ export function resetDevStagingHud(refs) {
   setText(refs.vSmooth, "0%");
   setText(refs.vSpeed, "0%");
   setText(refs.vDynamics, "0%");
+  setText(refs.vFallCatch, "0%");
+  setText(refs.vSimFallDrag, "-1.70");
   setText(refs.vEnergy, "0");
   setText(refs.vShake, "0.00");
   refs.vEnergy && refs.vEnergy.classList.remove("over");
