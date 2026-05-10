@@ -1418,6 +1418,7 @@ function getShellMotionStoreHudViewModel(shellContext) {
     smooth: Number(motion.smooth01) || 0,
     speed: Number(motion.speed01) || 0,
     dynamics: Number(motion.dynamics01) || 0,
+    motionTrust: Number(motion.motionTrust01) || 0,
     energyUI01,
     liftP: Math.round(clamp01(motion.lift01) * 100),
     gP: Math.round(clamp01(motion.groove01) * 100),
@@ -2442,9 +2443,10 @@ function formatPhoneImpulseLogLine(d) {
   const groove = Number.isFinite(Number(d.groove01 ?? d.groove)) ? Number(d.groove01 ?? d.groove).toFixed(3) : "0.000";
   const smooth = Number.isFinite(Number(d.smooth01 ?? d.smooth)) ? Number(d.smooth01 ?? d.smooth).toFixed(3) : "0.000";
   const dynamics = Number.isFinite(Number(d.dynamics01 ?? d.orbit01)) ? Number(d.dynamics01 ?? d.orbit01).toFixed(3) : "0.000";
+  const trust = Number.isFinite(Number(d.motionTrust01 ?? d.motionTrust)) ? Number(d.motionTrust01 ?? d.motionTrust).toFixed(3) : "0.000";
   const shake = Number.isFinite(Number(d.shake01 ?? d.shake)) ? Number(d.shake01 ?? d.shake).toFixed(3) : "0.000";
   const hz = Number.isFinite(Number(d.hz)) ? Number(d.hz).toFixed(2) : "0.00";
-  return `PHONE speed:${speed} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} hz:${hz}`;
+  return `PHONE speed:${speed} trust:${trust} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} hz:${hz}`;
 }
 
 function shellGroundLineScreenY(shellContext) {

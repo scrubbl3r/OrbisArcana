@@ -26,6 +26,7 @@ export function createTransmitterPacketPublisher({
       energy01: roundN(payload.energy01, 4),
       groove01: roundN(payload.groove01, 4),
       dynamics01: roundN(payload.dynamics01, 4),
+      motionTrust01: roundN(payload.motionTrust01, 4),
       smooth01: roundN(payload.smooth01, 4),
       speed01: roundN(payload.speed01, 4),
       shake01: roundN(payload.shake01, 4),
@@ -59,6 +60,7 @@ export function createTransmitterPacketPublisher({
     if (Math.abs(sig.energy01 - lastSig.energy01) > eps.energy01) return true;
     if (Math.abs(sig.groove01 - lastSig.groove01) > eps.groove01) return true;
     if (Math.abs(sig.dynamics01 - lastSig.dynamics01) > eps.dynamics01) return true;
+    if (Math.abs(sig.motionTrust01 - lastSig.motionTrust01) > (eps.motionTrust01 || eps.speed01 || 0.001)) return true;
     if (Math.abs(sig.smooth01 - lastSig.smooth01) > eps.smooth01) return true;
     if (Math.abs(sig.speed01 - lastSig.speed01) > eps.speed01) return true;
     if (Math.abs(sig.shake01 - lastSig.shake01) > eps.shake01) return true;
@@ -107,6 +109,7 @@ export function createTransmitterPacketPublisher({
       energy01: sig.energy01,
       groove01: sig.groove01,
       dynamics01: sig.dynamics01,
+      motionTrust01: sig.motionTrust01,
       smooth01: sig.smooth01,
       speed01: sig.speed01,
       shake01: sig.shake01,

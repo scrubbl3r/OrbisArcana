@@ -39,8 +39,9 @@ export function createTransmitterMotionCore({
   const DYNAMICS_FLOOR = 0.12;
   const DYNAMICS_FULL = 0.7;
   const DYNAMICS_RESPONSE_CURVE = 1.0;
-  const DYNAMICS_ACTIVITY_FLOOR_SPEED = 0.06;
-  const DYNAMICS_ACTIVITY_CURVE = 1.15;
+  const MOTION_TRUST_FLOOR_SPEED = 0.12;
+  const MOTION_TRUST_FULL_SPEED = 0.42;
+  const MOTION_TRUST_CURVE = 1.15;
   const DYNAMICS_ENERGY_FLOOR = 0.18;
   const DYNAMICS_ENERGY_CURVE = 1.0;
   const ENERGY_GAIN_ACTIVE = 1.25;
@@ -240,10 +241,12 @@ export function createTransmitterMotionCore({
     return clamp01((clamp01(rawGroove) - floor) / (full - floor));
   }
 
-  function dynamicsActivityGate(speed01) {
+  function motionTrustFromSpeed(speed01) {
     const v = clamp01(speed01 || 0);
-    const x = (v - DYNAMICS_ACTIVITY_FLOOR_SPEED) / (1 - DYNAMICS_ACTIVITY_FLOOR_SPEED);
-    return Math.pow(clamp01(x), DYNAMICS_ACTIVITY_CURVE);
+    const span = Math.max(1e-6, MOTION_TRUST_FULL_SPEED - MOTION_TRUST_FLOOR_SPEED);
+    const x = clamp01((v - MOTION_TRUST_FLOOR_SPEED) / span);
+    const smooth = x * x * (3 - 2 * x);
+    return Math.pow(smooth, MOTION_TRUST_CURVE);
   }
 
   function mapDynamics01(rawDynamics) {
@@ -568,6 +571,7 @@ export function createTransmitterMotionCore({
           energy01: energyUI,
           groove01: held.grooveOut,
           dynamics01: held.dynamicsOut,
+          motionTrust01: 0,
           smooth01: held.smoothOut,
           speed01: sv.speed,
           shake01: sh.shake01,
@@ -655,6 +659,7 @@ export function createTransmitterMotionCore({
           energy01: energyUI,
           groove01: held.grooveOut,
           dynamics01: held.dynamicsOut,
+          motionTrust01: motionTrustFromSpeed(sv.speed),
           smooth01: held.smoothOut,
           speed01: sv.speed,
           shake01: sh.shake01,
@@ -681,7 +686,7 @@ export function createTransmitterMotionCore({
           rr: [rrx, rry, rrz],
           d_r2: 0,
           d_r3: 0,
-          d_gate: 0,
+          d_gate: motionTrustFromSpeed(sv.speed),
           d_balance: 0,
           d_couple: 0,
         }, dt);
@@ -700,8 +705,8 @@ export function createTransmitterMotionCore({
       const avgJerk = median(jerkWindow);
       const smoothScore = smoothnessFromJerk(avgJerk);
       const dDiv = dynamicsDiversityLastSec(DYNAMICS_WINDOW_SEC);
-      const actGate = dynamicsActivityGate(sv.speed);
-      const dynamicsRaw = clamp01(dDiv.div01 * actGate);
+      const motionTrust01 = motionTrustFromSpeed(sv.speed);
+      const dynamicsRaw = clamp01(dDiv.div01 * motionTrust01);
       const dynamics01 = mapDynamics01(dynamicsRaw);
 
       const dynamicsBonus = DYNAMICS_ENERGY_FLOOR +
@@ -749,6 +754,7 @@ export function createTransmitterMotionCore({
         energy01: energyUI,
         groove01,
         dynamics01,
+        motionTrust01,
         smooth01: smoothScore,
         speed01: sv.speed,
         shake01: sh.shake01,
@@ -777,7 +783,7 @@ export function createTransmitterMotionCore({
         rr: [rrx, rry, rrz],
         d_r2: dDiv.axis01,
         d_r3: dDiv.div01,
-        d_gate: actGate,
+        d_gate: motionTrust01,
         d_balance: 0,
         d_couple: 0,
       }, dt, forceSend);
