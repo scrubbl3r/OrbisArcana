@@ -1,6 +1,6 @@
 import { setDevStagingFatal } from "./dev-staging-surface-state.js?v=20260421a";
 import { closeDevStagingTopmostPanel } from "./dev-staging-panel.js?v=20260421j";
-import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260510a";
+import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260510b";
 
 export function createDevStagingApi(root, refs, panels = {}) {
   return {
