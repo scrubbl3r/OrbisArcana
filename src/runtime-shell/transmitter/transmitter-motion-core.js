@@ -31,7 +31,7 @@ export function createTransmitterMotionCore({
   const LOCK_ON = 0.1;
   const LOCK_OFF = 0.05;
   const GROOVE_FLOOR = 0;
-  const GROOVE_FULL = 0.18;
+  const GROOVE_FULL = 0.12;
   const MIN_HZ = 0.55;
   const MAX_HZ = 2.3;
   const JERK_TIGHT = 150.0; //220.0
