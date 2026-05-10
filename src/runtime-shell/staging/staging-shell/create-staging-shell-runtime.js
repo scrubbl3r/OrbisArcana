@@ -1415,7 +1415,7 @@ function getShellMotionStoreHudViewModel(shellContext) {
   const motion = state.motion;
   const energyUI01 = clamp01(motion.energy01);
   const fallCatch01 = clamp01(motion.fallCatch01);
-  const simFallDrag = SIM_FALL_DRAG_BASE + (fallCatch01 * SIM_FALL_DRAG_NEGATION);
+  const simFallDrag = SIM_FALL_DRAG_BASE - (fallCatch01 * SIM_FALL_DRAG_NEGATION);
   return {
     lift: Number(motion.lift01) || 0,
     groove: Number(motion.groove01) || 0,
@@ -2452,7 +2452,7 @@ function formatPhoneImpulseLogLine(d) {
   const dynamics = Number.isFinite(Number(d.dynamics01 ?? d.orbit01)) ? Number(d.dynamics01 ?? d.orbit01).toFixed(3) : "0.000";
   const trust = Number.isFinite(Number(d.motionTrust01 ?? d.motionTrust)) ? Number(d.motionTrust01 ?? d.motionTrust).toFixed(3) : "0.000";
   const catch01 = Math.max(0, Math.min(1, Number(trust) * (1 - Number(dynamics))));
-  const simFallDrag = SIM_FALL_DRAG_BASE + (catch01 * SIM_FALL_DRAG_NEGATION);
+  const simFallDrag = SIM_FALL_DRAG_BASE - (catch01 * SIM_FALL_DRAG_NEGATION);
   const shake = Number.isFinite(Number(d.shake01 ?? d.shake)) ? Number(d.shake01 ?? d.shake).toFixed(3) : "0.000";
   const hz = Number.isFinite(Number(d.hz)) ? Number(d.hz).toFixed(2) : "0.00";
   return `PHONE speed:${speed} trust:${trust} catch:${catch01.toFixed(3)} simFall:${simFallDrag.toFixed(2)} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} hz:${hz}`;
