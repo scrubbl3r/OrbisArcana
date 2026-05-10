@@ -57,17 +57,17 @@ export function createTransmitterMotionCore({
   const RECENTER_GROOVE_MAX = 0.22;
   const NORM_ALPHA = 0.1;
 
-  const SPEED_DEAD_DPS = 8.0;
-  const SPEED_CAP_DPS = 360.0;
-  const SPEED_EMA_CUTOFF_FAST_HZ = 1.5;
-  const SPEED_EMA_CUTOFF_SLOW_HZ = 0.1;
-  const SPEED_ADAPT_START_DPS = 18.0;
-  const SPEED_ADAPT_END_DPS = 130.0;
-  const SPEED_ADAPT_POW = 1.0;
-  const SPEED_NORM_DPS = 180.0;
-  const SPEED_MAP_POW = 1.1;
-  const SPEED_ATTACK_HZ = 5.0;
-  const SPEED_RELEASE_HZ = 8.0;
+  const SPEED_FLOOR_DPS = 8.0;
+  const SPEED_FULL_DPS = 180.0;
+  const SPEED_LIMIT_DPS = 360.0;
+  const SPEED_RESPONSE_CURVE = 1.1;
+  const SPEED_RISE_HZ = 5.0;
+  const SPEED_FALL_HZ = 8.0;
+  const SPEED_SMOOTH_FAST_HZ = 1.5;
+  const SPEED_SMOOTH_SLOW_HZ = 0.1;
+  const SPEED_SMOOTH_START_DPS = 18.0;
+  const SPEED_SMOOTH_FULL_DPS = 130.0;
+  const SPEED_SMOOTH_CURVE = 1.0;
 
   const SHAKE_BASELINE_HZ = 0.75;
   const SHAKE_HP_DEAD_G = 0.35;
@@ -342,25 +342,25 @@ export function createTransmitterMotionCore({
   function updateSpeedV0(wRawDps, dt) {
     const dtSafe = Math.max(1e-3, dt || 1 / 60);
     const wRaw = Math.max(0, wRawDps || 0);
-    const cap = SPEED_CAP_DPS;
+    const cap = SPEED_LIMIT_DPS;
     const wCap = Math.min(wRaw, cap);
-    const wDz = Math.max(0, wCap - SPEED_DEAD_DPS);
+    const wDz = Math.max(0, wCap - SPEED_FLOOR_DPS);
 
-    const denom = Math.max(1e-6, SPEED_ADAPT_END_DPS - SPEED_ADAPT_START_DPS);
-    let tAdapt = (wDz - SPEED_ADAPT_START_DPS) / denom;
+    const denom = Math.max(1e-6, SPEED_SMOOTH_FULL_DPS - SPEED_SMOOTH_START_DPS);
+    let tAdapt = (wDz - SPEED_SMOOTH_START_DPS) / denom;
     tAdapt = clamp01(tAdapt);
-    tAdapt = Math.pow(tAdapt, SPEED_ADAPT_POW);
+    tAdapt = Math.pow(tAdapt, SPEED_SMOOTH_CURVE);
 
-    const cutoffHz = lerp(SPEED_EMA_CUTOFF_FAST_HZ, SPEED_EMA_CUTOFF_SLOW_HZ, tAdapt);
+    const cutoffHz = lerp(SPEED_SMOOTH_FAST_HZ, SPEED_SMOOTH_SLOW_HZ, tAdapt);
     const aE = alphaFromCutoff(dtSafe, cutoffHz);
 
     mSpeedEMA = mSpeedEMA === 0 ? wDz : ((1 - aE) * mSpeedEMA + aE * wDz);
     const wFilt = mSpeedEMA;
 
-    const n = clamp01(wFilt / SPEED_NORM_DPS);
-    const target = Math.pow(n, SPEED_MAP_POW);
-    const aAtk = alphaFromCutoff(dtSafe, SPEED_ATTACK_HZ);
-    const aRel = alphaFromCutoff(dtSafe, SPEED_RELEASE_HZ);
+    const n = clamp01(wFilt / SPEED_FULL_DPS);
+    const target = Math.pow(n, SPEED_RESPONSE_CURVE);
+    const aAtk = alphaFromCutoff(dtSafe, SPEED_RISE_HZ);
+    const aRel = alphaFromCutoff(dtSafe, SPEED_FALL_HZ);
     const a = target >= speedOut ? aAtk : aRel;
     speedOut = (1 - a) * speedOut + a * target;
 

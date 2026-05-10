@@ -2,9 +2,9 @@ import { createTransmitterPageShell } from "./transmitter-page-shell.js";
 import { createTransmitterLifecycle } from "./transmitter-lifecycle.js";
 import { createTransmitterSessionBootstrap } from "./transmitter-session-bootstrap.js";
 import { createTransmitterMotionInput } from "./transmitter-motion-input.js";
-import { createTransmitterPacketPublisher } from "./transmitter-packet-publisher.js?v=20260509j";
+import { createTransmitterPacketPublisher } from "./transmitter-packet-publisher.js?v=20260509k";
 import { createTransmitterAudioRuntime } from "./transmitter-audio-runtime.js";
-import { createTransmitterMotionCore } from "./transmitter-motion-core.js?v=20260509j";
+import { createTransmitterMotionCore } from "./transmitter-motion-core.js?v=20260509k";
 import { createTransmitterRuntimeReset } from "./transmitter-runtime-reset.js";
 import { createTransmitterLanSession } from "./transmitter-lan-session.js";
 import { createTransmitterGestureLabUi } from "./gesture-lab/transmitter-gesture-lab-ui.js";
@@ -16,7 +16,7 @@ import { createTransmitterGestureLabState } from "./gesture-lab/transmitter-gest
 
 function loadLegacyTransmitterRuntime() {
   const script = document.createElement("script");
-  script.src = "../../../mobile-transmitter.js?v=20260509j";
+  script.src = "../../../mobile-transmitter.js?v=20260509k";
   script.defer = true;
   script.dataset.entry = "transmitter-domain";
   document.body.appendChild(script);
