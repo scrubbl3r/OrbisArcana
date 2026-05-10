@@ -26,7 +26,7 @@
       const dP = Math.round(clamp01(motion.dynamics01) * 100);
       const ePts = Math.round(energyUI01 * 100);
       els.vLift.textContent = `${liftP}%`;
-      els.vGroove.textContent = `${gP}%${motion.locked ? " (locked)" : ""}`;
+      els.vGroove.textContent = `${gP}%`;
       els.vSmooth.textContent = `${sP}%`;
       els.vSpeed.textContent = `${sp}%`;
       els.vDynamics.textContent = `${dP}%`;

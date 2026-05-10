@@ -28,8 +28,6 @@ export function createTransmitterMotionCore({
   const MIN_WINDOW_SAMPLES = 28;
   const MAX_WINDOW_SAMPLES = 260;
   const MIN_OMEGA = 0.02; // 0.02
-  const LOCK_ON = 0.1;
-  const LOCK_OFF = 0.05;
   const GROOVE_FLOOR = 0;
   const GROOVE_FULL = 0.12;
   const MIN_HZ = 0.55;
@@ -43,11 +41,10 @@ export function createTransmitterMotionCore({
   const DYNAMICS_UI_GAIN = 3.5;
   const DYNAMICS_ACTIVITY_MIN01 = 0.06;
   const DYNAMICS_ACTIVITY_POW = 1.15;
-  const ENERGY_GAIN_LOCKED = 1.25;
-  const ENERGY_GAIN_FREE = 0.65;
+  const ENERGY_GAIN_ACTIVE = 1.25;
   const ENERGY_DECAY = 0.1;
   const UI_SMOOTH = 0.1;
-  const LOCK_SMOOTH = 0.05;
+  const GROOVE_STRENGTH_SMOOTH = 0.05;
   const GROOVE_EXP = 0.7;
   const SMOOTH_EXP = 0.7;
   const DYNAMICS_EXP = 1.0;
@@ -56,8 +53,6 @@ export function createTransmitterMotionCore({
   const COAST_DECAY_MULT = 0.65;
   const SMOOTH_KILL_THRESH = 0.12;
   const SMOOTH_KILL_DECAY_MULT = 3.25;
-  const SMOOTH_KILL_UNLOCK = true;
-  const GRACE_SEC = 0.75;
   const RECENTER_SEC = 0.85;
   const RECENTER_GROOVE_MAX = 0.22;
   const NORM_ALPHA = 0.1;
@@ -110,10 +105,8 @@ export function createTransmitterMotionCore({
 
   let emaMean = 0;
   let emaVar = 1;
-  let lock = false;
-  let lockStrength = 0;
+  let grooveStrength = 0;
   let grooveHz = 0;
-  let graceLeft = 0;
   let recenterBadTime = 0;
   let grooveFlushCount = 0;
   let lastGrooveFlushAtMs = 0;
@@ -564,7 +557,7 @@ export function createTransmitterMotionCore({
         }, dt, forceSend);
 
         setBgFromEnergy(clamp01(energyUI));
-        setAudio(energyUI, held.grooveOut, false);
+        setAudio(energyUI, held.grooveOut);
         return;
       }
 
@@ -578,8 +571,6 @@ export function createTransmitterMotionCore({
       const dtForFilter = dt > 0 ? dt : dtMean;
       const wRaw = mag3(rrx, rry, rrz);
       const sv = updateSpeedV0(wRaw, dtForFilter);
-
-      if (dt > 0) graceLeft = Math.max(0, graceLeft - dt);
 
       if (mStability > MIN_OMEGA) {
         omegaMag.push(mStability);
@@ -644,7 +635,7 @@ export function createTransmitterMotionCore({
             calibOK: isCalibrationReady() ? 1 : 0,
             omegaOK: (mStability > MIN_OMEGA) ? 1 : 0,
             g_raw: 0,
-            g_lock: lockStrength,
+            g_lock: grooveStrength,
             g_n: omegaNorm.length,
             g_target: nTarget,
             g_win: windowSec,
@@ -663,13 +654,13 @@ export function createTransmitterMotionCore({
         }, dt);
 
         setBgFromEnergy(clamp01(energyUI));
-        setAudio(energyUI, held.grooveOut, false);
+        setAudio(energyUI, held.grooveOut);
         return;
       }
 
       const ac = autocorrPeak(omegaNorm, dtMean);
-      lockStrength = lerp(lockStrength, ac.peak, LOCK_SMOOTH);
-      const groove01 = mapGroove01(lockStrength);
+      grooveStrength = lerp(grooveStrength, ac.peak, GROOVE_STRENGTH_SMOOTH);
+      const groove01 = mapGroove01(grooveStrength);
       grooveHz = ac.hz;
 
       const jerkWindow = jerkBuf.slice(-Math.min(jerkBuf.length, 70));
@@ -688,22 +679,6 @@ export function createTransmitterMotionCore({
       lastDynamicsUI = dynamicsUI;
       lastSmoothUI = smoothScore;
 
-      if (!lock) {
-        if (lockStrength > LOCK_ON) {
-          lock = true;
-          graceLeft = 0;
-        }
-      } else if (lockStrength < LOCK_OFF) {
-        lock = false;
-        graceLeft = GRACE_SEC;
-      }
-
-      const inGrace = !lock && graceLeft > 0;
-      if (inGrace && lockStrength > LOCK_ON) {
-        lock = true;
-        graceLeft = 0;
-      }
-
       if (dt > 0) {
         recenterBadTime = 0;
       }
@@ -714,26 +689,19 @@ export function createTransmitterMotionCore({
         const dynamicsTerm = Math.pow(clamp01(dynamicsBonus), DYNAMICS_EXP);
         const qualityTerm = grooveTerm * smoothTerm;
         const earnBase = EARN_SCALE * grooveTerm * smoothTerm * dynamicsTerm;
-        const effectivelyLocked = lock || inGrace;
-        const gain = effectivelyLocked ? ENERGY_GAIN_LOCKED : ENERGY_GAIN_FREE;
         const smoothKill = smoothScore < SMOOTH_KILL_THRESH;
-        const earn = smoothKill ? 0 : (gain * earnBase);
+        const earn = smoothKill ? 0 : (ENERGY_GAIN_ACTIVE * earnBase);
 
         let decay = ENERGY_DECAY;
         if (qualityTerm >= COAST_QUALITY_MIN) decay *= COAST_DECAY_MULT;
         if (smoothKill) {
           decay *= SMOOTH_KILL_DECAY_MULT;
-          if (SMOOTH_KILL_UNLOCK) {
-            lock = false;
-            graceLeft = 0;
-          }
         }
 
         energy = Math.max(0, energy + (earn - decay) * dt);
         energyUI = lerp(energyUI, energy, UI_SMOOTH);
       }
 
-      const lockedNow = !!(lock || inGrace);
       const sd = sh.shake01 > SD_SLOP_GATE ? classifyDirectionalShake(nowMs) : null;
       const calibAck = consumeCalibAck();
       const forceSend = !!calibAck || !!sh.shakeHit;
@@ -755,7 +723,7 @@ export function createTransmitterMotionCore({
         shakeHit: sh.shakeHit,
         sd,
         calib: calibAck,
-        locked: lockedNow,
+        locked: false,
         hz: grooveHz,
         spinVector: spinVector01 ? [spinVector01.x, spinVector01.y, spinVector01.z] : null,
         spinDirection,
@@ -764,7 +732,7 @@ export function createTransmitterMotionCore({
           calibOK: isCalibrationReady() ? 1 : 0,
           omegaOK: (mStability > MIN_OMEGA) ? 1 : 0,
           g_raw: ac.peak,
-          g_lock: lockStrength,
+          g_lock: grooveStrength,
           g_n: omegaNorm.length,
           g_target: nTarget,
           g_win: windowSec,
@@ -783,7 +751,7 @@ export function createTransmitterMotionCore({
       }, dt, forceSend);
 
       setBgFromEnergy(clamp01(energyUI));
-      setAudio(energyUI, groove01, lockedNow);
+      setAudio(energyUI, groove01);
     } catch (err) {
       console.error("[onMotion crash]", err);
     }
@@ -809,10 +777,8 @@ export function createTransmitterMotionCore({
     shakeFullTimes.length = 0;
     emaMean = 0;
     emaVar = 1;
-    lock = false;
-    lockStrength = 0;
+    grooveStrength = 0;
     grooveHz = 0;
-    graceLeft = 0;
     recenterBadTime = 0;
     grooveFlushCount = 0;
     lastGrooveFlushAtMs = 0;

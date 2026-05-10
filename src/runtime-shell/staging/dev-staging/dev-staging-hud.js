@@ -17,7 +17,7 @@ function setText(el, value) {
 export function renderDevStagingHud(refs, vm) {
   if (!refs || !vm) return;
   setText(refs.vLift, `${vm.liftP}%`);
-  setText(refs.vGroove, `${vm.gP}%${vm.locked ? " (locked)" : ""}`);
+  setText(refs.vGroove, `${vm.gP}%`);
   setText(refs.vSmooth, `${vm.sP}%`);
   setText(refs.vSpeed, `${vm.sp}%`);
   setText(refs.vDynamics, `${vm.dP}%`);

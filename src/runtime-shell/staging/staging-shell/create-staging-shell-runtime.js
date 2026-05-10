@@ -1,4 +1,4 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260421j";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260509a";
 import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421j";
 import {
   allDevStagingDirectionLampsOff,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260509g";
+globalThis.__orbisStagingShellRuntimeVersion = "20260509h";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -1258,17 +1258,15 @@ function traceShellGrooveAcquisition(shellContext, data, nowMs = performance.now
   const flush = Math.round(Number(data.g_flush) || 0);
   const win = Number(data.g_win) || 0;
   const stable = !!Number(data.g_stable);
-  const locked = !!data.locked;
   const due = !last.atMs || (nowMs - last.atMs) >= 500;
   const changed =
     flush !== last.flush ||
     Math.abs(win - (Number(last.win) || 0)) > 0.01 ||
-    stable !== last.stable ||
-    locked !== last.locked;
+    stable !== last.stable;
 
   if (!due && !changed) return;
 
-  runtime.lastGrooveAcquisitionTrace = { atMs: nowMs, flush, win, stable, locked };
+  runtime.lastGrooveAcquisitionTrace = { atMs: nowMs, flush, win, stable };
   const groove01 = clamp01(Number(data.groove01) || 0);
   const smooth01 = clamp01(Number(data.smooth01) || 0);
   const speed01 = clamp01(Number(data.speed01) || 0);
@@ -1278,12 +1276,11 @@ function traceShellGrooveAcquisition(shellContext, data, nowMs = performance.now
     speed01: Math.round(speed01 * 1000) / 1000,
     lift01: Math.round(computeLift01(groove01, smooth01, speed01) * 1000) / 1000,
     raw: Math.round((Number(data.g_raw) || 0) * 1000) / 1000,
-    lockStrength: Math.round((Number(data.g_lock) || 0) * 1000) / 1000,
+    strength: Math.round((Number(data.g_lock) || 0) * 1000) / 1000,
     samples: Math.round(Number(data.g_n) || 0),
     target: Math.round(Number(data.g_target) || 0),
     windowSec: Math.round(win * 1000) / 1000,
     stable,
-    locked,
     recenterSec: Math.round((Number(data.g_recenter) || 0) * 1000) / 1000,
     flush,
     flushAgeMs: Math.round(Number(data.g_flush_age) || 0),
@@ -2447,8 +2444,7 @@ function formatPhoneImpulseLogLine(d) {
   const dynamics = Number.isFinite(Number(d.dynamics01 ?? d.orbit01)) ? Number(d.dynamics01 ?? d.orbit01).toFixed(3) : "0.000";
   const shake = Number.isFinite(Number(d.shake01 ?? d.shake)) ? Number(d.shake01 ?? d.shake).toFixed(3) : "0.000";
   const hz = Number.isFinite(Number(d.hz)) ? Number(d.hz).toFixed(2) : "0.00";
-  const locked = d.locked ? "1" : "0";
-  return `PHONE speed:${speed} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} locked:${locked} hz:${hz}`;
+  return `PHONE speed:${speed} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} hz:${hz}`;
 }
 
 function shellGroundLineScreenY(shellContext) {
@@ -2787,7 +2783,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260509g",
+  moduleCacheBustV = "20260509h",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

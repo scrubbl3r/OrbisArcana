@@ -45,15 +45,15 @@ export function createTransmitterAudioRuntime({
     return true;
   }
 
-  function setAudio(energyUi, groove, locked) {
+  function setAudio(energyUi, groove) {
     if (!audioCtx || !gainNode || !osc) return;
 
     const gBase = energyToGain(clamp01(energyUi));
-    const gGroove = locked ? (0.3 + 0.7 * groove) : (0.08 + 0.22 * groove);
+    const gGroove = 0.3 + 0.7 * groove;
     const gain = masterGain * gBase * gGroove;
 
     const freq = toneBaseHz
-      + toneMaxAddHz * (locked ? groove : 0.3 * groove)
+      + toneMaxAddHz * groove
       + 60 * clamp01(energyUi);
 
     const now = audioCtx.currentTime;

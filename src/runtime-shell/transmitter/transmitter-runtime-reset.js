@@ -26,10 +26,8 @@ export function createTransmitterRuntimeReset({
       state.emaMean = 0;
       state.emaVar = 1;
 
-      state.lock = false;
-      state.lockStrength = 0;
+      state.grooveStrength = 0;
       state.grooveHz = 0;
-      state.graceLeft = 0;
       state.recenterBadTime = 0;
 
       state.energy = 0;
