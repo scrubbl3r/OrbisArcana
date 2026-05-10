@@ -36,18 +36,19 @@ export function createTransmitterMotionCore({
   const JERK_LOOSE = 2600.0;
 
   const DYNAMICS_WINDOW_SEC = 1.0;
-  const DYNAMICS_FLOOR = 0.18;
-  const DYNAMICS_UI_EXP = 1.0;
-  const DYNAMICS_UI_GAIN = 3.5;
-  const DYNAMICS_ACTIVITY_MIN01 = 0.06;
-  const DYNAMICS_ACTIVITY_POW = 1.15;
+  const DYNAMICS_FLOOR = 0.12;
+  const DYNAMICS_FULL = 0.7;
+  const DYNAMICS_RESPONSE_CURVE = 1.0;
+  const DYNAMICS_ACTIVITY_FLOOR_SPEED = 0.06;
+  const DYNAMICS_ACTIVITY_CURVE = 1.15;
+  const DYNAMICS_ENERGY_FLOOR = 0.18;
+  const DYNAMICS_ENERGY_CURVE = 1.0;
   const ENERGY_GAIN_ACTIVE = 1.25;
   const ENERGY_DECAY = 0.1;
   const UI_SMOOTH = 0.1;
   const GROOVE_STRENGTH_SMOOTH = 0.05;
   const GROOVE_EXP = 0.7;
   const SMOOTH_EXP = 0.7;
-  const DYNAMICS_EXP = 1.0;
   const EARN_SCALE = 1.0;
   const COAST_QUALITY_MIN = 0.28;
   const COAST_DECAY_MULT = 0.65;
@@ -241,8 +242,15 @@ export function createTransmitterMotionCore({
 
   function dynamicsActivityGate(speed01) {
     const v = clamp01(speed01 || 0);
-    const x = (v - DYNAMICS_ACTIVITY_MIN01) / (1 - DYNAMICS_ACTIVITY_MIN01);
-    return Math.pow(clamp01(x), DYNAMICS_ACTIVITY_POW);
+    const x = (v - DYNAMICS_ACTIVITY_FLOOR_SPEED) / (1 - DYNAMICS_ACTIVITY_FLOOR_SPEED);
+    return Math.pow(clamp01(x), DYNAMICS_ACTIVITY_CURVE);
+  }
+
+  function mapDynamics01(rawDynamics) {
+    const floor = clamp01(DYNAMICS_FLOOR);
+    const full = Math.max(floor + 1e-6, clamp01(DYNAMICS_FULL));
+    const n = clamp01((clamp01(rawDynamics) - floor) / (full - floor));
+    return Math.pow(n, Math.max(0.05, Number(DYNAMICS_RESPONSE_CURVE) || 1));
   }
 
   function computeAvg(arr) {
@@ -284,7 +292,8 @@ export function createTransmitterMotionCore({
   function dynamicsDiversityLastSec(windowSec) {
     const W = Math.max(0.2, Number(windowSec) || 1.0);
     let sumW = 0;
-    let sx = 0, sy = 0, sz = 0;
+    let xx = 0, xy = 0, xz = 0;
+    let yy = 0, yz = 0, zz = 0;
 
     for (let i = dynamicsVecBuf.length - 1; i >= 0; i -= 1) {
       const dt = dynamicsDtBuf[i] || 0;
@@ -292,22 +301,46 @@ export function createTransmitterMotionCore({
       const w = Math.min(dt, W - sumW);
       const v = dynamicsVecBuf[i];
       if (v) {
-        sx += (v.x || 0) * w;
-        sy += (v.y || 0) * w;
-        sz += (v.z || 0) * w;
+        const x = Number(v.x) || 0;
+        const y = Number(v.y) || 0;
+        const z = Number(v.z) || 0;
+        xx += x * x * w;
+        xy += x * y * w;
+        xz += x * z * w;
+        yy += y * y * w;
+        yz += y * z * w;
+        zz += z * z * w;
       }
       sumW += w;
     }
 
-    if (sumW < 0.25) return { div01: 0, R: 1, n: dynamicsVecBuf.length };
+    if (sumW < 0.25) return { div01: 0, axis01: 1, n: dynamicsVecBuf.length };
 
+    // Unsigned axis spread: +axis and -axis stay the same flat-spin family.
     const inv = 1 / sumW;
-    const mx = sx * inv;
-    const my = sy * inv;
-    const mz = sz * inv;
-    const R = clamp01(Math.sqrt(mx * mx + my * my + mz * mz));
-    const div01 = clamp01(1 - R);
-    return { div01, R, n: dynamicsVecBuf.length };
+    xx *= inv; xy *= inv; xz *= inv;
+    yy *= inv; yz *= inv; zz *= inv;
+
+    const invRoot3 = 1 / Math.sqrt(3);
+    let px = invRoot3, py = invRoot3, pz = invRoot3;
+    for (let i = 0; i < 8; i += 1) {
+      const nx = xx * px + xy * py + xz * pz;
+      const ny = xy * px + yy * py + yz * pz;
+      const nz = xz * px + yz * py + zz * pz;
+      const m = mag3(nx, ny, nz);
+      if (m <= 1e-6) break;
+      px = nx / m;
+      py = ny / m;
+      pz = nz / m;
+    }
+
+    const axis01 = clamp01(
+      px * (xx * px + xy * py + xz * pz) +
+      py * (xy * px + yy * py + yz * pz) +
+      pz * (xz * px + yz * py + zz * pz)
+    );
+    const div01 = clamp01((1 - axis01) * 1.5);
+    return { div01, axis01, n: dynamicsVecBuf.length };
   }
 
   function flushHistorySoft() {
@@ -668,15 +701,15 @@ export function createTransmitterMotionCore({
       const smoothScore = smoothnessFromJerk(avgJerk);
       const dDiv = dynamicsDiversityLastSec(DYNAMICS_WINDOW_SEC);
       const actGate = dynamicsActivityGate(sv.speed);
-      const diversityGated = clamp01(dDiv.div01 * actGate);
+      const dynamicsRaw = clamp01(dDiv.div01 * actGate);
+      const dynamics01 = mapDynamics01(dynamicsRaw);
 
-      const dynamicsBonus = DYNAMICS_FLOOR + (1 - DYNAMICS_FLOOR) * diversityGated;
-      const shapedCore = diversityGated;
-      const dynamicsUI = clamp01(DYNAMICS_UI_GAIN * Math.pow(shapedCore, DYNAMICS_UI_EXP));
+      const dynamicsBonus = DYNAMICS_ENERGY_FLOOR +
+        (1 - DYNAMICS_ENERGY_FLOOR) * Math.pow(dynamics01, DYNAMICS_ENERGY_CURVE);
 
       meterHoldLeft = METER_HOLD_SEC;
       lastGrooveUI = groove01;
-      lastDynamicsUI = dynamicsUI;
+      lastDynamicsUI = dynamics01;
       lastSmoothUI = smoothScore;
 
       if (dt > 0) {
@@ -686,9 +719,8 @@ export function createTransmitterMotionCore({
       if (dt > 0) {
         const grooveTerm = Math.pow(clamp01(groove01), GROOVE_EXP);
         const smoothTerm = Math.pow(clamp01(smoothScore), SMOOTH_EXP);
-        const dynamicsTerm = Math.pow(clamp01(dynamicsBonus), DYNAMICS_EXP);
         const qualityTerm = grooveTerm * smoothTerm;
-        const earnBase = EARN_SCALE * grooveTerm * smoothTerm * dynamicsTerm;
+        const earnBase = EARN_SCALE * grooveTerm * smoothTerm * dynamicsBonus;
         const smoothKill = smoothScore < SMOOTH_KILL_THRESH;
         const earn = smoothKill ? 0 : (ENERGY_GAIN_ACTIVE * earnBase);
 
@@ -716,7 +748,7 @@ export function createTransmitterMotionCore({
         cap: sv.cap,
         energy01: energyUI,
         groove01,
-        dynamics01: dynamicsUI,
+        dynamics01,
         smooth01: smoothScore,
         speed01: sv.speed,
         shake01: sh.shake01,
@@ -743,7 +775,7 @@ export function createTransmitterMotionCore({
         } : {}),
         ag: [agx, agy, agz],
         rr: [rrx, rry, rrz],
-        d_r2: dDiv.R,
+        d_r2: dDiv.axis01,
         d_r3: dDiv.div01,
         d_gate: actGate,
         d_balance: 0,
