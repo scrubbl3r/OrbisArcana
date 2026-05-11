@@ -7,6 +7,8 @@
 
       physState.lift01 = motion.lift01;
       physState.dynamics01 = motion.dynamics01;
+      physState.motionTrust01 = motion.motionTrust01;
+      physState.fallCatch01 = motion.fallCatch01;
     };
   }
 

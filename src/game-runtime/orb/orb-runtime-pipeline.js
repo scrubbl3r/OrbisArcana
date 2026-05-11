@@ -57,6 +57,22 @@ function aggregateContactNormal(contacts = [], target = CONTACT_NORMAL_SCRATCH) 
 const FLOOR_CONTACT_EPSILON_PX = 0.25;
 const CEIL_CONTACT_EPSILON_PX = 0.25;
 
+function resolveOrbFallDrag({
+  baseDownDrag,
+  fallCatch01,
+  orbControl,
+  clamp,
+} = {}) {
+  const safeClamp = typeof clamp === "function" ? clamp : ((n, a, b) => Math.min(b, Math.max(a, n)));
+  const base = safeClamp(Number(baseDownDrag) || 0, -5, 1);
+  const configuredTarget = Number(orbControl && orbControl.flatSpinFallDrag);
+  const target = safeClamp(Number.isFinite(configuredTarget) ? configuredTarget : base, -5, 1);
+  const configuredCurve = Number(orbControl && orbControl.flatSpinFallDragCurve);
+  const curve = Math.max(0.05, Number.isFinite(configuredCurve) ? configuredCurve : 1);
+  const t = Math.pow(clamp01(fallCatch01), curve);
+  return base + ((target - base) * t);
+}
+
 /**
  * @typedef {Object} RunOrbRuntimePipelineOptions
  * @property {number} ts Frame timestamp (RAF time)
@@ -66,6 +82,7 @@ const CEIL_CONTACT_EPSILON_PX = 0.25;
  * @property {Object} [physState] Legacy direct orb runtime motion state (mutated in place)
  * @property {{get?:() => Object}} [orbRuntimeState] Orb runtime state owner API (preferred)
  * @property {Object} phys Orb runtime physics config
+ * @property {{flatSpinFallDrag?:number, flatSpinFallDragCurve?:number}} [orbControl] Orb-specific input control tuning
  * @property {{vDownThr:number, graceMs:number}} shieldDescent Shield descent gate tuning
  * @property {Object} [receiverRuntime] Receiver runtime container (used for orb tick + impact application)
  * @property {Object} [orbFxSystem] Orb FX runtime system
@@ -90,6 +107,7 @@ export function runOrbRuntimePipeline({
   physState,
   orbRuntimeState,
   phys,
+  orbControl,
   shieldDescent,
   receiverRuntime,
   orbFxSystem,
@@ -216,7 +234,12 @@ export function runOrbRuntimePipeline({
 
   let a = g - thrust;
 
-  const signedFallDrag = clamp(Number(phys.downDrag) || 0, -5, 1);
+  const signedFallDrag = resolveOrbFallDrag({
+    baseDownDrag: phys.downDrag,
+    fallCatch01: state.fallCatch01,
+    orbControl,
+    clamp,
+  });
   const drag = (state.v >= 0) ? signedFallDrag : phys.upDrag;
   a += (-drag * state.v);
 
@@ -229,7 +252,7 @@ export function runOrbRuntimePipeline({
     if (upwardIntent) {
       if (typeof clearFloatGrace === "function") clearFloatGrace();
     } else {
-      const dragFactor = Math.max(0, -Number(phys.downDrag) || 0);
+      const dragFactor = Math.max(0, -Number(signedFallDrag) || 0);
       const bobAmp = clamp(1.8 + (state.gravityMul * 1.2) + (dragFactor * 1.8), 1.8, 6.0);
       const bobHz = clamp(0.8 + (state.gravityMul * 0.25) + (dragFactor * 0.15), 0.8, 1.7);
       state.floatGracePhase += (Math.PI * 2 * bobHz * dt);
@@ -333,7 +356,7 @@ export function runOrbRuntimePipeline({
     runtime.applyImpact(impactMetric, impactSrc || "boundary", {
       rawImpact: impactMag,
       gravityMul: state.gravityMul,
-      fallDrag: phys.downDrag,
+      fallDrag: signedFallDrag,
     });
   }
 

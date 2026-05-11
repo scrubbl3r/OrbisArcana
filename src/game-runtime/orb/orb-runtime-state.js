@@ -9,6 +9,8 @@
  * @property {number} lift01
  * @property {number} energy01
  * @property {number} dynamics01
+ * @property {number} motionTrust01
+ * @property {number} fallCatch01
  * @property {number} steerIntentX
  * @property {boolean} steerActive
  * @property {boolean} onGround
@@ -41,6 +43,8 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     lift01: 0,
     energy01: 0,
     dynamics01: 0,
+    motionTrust01: 0,
+    fallCatch01: 0,
     steerIntentX: 0,
     steerActive: false,
     onGround: false,
@@ -78,6 +82,8 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     state.lift01 = 0;
     state.energy01 = 0;
     state.dynamics01 = 0;
+    state.motionTrust01 = 0;
+    state.fallCatch01 = 0;
     state.steerIntentX = 0;
     state.steerActive = false;
     state.onGround = false;

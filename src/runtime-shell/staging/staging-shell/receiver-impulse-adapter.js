@@ -40,6 +40,8 @@ export function attachShellReceiverImpulseAdapter({
       values: {
         groove: frame ? frame.groove01 : pick01NewOrOld("groove01", "groove"),
         dynamics: frame ? frame.dynamics01 : pick01NewOrOld("dynamics01", "orbit01"),
+        motionTrust: frame ? frame.motionTrust01 : pick01NewOrOld("motionTrust01", "motionTrust"),
+        fallCatch: frame ? frame.fallCatch01 : pick01NewOrOld("fallCatch01", "fallCatch"),
         smooth: frame ? frame.smooth01 : pick01NewOrOld("smooth01", "smooth"),
         speed: frame ? frame.speed01 : pick01NewOrOld("speed01", "speed"),
         shake: frame ? frame.shake01 : (

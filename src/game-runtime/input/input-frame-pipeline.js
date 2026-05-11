@@ -10,7 +10,7 @@ function clamp01(n){
  * @typedef {Object} RunInputFramePipelineOptions
  * @property {Object} [d] Raw incoming payload from receiver/transmitter path.
  * @property {number} [nowMs]
- * @property {{groove?:number, dynamics?:number, smooth?:number, speed?:number, shake?:number}} [values]
+ * @property {{groove?:number, dynamics?:number, motionTrust?:number, fallCatch?:number, smooth?:number, speed?:number, shake?:number}} [values]
  * @property {{inputGestureSystem?:Object, inputDynamicsSystem?:Object}} [systems]
  * @property {{physState?:Object, orbRuntimeState?:{get?:() => Object}}} [runtime]
  * @property {{inputDynamics?:Object}} [configs]
@@ -38,6 +38,8 @@ export function runInputFramePipeline({
 } = {}){
   const groove = Number(values && values.groove) || 0;
   const dynamics = Number(values && values.dynamics) || 0;
+  const motionTrust = Number(values && values.motionTrust) || 0;
+  const fallCatch = Number(values && values.fallCatch) || 0;
   const smooth = Number(values && values.smooth) || 0;
   const speed = Number(values && values.speed) || 0;
   const shake = Number(values && values.shake) || 0;
@@ -58,6 +60,8 @@ export function runInputFramePipeline({
   if (!skipPhysStatePatch && physState && typeof physState === "object") {
     physState.lift01 = lift;
     physState.dynamics01 = dynamics;
+    physState.motionTrust01 = motionTrust;
+    physState.fallCatch01 = fallCatch;
   }
 
   if (d && typeof d.sd === "string" && d.sd.trim()) {

@@ -1,8 +1,11 @@
+import { ORB_CONTROL_DEFAULT } from "./orb-control-default.js";
+
 export const ORB_RUNTIME_CONFIG_DEFAULT = {
   shieldDescent: {
     vDownThr: 60,
     graceMs: 260,
   },
+  orbControl: ORB_CONTROL_DEFAULT,
   physics: {
     groundFromBottomPx: 17,
     groundLinePx: 2,

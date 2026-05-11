@@ -1,4 +1,4 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260510c";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260510d";
 import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421j";
 import {
   allDevStagingDirectionLampsOff,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260510c";
+globalThis.__orbisStagingShellRuntimeVersion = "20260510d";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -116,7 +116,7 @@ const SHELL_IMPACT_MODEL = Object.freeze({
 const SIM_FALL_DRAG_BASE = -1.7;
 const SIM_FALL_DRAG_FULL_CATCH = 0.8;
 const simFallDragFromCatch = (catch01) => (
-  SIM_FALL_DRAG_FULL_CATCH + ((SIM_FALL_DRAG_BASE - SIM_FALL_DRAG_FULL_CATCH) * clamp01(catch01))
+  SIM_FALL_DRAG_BASE + ((SIM_FALL_DRAG_FULL_CATCH - SIM_FALL_DRAG_BASE) * clamp01(catch01))
 );
 
 function cloneJsonLike(value, fallback = {}) {
@@ -311,6 +311,7 @@ function initializeShellStageRuntime(shellContext) {
   phys.downDrag = SHELL_STAGE_UI_DEFAULTS.downDrag;
   phys.worldHeightPx = shellWorldHeight(shellContext);
   const shieldDescent = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.shieldDescent);
+  const orbControl = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.orbControl);
   const impact = cloneJsonLike(ORB_RUNTIME_CONFIG_DEFAULT.impact);
   const statusConfig = cloneJsonLike(ORB_STATUS_CONFIG_DEFAULT && ORB_STATUS_CONFIG_DEFAULT.grace);
   const initialState = buildShellStageInitialState(phys);
@@ -351,6 +352,7 @@ function initializeShellStageRuntime(shellContext) {
 
   runtime.stage = {
     phys,
+    orbControl,
     shieldDescent,
     impact,
     statusConfig,
@@ -1308,9 +1310,14 @@ function handleShellImpulseFrame(shellContext, data) {
       });
       runtime.motionStore.publish(motionState);
       updateShellSpinColorFromMotionState(shellContext, motionState);
+      inputPayload = {
+        ...(data || {}),
+        motionTrust01: motionState && motionState.motion ? motionState.motion.motionTrust01 : 0,
+        fallCatch01: motionState && motionState.motion ? motionState.motion.fallCatch01 : 0,
+      };
       if (motionState && motionState.spin) {
         inputPayload = {
-          ...(data || {}),
+          ...inputPayload,
           spinVector: motionState.spin.vector,
           spinAxisDominance: motionState.spin.dominance,
           spinAxisGap: motionState.spin.gap,
@@ -1563,6 +1570,7 @@ function startShellStageLoop(shellContext) {
         wasOnGround,
         orbRuntimeState: runtime.orbRuntimeState,
         phys: runtime.stage ? runtime.stage.phys : {},
+        orbControl: runtime.stage ? runtime.stage.orbControl : {},
         shieldDescent: runtime.stage ? runtime.stage.shieldDescent : {},
         receiverRuntime,
         worldSystem: runtime.stage ? runtime.stage.worldSystem : null,
@@ -2797,7 +2805,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260510c",
+  moduleCacheBustV = "20260510d",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
