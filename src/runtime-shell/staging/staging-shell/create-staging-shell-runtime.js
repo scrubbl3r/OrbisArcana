@@ -1,4 +1,4 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260510d";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260510e";
 import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421j";
 import {
   allDevStagingDirectionLampsOff,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260510d";
+globalThis.__orbisStagingShellRuntimeVersion = "20260510e";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -114,9 +114,9 @@ const SHELL_IMPACT_MODEL = Object.freeze({
   dragMirrorScale: 0.5,
 });
 const SIM_FALL_DRAG_BASE = -1.7;
-const SIM_FALL_DRAG_FULL_CATCH = 0.8;
-const simFallDragFromCatch = (catch01) => (
-  SIM_FALL_DRAG_BASE + ((SIM_FALL_DRAG_FULL_CATCH - SIM_FALL_DRAG_BASE) * clamp01(catch01))
+const SIM_FALL_DRAG_FLAT_SPIN = 0.6;
+const simFallDragFromDynamics = ({ dynamics01 = 0, motionTrust01 = 0 } = {}) => (
+  SIM_FALL_DRAG_BASE + ((SIM_FALL_DRAG_FLAT_SPIN - SIM_FALL_DRAG_BASE) * clamp01(motionTrust01) * (1 - clamp01(dynamics01)))
 );
 
 function cloneJsonLike(value, fallback = {}) {
@@ -1424,15 +1424,17 @@ function getShellMotionStoreHudViewModel(shellContext) {
   if (!state || !state.motion) return null;
   const motion = state.motion;
   const energyUI01 = clamp01(motion.energy01);
+  const dynamics01 = clamp01(motion.dynamics01);
+  const motionTrust01 = clamp01(motion.motionTrust01);
   const fallCatch01 = clamp01(motion.fallCatch01);
-  const simFallDrag = simFallDragFromCatch(fallCatch01);
+  const simFallDrag = simFallDragFromDynamics({ dynamics01, motionTrust01 });
   return {
     lift: Number(motion.lift01) || 0,
     groove: Number(motion.groove01) || 0,
     smooth: Number(motion.smooth01) || 0,
     speed: Number(motion.speed01) || 0,
-    dynamics: Number(motion.dynamics01) || 0,
-    motionTrust: Number(motion.motionTrust01) || 0,
+    dynamics: dynamics01,
+    motionTrust: motionTrust01,
     fallCatch: fallCatch01,
     simFallDrag,
     energyUI01,
@@ -1440,7 +1442,7 @@ function getShellMotionStoreHudViewModel(shellContext) {
     gP: Math.round(clamp01(motion.groove01) * 100),
     sP: Math.round(clamp01(motion.smooth01) * 100),
     sp: Math.round(clamp01(motion.speed01) * 100),
-    dP: Math.round(clamp01(motion.dynamics01) * 100),
+    dP: Math.round(dynamics01 * 100),
     fcP: Math.round(fallCatch01 * 100),
     ePts: Math.round(energyUI01 * 100),
     shakeMeter: Number(motion.shakeMeter01) || 0,
@@ -2463,7 +2465,10 @@ function formatPhoneImpulseLogLine(d) {
   const dynamics = Number.isFinite(Number(d.dynamics01 ?? d.orbit01)) ? Number(d.dynamics01 ?? d.orbit01).toFixed(3) : "0.000";
   const trust = Number.isFinite(Number(d.motionTrust01 ?? d.motionTrust)) ? Number(d.motionTrust01 ?? d.motionTrust).toFixed(3) : "0.000";
   const catch01 = Math.max(0, Math.min(1, Number(trust) * (1 - Number(dynamics))));
-  const simFallDrag = simFallDragFromCatch(catch01);
+  const simFallDrag = simFallDragFromDynamics({
+    dynamics01: Number(dynamics),
+    motionTrust01: Number(trust),
+  });
   const shake = Number.isFinite(Number(d.shake01 ?? d.shake)) ? Number(d.shake01 ?? d.shake).toFixed(3) : "0.000";
   const hz = Number.isFinite(Number(d.hz)) ? Number(d.hz).toFixed(2) : "0.00";
   return `PHONE speed:${speed} trust:${trust} catch:${catch01.toFixed(3)} simFall:${simFallDrag.toFixed(2)} energy:${energy} groove:${groove} dyn:${dynamics} smooth:${smooth} shake:${shake} hz:${hz}`;
@@ -2805,7 +2810,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260510d",
+  moduleCacheBustV = "20260510e",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
