@@ -1,6 +1,6 @@
-import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260510b";
-import { createInputHudPanelRefs } from "./input-hud-panel-refs.js?v=20260510b";
-import { INPUT_HUD_PANEL_TEMPLATE } from "./input-hud-panel-template.js?v=20260510b";
+import { renderDevStagingHud, resetDevStagingHud } from "./dev-staging-hud.js?v=20260510c";
+import { createInputHudPanelRefs } from "./input-hud-panel-refs.js?v=20260510c";
+import { INPUT_HUD_PANEL_TEMPLATE } from "./input-hud-panel-template.js?v=20260510c";
 
 export function mountInputHudPanel(host, { onRequestClose = null } = {}) {
   if (!host) return null;
