@@ -39,6 +39,7 @@ export function createTransmitterMotionCore({
   const DYNAMICS_FLOOR = 0.12;
   const DYNAMICS_FULL = 0.7;
   const DYNAMICS_RESPONSE_CURVE = 1.0;
+  const DYNAMICS_MIN_MOTION_DPS = 10.0;
   const MOTION_TRUST_FLOOR_SPEED = 0.12;
   const MOTION_TRUST_FULL_SPEED = 0.42;
   const MOTION_TRUST_CURVE = 1.15;
@@ -290,6 +291,11 @@ export function createTransmitterMotionCore({
         break;
       }
     }
+  }
+
+  function dynamicsBufDecayOne() {
+    if (dynamicsVecBuf.length) dynamicsVecBuf.shift();
+    if (dynamicsDtBuf.length) dynamicsDtBuf.shift();
   }
 
   function dynamicsDiversityLastSec(windowSec) {
@@ -625,7 +631,11 @@ export function createTransmitterMotionCore({
         omegaVec.push(vUnit);
         updateSpinVectorState(nowMs, vUnit);
 
-        if (dtForFilter > 0) dynamicsBufPush(vUnit, dtForFilter);
+        if (dtForFilter > 0 && sv.wFilt >= DYNAMICS_MIN_MOTION_DPS) {
+          dynamicsBufPush(vUnit, dtForFilter);
+        } else {
+          dynamicsBufDecayOne();
+        }
         if (dt > 0) {
           const dtSafe = Math.max(dt, dtMean * 0.5, 1 / 120);
           jerkBuf.push(mag3(ox - prevOx, oy - prevOy, oz - prevOz) / dtSafe);
