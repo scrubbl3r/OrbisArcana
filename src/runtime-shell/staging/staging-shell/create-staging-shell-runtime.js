@@ -114,7 +114,7 @@ const SHELL_IMPACT_MODEL = Object.freeze({
   dragMirrorScale: 0.5,
 });
 const SIM_FALL_DRAG_BASE = -1.7;
-const SIM_FALL_DRAG_FULL_CATCH = 0.6;
+const SIM_FALL_DRAG_FULL_CATCH = 0.8;
 const simFallDragFromCatch = (catch01) => (
   SIM_FALL_DRAG_FULL_CATCH + ((SIM_FALL_DRAG_BASE - SIM_FALL_DRAG_FULL_CATCH) * clamp01(catch01))
 );
