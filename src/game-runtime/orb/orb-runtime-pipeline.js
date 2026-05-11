@@ -74,6 +74,23 @@ function resolveOrbFallDrag({
   return base + ((target - base) * t);
 }
 
+function resolveDynamicLiftBoost({
+  dynamics01,
+  orbControl,
+  clamp,
+} = {}) {
+  const safeClamp = typeof clamp === "function" ? clamp : ((n, a, b) => Math.min(b, Math.max(a, n)));
+  const configuredStart = Number(orbControl && orbControl.dynamicLiftBoostStart01);
+  const start = safeClamp(Number.isFinite(configuredStart) ? configuredStart : 0, 0, 0.99);
+  const configuredMax = Number(orbControl && orbControl.dynamicLiftBoostMax);
+  const max = safeClamp(Number.isFinite(configuredMax) ? configuredMax : 1, 0, 4);
+  const configuredCurve = Number(orbControl && orbControl.dynamicLiftBoostCurve);
+  const curve = Math.max(0.05, Number.isFinite(configuredCurve) ? configuredCurve : 1);
+  const span = Math.max(1e-6, 1 - start);
+  const t = Math.pow(clamp01((clamp01(dynamics01) - start) / span), curve);
+  return 1 + ((max - 1) * t);
+}
+
 /**
  * @typedef {Object} RunOrbRuntimePipelineOptions
  * @property {number} ts Frame timestamp (RAF time)
@@ -83,7 +100,7 @@ function resolveOrbFallDrag({
  * @property {Object} [physState] Legacy direct orb runtime motion state (mutated in place)
  * @property {{get?:() => Object}} [orbRuntimeState] Orb runtime state owner API (preferred)
  * @property {Object} phys Orb runtime physics config
- * @property {{fallDragBase?:number, flatSpinFallDrag?:number, flatSpinFallDragCurve?:number}} [orbControl] Orb-specific input control tuning
+ * @property {{fallDragBase?:number, flatSpinFallDrag?:number, flatSpinFallDragCurve?:number, dynamicLiftBoostStart01?:number, dynamicLiftBoostMax?:number, dynamicLiftBoostCurve?:number}} [orbControl] Orb-specific input control tuning
  * @property {{vDownThr:number, graceMs:number}} shieldDescent Shield descent gate tuning
  * @property {Object} [receiverRuntime] Receiver runtime container (used for orb tick + impact application)
  * @property {Object} [orbFxSystem] Orb FX runtime system
@@ -229,9 +246,15 @@ export function runOrbRuntimePipeline({
   });
 
   const g = phys.gBase * state.gravityMul;
-  const thrust = (typeof liftToThrustAccel === "function")
+  const baseThrust = (typeof liftToThrustAccel === "function")
     ? Number(liftToThrustAccel(state.lift01)) || 0
     : (Number(phys.thrustMax) || 0) * clamp01(state.lift01);
+  const dynamicLiftBoost = resolveDynamicLiftBoost({
+    dynamics01: state.dynamics01,
+    orbControl,
+    clamp,
+  });
+  const thrust = baseThrust * dynamicLiftBoost;
 
   let a = g - thrust;
 
