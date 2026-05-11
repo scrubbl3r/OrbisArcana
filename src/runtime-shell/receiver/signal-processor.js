@@ -128,6 +128,14 @@
     return Math.sqrt(dominance01 * gap01);
   }
 
+  const FALL_CATCH_MOTION_TRUST_MIN = 0.25;
+  const FALL_CATCH_MOTION_TRUST_CURVE = 1.0;
+
+  function fallCatchMotionTrustGate(motionTrust01){
+    const t = Math.pow(clamp01(motionTrust01), Math.max(0.05, FALL_CATCH_MOTION_TRUST_CURVE));
+    return lerp(FALL_CATCH_MOTION_TRUST_MIN, 1, t);
+  }
+
   const SPIN_AXIS_WINDOW_MS = 1500;
   const SPIN_DIRECTION_WINDOW_MS = 1000;
   const SPIN_DIRECTION_ACQUIRE_BIAS = 0.1;
@@ -368,7 +376,8 @@
           }
         : derivedSpin;
       const flatSpinCatch01 = flatSpinCatchFromSpin(spin);
-      const fallCatch01 = flatSpinCatch01;
+      const fallCatchMotionTrust01 = fallCatchMotionTrustGate(motionTrust01);
+      const fallCatch01 = clamp01(flatSpinCatch01 * fallCatchMotionTrust01);
       const directionVector = pickDirVector(packet);
       const directionAngles = directionVector ? dirToYawTiltDeg(directionVector) : null;
 
@@ -413,6 +422,7 @@
           spinAxisLabel: spin.label,
           spinDirection: spin.direction,
           motionTrust01,
+          fallCatchMotionTrust01,
           flatSpinCatch01,
           fallCatch01,
           calibOK: (packet && packet.calibOK != null) ? Number(packet.calibOK) || 0 : null,
