@@ -1,4 +1,4 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260510h";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260510i";
 import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421j";
 import {
   allDevStagingDirectionLampsOff,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260510h";
+globalThis.__orbisStagingShellRuntimeVersion = "20260510i";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2806,7 +2806,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260510h",
+  moduleCacheBustV = "20260510i",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

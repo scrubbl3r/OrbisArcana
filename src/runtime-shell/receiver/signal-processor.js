@@ -119,6 +119,15 @@
     };
   }
 
+  function flatSpinCatchFromSpin(spin){
+    if (!spin || !spin.label) return 0;
+    const dominance = clamp01(spin.dominance);
+    const gap = clamp01(spin.gap);
+    const dominance01 = clamp01((dominance - 0.48) / 0.32);
+    const gap01 = clamp01((gap - 0.03) / 0.22);
+    return dominance01 * gap01;
+  }
+
   const SPIN_AXIS_WINDOW_MS = 1500;
   const SPIN_DIRECTION_WINDOW_MS = 1000;
   const SPIN_DIRECTION_ACQUIRE_BIAS = 0.1;
@@ -339,7 +348,6 @@
       const speed01 = clamp01(pick01NewOrOld(packet, "speed01", "speed"));
       const dynamics01 = clamp01(pick01NewOrOld(packet, "dynamics01", "orbit01"));
       const motionTrust01 = clamp01(pick01NewOrOld(packet, "motionTrust01", "motionTrust"));
-      const fallCatch01 = clamp01(motionTrust01 * dynamics01);
       const energy01 = clamp01(pick01NewOrOld(packet, "energy01", "energy"));
       const shake01 = Math.max(0, Number(pick01NewOrOld(packet, "shake01", "shake")) || 0);
       const locked = !!(packet && packet.locked);
@@ -359,6 +367,8 @@
               : vectorSpin.direction,
           }
         : derivedSpin;
+      const flatSpinCatch01 = flatSpinCatchFromSpin(spin);
+      const fallCatch01 = clamp01(motionTrust01 * flatSpinCatch01);
       const directionVector = pickDirVector(packet);
       const directionAngles = directionVector ? dirToYawTiltDeg(directionVector) : null;
 
@@ -403,6 +413,7 @@
           spinAxisLabel: spin.label,
           spinDirection: spin.direction,
           motionTrust01,
+          flatSpinCatch01,
           fallCatch01,
           calibOK: (packet && packet.calibOK != null) ? Number(packet.calibOK) || 0 : null,
           omegaOK: (packet && packet.omegaOK != null) ? Number(packet.omegaOK) || 0 : null,
