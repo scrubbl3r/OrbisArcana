@@ -368,7 +368,7 @@
           }
         : derivedSpin;
       const flatSpinCatch01 = flatSpinCatchFromSpin(spin);
-      const fallCatch01 = clamp01(motionTrust01 * flatSpinCatch01);
+      const fallCatch01 = flatSpinCatch01;
       const directionVector = pickDirVector(packet);
       const directionAngles = directionVector ? dirToYawTiltDeg(directionVector) : null;
 
