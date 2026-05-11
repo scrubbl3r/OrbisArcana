@@ -1,4 +1,4 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260510k";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260510l";
 import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421j";
 import {
   allDevStagingDirectionLampsOff,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260510k";
+globalThis.__orbisStagingShellRuntimeVersion = "20260510l";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -113,8 +113,8 @@ const SHELL_IMPACT_MODEL = Object.freeze({
   gravityExp: 0.5,
   dragMirrorScale: 0.5,
 });
-const SIM_FALL_DRAG_BASE = -1.7;
-const SIM_FALL_DRAG_FLAT_SPIN = 0.6;
+const SIM_FALL_DRAG_BASE = -0.2;
+const SIM_FALL_DRAG_FLAT_SPIN = 0.8;
 const simFallDragFromCatch = (fallCatch01 = 0) => (
   SIM_FALL_DRAG_BASE + ((SIM_FALL_DRAG_FLAT_SPIN - SIM_FALL_DRAG_BASE) * clamp01(fallCatch01))
 );
@@ -2806,7 +2806,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260510k",
+  moduleCacheBustV = "20260510l",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

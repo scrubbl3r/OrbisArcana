@@ -64,7 +64,8 @@ function resolveOrbFallDrag({
   clamp,
 } = {}) {
   const safeClamp = typeof clamp === "function" ? clamp : ((n, a, b) => Math.min(b, Math.max(a, n)));
-  const base = safeClamp(Number(baseDownDrag) || 0, -5, 1);
+  const configuredBase = Number(orbControl && orbControl.fallDragBase);
+  const base = safeClamp(Number.isFinite(configuredBase) ? configuredBase : (Number(baseDownDrag) || 0), -5, 1);
   const configuredTarget = Number(orbControl && orbControl.flatSpinFallDrag);
   const target = safeClamp(Number.isFinite(configuredTarget) ? configuredTarget : base, -5, 1);
   const configuredCurve = Number(orbControl && orbControl.flatSpinFallDragCurve);
@@ -82,7 +83,7 @@ function resolveOrbFallDrag({
  * @property {Object} [physState] Legacy direct orb runtime motion state (mutated in place)
  * @property {{get?:() => Object}} [orbRuntimeState] Orb runtime state owner API (preferred)
  * @property {Object} phys Orb runtime physics config
- * @property {{flatSpinFallDrag?:number, flatSpinFallDragCurve?:number}} [orbControl] Orb-specific input control tuning
+ * @property {{fallDragBase?:number, flatSpinFallDrag?:number, flatSpinFallDragCurve?:number}} [orbControl] Orb-specific input control tuning
  * @property {{vDownThr:number, graceMs:number}} shieldDescent Shield descent gate tuning
  * @property {Object} [receiverRuntime] Receiver runtime container (used for orb tick + impact application)
  * @property {Object} [orbFxSystem] Orb FX runtime system

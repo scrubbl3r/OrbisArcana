@@ -1,4 +1,4 @@
-import { ORB_CONTROL_DEFAULT } from "./orb-control-default.js?v=20260510c";
+import { ORB_CONTROL_DEFAULT } from "./orb-control-default.js?v=20260510d";
 
 export const ORB_RUNTIME_CONFIG_DEFAULT = {
   shieldDescent: {
