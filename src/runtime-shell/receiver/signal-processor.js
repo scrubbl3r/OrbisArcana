@@ -123,9 +123,9 @@
     if (!spin || !spin.label) return 0;
     const dominance = clamp01(spin.dominance);
     const gap = clamp01(spin.gap);
-    const dominance01 = clamp01((dominance - 0.48) / 0.32);
-    const gap01 = clamp01((gap - 0.03) / 0.22);
-    return dominance01 * gap01;
+    const dominance01 = clamp01((dominance - 0.38) / 0.34);
+    const gap01 = clamp01((gap - 0.005) / 0.145);
+    return Math.sqrt(dominance01 * gap01);
   }
 
   const SPIN_AXIS_WINDOW_MS = 1500;
