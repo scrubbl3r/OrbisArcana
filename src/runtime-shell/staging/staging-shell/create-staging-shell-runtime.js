@@ -1,4 +1,4 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260510g";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260510h";
 import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421j";
 import {
   allDevStagingDirectionLampsOff,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260510g";
+globalThis.__orbisStagingShellRuntimeVersion = "20260510h";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2463,7 +2463,7 @@ function formatPhoneImpulseLogLine(d) {
   const smooth = Number.isFinite(Number(d.smooth01 ?? d.smooth)) ? Number(d.smooth01 ?? d.smooth).toFixed(3) : "0.000";
   const dynamics = Number.isFinite(Number(d.dynamics01 ?? d.orbit01)) ? Number(d.dynamics01 ?? d.orbit01).toFixed(3) : "0.000";
   const trust = Number.isFinite(Number(d.motionTrust01 ?? d.motionTrust)) ? Number(d.motionTrust01 ?? d.motionTrust).toFixed(3) : "0.000";
-  const catch01 = Math.max(0, Math.min(1, Number(trust) * (1 - Number(dynamics))));
+  const catch01 = Math.max(0, Math.min(1, Number(trust) * Number(dynamics)));
   const simFallDrag = simFallDragFromCatch(catch01);
   const shake = Number.isFinite(Number(d.shake01 ?? d.shake)) ? Number(d.shake01 ?? d.shake).toFixed(3) : "0.000";
   const hz = Number.isFinite(Number(d.hz)) ? Number(d.hz).toFixed(2) : "0.00";
@@ -2806,7 +2806,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260510g",
+  moduleCacheBustV = "20260510h",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
