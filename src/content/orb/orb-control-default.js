@@ -4,5 +4,5 @@ export const ORB_CONTROL_DEFAULT = Object.freeze({
   flatSpinFallDragCurve: 1.0,
   dynamicLiftBoostStart01: 0.25, // 0.12
   dynamicLiftBoostMax: 2.5, // 1.55
-  dynamicLiftBoostCurve: 2.2, // 1.1
+  dynamicLiftBoostCurve: 1.5, // 1.1
 });
