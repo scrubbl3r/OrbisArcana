@@ -37,7 +37,7 @@ export function createTransmitterMotionCore({
 
   const DYNAMICS_WINDOW_SEC = 2.0; // 1.0
   const DYNAMICS_FLOOR = 0.5; // 0.12
-  const DYNAMICS_FULL = 0.6; // 0.7
+  const DYNAMICS_FULL = 0.4; // 0.7
   const DYNAMICS_RESPONSE_CURVE = 1.5;
   const DYNAMICS_DIVERSITY_GAIN = 1.5;
   const DYNAMICS_DIVERSITY_CURVE = 1.6;
