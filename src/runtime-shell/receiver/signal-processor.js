@@ -339,7 +339,7 @@
       const speed01 = clamp01(pick01NewOrOld(packet, "speed01", "speed"));
       const dynamics01 = clamp01(pick01NewOrOld(packet, "dynamics01", "orbit01"));
       const motionTrust01 = clamp01(pick01NewOrOld(packet, "motionTrust01", "motionTrust"));
-      const fallCatch01 = clamp01(1 - dynamics01);
+      const fallCatch01 = clamp01(motionTrust01 * (1 - dynamics01));
       const energy01 = clamp01(pick01NewOrOld(packet, "energy01", "energy"));
       const shake01 = Math.max(0, Number(pick01NewOrOld(packet, "shake01", "shake")) || 0);
       const locked = !!(packet && packet.locked);
