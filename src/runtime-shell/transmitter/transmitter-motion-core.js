@@ -40,9 +40,9 @@ export function createTransmitterMotionCore({
   const DYNAMICS_FULL = 0.7;
   const DYNAMICS_RESPONSE_CURVE = 1.0;
   const DYNAMICS_MIN_MOTION_DPS = 10.0;
-  const MOTION_TRUST_FLOOR_SPEED = 0.12;
-  const MOTION_TRUST_FULL_SPEED = 0.42;
-  const MOTION_TRUST_CURVE = 1.15;
+  const MOTION_TRUST_FLOOR_SPEED = 0.0;
+  const MOTION_TRUST_FULL_SPEED = 0.03;
+  const MOTION_TRUST_CURVE = 1.0;
   const DYNAMICS_ENERGY_FLOOR = 0.18;
   const DYNAMICS_ENERGY_CURVE = 1.0;
   const ENERGY_GAIN_ACTIVE = 1.25;

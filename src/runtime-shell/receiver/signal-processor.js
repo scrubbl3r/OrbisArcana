@@ -128,7 +128,7 @@
     return Math.sqrt(dominance01 * gap01);
   }
 
-  const FALL_CATCH_MOTION_TRUST_MIN = 0.25;
+  const FALL_CATCH_MOTION_TRUST_MIN = 0.0;
   const FALL_CATCH_MOTION_TRUST_CURVE = 1.0;
 
   function fallCatchMotionTrustGate(motionTrust01){
