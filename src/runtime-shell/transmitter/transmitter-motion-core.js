@@ -35,7 +35,7 @@ export function createTransmitterMotionCore({
   const JERK_TIGHT = 150.0; //220.0
   const JERK_LOOSE = 2600.0;
 
-  const DYNAMICS_WINDOW_SEC = 1.0;
+  const DYNAMICS_WINDOW_SEC = 2.0; // 1.0
   const DYNAMICS_FLOOR = 0.05; //0.12
   const DYNAMICS_FULL = 0.9; // 0.7
   const DYNAMICS_RESPONSE_CURVE = 1.0;
