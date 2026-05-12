@@ -30,6 +30,22 @@ export const INPUT_HUD_PANEL_TEMPLATE = `
       <div id="vSpeed" class="devStagingMeterVal">0%</div>
     </div>
 
+    <div class="devStagingLiftMixerRow" aria-label="Lift mixer">
+      <div class="devStagingLiftMixerTitle">Lift Mixer :</div>
+      <label class="devStagingLiftMixerField">
+        <span>Groove</span>
+        <input id="liftMixerGroove" type="number" inputmode="decimal" step="0.01" aria-label="Lift mixer groove" />
+      </label>
+      <label class="devStagingLiftMixerField">
+        <span>Smooth</span>
+        <input id="liftMixerSmooth" type="number" inputmode="decimal" step="0.01" aria-label="Lift mixer smooth" />
+      </label>
+      <label class="devStagingLiftMixerField">
+        <span>Speed</span>
+        <input id="liftMixerSpeed" type="number" inputmode="decimal" step="0.01" aria-label="Lift mixer speed" />
+      </label>
+    </div>
+
     <div class="devStagingBarLabel"><div>Dynamics</div><span class="devStagingDim"> </span></div>
     <div class="devStagingMeterRow">
       <div class="devStagingBar"><div id="bDynamics" class="devStagingFill" style="width:0%"></div></div>

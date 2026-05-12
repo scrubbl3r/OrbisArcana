@@ -222,6 +222,45 @@
   color: var(--text-strong);
 }
 
+.devStagingLiftMixerRow {
+  display: grid;
+  grid-template-columns: auto repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  width: 100%;
+}
+
+.devStagingLiftMixerTitle,
+.devStagingLiftMixerField span {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.devStagingLiftMixerField {
+  display: grid;
+  grid-template-columns: auto minmax(44px, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.devStagingLiftMixerField input {
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  padding: 2px 6px;
+  border: 1px solid rgba(var(--frame-rgb), .36);
+  border-radius: 4px;
+  background: rgba(var(--frame-rgb), .08);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .devStagingReadoutRow {
   display: flex;
   align-items: center;
