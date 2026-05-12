@@ -33,5 +33,8 @@ export function createInputHudPanelRefs(root) {
     gVal: $("gVal"),
     dSlider: $("dSlider"),
     dVal: $("dVal"),
+    liftMixerGroove: $("liftMixerGroove"),
+    liftMixerSmooth: $("liftMixerSmooth"),
+    liftMixerSpeed: $("liftMixerSpeed"),
   };
 }

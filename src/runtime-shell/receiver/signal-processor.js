@@ -8,11 +8,35 @@
     return Math.max(lo, Math.min(hi, v));
   }
 
-  function computeLift01(groove01, smooth01, speed01){
+  const DEFAULT_LIFT_MIXER_WEIGHTS = Object.freeze({
+    groove: 1 / 3,
+    smooth: 1 / 3,
+    speed: 1 / 3,
+  });
+
+  function normalizeLiftMixerWeights(weights){
+    const groove = clamp01(weights && weights.groove);
+    const smooth = clamp01(weights && weights.smooth);
+    const speed = clamp01(weights && weights.speed);
+    const total = groove + smooth + speed;
+    if (!(total > 1e-6)) return DEFAULT_LIFT_MIXER_WEIGHTS;
+    return {
+      groove: groove / total,
+      smooth: smooth / total,
+      speed: speed / total,
+    };
+  }
+
+  function computeLift01(groove01, smooth01, speed01, liftMixerWeights){
     const g = clamp01(groove01);
     const s = clamp01(smooth01);
     const p = clamp01(speed01);
-    return clamp01(Math.pow(Math.max(0, g * s * p), 1 / 3));
+    const weights = normalizeLiftMixerWeights(liftMixerWeights);
+    return clamp01(
+      Math.pow(g, weights.groove) *
+      Math.pow(s, weights.smooth) *
+      Math.pow(p, weights.speed)
+    );
   }
 
   function pick01NewOrOld(packet, newKey, oldKey){
@@ -327,6 +351,9 @@
     const settings = {
       shakeLampThreshold: Number(options && options.shakeLampThreshold) || 1.45,
     };
+    const getLiftMixerWeights = (options && typeof options.getLiftMixerWeights === "function")
+      ? options.getLiftMixerWeights
+      : () => DEFAULT_LIFT_MIXER_WEIGHTS;
     const spinRuntime = {
       ox: 0,
       oy: 0,
@@ -399,7 +426,7 @@
           smooth01,
           speed01,
           shake01,
-          lift01: computeLift01(groove01, smooth01, speed01),
+          lift01: computeLift01(groove01, smooth01, speed01, getLiftMixerWeights()),
           locked,
           hz,
           shakeHit,

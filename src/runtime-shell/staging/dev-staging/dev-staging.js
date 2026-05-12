@@ -8,7 +8,7 @@ import {
 } from "./dev-staging-panel.js?v=20260421j";
 import { createDevStagingRefs } from "./dev-staging-refs.js?v=20260421h";
 import { mountCameraInputPanel } from "./camera-input-panel.js?v=20260421h";
-import { mountInputHudPanel } from "./input-hud-panel.js?v=20260511a";
+import { mountInputHudPanel } from "./input-hud-panel.js?v=20260511b";
 import { mountLogPanel } from "./log-panel.js?v=20260421h";
 import { mountPathBoardPanel } from "./path-board-panel.js?v=20260421h";
 import { DEV_STAGING_TEMPLATE } from "./dev-staging-template.js?v=20260421h";
@@ -21,7 +21,10 @@ export {
   setDevStagingFatal,
 };
 
-export function mountDevStaging(root) {
+export function mountDevStaging(root, {
+  liftMixerWeights = null,
+  onLiftMixerChange = null,
+} = {}) {
   if (!root) return null;
   root.innerHTML = DEV_STAGING_TEMPLATE;
   const baseRefs = createDevStagingRefs(root);
@@ -35,6 +38,8 @@ export function mountDevStaging(root) {
     title: "Dynamics",
     mount: (host) => mountInputHudPanel(host, {
       onRequestClose: () => manager.closePanel("input-hud"),
+      liftMixerWeights,
+      onLiftMixerChange,
     }),
   });
   manager.registerPanel("log", {

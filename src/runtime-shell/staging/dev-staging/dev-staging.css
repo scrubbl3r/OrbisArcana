@@ -262,6 +262,12 @@
   font-weight: 900;
 }
 
+.devStagingLiftMixerField input.isAuto {
+  border-color: rgba(var(--frame-rgb), .24);
+  color: var(--text-muted);
+  background: rgba(var(--frame-rgb), .04);
+}
+
 .devStagingReadoutRow {
   display: flex;
   align-items: center;

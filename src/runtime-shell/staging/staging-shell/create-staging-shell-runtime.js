@@ -1,4 +1,4 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260511a";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260511b";
 import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421j";
 import {
   allDevStagingDirectionLampsOff,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260511a";
+globalThis.__orbisStagingShellRuntimeVersion = "20260511b";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -183,11 +183,40 @@ function pickShakeMetric(d, newKey = "shake01", oldKey = "shake") {
   return Number.isFinite(n) ? n : 0;
 }
 
-function computeLift01(groove01, smooth01, speed01) {
+const DEFAULT_LIFT_MIXER_WEIGHTS = Object.freeze({
+  groove: 1 / 3,
+  smooth: 1 / 3,
+  speed: 1 / 3,
+});
+
+function normalizeLiftMixerWeights(weights = {}) {
+  const groove = clamp01(weights.groove);
+  const smooth = clamp01(weights.smooth);
+  const speed = clamp01(weights.speed);
+  const total = groove + smooth + speed;
+  if (!(total > 1e-6)) return DEFAULT_LIFT_MIXER_WEIGHTS;
+  return {
+    groove: groove / total,
+    smooth: smooth / total,
+    speed: speed / total,
+  };
+}
+
+function computeLift01(groove01, smooth01, speed01, liftMixerWeights = DEFAULT_LIFT_MIXER_WEIGHTS) {
   const g = clamp01(groove01);
   const s = clamp01(smooth01);
   const p = clamp01(speed01);
-  return clamp01(Math.pow(Math.max(0, g * s * p), 1 / 3));
+  const weights = normalizeLiftMixerWeights(liftMixerWeights);
+  return clamp01(
+    Math.pow(g, weights.groove) *
+    Math.pow(s, weights.smooth) *
+    Math.pow(p, weights.speed)
+  );
+}
+
+function getShellLiftMixerWeights(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  return normalizeLiftMixerWeights(runtime && runtime.liftMixerWeights);
 }
 
 function axisToColor01(axis) {
@@ -1281,7 +1310,7 @@ function traceShellGrooveAcquisition(shellContext, data, nowMs = performance.now
     groove01: Math.round(groove01 * 1000) / 1000,
     smooth01: Math.round(smooth01 * 1000) / 1000,
     speed01: Math.round(speed01 * 1000) / 1000,
-    lift01: Math.round(computeLift01(groove01, smooth01, speed01) * 1000) / 1000,
+    lift01: Math.round(computeLift01(groove01, smooth01, speed01, getShellLiftMixerWeights(shellContext)) * 1000) / 1000,
     raw: Math.round((Number(data.g_raw) || 0) * 1000) / 1000,
     strength: Math.round((Number(data.g_lock) || 0) * 1000) / 1000,
     samples: Math.round(Number(data.g_n) || 0),
@@ -2045,7 +2074,12 @@ async function initShellReceiverHostRuntime(shellContext) {
       updateDebugReadout: () => {},
     },
     impulseAdapterHooks: {
-      computeLift01,
+      computeLift01: (groove01, smooth01, speed01) => computeLift01(
+        groove01,
+        smooth01,
+        speed01,
+        getShellLiftMixerWeights(shellContext)
+      ),
       pickShakeMetric,
     },
   });
@@ -2806,7 +2840,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260511a",
+  moduleCacheBustV = "20260511b",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
@@ -2834,7 +2868,13 @@ export async function createStagingShellRuntime({
   const gameStageLevel = DEFAULT_GAME_STAGE_LEVEL;
   const perfTrace = createPerfTrace();
   perfTrace.installGlobal(rootDocument && rootDocument.defaultView ? rootDocument.defaultView : window);
-  const devStagingView = devRoot ? mountDevStaging(devRoot) : null;
+  const liftMixerWeights = { ...DEFAULT_LIFT_MIXER_WEIGHTS };
+  const devStagingView = devRoot ? mountDevStaging(devRoot, {
+    liftMixerWeights,
+    onLiftMixerChange: (nextWeights = {}) => {
+      Object.assign(liftMixerWeights, normalizeLiftMixerWeights(nextWeights));
+    },
+  }) : null;
   const orbStageView = orbRoot ? renderOrbStage(orbRoot, { level: orbStageLevel }) : null;
   const gameStageView = gameRoot
     ? renderGameStage(gameRoot, {
@@ -2883,6 +2923,7 @@ export async function createStagingShellRuntime({
       perfTrace,
     });
     shellContext.bootStatus = bootStatus;
+    shellContext.runtime.liftMixerWeights = liftMixerWeights;
     syncActiveShellStage(shellContext);
     if (modeController && typeof modeController.subscribe === "function") {
       let previousModeState = modeController.getState();
@@ -2923,7 +2964,9 @@ export async function createStagingShellRuntime({
       shellContext.runtime.orbColorRuntime.reset(true);
     }
     shellContext.runtime.signalProcessor = (typeof window.createSignalProcessor === "function")
-      ? window.createSignalProcessor({})
+      ? window.createSignalProcessor({
+          getLiftMixerWeights: () => getShellLiftMixerWeights(shellContext),
+        })
       : null;
     shellContext.runtime.motionStore = (typeof window.createMotionStore === "function")
       ? window.createMotionStore()
