@@ -1,3 +1,5 @@
+import { RECEIVER_CONFIG_DEFAULT } from "./receiver-config-default.js?v=20260511a";
+
 (function(global){
   function clamp01(x){
     x = Number(x);
@@ -8,11 +10,7 @@
     return Math.max(lo, Math.min(hi, v));
   }
 
-  const DEFAULT_LIFT_MIXER_WEIGHTS = Object.freeze({
-    groove: 1 / 3,
-    smooth: 1 / 3,
-    speed: 1 / 3,
-  });
+  const DEFAULT_LIFT_MIXER_WEIGHTS = RECEIVER_CONFIG_DEFAULT.liftMixer.weights;
 
   function normalizeLiftMixerWeights(weights){
     const groove = clamp01(weights && weights.groove);

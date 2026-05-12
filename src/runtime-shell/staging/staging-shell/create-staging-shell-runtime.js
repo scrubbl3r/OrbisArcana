@@ -1,4 +1,5 @@
 import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260511c";
+import { RECEIVER_CONFIG_DEFAULT } from "../../receiver/receiver-config-default.js?v=20260511a";
 import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421j";
 import {
   allDevStagingDirectionLampsOff,
@@ -74,7 +75,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260511c";
+globalThis.__orbisStagingShellRuntimeVersion = "20260511d";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -183,11 +184,7 @@ function pickShakeMetric(d, newKey = "shake01", oldKey = "shake") {
   return Number.isFinite(n) ? n : 0;
 }
 
-const DEFAULT_LIFT_MIXER_WEIGHTS = Object.freeze({
-  groove: 1 / 3,
-  smooth: 1 / 3,
-  speed: 1 / 3,
-});
+const DEFAULT_LIFT_MIXER_WEIGHTS = RECEIVER_CONFIG_DEFAULT.liftMixer.weights;
 
 function normalizeLiftMixerWeights(weights = {}) {
   const groove = clamp01(weights.groove);
@@ -2840,7 +2837,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260511c",
+  moduleCacheBustV = "20260511d",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
