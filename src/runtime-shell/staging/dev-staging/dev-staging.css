@@ -223,12 +223,13 @@
 }
 
 .devStagingLiftMixerRow {
-  display: grid;
-  grid-template-columns: auto repeat(3, minmax(0, 1fr));
+  display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 8px;
   margin: 0 0 12px;
   width: 100%;
+  min-width: 0;
 }
 
 .devStagingLiftMixerTitle,
@@ -240,15 +241,15 @@
 }
 
 .devStagingLiftMixerField {
-  display: grid;
-  grid-template-columns: auto minmax(30px, 0.67fr);
+  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
 .devStagingLiftMixerField input {
-  width: 100%;
+  width: 44px;
   min-width: 0;
   height: 24px;
   padding: 2px 6px;
