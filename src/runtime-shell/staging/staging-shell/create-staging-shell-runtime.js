@@ -1,4 +1,4 @@
-import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260511b";
+import { mountDevStaging } from "../dev-staging/dev-staging.js?v=20260511c";
 import { createDevStagingPanelElementsFromView } from "../dev-staging/dev-staging-panel.js?v=20260421j";
 import {
   allDevStagingDirectionLampsOff,
@@ -74,7 +74,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260511b";
+globalThis.__orbisStagingShellRuntimeVersion = "20260511c";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2840,7 +2840,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260511b",
+  moduleCacheBustV = "20260511c",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
@@ -2871,6 +2871,7 @@ export async function createStagingShellRuntime({
   const liftMixerWeights = { ...DEFAULT_LIFT_MIXER_WEIGHTS };
   const devStagingView = devRoot ? mountDevStaging(devRoot, {
     liftMixerWeights,
+    getLiftMixerWeights: () => liftMixerWeights,
     onLiftMixerChange: (nextWeights = {}) => {
       Object.assign(liftMixerWeights, normalizeLiftMixerWeights(nextWeights));
     },

@@ -35,6 +35,11 @@ function normalizePercentWeights(weights = {}) {
   return { groove: 33.33, smooth: 33.33, speed: 33.34 };
 }
 
+function percentWeightSignature(weights = {}) {
+  const normalized = normalizePercentWeights(weights);
+  return LIFT_MIXER_KEYS.map((key) => formatPercent(normalized[key])).join("|");
+}
+
 function mountLiftMixer(refs, {
   initialWeights = null,
   onChange = null,
@@ -47,6 +52,7 @@ function mountLiftMixer(refs, {
 
   let manualKeys = ["groove", "smooth"];
   let values = normalizePercentWeights(initialWeights || {});
+  let externalSignature = percentWeightSignature(values);
   let updating = false;
 
   function derivedKey() {
@@ -55,6 +61,11 @@ function mountLiftMixer(refs, {
 
   function publish() {
     if (typeof onChange !== "function") return;
+    externalSignature = percentWeightSignature({
+      groove: values.groove / 100,
+      smooth: values.smooth / 100,
+      speed: values.speed / 100,
+    });
     onChange({
       groove: values.groove / 100,
       smooth: values.smooth / 100,
@@ -99,10 +110,24 @@ function mountLiftMixer(refs, {
 
   render();
   publish();
-  return { getValues: () => ({ ...values }) };
+  return {
+    getValues: () => ({ ...values }),
+    syncExternal(nextWeights = {}) {
+      const nextSignature = percentWeightSignature(nextWeights);
+      if (nextSignature === externalSignature) return;
+      values = normalizePercentWeights(nextWeights);
+      externalSignature = nextSignature;
+      render();
+    },
+  };
 }
 
-export function mountInputHudPanel(host, { onRequestClose = null, liftMixerWeights = null, onLiftMixerChange = null } = {}) {
+export function mountInputHudPanel(host, {
+  onRequestClose = null,
+  liftMixerWeights = null,
+  getLiftMixerWeights = null,
+  onLiftMixerChange = null,
+} = {}) {
   if (!host) return null;
   host.innerHTML = INPUT_HUD_PANEL_TEMPLATE;
   const refs = createInputHudPanelRefs(host);
@@ -121,6 +146,9 @@ export function mountInputHudPanel(host, { onRequestClose = null, liftMixerWeigh
     refs,
     liftMixer,
     render(vm) {
+      if (liftMixer && typeof liftMixer.syncExternal === "function" && typeof getLiftMixerWeights === "function") {
+        liftMixer.syncExternal(getLiftMixerWeights());
+      }
       renderDevStagingHud(refs, vm);
     },
     reset() {
