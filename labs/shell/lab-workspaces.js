@@ -9,6 +9,11 @@ export const LAB_WORKSPACES = Object.freeze([
     label: "World Workshop",
     href: "../world-workshop/world-workshop.html",
   }),
+  Object.freeze({
+    id: "enemy-workshop",
+    label: "Enemy Workshop",
+    href: "../enemy-workshop/enemy-workshop.html",
+  }),
 ]);
 
 export function renderLabWorkspaceNav({

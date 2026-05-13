@@ -10,6 +10,8 @@ Experimental authoring space for game content before production integration.
   effect-like world visuals.
 - `world-workshop/` owns world object authoring for props, spawn anchors,
   scenery pieces, generators, and object inspection previews.
+- `enemy-workshop/` owns enemy archetype authoring for actor previews, behavior
+  tuning, personality ranges, and future publish contracts.
 - `sfx/` remains the future sound authoring lane until it becomes a first-class
   workspace.
 

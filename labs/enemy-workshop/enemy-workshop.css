@@ -1,0 +1,294 @@
+:root {
+  --g: var(--text-strong);
+  --bg: rgb(5, 6, 7);
+  --panel: rgba(10, 12, 13, 0.92);
+  --border: var(--frame);
+  --lab-workspace-nav-muted: var(--text-muted);
+  --lab-workspace-nav-active: var(--text-strong);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 540px at 54% 38%, rgba(18, 31, 26, 0.38), rgba(0, 0, 0, 0) 58%),
+    radial-gradient(1200px 700px at 50% 35%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.48) 57%, rgba(0, 0, 0, 0.78) 100%);
+  opacity: 0.96;
+  z-index: 0;
+}
+
+.enemyWorkshopShell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  margin: 22px auto;
+  padding: 0 16px 48px;
+  gap: 16px;
+  align-items: start;
+}
+
+.studioBar,
+.card {
+  background: var(--panel);
+  border: 1px solid var(--frame);
+  border-radius: 16px;
+  box-shadow: 0 18px 80px rgba(0, 0, 0, 0.45);
+}
+
+.studioBar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+}
+
+.studioBarGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.studioWorkspaceGroup {
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.studioBarLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.enemyWorkshopTitle {
+  color: var(--text-strong);
+  font-size: 16px;
+  font-weight: 1000;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.enemyWorkshopSelectGroup {
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.enemySelect {
+  min-width: 220px;
+  color: var(--text);
+  background: rgba(var(--frame-rgb), 0.12);
+  border: 1px solid var(--frame);
+  border-radius: 10px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.card {
+  padding: 14px 14px 16px;
+  overflow: hidden;
+}
+
+.enemyViewport {
+  position: relative;
+  height: clamp(420px, 62vh, 720px);
+  border: 1px solid var(--frame);
+  border-radius: 16px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    #020303;
+  background-size: 34px 34px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.enemyPreviewRoot {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.gnatPreviewScene {
+  position: relative;
+  width: min(72vmin, 640px);
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+.gnatPreviewAura {
+  position: absolute;
+  inset: 20%;
+  border: 1px solid rgba(164, 224, 173, 0.18);
+  border-radius: 50%;
+  box-shadow:
+    0 0 60px rgba(88, 186, 124, 0.12),
+    inset 0 0 80px rgba(100, 173, 132, 0.07);
+}
+
+.gnatPreviewTarget {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(222, 235, 216, 0.42);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 24px rgba(178, 222, 181, 0.22);
+}
+
+.gnatPreviewDot {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: calc(7px * var(--s));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgb(209, 230, 190);
+  opacity: var(--o);
+  box-shadow: 0 0 8px rgba(209, 230, 190, 0.62);
+  transform: translate(-50%, -50%);
+  animation: gnatDrift var(--d) ease-in-out var(--delay) infinite alternate;
+}
+
+@keyframes gnatDrift {
+  from {
+    translate: calc(var(--dx) * -0.44) calc(var(--dy) * -0.52);
+  }
+
+  to {
+    translate: var(--dx) var(--dy);
+  }
+}
+
+.viewportHud {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  color: var(--text-muted);
+  pointer-events: none;
+  padding: 18px;
+}
+
+.viewportHud strong {
+  display: block;
+  color: var(--text-strong);
+  font-size: 12px;
+  line-height: 1.05;
+  text-align: center;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.viewportHud span {
+  display: block;
+  margin-top: 6px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.62;
+}
+
+.enemyControls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.controlPane {
+  min-height: 130px;
+  padding: 12px;
+  border: 1px solid rgba(var(--frame-rgb), 0.18);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.controlPane h2 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-strong);
+}
+
+.controlPane p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 800;
+}
+
+@media (max-width: 960px) {
+  .studioBar {
+    align-items: stretch;
+  }
+
+  .enemyControls {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .studioBarGroup,
+  .enemyWorkshopSelectGroup {
+    width: 100%;
+  }
+
+  .enemyWorkshopSelectGroup {
+    flex-wrap: wrap;
+  }
+
+  .enemySelect {
+    flex: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    margin-top: 12px;
+    padding-inline: 10px;
+  }
+
+  .enemyViewport {
+    height: clamp(360px, 66vh, 620px);
+    border-radius: 12px;
+  }
+}

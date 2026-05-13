@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Enemy Workshop</title>
+  <link rel="stylesheet" href="../shell/lab-workspaces.css?v=20260425a" />
+  <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260410-vfxlab-semantics" />
+  <link rel="stylesheet" href="./enemy-workshop.css?v=20260513a" />
+</head>
+<body>
+  <main class="enemyWorkshopShell wrap">
+    <header class="studioBar enemyWorkshopTopbar">
+      <div class="studioBarGroup studioWorkspaceGroup">
+        <strong class="enemyWorkshopTitle">ENEMY WORKSHOP</strong>
+        <nav data-lab-workspace-nav></nav>
+      </div>
+      <div class="studioBarGroup enemyWorkshopSelectGroup">
+        <label class="studioBarLabel" for="enemySelect">enemy:</label>
+        <select id="enemySelect" class="enemySelect" data-enemy-workshop-enemy-select aria-label="Enemy"></select>
+      </div>
+    </header>
+
+    <section class="card enemyViewportCard" aria-label="Enemy viewport">
+      <div class="enemyViewport stage">
+        <div class="enemyPreviewRoot" data-enemy-workshop-preview-root></div>
+        <div class="viewportHud">
+          <div>
+            <strong data-enemy-workshop-viewport-label>Enemy</strong>
+            <span data-enemy-workshop-meta></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card enemyControls" aria-label="Enemy controls">
+      <article class="controlPane">
+        <h2>Behavior</h2>
+        <p data-enemy-workshop-behavior-readout>Pending</p>
+      </article>
+      <article class="controlPane">
+        <h2>Personality</h2>
+        <p data-enemy-workshop-personality-readout>Pending</p>
+      </article>
+      <article class="controlPane">
+        <h2>Runtime</h2>
+        <p data-enemy-workshop-runtime-readout>Pending</p>
+      </article>
+    </section>
+  </main>
+  <script type="module" src="./enemy-workshop.js?v=20260513a"></script>
+</body>
+</html>

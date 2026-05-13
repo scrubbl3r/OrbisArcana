@@ -1,0 +1,31 @@
+export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
+  Object.freeze({
+    id: "gnat-swarm",
+    label: "Gnat Swarm",
+    kind: "swarm",
+    category: "enemy",
+    archetype: "gnat-swarm",
+    previewKey: "gnat-swarm",
+    preview: "enemy-swarm-preview",
+    status: "exemplar",
+    memberLabel: "gnat",
+    defaults: Object.freeze({
+      count: 24,
+      spawnRadiusBo: 2.2,
+      personalRadiusBo: 0.18,
+      speedBoPerSec: 1.35,
+      jitterBo: 0.42,
+      cohesion: 0.54,
+      curiosity: 0.62,
+      aggression: 0.18,
+    }),
+    personalityRanges: Object.freeze({
+      scale: Object.freeze([0.72, 1.28]),
+      speed: Object.freeze([0.72, 1.34]),
+      jitter: Object.freeze([0.55, 1.55]),
+      orbitBias: Object.freeze([-1, 1]),
+      followLag: Object.freeze([0.12, 0.76]),
+      verticalDrift: Object.freeze([0.35, 1.45]),
+    }),
+  }),
+]);
