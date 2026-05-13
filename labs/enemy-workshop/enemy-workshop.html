@@ -69,32 +69,18 @@
         </section>
 
         <section class="controlGroup">
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="gnatWanderControls">Wander</button>
-          <div id="gnatWanderControls" class="controlGroupBody">
-            <div class="paramFieldRows">
-              <label class="paramFieldRow">Chance/min <input class="paramFieldInput" type="number" min="0" max="120" step="1" data-gnat-setting="wander.chancePerMinute" /></label>
-              <label class="paramFieldRow">Cooldown min sec <input class="paramFieldInput" type="number" min="0" max="60" step="0.1" data-gnat-setting="wander.cooldownMinSec" /></label>
-              <label class="paramFieldRow">Cooldown max sec <input class="paramFieldInput" type="number" min="0" max="120" step="0.1" data-gnat-setting="wander.cooldownMaxSec" /></label>
-              <label class="paramFieldRow">Range min BO <input class="paramFieldInput" type="number" min="0.2" max="20" step="0.1" data-gnat-setting="wander.rangeMinBo" /></label>
-              <label class="paramFieldRow">Range max BO <input class="paramFieldInput" type="number" min="0.2" max="24" step="0.1" data-gnat-setting="wander.rangeMaxBo" /></label>
-              <label class="paramFieldRow">Outbound bias <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-setting="wander.outboundBias" /></label>
-              <label class="paramFieldRow">Arrival radius BO <input class="paramFieldInput" type="number" min="0.05" max="4" step="0.05" data-gnat-setting="wander.arrivalRadiusBo" /></label>
-              <label class="paramFieldRow">Return bias <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-setting="wander.returnBias" /></label>
-              <label class="paramFieldRow">Return speed x <input class="paramFieldInput" type="number" min="0.1" max="4" step="0.05" data-gnat-setting="wander.returnSpeedMultiplier" /></label>
-              <label class="paramFieldRow">Linger min sec <input class="paramFieldInput" type="number" min="0" max="30" step="0.1" data-gnat-setting="wander.lingerMinSec" /></label>
-              <label class="paramFieldRow">Linger max sec <input class="paramFieldInput" type="number" min="0" max="60" step="0.1" data-gnat-setting="wander.lingerMaxSec" /></label>
-            </div>
-            <p data-enemy-workshop-spawn-readout>Pending</p>
-          </div>
-        </section>
-
-        <section class="controlGroup">
           <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="gnatPersonalityControls">Personality</button>
           <div id="gnatPersonalityControls" class="controlGroupBody">
             <div class="rangeFieldRows">
               <label class="rangeFieldRow">Speed <input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.speed.0" /><input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.speed.1" /></label>
-              <label class="rangeFieldRow">Wander chance <input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.wanderChance.0" /><input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.wanderChance.1" /></label>
-              <label class="rangeFieldRow">Wander range <input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.wanderRange.0" /><input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.wanderRange.1" /></label>
+              <label class="rangeFieldRow">Chance/min <input class="paramFieldInput" type="number" min="0" max="120" step="1" data-gnat-range="personalityRanges.wanderChancePerMinute.0" /><input class="paramFieldInput" type="number" min="0" max="120" step="1" data-gnat-range="personalityRanges.wanderChancePerMinute.1" /></label>
+              <label class="rangeFieldRow">Cooldown sec <input class="paramFieldInput" type="number" min="0" max="60" step="0.1" data-gnat-range="personalityRanges.wanderCooldownSec.0" /><input class="paramFieldInput" type="number" min="0" max="120" step="0.1" data-gnat-range="personalityRanges.wanderCooldownSec.1" /></label>
+              <label class="rangeFieldRow">Range BO <input class="paramFieldInput" type="number" min="0.2" max="20" step="0.1" data-gnat-range="personalityRanges.wanderRangeBo.0" /><input class="paramFieldInput" type="number" min="0.2" max="24" step="0.1" data-gnat-range="personalityRanges.wanderRangeBo.1" /></label>
+              <label class="rangeFieldRow">Outbound bias <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-range="personalityRanges.outboundBias.0" /><input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-range="personalityRanges.outboundBias.1" /></label>
+              <label class="rangeFieldRow">Arrival BO <input class="paramFieldInput" type="number" min="0.05" max="4" step="0.05" data-gnat-range="personalityRanges.arrivalRadiusBo.0" /><input class="paramFieldInput" type="number" min="0.05" max="4" step="0.05" data-gnat-range="personalityRanges.arrivalRadiusBo.1" /></label>
+              <label class="rangeFieldRow">Return bias <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-range="personalityRanges.returnBias.0" /><input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-range="personalityRanges.returnBias.1" /></label>
+              <label class="rangeFieldRow">Return speed x <input class="paramFieldInput" type="number" min="0" max="4" step="0.05" data-gnat-range="personalityRanges.returnSpeedMultiplier.0" /><input class="paramFieldInput" type="number" min="0" max="4" step="0.05" data-gnat-range="personalityRanges.returnSpeedMultiplier.1" /></label>
+              <label class="rangeFieldRow">Linger sec <input class="paramFieldInput" type="number" min="0" max="30" step="0.1" data-gnat-range="personalityRanges.lingerSec.0" /><input class="paramFieldInput" type="number" min="0" max="60" step="0.1" data-gnat-range="personalityRanges.lingerSec.1" /></label>
               <label class="rangeFieldRow">Awareness <input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.awareness.0" /><input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.awareness.1" /></label>
               <label class="rangeFieldRow">Aggression <input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.aggression.0" /><input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.aggression.1" /></label>
             </div>

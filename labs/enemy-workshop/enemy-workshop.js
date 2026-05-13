@@ -24,7 +24,6 @@ import {
   formatEnemyWorkshopMeta,
   formatEnemyWorkshopPersonalityReadout,
   formatEnemyWorkshopRuntimeReadout,
-  formatEnemyWorkshopSpawnReadout,
 } from "./enemy-workshop-readouts.js?v=20260513a";
 
 const DRAFT_STORAGE_KEY = "orbis.enemyWorkshop.drafts.v1";
@@ -97,7 +96,6 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   const previewRoot = root.querySelector("[data-enemy-workshop-preview-root]");
   const behaviorReadout = root.querySelector("[data-enemy-workshop-behavior-readout]");
   const personalityReadout = root.querySelector("[data-enemy-workshop-personality-readout]");
-  const spawnReadout = root.querySelector("[data-enemy-workshop-spawn-readout]");
   const runtimeReadout = root.querySelector("[data-enemy-workshop-runtime-readout]");
   const actionStatus = root.querySelector("[data-enemy-workshop-action-status]");
   const projectIo = createEnemyProjectIo({
@@ -123,7 +121,6 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
       previewRoot,
       behaviorReadout,
       personalityReadout,
-      spawnReadout,
       runtimeReadout,
       previewRegistry,
       gnatSettingsRef,
@@ -146,7 +143,6 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
         previewRoot,
         behaviorReadout,
         personalityReadout,
-        spawnReadout,
         runtimeReadout,
         previewRegistry,
         gnatSettingsRef,
@@ -161,7 +157,6 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
     previewRoot,
     behaviorReadout,
     personalityReadout,
-    spawnReadout,
     runtimeReadout,
     previewRegistry,
     gnatSettingsRef,
@@ -174,7 +169,6 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
     previewRoot,
     behaviorReadout,
     personalityReadout,
-    spawnReadout,
     runtimeReadout,
     previewRegistry,
     gnatSettingsRef,
@@ -399,7 +393,6 @@ function updateSelection({
   previewRoot = null,
   behaviorReadout = null,
   personalityReadout = null,
-  spawnReadout = null,
   runtimeReadout = null,
   previewRegistry = null,
   gnatSettingsRef = null,
@@ -419,7 +412,6 @@ function updateSelection({
   }
   if (behaviorReadout) behaviorReadout.textContent = formatEnemyWorkshopBehaviorReadout(gnatSettings);
   if (personalityReadout) personalityReadout.textContent = formatEnemyWorkshopPersonalityReadout(gnatSettings);
-  if (spawnReadout) spawnReadout.textContent = formatEnemyWorkshopSpawnReadout(gnatSettings);
   if (runtimeReadout) runtimeReadout.textContent = formatEnemyWorkshopRuntimeReadout(surface);
 }
 

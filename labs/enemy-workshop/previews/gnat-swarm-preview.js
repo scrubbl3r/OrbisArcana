@@ -14,6 +14,14 @@ function rangeMidpoint(range = [], fallback = 1) {
   return (min + max) / 2;
 }
 
+function rangePair(range = [], fallback = [0, 1]) {
+  if (!Array.isArray(range) || range.length < 2) return fallback.slice();
+  const min = Number(range[0]);
+  const max = Number(range[1]);
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return fallback.slice();
+  return min <= max ? [min, max] : [max, min];
+}
+
 function randomInCircle(radius = 1) {
   const angle = Math.random() * Math.PI * 2;
   const r = Math.sqrt(Math.random()) * radius;
@@ -69,11 +77,16 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const wander = gnat.wander || {};
   const personalityRanges = gnat.personalityRanges || {};
   const speedMultiplier = clampNumber(rangeMidpoint(personalityRanges.speed, 1), 1, 0.1, 4);
-  const wanderChanceMultiplier = clampNumber(rangeMidpoint(personalityRanges.wanderChance, 1), 1, 0, 4);
-  const wanderRangeMultiplier = clampNumber(rangeMidpoint(personalityRanges.wanderRange, 1), 1, 0.1, 4);
+  const legacyWanderChanceMultiplier = clampNumber(rangeMidpoint(personalityRanges.wanderChance, 1), 1, 0, 4);
+  const legacyWanderRangeMultiplier = clampNumber(rangeMidpoint(personalityRanges.wanderRange, 1), 1, 0.1, 4);
   const idleRadiusBo = clampNumber(idle.idleRadiusBo, 2.2, 0.2, 12);
-  const wanderMinBo = clampNumber(wander.rangeMinBo, 2.8, 0.2, 20) * wanderRangeMultiplier;
-  const wanderMaxBo = Math.max(idleRadiusBo, wanderMinBo, clampNumber(wander.rangeMaxBo, 5.8, 0.4, 20) * wanderRangeMultiplier);
+  const legacyWanderRangeBo = [
+    clampNumber(wander.rangeMinBo, 2.8, 0.2, 20) * legacyWanderRangeMultiplier,
+    clampNumber(wander.rangeMaxBo, 5.8, 0.4, 20) * legacyWanderRangeMultiplier,
+  ];
+  const wanderRangeBo = rangePair(personalityRanges.wanderRangeBo, legacyWanderRangeBo);
+  const wanderMinBo = clampNumber(wanderRangeBo[0], 2.8, 0.2, 20);
+  const wanderMaxBo = Math.max(idleRadiusBo, wanderMinBo, clampNumber(wanderRangeBo[1], 5.8, 0.4, 24));
   const scale = 42;
   const idleRadiusPx = Math.round(idleRadiusBo * scale);
   const wanderMinPx = Math.round(wanderMinBo * scale);
@@ -87,15 +100,23 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const elasticJitterHz = clampNumber(idle.elasticJitterHz, 9, 0, 40);
   const retargetMinSec = clampNumber(idle.targetRetargetMinSec, 0.28, 0.05, 8);
   const retargetMaxSec = Math.max(retargetMinSec, clampNumber(idle.targetRetargetMaxSec, 1.25, 0.05, 16));
-  const wanderChancePerSec = clampNumber(wander.chancePerMinute, 16, 0, 120) * wanderChanceMultiplier / 60;
-  const cooldownMinSec = clampNumber(wander.cooldownMinSec, 1.4, 0, 60);
-  const cooldownMaxSec = Math.max(cooldownMinSec, clampNumber(wander.cooldownMaxSec, 5.5, 0, 120));
-  const outboundBias = clampNumber(wander.outboundBias, 0.64, 0, 1);
-  const arrivalRadiusPx = clampNumber(wander.arrivalRadiusBo, 0.34, 0.05, 4) * scale;
-  const returnBias = clampNumber(wander.returnBias, 0.82, 0, 1);
-  const returnSpeedMultiplier = clampNumber(wander.returnSpeedMultiplier, 1.12, 0.1, 4);
-  const lingerMinSec = clampNumber(wander.lingerMinSec, 0.4, 0, 30);
-  const lingerMaxSec = Math.max(lingerMinSec, clampNumber(wander.lingerMaxSec, 2.2, 0, 60));
+  const wanderChancePerMinute = clampNumber(
+    rangeMidpoint(personalityRanges.wanderChancePerMinute, clampNumber(wander.chancePerMinute, 16, 0, 120) * legacyWanderChanceMultiplier),
+    16,
+    0,
+    120
+  );
+  const cooldownSec = rangePair(personalityRanges.wanderCooldownSec, [wander.cooldownMinSec, wander.cooldownMaxSec]);
+  const lingerSec = rangePair(personalityRanges.lingerSec, [wander.lingerMinSec, wander.lingerMaxSec]);
+  const wanderChancePerSec = wanderChancePerMinute / 60;
+  const cooldownMinSec = clampNumber(cooldownSec[0], 1.4, 0, 60);
+  const cooldownMaxSec = Math.max(cooldownMinSec, clampNumber(cooldownSec[1], 5.5, 0, 120));
+  const outboundBias = clampNumber(rangeMidpoint(personalityRanges.outboundBias, wander.outboundBias), 0.64, 0, 1);
+  const arrivalRadiusPx = clampNumber(rangeMidpoint(personalityRanges.arrivalRadiusBo, wander.arrivalRadiusBo), 0.34, 0.05, 4) * scale;
+  const returnBias = clampNumber(rangeMidpoint(personalityRanges.returnBias, wander.returnBias), 0.82, 0, 1);
+  const returnSpeedMultiplier = clampNumber(rangeMidpoint(personalityRanges.returnSpeedMultiplier, wander.returnSpeedMultiplier), 1.12, 0.1, 4);
+  const lingerMinSec = clampNumber(lingerSec[0], 0.4, 0, 30);
+  const lingerMaxSec = Math.max(lingerMinSec, clampNumber(lingerSec[1], 2.2, 0, 60));
   const outboundAnchorStep = 0.08 + outboundBias * 0.28;
   const returnAnchorStep = 0.18 + returnBias * 0.44;
   const outboundRerollRadiusPx = Math.max(arrivalRadiusPx * 1.5, idleRadiusPx * (0.75 - outboundBias * 0.35));
@@ -229,7 +250,6 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     wanderMinPx,
     wanderRadiusPx,
     speedMultiplier,
-    wanderChanceMultiplier,
-    wanderRangeMultiplier,
+    wanderChancePerMinute,
   });
 }
