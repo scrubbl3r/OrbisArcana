@@ -27,6 +27,12 @@ export function formatEnemyWorkshopPersonalityReadout(surface = null) {
   return `speed ${rangeText(ranges.speed)} / jitter ${rangeText(ranges.jitter)} / orbit ${rangeText(ranges.orbitBias)} / lag ${rangeText(ranges.followLag)} / drift ${rangeText(ranges.verticalDrift)}`;
 }
 
+export function formatEnemyWorkshopSpawnReadout(surface = null) {
+  if (!surface) return "Pending";
+  const defaults = surface.defaults || {};
+  return `spawn radius ${roundMetric(defaults.spawnRadiusBo)} BO / personal radius ${roundMetric(defaults.personalRadiusBo)} BO / default speed ${roundMetric(defaults.speedBoPerSec)} BO/s / jitter ${roundMetric(defaults.jitterBo)} BO`;
+}
+
 export function formatEnemyWorkshopRuntimeReadout(surface = null) {
   if (!surface) return "Pending";
   return `content target src/content/enemies/${String(surface.archetype || surface.id || "enemy")}.js / runtime target src/game-runtime/enemies/ / level spawns remain level-owned`;

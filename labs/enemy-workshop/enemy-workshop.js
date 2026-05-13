@@ -6,6 +6,7 @@ import {
   formatEnemyWorkshopMeta,
   formatEnemyWorkshopPersonalityReadout,
   formatEnemyWorkshopRuntimeReadout,
+  formatEnemyWorkshopSpawnReadout,
 } from "./enemy-workshop-readouts.js?v=20260513a";
 
 function surfaceOptionMarkup(surface = {}) {
@@ -20,6 +21,7 @@ function surfaceIdFromHash({ location = globalThis.location } = {}) {
 export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   if (!root) return;
   renderLabWorkspaceNav({ root, currentWorkspaceId: "enemy-workshop" });
+  initCollapsibleControlGroups(root);
   const previewRegistry = createEnemyWorkshopPreviewRegistry();
   const select = root.querySelector("[data-enemy-workshop-enemy-select]");
   const meta = root.querySelector("[data-enemy-workshop-meta]");
@@ -27,7 +29,10 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   const previewRoot = root.querySelector("[data-enemy-workshop-preview-root]");
   const behaviorReadout = root.querySelector("[data-enemy-workshop-behavior-readout]");
   const personalityReadout = root.querySelector("[data-enemy-workshop-personality-readout]");
+  const spawnReadout = root.querySelector("[data-enemy-workshop-spawn-readout]");
   const runtimeReadout = root.querySelector("[data-enemy-workshop-runtime-readout]");
+  const actionStatus = root.querySelector("[data-enemy-workshop-action-status]");
+  bindTopbarActions({ root, actionStatus });
   if (select) {
     select.innerHTML = ENEMY_WORKSHOP_SURFACES.map(surfaceOptionMarkup).join("");
     const hashSurfaceId = surfaceIdFromHash();
@@ -41,6 +46,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
       previewRoot,
       behaviorReadout,
       personalityReadout,
+      spawnReadout,
       runtimeReadout,
       previewRegistry,
     }));
@@ -52,9 +58,48 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
     previewRoot,
     behaviorReadout,
     personalityReadout,
+    spawnReadout,
     runtimeReadout,
     previewRegistry,
   });
+}
+
+function initCollapsibleControlGroups(root = globalThis.document) {
+  if (!root || typeof root.querySelectorAll !== "function") return;
+  const findBody = (toggle) => {
+    const controlsId = toggle ? toggle.getAttribute("aria-controls") : "";
+    if (!controlsId) return null;
+    if (typeof root.getElementById === "function") return root.getElementById(controlsId);
+    return globalThis.document && typeof globalThis.document.getElementById === "function"
+      ? globalThis.document.getElementById(controlsId)
+      : null;
+  };
+  root.querySelectorAll("[data-control-toggle]").forEach((toggle) => {
+    const body = findBody(toggle);
+    const expanded = toggle.getAttribute("aria-expanded") !== "false";
+    if (body) body.hidden = !expanded;
+  });
+  root.addEventListener("click", (event) => {
+    const toggle = event.target && event.target.closest ? event.target.closest("[data-control-toggle]") : null;
+    if (!toggle || !root.contains(toggle)) return;
+    const body = findBody(toggle);
+    const expanded = toggle.getAttribute("aria-expanded") !== "false";
+    toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+    if (body) body.hidden = expanded;
+  });
+}
+
+function bindTopbarActions({ root = null, actionStatus = null } = {}) {
+  if (!root) return;
+  const setStatus = (message) => {
+    if (actionStatus) actionStatus.textContent = message;
+  };
+  const saveBtn = root.querySelector("[data-enemy-workshop-save]");
+  const connectBtn = root.querySelector("[data-enemy-workshop-connect]");
+  const publishBtn = root.querySelector("[data-enemy-workshop-publish]");
+  if (saveBtn) saveBtn.addEventListener("click", () => setStatus("Saved draft"));
+  if (connectBtn) connectBtn.addEventListener("click", () => setStatus("Project connection pending"));
+  if (publishBtn) publishBtn.addEventListener("click", () => setStatus("Publish pending"));
 }
 
 function updateSelection({
@@ -64,6 +109,7 @@ function updateSelection({
   previewRoot = null,
   behaviorReadout = null,
   personalityReadout = null,
+  spawnReadout = null,
   runtimeReadout = null,
   previewRegistry = null,
 } = {}) {
@@ -76,6 +122,7 @@ function updateSelection({
   }
   if (behaviorReadout) behaviorReadout.textContent = formatEnemyWorkshopBehaviorReadout(surface);
   if (personalityReadout) personalityReadout.textContent = formatEnemyWorkshopPersonalityReadout(surface);
+  if (spawnReadout) spawnReadout.textContent = formatEnemyWorkshopSpawnReadout(surface);
   if (runtimeReadout) runtimeReadout.textContent = formatEnemyWorkshopRuntimeReadout(surface);
 }
 

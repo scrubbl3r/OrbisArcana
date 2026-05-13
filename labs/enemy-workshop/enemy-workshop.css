@@ -6,6 +6,8 @@
   --lab-workspace-nav-muted: var(--text-muted);
   --lab-workspace-nav-active: var(--text-strong);
   --enemy-workshop-viewport-width: 1600px;
+  --enemy-workshop-sidebar-width: 380px;
+  --enemy-workshop-main-gap: 16px;
   --enemy-workshop-card-padding-x: 14px;
 }
 
@@ -48,6 +50,8 @@ body::before {
   z-index: 1;
   max-width: calc(
     var(--enemy-workshop-viewport-width) +
+    var(--enemy-workshop-sidebar-width) +
+    var(--enemy-workshop-main-gap) +
     (var(--enemy-workshop-card-padding-x) * 2) +
     2px +
     32px
@@ -86,6 +90,7 @@ body::before {
 .studioWorkspaceGroup {
   min-width: 0;
   justify-content: flex-start;
+  flex: 1 1 auto;
 }
 
 .studioBarLabel {
@@ -107,6 +112,11 @@ body::before {
   flex-wrap: nowrap;
 }
 
+.enemyWorkshopActionGroup {
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
 .enemySelect {
   min-width: 220px;
   color: var(--text);
@@ -119,14 +129,48 @@ body::before {
   font-weight: 800;
 }
 
+.toolBtn {
+  color: var(--text);
+  background: rgba(var(--frame-rgb), 0.12);
+  border: 1px solid var(--frame);
+  border-radius: 10px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toolBtn:hover {
+  border-color: var(--frame-strong);
+  color: var(--text-strong);
+}
+
+.toolBtn.secondary {
+  opacity: 0.9;
+}
+
 .card {
   padding: 14px var(--enemy-workshop-card-padding-x) 16px;
   overflow: hidden;
 }
 
+.enemyWorkshopMain {
+  display: grid;
+  grid-template-columns: minmax(0, var(--enemy-workshop-viewport-width)) minmax(320px, var(--enemy-workshop-sidebar-width));
+  gap: var(--enemy-workshop-main-gap);
+  align-items: stretch;
+}
+
+.enemyViewportCard,
+.enemySidebar {
+  min-width: 0;
+}
+
 .enemyViewport {
   position: relative;
-  height: clamp(420px, 62vh, 720px);
+  height: clamp(520px, 72vh, 860px);
   border: 1px solid var(--frame);
   border-radius: 16px;
   background:
@@ -233,29 +277,89 @@ body::before {
 
 .enemyControls {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
   width: 100%;
 }
 
-.controlPane {
-  min-height: 130px;
-  padding: 12px;
+.enemySidebar {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.enemySidebarHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 2px 2px;
+}
+
+.enemySidebarHeader strong {
+  color: var(--text-strong);
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.enemySidebarHeader span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.controlGroup {
   border: 1px solid rgba(var(--frame-rgb), 0.18);
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.25);
+  overflow: hidden;
 }
 
-.controlPane h2 {
-  margin: 0 0 10px;
+.controlGroupHeader {
+  width: 100%;
+  color: var(--text-strong);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 12px;
+  font: inherit;
   font-size: 12px;
   font-weight: 1000;
-  text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-strong);
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 
-.controlPane p {
+.controlGroupHeader::after {
+  content: "-";
+  float: right;
+  color: var(--text-muted);
+}
+
+.controlGroupHeader[aria-expanded="false"]::after {
+  content: "+";
+}
+
+.controlGroupHeader:hover {
+  color: var(--text-strong);
+  background: rgba(var(--frame-rgb), 0.08);
+}
+
+.controlGroupBody {
+  border-top: 1px solid rgba(var(--frame-rgb), 0.14);
+  padding: 11px 12px 12px;
+}
+
+.controlGroupBody[hidden] {
+  display: none;
+}
+
+.controlGroupBody p {
   margin: 0;
   color: var(--text-muted);
   font-size: 12px;
@@ -263,23 +367,43 @@ body::before {
   font-weight: 800;
 }
 
+@media (max-width: 1280px) {
+  .enemyWorkshopMain {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  }
+}
+
 @media (max-width: 960px) {
   .studioBar {
     align-items: stretch;
   }
 
-  .enemyControls {
+  .studioBarGroup {
+    width: 100%;
+  }
+
+  .enemyWorkshopMain {
     grid-template-columns: 1fr;
+  }
+
+  .enemyViewport {
+    height: min(62vh, 640px);
   }
 }
 
 @media (max-width: 720px) {
   .studioBarGroup,
-  .enemyWorkshopSelectGroup {
+  .enemyWorkshopSelectGroup,
+  .enemyWorkshopActionGroup {
     width: 100%;
   }
 
   .enemyWorkshopSelectGroup {
+    flex-wrap: wrap;
+  }
+
+  .enemyWorkshopActionGroup {
+    justify-content: flex-start;
     flex-wrap: wrap;
   }
 

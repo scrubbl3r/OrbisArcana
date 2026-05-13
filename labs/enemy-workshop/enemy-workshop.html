@@ -16,36 +16,63 @@
         <nav data-lab-workspace-nav></nav>
       </div>
       <div class="studioBarGroup enemyWorkshopSelectGroup">
-        <label class="studioBarLabel" for="enemySelect">enemy:</label>
+        <label class="studioBarLabel" for="enemySelect">Enemy</label>
         <select id="enemySelect" class="enemySelect" data-enemy-workshop-enemy-select aria-label="Enemy"></select>
+      </div>
+      <div class="studioBarGroup enemyWorkshopActionGroup">
+        <button class="toolBtn secondary" type="button" data-enemy-workshop-save>Save</button>
+        <button class="toolBtn secondary" type="button" data-enemy-workshop-connect>Connect Project</button>
+        <button class="toolBtn secondary" type="button" data-enemy-workshop-publish>Publish</button>
       </div>
     </header>
 
-    <section class="card enemyViewportCard" aria-label="Enemy viewport">
-      <div class="enemyViewport stage">
-        <div class="enemyPreviewRoot" data-enemy-workshop-preview-root></div>
-        <div class="viewportHud">
-          <div>
-            <strong data-enemy-workshop-viewport-label>Enemy</strong>
-            <span data-enemy-workshop-meta></span>
+    <section class="enemyWorkshopMain" aria-label="Enemy authoring workspace">
+      <section class="card enemyViewportCard" aria-label="Enemy viewport">
+        <div class="enemyViewport stage">
+          <div class="enemyPreviewRoot" data-enemy-workshop-preview-root></div>
+          <div class="viewportHud">
+            <div>
+              <strong data-enemy-workshop-viewport-label>Enemy</strong>
+              <span data-enemy-workshop-meta></span>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="card enemyControls" aria-label="Enemy controls">
-      <article class="controlPane">
-        <h2>Behavior</h2>
-        <p data-enemy-workshop-behavior-readout>Pending</p>
-      </article>
-      <article class="controlPane">
-        <h2>Personality</h2>
-        <p data-enemy-workshop-personality-readout>Pending</p>
-      </article>
-      <article class="controlPane">
-        <h2>Runtime</h2>
-        <p data-enemy-workshop-runtime-readout>Pending</p>
-      </article>
+      <aside class="card enemySidebar" aria-label="Enemy controls">
+        <div class="enemySidebarHeader">
+          <strong>Authoring</strong>
+          <span data-enemy-workshop-action-status>Ready</span>
+        </div>
+
+        <section class="controlGroup">
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="enemyBehaviorControls">Behavior</button>
+          <div id="enemyBehaviorControls" class="controlGroupBody">
+            <p data-enemy-workshop-behavior-readout>Pending</p>
+          </div>
+        </section>
+
+        <section class="controlGroup">
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="enemyPersonalityControls">Personality</button>
+          <div id="enemyPersonalityControls" class="controlGroupBody">
+            <p data-enemy-workshop-personality-readout>Pending</p>
+          </div>
+        </section>
+
+        <section class="controlGroup">
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="enemySpawnControls">Spawn</button>
+          <div id="enemySpawnControls" class="controlGroupBody">
+            <p data-enemy-workshop-spawn-readout>Pending</p>
+          </div>
+        </section>
+
+        <section class="controlGroup">
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="enemyRuntimeControls">Runtime</button>
+          <div id="enemyRuntimeControls" class="controlGroupBody">
+            <p data-enemy-workshop-runtime-readout>Pending</p>
+          </div>
+        </section>
+      </aside>
     </section>
   </main>
   <script type="module" src="./enemy-workshop.js?v=20260513a"></script>
