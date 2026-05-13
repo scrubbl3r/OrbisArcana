@@ -1,41 +1,43 @@
-function createSeededRandom(seed = 1) {
-  let state = Math.max(1, Math.floor(Number(seed) || 1)) % 2147483647;
-  return function seededRandom() {
-    state = (state * 16807) % 2147483647;
-    return (state - 1) / 2147483646;
-  };
+function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  return Math.min(max, Math.max(min, numeric));
 }
 
-function createGnatMarkup(index, random) {
-  const angle = random() * Math.PI * 2;
-  const radius = 18 + random() * 34;
-  const x = 50 + Math.cos(angle) * radius;
-  const y = 50 + Math.sin(angle) * radius * 0.64;
-  const scale = 0.72 + random() * 0.56;
-  const duration = 2.7 + random() * 2.4;
-  const delay = -random() * duration;
-  const driftX = -18 + random() * 36;
-  const driftY = -14 + random() * 28;
-  const opacity = 0.48 + random() * 0.42;
-  return `<span class="gnatPreviewDot" style="--x:${x.toFixed(2)}%;--y:${y.toFixed(2)}%;--s:${scale.toFixed(3)};--d:${duration.toFixed(3)}s;--delay:${delay.toFixed(3)}s;--dx:${driftX.toFixed(2)}px;--dy:${driftY.toFixed(2)}px;--o:${opacity.toFixed(3)}" aria-hidden="true"></span>`;
-}
-
-export function renderGnatSwarmPreview({ root, surface = null } = {}) {
+export function renderGnatSwarmPreview({ root, surface = null, settings = null } = {}) {
   if (!root) return null;
-  const defaults = surface && surface.defaults ? surface.defaults : {};
-  const count = Math.max(1, Math.min(80, Math.round(Number(defaults.count) || 24)));
-  const random = createSeededRandom(1309);
+  const gnat = settings || surface && surface.gnat || {};
+  const idle = gnat.idle || {};
+  const wander = gnat.wander || {};
+  const idleRadiusBo = clampNumber(idle.idleRadiusBo, 2.2, 0.2, 12);
+  const wanderMaxBo = Math.max(idleRadiusBo, clampNumber(wander.rangeMaxBo, 5.8, 0.4, 20));
+  const scale = 42;
+  const idleRadiusPx = Math.round(idleRadiusBo * scale);
+  const wanderRadiusPx = Math.round(wanderMaxBo * scale);
+  const waveX = Math.round(clampNumber(idle.waveAmplitudeXBo, 0.42, 0, 5) * scale);
+  const waveY = Math.round(clampNumber(idle.waveAmplitudeYBo, 0.28, 0, 5) * scale);
+  const loopBias = clampNumber(idle.loopBias, 0.46, 0, 1);
+  const speed = clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 8);
+  const durationSec = Math.max(1.8, 7.2 / speed);
   root.innerHTML = `
-    <div class="gnatPreviewScene">
-      <div class="gnatPreviewAura" aria-hidden="true"></div>
-      <div class="gnatPreviewTarget" aria-hidden="true"></div>
-      ${Array.from({ length: count }, (_, index) => createGnatMarkup(index, random)).join("")}
+    <div
+      class="gnatPreviewScene"
+      style="--idle-r:${idleRadiusPx}px;--wander-r:${wanderRadiusPx}px;--wave-x:${waveX}px;--wave-y:${waveY}px;--loop:${loopBias.toFixed(3)};--d:${durationSec.toFixed(3)}s"
+    >
+      <div class="gnatPreviewRing gnatPreviewWanderRing" aria-hidden="true"></div>
+      <div class="gnatPreviewRing gnatPreviewIdleRing" aria-hidden="true"></div>
+      <div class="gnatPreviewSpawnPoint" aria-hidden="true"></div>
+      <div class="gnatPreviewFlightPath" aria-hidden="true">
+        <span class="gnatPreviewDot"></span>
+      </div>
     </div>
   `;
   return Object.freeze({
-    count,
-    personalitySeeds: count,
-    swarmRadiusBo: Number(defaults.spawnRadiusBo) || 0,
-    personalRadiusBo: Number(defaults.personalRadiusBo) || 0,
+    idleRadiusBo,
+    wanderMaxBo,
+    idleRadiusPx,
+    wanderRadiusPx,
+    waveX,
+    waveY,
   });
 }

@@ -45,31 +45,66 @@
           <span data-enemy-workshop-action-status>Ready</span>
         </div>
 
+        <div class="authoringTabs" role="tablist" aria-label="Enemy authoring surface">
+          <button class="authoringTab active" type="button" role="tab" aria-selected="true">Gnat</button>
+        </div>
+
         <section class="controlGroup">
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="enemyBehaviorControls">Behavior</button>
-          <div id="enemyBehaviorControls" class="controlGroupBody">
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="gnatIdleControls">Idle Flight</button>
+          <div id="gnatIdleControls" class="controlGroupBody">
+            <div class="paramFieldRows">
+              <label class="paramFieldRow">Idle radius BO <input class="paramFieldInput" type="number" min="0.2" max="12" step="0.1" data-gnat-setting="idle.idleRadiusBo" /></label>
+              <label class="paramFieldRow">Base speed BO/s <input class="paramFieldInput" type="number" min="0.1" max="8" step="0.05" data-gnat-setting="idle.baseSpeedBoPerSec" /></label>
+              <label class="paramFieldRow">Turn ease <input class="paramFieldInput" type="number" min="0.01" max="1" step="0.01" data-gnat-setting="idle.turnEase" /></label>
+              <label class="paramFieldRow">Wave X BO <input class="paramFieldInput" type="number" min="0" max="5" step="0.05" data-gnat-setting="idle.waveAmplitudeXBo" /></label>
+              <label class="paramFieldRow">Wave Y BO <input class="paramFieldInput" type="number" min="0" max="5" step="0.05" data-gnat-setting="idle.waveAmplitudeYBo" /></label>
+              <label class="paramFieldRow">Wave Z BO <input class="paramFieldInput" type="number" min="0" max="5" step="0.05" data-gnat-setting="idle.waveAmplitudeZBo" /></label>
+              <label class="paramFieldRow">Wave X Hz <input class="paramFieldInput" type="number" min="0.01" max="4" step="0.01" data-gnat-setting="idle.waveFrequencyXHz" /></label>
+              <label class="paramFieldRow">Wave Y Hz <input class="paramFieldInput" type="number" min="0.01" max="4" step="0.01" data-gnat-setting="idle.waveFrequencyYHz" /></label>
+              <label class="paramFieldRow">Wave Z Hz <input class="paramFieldInput" type="number" min="0.01" max="4" step="0.01" data-gnat-setting="idle.waveFrequencyZHz" /></label>
+              <label class="paramFieldRow">Phase spread <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-setting="idle.wavePhaseSpread" /></label>
+              <label class="paramFieldRow">Loop bias <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-setting="idle.loopBias" /></label>
+              <label class="paramFieldRow">Noise amount <input class="paramFieldInput" type="number" min="0" max="2" step="0.01" data-gnat-setting="idle.noiseAmount" /></label>
+              <label class="paramFieldRow">Hover tightness <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-setting="idle.hoverTightness" /></label>
+              <label class="paramFieldRow">Vertical preference <input class="paramFieldInput" type="number" min="-1" max="1" step="0.01" data-gnat-setting="idle.verticalPreference" /></label>
+            </div>
             <p data-enemy-workshop-behavior-readout>Pending</p>
           </div>
         </section>
 
         <section class="controlGroup">
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="enemyPersonalityControls">Personality</button>
-          <div id="enemyPersonalityControls" class="controlGroupBody">
-            <p data-enemy-workshop-personality-readout>Pending</p>
-          </div>
-        </section>
-
-        <section class="controlGroup">
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="enemySpawnControls">Spawn</button>
-          <div id="enemySpawnControls" class="controlGroupBody">
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="gnatWanderControls">Wander</button>
+          <div id="gnatWanderControls" class="controlGroupBody">
+            <div class="paramFieldRows">
+              <label class="paramFieldRow">Chance/min <input class="paramFieldInput" type="number" min="0" max="120" step="1" data-gnat-setting="wander.chancePerMinute" /></label>
+              <label class="paramFieldRow">Cooldown min sec <input class="paramFieldInput" type="number" min="0" max="60" step="0.1" data-gnat-setting="wander.cooldownMinSec" /></label>
+              <label class="paramFieldRow">Cooldown max sec <input class="paramFieldInput" type="number" min="0" max="120" step="0.1" data-gnat-setting="wander.cooldownMaxSec" /></label>
+              <label class="paramFieldRow">Range min BO <input class="paramFieldInput" type="number" min="0.2" max="20" step="0.1" data-gnat-setting="wander.rangeMinBo" /></label>
+              <label class="paramFieldRow">Range max BO <input class="paramFieldInput" type="number" min="0.2" max="24" step="0.1" data-gnat-setting="wander.rangeMaxBo" /></label>
+              <label class="paramFieldRow">Commitment <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-setting="wander.commitment" /></label>
+              <label class="paramFieldRow">Outbound skew <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-setting="wander.outboundSkew" /></label>
+              <label class="paramFieldRow">Loopiness <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-setting="wander.loopiness" /></label>
+              <label class="paramFieldRow">Arrival radius BO <input class="paramFieldInput" type="number" min="0.05" max="4" step="0.05" data-gnat-setting="wander.arrivalRadiusBo" /></label>
+              <label class="paramFieldRow">Return skew <input class="paramFieldInput" type="number" min="0" max="1" step="0.01" data-gnat-setting="wander.returnSkew" /></label>
+              <label class="paramFieldRow">Return speed x <input class="paramFieldInput" type="number" min="0.1" max="4" step="0.05" data-gnat-setting="wander.returnSpeedMultiplier" /></label>
+              <label class="paramFieldRow">Linger min sec <input class="paramFieldInput" type="number" min="0" max="30" step="0.1" data-gnat-setting="wander.lingerMinSec" /></label>
+              <label class="paramFieldRow">Linger max sec <input class="paramFieldInput" type="number" min="0" max="60" step="0.1" data-gnat-setting="wander.lingerMaxSec" /></label>
+            </div>
             <p data-enemy-workshop-spawn-readout>Pending</p>
           </div>
         </section>
 
         <section class="controlGroup">
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="enemyRuntimeControls">Runtime</button>
-          <div id="enemyRuntimeControls" class="controlGroupBody">
-            <p data-enemy-workshop-runtime-readout>Pending</p>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="gnatPersonalityControls">Personality</button>
+          <div id="gnatPersonalityControls" class="controlGroupBody">
+            <div class="rangeFieldRows">
+              <label class="rangeFieldRow">Speed <input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.speed.0" /><input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.speed.1" /></label>
+              <label class="rangeFieldRow">Wander chance <input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.wanderChance.0" /><input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.wanderChance.1" /></label>
+              <label class="rangeFieldRow">Wander range <input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.wanderRange.0" /><input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.wanderRange.1" /></label>
+              <label class="rangeFieldRow">Awareness <input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.awareness.0" /><input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.awareness.1" /></label>
+              <label class="rangeFieldRow">Aggression <input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.aggression.0" /><input class="paramFieldInput" type="number" step="0.01" data-gnat-range="personalityRanges.aggression.1" /></label>
+            </div>
+            <p data-enemy-workshop-personality-readout>Pending</p>
           </div>
         </section>
       </aside>

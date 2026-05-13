@@ -17,20 +17,20 @@ export function formatEnemyWorkshopMeta(surface = null) {
 
 export function formatEnemyWorkshopBehaviorReadout(surface = null) {
   if (!surface) return "Pending";
-  const defaults = surface.defaults || {};
-  return `count ${roundMetric(defaults.count, 0)} / cohesion ${roundMetric(defaults.cohesion)} / curiosity ${roundMetric(defaults.curiosity)} / aggression ${roundMetric(defaults.aggression)} / independent seeded members`;
+  const idle = surface.idle || surface.gnat && surface.gnat.idle || {};
+  return `idle radius ${roundMetric(idle.idleRadiusBo)} BO / base speed ${roundMetric(idle.baseSpeedBoPerSec)} BO/s / turn ease ${roundMetric(idle.turnEase)} / hover tightness ${roundMetric(idle.hoverTightness)}`;
 }
 
 export function formatEnemyWorkshopPersonalityReadout(surface = null) {
   if (!surface) return "Pending";
-  const ranges = surface.personalityRanges || {};
-  return `speed ${rangeText(ranges.speed)} / jitter ${rangeText(ranges.jitter)} / orbit ${rangeText(ranges.orbitBias)} / lag ${rangeText(ranges.followLag)} / drift ${rangeText(ranges.verticalDrift)}`;
+  const ranges = surface.personalityRanges || surface.gnat && surface.gnat.personalityRanges || {};
+  return `speed ${rangeText(ranges.speed)} / wander chance ${rangeText(ranges.wanderChance)} / wander range ${rangeText(ranges.wanderRange)} / awareness ${rangeText(ranges.awareness)} / aggression ${rangeText(ranges.aggression)}`;
 }
 
 export function formatEnemyWorkshopSpawnReadout(surface = null) {
   if (!surface) return "Pending";
-  const defaults = surface.defaults || {};
-  return `spawn radius ${roundMetric(defaults.spawnRadiusBo)} BO / personal radius ${roundMetric(defaults.personalRadiusBo)} BO / default speed ${roundMetric(defaults.speedBoPerSec)} BO/s / jitter ${roundMetric(defaults.jitterBo)} BO`;
+  const wander = surface.wander || surface.gnat && surface.gnat.wander || {};
+  return `wander ${roundMetric(wander.rangeMinBo)}-${roundMetric(wander.rangeMaxBo)} BO / chance ${roundMetric(wander.chancePerMinute)} per min / outbound skew ${roundMetric(wander.outboundSkew)} / return skew ${roundMetric(wander.returnSkew)}`;
 }
 
 export function formatEnemyWorkshopRuntimeReadout(surface = null) {

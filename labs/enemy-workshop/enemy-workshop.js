@@ -18,11 +18,35 @@ function surfaceIdFromHash({ location = globalThis.location } = {}) {
   return hash ? decodeURIComponent(hash) : "";
 }
 
+function cloneSettings(value = {}) {
+  return JSON.parse(JSON.stringify(value || {}));
+}
+
+function getPathValue(source = {}, path = "") {
+  return String(path || "").split(".").reduce((acc, key) => {
+    if (acc == null) return undefined;
+    return acc[key];
+  }, source);
+}
+
+function setPathValue(target = {}, path = "", value = null) {
+  const parts = String(path || "").split(".").filter(Boolean);
+  if (!parts.length) return;
+  let cursor = target;
+  for (let i = 0; i < parts.length - 1; i += 1) {
+    const key = parts[i];
+    if (!cursor[key] || typeof cursor[key] !== "object") cursor[key] = {};
+    cursor = cursor[key];
+  }
+  cursor[parts[parts.length - 1]] = value;
+}
+
 export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   if (!root) return;
   renderLabWorkspaceNav({ root, currentWorkspaceId: "enemy-workshop" });
   initCollapsibleControlGroups(root);
   const previewRegistry = createEnemyWorkshopPreviewRegistry();
+  const gnatSettingsRef = { value: null };
   const select = root.querySelector("[data-enemy-workshop-enemy-select]");
   const meta = root.querySelector("[data-enemy-workshop-meta]");
   const viewportLabel = root.querySelector("[data-enemy-workshop-viewport-label]");
@@ -33,6 +57,23 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   const runtimeReadout = root.querySelector("[data-enemy-workshop-runtime-readout]");
   const actionStatus = root.querySelector("[data-enemy-workshop-action-status]");
   bindTopbarActions({ root, actionStatus });
+  bindGnatSettingInputs({
+    root,
+    gnatSettingsRef,
+    update: () => updateSelection({
+      select,
+      meta,
+      viewportLabel,
+      previewRoot,
+      behaviorReadout,
+      personalityReadout,
+      spawnReadout,
+      runtimeReadout,
+      previewRegistry,
+      gnatSettingsRef,
+      preserveSettings: true,
+    }),
+  });
   if (select) {
     select.innerHTML = ENEMY_WORKSHOP_SURFACES.map(surfaceOptionMarkup).join("");
     const hashSurfaceId = surfaceIdFromHash();
@@ -49,6 +90,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
       spawnReadout,
       runtimeReadout,
       previewRegistry,
+      gnatSettingsRef,
     }));
   }
   updateSelection({
@@ -61,6 +103,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
     spawnReadout,
     runtimeReadout,
     previewRegistry,
+    gnatSettingsRef,
   });
 }
 
@@ -102,6 +145,28 @@ function bindTopbarActions({ root = null, actionStatus = null } = {}) {
   if (publishBtn) publishBtn.addEventListener("click", () => setStatus("Publish pending"));
 }
 
+function bindGnatSettingInputs({ root = null, gnatSettingsRef = null, update = null } = {}) {
+  if (!root || !gnatSettingsRef) return;
+  root.querySelectorAll("[data-gnat-setting], [data-gnat-range]").forEach((input) => {
+    input.addEventListener("input", () => {
+      const path = input.getAttribute("data-gnat-setting") || input.getAttribute("data-gnat-range") || "";
+      if (!path) return;
+      if (!gnatSettingsRef.value) gnatSettingsRef.value = {};
+      setPathValue(gnatSettingsRef.value, path, Number(input.value));
+      if (typeof update === "function") update();
+    });
+  });
+}
+
+function hydrateGnatSettingInputs({ root = null, settings = null } = {}) {
+  if (!root || !settings) return;
+  root.querySelectorAll("[data-gnat-setting], [data-gnat-range]").forEach((input) => {
+    const path = input.getAttribute("data-gnat-setting") || input.getAttribute("data-gnat-range") || "";
+    const value = getPathValue(settings, path);
+    if (value != null && Number.isFinite(Number(value))) input.value = String(value);
+  });
+}
+
 function updateSelection({
   select = null,
   meta = null,
@@ -112,17 +177,24 @@ function updateSelection({
   spawnReadout = null,
   runtimeReadout = null,
   previewRegistry = null,
+  gnatSettingsRef = null,
+  preserveSettings = false,
 } = {}) {
   const selectedId = String(select && select.value || ENEMY_WORKSHOP_SURFACES[0]?.id || "");
   const surface = ENEMY_WORKSHOP_SURFACES.find((entry) => entry.id === selectedId) || ENEMY_WORKSHOP_SURFACES[0] || null;
+  if (gnatSettingsRef && (!preserveSettings || !gnatSettingsRef.value)) {
+    gnatSettingsRef.value = cloneSettings(surface && surface.gnat ? surface.gnat : {});
+  }
+  const gnatSettings = gnatSettingsRef && gnatSettingsRef.value ? gnatSettingsRef.value : surface && surface.gnat || {};
   if (viewportLabel) viewportLabel.textContent = surface ? String(surface.label || surface.id) : "Enemy";
   if (meta) meta.textContent = formatEnemyWorkshopMeta(surface);
+  hydrateGnatSettingInputs({ root: globalThis.document, settings: gnatSettings });
   if (previewRoot && previewRegistry && typeof previewRegistry.renderPreview === "function") {
-    previewRegistry.renderPreview({ surface, previewRoot });
+    previewRegistry.renderPreview({ surface, previewRoot, settings: gnatSettings });
   }
-  if (behaviorReadout) behaviorReadout.textContent = formatEnemyWorkshopBehaviorReadout(surface);
-  if (personalityReadout) personalityReadout.textContent = formatEnemyWorkshopPersonalityReadout(surface);
-  if (spawnReadout) spawnReadout.textContent = formatEnemyWorkshopSpawnReadout(surface);
+  if (behaviorReadout) behaviorReadout.textContent = formatEnemyWorkshopBehaviorReadout(gnatSettings);
+  if (personalityReadout) personalityReadout.textContent = formatEnemyWorkshopPersonalityReadout(gnatSettings);
+  if (spawnReadout) spawnReadout.textContent = formatEnemyWorkshopSpawnReadout(gnatSettings);
   if (runtimeReadout) runtimeReadout.textContent = formatEnemyWorkshopRuntimeReadout(surface);
 }
 

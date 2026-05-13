@@ -5,14 +5,14 @@ const PREVIEW_RENDERERS = Object.freeze({
 });
 
 export function createEnemyWorkshopPreviewRegistry() {
-  function renderPreview({ surface, previewRoot } = {}) {
+  function renderPreview({ surface, previewRoot, settings = null } = {}) {
     if (!surface || !previewRoot) return null;
     const renderer = PREVIEW_RENDERERS[String(surface.previewKey || surface.archetype || "")] || null;
     if (!renderer) {
       previewRoot.innerHTML = "";
       return null;
     }
-    return renderer({ root: previewRoot, surface });
+    return renderer({ root: previewRoot, surface, settings });
   }
 
   return Object.freeze({ renderPreview });

@@ -194,54 +194,88 @@ body::before {
 
 .gnatPreviewScene {
   position: relative;
-  width: min(72vmin, 640px);
+  width: min(76vmin, 760px);
   aspect-ratio: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
-.gnatPreviewAura {
+.gnatPreviewRing,
+.gnatPreviewSpawnPoint,
+.gnatPreviewFlightPath {
   position: absolute;
-  inset: 20%;
+  left: 50%;
+  top: 50%;
+}
+
+.gnatPreviewRing {
   border: 1px solid rgba(164, 224, 173, 0.18);
   border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.gnatPreviewIdleRing {
+  width: calc(var(--idle-r) * 2);
+  height: calc(var(--idle-r) * 2);
   box-shadow:
     0 0 60px rgba(88, 186, 124, 0.12),
     inset 0 0 80px rgba(100, 173, 132, 0.07);
 }
 
-.gnatPreviewTarget {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 7%;
-  aspect-ratio: 1;
-  border: 1px solid rgba(222, 235, 216, 0.42);
+.gnatPreviewWanderRing {
+  width: calc(var(--wander-r) * 2);
+  height: calc(var(--wander-r) * 2);
+  border-color: rgba(164, 224, 173, 0.1);
+  border-style: dashed;
+  box-shadow: 0 0 80px rgba(88, 186, 124, 0.06);
+}
+
+.gnatPreviewSpawnPoint {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(222, 235, 216, 0.46);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   box-shadow: 0 0 24px rgba(178, 222, 181, 0.22);
 }
 
+.gnatPreviewFlightPath {
+  width: calc(var(--idle-r) + var(--wave-x));
+  height: calc(var(--idle-r) * 0.72 + var(--wave-y));
+  transform: translate(-50%, -50%);
+  animation: gnatPreviewOrbit var(--d) linear infinite;
+}
+
 .gnatPreviewDot {
   position: absolute;
-  left: var(--x);
-  top: var(--y);
-  width: calc(7px * var(--s));
+  left: 88%;
+  top: 50%;
+  width: 8px;
   aspect-ratio: 1;
   border-radius: 50%;
   background: rgb(209, 230, 190);
-  opacity: var(--o);
+  opacity: 0.84;
   box-shadow: 0 0 8px rgba(209, 230, 190, 0.62);
   transform: translate(-50%, -50%);
-  animation: gnatDrift var(--d) ease-in-out var(--delay) infinite alternate;
+  animation: gnatDrift calc(var(--d) * 0.58) ease-in-out infinite alternate;
+}
+
+@keyframes gnatPreviewOrbit {
+  from {
+    rotate: 0deg;
+  }
+
+  to {
+    rotate: 360deg;
+  }
 }
 
 @keyframes gnatDrift {
   from {
-    translate: calc(var(--dx) * -0.44) calc(var(--dy) * -0.52);
+    translate: calc(var(--wave-x) * -0.16) calc(var(--wave-y) * -0.3);
   }
 
   to {
-    translate: var(--dx) var(--dy);
+    translate: calc(var(--wave-x) * 0.16) calc(var(--wave-y) * 0.3);
   }
 }
 
@@ -312,6 +346,30 @@ body::before {
   text-align: right;
 }
 
+.authoringTabs {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--frame);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 6px;
+}
+
+.authoringTab {
+  cursor: default;
+  border-radius: 9px;
+  border: 1px solid rgba(var(--frame-rgb), 0.36);
+  background: rgba(var(--frame-rgb), 0.14);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 10px;
+}
+
 .controlGroup {
   border: 1px solid rgba(var(--frame-rgb), 0.18);
   border-radius: 12px;
@@ -360,10 +418,45 @@ body::before {
 }
 
 .controlGroupBody p {
-  margin: 0;
+  margin: 10px 0 0;
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.45;
+  font-weight: 800;
+}
+
+.paramFieldRows,
+.rangeFieldRows {
+  display: grid;
+  gap: 8px;
+}
+
+.paramFieldRow,
+.rangeFieldRow {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(82px, 110px);
+  gap: 8px;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.rangeFieldRow {
+  grid-template-columns: minmax(150px, 1fr) minmax(64px, 88px) minmax(64px, 88px);
+}
+
+.paramFieldInput {
+  min-width: 0;
+  width: 100%;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--frame);
+  border-radius: 8px;
+  padding: 6px 7px;
+  font: inherit;
+  font-size: 12px;
   font-weight: 800;
 }
 
