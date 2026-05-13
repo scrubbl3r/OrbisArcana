@@ -58,20 +58,39 @@ function distanceBetween(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-function moveToward(a, b, amount = 0.5) {
-  const t = Math.min(1, Math.max(0, amount));
-  return {
-    x: a.x + (b.x - a.x) * t,
-    y: a.y + (b.y - a.y) * t,
-  };
-}
-
 function offsetPoint(point, radius = 1) {
   const offset = randomInCircle(radius);
   return {
     x: point.x + offset.x,
     y: point.y + offset.y,
   };
+}
+
+function buildRouteStops({ from, to, spacingRangePx, jitterPx }) {
+  const distance = distanceBetween(from, to);
+  if (distance <= 0.001) return [to];
+  const dir = {
+    x: (to.x - from.x) / distance,
+    y: (to.y - from.y) / distance,
+  };
+  const perp = { x: -dir.y, y: dir.x };
+  const stops = [];
+  let traveled = 0;
+  const minSpacing = Math.max(1, spacingRangePx[0]);
+  const maxSpacing = Math.max(minSpacing, spacingRangePx[1]);
+  while (traveled < distance) {
+    traveled = Math.min(distance, traveled + minSpacing + Math.random() * (maxSpacing - minSpacing));
+    if (distance - traveled < minSpacing * 0.35) traveled = distance;
+    const lateral = (Math.random() * 2 - 1) * jitterPx;
+    const forward = traveled < distance ? (Math.random() * 2 - 1) * Math.min(jitterPx, minSpacing * 0.35) : 0;
+    const clampedDistance = Math.min(distance, Math.max(0, traveled + forward));
+    stops.push({
+      x: from.x + dir.x * clampedDistance + perp.x * lateral,
+      y: from.y + dir.y * clampedDistance + perp.y * lateral,
+    });
+  }
+  stops[stops.length - 1] = to;
+  return stops;
 }
 
 function cleanupPreview(root = null) {
@@ -140,14 +159,19 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     const personalChancePerMinute = clampNumber(randomInRange(personalityRanges.wanderChancePerMinute, fallbackWanderChancePerMinute), 16, 0, 120);
     const personalCooldownSec = clampNumber(randomInRange(cooldownSec, 1.4), 1.4, 0, 120);
     const personalLingerSec = clampNumber(randomInRange(lingerSec, 0.4), 0.4, 0, 60);
-    const outboundBias = clampNumber(randomInRange(personalityRanges.outboundBias, wander.outboundBias), 0.64, 0, 1);
+    const legacyOutboundBias = rangeMidpoint(personalityRanges.outboundBias, wander.outboundBias);
+    const stopSpacingRangeBo = rangePair(personalityRanges.wanderStopSpacingBo, [3, 7]);
+    const stopSpacingRangePx = [
+      clampNumber(stopSpacingRangeBo[0], 3, 0.2, 32) * scale,
+      clampNumber(stopSpacingRangeBo[1], 7, 0.2, 40) * scale,
+    ];
+    const stopJitterPx = clampNumber(randomInRange(personalityRanges.wanderStopJitterBo, 1.2), 1.2, 0, 16) * scale;
+    const routeCommitment = clampNumber(randomInRange(personalityRanges.routeCommitment, legacyOutboundBias), 0.82, 0, 1);
     const returnBias = clampNumber(randomInRange(personalityRanges.returnBias, wander.returnBias), 0.82, 0, 1);
     const arrivalRadiusPx = clampNumber(randomInRange(personalityRanges.arrivalRadiusBo, wander.arrivalRadiusBo), 0.34, 0.05, 4) * scale;
     const returnSpeedMultiplier = clampNumber(randomInRange(personalityRanges.returnSpeedMultiplier, wander.returnSpeedMultiplier), 1.12, 0.1, 4);
-    const outboundAnchorStep = 0.08 + outboundBias * 0.28;
-    const returnAnchorStep = 0.18 + returnBias * 0.44;
-    const outboundRerollRadiusPx = Math.max(arrivalRadiusPx * 1.5, idleRadiusPx * (0.75 - outboundBias * 0.35));
-    const returnRerollRadiusPx = Math.max(arrivalRadiusPx * 1.25, idleRadiusPx * (0.62 - returnBias * 0.32));
+    const outboundRerollRadiusPx = Math.max(arrivalRadiusPx * 0.5, stopJitterPx * (1.15 - routeCommitment * 0.75));
+    const returnRerollRadiusPx = Math.max(arrivalRadiusPx * 0.5, stopJitterPx * (0.95 - returnBias * 0.55));
     const start = randomInCircle(idleRadiusPx);
     return {
       dot,
@@ -157,8 +181,9 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       vy: 0,
       mode: "idle",
       target: randomInCircle(idleRadiusPx),
-      wanderAnchor: { x: 0, y: 0 },
       wanderDestination: randomInAnnulus(personalWanderMinPx, personalWanderRadiusPx),
+      routeStops: [],
+      routeIndex: 0,
       nextTargetAt: 0,
       lingerUntil: 0,
       cooldownUntil: index * 0.04,
@@ -172,8 +197,10 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       wanderChancePerSec: personalChancePerMinute / 60,
       cooldownSec: personalCooldownSec,
       lingerSec: personalLingerSec,
-      outboundAnchorStep,
-      returnAnchorStep,
+      stopSpacingRangePx,
+      stopJitterPx,
+      routeCommitment,
+      returnBias,
       outboundRerollRadiusPx,
       returnRerollRadiusPx,
       arrivalRadiusPx,
@@ -188,22 +215,14 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
 
   const scheduleTarget = (state, nowSec) => {
     if (state.mode === "outbound") {
-      state.wanderAnchor = moveToward(state.wanderAnchor, state.wanderDestination, state.outboundAnchorStep);
-      const goalDistance = distanceBetween(state.wanderAnchor, state.wanderDestination);
-      const focus = Math.min(1, goalDistance / Math.max(state.arrivalRadiusPx, state.wanderRadiusPx));
-      const rerollRadius = Math.max(state.arrivalRadiusPx * 0.5, state.outboundRerollRadiusPx * (0.2 + focus * 0.8));
-      state.target = offsetPoint(state.wanderAnchor, rerollRadius);
+      const routeStop = state.routeStops[state.routeIndex] || state.wanderDestination;
+      state.target = offsetPoint(routeStop, state.outboundRerollRadiusPx);
     } else if (state.mode === "linger") {
-      state.wanderAnchor = moveToward(state.wanderAnchor, state.wanderDestination, 0.5);
       state.target = offsetPoint(state.wanderDestination, Math.max(state.arrivalRadiusPx, idleRadiusPx * 0.25));
     } else if (state.mode === "return") {
-      state.wanderAnchor = moveToward(state.wanderAnchor, { x: 0, y: 0 }, state.returnAnchorStep);
-      const goalDistance = distanceBetween(state.wanderAnchor, { x: 0, y: 0 });
-      const focus = Math.min(1, goalDistance / Math.max(state.arrivalRadiusPx, state.wanderRadiusPx));
-      const rerollRadius = Math.max(state.arrivalRadiusPx * 0.5, state.returnRerollRadiusPx * (0.2 + focus * 0.8));
-      state.target = offsetPoint(state.wanderAnchor, rerollRadius);
+      const routeStop = state.routeStops[state.routeIndex] || { x: 0, y: 0 };
+      state.target = offsetPoint(routeStop, state.returnRerollRadiusPx);
     } else {
-      state.wanderAnchor = { x: 0, y: 0 };
       state.target = randomInCircle(idleRadiusPx);
     }
     state.nextTargetAt = nowSec + retargetMinSec + Math.random() * Math.max(0, retargetMaxSec - retargetMinSec);
@@ -211,8 +230,14 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
 
   const startWander = (state, nowSec) => {
     state.mode = "outbound";
-    state.wanderAnchor = { x: state.x, y: state.y };
     state.wanderDestination = randomInAnnulus(state.wanderMinPx, state.wanderRadiusPx);
+    state.routeStops = buildRouteStops({
+      from: { x: state.x, y: state.y },
+      to: state.wanderDestination,
+      spacingRangePx: state.stopSpacingRangePx,
+      jitterPx: state.stopJitterPx,
+    });
+    state.routeIndex = 0;
     scheduleTarget(state, nowSec);
   };
 
@@ -255,16 +280,34 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       }
       state.x += state.vx * dt;
       state.y += state.vy * dt;
-      if (state.mode === "outbound" && distanceBetween(state, state.wanderDestination) <= state.arrivalRadiusPx) {
-        state.mode = "linger";
-        state.lingerUntil = nowSec + state.lingerSec;
+      if (state.mode === "outbound" && distanceBetween(state, state.routeStops[state.routeIndex] || state.wanderDestination) <= state.arrivalRadiusPx) {
+        state.routeIndex += 1;
+        if (state.routeIndex >= state.routeStops.length) {
+          state.mode = "linger";
+          state.lingerUntil = nowSec + state.lingerSec;
+        }
         scheduleTarget(state, nowSec);
       } else if (state.mode === "linger" && nowSec >= state.lingerUntil) {
         state.mode = "return";
-        state.wanderAnchor = { x: state.x, y: state.y };
+        const returnSpacingRangePx = [
+          state.stopSpacingRangePx[0] * Math.max(0.5, 1 - state.returnBias * 0.35),
+          state.stopSpacingRangePx[1] * Math.max(0.55, 1 - state.returnBias * 0.25),
+        ];
+        state.routeStops = buildRouteStops({
+          from: { x: state.x, y: state.y },
+          to: { x: 0, y: 0 },
+          spacingRangePx: returnSpacingRangePx,
+          jitterPx: state.stopJitterPx * Math.max(0.25, 1 - state.returnBias * 0.6),
+        });
+        state.routeIndex = 0;
         scheduleTarget(state, nowSec);
-      } else if (state.mode === "return" && distanceBetween(state, { x: 0, y: 0 }) <= Math.max(state.arrivalRadiusPx, idleRadiusPx * 0.72)) {
-        startCooldown(state, nowSec);
+      } else if (state.mode === "return" && distanceBetween(state, state.routeStops[state.routeIndex] || { x: 0, y: 0 }) <= Math.max(state.arrivalRadiusPx, idleRadiusPx * 0.34)) {
+        state.routeIndex += 1;
+        if (state.routeIndex >= state.routeStops.length) {
+          startCooldown(state, nowSec);
+        } else {
+          scheduleTarget(state, nowSec);
+        }
       }
       if (Math.hypot(state.x, state.y) > state.wanderRadiusPx * 1.08) {
         state.x *= 0.985;

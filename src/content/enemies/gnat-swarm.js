@@ -31,10 +31,6 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         0.4,
         5
       ],
-      "outboundBias": [
-        0.4,
-        0.75
-      ],
       "returnBias": [
         0.5,
         0.82
@@ -47,6 +43,10 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         150,
         200
       ],
+      "routeCommitment": [
+        0.4,
+        0.75
+      ],
       "wanderChancePerMinute": [
         0,
         1
@@ -58,6 +58,14 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       "wanderRangeBo": [
         3,
         12
+      ],
+      "wanderStopJitterBo": [
+        0.5,
+        2
+      ],
+      "wanderStopSpacingBo": [
+        3,
+        7
       ]
     }
   },
