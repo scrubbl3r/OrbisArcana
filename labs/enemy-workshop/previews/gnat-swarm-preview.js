@@ -27,13 +27,14 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
   const waveX = Math.round(clampNumber(idle.waveAmplitudeXBo, 0.42, 0, 5) * scale);
   const waveY = Math.round(clampNumber(idle.waveAmplitudeYBo, 0.28, 0, 5) * scale);
+  const orbitRadiusPx = Math.round(idleRadiusPx * 0.58);
   const loopBias = clampNumber(idle.loopBias, 0.46, 0, 1);
   const speed = clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 8) * speedMultiplier;
   const durationSec = Math.max(1.8, 7.2 / speed);
   root.innerHTML = `
     <div
       class="gnatPreviewScene"
-      style="--idle-r:${idleRadiusPx}px;--wander-r:${wanderRadiusPx}px;--wave-x:${waveX}px;--wave-y:${waveY}px;--loop:${loopBias.toFixed(3)};--d:${durationSec.toFixed(3)}s"
+      style="--idle-r:${idleRadiusPx}px;--wander-r:${wanderRadiusPx}px;--orbit-r:${orbitRadiusPx}px;--wave-x:${waveX}px;--wave-y:${waveY}px;--loop:${loopBias.toFixed(3)};--d:${durationSec.toFixed(3)}s"
     >
       <div class="gnatPreviewRing gnatPreviewWanderRing" aria-hidden="true"></div>
       <div class="gnatPreviewRing gnatPreviewIdleRing" aria-hidden="true"></div>
@@ -48,6 +49,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     wanderMaxBo,
     idleRadiusPx,
     wanderRadiusPx,
+    orbitRadiusPx,
     waveX,
     waveY,
     speedMultiplier,

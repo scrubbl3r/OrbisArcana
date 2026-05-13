@@ -239,23 +239,23 @@ body::before {
 }
 
 .gnatPreviewFlightPath {
-  width: calc(var(--idle-r) + var(--wave-x));
-  height: calc(var(--idle-r) * 0.72 + var(--wave-y));
-  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
   animation: gnatPreviewOrbit var(--d) linear infinite;
 }
 
 .gnatPreviewDot {
   position: absolute;
-  left: 88%;
-  top: 50%;
+  left: 0;
+  top: 0;
   width: 8px;
   aspect-ratio: 1;
   border-radius: 50%;
   background: rgb(209, 230, 190);
   opacity: 0.84;
   box-shadow: 0 0 8px rgba(209, 230, 190, 0.62);
-  transform: translate(-50%, -50%);
+  transform: translateX(var(--orbit-r)) translate(-50%, -50%);
   animation: gnatDrift calc(var(--d) * 0.58) ease-in-out infinite alternate;
 }
 
