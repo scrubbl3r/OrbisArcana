@@ -19,6 +19,13 @@ function randomInRange(range = [], fallback = 1) {
   return min + Math.random() * Math.max(0, max - min);
 }
 
+function speedPercentToMultiplier(value = 100) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 1;
+  if (numeric > 10) return numeric / 100;
+  return numeric;
+}
+
 function rangePair(range = [], fallback = [0, 1]) {
   if (!Array.isArray(range) || range.length < 2) return fallback.slice();
   const min = Number(range[0]);
@@ -98,8 +105,8 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const wanderMinPx = Math.round(wanderMinBo * scale);
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
   const swarmTotal = Math.round(clampNumber(swarm.gnatsTotal, 1, 1, 240));
-  const baseSpeedBoPerSec = clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 8);
-  const maxSpeedBoPerSec = clampNumber(idle.maxSpeedBoPerSec, 3.2, 0.1, 16);
+  const baseSpeedBoPerSec = clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 240);
+  const maxSpeedBoPerSec = clampNumber(idle.maxSpeedBoPerSec, 3.2, 0.1, 320);
   const targetJitterPx = clampNumber(idle.targetJitterBo, 0.42, 0, 4) * scale;
   const stiffness = clampNumber(idle.springStiffness, 18, 0.1, 80);
   const damping = clampNumber(idle.springDamping, 6.5, 0, 30);
@@ -125,7 +132,8 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
 
   const dots = Array.from(root.querySelectorAll(".gnatPreviewDot"));
   const buildGnatState = (dot, index) => {
-    const speedMultiplier = clampNumber(randomInRange(personalityRanges.speed, 1), 1, 0.1, 4);
+    const speedMultiplier = clampNumber(speedPercentToMultiplier(randomInRange(personalityRanges.speed, 100)), 1, 0.01, 4);
+    const responseMultiplier = Math.max(0.1, Math.sqrt(baseSpeedBoPerSec / 1.35) * speedMultiplier);
     const personalWanderBo = clampNumber(randomInRange(personalityRanges.wanderRangeBo, wanderMaxBo), wanderMaxBo, 0.4, 24);
     const personalWanderRadiusPx = Math.round(Math.max(idleRadiusBo, personalWanderBo) * scale);
     const personalWanderMinPx = Math.min(wanderMinPx, personalWanderRadiusPx);
@@ -158,6 +166,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       phaseY: Math.random() * Math.PI * 2,
       baseSpeedPx: baseSpeedBoPerSec * speedMultiplier * scale,
       maxSpeedPx: maxSpeedBoPerSec * speedMultiplier * scale,
+      responseMultiplier,
       wanderRadiusPx: personalWanderRadiusPx,
       wanderMinPx: personalWanderMinPx,
       wanderChancePerSec: personalChancePerMinute / 60,
@@ -233,8 +242,8 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       const targetJitterY = (Math.random() * 2 - 1) * targetJitterPx;
       const tx = state.target.x + targetJitterX + jitterX;
       const ty = state.target.y + targetJitterY + jitterY;
-      const ax = (tx - state.x) * stiffness - state.vx * damping;
-      const ay = (ty - state.y) * stiffness - state.vy * damping;
+      const ax = (tx - state.x) * stiffness * state.responseMultiplier - state.vx * damping;
+      const ay = (ty - state.y) * stiffness * state.responseMultiplier - state.vy * damping;
       state.vx += ax * dt;
       state.vy += ay * dt;
       const modeMaxSpeedPx = state.mode === "return" ? state.maxSpeedPx * state.returnSpeedMultiplier : state.maxSpeedPx;

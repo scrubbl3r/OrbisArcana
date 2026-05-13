@@ -26,7 +26,7 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
         elasticJitterHz: 9,
       }),
       personalityRanges: Object.freeze({
-        speed: Object.freeze([0.72, 1.34]),
+        speed: Object.freeze([72, 134]),
         wanderChancePerMinute: Object.freeze([16, 16]),
         wanderCooldownSec: Object.freeze([1.4, 5.5]),
         wanderRangeBo: Object.freeze([2.8, 5.8]),

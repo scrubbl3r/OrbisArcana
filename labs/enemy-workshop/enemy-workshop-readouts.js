@@ -24,7 +24,7 @@ export function formatEnemyWorkshopBehaviorReadout(surface = null) {
 export function formatEnemyWorkshopPersonalityReadout(surface = null) {
   if (!surface) return "Pending";
   const ranges = surface.personalityRanges || surface.gnat && surface.gnat.personalityRanges || {};
-  return `speed ${rangeText(ranges.speed)} / chance ${rangeText(ranges.wanderChancePerMinute)}/min / range ${rangeText(ranges.wanderRangeBo)} BO / outbound ${rangeText(ranges.outboundBias)} / return ${rangeText(ranges.returnBias)}`;
+  return `speed ${rangeText(ranges.speed)}% / chance ${rangeText(ranges.wanderChancePerMinute)}/min / range ${rangeText(ranges.wanderRangeBo)} BO / outbound ${rangeText(ranges.outboundBias)} / return ${rangeText(ranges.returnBias)}`;
 }
 
 export function formatEnemyWorkshopSwarmReadout(surface = null) {
