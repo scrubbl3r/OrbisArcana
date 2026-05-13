@@ -17,21 +17,23 @@ export const ENEMY_WORKSHOP_TARGETS = Object.freeze({
   drafts: ENEMY_DRAFT_PATH,
 });
 
-export function buildEnemyDraftPayload({ surface = null, gnatSettings = null } = {}) {
+export function buildEnemyDraftPayload({ surface = null, enemySettings = null, gnatSettings = null } = {}) {
   const id = String(surface && surface.id || "gnat-swarm");
   const label = String(surface && surface.label || "Gnat Swarm");
+  const settings = enemySettings || { gnat: gnatSettings || {} };
   return Object.freeze({
     schema: "orbis.enemy-workshop.draft.v1",
     enemyId: id,
     label,
     savedAtMs: Date.now(),
-    gnat: sortObject(gnatSettings || {}),
+    enemy: sortObject(settings),
   });
 }
 
-export function buildGnatSwarmEnemyModule({ surface = null, gnatSettings = null } = {}) {
+export function buildGnatSwarmEnemyModule({ surface = null, enemySettings = null, gnatSettings = null } = {}) {
   const id = String(surface && surface.id || "gnat-swarm");
   const label = String(surface && surface.label || "Gnat Swarm");
+  const settings = enemySettings || { gnat: gnatSettings || {} };
   const payload = sortObject({
     id,
     label,
@@ -39,7 +41,7 @@ export function buildGnatSwarmEnemyModule({ surface = null, gnatSettings = null 
     category: "enemy",
     status: "draft",
     member: "gnat",
-    gnat: gnatSettings || {},
+    ...settings,
   });
   return [
     "export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(",

@@ -72,7 +72,8 @@ function cleanupPreview(root = null) {
 export function renderGnatSwarmPreview({ root, surface = null, settings = null } = {}) {
   if (!root) return null;
   cleanupPreview(root);
-  const gnat = settings || surface && surface.gnat || {};
+  const enemySettings = settings || {};
+  const gnat = enemySettings.gnat || settings || surface && surface.gnat || {};
   const idle = gnat.idle || {};
   const wander = gnat.wander || {};
   const personalityRanges = gnat.personalityRanges || {};

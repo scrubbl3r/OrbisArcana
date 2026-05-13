@@ -9,6 +9,9 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
     preview: "enemy-swarm-preview",
     status: "exemplar",
     memberLabel: "gnat",
+    swarm: Object.freeze({
+      gnatsTotal: 24,
+    }),
     gnat: Object.freeze({
       idle: Object.freeze({
         idleRadiusBo: 2.2,

@@ -24,6 +24,7 @@ import {
   formatEnemyWorkshopMeta,
   formatEnemyWorkshopPersonalityReadout,
   formatEnemyWorkshopRuntimeReadout,
+  formatEnemyWorkshopSwarmReadout,
 } from "./enemy-workshop-readouts.js?v=20260513a";
 
 const DRAFT_STORAGE_KEY = "orbis.enemyWorkshop.drafts.v1";
@@ -39,6 +40,13 @@ function surfaceIdFromHash({ location = globalThis.location } = {}) {
 
 function cloneSettings(value = {}) {
   return JSON.parse(JSON.stringify(value || {}));
+}
+
+function defaultSettingsForSurface(surface = null) {
+  return {
+    gnat: cloneSettings(surface && surface.gnat ? surface.gnat : {}),
+    swarm: cloneSettings(surface && surface.swarm ? surface.swarm : {}),
+  };
 }
 
 function mergeSettings(defaults = {}, overrides = {}) {
@@ -85,6 +93,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   if (!root) return;
   renderLabWorkspaceNav({ root, currentWorkspaceId: "enemy-workshop" });
   initCollapsibleControlGroups(root);
+  initAuthoringTabs(root);
   const previewRegistry = createEnemyWorkshopPreviewRegistry();
   const gnatSettingsRef = { value: null };
   const draftStore = createLabProfileStore();
@@ -96,6 +105,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   const previewRoot = root.querySelector("[data-enemy-workshop-preview-root]");
   const behaviorReadout = root.querySelector("[data-enemy-workshop-behavior-readout]");
   const personalityReadout = root.querySelector("[data-enemy-workshop-personality-readout]");
+  const swarmReadout = root.querySelector("[data-enemy-workshop-swarm-readout]");
   const runtimeReadout = root.querySelector("[data-enemy-workshop-runtime-readout]");
   const actionStatus = root.querySelector("[data-enemy-workshop-action-status]");
   const projectIo = createEnemyProjectIo({
@@ -121,6 +131,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
       previewRoot,
       behaviorReadout,
       personalityReadout,
+      swarmReadout,
       runtimeReadout,
       previewRegistry,
       gnatSettingsRef,
@@ -143,6 +154,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
         previewRoot,
         behaviorReadout,
         personalityReadout,
+        swarmReadout,
         runtimeReadout,
         previewRegistry,
         gnatSettingsRef,
@@ -157,6 +169,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
     previewRoot,
     behaviorReadout,
     personalityReadout,
+    swarmReadout,
     runtimeReadout,
     previewRegistry,
     gnatSettingsRef,
@@ -169,11 +182,30 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
     previewRoot,
     behaviorReadout,
     personalityReadout,
+    swarmReadout,
     runtimeReadout,
     previewRegistry,
     gnatSettingsRef,
     preserveSettings: true,
   });
+}
+
+function initAuthoringTabs(root = globalThis.document) {
+  if (!root || typeof root.querySelectorAll !== "function") return;
+  const setActive = (tabId = "gnat") => {
+    root.querySelectorAll("[data-authoring-tab]").forEach((tab) => {
+      const active = tab.getAttribute("data-authoring-tab") === tabId;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    root.querySelectorAll("[data-authoring-panel]").forEach((panel) => {
+      panel.hidden = panel.getAttribute("data-authoring-panel") !== tabId;
+    });
+  };
+  root.querySelectorAll("[data-authoring-tab]").forEach((tab) => {
+    tab.addEventListener("click", () => setActive(tab.getAttribute("data-authoring-tab") || "gnat"));
+  });
+  setActive("gnat");
 }
 
 function initCollapsibleControlGroups(root = globalThis.document) {
@@ -248,12 +280,13 @@ function createEnemyProjectIo({
 
 function buildDraftRecord({ select = null, gnatSettingsRef = null } = {}) {
   const surface = selectedSurface(select);
+  const settings = gnatSettingsRef && gnatSettingsRef.value ? gnatSettingsRef.value : defaultSettingsForSurface(surface);
   if (!surface) return null;
   return {
     value: String(surface.id || "gnat-swarm"),
     label: String(surface.label || "Gnat Swarm"),
     savedAtMs: Date.now(),
-    gnat: cloneSettings(gnatSettingsRef && gnatSettingsRef.value ? gnatSettingsRef.value : surface.gnat || {}),
+    enemy: cloneSettings(settings),
   };
 }
 
@@ -271,17 +304,21 @@ function restoreSavedDraft({ select = null, gnatSettingsRef = null, draftStore =
   const surface = selectedSurface(select);
   const value = String(surface && surface.id || "");
   const record = draftStore && draftStore.profilesByValue ? draftStore.profilesByValue[value] : null;
-  if (record && record.gnat && gnatSettingsRef) {
-    gnatSettingsRef.value = mergeSettings(surface && surface.gnat ? surface.gnat : {}, record.gnat);
+  if (record && gnatSettingsRef) {
+    const savedSettings = record.enemy || {
+      gnat: record.gnat || {},
+      swarm: record.swarm || {},
+    };
+    gnatSettingsRef.value = mergeSettings(defaultSettingsForSurface(surface), savedSettings);
   }
 }
 
 async function publishEnemy({ select, gnatSettingsRef, projectIo, actionStatus }) {
   const surface = selectedSurface(select);
   if (!surface) return;
-  const gnatSettings = cloneSettings(gnatSettingsRef && gnatSettingsRef.value ? gnatSettingsRef.value : surface.gnat || {});
-  const moduleText = buildGnatSwarmEnemyModule({ surface, gnatSettings });
-  const draftPayload = buildEnemyDraftPayload({ surface, gnatSettings });
+  const enemySettings = cloneSettings(gnatSettingsRef && gnatSettingsRef.value ? gnatSettingsRef.value : defaultSettingsForSurface(surface));
+  const moduleText = buildGnatSwarmEnemyModule({ surface, enemySettings });
+  const draftPayload = buildEnemyDraftPayload({ surface, enemySettings });
   const filename = `${String(surface.id || "gnat-swarm")}.enemy.json`;
   const draftText = JSON.stringify(draftPayload, null, 2);
 
@@ -393,6 +430,7 @@ function updateSelection({
   previewRoot = null,
   behaviorReadout = null,
   personalityReadout = null,
+  swarmReadout = null,
   runtimeReadout = null,
   previewRegistry = null,
   gnatSettingsRef = null,
@@ -401,9 +439,9 @@ function updateSelection({
   const selectedId = String(select && select.value || ENEMY_WORKSHOP_SURFACES[0]?.id || "");
   const surface = ENEMY_WORKSHOP_SURFACES.find((entry) => entry.id === selectedId) || ENEMY_WORKSHOP_SURFACES[0] || null;
   if (gnatSettingsRef && (!preserveSettings || !gnatSettingsRef.value)) {
-    gnatSettingsRef.value = cloneSettings(surface && surface.gnat ? surface.gnat : {});
+    gnatSettingsRef.value = defaultSettingsForSurface(surface);
   }
-  const gnatSettings = gnatSettingsRef && gnatSettingsRef.value ? gnatSettingsRef.value : surface && surface.gnat || {};
+  const gnatSettings = gnatSettingsRef && gnatSettingsRef.value ? gnatSettingsRef.value : defaultSettingsForSurface(surface);
   if (viewportLabel) viewportLabel.textContent = surface ? String(surface.label || surface.id) : "Enemy";
   if (meta) meta.textContent = formatEnemyWorkshopMeta(surface);
   hydrateGnatSettingInputs({ root: globalThis.document, settings: gnatSettings });
@@ -412,6 +450,7 @@ function updateSelection({
   }
   if (behaviorReadout) behaviorReadout.textContent = formatEnemyWorkshopBehaviorReadout(gnatSettings);
   if (personalityReadout) personalityReadout.textContent = formatEnemyWorkshopPersonalityReadout(gnatSettings);
+  if (swarmReadout) swarmReadout.textContent = formatEnemyWorkshopSwarmReadout(gnatSettings);
   if (runtimeReadout) runtimeReadout.textContent = formatEnemyWorkshopRuntimeReadout(surface);
 }
 

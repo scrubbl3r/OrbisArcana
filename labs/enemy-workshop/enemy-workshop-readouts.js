@@ -27,6 +27,12 @@ export function formatEnemyWorkshopPersonalityReadout(surface = null) {
   return `speed ${rangeText(ranges.speed)} / chance ${rangeText(ranges.wanderChancePerMinute)}/min / range ${rangeText(ranges.wanderRangeBo)} BO / outbound ${rangeText(ranges.outboundBias)} / return ${rangeText(ranges.returnBias)}`;
 }
 
+export function formatEnemyWorkshopSwarmReadout(surface = null) {
+  if (!surface) return "Pending";
+  const swarm = surface.swarm || {};
+  return `gnats total ${roundMetric(swarm.gnatsTotal, 0)}`;
+}
+
 export function formatEnemyWorkshopRuntimeReadout(surface = null) {
   if (!surface) return "Pending";
   return `content target src/content/enemies/${String(surface.archetype || surface.id || "enemy")}.js / runtime target src/game-runtime/enemies/ / level spawns remain level-owned`;
