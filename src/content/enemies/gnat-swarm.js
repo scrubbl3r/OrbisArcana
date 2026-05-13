@@ -41,20 +41,13 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       "chancePerMinute": 25,
       "cooldownMaxSec": 2,
       "cooldownMinSec": 0,
-      "elasticJitterBo": 0.18,
-      "elasticJitterHz": 7.5,
       "lingerMaxSec": 2.2,
       "lingerMinSec": 0.4,
       "outboundBias": 0.25,
       "rangeMaxBo": 10,
       "rangeMinBo": 5,
       "returnBias": 0.72,
-      "returnSpeedMultiplier": 1.12,
-      "springDamping": 5.2,
-      "springStiffness": 12,
-      "targetJitterBo": 0.54,
-      "targetRetargetMaxSec": 1.8,
-      "targetRetargetMinSec": 0.35
+      "returnSpeedMultiplier": 1.12
     }
   },
   "id": "gnat-swarm",

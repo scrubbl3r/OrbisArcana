@@ -30,7 +30,7 @@ export function formatEnemyWorkshopPersonalityReadout(surface = null) {
 export function formatEnemyWorkshopSpawnReadout(surface = null) {
   if (!surface) return "Pending";
   const wander = surface.wander || surface.gnat && surface.gnat.wander || {};
-  return `wander ${roundMetric(wander.rangeMinBo)}-${roundMetric(wander.rangeMaxBo)} BO / target ${roundMetric(wander.targetRetargetMinSec)}-${roundMetric(wander.targetRetargetMaxSec)}s / spring ${roundMetric(wander.springStiffness)} / damping ${roundMetric(wander.springDamping)} / return bias ${roundMetric(wander.returnBias)}`;
+  return `wander ${roundMetric(wander.rangeMinBo)}-${roundMetric(wander.rangeMaxBo)} BO / chance ${roundMetric(wander.chancePerMinute)}/min / outbound bias ${roundMetric(wander.outboundBias)} / return bias ${roundMetric(wander.returnBias)}`;
 }
 
 export function formatEnemyWorkshopRuntimeReadout(surface = null) {
