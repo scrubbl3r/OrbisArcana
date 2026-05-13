@@ -23,6 +23,25 @@ function randomInCircle(radius = 1) {
   };
 }
 
+function randomInAnnulus(minRadius = 0, maxRadius = 1) {
+  const inner = Math.max(0, Math.min(minRadius, maxRadius));
+  const outer = Math.max(inner, maxRadius);
+  const angle = Math.random() * Math.PI * 2;
+  const r = Math.sqrt(inner * inner + Math.random() * (outer * outer - inner * inner));
+  return {
+    x: Math.cos(angle) * r,
+    y: Math.sin(angle) * r,
+  };
+}
+
+function mixPoint(a, b, amount = 0.5) {
+  const t = Math.min(1, Math.max(0, amount));
+  return {
+    x: a.x + (b.x - a.x) * t,
+    y: a.y + (b.y - a.y) * t,
+  };
+}
+
 function cleanupPreview(root = null) {
   if (!root) return;
   const cleanup = root[PREVIEW_CLEANUP_KEY];
@@ -38,11 +57,14 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const wander = gnat.wander || {};
   const personalityRanges = gnat.personalityRanges || {};
   const speedMultiplier = clampNumber(rangeMidpoint(personalityRanges.speed, 1), 1, 0.1, 4);
+  const wanderChanceMultiplier = clampNumber(rangeMidpoint(personalityRanges.wanderChance, 1), 1, 0, 4);
   const wanderRangeMultiplier = clampNumber(rangeMidpoint(personalityRanges.wanderRange, 1), 1, 0.1, 4);
   const idleRadiusBo = clampNumber(idle.idleRadiusBo, 2.2, 0.2, 12);
-  const wanderMaxBo = Math.max(idleRadiusBo, clampNumber(wander.rangeMaxBo, 5.8, 0.4, 20) * wanderRangeMultiplier);
+  const wanderMinBo = clampNumber(wander.rangeMinBo, 2.8, 0.2, 20) * wanderRangeMultiplier;
+  const wanderMaxBo = Math.max(idleRadiusBo, wanderMinBo, clampNumber(wander.rangeMaxBo, 5.8, 0.4, 20) * wanderRangeMultiplier);
   const scale = 42;
   const idleRadiusPx = Math.round(idleRadiusBo * scale);
+  const wanderMinPx = Math.round(wanderMinBo * scale);
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
   const baseSpeedPx = clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 8) * speedMultiplier * scale;
   const maxSpeedPx = clampNumber(idle.maxSpeedBoPerSec, 3.2, 0.1, 16) * speedMultiplier * scale;
@@ -53,6 +75,15 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const elasticJitterHz = clampNumber(idle.elasticJitterHz, 9, 0, 40);
   const retargetMinSec = clampNumber(idle.targetRetargetMinSec, 0.28, 0.05, 8);
   const retargetMaxSec = Math.max(retargetMinSec, clampNumber(idle.targetRetargetMaxSec, 1.25, 0.05, 16));
+  const wanderChancePerSec = clampNumber(wander.chancePerMinute, 16, 0, 120) * wanderChanceMultiplier / 60;
+  const cooldownMinSec = clampNumber(wander.cooldownMinSec, 1.4, 0, 60);
+  const cooldownMaxSec = Math.max(cooldownMinSec, clampNumber(wander.cooldownMaxSec, 5.5, 0, 120));
+  const outboundBias = clampNumber(wander.outboundBias, 0.64, 0, 1);
+  const arrivalRadiusPx = clampNumber(wander.arrivalRadiusBo, 0.34, 0.05, 4) * scale;
+  const returnBias = clampNumber(wander.returnBias, 0.82, 0, 1);
+  const returnSpeedMultiplier = clampNumber(wander.returnSpeedMultiplier, 1.12, 0.1, 4);
+  const lingerMinSec = clampNumber(wander.lingerMinSec, 0.4, 0, 30);
+  const lingerMaxSec = Math.max(lingerMinSec, clampNumber(wander.lingerMaxSec, 2.2, 0, 60));
 
   root.innerHTML = `
     <div
@@ -72,8 +103,12 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     y: 0,
     vx: baseSpeedPx * 0.2,
     vy: 0,
+    mode: "idle",
     target: randomInCircle(idleRadiusPx),
+    wanderDestination: randomInAnnulus(wanderMinPx, wanderRadiusPx),
     nextTargetAt: 0,
+    lingerUntil: 0,
+    cooldownUntil: 0,
     lastMs: performance.now(),
     frame: 0,
     phaseX: Math.random() * Math.PI * 2,
@@ -81,15 +116,44 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   };
 
   const scheduleTarget = (nowSec) => {
-    state.target = randomInCircle(idleRadiusPx);
+    if (state.mode === "outbound") {
+      state.target = mixPoint(randomInCircle(idleRadiusPx), state.wanderDestination, outboundBias);
+    } else if (state.mode === "linger") {
+      const lingerOffset = randomInCircle(Math.max(arrivalRadiusPx, idleRadiusPx * 0.25));
+      state.target = {
+        x: state.wanderDestination.x + lingerOffset.x,
+        y: state.wanderDestination.y + lingerOffset.y,
+      };
+    } else if (state.mode === "return") {
+      state.target = mixPoint(randomInCircle(idleRadiusPx), { x: 0, y: 0 }, returnBias);
+    } else {
+      state.target = randomInCircle(idleRadiusPx);
+    }
     state.nextTargetAt = nowSec + retargetMinSec + Math.random() * Math.max(0, retargetMaxSec - retargetMinSec);
   };
+
+  const startWander = (nowSec) => {
+    state.mode = "outbound";
+    state.wanderDestination = randomInAnnulus(wanderMinPx, wanderRadiusPx);
+    scheduleTarget(nowSec);
+  };
+
+  const startCooldown = (nowSec) => {
+    state.mode = "cooldown";
+    state.cooldownUntil = nowSec + cooldownMinSec + Math.random() * Math.max(0, cooldownMaxSec - cooldownMinSec);
+    scheduleTarget(nowSec);
+  };
+
   scheduleTarget(performance.now() / 1000);
 
   const tick = (nowMs) => {
     const nowSec = nowMs / 1000;
     const dt = Math.min(0.04, Math.max(0.001, (nowMs - state.lastMs) / 1000));
     state.lastMs = nowMs;
+    if ((state.mode === "idle" || state.mode === "cooldown") && nowSec >= state.cooldownUntil) {
+      state.mode = "idle";
+      if (wanderChancePerSec > 0 && Math.random() < wanderChancePerSec * dt) startWander(nowSec);
+    }
     if (nowSec >= state.nextTargetAt) scheduleTarget(nowSec);
 
     const jitterX = Math.sin(nowSec * elasticJitterHz * 6.283 + state.phaseX) * elasticJitterPx;
@@ -102,15 +166,26 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     const ay = (ty - state.y) * stiffness - state.vy * damping;
     state.vx += ax * dt;
     state.vy += ay * dt;
+    const modeMaxSpeedPx = state.mode === "return" ? maxSpeedPx * returnSpeedMultiplier : maxSpeedPx;
     const speed = Math.hypot(state.vx, state.vy);
-    if (speed > maxSpeedPx) {
-      const cap = maxSpeedPx / speed;
+    if (speed > modeMaxSpeedPx) {
+      const cap = modeMaxSpeedPx / speed;
       state.vx *= cap;
       state.vy *= cap;
     }
     state.x += state.vx * dt;
     state.y += state.vy * dt;
-    if (Math.hypot(state.x, state.y) > idleRadiusPx * 1.12) {
+    if (state.mode === "outbound" && Math.hypot(state.x - state.wanderDestination.x, state.y - state.wanderDestination.y) <= arrivalRadiusPx) {
+      state.mode = "linger";
+      state.lingerUntil = nowSec + lingerMinSec + Math.random() * Math.max(0, lingerMaxSec - lingerMinSec);
+      scheduleTarget(nowSec);
+    } else if (state.mode === "linger" && nowSec >= state.lingerUntil) {
+      state.mode = "return";
+      scheduleTarget(nowSec);
+    } else if (state.mode === "return" && Math.hypot(state.x, state.y) <= Math.max(arrivalRadiusPx, idleRadiusPx * 0.72)) {
+      startCooldown(nowSec);
+    }
+    if (Math.hypot(state.x, state.y) > wanderRadiusPx * 1.08) {
       state.x *= 0.985;
       state.y *= 0.985;
     }
@@ -126,8 +201,10 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     idleRadiusBo,
     wanderMaxBo,
     idleRadiusPx,
+    wanderMinPx,
     wanderRadiusPx,
     speedMultiplier,
+    wanderChanceMultiplier,
     wanderRangeMultiplier,
   });
 }
