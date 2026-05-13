@@ -5,6 +5,8 @@
   --border: var(--frame);
   --lab-workspace-nav-muted: var(--text-muted);
   --lab-workspace-nav-active: var(--text-strong);
+  --enemy-workshop-viewport-width: 1600px;
+  --enemy-workshop-card-padding-x: 14px;
 }
 
 *,
@@ -44,7 +46,12 @@ body::before {
 .wrap {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  max-width: calc(
+    var(--enemy-workshop-viewport-width) +
+    (var(--enemy-workshop-card-padding-x) * 2) +
+    2px +
+    32px
+  );
   margin: 22px auto;
   padding: 0 16px 48px;
   gap: 16px;
@@ -113,7 +120,7 @@ body::before {
 }
 
 .card {
-  padding: 14px 14px 16px;
+  padding: 14px var(--enemy-workshop-card-padding-x) 16px;
   overflow: hidden;
 }
 
