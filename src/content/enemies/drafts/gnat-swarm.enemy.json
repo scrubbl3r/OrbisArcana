@@ -1,6 +1,8 @@
-export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
 {
-  "category": "enemy",
+  "schema": "orbis.enemy-workshop.draft.v1",
+  "enemyId": "gnat-swarm",
+  "label": "Gnat Swarm",
+  "savedAtMs": 1778700246042,
   "gnat": {
     "idle": {
       "baseSpeedBoPerSec": 1.35,
@@ -55,11 +57,5 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       "returnSkew": 0.72,
       "returnSpeedMultiplier": 1.12
     }
-  },
-  "id": "gnat-swarm",
-  "kind": "swarm",
-  "label": "Gnat Swarm",
-  "member": "gnat",
-  "status": "draft"
+  }
 }
-);
