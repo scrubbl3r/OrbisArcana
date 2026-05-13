@@ -44,7 +44,7 @@ body::before {
 .wrap {
   position: relative;
   z-index: 1;
-  max-width: 1180px;
+  max-width: 1200px;
   margin: 22px auto;
   padding: 0 16px 48px;
   gap: 16px;
