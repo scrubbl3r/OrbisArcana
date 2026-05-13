@@ -34,11 +34,23 @@ function randomInAnnulus(minRadius = 0, maxRadius = 1) {
   };
 }
 
-function mixPoint(a, b, amount = 0.5) {
+function distanceBetween(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function moveToward(a, b, amount = 0.5) {
   const t = Math.min(1, Math.max(0, amount));
   return {
     x: a.x + (b.x - a.x) * t,
     y: a.y + (b.y - a.y) * t,
+  };
+}
+
+function offsetPoint(point, radius = 1) {
+  const offset = randomInCircle(radius);
+  return {
+    x: point.x + offset.x,
+    y: point.y + offset.y,
   };
 }
 
@@ -84,6 +96,10 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const returnSpeedMultiplier = clampNumber(wander.returnSpeedMultiplier, 1.12, 0.1, 4);
   const lingerMinSec = clampNumber(wander.lingerMinSec, 0.4, 0, 30);
   const lingerMaxSec = Math.max(lingerMinSec, clampNumber(wander.lingerMaxSec, 2.2, 0, 60));
+  const outboundAnchorStep = 0.08 + outboundBias * 0.28;
+  const returnAnchorStep = 0.18 + returnBias * 0.44;
+  const outboundRerollRadiusPx = Math.max(arrivalRadiusPx * 1.5, idleRadiusPx * (0.75 - outboundBias * 0.35));
+  const returnRerollRadiusPx = Math.max(arrivalRadiusPx * 1.25, idleRadiusPx * (0.62 - returnBias * 0.32));
 
   root.innerHTML = `
     <div
@@ -105,6 +121,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     vy: 0,
     mode: "idle",
     target: randomInCircle(idleRadiusPx),
+    wanderAnchor: { x: 0, y: 0 },
     wanderDestination: randomInAnnulus(wanderMinPx, wanderRadiusPx),
     nextTargetAt: 0,
     lingerUntil: 0,
@@ -117,16 +134,22 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
 
   const scheduleTarget = (nowSec) => {
     if (state.mode === "outbound") {
-      state.target = mixPoint(randomInCircle(idleRadiusPx), state.wanderDestination, outboundBias);
+      state.wanderAnchor = moveToward(state.wanderAnchor, state.wanderDestination, outboundAnchorStep);
+      const goalDistance = distanceBetween(state.wanderAnchor, state.wanderDestination);
+      const focus = Math.min(1, goalDistance / Math.max(arrivalRadiusPx, wanderRadiusPx));
+      const rerollRadius = Math.max(arrivalRadiusPx * 0.5, outboundRerollRadiusPx * (0.2 + focus * 0.8));
+      state.target = offsetPoint(state.wanderAnchor, rerollRadius);
     } else if (state.mode === "linger") {
-      const lingerOffset = randomInCircle(Math.max(arrivalRadiusPx, idleRadiusPx * 0.25));
-      state.target = {
-        x: state.wanderDestination.x + lingerOffset.x,
-        y: state.wanderDestination.y + lingerOffset.y,
-      };
+      state.wanderAnchor = moveToward(state.wanderAnchor, state.wanderDestination, 0.5);
+      state.target = offsetPoint(state.wanderDestination, Math.max(arrivalRadiusPx, idleRadiusPx * 0.25));
     } else if (state.mode === "return") {
-      state.target = mixPoint(randomInCircle(idleRadiusPx), { x: 0, y: 0 }, returnBias);
+      state.wanderAnchor = moveToward(state.wanderAnchor, { x: 0, y: 0 }, returnAnchorStep);
+      const goalDistance = distanceBetween(state.wanderAnchor, { x: 0, y: 0 });
+      const focus = Math.min(1, goalDistance / Math.max(arrivalRadiusPx, wanderRadiusPx));
+      const rerollRadius = Math.max(arrivalRadiusPx * 0.5, returnRerollRadiusPx * (0.2 + focus * 0.8));
+      state.target = offsetPoint(state.wanderAnchor, rerollRadius);
     } else {
+      state.wanderAnchor = { x: 0, y: 0 };
       state.target = randomInCircle(idleRadiusPx);
     }
     state.nextTargetAt = nowSec + retargetMinSec + Math.random() * Math.max(0, retargetMaxSec - retargetMinSec);
@@ -134,6 +157,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
 
   const startWander = (nowSec) => {
     state.mode = "outbound";
+    state.wanderAnchor = { x: state.x, y: state.y };
     state.wanderDestination = randomInAnnulus(wanderMinPx, wanderRadiusPx);
     scheduleTarget(nowSec);
   };
@@ -175,14 +199,15 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     }
     state.x += state.vx * dt;
     state.y += state.vy * dt;
-    if (state.mode === "outbound" && Math.hypot(state.x - state.wanderDestination.x, state.y - state.wanderDestination.y) <= arrivalRadiusPx) {
+    if (state.mode === "outbound" && distanceBetween(state, state.wanderDestination) <= arrivalRadiusPx) {
       state.mode = "linger";
       state.lingerUntil = nowSec + lingerMinSec + Math.random() * Math.max(0, lingerMaxSec - lingerMinSec);
       scheduleTarget(nowSec);
     } else if (state.mode === "linger" && nowSec >= state.lingerUntil) {
       state.mode = "return";
+      state.wanderAnchor = { x: state.x, y: state.y };
       scheduleTarget(nowSec);
-    } else if (state.mode === "return" && Math.hypot(state.x, state.y) <= Math.max(arrivalRadiusPx, idleRadiusPx * 0.72)) {
+    } else if (state.mode === "return" && distanceBetween(state, { x: 0, y: 0 }) <= Math.max(arrivalRadiusPx, idleRadiusPx * 0.72)) {
       startCooldown(nowSec);
     }
     if (Math.hypot(state.x, state.y) > wanderRadiusPx * 1.08) {
