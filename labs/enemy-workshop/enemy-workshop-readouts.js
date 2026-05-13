@@ -18,7 +18,7 @@ export function formatEnemyWorkshopMeta(surface = null) {
 export function formatEnemyWorkshopBehaviorReadout(surface = null) {
   if (!surface) return "Pending";
   const idle = surface.idle || surface.gnat && surface.gnat.idle || {};
-  return `idle radius ${roundMetric(idle.idleRadiusBo)} BO / base speed ${roundMetric(idle.baseSpeedBoPerSec)} BO/s / turn ease ${roundMetric(idle.turnEase)} / hover tightness ${roundMetric(idle.hoverTightness)}`;
+  return `idle radius ${roundMetric(idle.idleRadiusBo)} BO / target ${roundMetric(idle.targetRetargetMinSec)}-${roundMetric(idle.targetRetargetMaxSec)}s / spring ${roundMetric(idle.springStiffness)} / damping ${roundMetric(idle.springDamping)} / elastic jitter ${roundMetric(idle.elasticJitterBo)} BO`;
 }
 
 export function formatEnemyWorkshopPersonalityReadout(surface = null) {

@@ -42,6 +42,26 @@ function cloneSettings(value = {}) {
   return JSON.parse(JSON.stringify(value || {}));
 }
 
+function mergeSettings(defaults = {}, overrides = {}) {
+  const out = cloneSettings(defaults);
+  const apply = (target, source) => {
+    if (!source || typeof source !== "object") return target;
+    Object.entries(source).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        target[key] = value.slice();
+        return;
+      }
+      if (value && typeof value === "object") {
+        target[key] = apply(target[key] && typeof target[key] === "object" ? target[key] : {}, value);
+        return;
+      }
+      target[key] = value;
+    });
+    return target;
+  };
+  return apply(out, overrides);
+}
+
 function getPathValue(source = {}, path = "") {
   return String(path || "").split(".").reduce((acc, key) => {
     if (acc == null) return undefined;
@@ -256,7 +276,9 @@ function restoreSavedDraft({ select = null, gnatSettingsRef = null, draftStore =
   const surface = selectedSurface(select);
   const value = String(surface && surface.id || "");
   const record = draftStore && draftStore.profilesByValue ? draftStore.profilesByValue[value] : null;
-  if (record && record.gnat && gnatSettingsRef) gnatSettingsRef.value = cloneSettings(record.gnat);
+  if (record && record.gnat && gnatSettingsRef) {
+    gnatSettingsRef.value = mergeSettings(surface && surface.gnat ? surface.gnat : {}, record.gnat);
+  }
 }
 
 async function publishEnemy({ select, gnatSettingsRef, projectIo, actionStatus }) {

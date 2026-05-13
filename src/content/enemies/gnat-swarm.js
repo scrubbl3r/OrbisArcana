@@ -4,19 +4,15 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
   "gnat": {
     "idle": {
       "baseSpeedBoPerSec": 1.35,
-      "hoverTightness": 0.64,
+      "elasticJitterBo": 0.12,
+      "elasticJitterHz": 9,
       "idleRadiusBo": 2.2,
-      "loopBias": 0.46,
-      "noiseAmount": 0.22,
-      "turnEase": 0.18,
-      "verticalPreference": 0,
-      "waveAmplitudeXBo": 0.42,
-      "waveAmplitudeYBo": 0.28,
-      "waveAmplitudeZBo": 0.16,
-      "waveFrequencyXHz": 0.58,
-      "waveFrequencyYHz": 0.77,
-      "waveFrequencyZHz": 0.36,
-      "wavePhaseSpread": 0.72
+      "maxSpeedBoPerSec": 3.2,
+      "springDamping": 6.5,
+      "springStiffness": 18,
+      "targetJitterBo": 0.42,
+      "targetRetargetMaxSec": 1.25,
+      "targetRetargetMinSec": 0.28
     },
     "personalityRanges": {
       "aggression": [

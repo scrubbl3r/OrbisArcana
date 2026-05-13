@@ -201,7 +201,7 @@ body::before {
 
 .gnatPreviewRing,
 .gnatPreviewSpawnPoint,
-.gnatPreviewFlightPath {
+.gnatPreviewDot {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -238,45 +238,15 @@ body::before {
   box-shadow: 0 0 24px rgba(178, 222, 181, 0.22);
 }
 
-.gnatPreviewFlightPath {
-  width: 0;
-  height: 0;
-  transform-origin: 0 0;
-  animation: gnatPreviewOrbit var(--d) linear infinite;
-}
-
 .gnatPreviewDot {
-  position: absolute;
-  left: 0;
-  top: 0;
   width: 8px;
   aspect-ratio: 1;
   border-radius: 50%;
   background: rgb(209, 230, 190);
   opacity: 0.84;
   box-shadow: 0 0 8px rgba(209, 230, 190, 0.62);
-  transform: translateX(var(--orbit-r)) translate(-50%, -50%);
-  animation: gnatDrift calc(var(--d) * 0.58) ease-in-out infinite alternate;
-}
-
-@keyframes gnatPreviewOrbit {
-  from {
-    rotate: 0deg;
-  }
-
-  to {
-    rotate: 360deg;
-  }
-}
-
-@keyframes gnatDrift {
-  from {
-    translate: calc(var(--wave-x) * -0.16) calc(var(--wave-y) * -0.3);
-  }
-
-  to {
-    translate: calc(var(--wave-x) * 0.16) calc(var(--wave-y) * 0.3);
-  }
+  transform: translate(-50%, -50%);
+  will-change: transform;
 }
 
 .viewportHud {
