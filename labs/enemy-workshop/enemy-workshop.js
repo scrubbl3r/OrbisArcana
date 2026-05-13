@@ -147,14 +147,24 @@ function bindTopbarActions({ root = null, actionStatus = null } = {}) {
 
 function bindGnatSettingInputs({ root = null, gnatSettingsRef = null, update = null } = {}) {
   if (!root || !gnatSettingsRef) return;
+  const applyInputValue = (input) => {
+    const path = input.getAttribute("data-gnat-setting") || input.getAttribute("data-gnat-range") || "";
+    if (!path) return;
+    const nextValue = Number(input.value);
+    const isValid = Number.isFinite(nextValue);
+    input.classList.toggle("isInvalid", !isValid);
+    if (!isValid) return;
+    if (!gnatSettingsRef.value) gnatSettingsRef.value = {};
+    setPathValue(gnatSettingsRef.value, path, nextValue);
+    if (typeof update === "function") update();
+  };
   root.querySelectorAll("[data-gnat-setting], [data-gnat-range]").forEach((input) => {
-    input.addEventListener("input", () => {
-      const path = input.getAttribute("data-gnat-setting") || input.getAttribute("data-gnat-range") || "";
-      if (!path) return;
-      if (!gnatSettingsRef.value) gnatSettingsRef.value = {};
-      setPathValue(gnatSettingsRef.value, path, Number(input.value));
-      if (typeof update === "function") update();
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      applyInputValue(input);
     });
+    input.addEventListener("blur", () => applyInputValue(input));
   });
 }
 
