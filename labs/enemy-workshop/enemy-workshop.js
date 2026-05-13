@@ -1,5 +1,23 @@
 import { renderLabWorkspaceNav } from "../shell/lab-workspaces.js";
+import {
+  connectProjectFolder,
+  downloadTextFile,
+  refreshProjectConnectUi,
+  saveTextToConnectedProjectDrafts,
+  saveTextToConnectedProjectPath,
+  saveTextToProjectFile,
+} from "../shell/lab-project-io.js";
+import {
+  createLabProfileStore,
+  loadLabProfileStore,
+  persistLabProfileStore,
+} from "../shell/lab-profile-store.js";
 import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js";
+import {
+  buildEnemyDraftPayload,
+  buildGnatSwarmEnemyModule,
+  ENEMY_WORKSHOP_TARGETS,
+} from "./enemy-workshop-publish.js";
 import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-registry.js?v=20260513a";
 import {
   formatEnemyWorkshopBehaviorReadout,
@@ -8,6 +26,8 @@ import {
   formatEnemyWorkshopRuntimeReadout,
   formatEnemyWorkshopSpawnReadout,
 } from "./enemy-workshop-readouts.js?v=20260513a";
+
+const DRAFT_STORAGE_KEY = "orbis.enemyWorkshop.drafts.v1";
 
 function surfaceOptionMarkup(surface = {}) {
   return `<option value="${String(surface.id || "")}">${String(surface.label || surface.id || "Enemy")}</option>`;
@@ -47,6 +67,9 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   initCollapsibleControlGroups(root);
   const previewRegistry = createEnemyWorkshopPreviewRegistry();
   const gnatSettingsRef = { value: null };
+  const draftStore = createLabProfileStore();
+  loadLabProfileStore(DRAFT_STORAGE_KEY, draftStore);
+  let projectRootDirHandle = null;
   const select = root.querySelector("[data-enemy-workshop-enemy-select]");
   const meta = root.querySelector("[data-enemy-workshop-meta]");
   const viewportLabel = root.querySelector("[data-enemy-workshop-viewport-label]");
@@ -56,7 +79,19 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   const spawnReadout = root.querySelector("[data-enemy-workshop-spawn-readout]");
   const runtimeReadout = root.querySelector("[data-enemy-workshop-runtime-readout]");
   const actionStatus = root.querySelector("[data-enemy-workshop-action-status]");
-  bindTopbarActions({ root, actionStatus });
+  const projectIo = createEnemyProjectIo({
+    root,
+    getProjectRootDirHandle: () => projectRootDirHandle,
+    setProjectRootDirHandle: (dirHandle) => { projectRootDirHandle = dirHandle; },
+  });
+  bindTopbarActions({
+    root,
+    actionStatus,
+    draftStore,
+    select,
+    gnatSettingsRef,
+    projectIo,
+  });
   bindGnatSettingInputs({
     root,
     gnatSettingsRef,
@@ -80,18 +115,23 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
     if (hashSurfaceId && ENEMY_WORKSHOP_SURFACES.some((surface) => surface.id === hashSurfaceId)) {
       select.value = hashSurfaceId;
     }
-    select.addEventListener("change", () => updateSelection({
-      select,
-      meta,
-      viewportLabel,
-      previewRoot,
-      behaviorReadout,
-      personalityReadout,
-      spawnReadout,
-      runtimeReadout,
-      previewRegistry,
-      gnatSettingsRef,
-    }));
+    select.addEventListener("change", () => {
+      gnatSettingsRef.value = null;
+      restoreSavedDraft({ select, gnatSettingsRef, draftStore, root });
+      updateSelection({
+        select,
+        meta,
+        viewportLabel,
+        previewRoot,
+        behaviorReadout,
+        personalityReadout,
+        spawnReadout,
+        runtimeReadout,
+        previewRegistry,
+        gnatSettingsRef,
+        preserveSettings: !!gnatSettingsRef.value,
+      });
+    });
   }
   updateSelection({
     select,
@@ -104,6 +144,20 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
     runtimeReadout,
     previewRegistry,
     gnatSettingsRef,
+  });
+  restoreSavedDraft({ select, gnatSettingsRef, draftStore, root });
+  updateSelection({
+    select,
+    meta,
+    viewportLabel,
+    previewRoot,
+    behaviorReadout,
+    personalityReadout,
+    spawnReadout,
+    runtimeReadout,
+    previewRegistry,
+    gnatSettingsRef,
+    preserveSettings: true,
   });
 }
 
@@ -132,17 +186,154 @@ function initCollapsibleControlGroups(root = globalThis.document) {
   });
 }
 
-function bindTopbarActions({ root = null, actionStatus = null } = {}) {
-  if (!root) return;
-  const setStatus = (message) => {
-    if (actionStatus) actionStatus.textContent = message;
+function setActionStatus(actionStatus = null, message = "Ready") {
+  if (actionStatus) actionStatus.textContent = message;
+}
+
+function selectedSurface(select = null) {
+  const selectedId = String(select && select.value || ENEMY_WORKSHOP_SURFACES[0]?.id || "");
+  return ENEMY_WORKSHOP_SURFACES.find((entry) => entry.id === selectedId) || ENEMY_WORKSHOP_SURFACES[0] || null;
+}
+
+function createEnemyProjectIo({
+  root = null,
+  getProjectRootDirHandle = () => null,
+  setProjectRootDirHandle = () => {},
+} = {}) {
+  const connectProjectBtn = root ? root.querySelector("[data-enemy-workshop-connect]") : null;
+  const refreshUi = () => refreshProjectConnectUi({
+    connectProjectBtn,
+    projectRootDirHandle: getProjectRootDirHandle(),
+    connectedTitle: `Connected. Publish writes to ${ENEMY_WORKSHOP_TARGETS.gnatSwarm.join("/")}`,
+    disconnectedTitle: "Connect repo root for one-click enemy publish.",
+  });
+  const connect = () => connectProjectFolder({
+    showDirectoryPicker: window.showDirectoryPicker ? window.showDirectoryPicker.bind(window) : null,
+    onConnected: setProjectRootDirHandle,
+    refreshProjectConnectUi: refreshUi,
+  });
+  refreshUi();
+  return Object.freeze({
+    connect,
+    refreshUi,
+    saveDraft: (filename, text) => saveTextToConnectedProjectDrafts({
+      projectRootDirHandle: getProjectRootDirHandle(),
+      draftPathParts: ENEMY_WORKSHOP_TARGETS.drafts,
+      filename,
+      text,
+    }),
+    savePath: (pathParts, text) => saveTextToConnectedProjectPath({
+      projectRootDirHandle: getProjectRootDirHandle(),
+      pathParts,
+      text,
+    }),
+    hasConnection: () => !!getProjectRootDirHandle(),
+  });
+}
+
+function buildDraftRecord({ select = null, gnatSettingsRef = null } = {}) {
+  const surface = selectedSurface(select);
+  if (!surface) return null;
+  return {
+    value: String(surface.id || "gnat-swarm"),
+    label: String(surface.label || "Gnat Swarm"),
+    savedAtMs: Date.now(),
+    gnat: cloneSettings(gnatSettingsRef && gnatSettingsRef.value ? gnatSettingsRef.value : surface.gnat || {}),
   };
+}
+
+function saveDraft({ draftStore, select, gnatSettingsRef, actionStatus }) {
+  const record = buildDraftRecord({ select, gnatSettingsRef });
+  if (!record) return null;
+  draftStore.profilesByValue[record.value] = record;
+  draftStore.activeValue = record.value;
+  persistLabProfileStore(DRAFT_STORAGE_KEY, draftStore);
+  setActionStatus(actionStatus, `Saved ${record.label}`);
+  return record;
+}
+
+function restoreSavedDraft({ select = null, gnatSettingsRef = null, draftStore = null } = {}) {
+  const surface = selectedSurface(select);
+  const value = String(surface && surface.id || "");
+  const record = draftStore && draftStore.profilesByValue ? draftStore.profilesByValue[value] : null;
+  if (record && record.gnat && gnatSettingsRef) gnatSettingsRef.value = cloneSettings(record.gnat);
+}
+
+async function publishEnemy({ select, gnatSettingsRef, projectIo, actionStatus }) {
+  const surface = selectedSurface(select);
+  if (!surface) return;
+  const gnatSettings = cloneSettings(gnatSettingsRef && gnatSettingsRef.value ? gnatSettingsRef.value : surface.gnat || {});
+  const moduleText = buildGnatSwarmEnemyModule({ surface, gnatSettings });
+  const draftPayload = buildEnemyDraftPayload({ surface, gnatSettings });
+  const filename = `${String(surface.id || "gnat-swarm")}.enemy.json`;
+  const draftText = JSON.stringify(draftPayload, null, 2);
+
+  try {
+    if (!projectIo.hasConnection() && window.showDirectoryPicker) {
+      const connected = await projectIo.connect();
+      if (!connected) {
+        setActionStatus(actionStatus, "Publish canceled");
+        return;
+      }
+    }
+    if (projectIo.hasConnection()) {
+      const wroteModule = await projectIo.savePath(ENEMY_WORKSHOP_TARGETS.gnatSwarm, moduleText);
+      const wroteDraft = await projectIo.saveDraft(filename, draftText);
+      if (wroteModule) {
+        setActionStatus(actionStatus, wroteDraft ? "Published enemy + draft" : "Published enemy");
+        window.alert(`Published ${surface.label || surface.id} to ${ENEMY_WORKSHOP_TARGETS.gnatSwarm.join("/")}`);
+        return;
+      }
+    }
+    const fileSaved = await saveTextToProjectFile("gnat-swarm.js", moduleText, {
+      description: "Enemy module",
+      accept: { "text/javascript": [".js"] },
+    });
+    if (fileSaved) {
+      setActionStatus(actionStatus, "Saved enemy module");
+      return;
+    }
+    downloadTextFile("gnat-swarm.js", moduleText, "text/javascript;charset=utf-8");
+    setActionStatus(actionStatus, "Downloaded enemy module");
+  } catch (err) {
+    if (err && err.name === "AbortError") {
+      setActionStatus(actionStatus, "Publish canceled");
+      return;
+    }
+    console.error(err);
+    downloadTextFile("gnat-swarm.js", moduleText, "text/javascript;charset=utf-8");
+    setActionStatus(actionStatus, "Downloaded fallback");
+  }
+}
+
+function bindTopbarActions({
+  root = null,
+  actionStatus = null,
+  draftStore = null,
+  select = null,
+  gnatSettingsRef = null,
+  projectIo = null,
+} = {}) {
+  if (!root) return;
   const saveBtn = root.querySelector("[data-enemy-workshop-save]");
   const connectBtn = root.querySelector("[data-enemy-workshop-connect]");
   const publishBtn = root.querySelector("[data-enemy-workshop-publish]");
-  if (saveBtn) saveBtn.addEventListener("click", () => setStatus("Saved draft"));
-  if (connectBtn) connectBtn.addEventListener("click", () => setStatus("Project connection pending"));
-  if (publishBtn) publishBtn.addEventListener("click", () => setStatus("Publish pending"));
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => saveDraft({ draftStore, select, gnatSettingsRef, actionStatus }));
+  }
+  if (connectBtn && projectIo) {
+    connectBtn.addEventListener("click", () => {
+      void projectIo.connect().then((connected) => {
+        setActionStatus(actionStatus, connected ? "Project connected" : "Connect canceled");
+      });
+    });
+  }
+  if (publishBtn && projectIo) {
+    publishBtn.addEventListener("click", () => {
+      saveDraft({ draftStore, select, gnatSettingsRef, actionStatus });
+      void publishEnemy({ select, gnatSettingsRef, projectIo, actionStatus });
+    });
+  }
 }
 
 function bindGnatSettingInputs({ root = null, gnatSettingsRef = null, update = null } = {}) {
