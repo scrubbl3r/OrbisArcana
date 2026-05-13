@@ -6,7 +6,7 @@
   --lab-workspace-nav-muted: var(--text-muted);
   --lab-workspace-nav-active: var(--text-strong);
   --enemy-workshop-viewport-width: 1600px;
-  --enemy-workshop-sidebar-width: 380px;
+  --enemy-workshop-sidebar-width: 630px;
   --enemy-workshop-main-gap: 16px;
   --enemy-workshop-card-padding-x: 14px;
 }
