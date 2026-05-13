@@ -14,6 +14,11 @@ function rangeMidpoint(range = [], fallback = 1) {
   return (min + max) / 2;
 }
 
+function randomInRange(range = [], fallback = 1) {
+  const [min, max] = rangePair(range, [fallback, fallback]);
+  return min + Math.random() * Math.max(0, max - min);
+}
+
 function rangePair(range = [], fallback = [0, 1]) {
   if (!Array.isArray(range) || range.length < 2) return fallback.slice();
   const min = Number(range[0]);
@@ -74,10 +79,10 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   cleanupPreview(root);
   const enemySettings = settings || {};
   const gnat = enemySettings.gnat || settings || surface && surface.gnat || {};
+  const swarm = enemySettings.swarm || surface && surface.swarm || {};
   const idle = gnat.idle || {};
   const wander = gnat.wander || {};
   const personalityRanges = gnat.personalityRanges || {};
-  const speedMultiplier = clampNumber(rangeMidpoint(personalityRanges.speed, 1), 1, 0.1, 4);
   const legacyWanderChanceMultiplier = clampNumber(rangeMidpoint(personalityRanges.wanderChance, 1), 1, 0, 4);
   const legacyWanderRangeMultiplier = clampNumber(rangeMidpoint(personalityRanges.wanderRange, 1), 1, 0.1, 4);
   const idleRadiusBo = clampNumber(idle.idleRadiusBo, 2.2, 0.2, 12);
@@ -92,8 +97,9 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const idleRadiusPx = Math.round(idleRadiusBo * scale);
   const wanderMinPx = Math.round(wanderMinBo * scale);
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
-  const baseSpeedPx = clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 8) * speedMultiplier * scale;
-  const maxSpeedPx = clampNumber(idle.maxSpeedBoPerSec, 3.2, 0.1, 16) * speedMultiplier * scale;
+  const swarmTotal = Math.round(clampNumber(swarm.gnatsTotal, 1, 1, 240));
+  const baseSpeedBoPerSec = clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 8);
+  const maxSpeedBoPerSec = clampNumber(idle.maxSpeedBoPerSec, 3.2, 0.1, 16);
   const targetJitterPx = clampNumber(idle.targetJitterBo, 0.42, 0, 4) * scale;
   const stiffness = clampNumber(idle.springStiffness, 18, 0.1, 80);
   const damping = clampNumber(idle.springDamping, 6.5, 0, 30);
@@ -101,27 +107,9 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const elasticJitterHz = clampNumber(idle.elasticJitterHz, 9, 0, 40);
   const retargetMinSec = clampNumber(idle.targetRetargetMinSec, 0.28, 0.05, 8);
   const retargetMaxSec = Math.max(retargetMinSec, clampNumber(idle.targetRetargetMaxSec, 1.25, 0.05, 16));
-  const wanderChancePerMinute = clampNumber(
-    rangeMidpoint(personalityRanges.wanderChancePerMinute, clampNumber(wander.chancePerMinute, 16, 0, 120) * legacyWanderChanceMultiplier),
-    16,
-    0,
-    120
-  );
+  const fallbackWanderChancePerMinute = clampNumber(wander.chancePerMinute, 16, 0, 120) * legacyWanderChanceMultiplier;
   const cooldownSec = rangePair(personalityRanges.wanderCooldownSec, [wander.cooldownMinSec, wander.cooldownMaxSec]);
   const lingerSec = rangePair(personalityRanges.lingerSec, [wander.lingerMinSec, wander.lingerMaxSec]);
-  const wanderChancePerSec = wanderChancePerMinute / 60;
-  const cooldownMinSec = clampNumber(cooldownSec[0], 1.4, 0, 60);
-  const cooldownMaxSec = Math.max(cooldownMinSec, clampNumber(cooldownSec[1], 5.5, 0, 120));
-  const outboundBias = clampNumber(rangeMidpoint(personalityRanges.outboundBias, wander.outboundBias), 0.64, 0, 1);
-  const arrivalRadiusPx = clampNumber(rangeMidpoint(personalityRanges.arrivalRadiusBo, wander.arrivalRadiusBo), 0.34, 0.05, 4) * scale;
-  const returnBias = clampNumber(rangeMidpoint(personalityRanges.returnBias, wander.returnBias), 0.82, 0, 1);
-  const returnSpeedMultiplier = clampNumber(rangeMidpoint(personalityRanges.returnSpeedMultiplier, wander.returnSpeedMultiplier), 1.12, 0.1, 4);
-  const lingerMinSec = clampNumber(lingerSec[0], 0.4, 0, 30);
-  const lingerMaxSec = Math.max(lingerMinSec, clampNumber(lingerSec[1], 2.2, 0, 60));
-  const outboundAnchorStep = 0.08 + outboundBias * 0.28;
-  const returnAnchorStep = 0.18 + returnBias * 0.44;
-  const outboundRerollRadiusPx = Math.max(arrivalRadiusPx * 1.5, idleRadiusPx * (0.75 - outboundBias * 0.35));
-  const returnRerollRadiusPx = Math.max(arrivalRadiusPx * 1.25, idleRadiusPx * (0.62 - returnBias * 0.32));
 
   root.innerHTML = `
     <div
@@ -131,44 +119,79 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       <div class="gnatPreviewRing gnatPreviewWanderRing" aria-hidden="true"></div>
       <div class="gnatPreviewRing gnatPreviewIdleRing" aria-hidden="true"></div>
       <div class="gnatPreviewSpawnPoint" aria-hidden="true"></div>
-      <span class="gnatPreviewDot" aria-hidden="true"></span>
+      ${Array.from({ length: swarmTotal }, () => '<span class="gnatPreviewDot" aria-hidden="true"></span>').join("")}
     </div>
   `;
 
-  const dot = root.querySelector(".gnatPreviewDot");
-  const state = {
-    x: 0,
-    y: 0,
-    vx: baseSpeedPx * 0.2,
-    vy: 0,
-    mode: "idle",
-    target: randomInCircle(idleRadiusPx),
-    wanderAnchor: { x: 0, y: 0 },
-    wanderDestination: randomInAnnulus(wanderMinPx, wanderRadiusPx),
-    nextTargetAt: 0,
-    lingerUntil: 0,
-    cooldownUntil: 0,
-    lastMs: performance.now(),
+  const dots = Array.from(root.querySelectorAll(".gnatPreviewDot"));
+  const buildGnatState = (dot, index) => {
+    const speedMultiplier = clampNumber(randomInRange(personalityRanges.speed, 1), 1, 0.1, 4);
+    const personalWanderBo = clampNumber(randomInRange(personalityRanges.wanderRangeBo, wanderMaxBo), wanderMaxBo, 0.4, 24);
+    const personalWanderRadiusPx = Math.round(Math.max(idleRadiusBo, personalWanderBo) * scale);
+    const personalWanderMinPx = Math.min(wanderMinPx, personalWanderRadiusPx);
+    const personalChancePerMinute = clampNumber(randomInRange(personalityRanges.wanderChancePerMinute, fallbackWanderChancePerMinute), 16, 0, 120);
+    const personalCooldownSec = clampNumber(randomInRange(cooldownSec, 1.4), 1.4, 0, 120);
+    const personalLingerSec = clampNumber(randomInRange(lingerSec, 0.4), 0.4, 0, 60);
+    const outboundBias = clampNumber(randomInRange(personalityRanges.outboundBias, wander.outboundBias), 0.64, 0, 1);
+    const returnBias = clampNumber(randomInRange(personalityRanges.returnBias, wander.returnBias), 0.82, 0, 1);
+    const arrivalRadiusPx = clampNumber(randomInRange(personalityRanges.arrivalRadiusBo, wander.arrivalRadiusBo), 0.34, 0.05, 4) * scale;
+    const returnSpeedMultiplier = clampNumber(randomInRange(personalityRanges.returnSpeedMultiplier, wander.returnSpeedMultiplier), 1.12, 0.1, 4);
+    const outboundAnchorStep = 0.08 + outboundBias * 0.28;
+    const returnAnchorStep = 0.18 + returnBias * 0.44;
+    const outboundRerollRadiusPx = Math.max(arrivalRadiusPx * 1.5, idleRadiusPx * (0.75 - outboundBias * 0.35));
+    const returnRerollRadiusPx = Math.max(arrivalRadiusPx * 1.25, idleRadiusPx * (0.62 - returnBias * 0.32));
+    const start = randomInCircle(idleRadiusPx);
+    return {
+      dot,
+      x: start.x,
+      y: start.y,
+      vx: baseSpeedBoPerSec * speedMultiplier * scale * 0.2,
+      vy: 0,
+      mode: "idle",
+      target: randomInCircle(idleRadiusPx),
+      wanderAnchor: { x: 0, y: 0 },
+      wanderDestination: randomInAnnulus(personalWanderMinPx, personalWanderRadiusPx),
+      nextTargetAt: 0,
+      lingerUntil: 0,
+      cooldownUntil: index * 0.04,
+      phaseX: Math.random() * Math.PI * 2,
+      phaseY: Math.random() * Math.PI * 2,
+      baseSpeedPx: baseSpeedBoPerSec * speedMultiplier * scale,
+      maxSpeedPx: maxSpeedBoPerSec * speedMultiplier * scale,
+      wanderRadiusPx: personalWanderRadiusPx,
+      wanderMinPx: personalWanderMinPx,
+      wanderChancePerSec: personalChancePerMinute / 60,
+      cooldownSec: personalCooldownSec,
+      lingerSec: personalLingerSec,
+      outboundAnchorStep,
+      returnAnchorStep,
+      outboundRerollRadiusPx,
+      returnRerollRadiusPx,
+      arrivalRadiusPx,
+      returnSpeedMultiplier,
+    };
+  };
+  const states = dots.map(buildGnatState);
+  const animation = {
     frame: 0,
-    phaseX: Math.random() * Math.PI * 2,
-    phaseY: Math.random() * Math.PI * 2,
+    lastMs: performance.now(),
   };
 
-  const scheduleTarget = (nowSec) => {
+  const scheduleTarget = (state, nowSec) => {
     if (state.mode === "outbound") {
-      state.wanderAnchor = moveToward(state.wanderAnchor, state.wanderDestination, outboundAnchorStep);
+      state.wanderAnchor = moveToward(state.wanderAnchor, state.wanderDestination, state.outboundAnchorStep);
       const goalDistance = distanceBetween(state.wanderAnchor, state.wanderDestination);
-      const focus = Math.min(1, goalDistance / Math.max(arrivalRadiusPx, wanderRadiusPx));
-      const rerollRadius = Math.max(arrivalRadiusPx * 0.5, outboundRerollRadiusPx * (0.2 + focus * 0.8));
+      const focus = Math.min(1, goalDistance / Math.max(state.arrivalRadiusPx, state.wanderRadiusPx));
+      const rerollRadius = Math.max(state.arrivalRadiusPx * 0.5, state.outboundRerollRadiusPx * (0.2 + focus * 0.8));
       state.target = offsetPoint(state.wanderAnchor, rerollRadius);
     } else if (state.mode === "linger") {
       state.wanderAnchor = moveToward(state.wanderAnchor, state.wanderDestination, 0.5);
-      state.target = offsetPoint(state.wanderDestination, Math.max(arrivalRadiusPx, idleRadiusPx * 0.25));
+      state.target = offsetPoint(state.wanderDestination, Math.max(state.arrivalRadiusPx, idleRadiusPx * 0.25));
     } else if (state.mode === "return") {
-      state.wanderAnchor = moveToward(state.wanderAnchor, { x: 0, y: 0 }, returnAnchorStep);
+      state.wanderAnchor = moveToward(state.wanderAnchor, { x: 0, y: 0 }, state.returnAnchorStep);
       const goalDistance = distanceBetween(state.wanderAnchor, { x: 0, y: 0 });
-      const focus = Math.min(1, goalDistance / Math.max(arrivalRadiusPx, wanderRadiusPx));
-      const rerollRadius = Math.max(arrivalRadiusPx * 0.5, returnRerollRadiusPx * (0.2 + focus * 0.8));
+      const focus = Math.min(1, goalDistance / Math.max(state.arrivalRadiusPx, state.wanderRadiusPx));
+      const rerollRadius = Math.max(state.arrivalRadiusPx * 0.5, state.returnRerollRadiusPx * (0.2 + focus * 0.8));
       state.target = offsetPoint(state.wanderAnchor, rerollRadius);
     } else {
       state.wanderAnchor = { x: 0, y: 0 };
@@ -177,71 +200,74 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     state.nextTargetAt = nowSec + retargetMinSec + Math.random() * Math.max(0, retargetMaxSec - retargetMinSec);
   };
 
-  const startWander = (nowSec) => {
+  const startWander = (state, nowSec) => {
     state.mode = "outbound";
     state.wanderAnchor = { x: state.x, y: state.y };
-    state.wanderDestination = randomInAnnulus(wanderMinPx, wanderRadiusPx);
-    scheduleTarget(nowSec);
+    state.wanderDestination = randomInAnnulus(state.wanderMinPx, state.wanderRadiusPx);
+    scheduleTarget(state, nowSec);
   };
 
-  const startCooldown = (nowSec) => {
+  const startCooldown = (state, nowSec) => {
     state.mode = "cooldown";
-    state.cooldownUntil = nowSec + cooldownMinSec + Math.random() * Math.max(0, cooldownMaxSec - cooldownMinSec);
-    scheduleTarget(nowSec);
+    state.cooldownUntil = nowSec + state.cooldownSec;
+    scheduleTarget(state, nowSec);
   };
 
-  scheduleTarget(performance.now() / 1000);
+  const startSec = performance.now() / 1000;
+  states.forEach((state) => scheduleTarget(state, startSec));
 
   const tick = (nowMs) => {
     const nowSec = nowMs / 1000;
-    const dt = Math.min(0.04, Math.max(0.001, (nowMs - state.lastMs) / 1000));
-    state.lastMs = nowMs;
-    if ((state.mode === "idle" || state.mode === "cooldown") && nowSec >= state.cooldownUntil) {
-      state.mode = "idle";
-      if (wanderChancePerSec > 0 && Math.random() < wanderChancePerSec * dt) startWander(nowSec);
-    }
-    if (nowSec >= state.nextTargetAt) scheduleTarget(nowSec);
+    const dt = Math.min(0.04, Math.max(0.001, (nowMs - animation.lastMs) / 1000));
+    animation.lastMs = nowMs;
+    states.forEach((state) => {
+      if ((state.mode === "idle" || state.mode === "cooldown") && nowSec >= state.cooldownUntil) {
+        state.mode = "idle";
+        if (state.wanderChancePerSec > 0 && Math.random() < state.wanderChancePerSec * dt) startWander(state, nowSec);
+      }
+      if (nowSec >= state.nextTargetAt) scheduleTarget(state, nowSec);
 
-    const jitterX = Math.sin(nowSec * elasticJitterHz * 6.283 + state.phaseX) * elasticJitterPx;
-    const jitterY = Math.cos(nowSec * elasticJitterHz * 5.113 + state.phaseY) * elasticJitterPx;
-    const targetJitterX = (Math.random() * 2 - 1) * targetJitterPx;
-    const targetJitterY = (Math.random() * 2 - 1) * targetJitterPx;
-    const tx = state.target.x + targetJitterX + jitterX;
-    const ty = state.target.y + targetJitterY + jitterY;
-    const ax = (tx - state.x) * stiffness - state.vx * damping;
-    const ay = (ty - state.y) * stiffness - state.vy * damping;
-    state.vx += ax * dt;
-    state.vy += ay * dt;
-    const modeMaxSpeedPx = state.mode === "return" ? maxSpeedPx * returnSpeedMultiplier : maxSpeedPx;
-    const speed = Math.hypot(state.vx, state.vy);
-    if (speed > modeMaxSpeedPx) {
-      const cap = modeMaxSpeedPx / speed;
-      state.vx *= cap;
-      state.vy *= cap;
-    }
-    state.x += state.vx * dt;
-    state.y += state.vy * dt;
-    if (state.mode === "outbound" && distanceBetween(state, state.wanderDestination) <= arrivalRadiusPx) {
-      state.mode = "linger";
-      state.lingerUntil = nowSec + lingerMinSec + Math.random() * Math.max(0, lingerMaxSec - lingerMinSec);
-      scheduleTarget(nowSec);
-    } else if (state.mode === "linger" && nowSec >= state.lingerUntil) {
-      state.mode = "return";
-      state.wanderAnchor = { x: state.x, y: state.y };
-      scheduleTarget(nowSec);
-    } else if (state.mode === "return" && distanceBetween(state, { x: 0, y: 0 }) <= Math.max(arrivalRadiusPx, idleRadiusPx * 0.72)) {
-      startCooldown(nowSec);
-    }
-    if (Math.hypot(state.x, state.y) > wanderRadiusPx * 1.08) {
-      state.x *= 0.985;
-      state.y *= 0.985;
-    }
-    if (dot) dot.style.transform = `translate(${state.x.toFixed(2)}px, ${state.y.toFixed(2)}px) translate(-50%, -50%)`;
-    state.frame = requestAnimationFrame(tick);
+      const jitterX = Math.sin(nowSec * elasticJitterHz * 6.283 + state.phaseX) * elasticJitterPx;
+      const jitterY = Math.cos(nowSec * elasticJitterHz * 5.113 + state.phaseY) * elasticJitterPx;
+      const targetJitterX = (Math.random() * 2 - 1) * targetJitterPx;
+      const targetJitterY = (Math.random() * 2 - 1) * targetJitterPx;
+      const tx = state.target.x + targetJitterX + jitterX;
+      const ty = state.target.y + targetJitterY + jitterY;
+      const ax = (tx - state.x) * stiffness - state.vx * damping;
+      const ay = (ty - state.y) * stiffness - state.vy * damping;
+      state.vx += ax * dt;
+      state.vy += ay * dt;
+      const modeMaxSpeedPx = state.mode === "return" ? state.maxSpeedPx * state.returnSpeedMultiplier : state.maxSpeedPx;
+      const speed = Math.hypot(state.vx, state.vy);
+      if (speed > modeMaxSpeedPx) {
+        const cap = modeMaxSpeedPx / speed;
+        state.vx *= cap;
+        state.vy *= cap;
+      }
+      state.x += state.vx * dt;
+      state.y += state.vy * dt;
+      if (state.mode === "outbound" && distanceBetween(state, state.wanderDestination) <= state.arrivalRadiusPx) {
+        state.mode = "linger";
+        state.lingerUntil = nowSec + state.lingerSec;
+        scheduleTarget(state, nowSec);
+      } else if (state.mode === "linger" && nowSec >= state.lingerUntil) {
+        state.mode = "return";
+        state.wanderAnchor = { x: state.x, y: state.y };
+        scheduleTarget(state, nowSec);
+      } else if (state.mode === "return" && distanceBetween(state, { x: 0, y: 0 }) <= Math.max(state.arrivalRadiusPx, idleRadiusPx * 0.72)) {
+        startCooldown(state, nowSec);
+      }
+      if (Math.hypot(state.x, state.y) > state.wanderRadiusPx * 1.08) {
+        state.x *= 0.985;
+        state.y *= 0.985;
+      }
+      if (state.dot) state.dot.style.transform = `translate(${state.x.toFixed(2)}px, ${state.y.toFixed(2)}px) translate(-50%, -50%)`;
+    });
+    animation.frame = requestAnimationFrame(tick);
   };
-  state.frame = requestAnimationFrame(tick);
+  animation.frame = requestAnimationFrame(tick);
   root[PREVIEW_CLEANUP_KEY] = () => {
-    if (state.frame) cancelAnimationFrame(state.frame);
+    if (animation.frame) cancelAnimationFrame(animation.frame);
   };
 
   return Object.freeze({
@@ -250,7 +276,6 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     idleRadiusPx,
     wanderMinPx,
     wanderRadiusPx,
-    speedMultiplier,
-    wanderChancePerMinute,
+    swarmTotal,
   });
 }
