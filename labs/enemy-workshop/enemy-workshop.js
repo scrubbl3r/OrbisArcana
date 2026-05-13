@@ -47,6 +47,7 @@ function mergeSettings(defaults = {}, overrides = {}) {
   const apply = (target, source) => {
     if (!source || typeof source !== "object") return target;
     Object.entries(source).forEach(([key, value]) => {
+      if (!Object.prototype.hasOwnProperty.call(target, key)) return;
       if (Array.isArray(value)) {
         target[key] = value.slice();
         return;
