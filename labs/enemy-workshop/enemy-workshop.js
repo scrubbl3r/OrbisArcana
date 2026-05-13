@@ -164,6 +164,7 @@ function bindGnatSettingInputs({ root = null, gnatSettingsRef = null, update = n
       event.preventDefault();
       applyInputValue(input);
     });
+    input.addEventListener("change", () => applyInputValue(input));
     input.addEventListener("blur", () => applyInputValue(input));
   });
 }
