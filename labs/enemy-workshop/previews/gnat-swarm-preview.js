@@ -7,7 +7,7 @@ import { STAGE_BLOOM_CONFIG } from "../../../src/game-runtime/rendering/three/th
 const PREVIEW_CLEANUP_KEY = Symbol.for("orbis.enemyWorkshop.gnatPreviewCleanup");
 const GNAT_WORLD_SCALE = 42;
 const GNAT_CAMERA_FOV_DEG = 45;
-const GNAT_CAMERA_VIEW_RADIUS = 420;
+const GNAT_MIN_CAMERA_VIEW_RADIUS = 420;
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
   const numeric = Number(value);
@@ -220,7 +220,7 @@ function createPreviewGrid(size = 12000, step = 34, z = -2) {
   return new THREE.LineSegments(geometry, material);
 }
 
-function cameraDistanceForViewRadius(radius = GNAT_CAMERA_VIEW_RADIUS, fovDeg = GNAT_CAMERA_FOV_DEG) {
+function cameraDistanceForViewRadius(radius = GNAT_MIN_CAMERA_VIEW_RADIUS, fovDeg = GNAT_CAMERA_FOV_DEG) {
   return radius / Math.tan(THREE.MathUtils.degToRad(fovDeg / 2));
 }
 
@@ -254,6 +254,12 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const idleRadiusPx = Math.round(spawnRadiusBo * scale);
   const wanderMinPx = Math.round(wanderMinBo * scale);
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
+  const cameraViewRadiusPx = Math.max(GNAT_MIN_CAMERA_VIEW_RADIUS, wanderRadiusPx * 1.14);
+  const cameraDistancePx = cameraDistanceForViewRadius(cameraViewRadiusPx);
+  const gnatSpriteSizePx = clampNumber(cameraViewRadiusPx * 0.036, 22, 22, 380);
+  const gridSizePx = Math.max(12000, cameraViewRadiusPx * 2.7);
+  const gridStepPx = Math.max(scale, Math.round(cameraViewRadiusPx / 64));
+  const wanderRingOpacity = cameraViewRadiusPx > 2400 ? 0.22 : 0.1;
   const swarmTotal = Math.round(clampNumber(swarm.gnatsTotal, 1, 1, 240));
   const targetJitterBo = settingRangePair(idle.targetJitterBo, [0.42, 0.42]);
   const springStiffness = settingRangePair(idle.springStiffness, [18, 18]);
@@ -271,7 +277,8 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const stage = root.querySelector(".gnatThreePreviewScene");
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(GNAT_CAMERA_FOV_DEG, 1, 0.1, 50000);
-  camera.position.set(0, 0, zDepthPx + cameraDistanceForViewRadius());
+  camera.far = Math.max(50000, Math.abs(zDepthPx) + cameraDistancePx * 3);
+  camera.position.set(0, 0, zDepthPx + cameraDistancePx);
   camera.lookAt(0, 0, zDepthPx);
 
   const renderer = new THREE.WebGLRenderer({
@@ -292,8 +299,8 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const worldGroup = new THREE.Group();
   worldGroup.name = "gnat-swarm-preview-world";
   scene.add(worldGroup);
-  worldGroup.add(createPreviewGrid(12000, 34, zDepthPx - 2));
-  worldGroup.add(createRing(wanderRadiusPx, zDepthPx, { opacity: 0.1, dashed: true }));
+  worldGroup.add(createPreviewGrid(gridSizePx, gridStepPx, zDepthPx - 2));
+  worldGroup.add(createRing(wanderRadiusPx, zDepthPx, { opacity: wanderRingOpacity, dashed: true }));
   worldGroup.add(createRing(idleRadiusPx, zDepthPx, { opacity: 0.2 }));
   worldGroup.add(createRing(17, zDepthPx, { color: 0xdeebd8, opacity: 0.48 }));
 
@@ -308,7 +315,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   });
   const sprites = Array.from({ length: swarmTotal }, () => {
     const sprite = new THREE.Sprite(gnatMaterial.clone());
-    sprite.scale.set(22, 22, 1);
+    sprite.scale.set(gnatSpriteSizePx, gnatSpriteSizePx, 1);
     sprite.position.set(0, 0, zDepthPx);
     worldGroup.add(sprite);
     return sprite;
@@ -576,6 +583,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     idleRadiusPx,
     wanderMinPx,
     wanderRadiusPx,
+    cameraViewRadiusPx,
     swarmTotal,
     zDepthBo,
   });
