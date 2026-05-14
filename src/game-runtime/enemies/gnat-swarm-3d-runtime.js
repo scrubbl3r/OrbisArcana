@@ -169,27 +169,77 @@ export function createGnatSwarm3dRuntime({
     state.nextTargetAt = nowSec + randomInRange(state.idleRetargetSec, 1);
   }
 
+  function scheduleWanderTarget(state, nowSec = 0) {
+    if (state.mode === "linger") {
+      state.target = randomBoundedPointAround(state.destination, state.arrivalRadiusPx, bounds);
+    } else {
+      const segment = state.route[state.routeIndex] || state.destination || state.spawn;
+      const rerollRadius = state.mode === "return" ? state.returnRerollRadiusPx : state.outboundRerollRadiusPx;
+      state.target = randomBoundedPointAround(segment, rerollRadius, bounds);
+    }
+    state.nextTargetAt = nowSec + randomInRange(state.idleRetargetSec, 1);
+  }
+
   function startCooldown(state, nowSec = 0) {
     state.mode = "cooldown";
     state.route = [];
     state.routeIndex = 0;
+    state.isDwelling = false;
     state.nextRouteAt = nowSec + randomInRange(state.cooldownSec, 4);
     scheduleIdleTarget(state, nowSec);
   }
 
-  function startRoute(state, nowSec = 0) {
+  function startWander(state, nowSec = 0) {
     const destination = chooseDestination(state);
-    state.mode = "wander";
+    state.mode = "outbound";
+    state.destination = destination;
+    state.isDwelling = false;
     state.route = buildRouteSegments({
       from: state.position,
       to: destination,
       spacingPx: randomInRange(state.segmentSpacingPx, 96),
-      jitterPx: state.segmentJitterPx,
+      jitterPx: state.segmentJitterPx * Math.max(0.25, 1.15 - state.routeCommitment * 0.75),
       bounds,
     });
     state.routeIndex = 0;
     state.target = state.route[0] || destination;
-    state.nextTargetAt = nowSec + 999999;
+    scheduleWanderTarget(state, nowSec);
+  }
+
+  function startReturn(state, nowSec = 0) {
+    state.mode = "return";
+    state.destination = state.spawn;
+    state.isDwelling = false;
+    state.route = buildRouteSegments({
+      from: state.position,
+      to: state.spawn,
+      spacingPx: randomInRange(state.segmentSpacingPx, 96) * Math.max(0.45, 1 - state.returnBias * 0.3),
+      jitterPx: state.segmentJitterPx * Math.max(0.2, 1 - state.returnBias * 0.6),
+      bounds,
+    });
+    state.routeIndex = 0;
+    state.target = state.route[0] || state.spawn;
+    scheduleWanderTarget(state, nowSec);
+  }
+
+  function advanceRoute(state, nowSec = 0, onFinished = null) {
+    if (state.isDwelling) {
+      if (nowSec < state.dwellUntil) return;
+      state.isDwelling = false;
+      state.routeIndex += 1;
+    } else if (state.segmentDwellSec > 0 && state.routeIndex < state.route.length - 1) {
+      state.isDwelling = true;
+      state.dwellUntil = nowSec + state.segmentDwellSec;
+      scheduleWanderTarget(state, nowSec);
+      return;
+    } else {
+      state.routeIndex += 1;
+    }
+    if (state.routeIndex >= state.route.length) {
+      if (typeof onFinished === "function") onFinished();
+    } else {
+      scheduleWanderTarget(state, nowSec);
+    }
   }
 
   function load(spawns = [], {
@@ -216,12 +266,22 @@ export function createGnatSwarm3dRuntime({
     const segmentSpacingBo = rangePair(personality.wanderSegmentSpacingBo, [3, 7]);
     const segmentJitterBo = rangePair(personality.wanderSegmentJitterBo, [0.5, 2]);
     const cooldownSec = rangePair(personality.wanderCooldownSec, [1, 5]);
-    const idleRetargetSec = [
-      randomInRange(rangePair(idle.targetRetargetMinSec, [0.28, 0.28]), 0.28),
-      randomInRange(rangePair(idle.targetRetargetMaxSec, [1.25, 1.25]), 1.25),
-    ];
+    const targetRetargetMinSec = rangePair(idle.targetRetargetMinSec, [0.28, 0.28]);
+    const targetRetargetMaxSec = rangePair(idle.targetRetargetMaxSec, [1.25, 1.25]);
+    const targetJitterBo = rangePair(idle.targetJitterBo, [0.42, 0.42]);
+    const springStiffness = rangePair(idle.springStiffness, [18, 18]);
+    const springDamping = rangePair(idle.springDamping, [6.5, 6.5]);
+    const elasticJitterBo = rangePair(idle.elasticJitterBo, [0.12, 0.12]);
+    const elasticJitterHz = rangePair(idle.elasticJitterHz, [9, 9]);
+    const lingerSec = rangePair(personality.lingerSec, [0.4, 0.4]);
+    const segmentDwellSec = rangePair(personality.segmentDwellSec, [0, 0]);
+    const routeCommitment = rangePair(personality.routeCommitment, [0.82, 0.82]);
+    const returnBias = rangePair(personality.returnBias, [0.82, 0.82]);
+    const arrivalRadiusBo = rangePair(personality.arrivalRadiusBo, [0.34, 0.34]);
+    const returnSpeedMultiplier = rangePair(personality.returnSpeedMultiplier, [1.12, 1.12]);
     const spawnRadius = Math.max(0, clampNumber(swarm.spawnRadiusBo, 2, 0, 64)) * bo;
     const gnatSize = Math.max(0.5, clampNumber(swarm.gnatSizeBo, 0.04, 0.005, 1) * bo);
+    const zDepthPx = -clampNumber(swarm.zDepthBo, getOrbZBO(), -500, 500) * bo;
     const allStates = [];
     for (const spawn of Array.isArray(spawns) ? spawns : []) {
       if (String(spawn && (spawn.enemy || spawn.archetype) || "") !== "gnat-swarm") continue;
@@ -239,15 +299,26 @@ export function createGnatSwarm3dRuntime({
           16,
           spawnCurves.wanderChancePerMinute,
         );
-        const personalIdleRetargetSec = rangePair(idleRetargetSec, [0.28, 1.25]);
+        const personalRetargetMinSec = randomInRange(targetRetargetMinSec, 0.28);
+        const personalRetargetMaxSec = randomInRange(targetRetargetMaxSec, 1.25);
+        const personalTargetJitterPx = randomInRange(targetJitterBo, 0.42) * bo;
+        const personalElasticJitterPx = randomInRange(elasticJitterBo, 0.12) * bo;
+        const personalElasticJitterHz = randomInRange(elasticJitterHz, 9);
+        const personalRouteCommitment = clampNumber(randomInRange(routeCommitment, 0.82), 0.82, 0, 1);
+        const personalReturnBias = clampNumber(randomInRange(returnBias, 0.82), 0.82, 0, 1);
+        const personalArrivalRadiusPx = Math.max(1, randomInRange(arrivalRadiusBo, 0.34) * bo);
         const state = {
           mode: "idle",
           position: spawnPoint,
           spawn: center,
+          destination: spawnPoint,
           target: spawnPoint,
-          velocity: { xW: randomUnit() * 20, yW: randomUnit() * 20 },
+          velocity: { xW: randomUnit() * randomInRange(baseSpeed, 2) * bo, yW: randomUnit() * randomInRange(baseSpeed, 2) * bo },
           route: [],
           routeIndex: 0,
+          isDwelling: false,
+          dwellUntil: 0,
+          lingerUntil: 0,
           nextRouteAt: Math.random() * 2,
           nextTargetAt: Math.random() * 0.5,
           speedPx: Math.max(1, randomInRange(baseSpeed, 2) * randomInRange(speedX, 1) * bo),
@@ -257,9 +328,25 @@ export function createGnatSwarm3dRuntime({
           segmentSpacingPx: [segmentSpacingBo[0] * bo, segmentSpacingBo[1] * bo],
           segmentJitterPx: randomInRange(segmentJitterBo, 1) * bo,
           cooldownSec,
+          lingerSec: randomInRange(lingerSec, 0.4),
+          segmentDwellSec: randomInRange(segmentDwellSec, 0),
+          routeCommitment: personalRouteCommitment,
+          returnBias: personalReturnBias,
+          arrivalRadiusPx: personalArrivalRadiusPx,
+          returnSpeedMultiplier: randomInRange(returnSpeedMultiplier, 1.12),
+          outboundRerollRadiusPx: Math.max(personalArrivalRadiusPx * 0.5, randomInRange(segmentJitterBo, 1) * bo * (1.15 - personalRouteCommitment * 0.75)),
+          returnRerollRadiusPx: Math.max(personalArrivalRadiusPx * 0.5, randomInRange(segmentJitterBo, 1) * bo * (0.95 - personalReturnBias * 0.55)),
+          stiffness: Math.max(0.1, randomInRange(springStiffness, 18)),
+          damping: Math.max(0, randomInRange(springDamping, 6.5)),
+          targetJitterPx: Math.max(0, personalTargetJitterPx),
+          elasticJitterPx: Math.max(0, personalElasticJitterPx),
+          elasticJitterHz: Math.max(0, personalElasticJitterHz),
+          phaseX: Math.random() * Math.PI * 2,
+          phaseY: Math.random() * Math.PI * 2,
+          zDepthPx,
           idleRetargetSec: [
-            Math.max(0.05, Math.min(personalIdleRetargetSec[0], personalIdleRetargetSec[1])),
-            Math.max(0.05, Math.max(personalIdleRetargetSec[0], personalIdleRetargetSec[1])),
+            Math.max(0.05, Math.min(personalRetargetMinSec, personalRetargetMaxSec)),
+            Math.max(0.05, Math.max(personalRetargetMinSec, personalRetargetMaxSec)),
           ],
           spin: new THREE.Euler(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI),
           spinSpeed: {
@@ -291,7 +378,6 @@ export function createGnatSwarm3dRuntime({
   function update(nowMs = performance.now(), dtSec = 0.016) {
     if (!mesh || !states.length) return;
     const nowSec = nowMs / 1000;
-    const z = -Math.max(0, clampNumber(getOrbZBO(), 4)) * Math.max(1, Number(getBo()) || 42);
     for (let i = 0; i < states.length; i += 1) {
       const state = states[i];
       if (state.mode === "idle" && nowSec >= state.nextTargetAt) {
@@ -302,23 +388,44 @@ export function createGnatSwarm3dRuntime({
         scheduleIdleTarget(state, nowSec);
       }
       if (state.mode === "idle" && state.wanderChancePerSec > 0 && Math.random() < state.wanderChancePerSec * dtSec) {
-        startRoute(state, nowSec);
+        startWander(state, nowSec);
       }
-      if (state.mode === "wander" && distance(state.position, state.target) < Math.max(8, state.scale * 1.5)) {
-        state.routeIndex += 1;
-        if (state.routeIndex >= state.route.length) startCooldown(state, nowSec);
-        else state.target = state.route[state.routeIndex];
+      if (state.mode === "outbound" && nowSec >= state.nextTargetAt) {
+        scheduleWanderTarget(state, nowSec);
       }
-      const dx = (state.target.xW || 0) - (state.position.xW || 0);
-      const dy = (state.target.yW || 0) - (state.position.yW || 0);
-      const d = Math.max(0.001, Math.hypot(dx, dy));
-      const accel = state.speedPx * 5;
-      state.velocity.xW += (dx / d) * accel * dtSec;
-      state.velocity.yW += (dy / d) * accel * dtSec;
+      if (state.mode === "return" && nowSec >= state.nextTargetAt) {
+        scheduleWanderTarget(state, nowSec);
+      }
+      if (state.mode === "linger" && nowSec >= state.nextTargetAt) {
+        scheduleWanderTarget(state, nowSec);
+      }
+      if (state.mode === "outbound" && (state.isDwelling || distance(state.position, state.route[state.routeIndex] || state.destination) < state.arrivalRadiusPx)) {
+        advanceRoute(state, nowSec, () => {
+          state.mode = "linger";
+          state.lingerUntil = nowSec + state.lingerSec;
+          scheduleWanderTarget(state, nowSec);
+        });
+      }
+      if (state.mode === "linger" && nowSec >= state.lingerUntil) {
+        startReturn(state, nowSec);
+      }
+      if (state.mode === "return" && (state.isDwelling || distance(state.position, state.route[state.routeIndex] || state.spawn) < Math.max(state.arrivalRadiusPx, state.spawnRadiusPx * 0.34))) {
+        advanceRoute(state, nowSec, () => startCooldown(state, nowSec));
+      }
+      const jitterX = Math.sin(nowSec * state.elasticJitterHz * 6.283 + state.phaseX) * state.elasticJitterPx + randomUnit() * state.targetJitterPx;
+      const jitterY = Math.cos(nowSec * state.elasticJitterHz * 5.113 + state.phaseY) * state.elasticJitterPx + randomUnit() * state.targetJitterPx;
+      const tx = (state.target.xW || 0) + jitterX;
+      const ty = (state.target.yW || 0) + jitterY;
+      const dx = tx - (state.position.xW || 0);
+      const dy = ty - (state.position.yW || 0);
+      state.velocity.xW += dx * state.stiffness * dtSec - state.velocity.xW * state.damping * dtSec;
+      state.velocity.yW += dy * state.stiffness * dtSec - state.velocity.yW * state.damping * dtSec;
+      const modeSpeedMultiplier = state.mode === "return" ? state.returnSpeedMultiplier : 1;
       const speed = Math.hypot(state.velocity.xW, state.velocity.yW);
-      if (speed > state.speedPx) {
-        state.velocity.xW *= state.speedPx / speed;
-        state.velocity.yW *= state.speedPx / speed;
+      const maxSpeed = state.speedPx * modeSpeedMultiplier;
+      if (speed > maxSpeed) {
+        state.velocity.xW *= maxSpeed / speed;
+        state.velocity.yW *= maxSpeed / speed;
       }
       const next = {
         xW: state.position.xW + state.velocity.xW * dtSec,
@@ -334,7 +441,7 @@ export function createGnatSwarm3dRuntime({
         });
         state.velocity.xW *= -0.25;
         state.velocity.yW *= -0.25;
-        startRoute(state, nowSec);
+        startReturn(state, nowSec);
       }
       state.spin.x += state.spinSpeed.x * dtSec;
       state.spin.y += state.spinSpeed.y * dtSec;
@@ -342,7 +449,7 @@ export function createGnatSwarm3dRuntime({
       const runtimePosition = toRuntimePosition({
         xW: state.position.xW,
         yW: state.position.yW,
-        z,
+        z: state.zDepthPx,
       });
       positionVec.set(runtimePosition.x, runtimePosition.y, runtimePosition.z);
       quat.setFromEuler(state.spin);
