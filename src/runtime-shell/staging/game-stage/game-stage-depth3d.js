@@ -22,11 +22,13 @@ import { createStarField3dRuntime } from "../../../game-runtime/level-graphics/s
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES,
   AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
+  AUTHORED_LEVEL_READ_MODEL_KEY_ENEMY_SPAWNS,
   AUTHORED_LEVEL_READ_MODEL_KEY_ORB_DEPTH,
   AUTHORED_LEVEL_READ_MODEL_KEY_PROPS,
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260514a";
 import {
   applyThreeMeshFlags,
   disposeThreeObject,
@@ -53,8 +55,9 @@ import {
   publishDepth3dModuleVersion,
 } from "./game-stage-depth3d-debug.js?v=20260508a";
 import { createGameStageDepth3dRenderLoop } from "./game-stage-depth3d-render-loop.js?v=20260430b";
-import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260508b";
+import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260514a";
 import { createGameStageDepth3dTelemetry } from "./game-stage-depth3d-telemetry.js?v=20260430b";
+import { GNAT_SWARM_ENEMY_DEFAULT } from "../../../content/enemies/gnat-swarm.js?v=20260514a";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
@@ -83,6 +86,10 @@ function resolveSceneArtShapes(authoredScene = null) {
 
 function resolveSceneProps(authoredScene = null) {
   return resolveAuthoredLevelReadModelArray(authoredScene, AUTHORED_LEVEL_READ_MODEL_KEY_PROPS);
+}
+
+function resolveSceneEnemySpawns(authoredScene = null) {
+  return resolveAuthoredLevelReadModelArray(authoredScene, AUTHORED_LEVEL_READ_MODEL_KEY_ENEMY_SPAWNS);
 }
 
 function resolveSceneOrbDepth(authoredScene = null) {
@@ -132,6 +139,7 @@ export function createGameStageDepth3dLayer({
     propsGroup,
     actorGroup,
     globeGroup: globe3dGroup,
+    enemyGroup,
   } = sceneRuntime;
 
   let disposed = false;
@@ -150,6 +158,7 @@ export function createGameStageDepth3dLayer({
   const baseOrbWorldUnits = Math.max(1, clampNumber(orbDiameterWorldUnits, BO_WORLD_UNITS));
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let lastGlobe3dTickMs = 0;
+  let lastEnemy3dTickMs = 0;
   let boundGlobe3dSpawns = Object.freeze([]);
   const telemetry = createGameStageDepth3dTelemetry({
     root,
@@ -302,6 +311,18 @@ export function createGameStageDepth3dLayer({
       root.dataset.starFieldCount = String(Math.max(0, Math.floor(Number(count) || 0)));
     },
   });
+  const gnatSwarm3dRuntime = createGnatSwarm3dRuntime({
+    group: enemyGroup,
+    getBo: () => baseOrbWorldUnits,
+    getOrbZBO: () => currentOrbZBO,
+    getConfig: () => GNAT_SWARM_ENEMY_DEFAULT,
+    toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
+      x: toDepthThreeX(xW, worldWidthPx),
+      y: toDepthThreeY(yW, worldHeightPx),
+      z,
+    }),
+    onNeedsFrame: () => renderLoop.scheduleAnimation(),
+  });
 
   function clearGroup() {
     while (group.children.length) {
@@ -345,6 +366,12 @@ export function createGameStageDepth3dLayer({
     orbLifecycle3dRuntime.update(nowMs);
   }
 
+  function tickEnemy3dRuntime(nowMs = performance.now()) {
+    const dtSec = lastEnemy3dTickMs ? Math.max(0.001, Math.min(0.05, (nowMs - lastEnemy3dTickMs) / 1000)) : 0.016;
+    lastEnemy3dTickMs = nowMs;
+    gnatSwarm3dRuntime.update(nowMs, dtSec);
+  }
+
   function hasActiveGlobe3dAnimation() {
     return (
       worldGlobe3dRuntime.hasAnimatingVisuals()
@@ -356,6 +383,7 @@ export function createGameStageDepth3dLayer({
       || bubbleShield3dRuntime.isActive()
       || flameAoe3dRuntime.isActive()
       || shockwave3dRuntime.isActive()
+      || gnatSwarm3dRuntime.hasActiveVisuals()
     );
   }
 
@@ -364,6 +392,7 @@ export function createGameStageDepth3dLayer({
       && !backgroundGroup.children.length
       && artGroup.children.length <= 0
       && propsGroup.children.length <= 0
+      && enemyGroup.children.length <= 0
       && !orb3dActorRuntime.hasModel()
       && !globe3dGroup.children.length;
   }
@@ -471,6 +500,7 @@ export function createGameStageDepth3dLayer({
     if (measure) {
       measure("depth3d.orbUpdate", () => orb3dActorRuntime.update(frameNowMs / 1000));
       measure("depth3d.globes", () => tickGlobe3dRuntime(frameNowMs));
+      measure("depth3d.enemies", () => tickEnemy3dRuntime(frameNowMs));
       measure("depth3d.renderer", () => {
         if (bloom) bloom.render();
         else renderer.render(scene, camera);
@@ -478,6 +508,7 @@ export function createGameStageDepth3dLayer({
     } else {
       orb3dActorRuntime.update(frameNowMs / 1000);
       tickGlobe3dRuntime(frameNowMs);
+      tickEnemy3dRuntime(frameNowMs);
       if (bloom) bloom.render();
       else renderer.render(scene, camera);
     }
@@ -495,10 +526,13 @@ export function createGameStageDepth3dLayer({
       clearPropsGroup();
       artPlane3dRuntime.clear();
       starField3dRuntime.clear();
+      gnatSwarm3dRuntime.clear();
+      const sceneModel = resolveSceneModel(authoredScene);
       const summary = resolveSceneSummary(authoredScene);
       const layers = resolveSceneDepthLayers(authoredScene);
       const artShapes = resolveSceneArtShapes(authoredScene);
       const props = resolveSceneProps(authoredScene);
+      const enemySpawns = resolveSceneEnemySpawns(authoredScene);
       const orbDepth = resolveSceneOrbDepth(authoredScene);
       const levelGraphicsModel = authoredScene && authoredScene.levelGraphicsModel ? authoredScene.levelGraphicsModel : null;
       const starField = levelGraphicsModel && (levelGraphicsModel.starField || levelGraphicsModel.starsField);
@@ -531,6 +565,12 @@ export function createGameStageDepth3dLayer({
         }
       }
       loadProps(props);
+      gnatSwarm3dRuntime.load(enemySpawns, {
+        boundaryLoops: sceneModel && Array.isArray(sceneModel.loops) ? sceneModel.loops : [],
+        boundaryBox: sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null,
+      });
+      root.dataset.enemy3dSpawnCount = String(enemySpawns.length);
+      root.dataset.enemy3dObjectCount = String(enemyGroup.children.length);
       if (boundGlobe3dSpawns.length) {
         worldGlobe3dRuntime.loadSpawns(boundGlobe3dSpawns);
         tickGlobe3dRuntime();
@@ -540,7 +580,7 @@ export function createGameStageDepth3dLayer({
         depthLayerCount: group.children.length,
         depthStatus: group.children.length ? "ready" : "empty",
       });
-      if (group.children.length || backgroundGroup.children.length || artGroup.children.length) {
+      if (group.children.length || backgroundGroup.children.length || artGroup.children.length || enemyGroup.children.length) {
         renderLoop.renderFrame(renderLoop.getLastFrame() || {
           ...resolveDepthBootFrame({ depthLayers: layers, root }),
           isBootFrame: true,
@@ -670,6 +710,7 @@ export function createGameStageDepth3dLayer({
       orbLifecycle3dRuntime.dispose();
       artPlane3dRuntime.dispose();
       starField3dRuntime.dispose();
+      gnatSwarm3dRuntime.dispose();
       clearGlobe3dObjects();
       orb3dActorRuntime.dispose();
       clearGroup();

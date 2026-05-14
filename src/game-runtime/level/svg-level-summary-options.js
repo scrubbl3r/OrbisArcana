@@ -19,6 +19,7 @@ export function buildSvgLevelSummaryOptions({
     cameraLayerLabels: semanticLayers.cameras || [],
     cameraBoundaryLayerLabels: semanticLayers.cameraBounds || [],
     worldItemLayerLabels: semanticLayers.worldItems || [],
+    enemyLayerLabels: semanticLayers.enemies || [],
     propLayerLabels: semanticLayers.props || [],
     artLayerLabels: semanticLayers.art || [],
     starsFieldLayerLabels: semanticLayers.fields || [],

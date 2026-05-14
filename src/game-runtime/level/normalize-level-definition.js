@@ -31,6 +31,7 @@ export const LEVEL_SVG_LAYER_SPAWNS = "spawns";
 export const LEVEL_SVG_LAYER_CAMERAS = "cameras";
 export const LEVEL_SVG_LAYER_DEPTHS = "depths";
 export const LEVEL_SVG_LAYER_GLOBES = "globes";
+export const LEVEL_SVG_LAYER_ENEMIES = "enemies";
 export const LEVEL_SVG_LAYER_PROPS = "props";
 export const LEVEL_SVG_LAYER_ART = "art";
 export const LEVEL_SVG_LAYER_FIELDS = "fields";
@@ -90,6 +91,7 @@ function normalizeLevelMapSource(mapSource = {}, world = {}) {
       cameraBounds: normalizeLayerLabels(semanticLayers.cameraBounds),
       depths: normalizeLayerLabels(semanticLayers.depths),
       worldItems: normalizeLayerLabels(semanticLayers.worldItems),
+      enemies: normalizeLayerLabels(semanticLayers.enemies),
       props: normalizeLayerLabels(semanticLayers.props),
       art: normalizeLayerLabels(semanticLayers.art),
       fields: normalizeLayerLabels(semanticLayers.fields),

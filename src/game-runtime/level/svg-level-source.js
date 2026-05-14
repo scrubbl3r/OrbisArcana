@@ -1028,6 +1028,55 @@ export function buildSvgWorldItems({
   return Object.freeze(spawns);
 }
 
+export function buildSvgEnemySpawns({
+  svgText = "",
+  worldWidthPx = 0,
+  worldHeightPx = 0,
+  enemyLayerLabels = [],
+} = {}) {
+  const viewBox = parseSvgViewBox(svgText);
+  const authoredLayers = parseSvgLayerElements(svgText);
+  const allowedLabels = new Set(
+    (Array.isArray(enemyLayerLabels) ? enemyLayerLabels : []).map((label) => String(label || "").trim().toLowerCase())
+  );
+  const matchingLayers = authoredLayers
+    .filter((layer) => (
+      allowedLabels.has(String(layer && layer.label || "").trim().toLowerCase())
+      && isSvgRenderLayerVisible(layer)
+    ));
+  const enemySpawns = [];
+  for (const layer of matchingLayers) {
+    const circles = Array.isArray(layer && layer.circles) ? layer.circles : [];
+    for (let index = 0; index < circles.length; index += 1) {
+      const circle = translateCircle(circles[index], layer && layer.translate);
+      const metadata = parseSvgLabelMetadata(circle && circle.label, circle && circle.id);
+      const sourceStack = resolveSvgSourceStack(layer, index);
+      const authoredCenter = Object.freeze({
+        x: clampNumber(circle && circle.cx, 0),
+        y: clampNumber(circle && circle.cy, 0),
+      });
+      enemySpawns.push(Object.freeze({
+        id: String(metadata.id || circle && circle.id || `enemy_spawn_${enemySpawns.length + 1}`),
+        enemy: String(metadata.entries && (metadata.entries.enemy || metadata.entries.archetype) || metadata.kind || "").trim(),
+        archetype: String(metadata.entries && (metadata.entries.archetype || metadata.entries.enemy) || metadata.kind || "").trim(),
+        ...sourceStack,
+        zMode: metadata.zMode,
+        zBO: metadata.zBO,
+        authoredCenter,
+        worldCenter: scaleAuthoringPointToWorld(authoredCenter, {
+          viewBox,
+          worldWidthPx,
+          worldHeightPx,
+        }),
+        authoredRadius: clampNumber(circle && circle.r, 0),
+        sourceId: String(circle && circle.id || ""),
+        sourceLabel: String(circle && circle.label || ""),
+      }));
+    }
+  }
+  return Object.freeze(enemySpawns);
+}
+
 export function buildSvgPropInstances({
   svgText = "",
   worldWidthPx = 0,
@@ -1665,6 +1714,7 @@ export function summarizeSvgLevelSource({
   cameraLayerLabels = [],
   cameraBoundaryLayerLabels = [],
   worldItemLayerLabels = [],
+  enemyLayerLabels = [],
   propLayerLabels = [],
   artLayerLabels = [],
   starsFieldLayerLabels = [],
@@ -1704,6 +1754,12 @@ export function summarizeSvgLevelSource({
     worldWidthPx,
     worldHeightPx,
     worldItemLayerLabels,
+  });
+  const enemySpawns = buildSvgEnemySpawns({
+    svgText,
+    worldWidthPx,
+    worldHeightPx,
+    enemyLayerLabels,
   });
   const props = buildSvgPropInstances({
     svgText,
@@ -1749,6 +1805,7 @@ export function summarizeSvgLevelSource({
     cameraBoundaryLoops: Object.freeze(cameraBoundaryLoops),
     cameraBoundaryBox,
     worldItems: Object.freeze(worldItems),
+    enemySpawns: Object.freeze(enemySpawns),
     props: Object.freeze(props),
     artShapes,
     starsFieldRegions: Object.freeze(starsFieldRegions),

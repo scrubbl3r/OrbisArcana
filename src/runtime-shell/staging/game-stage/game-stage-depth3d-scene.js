@@ -50,10 +50,13 @@ export function createGameStageDepth3dScene({
   const propsGroup = new THREE.Group();
   const actorGroup = new THREE.Group();
   const globeGroup = new THREE.Group();
+  const enemyGroup = new THREE.Group();
   backgroundGroup.name = "star_field:background_layer";
   artGroup.name = "art_plane:runtime_layer";
   globeGroup.name = "globe3d:runtime_layer";
+  enemyGroup.name = "enemy3d:runtime_layer";
   actorGroup.add(globeGroup);
+  actorGroup.add(enemyGroup);
   scene.add(backgroundGroup);
   scene.add(depthGroup);
   scene.add(artGroup);
@@ -71,5 +74,6 @@ export function createGameStageDepth3dScene({
     propsGroup,
     actorGroup,
     globeGroup,
+    enemyGroup,
   });
 }

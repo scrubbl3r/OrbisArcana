@@ -2,7 +2,7 @@ import { createCameraRuntime } from "../camera/camera-runtime.js";
 import {
   resolveAuthoredLevelCameraTarget,
 } from "../level/authored-level-scene-model.js";
-import { loadAuthoredLevelScene } from "../level/load-authored-level-scene.js?v=20260508c";
+import { loadAuthoredLevelScene } from "../level/load-authored-level-scene.js?v=20260514a";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_BOUNDARY_BOX,
   AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_ANCHORS,

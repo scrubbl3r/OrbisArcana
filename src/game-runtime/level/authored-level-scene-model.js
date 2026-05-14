@@ -47,6 +47,7 @@ export function buildAuthoredLevelSceneModel({
     spawnPoints: spawnPoints,
     cameraAnchors,
     worldItems: Array.isArray(safeSummary && safeSummary.worldItems) ? safeSummary.worldItems : [],
+    enemySpawns: Array.isArray(safeSummary && safeSummary.enemySpawns) ? safeSummary.enemySpawns : [],
     props: Array.isArray(safeSummary && safeSummary.props) ? safeSummary.props : [],
     artShapes,
     starsFieldRegions: Array.isArray(safeSummary && safeSummary.starsFieldRegions) ? safeSummary.starsFieldRegions : [],

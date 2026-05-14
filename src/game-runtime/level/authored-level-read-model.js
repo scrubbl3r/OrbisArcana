@@ -4,6 +4,7 @@ export const AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_ANCHORS = "cameraAnchors";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_BOUNDARY_BOX = "boundaryBox";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX = "cameraBoundaryBox";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_WORLD_ITEMS = "worldItems";
+export const AUTHORED_LEVEL_READ_MODEL_KEY_ENEMY_SPAWNS = "enemySpawns";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_PROPS = "props";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES = "artShapes";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_STARS_FIELD_REGIONS = "starsFieldRegions";
