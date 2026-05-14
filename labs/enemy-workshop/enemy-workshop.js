@@ -67,6 +67,9 @@ function migrateEnemySettings(settings = {}) {
   if (Array.isArray(personality.speed) && personality.speed.some((value) => Number(value) > 10)) {
     personality.speed = personality.speed.map((value) => Number(value) > 10 ? Number(value) / 100 : Number(value));
   }
+  if (!Array.isArray(personality.segmentDwellSec)) {
+    personality.segmentDwellSec = [0, 0];
+  }
   return next;
 }
 

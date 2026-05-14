@@ -8,8 +8,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       "springDamping": 3,
       "springStiffness": 8,
       "targetJitterBo": 3,
-      "targetRetargetMaxSec": 4,
-      "targetRetargetMinSec": 1.5
+      "targetRetargetMaxSec": 6,
+      "targetRetargetMinSec": 2
     },
     "personalityRanges": {
       "aggression": [
@@ -18,7 +18,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "arrivalRadiusBo": [
         1,
-        5
+        1
       ],
       "awareness": [
         0.24,
@@ -37,8 +37,12 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         1
       ],
       "routeCommitment": [
-        0.7,
+        0.6,
         0.95
+      ],
+      "segmentDwellSec": [
+        0,
+        0
       ],
       "speed": [
         0.5,
@@ -56,13 +60,13 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         10,
         10
       ],
-      "wanderStopJitterBo": [
-        0.5,
-        2
+      "wanderSegmentJitterBo": [
+        0.2,
+        0.5
       ],
-      "wanderStopSpacingBo": [
-        1,
-        4
+      "wanderSegmentSpacingBo": [
+        4,
+        10
       ]
     }
   },

@@ -59,7 +59,7 @@ function offsetPoint(point, radius = 1) {
   };
 }
 
-function buildRouteStops({ from, to, spacingRangePx, jitterPx }) {
+function buildRouteSegments({ from, to, spacingRangePx, jitterPx }) {
   const distance = distanceBetween(from, to);
   if (distance <= 0.001) return [to];
   const dir = {
@@ -67,7 +67,7 @@ function buildRouteStops({ from, to, spacingRangePx, jitterPx }) {
     y: (to.y - from.y) / distance,
   };
   const perp = { x: -dir.y, y: dir.x };
-  const stops = [];
+  const segments = [];
   let traveled = 0;
   const minSpacing = Math.max(1, spacingRangePx[0]);
   const maxSpacing = Math.max(minSpacing, spacingRangePx[1]);
@@ -77,13 +77,13 @@ function buildRouteStops({ from, to, spacingRangePx, jitterPx }) {
     const lateral = (Math.random() * 2 - 1) * jitterPx;
     const forward = traveled < distance ? (Math.random() * 2 - 1) * Math.min(jitterPx, minSpacing * 0.35) : 0;
     const clampedDistance = Math.min(distance, Math.max(0, traveled + forward));
-    stops.push({
+    segments.push({
       x: from.x + dir.x * clampedDistance + perp.x * lateral,
       y: from.y + dir.y * clampedDistance + perp.y * lateral,
     });
   }
-  stops[stops.length - 1] = to;
-  return stops;
+  segments[segments.length - 1] = to;
+  return segments;
 }
 
 function cleanupPreview(root = null) {
@@ -131,6 +131,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const fallbackWanderChancePerMinute = clampNumber(wander.chancePerMinute, 16, 0, 120) * legacyWanderChanceMultiplier;
   const cooldownSec = rangePair(personalityRanges.wanderCooldownSec, [wander.cooldownMinSec, wander.cooldownMaxSec]);
   const lingerSec = rangePair(personalityRanges.lingerSec, [wander.lingerMinSec, wander.lingerMaxSec]);
+  const segmentDwellSec = rangePair(personalityRanges.segmentDwellSec, [0, 0]);
 
   root.innerHTML = `
     <div
@@ -157,18 +158,19 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     const personalCooldownSec = clampNumber(randomInRange(cooldownSec, 1.4), 1.4, 0, 120);
     const personalLingerSec = clampNumber(randomInRange(lingerSec, 0.4), 0.4, 0, 60);
     const legacyOutboundBias = rangeMidpoint(personalityRanges.outboundBias, wander.outboundBias);
-    const stopSpacingRangeBo = rangePair(personalityRanges.wanderStopSpacingBo, [3, 7]);
-    const stopSpacingRangePx = [
-      clampNumber(stopSpacingRangeBo[0], 3, 0.2, 32) * scale,
-      clampNumber(stopSpacingRangeBo[1], 7, 0.2, 40) * scale,
+    const segmentSpacingRangeBo = rangePair(personalityRanges.wanderSegmentSpacingBo, [3, 7]);
+    const segmentSpacingRangePx = [
+      clampNumber(segmentSpacingRangeBo[0], 3, 0.2, 32) * scale,
+      clampNumber(segmentSpacingRangeBo[1], 7, 0.2, 40) * scale,
     ];
-    const stopJitterPx = clampNumber(randomInRange(personalityRanges.wanderStopJitterBo, 1.2), 1.2, 0, 16) * scale;
+    const segmentJitterPx = clampNumber(randomInRange(personalityRanges.wanderSegmentJitterBo, 1.2), 1.2, 0, 16) * scale;
+    const personalSegmentDwellSec = clampNumber(randomInRange(segmentDwellSec, 0), 0, 0, 12);
     const routeCommitment = clampNumber(randomInRange(personalityRanges.routeCommitment, legacyOutboundBias), 0.82, 0, 1);
     const returnBias = clampNumber(randomInRange(personalityRanges.returnBias, wander.returnBias), 0.82, 0, 1);
     const arrivalRadiusPx = clampNumber(randomInRange(personalityRanges.arrivalRadiusBo, wander.arrivalRadiusBo), 0.34, 0.05, 4) * scale;
     const returnSpeedMultiplier = clampNumber(randomInRange(personalityRanges.returnSpeedMultiplier, wander.returnSpeedMultiplier), 1.12, 0.1, 4);
-    const outboundRerollRadiusPx = Math.max(arrivalRadiusPx * 0.5, stopJitterPx * (1.15 - routeCommitment * 0.75));
-    const returnRerollRadiusPx = Math.max(arrivalRadiusPx * 0.5, stopJitterPx * (0.95 - returnBias * 0.55));
+    const outboundRerollRadiusPx = Math.max(arrivalRadiusPx * 0.5, segmentJitterPx * (1.15 - routeCommitment * 0.75));
+    const returnRerollRadiusPx = Math.max(arrivalRadiusPx * 0.5, segmentJitterPx * (0.95 - returnBias * 0.55));
     const start = randomInCircle(idleRadiusPx);
     return {
       dot,
@@ -179,8 +181,10 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       mode: "idle",
       target: randomInCircle(idleRadiusPx),
       wanderDestination: randomInAnnulus(personalWanderMinPx, personalWanderRadiusPx),
-      routeStops: [],
+      routeSegments: [],
       routeIndex: 0,
+      routeDwellUntil: 0,
+      isDwellingAtSegment: false,
       nextTargetAt: 0,
       lingerUntil: 0,
       cooldownUntil: index * 0.04,
@@ -194,8 +198,9 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       wanderChancePerSec: personalChancePerMinute / 60,
       cooldownSec: personalCooldownSec,
       lingerSec: personalLingerSec,
-      stopSpacingRangePx,
-      stopJitterPx,
+      segmentSpacingRangePx,
+      segmentJitterPx,
+      segmentDwellSec: personalSegmentDwellSec,
       routeCommitment,
       returnBias,
       outboundRerollRadiusPx,
@@ -212,13 +217,13 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
 
   const scheduleTarget = (state, nowSec) => {
     if (state.mode === "outbound") {
-      const routeStop = state.routeStops[state.routeIndex] || state.wanderDestination;
-      state.target = offsetPoint(routeStop, state.outboundRerollRadiusPx);
+      const routeSegment = state.routeSegments[state.routeIndex] || state.wanderDestination;
+      state.target = offsetPoint(routeSegment, state.outboundRerollRadiusPx);
     } else if (state.mode === "linger") {
       state.target = offsetPoint(state.wanderDestination, Math.max(state.arrivalRadiusPx, idleRadiusPx * 0.25));
     } else if (state.mode === "return") {
-      const routeStop = state.routeStops[state.routeIndex] || { x: 0, y: 0 };
-      state.target = offsetPoint(routeStop, state.returnRerollRadiusPx);
+      const routeSegment = state.routeSegments[state.routeIndex] || { x: 0, y: 0 };
+      state.target = offsetPoint(routeSegment, state.returnRerollRadiusPx);
     } else {
       state.target = randomInCircle(idleRadiusPx);
     }
@@ -227,19 +232,43 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
 
   const startWander = (state, nowSec) => {
     state.mode = "outbound";
+    state.isDwellingAtSegment = false;
     state.wanderDestination = randomInAnnulus(state.wanderMinPx, state.wanderRadiusPx);
-    state.routeStops = buildRouteStops({
+    state.routeSegments = buildRouteSegments({
       from: { x: state.x, y: state.y },
       to: state.wanderDestination,
-      spacingRangePx: state.stopSpacingRangePx,
-      jitterPx: state.stopJitterPx,
+      spacingRangePx: state.segmentSpacingRangePx,
+      jitterPx: state.segmentJitterPx,
     });
     state.routeIndex = 0;
     scheduleTarget(state, nowSec);
   };
 
+  const advanceRouteSegment = (state, nowSec, onFinished) => {
+    if (state.isDwellingAtSegment) {
+      if (nowSec < state.routeDwellUntil) return;
+      state.isDwellingAtSegment = false;
+      state.routeIndex += 1;
+    } else {
+      const hasNextSegment = state.routeIndex < state.routeSegments.length - 1;
+      if (hasNextSegment && state.segmentDwellSec > 0) {
+        state.isDwellingAtSegment = true;
+        state.routeDwellUntil = nowSec + state.segmentDwellSec;
+        scheduleTarget(state, nowSec);
+        return;
+      }
+      state.routeIndex += 1;
+    }
+    if (state.routeIndex >= state.routeSegments.length) {
+      onFinished();
+    } else {
+      scheduleTarget(state, nowSec);
+    }
+  };
+
   const startCooldown = (state, nowSec) => {
     state.mode = "cooldown";
+    state.isDwellingAtSegment = false;
     state.cooldownUntil = nowSec + state.cooldownSec;
     scheduleTarget(state, nowSec);
   };
@@ -277,34 +306,32 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       }
       state.x += state.vx * dt;
       state.y += state.vy * dt;
-      if (state.mode === "outbound" && distanceBetween(state, state.routeStops[state.routeIndex] || state.wanderDestination) <= state.arrivalRadiusPx) {
-        state.routeIndex += 1;
-        if (state.routeIndex >= state.routeStops.length) {
+      if (state.mode === "outbound" && (state.isDwellingAtSegment || distanceBetween(state, state.routeSegments[state.routeIndex] || state.wanderDestination) <= state.arrivalRadiusPx)) {
+        advanceRouteSegment(state, nowSec, () => {
           state.mode = "linger";
+          state.isDwellingAtSegment = false;
           state.lingerUntil = nowSec + state.lingerSec;
-        }
-        scheduleTarget(state, nowSec);
+          scheduleTarget(state, nowSec);
+        });
       } else if (state.mode === "linger" && nowSec >= state.lingerUntil) {
         state.mode = "return";
+        state.isDwellingAtSegment = false;
         const returnSpacingRangePx = [
-          state.stopSpacingRangePx[0] * Math.max(0.5, 1 - state.returnBias * 0.35),
-          state.stopSpacingRangePx[1] * Math.max(0.55, 1 - state.returnBias * 0.25),
+          state.segmentSpacingRangePx[0] * Math.max(0.5, 1 - state.returnBias * 0.35),
+          state.segmentSpacingRangePx[1] * Math.max(0.55, 1 - state.returnBias * 0.25),
         ];
-        state.routeStops = buildRouteStops({
+        state.routeSegments = buildRouteSegments({
           from: { x: state.x, y: state.y },
           to: { x: 0, y: 0 },
           spacingRangePx: returnSpacingRangePx,
-          jitterPx: state.stopJitterPx * Math.max(0.25, 1 - state.returnBias * 0.6),
+          jitterPx: state.segmentJitterPx * Math.max(0.25, 1 - state.returnBias * 0.6),
         });
         state.routeIndex = 0;
         scheduleTarget(state, nowSec);
-      } else if (state.mode === "return" && distanceBetween(state, state.routeStops[state.routeIndex] || { x: 0, y: 0 }) <= Math.max(state.arrivalRadiusPx, idleRadiusPx * 0.34)) {
-        state.routeIndex += 1;
-        if (state.routeIndex >= state.routeStops.length) {
+      } else if (state.mode === "return" && (state.isDwellingAtSegment || distanceBetween(state, state.routeSegments[state.routeIndex] || { x: 0, y: 0 }) <= Math.max(state.arrivalRadiusPx, idleRadiusPx * 0.34))) {
+        advanceRouteSegment(state, nowSec, () => {
           startCooldown(state, nowSec);
-        } else {
-          scheduleTarget(state, nowSec);
-        }
+        });
       }
       if (Math.hypot(state.x, state.y) > state.wanderRadiusPx * 1.08) {
         state.x *= 0.985;
