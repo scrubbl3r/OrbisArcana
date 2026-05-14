@@ -2,25 +2,25 @@
   "schema": "orbis.enemy-workshop.draft.v1",
   "enemyId": "gnat-swarm",
   "label": "Gnat Swarm",
-  "savedAtMs": 1778788466100,
+  "savedAtMs": 1778790033846,
   "enemy": {
     "gnat": {
       "idle": {
         "elasticJitterBo": [
-          1,
-          1
+          0.2,
+          1.5
         ],
         "elasticJitterHz": [
-          1,
+          0.2,
           1
         ],
         "springDamping": [
-          4,
-          4
+          2,
+          5
         ],
         "springStiffness": [
-          9,
-          9
+          4,
+          8
         ],
         "targetJitterBo": [
           10,
@@ -50,7 +50,7 @@
         ],
         "lingerSec": [
           0,
-          3
+          8
         ],
         "returnBias": [
           0.6,
@@ -66,31 +66,31 @@
         ],
         "segmentDwellSec": [
           0,
-          3
+          5
         ],
         "speed": [
-          0.5,
-          0.2
+          0,
+          0.4
         ],
         "wanderChancePerMinute": [
           0,
-          1.25
+          0.3
         ],
         "wanderCooldownSec": [
           10,
           30
         ],
         "wanderRangeBo": [
-          10,
+          40,
           50
         ],
         "wanderSegmentJitterBo": [
           0,
-          0
+          2
         ],
         "wanderSegmentSpacingBo": [
           0.5,
-          3
+          5
         ]
       }
     },
@@ -103,15 +103,15 @@
       "gnatsTotal": 40,
       "spawnCurves": {
         "wanderChancePerMinute": {
-          "amount": 1,
-          "bias": 1
+          "amount": 0,
+          "bias": 0
         },
         "wanderRangeBo": {
           "amount": 0,
           "bias": 0
         }
       },
-      "spawnRadiusBo": 1.5,
+      "spawnRadiusBo": 1,
       "zDepthBo": 0
     }
   }
