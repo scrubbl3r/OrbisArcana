@@ -64,6 +64,12 @@ function randomInAnnulus(minRadius = 0, maxRadius = 1) {
   };
 }
 
+function positiveFiniteNumber(value, fallback = 0, min = 0) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  return Math.max(min, numeric);
+}
+
 function distanceBetween(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
@@ -128,8 +134,8 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     clampNumber(wander.rangeMaxBo, 5.8, 0.4, 20) * legacyWanderRangeMultiplier,
   ];
   const wanderRangeBo = rangePair(personalityRanges.wanderRangeBo, legacyWanderRangeBo);
-  const wanderMinBo = clampNumber(wanderRangeBo[0], 2.8, 0.2, 20);
-  const wanderMaxBo = Math.max(spawnRadiusBo, wanderMinBo, clampNumber(wanderRangeBo[1], 5.8, 0.4, 24));
+  const wanderMinBo = positiveFiniteNumber(wanderRangeBo[0], 2.8, 0.2);
+  const wanderMaxBo = Math.max(wanderMinBo, positiveFiniteNumber(wanderRangeBo[1], 5.8, 0.2));
   const baseSpeedRangeBoPerSec = rangePair(swarm.baseSpeedBoPerSec, [
     clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 240),
     clampNumber(idle.maxSpeedBoPerSec, 3.2, 0.1, 320),
@@ -177,7 +183,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       ),
       wanderMaxBo,
       0.4,
-      24,
+      Infinity,
     );
     const personalWanderRadiusPx = Math.round(Math.max(spawnRadiusBo, personalWanderBo) * scale);
     const personalWanderMinPx = Math.min(wanderMinPx, personalWanderRadiusPx);
