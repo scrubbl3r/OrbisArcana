@@ -121,7 +121,8 @@
      inkscape:groupmode="layer"
      id="layer17"
      inkscape:label="depths"
-     style="display:inline">
+     style="display:inline"
+     sodipodi:insensitive="true">
     <path
        style="display:inline;fill:url(#linearGradient5);stroke:#000000;stroke-opacity:1"
        d="M 380.81185,1610.75 H 1709.0618 V 392.00004 l -624.25,2.75 -16.8275,695.73856 411.0037,-2.625 52.0319,410.4384 -251.3809,1.944 -5.4095,-192.4562 -106.5145,-47.2392 -80.0761,179.8202 -180.36954,47.0448 -206.45751,-4.6656 v -320 h -320 z"
@@ -282,13 +283,12 @@
   <g
      inkscape:groupmode="layer"
      id="layer5"
-     inkscape:label="enemies"
-     sodipodi:insensitive="true">
+     inkscape:label="enemies">
     <circle
        style="fill:#ff00ff;stroke-width:1.88976"
        id="path4"
-       cx="1241.1562"
-       cy="1340.2633"
+       cx="1209.1562"
+       cy="1368.2633"
        r="13.219213"
        inkscape:label="id:gnats_01 enemy:gnat-swarm z:orb" />
   </g>
