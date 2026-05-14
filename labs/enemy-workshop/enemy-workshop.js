@@ -70,6 +70,12 @@ function migrateEnemySettings(settings = {}) {
   if (!Array.isArray(personality.segmentDwellSec)) {
     personality.segmentDwellSec = [0, 0];
   }
+  if (!next.swarm.spawnCurves || typeof next.swarm.spawnCurves !== "object") {
+    next.swarm.spawnCurves = {};
+  }
+  if (!next.swarm.spawnCurves.wanderChancePerMinute || typeof next.swarm.spawnCurves.wanderChancePerMinute !== "object") {
+    next.swarm.spawnCurves.wanderChancePerMinute = { bias: -0.25, amount: 0.45 };
+  }
   return next;
 }
 

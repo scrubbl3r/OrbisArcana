@@ -19,6 +19,23 @@ function randomInRange(range = [], fallback = 1) {
   return min + Math.random() * Math.max(0, max - min);
 }
 
+function curveUnitValue(t = 0, curve = null) {
+  const linear = clampNumber(t, 0, 0, 1);
+  const bias = clampNumber(curve && curve.bias, 0, -1, 1);
+  const amount = clampNumber(curve && curve.amount, 0, 0, 1);
+  if (Math.abs(bias) <= 0.0001 || amount <= 0.0001) return linear;
+  const power = 1 + Math.abs(bias) * 4;
+  const curved = bias < 0
+    ? linear ** power
+    : 1 - (1 - linear) ** power;
+  return linear + (curved - linear) * amount;
+}
+
+function randomInRangeWithCurve(range = [], fallback = 1, curve = null) {
+  const [min, max] = rangePair(range, [fallback, fallback]);
+  return min + curveUnitValue(Math.random(), curve) * Math.max(0, max - min);
+}
+
 function rangePair(range = [], fallback = [0, 1]) {
   if (!Array.isArray(range) || range.length < 2) return fallback.slice();
   const min = Number(range[0]);
@@ -99,6 +116,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const enemySettings = settings || {};
   const gnat = enemySettings.gnat || settings || surface && surface.gnat || {};
   const swarm = enemySettings.swarm || surface && surface.swarm || {};
+  const spawnCurves = swarm.spawnCurves || {};
   const idle = gnat.idle || {};
   const wander = gnat.wander || {};
   const personalityRanges = gnat.personalityRanges || {};
@@ -154,7 +172,16 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     const personalWanderBo = clampNumber(randomInRange(personalityRanges.wanderRangeBo, wanderMaxBo), wanderMaxBo, 0.4, 24);
     const personalWanderRadiusPx = Math.round(Math.max(spawnRadiusBo, personalWanderBo) * scale);
     const personalWanderMinPx = Math.min(wanderMinPx, personalWanderRadiusPx);
-    const personalChancePerMinute = clampNumber(randomInRange(personalityRanges.wanderChancePerMinute, fallbackWanderChancePerMinute), 16, 0, 120);
+    const personalChancePerMinute = clampNumber(
+      randomInRangeWithCurve(
+        personalityRanges.wanderChancePerMinute,
+        fallbackWanderChancePerMinute,
+        spawnCurves.wanderChancePerMinute,
+      ),
+      16,
+      0,
+      120,
+    );
     const personalCooldownSec = clampNumber(randomInRange(cooldownSec, 1.4), 1.4, 0, 120);
     const personalLingerSec = clampNumber(randomInRange(lingerSec, 0.4), 0.4, 0, 60);
     const legacyOutboundBias = rangeMidpoint(personalityRanges.outboundBias, wander.outboundBias);
