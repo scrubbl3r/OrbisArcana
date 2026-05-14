@@ -216,6 +216,7 @@ export function createGnatSwarm3dRuntime({
     if (!states.length) return;
     mesh = new THREE.InstancedMesh(geometry, material, states.length);
     mesh.name = "enemy:gnat-swarm";
+    mesh.frustumCulled = false;
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     root.add(mesh);
     if (typeof onNeedsFrame === "function") onNeedsFrame();
