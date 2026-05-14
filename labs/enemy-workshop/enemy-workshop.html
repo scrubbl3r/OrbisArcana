@@ -57,8 +57,7 @@
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="gnatIdleControls">Idle Flight</button>
             <div id="gnatIdleControls" class="controlGroupBody">
               <div class="rangeFieldRows">
-                <label class="rangeFieldRow">Retarget min sec <input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetRetargetMinSec.0" /><input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetRetargetMinSec.1" /></label>
-                <label class="rangeFieldRow">Retarget max sec <input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetRetargetMaxSec.0" /><input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetRetargetMaxSec.1" /></label>
+                <label class="rangeFieldRow">Retarget sec <input class="paramFieldInput" type="number" min="0" step="0.05" placeholder="min" aria-label="Retarget min seconds" data-gnat-setting="gnat.idle.targetRetargetMinSec" /><input class="paramFieldInput" type="number" min="0" step="0.05" placeholder="max" aria-label="Retarget max seconds" data-gnat-setting="gnat.idle.targetRetargetMaxSec" /></label>
                 <label class="rangeFieldRow">Target jitter BO <input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetJitterBo.0" /><input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetJitterBo.1" /></label>
                 <label class="rangeFieldRow">Spring stiffness <input class="paramFieldInput" type="number" min="0.1" step="0.1" data-gnat-range="gnat.idle.springStiffness.0" /><input class="paramFieldInput" type="number" min="0.1" step="0.1" data-gnat-range="gnat.idle.springStiffness.1" /></label>
                 <label class="rangeFieldRow">Spring damping <input class="paramFieldInput" type="number" min="0" step="0.1" data-gnat-range="gnat.idle.springDamping.0" /><input class="paramFieldInput" type="number" min="0" step="0.1" data-gnat-range="gnat.idle.springDamping.1" /></label>
@@ -117,6 +116,6 @@
       </aside>
     </section>
   </main>
-  <script type="module" src="./enemy-workshop.js?v=20260514a"></script>
+  <script type="module" src="./enemy-workshop.js?v=20260514b"></script>
 </body>
 </html>

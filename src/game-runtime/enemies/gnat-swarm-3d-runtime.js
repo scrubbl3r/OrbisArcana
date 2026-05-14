@@ -7,6 +7,8 @@ function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
 }
 
 function rangePair(range = [], fallback = [0, 1]) {
+  const numeric = Number(range);
+  if (Number.isFinite(numeric)) return [numeric, numeric];
   if (!Array.isArray(range) || range.length < 2) return fallback.slice();
   const min = Number(range[0]);
   const max = Number(range[1]);

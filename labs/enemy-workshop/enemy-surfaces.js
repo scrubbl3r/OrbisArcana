@@ -28,8 +28,8 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
     }),
     gnat: Object.freeze({
       idle: Object.freeze({
-        targetRetargetMinSec: Object.freeze([0.28, 0.28]),
-        targetRetargetMaxSec: Object.freeze([1.25, 1.25]),
+        targetRetargetMinSec: 0.28,
+        targetRetargetMaxSec: 1.25,
         targetJitterBo: Object.freeze([0.42, 0.42]),
         springStiffness: Object.freeze([18, 18]),
         springDamping: Object.freeze([6.5, 6.5]),

@@ -46,6 +46,15 @@ function defaultSettingsForSurface(surface = null) {
   };
 }
 
+function scalarSetting(value, fallback = 0) {
+  if (Array.isArray(value)) {
+    const numbers = value.map(Number).filter(Number.isFinite);
+    if (numbers.length) return numbers.reduce((sum, number) => sum + number, 0) / numbers.length;
+  }
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
 function migrateEnemySettings(settings = {}) {
   const next = cloneSettings(settings);
   const idle = next.gnat && next.gnat.idle || {};
@@ -73,9 +82,9 @@ function migrateEnemySettings(settings = {}) {
   if (Array.isArray(personality.speed) && personality.speed.some((value) => Number(value) > 10)) {
     personality.speed = personality.speed.map((value) => Number(value) > 10 ? Number(value) / 100 : Number(value));
   }
+  idle.targetRetargetMinSec = scalarSetting(idle.targetRetargetMinSec, 0.28);
+  idle.targetRetargetMaxSec = scalarSetting(idle.targetRetargetMaxSec, 1.25);
   [
-    "targetRetargetMinSec",
-    "targetRetargetMaxSec",
     "targetJitterBo",
     "springStiffness",
     "springDamping",
