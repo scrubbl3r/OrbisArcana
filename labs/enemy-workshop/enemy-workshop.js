@@ -49,6 +49,30 @@ function defaultSettingsForSurface(surface = null) {
   };
 }
 
+function migrateEnemySettings(settings = {}) {
+  const next = cloneSettings(settings);
+  const idle = next.gnat && next.gnat.idle || {};
+  const personality = next.gnat && next.gnat.personalityRanges || {};
+  if (!next.swarm || typeof next.swarm !== "object") next.swarm = {};
+  if (next.swarm.spawnRadiusBo == null && Number.isFinite(Number(idle.idleRadiusBo))) {
+    next.swarm.spawnRadiusBo = Number(idle.idleRadiusBo);
+  }
+  if (!Array.isArray(next.swarm.baseSpeedBoPerSec)) {
+    const base = Number(idle.baseSpeedBoPerSec);
+    const max = Number(idle.maxSpeedBoPerSec);
+    if (Number.isFinite(base) || Number.isFinite(max)) {
+      next.swarm.baseSpeedBoPerSec = [
+        Number.isFinite(base) ? base : max,
+        Number.isFinite(max) ? max : base,
+      ];
+    }
+  }
+  if (Array.isArray(personality.speed) && personality.speed.some((value) => Number(value) > 10)) {
+    personality.speed = personality.speed.map((value) => Number(value) > 10 ? Number(value) / 100 : Number(value));
+  }
+  return next;
+}
+
 function mergeSettings(defaults = {}, overrides = {}) {
   const out = cloneSettings(defaults);
   const apply = (target, source) => {
@@ -309,7 +333,7 @@ function restoreSavedDraft({ select = null, gnatSettingsRef = null, draftStore =
       gnat: record.gnat || {},
       swarm: record.swarm || {},
     };
-    gnatSettingsRef.value = mergeSettings(defaultSettingsForSurface(surface), savedSettings);
+    gnatSettingsRef.value = mergeSettings(defaultSettingsForSurface(surface), migrateEnemySettings(savedSettings));
   }
 }
 

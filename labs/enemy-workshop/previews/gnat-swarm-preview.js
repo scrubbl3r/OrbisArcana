@@ -19,13 +19,6 @@ function randomInRange(range = [], fallback = 1) {
   return min + Math.random() * Math.max(0, max - min);
 }
 
-function speedPercentToMultiplier(value = 100) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return 1;
-  if (numeric > 10) return numeric / 100;
-  return numeric;
-}
-
 function rangePair(range = [], fallback = [0, 1]) {
   if (!Array.isArray(range) || range.length < 2) return fallback.slice();
   const min = Number(range[0]);
@@ -111,21 +104,23 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const personalityRanges = gnat.personalityRanges || {};
   const legacyWanderChanceMultiplier = clampNumber(rangeMidpoint(personalityRanges.wanderChance, 1), 1, 0, 4);
   const legacyWanderRangeMultiplier = clampNumber(rangeMidpoint(personalityRanges.wanderRange, 1), 1, 0.1, 4);
-  const idleRadiusBo = clampNumber(idle.idleRadiusBo, 2.2, 0.2, 12);
+  const spawnRadiusBo = clampNumber(swarm.spawnRadiusBo, clampNumber(idle.idleRadiusBo, 2.2, 0.2, 12), 0.2, 24);
   const legacyWanderRangeBo = [
     clampNumber(wander.rangeMinBo, 2.8, 0.2, 20) * legacyWanderRangeMultiplier,
     clampNumber(wander.rangeMaxBo, 5.8, 0.4, 20) * legacyWanderRangeMultiplier,
   ];
   const wanderRangeBo = rangePair(personalityRanges.wanderRangeBo, legacyWanderRangeBo);
   const wanderMinBo = clampNumber(wanderRangeBo[0], 2.8, 0.2, 20);
-  const wanderMaxBo = Math.max(idleRadiusBo, wanderMinBo, clampNumber(wanderRangeBo[1], 5.8, 0.4, 24));
+  const wanderMaxBo = Math.max(spawnRadiusBo, wanderMinBo, clampNumber(wanderRangeBo[1], 5.8, 0.4, 24));
+  const baseSpeedRangeBoPerSec = rangePair(swarm.baseSpeedBoPerSec, [
+    clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 240),
+    clampNumber(idle.maxSpeedBoPerSec, 3.2, 0.1, 320),
+  ]);
   const scale = 42;
-  const idleRadiusPx = Math.round(idleRadiusBo * scale);
+  const idleRadiusPx = Math.round(spawnRadiusBo * scale);
   const wanderMinPx = Math.round(wanderMinBo * scale);
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
   const swarmTotal = Math.round(clampNumber(swarm.gnatsTotal, 1, 1, 240));
-  const baseSpeedBoPerSec = clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 240);
-  const maxSpeedBoPerSec = clampNumber(idle.maxSpeedBoPerSec, 3.2, 0.1, 320);
   const targetJitterPx = clampNumber(idle.targetJitterBo, 0.42, 0, 4) * scale;
   const stiffness = clampNumber(idle.springStiffness, 18, 0.1, 80);
   const damping = clampNumber(idle.springDamping, 6.5, 0, 30);
@@ -151,10 +146,12 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
 
   const dots = Array.from(root.querySelectorAll(".gnatPreviewDot"));
   const buildGnatState = (dot, index) => {
-    const speedMultiplier = clampNumber(speedPercentToMultiplier(randomInRange(personalityRanges.speed, 100)), 1, 0.01, 4);
-    const responseMultiplier = Math.max(0.1, Math.sqrt(baseSpeedBoPerSec / 1.35) * speedMultiplier);
+    const baseSpeedBoPerSec = clampNumber(randomInRange(baseSpeedRangeBoPerSec, 1.35), 1.35, 0.1, 320);
+    const speedMultiplier = clampNumber(randomInRange(personalityRanges.speed, 1), 1, 0.05, 8);
+    const effectiveSpeedBoPerSec = baseSpeedBoPerSec * speedMultiplier;
+    const responseMultiplier = Math.max(0.1, Math.sqrt(effectiveSpeedBoPerSec / 1.35));
     const personalWanderBo = clampNumber(randomInRange(personalityRanges.wanderRangeBo, wanderMaxBo), wanderMaxBo, 0.4, 24);
-    const personalWanderRadiusPx = Math.round(Math.max(idleRadiusBo, personalWanderBo) * scale);
+    const personalWanderRadiusPx = Math.round(Math.max(spawnRadiusBo, personalWanderBo) * scale);
     const personalWanderMinPx = Math.min(wanderMinPx, personalWanderRadiusPx);
     const personalChancePerMinute = clampNumber(randomInRange(personalityRanges.wanderChancePerMinute, fallbackWanderChancePerMinute), 16, 0, 120);
     const personalCooldownSec = clampNumber(randomInRange(cooldownSec, 1.4), 1.4, 0, 120);
@@ -177,7 +174,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       dot,
       x: start.x,
       y: start.y,
-      vx: baseSpeedBoPerSec * speedMultiplier * scale * 0.2,
+      vx: effectiveSpeedBoPerSec * scale * 0.2,
       vy: 0,
       mode: "idle",
       target: randomInCircle(idleRadiusPx),
@@ -189,8 +186,8 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       cooldownUntil: index * 0.04,
       phaseX: Math.random() * Math.PI * 2,
       phaseY: Math.random() * Math.PI * 2,
-      baseSpeedPx: baseSpeedBoPerSec * speedMultiplier * scale,
-      maxSpeedPx: maxSpeedBoPerSec * speedMultiplier * scale,
+      baseSpeedPx: effectiveSpeedBoPerSec * scale,
+      maxSpeedPx: effectiveSpeedBoPerSec * scale,
       responseMultiplier,
       wanderRadiusPx: personalWanderRadiusPx,
       wanderMinPx: personalWanderMinPx,
@@ -323,7 +320,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   };
 
   return Object.freeze({
-    idleRadiusBo,
+    idleRadiusBo: spawnRadiusBo,
     wanderMaxBo,
     idleRadiusPx,
     wanderMinPx,

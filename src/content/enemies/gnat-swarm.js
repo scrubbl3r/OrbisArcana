@@ -3,11 +3,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
   "category": "enemy",
   "gnat": {
     "idle": {
-      "baseSpeedBoPerSec": 150,
       "elasticJitterBo": 0.12,
       "elasticJitterHz": 9,
-      "idleRadiusBo": 2,
-      "maxSpeedBoPerSec": 200,
       "springDamping": 3,
       "springStiffness": 8,
       "targetJitterBo": 3,
@@ -32,40 +29,40 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         5
       ],
       "returnBias": [
-        0.5,
-        0.82
+        0.2,
+        0.2
       ],
       "returnSpeedMultiplier": [
         0.5,
         1
       ],
-      "speed": [
-        150,
-        200
-      ],
       "routeCommitment": [
-        0.4,
-        0.75
+        0.7,
+        0.95
+      ],
+      "speed": [
+        0.5,
+        0.5
       ],
       "wanderChancePerMinute": [
-        0,
+        60,
         1
       ],
       "wanderCooldownSec": [
-        1.4,
-        5.5
+        3,
+        3
       ],
       "wanderRangeBo": [
-        3,
-        12
+        10,
+        20
       ],
       "wanderStopJitterBo": [
         0.5,
         2
       ],
       "wanderStopSpacingBo": [
-        3,
-        7
+        1,
+        4
       ]
     }
   },
@@ -75,7 +72,12 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
   "member": "gnat",
   "status": "draft",
   "swarm": {
-    "gnatsTotal": 40
+    "baseSpeedBoPerSec": [
+      100,
+      100
+    ],
+    "gnatsTotal": 1,
+    "spawnRadiusBo": 2
   }
 }
 );

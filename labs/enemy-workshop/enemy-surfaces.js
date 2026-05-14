@@ -11,12 +11,11 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
     memberLabel: "gnat",
     swarm: Object.freeze({
       gnatsTotal: 24,
+      spawnRadiusBo: 2.2,
+      baseSpeedBoPerSec: Object.freeze([1.35, 3.2]),
     }),
     gnat: Object.freeze({
       idle: Object.freeze({
-        idleRadiusBo: 2.2,
-        baseSpeedBoPerSec: 1.35,
-        maxSpeedBoPerSec: 3.2,
         targetRetargetMinSec: 0.28,
         targetRetargetMaxSec: 1.25,
         targetJitterBo: 0.42,
@@ -26,7 +25,7 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
         elasticJitterHz: 9,
       }),
       personalityRanges: Object.freeze({
-        speed: Object.freeze([72, 134]),
+        speed: Object.freeze([0.72, 1.34]),
         wanderChancePerMinute: Object.freeze([16, 16]),
         wanderCooldownSec: Object.freeze([1.4, 5.5]),
         wanderRangeBo: Object.freeze([2.8, 5.8]),
