@@ -71,15 +71,15 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "wanderChancePerMinute": [
         0,
-        0.3
+        0.5
       ],
       "wanderCooldownSec": [
         10,
         30
       ],
       "wanderRangeBo": [
-        15,
-        40
+        25,
+        50
       ],
       "wanderSegmentJitterBo": [
         0,
