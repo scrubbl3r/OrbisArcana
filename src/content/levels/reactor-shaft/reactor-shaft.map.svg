@@ -11,6 +11,7 @@
    sodipodi:docname="reactor-shaft.map.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
@@ -23,9 +24,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.6430035"
-     inkscape:cx="1174.9547"
-     inkscape:cy="1520.9871"
+     inkscape:zoom="0.67382812"
+     inkscape:cx="959.44348"
+     inkscape:cy="1466.2493"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="17"
@@ -49,7 +50,33 @@
        visible="false" />
   </sodipodi:namedview>
   <defs
-     id="defs1" />
+     id="defs1">
+    <linearGradient
+       id="swatch5"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop5" />
+    </linearGradient>
+    <linearGradient
+       id="swatch4"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#0000be;stop-opacity:1;"
+         offset="0"
+         id="stop4" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch4"
+       id="linearGradient5"
+       x1="380.31186"
+       y1="1001.3739"
+       x2="1709.5618"
+       y2="1001.3739"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
   <g
      inkscape:label="bounds"
      inkscape:groupmode="layer"
@@ -58,9 +85,9 @@
      sodipodi:insensitive="true">
     <path
        style="fill:none;stroke:#000000;stroke-opacity:1"
-       d="M 380.81185,1610.75 H 1709.0618 V 392.00004 l -624.25,2.75 -113.24995,706.62496 305.24995,-2.625 192,384 H 700.81185 v -320 h -320 z"
+       d="M 380.81185,1610.75 H 1709.0618 V 392.00004 l -624.25,2.75 -16.8275,695.73856 411.0037,-2.625 52.0319,410.4384 -251.3809,1.944 -5.4095,-192.4562 -106.5145,-47.2392 -80.0761,179.8202 -180.36954,47.0448 -206.45751,-4.6656 v -320 h -320 z"
        id="path1"
-       sodipodi:nodetypes="ccccccccccc"
+       sodipodi:nodetypes="cccccccccccccccc"
        inkscape:label="id:bounds_01" />
   </g>
   <g
@@ -70,17 +97,16 @@
      style="display:inline;fill:none;stroke:#ff0000;stroke-opacity:1"
      sodipodi:insensitive="true">
     <path
-       id="path1-4-1"
-       style="fill:none;stroke:#f90000;stroke-width:1.88976;stroke-dasharray:none;stroke-opacity:1"
-       d="m 1047.3079,276.9766 -143.88472,882.9648 337.70502,-2.9043 133.8301,267.7129 H 758.81185 v -320 h -496 v 564 H 1855.052 V 273.72684 Z"
-       sodipodi:nodetypes="ccccccccccc"
-       inkscape:label="id:cam_bounds_01" />
+       id="path1-49"
+       style="display:inline;fill:none;stroke:#000000;stroke-opacity:1"
+       inkscape:label="id:bounds_01"
+       d="m 1022.3125,331 c -6.6302,274.64193 -13.2604,549.28385 -19.8906,823.9258 140.0638,-0.896 280.1276,-1.791 420.1914,-2.6875 11.9468,94.2091 23.8963,188.4179 35.8437,282.6269 -38.8587,0.2951 -77.7174,0.5854 -116.5761,0.8809 -1.6157,-56.694 -3.2276,-113.388 -4.8418,-170.082 -67.2748,-29.8503 -134.5495,-59.7006 -201.8243,-89.5508 -31.1677,70.0219 -62.3323,140.0453 -93.5019,210.0664 -47.30793,12.3522 -94.61705,24.6998 -141.92579,37.0488 -44.99155,-1.0131 -89.98311,-2.0257 -134.97461,-3.041 0,-107.1458 0,-214.2917 0,-321.4375 -149.33333,0 -298.66667,0 -448,0 0,192 0,384 0,576 485.41667,0 970.8333,0 1456.25,0 0,-449.0208 0,-898.04167 0,-1347.0625 -250.25,1.10417 -500.5,2.20833 -750.75,3.3125 z" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer13"
      inkscape:label="fields"
-     style="display:inline"
+     style="display:none"
      sodipodi:insensitive="true">
     <rect
        style="display:inline;fill:#ff6600;fill-opacity:1;stroke-width:1.88976"
@@ -95,14 +121,13 @@
      inkscape:groupmode="layer"
      id="layer17"
      inkscape:label="depths"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <path
-       style="display:inline;fill:#0000be;fill-opacity:1;stroke:none;stroke-opacity:1"
-       d="M 380.81185,1610.75 H 1709.0618 V 392.00004 l -624.25,2.75 -113.24995,706.62496 305.24995,-2.625 192,384 H 700.81185 v -320 h -320 z"
-       id="path8"
-       sodipodi:nodetypes="ccccccccccc"
-       inkscape:label="depth:reactor max=10bo material=graphite tess=24" />
+       style="display:inline;fill:url(#linearGradient5);stroke:#000000;stroke-opacity:1"
+       d="M 380.81185,1610.75 H 1709.0618 V 392.00004 l -624.25,2.75 -16.8275,695.73856 411.0037,-2.625 52.0319,410.4384 -251.3809,1.944 -5.4095,-192.4562 -106.5145,-47.2392 -80.0761,179.8202 -180.36954,47.0448 -206.45751,-4.6656 v -320 h -320 z"
+       id="path1-4"
+       sodipodi:nodetypes="cccccccccccccccc"
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        style="fill:#ff0000;fill-opacity:1;stroke-width:0.926189"
        d="m 468.01639,1256.4972 150.97564,-27.9585 -31.00358,29.6133 z"
@@ -137,92 +162,93 @@
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
-       d="m 1072.8104,854.42254 78.1096,-374.60687 290.121,-7.97035 z"
+       d="m 1113.2456,798.43529 37.6744,-318.61962 290.121,-7.97035 z"
        id="path16"
        sodipodi:nodetypes="cccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
-       d="m 1071.2163,914.99734 484.5979,-433.58759 87.674,-4.78222 3.1881,197.66493 z"
+       d="m 1161.418,865.23089 394.3962,-383.82114 87.674,-4.78222 3.1881,197.66493 z"
        id="path17"
-       inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
+       inkscape:label=" depth:reactor max=10bo material=graphite tess=24"
+       sodipodi:nodetypes="ccccc" />
     <circle
        style="display:inline;fill:#ff0000;fill-opacity:1;stroke-width:1.88976"
        id="path18"
-       cx="1506.3981"
-       cy="970.78986"
+       cx="1562.3854"
+       cy="924.13379"
        r="132.30797"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20"
        style="fill:#ff0000;stroke-width:0.609715"
-       d="m 823.98471,1570.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
+       d="m 761.98471,1586.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 863.98471,1570.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
+       d="m 801.98471,1586.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9-4"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 903.98471,1570.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
+       d="m 841.98471,1586.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9-4-7"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 943.98471,1570.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
+       d="m 881.98471,1586.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9-4-7-5"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 983.98471,1570.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
+       d="m 921.98471,1586.7732 -4.81713,4.4925 -4.81714,-4.4925 v -63.228 l 4.81714,-4.4923 4.81713,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9-4-7-5-3"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 1023.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       d="m 961.9847,1586.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9-4-7-5-3-7"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 1063.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       d="m 1001.9847,1586.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9-4-7-5-3-7-2"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 1103.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       d="m 1041.9847,1586.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9-4-7-5-3-7-2-7"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 1143.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       d="m 1081.9847,1586.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9-4-7-5-3-7-2-7-9"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 1183.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       d="m 1121.9847,1586.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9-4-7-5-3-7-2-7-9-4"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 1223.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       d="m 1161.9847,1586.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
     <path
        id="path20-9-4-7-5-3-7-2-7-9-4-9"
        style="display:inline;fill:#ff0000;stroke-width:0.609715"
-       d="m 1263.9847,1570.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
+       d="m 1201.9847,1586.7732 -4.8171,4.4925 -4.8172,-4.4925 v -63.228 l 4.8172,-4.4923 4.8171,4.4923 z"
        sodipodi:nodetypes="ccccccc"
        inkscape:label=" depth:reactor max=10bo material=graphite tess=24" />
   </g>
@@ -235,9 +261,8 @@
     <path
        id="rect1"
        style="fill:#272727;fill-opacity:1;stroke:#5f5f5f;stroke-width:1.88976"
-       d="M 31.21419,22.17192 V 2013.0547 H 2019.5891 V 22.17192 Z M 1709.0618,392.00004 V 1607.7279 H 380.81185 V 1162.75 h 320 v 320 h 767.99995 l -192,-384 -305.24995,2.625 113.24995,-706.62496 z"
        inkscape:label="id:art_panel z=0bo material=flat color=#272727 opacity=1"
-       sodipodi:nodetypes="cccccccccccccccc" />
+       d="M 31.214844,22.171875 V 2013.0547 H 2019.5898 V 22.171875 Z M 1709.0625,392 v 1218.75 h -1328.25 v -448 h 320 v 320 l 206.45703,4.666 180.36917,-47.0449 80.0761,-179.8203 106.5157,47.2383 5.4082,192.457 251.3808,-1.9434 -52.0312,-410.4394 -411.0039,2.625 16.8281,-695.7383 z" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -257,12 +282,13 @@
   <g
      inkscape:groupmode="layer"
      id="layer5"
-     inkscape:label="enemies">
+     inkscape:label="enemies"
+     sodipodi:insensitive="true">
     <circle
        style="fill:#ff00ff;stroke-width:1.88976"
        id="path4"
-       cx="448.66925"
-       cy="1224.5068"
+       cx="1241.1562"
+       cy="1340.2633"
        r="13.219213"
        inkscape:label="id:gnats_01 enemy:gnat-swarm z:orb" />
   </g>

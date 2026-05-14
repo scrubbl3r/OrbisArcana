@@ -74,12 +74,12 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         0.5
       ],
       "wanderCooldownSec": [
-        10,
+        5,
         30
       ],
       "wanderRangeBo": [
-        25,
-        50
+        30,
+        55
       ],
       "wanderSegmentJitterBo": [
         0,
@@ -113,7 +113,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         "bias": 0
       }
     },
-    "spawnRadiusBo": 1,
+    "spawnRadiusBo": 0.3,
     "zDepthBo": 0
   }
 }
