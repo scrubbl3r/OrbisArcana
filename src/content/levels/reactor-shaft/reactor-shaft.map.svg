@@ -258,22 +258,12 @@
      inkscape:groupmode="layer"
      id="layer5"
      inkscape:label="enemies">
-    <path
-       sodipodi:type="star"
+    <circle
        style="fill:#ff00ff;stroke-width:1.88976"
-       id="path2"
-       inkscape:flatsided="true"
-       sodipodi:sides="6"
-       sodipodi:cx="1430.7854"
-       sodipodi:cy="1335.1405"
-       sodipodi:r1="25.754908"
-       sodipodi:r2="22.304403"
-       sodipodi:arg1="1.0471976"
-       sodipodi:arg2="1.5707963"
-       inkscape:rounded="0"
-       inkscape:randomized="0"
-       d="m 1443.6629,1357.4449 -25.755,0 -12.8774,-22.3044 12.8774,-22.3044 25.755,0 12.8774,22.3044 z"
-       transform="matrix(0.63769201,0,0,0.63769201,529.937,534.27613)"
+       id="path4"
+       cx="1456.4398"
+       cy="1406.4653"
+       r="13.219213"
        inkscape:label="id:gnats_01 enemy:gnat-swarm z:orb" />
   </g>
   <g
