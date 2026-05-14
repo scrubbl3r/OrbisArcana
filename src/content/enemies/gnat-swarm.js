@@ -23,14 +23,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         4,
         4
       ],
-      "targetRetargetMaxSec": [
-        5,
-        5
-      ],
-      "targetRetargetMinSec": [
-        0.5,
-        0.5
-      ]
+      "targetRetargetMaxSec": 5,
+      "targetRetargetMinSec": 0.5
     },
     "personalityRanges": {
       "aggression": [
@@ -71,7 +65,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "wanderChancePerMinute": [
         0,
-        0.5
+        1
       ],
       "wanderCooldownSec": [
         5,

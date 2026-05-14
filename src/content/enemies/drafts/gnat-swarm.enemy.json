@@ -2,7 +2,7 @@
   "schema": "orbis.enemy-workshop.draft.v1",
   "enemyId": "gnat-swarm",
   "label": "Gnat Swarm",
-  "savedAtMs": 1778801165609,
+  "savedAtMs": 1778802119043,
   "enemy": {
     "gnat": {
       "idle": {
@@ -26,14 +26,8 @@
           4,
           4
         ],
-        "targetRetargetMaxSec": [
-          5,
-          5
-        ],
-        "targetRetargetMinSec": [
-          0.5,
-          0.5
-        ]
+        "targetRetargetMaxSec": 5,
+        "targetRetargetMinSec": 0.5
       },
       "personalityRanges": {
         "aggression": [
@@ -74,7 +68,7 @@
         ],
         "wanderChancePerMinute": [
           0,
-          0.5
+          1
         ],
         "wanderCooldownSec": [
           5,
