@@ -67,6 +67,19 @@ function migrateEnemySettings(settings = {}) {
   if (Array.isArray(personality.speed) && personality.speed.some((value) => Number(value) > 10)) {
     personality.speed = personality.speed.map((value) => Number(value) > 10 ? Number(value) / 100 : Number(value));
   }
+  [
+    "targetRetargetMinSec",
+    "targetRetargetMaxSec",
+    "targetJitterBo",
+    "springStiffness",
+    "springDamping",
+    "elasticJitterBo",
+    "elasticJitterHz",
+  ].forEach((key) => {
+    if (Array.isArray(idle[key])) return;
+    const value = Number(idle[key]);
+    if (Number.isFinite(value)) idle[key] = [value, value];
+  });
   if (!Array.isArray(personality.segmentDwellSec)) {
     personality.segmentDwellSec = [0, 0];
   }

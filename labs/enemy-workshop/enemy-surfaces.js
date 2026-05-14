@@ -26,13 +26,13 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
     }),
     gnat: Object.freeze({
       idle: Object.freeze({
-        targetRetargetMinSec: 0.28,
-        targetRetargetMaxSec: 1.25,
-        targetJitterBo: 0.42,
-        springStiffness: 18,
-        springDamping: 6.5,
-        elasticJitterBo: 0.12,
-        elasticJitterHz: 9,
+        targetRetargetMinSec: Object.freeze([0.28, 0.28]),
+        targetRetargetMaxSec: Object.freeze([1.25, 1.25]),
+        targetJitterBo: Object.freeze([0.42, 0.42]),
+        springStiffness: Object.freeze([18, 18]),
+        springDamping: Object.freeze([6.5, 6.5]),
+        elasticJitterBo: Object.freeze([0.12, 0.12]),
+        elasticJitterHz: Object.freeze([9, 9]),
       }),
       personalityRanges: Object.freeze({
         speed: Object.freeze([0.72, 1.34]),

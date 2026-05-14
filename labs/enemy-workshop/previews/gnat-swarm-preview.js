@@ -44,6 +44,12 @@ function rangePair(range = [], fallback = [0, 1]) {
   return min <= max ? [min, max] : [max, min];
 }
 
+function settingRangePair(value = null, fallback = [0, 1]) {
+  if (Array.isArray(value)) return rangePair(value, fallback);
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? [numeric, numeric] : fallback.slice();
+}
+
 function randomInCircle(radius = 1) {
   const angle = Math.random() * Math.PI * 2;
   const r = Math.sqrt(Math.random()) * radius;
@@ -145,13 +151,13 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const wanderMinPx = Math.round(wanderMinBo * scale);
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
   const swarmTotal = Math.round(clampNumber(swarm.gnatsTotal, 1, 1, 240));
-  const targetJitterPx = clampNumber(idle.targetJitterBo, 0.42, 0, 4) * scale;
-  const stiffness = clampNumber(idle.springStiffness, 18, 0.1, 80);
-  const damping = clampNumber(idle.springDamping, 6.5, 0, 30);
-  const elasticJitterPx = clampNumber(idle.elasticJitterBo, 0.12, 0, 2) * scale;
-  const elasticJitterHz = clampNumber(idle.elasticJitterHz, 9, 0, 40);
-  const retargetMinSec = clampNumber(idle.targetRetargetMinSec, 0.28, 0.05, 8);
-  const retargetMaxSec = Math.max(retargetMinSec, clampNumber(idle.targetRetargetMaxSec, 1.25, 0.05, 16));
+  const targetJitterBo = settingRangePair(idle.targetJitterBo, [0.42, 0.42]);
+  const springStiffness = settingRangePair(idle.springStiffness, [18, 18]);
+  const springDamping = settingRangePair(idle.springDamping, [6.5, 6.5]);
+  const elasticJitterBo = settingRangePair(idle.elasticJitterBo, [0.12, 0.12]);
+  const elasticJitterHz = settingRangePair(idle.elasticJitterHz, [9, 9]);
+  const targetRetargetMinSec = settingRangePair(idle.targetRetargetMinSec, [0.28, 0.28]);
+  const targetRetargetMaxSec = settingRangePair(idle.targetRetargetMaxSec, [1.25, 1.25]);
   const fallbackWanderChancePerMinute = clampNumber(wander.chancePerMinute, 16, 0, 120) * legacyWanderChanceMultiplier;
   const cooldownSec = rangePair(personalityRanges.wanderCooldownSec, [wander.cooldownMinSec, wander.cooldownMaxSec]);
   const lingerSec = rangePair(personalityRanges.lingerSec, [wander.lingerMinSec, wander.lingerMaxSec]);
@@ -175,6 +181,13 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     const speedMultiplier = clampNumber(randomInRange(personalityRanges.speed, 1), 1, 0.05, 8);
     const effectiveSpeedBoPerSec = baseSpeedBoPerSec * speedMultiplier;
     const responseMultiplier = Math.max(0.1, Math.sqrt(effectiveSpeedBoPerSec / 1.35));
+    const retargetMinSec = clampNumber(randomInRange(targetRetargetMinSec, 0.28), 0.28, 0, Infinity);
+    const retargetMaxSec = Math.max(retargetMinSec, clampNumber(randomInRange(targetRetargetMaxSec, 1.25), 1.25, 0, Infinity));
+    const targetJitterPx = clampNumber(randomInRange(targetJitterBo, 0.42), 0.42, 0, Infinity) * scale;
+    const stiffness = clampNumber(randomInRange(springStiffness, 18), 18, 0.1, Infinity);
+    const damping = clampNumber(randomInRange(springDamping, 6.5), 6.5, 0, Infinity);
+    const elasticJitterPx = clampNumber(randomInRange(elasticJitterBo, 0.12), 0.12, 0, Infinity) * scale;
+    const personalElasticJitterHz = clampNumber(randomInRange(elasticJitterHz, 9), 9, 0, Infinity);
     const personalWanderBo = clampNumber(
       randomInRangeWithCurve(
         personalityRanges.wanderRangeBo,
@@ -240,6 +253,13 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       wanderChancePerSec: personalChancePerMinute / 60,
       cooldownSec: personalCooldownSec,
       lingerSec: personalLingerSec,
+      retargetMinSec,
+      retargetMaxSec,
+      targetJitterPx,
+      stiffness,
+      damping,
+      elasticJitterPx,
+      elasticJitterHz: personalElasticJitterHz,
       segmentSpacingRangePx,
       segmentJitterPx,
       segmentDwellSec: personalSegmentDwellSec,
@@ -269,7 +289,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     } else {
       state.target = randomInCircle(idleRadiusPx);
     }
-    state.nextTargetAt = nowSec + retargetMinSec + Math.random() * Math.max(0, retargetMaxSec - retargetMinSec);
+    state.nextTargetAt = nowSec + state.retargetMinSec + Math.random() * Math.max(0, state.retargetMaxSec - state.retargetMinSec);
   };
 
   const startWander = (state, nowSec) => {
@@ -329,14 +349,14 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       }
       if (nowSec >= state.nextTargetAt) scheduleTarget(state, nowSec);
 
-      const jitterX = Math.sin(nowSec * elasticJitterHz * 6.283 + state.phaseX) * elasticJitterPx;
-      const jitterY = Math.cos(nowSec * elasticJitterHz * 5.113 + state.phaseY) * elasticJitterPx;
-      const targetJitterX = (Math.random() * 2 - 1) * targetJitterPx;
-      const targetJitterY = (Math.random() * 2 - 1) * targetJitterPx;
+      const jitterX = Math.sin(nowSec * state.elasticJitterHz * 6.283 + state.phaseX) * state.elasticJitterPx;
+      const jitterY = Math.cos(nowSec * state.elasticJitterHz * 5.113 + state.phaseY) * state.elasticJitterPx;
+      const targetJitterX = (Math.random() * 2 - 1) * state.targetJitterPx;
+      const targetJitterY = (Math.random() * 2 - 1) * state.targetJitterPx;
       const tx = state.target.x + targetJitterX + jitterX;
       const ty = state.target.y + targetJitterY + jitterY;
-      const ax = (tx - state.x) * stiffness * state.responseMultiplier - state.vx * damping;
-      const ay = (ty - state.y) * stiffness * state.responseMultiplier - state.vy * damping;
+      const ax = (tx - state.x) * state.stiffness * state.responseMultiplier - state.vx * state.damping;
+      const ay = (ty - state.y) * state.stiffness * state.responseMultiplier - state.vy * state.damping;
       state.vx += ax * dt;
       state.vy += ay * dt;
       const modeMaxSpeedPx = state.mode === "return" ? state.maxSpeedPx * state.returnSpeedMultiplier : state.maxSpeedPx;

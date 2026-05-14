@@ -48,14 +48,14 @@
           <section class="controlGroup">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="true" aria-controls="gnatIdleControls">Idle Flight</button>
             <div id="gnatIdleControls" class="controlGroupBody">
-              <div class="paramFieldRows">
-                <label class="paramFieldRow">Retarget min sec <input class="paramFieldInput" type="number" min="0.05" max="8" step="0.05" data-gnat-setting="gnat.idle.targetRetargetMinSec" /></label>
-                <label class="paramFieldRow">Retarget max sec <input class="paramFieldInput" type="number" min="0.05" max="16" step="0.05" data-gnat-setting="gnat.idle.targetRetargetMaxSec" /></label>
-                <label class="paramFieldRow">Target jitter BO <input class="paramFieldInput" type="number" min="0" max="4" step="0.05" data-gnat-setting="gnat.idle.targetJitterBo" /></label>
-                <label class="paramFieldRow">Spring stiffness <input class="paramFieldInput" type="number" min="0.1" max="80" step="0.1" data-gnat-setting="gnat.idle.springStiffness" /></label>
-                <label class="paramFieldRow">Spring damping <input class="paramFieldInput" type="number" min="0" max="30" step="0.1" data-gnat-setting="gnat.idle.springDamping" /></label>
-                <label class="paramFieldRow">Elastic jitter BO <input class="paramFieldInput" type="number" min="0" max="2" step="0.01" data-gnat-setting="gnat.idle.elasticJitterBo" /></label>
-                <label class="paramFieldRow">Elastic jitter Hz <input class="paramFieldInput" type="number" min="0" max="40" step="0.1" data-gnat-setting="gnat.idle.elasticJitterHz" /></label>
+              <div class="rangeFieldRows">
+                <label class="rangeFieldRow">Retarget min sec <input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetRetargetMinSec.0" /><input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetRetargetMinSec.1" /></label>
+                <label class="rangeFieldRow">Retarget max sec <input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetRetargetMaxSec.0" /><input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetRetargetMaxSec.1" /></label>
+                <label class="rangeFieldRow">Target jitter BO <input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetJitterBo.0" /><input class="paramFieldInput" type="number" min="0" step="0.05" data-gnat-range="gnat.idle.targetJitterBo.1" /></label>
+                <label class="rangeFieldRow">Spring stiffness <input class="paramFieldInput" type="number" min="0.1" step="0.1" data-gnat-range="gnat.idle.springStiffness.0" /><input class="paramFieldInput" type="number" min="0.1" step="0.1" data-gnat-range="gnat.idle.springStiffness.1" /></label>
+                <label class="rangeFieldRow">Spring damping <input class="paramFieldInput" type="number" min="0" step="0.1" data-gnat-range="gnat.idle.springDamping.0" /><input class="paramFieldInput" type="number" min="0" step="0.1" data-gnat-range="gnat.idle.springDamping.1" /></label>
+                <label class="rangeFieldRow">Elastic jitter BO <input class="paramFieldInput" type="number" min="0" step="0.01" data-gnat-range="gnat.idle.elasticJitterBo.0" /><input class="paramFieldInput" type="number" min="0" step="0.01" data-gnat-range="gnat.idle.elasticJitterBo.1" /></label>
+                <label class="rangeFieldRow">Elastic jitter Hz <input class="paramFieldInput" type="number" min="0" step="0.1" data-gnat-range="gnat.idle.elasticJitterHz.0" /><input class="paramFieldInput" type="number" min="0" step="0.1" data-gnat-range="gnat.idle.elasticJitterHz.1" /></label>
               </div>
             </div>
           </section>
