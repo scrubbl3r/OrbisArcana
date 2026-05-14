@@ -377,8 +377,6 @@ async function publishEnemy({ select, gnatSettingsRef, projectIo, actionStatus }
 function bindViewportZoom(previewRoot = null) {
   if (!previewRoot) return;
   let zoom = 1;
-  const minZoom = 0.45;
-  const maxZoom = 2.5;
   const applyZoom = () => {
     previewRoot.style.setProperty("--enemy-preview-zoom", String(Math.round(zoom * 1000) / 1000));
   };
@@ -386,8 +384,7 @@ function bindViewportZoom(previewRoot = null) {
   previewRoot.addEventListener("wheel", (event) => {
     event.preventDefault();
     const intensity = event.ctrlKey ? 0.004 : 0.0018;
-    const nextZoom = zoom * Math.exp(-event.deltaY * intensity);
-    zoom = Math.min(maxZoom, Math.max(minZoom, nextZoom));
+    zoom *= Math.exp(-event.deltaY * intensity);
     applyZoom();
   }, { passive: false });
 }
