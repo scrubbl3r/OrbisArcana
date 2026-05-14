@@ -50,7 +50,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "wanderChancePerMinute": [
         0,
-        0.1
+        1.25
       ],
       "wanderCooldownSec": [
         5,
@@ -84,7 +84,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     "spawnCurves": {
       "wanderChancePerMinute": {
         "amount": 1,
-        "bias": 0.5
+        "bias": 1
       },
       "wanderRangeBo": {
         "amount": 0,
