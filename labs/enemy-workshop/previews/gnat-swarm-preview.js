@@ -153,7 +153,7 @@ function createGnatGlowTexture() {
   const glow = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
   glow.addColorStop(0, "rgba(238,255,218,1)");
   glow.addColorStop(0.16, "rgba(218,242,198,0.96)");
-  glow.addColorStop(0.42, "rgba(182,226,166,0.34)");
+  glow.addColorStop(0.36, "rgba(182,226,166,0.2)");
   glow.addColorStop(1, "rgba(182,226,166,0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, 64, 64);
@@ -256,7 +256,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
   const cameraViewRadiusPx = Math.max(GNAT_MIN_CAMERA_VIEW_RADIUS, wanderRadiusPx * 1.14);
   const cameraDistancePx = cameraDistanceForViewRadius(cameraViewRadiusPx);
-  const gnatSpriteSizePx = clampNumber(cameraViewRadiusPx * 0.036, 22, 22, 380);
+  const gnatSpriteSizePx = clampNumber(cameraViewRadiusPx * 0.018, 10, 10, 96);
   const gridSizePx = Math.max(12000, cameraViewRadiusPx * 2.7);
   const gridStepPx = Math.max(scale, Math.round(cameraViewRadiusPx / 64));
   const wanderRingOpacity = cameraViewRadiusPx > 2400 ? 0.22 : 0.1;
