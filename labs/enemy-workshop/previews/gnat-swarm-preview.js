@@ -251,12 +251,13 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const scale = GNAT_WORLD_SCALE;
   const zDepthBo = clampNumber(swarm.zDepthBo, 0, -500, 500);
   const zDepthPx = zDepthBo * scale;
+  const gnatSizeBo = clampNumber(swarm.gnatSizeBo, 0.04, 0.005, 1);
   const idleRadiusPx = Math.round(spawnRadiusBo * scale);
   const wanderMinPx = Math.round(wanderMinBo * scale);
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
   const cameraViewRadiusPx = Math.max(GNAT_MIN_CAMERA_VIEW_RADIUS, wanderRadiusPx * 1.14);
   const cameraDistancePx = cameraDistanceForViewRadius(cameraViewRadiusPx);
-  const gnatSpriteSizePx = clampNumber(cameraViewRadiusPx * 0.018, 10, 10, 96);
+  const gnatSpriteSizePx = clampNumber(gnatSizeBo * scale * 6, 10, 3, 96);
   const gridSizePx = Math.max(12000, cameraViewRadiusPx * 2.7);
   const gridStepPx = Math.max(scale, Math.round(cameraViewRadiusPx / 64));
   const wanderRingOpacity = cameraViewRadiusPx > 2400 ? 0.22 : 0.1;
@@ -586,5 +587,6 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     cameraViewRadiusPx,
     swarmTotal,
     zDepthBo,
+    gnatSizeBo,
   });
 }

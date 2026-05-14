@@ -179,6 +179,7 @@ export function createGnatSwarm3dRuntime({
     const segmentJitterBo = rangePair(personality.wanderSegmentJitterBo, [0.5, 2]);
     const cooldownSec = rangePair(personality.wanderCooldownSec, [1, 5]);
     const spawnRadius = Math.max(0, clampNumber(swarm.spawnRadiusBo, 2, 0, 64)) * bo;
+    const gnatSize = Math.max(0.5, clampNumber(swarm.gnatSizeBo, 0.04, 0.005, 1) * bo);
     const allStates = [];
     for (const spawn of Array.isArray(spawns) ? spawns : []) {
       if (String(spawn && (spawn.enemy || spawn.archetype) || "") !== "gnat-swarm") continue;
@@ -205,7 +206,7 @@ export function createGnatSwarm3dRuntime({
             y: randomUnit() * 7,
             z: randomUnit() * 6,
           },
-          scale: Math.max(3, bo * 0.11 * (0.75 + Math.random() * 0.7)),
+          scale: gnatSize * (0.75 + Math.random() * 0.7),
         };
         startRoute(state, 0);
         allStates.push(state);

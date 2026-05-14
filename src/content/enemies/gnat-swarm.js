@@ -80,6 +80,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       100,
       100
     ],
+    "gnatSizeBo": 0.04,
     "gnatsTotal": 70,
     "spawnCurves": {
       "wanderChancePerMinute": {

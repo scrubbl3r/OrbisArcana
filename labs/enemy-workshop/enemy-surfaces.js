@@ -12,6 +12,7 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
     swarm: Object.freeze({
       gnatsTotal: 24,
       spawnRadiusBo: 2.2,
+      gnatSizeBo: 0.04,
       zDepthBo: 0,
       baseSpeedBoPerSec: Object.freeze([1.35, 3.2]),
       spawnCurves: Object.freeze({
