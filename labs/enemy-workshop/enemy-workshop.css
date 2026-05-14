@@ -168,9 +168,15 @@ body::before {
   min-width: 0;
 }
 
+.enemyViewportCard {
+  display: flex;
+}
+
 .enemyViewport {
   position: relative;
-  height: clamp(520px, 72vh, 860px);
+  flex: 1;
+  width: 100%;
+  min-height: calc(100vh - 154px);
   border: 1px solid var(--frame);
   border-radius: 16px;
   background:
@@ -194,7 +200,7 @@ body::before {
 
 .gnatPreviewScene {
   position: relative;
-  width: min(76vmin, 760px);
+  width: min(92%, 76vmin, 820px);
   aspect-ratio: 1;
   overflow: visible;
 }
@@ -247,36 +253,6 @@ body::before {
   box-shadow: 0 0 8px rgba(209, 230, 190, 0.62);
   transform: translate(-50%, -50%);
   will-change: transform;
-}
-
-.viewportHud {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: start center;
-  color: var(--text-muted);
-  pointer-events: none;
-  padding: 18px;
-}
-
-.viewportHud strong {
-  display: block;
-  color: var(--text-strong);
-  font-size: 12px;
-  line-height: 1.05;
-  text-align: center;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.72;
-}
-
-.viewportHud span {
-  display: block;
-  margin-top: 6px;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 800;
-  opacity: 0.62;
 }
 
 .enemyControls {
@@ -469,7 +445,7 @@ body::before {
   }
 
   .enemyViewport {
-    height: min(62vh, 640px);
+    min-height: min(62vh, 640px);
   }
 }
 
@@ -501,7 +477,7 @@ body::before {
   }
 
   .enemyViewport {
-    height: clamp(360px, 66vh, 620px);
+    min-height: clamp(360px, 66vh, 620px);
     border-radius: 12px;
   }
 }

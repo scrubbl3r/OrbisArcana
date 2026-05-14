@@ -10,23 +10,6 @@ function rangeText(range = []) {
   return `${roundMetric(range[0])}-${roundMetric(range[1])}`;
 }
 
-export function formatEnemyWorkshopMeta(surface = null) {
-  if (!surface) return "";
-  return `${String(surface.kind || "")} / ${String(surface.category || "")} / ${String(surface.status || "draft")}`;
-}
-
-export function formatEnemyWorkshopBehaviorReadout(surface = null) {
-  if (!surface) return "Pending";
-  const idle = surface.idle || surface.gnat && surface.gnat.idle || {};
-  return `target ${roundMetric(idle.targetRetargetMinSec)}-${roundMetric(idle.targetRetargetMaxSec)}s / spring ${roundMetric(idle.springStiffness)} / damping ${roundMetric(idle.springDamping)} / elastic jitter ${roundMetric(idle.elasticJitterBo)} BO`;
-}
-
-export function formatEnemyWorkshopPersonalityReadout(surface = null) {
-  if (!surface) return "Pending";
-  const ranges = surface.personalityRanges || surface.gnat && surface.gnat.personalityRanges || {};
-  return `speed ${rangeText(ranges.speed)}x / chance ${rangeText(ranges.wanderChancePerMinute)}/min / range ${rangeText(ranges.wanderRangeBo)} BO / stops ${rangeText(ranges.wanderStopSpacingBo)} BO / route ${rangeText(ranges.routeCommitment)}`;
-}
-
 export function formatEnemyWorkshopSwarmReadout(surface = null) {
   if (!surface) return "Pending";
   const swarm = surface.swarm || {};

@@ -20,9 +20,6 @@ import {
 } from "./enemy-workshop-publish.js";
 import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-registry.js?v=20260513a";
 import {
-  formatEnemyWorkshopBehaviorReadout,
-  formatEnemyWorkshopMeta,
-  formatEnemyWorkshopPersonalityReadout,
   formatEnemyWorkshopRuntimeReadout,
   formatEnemyWorkshopSwarmReadout,
 } from "./enemy-workshop-readouts.js?v=20260513a";
@@ -124,11 +121,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   loadLabProfileStore(DRAFT_STORAGE_KEY, draftStore);
   let projectRootDirHandle = null;
   const select = root.querySelector("[data-enemy-workshop-enemy-select]");
-  const meta = root.querySelector("[data-enemy-workshop-meta]");
-  const viewportLabel = root.querySelector("[data-enemy-workshop-viewport-label]");
   const previewRoot = root.querySelector("[data-enemy-workshop-preview-root]");
-  const behaviorReadout = root.querySelector("[data-enemy-workshop-behavior-readout]");
-  const personalityReadout = root.querySelector("[data-enemy-workshop-personality-readout]");
   const swarmReadout = root.querySelector("[data-enemy-workshop-swarm-readout]");
   const runtimeReadout = root.querySelector("[data-enemy-workshop-runtime-readout]");
   const actionStatus = root.querySelector("[data-enemy-workshop-action-status]");
@@ -150,11 +143,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
     gnatSettingsRef,
     update: () => updateSelection({
       select,
-      meta,
-      viewportLabel,
       previewRoot,
-      behaviorReadout,
-      personalityReadout,
       swarmReadout,
       runtimeReadout,
       previewRegistry,
@@ -173,11 +162,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
       restoreSavedDraft({ select, gnatSettingsRef, draftStore, root });
       updateSelection({
         select,
-        meta,
-        viewportLabel,
         previewRoot,
-        behaviorReadout,
-        personalityReadout,
         swarmReadout,
         runtimeReadout,
         previewRegistry,
@@ -188,11 +173,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   }
   updateSelection({
     select,
-    meta,
-    viewportLabel,
     previewRoot,
-    behaviorReadout,
-    personalityReadout,
     swarmReadout,
     runtimeReadout,
     previewRegistry,
@@ -201,11 +182,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   restoreSavedDraft({ select, gnatSettingsRef, draftStore, root });
   updateSelection({
     select,
-    meta,
-    viewportLabel,
     previewRoot,
-    behaviorReadout,
-    personalityReadout,
     swarmReadout,
     runtimeReadout,
     previewRegistry,
@@ -449,11 +426,7 @@ function hydrateGnatSettingInputs({ root = null, settings = null } = {}) {
 
 function updateSelection({
   select = null,
-  meta = null,
-  viewportLabel = null,
   previewRoot = null,
-  behaviorReadout = null,
-  personalityReadout = null,
   swarmReadout = null,
   runtimeReadout = null,
   previewRegistry = null,
@@ -466,14 +439,10 @@ function updateSelection({
     gnatSettingsRef.value = defaultSettingsForSurface(surface);
   }
   const gnatSettings = gnatSettingsRef && gnatSettingsRef.value ? gnatSettingsRef.value : defaultSettingsForSurface(surface);
-  if (viewportLabel) viewportLabel.textContent = surface ? String(surface.label || surface.id) : "Enemy";
-  if (meta) meta.textContent = formatEnemyWorkshopMeta(surface);
   hydrateGnatSettingInputs({ root: globalThis.document, settings: gnatSettings });
   if (previewRoot && previewRegistry && typeof previewRegistry.renderPreview === "function") {
     previewRegistry.renderPreview({ surface, previewRoot, settings: gnatSettings });
   }
-  if (behaviorReadout) behaviorReadout.textContent = formatEnemyWorkshopBehaviorReadout(gnatSettings);
-  if (personalityReadout) personalityReadout.textContent = formatEnemyWorkshopPersonalityReadout(gnatSettings);
   if (swarmReadout) swarmReadout.textContent = formatEnemyWorkshopSwarmReadout(gnatSettings);
   if (runtimeReadout) runtimeReadout.textContent = formatEnemyWorkshopRuntimeReadout(surface);
 }
