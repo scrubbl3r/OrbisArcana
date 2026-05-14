@@ -196,6 +196,7 @@ body::before {
   display: grid;
   place-items: center;
   padding: 24px;
+  --enemy-preview-zoom: 1;
 }
 
 .gnatPreviewScene {
@@ -203,6 +204,8 @@ body::before {
   width: min(92%, 76vmin, 820px);
   aspect-ratio: 1;
   overflow: visible;
+  transform: scale(var(--enemy-preview-zoom));
+  transform-origin: center;
 }
 
 .gnatPreviewRing,

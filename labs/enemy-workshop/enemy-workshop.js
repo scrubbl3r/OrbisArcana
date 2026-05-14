@@ -134,6 +134,7 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   let projectRootDirHandle = null;
   const select = root.querySelector("[data-enemy-workshop-enemy-select]");
   const previewRoot = root.querySelector("[data-enemy-workshop-preview-root]");
+  bindViewportZoom(previewRoot);
   const swarmReadout = root.querySelector("[data-enemy-workshop-swarm-readout]");
   const runtimeReadout = root.querySelector("[data-enemy-workshop-runtime-readout]");
   const actionStatus = root.querySelector("[data-enemy-workshop-action-status]");
@@ -371,6 +372,24 @@ async function publishEnemy({ select, gnatSettingsRef, projectIo, actionStatus }
     downloadTextFile("gnat-swarm.js", moduleText, "text/javascript;charset=utf-8");
     setActionStatus(actionStatus, "Downloaded fallback");
   }
+}
+
+function bindViewportZoom(previewRoot = null) {
+  if (!previewRoot) return;
+  let zoom = 1;
+  const minZoom = 0.45;
+  const maxZoom = 2.5;
+  const applyZoom = () => {
+    previewRoot.style.setProperty("--enemy-preview-zoom", String(Math.round(zoom * 1000) / 1000));
+  };
+  applyZoom();
+  previewRoot.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const intensity = event.ctrlKey ? 0.004 : 0.0018;
+    const nextZoom = zoom * Math.exp(-event.deltaY * intensity);
+    zoom = Math.min(maxZoom, Math.max(minZoom, nextZoom));
+    applyZoom();
+  }, { passive: false });
 }
 
 function bindTopbarActions({
