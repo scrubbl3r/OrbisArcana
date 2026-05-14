@@ -169,7 +169,16 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     const speedMultiplier = clampNumber(randomInRange(personalityRanges.speed, 1), 1, 0.05, 8);
     const effectiveSpeedBoPerSec = baseSpeedBoPerSec * speedMultiplier;
     const responseMultiplier = Math.max(0.1, Math.sqrt(effectiveSpeedBoPerSec / 1.35));
-    const personalWanderBo = clampNumber(randomInRange(personalityRanges.wanderRangeBo, wanderMaxBo), wanderMaxBo, 0.4, 24);
+    const personalWanderBo = clampNumber(
+      randomInRangeWithCurve(
+        personalityRanges.wanderRangeBo,
+        wanderMaxBo,
+        spawnCurves.wanderRangeBo,
+      ),
+      wanderMaxBo,
+      0.4,
+      24,
+    );
     const personalWanderRadiusPx = Math.round(Math.max(spawnRadiusBo, personalWanderBo) * scale);
     const personalWanderMinPx = Math.min(wanderMinPx, personalWanderRadiusPx);
     const personalChancePerMinute = clampNumber(

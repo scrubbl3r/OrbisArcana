@@ -76,6 +76,9 @@ function migrateEnemySettings(settings = {}) {
   if (!next.swarm.spawnCurves.wanderChancePerMinute || typeof next.swarm.spawnCurves.wanderChancePerMinute !== "object") {
     next.swarm.spawnCurves.wanderChancePerMinute = { bias: -0.25, amount: 0.45 };
   }
+  if (!next.swarm.spawnCurves.wanderRangeBo || typeof next.swarm.spawnCurves.wanderRangeBo !== "object") {
+    next.swarm.spawnCurves.wanderRangeBo = { bias: 0, amount: 0 };
+  }
   return next;
 }
 

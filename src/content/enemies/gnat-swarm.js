@@ -85,6 +85,10 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       "wanderChancePerMinute": {
         "amount": 0.1,
         "bias": -0.8
+      },
+      "wanderRangeBo": {
+        "amount": 0,
+        "bias": 0
       }
     },
     "spawnRadiusBo": 2

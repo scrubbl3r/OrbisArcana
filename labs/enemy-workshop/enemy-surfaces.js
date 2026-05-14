@@ -18,6 +18,10 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
           bias: -0.25,
           amount: 0.45,
         }),
+        wanderRangeBo: Object.freeze({
+          bias: 0,
+          amount: 0,
+        }),
       }),
     }),
     gnat: Object.freeze({
