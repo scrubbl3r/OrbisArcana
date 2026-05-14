@@ -145,23 +145,6 @@ function disposeSceneObject(object = null) {
   });
 }
 
-function createGnatGlowTexture() {
-  const canvas = document.createElement("canvas");
-  canvas.width = 64;
-  canvas.height = 64;
-  const ctx = canvas.getContext("2d");
-  const glow = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-  glow.addColorStop(0, "rgba(238,255,218,1)");
-  glow.addColorStop(0.16, "rgba(218,242,198,0.96)");
-  glow.addColorStop(0.36, "rgba(182,226,166,0.2)");
-  glow.addColorStop(1, "rgba(182,226,166,0)");
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, 64, 64);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
 function createRing(radius = 1, z = 0, { color = 0xa4e0ad, opacity = 0.18, dashed = false } = {}) {
   const segments = 192;
   const material = new THREE.LineBasicMaterial({
@@ -257,7 +240,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
   const cameraViewRadiusPx = Math.max(GNAT_MIN_CAMERA_VIEW_RADIUS, wanderRadiusPx * 1.14);
   const cameraDistancePx = cameraDistanceForViewRadius(cameraViewRadiusPx);
-  const gnatSpriteSizePx = clampNumber(gnatSizeBo * scale * 6, 10, 3, 96);
+  const gnatCubeSizePx = clampNumber(gnatSizeBo * scale, 3, 2, 80);
   const gridSizePx = Math.max(12000, cameraViewRadiusPx * 2.7);
   const gridStepPx = Math.max(scale, Math.round(cameraViewRadiusPx / 64));
   const wanderRingOpacity = cameraViewRadiusPx > 2400 ? 0.22 : 0.1;
@@ -300,27 +283,31 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const worldGroup = new THREE.Group();
   worldGroup.name = "gnat-swarm-preview-world";
   scene.add(worldGroup);
+  scene.add(new THREE.AmbientLight(0xdfffd6, 0.45));
+  const keyLight = new THREE.DirectionalLight(0xf2ffe8, 1.35);
+  keyLight.position.set(-0.35, -0.4, 1);
+  scene.add(keyLight);
   worldGroup.add(createPreviewGrid(gridSizePx, gridStepPx, zDepthPx - 2));
   worldGroup.add(createRing(wanderRadiusPx, zDepthPx, { opacity: wanderRingOpacity, dashed: true }));
   worldGroup.add(createRing(idleRadiusPx, zDepthPx, { opacity: 0.2 }));
   worldGroup.add(createRing(17, zDepthPx, { color: 0xdeebd8, opacity: 0.48 }));
 
-  const gnatTexture = createGnatGlowTexture();
-  const gnatMaterial = new THREE.SpriteMaterial({
-    map: gnatTexture,
-    transparent: true,
-    opacity: 0.95,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    toneMapped: false,
+  const gnatGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const gnatMaterial = new THREE.MeshStandardMaterial({
+    color: 0xdfffcf,
+    emissive: 0x9dff8a,
+    emissiveIntensity: 1.2,
+    roughness: 0.48,
+    metalness: 0.08,
   });
-  const sprites = Array.from({ length: swarmTotal }, () => {
-    const sprite = new THREE.Sprite(gnatMaterial.clone());
-    sprite.scale.set(gnatSpriteSizePx, gnatSpriteSizePx, 1);
-    sprite.position.set(0, 0, zDepthPx);
-    worldGroup.add(sprite);
-    return sprite;
-  });
+  const gnatMesh = new THREE.InstancedMesh(gnatGeometry, gnatMaterial, swarmTotal);
+  gnatMesh.name = "gnat-swarm-preview:cubes";
+  gnatMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  worldGroup.add(gnatMesh);
+  const gnatMatrix = new THREE.Matrix4();
+  const gnatQuat = new THREE.Quaternion();
+  const gnatPosition = new THREE.Vector3();
+  const gnatScale = new THREE.Vector3();
 
   const resizePreview = () => {
     const rect = stage.getBoundingClientRect();
@@ -339,7 +326,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   window.addEventListener("resize", resizePreview);
   resizePreview();
 
-  const buildGnatState = (sprite, index) => {
+  const buildGnatState = (index) => {
     const baseSpeedBoPerSec = clampNumber(randomInRange(baseSpeedRangeBoPerSec, 1.35), 1.35, 0.1, 320);
     const speedMultiplier = clampNumber(randomInRange(personalityRanges.speed, 1), 1, 0.05, 8);
     const effectiveSpeedBoPerSec = baseSpeedBoPerSec * speedMultiplier;
@@ -391,7 +378,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     const returnRerollRadiusPx = Math.max(arrivalRadiusPx * 0.5, segmentJitterPx * (0.95 - returnBias * 0.55));
     const start = randomInCircle(idleRadiusPx);
     return {
-      sprite,
+      index,
       x: start.x,
       y: start.y,
       vx: effectiveSpeedBoPerSec * scale * 0.2,
@@ -432,9 +419,16 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       returnRerollRadiusPx,
       arrivalRadiusPx,
       returnSpeedMultiplier,
+      spin: new THREE.Euler(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI),
+      spinSpeed: {
+        x: (Math.random() * 2 - 1) * 5,
+        y: (Math.random() * 2 - 1) * 7,
+        z: (Math.random() * 2 - 1) * 6,
+      },
+      visualScale: gnatCubeSizePx * (0.75 + Math.random() * 0.7),
     };
   };
-  const states = sprites.map(buildGnatState);
+  const states = Array.from({ length: swarmTotal }, (_, index) => buildGnatState(index));
   const animation = {
     frame: 0,
     lastMs: performance.now(),
@@ -562,8 +556,16 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
         state.x *= 0.985;
         state.y *= 0.985;
       }
-      if (state.sprite) state.sprite.position.set(state.x, state.y, zDepthPx);
+      state.spin.x += state.spinSpeed.x * dt;
+      state.spin.y += state.spinSpeed.y * dt;
+      state.spin.z += state.spinSpeed.z * dt;
+      gnatPosition.set(state.x, state.y, zDepthPx);
+      gnatQuat.setFromEuler(state.spin);
+      gnatScale.set(state.visualScale, state.visualScale * 0.55, state.visualScale);
+      gnatMatrix.compose(gnatPosition, gnatQuat, gnatScale);
+      gnatMesh.setMatrixAt(state.index, gnatMatrix);
     });
+    gnatMesh.instanceMatrix.needsUpdate = true;
     composer.render();
     animation.frame = requestAnimationFrame(tick);
   };
