@@ -179,11 +179,7 @@ body::before {
   min-height: calc(100vh - 154px);
   border: 1px solid var(--frame);
   border-radius: 16px;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
-    #020303;
-  background-size: 34px 34px;
+  background: #020303;
   display: grid;
   place-items: center;
   overflow: hidden;

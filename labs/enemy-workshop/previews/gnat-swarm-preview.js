@@ -1,13 +1,11 @@
 import * as THREE from "three";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { STAGE_BLOOM_CONFIG } from "../../../src/game-runtime/rendering/three/three-bloom-config.js?v=20260505f";
 
 const PREVIEW_CLEANUP_KEY = Symbol.for("orbis.enemyWorkshop.gnatPreviewCleanup");
 const GNAT_WORLD_SCALE = 42;
 const GNAT_CAMERA_FOV_DEG = 45;
-const GNAT_MIN_CAMERA_VIEW_RADIUS = 420;
+const GNAT_CAMERA_VIEW_BO = 20;
+const GNAT_CAMERA_VIEW_RADIUS = GNAT_CAMERA_VIEW_BO * GNAT_WORLD_SCALE * 0.5;
+const GNAT_PREVIEW_PIXEL_RATIO = 1.25;
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
   const numeric = Number(value);
@@ -182,28 +180,7 @@ function createRing(radius = 1, z = 0, { color = 0xa4e0ad, opacity = 0.18, dashe
   return new THREE.LineLoop(geometry, material);
 }
 
-function createPreviewGrid(size = 12000, step = 34, z = -2) {
-  const half = size / 2;
-  const positions = [];
-  for (let x = -half; x <= half; x += step) {
-    positions.push(x, -half, z, x, half, z);
-  }
-  for (let y = -half; y <= half; y += step) {
-    positions.push(-half, y, z, half, y, z);
-  }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  const material = new THREE.LineBasicMaterial({
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.028,
-    depthWrite: false,
-    toneMapped: false,
-  });
-  return new THREE.LineSegments(geometry, material);
-}
-
-function cameraDistanceForViewRadius(radius = GNAT_MIN_CAMERA_VIEW_RADIUS, fovDeg = GNAT_CAMERA_FOV_DEG) {
+function cameraDistanceForViewRadius(radius = GNAT_CAMERA_VIEW_RADIUS, fovDeg = GNAT_CAMERA_FOV_DEG) {
   return radius / Math.tan(THREE.MathUtils.degToRad(fovDeg / 2));
 }
 
@@ -238,11 +215,9 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const idleRadiusPx = Math.round(spawnRadiusBo * scale);
   const wanderMinPx = Math.round(wanderMinBo * scale);
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
-  const cameraViewRadiusPx = Math.max(GNAT_MIN_CAMERA_VIEW_RADIUS, wanderRadiusPx * 1.14);
+  const cameraViewRadiusPx = GNAT_CAMERA_VIEW_RADIUS;
   const cameraDistancePx = cameraDistanceForViewRadius(cameraViewRadiusPx);
   const gnatCubeSizePx = clampNumber(gnatSizeBo * scale, 3, 2, 80);
-  const gridSizePx = Math.max(12000, cameraViewRadiusPx * 2.7);
-  const gridStepPx = Math.max(scale, Math.round(cameraViewRadiusPx / 64));
   const wanderRingOpacity = cameraViewRadiusPx > 2400 ? 0.22 : 0.1;
   const swarmTotal = Math.round(clampNumber(swarm.gnatsTotal, 1, 1, 240));
   const targetJitterBo = settingRangePair(idle.targetJitterBo, [0.42, 0.42]);
@@ -258,6 +233,9 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const segmentDwellSec = rangePair(personalityRanges.segmentDwellSec, [0, 0]);
 
   root.innerHTML = '<div class="gnatThreePreviewScene" aria-hidden="true"></div>';
+  root.dataset.gnatPreviewVisual = "cubes";
+  root.dataset.gnatPreviewCount = String(swarmTotal);
+  root.dataset.gnatPreviewCameraBo = String(GNAT_CAMERA_VIEW_BO);
   const stage = root.querySelector(".gnatThreePreviewScene");
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(GNAT_CAMERA_FOV_DEG, 1, 0.1, 50000);
@@ -275,11 +253,6 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   renderer.domElement.className = "gnatThreeCanvas";
   stage.appendChild(renderer.domElement);
 
-  const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
-  const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), STAGE_BLOOM_CONFIG.strength, STAGE_BLOOM_CONFIG.radius, STAGE_BLOOM_CONFIG.threshold);
-  composer.addPass(bloomPass);
-
   const worldGroup = new THREE.Group();
   worldGroup.name = "gnat-swarm-preview-world";
   scene.add(worldGroup);
@@ -287,7 +260,6 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const keyLight = new THREE.DirectionalLight(0xf2ffe8, 1.35);
   keyLight.position.set(-0.35, -0.4, 1);
   scene.add(keyLight);
-  worldGroup.add(createPreviewGrid(gridSizePx, gridStepPx, zDepthPx - 2));
   worldGroup.add(createRing(wanderRadiusPx, zDepthPx, { opacity: wanderRingOpacity, dashed: true }));
   worldGroup.add(createRing(idleRadiusPx, zDepthPx, { opacity: 0.2 }));
   worldGroup.add(createRing(17, zDepthPx, { color: 0xdeebd8, opacity: 0.48 }));
@@ -313,11 +285,9 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     const rect = stage.getBoundingClientRect();
     const width = Math.max(1, Math.round(rect.width));
     const height = Math.max(1, Math.round(rect.height));
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, STAGE_BLOOM_CONFIG.pixelRatio || 1.5);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, GNAT_PREVIEW_PIXEL_RATIO);
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(width, height, false);
-    composer.setPixelRatio(pixelRatio);
-    composer.setSize(width, height);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
   };
@@ -566,7 +536,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       gnatMesh.setMatrixAt(state.index, gnatMatrix);
     });
     gnatMesh.instanceMatrix.needsUpdate = true;
-    composer.render();
+    renderer.render(scene, camera);
     animation.frame = requestAnimationFrame(tick);
   };
   animation.frame = requestAnimationFrame(tick);
@@ -575,8 +545,10 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     window.removeEventListener("resize", resizePreview);
     if (resizeObserver) resizeObserver.disconnect();
     disposeSceneObject(scene);
-    composer.dispose();
     renderer.dispose();
+    delete root.dataset.gnatPreviewVisual;
+    delete root.dataset.gnatPreviewCount;
+    delete root.dataset.gnatPreviewCameraBo;
     root.innerHTML = "";
   };
 
