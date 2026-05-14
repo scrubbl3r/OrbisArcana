@@ -208,6 +208,20 @@ body::before {
   transform-origin: center;
 }
 
+.gnatThreePreviewScene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform: scale(var(--enemy-preview-zoom));
+  transform-origin: center;
+}
+
+.gnatThreeCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .gnatPreviewRing,
 .gnatPreviewSpawnPoint,
 .gnatPreviewDot {

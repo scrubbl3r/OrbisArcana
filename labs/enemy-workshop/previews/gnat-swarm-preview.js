@@ -1,4 +1,13 @@
+import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { STAGE_BLOOM_CONFIG } from "../../../src/game-runtime/rendering/three/three-bloom-config.js?v=20260505f";
+
 const PREVIEW_CLEANUP_KEY = Symbol.for("orbis.enemyWorkshop.gnatPreviewCleanup");
+const GNAT_WORLD_SCALE = 42;
+const GNAT_CAMERA_FOV_DEG = 45;
+const GNAT_CAMERA_VIEW_RADIUS = 420;
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
   const numeric = Number(value);
@@ -122,6 +131,99 @@ function cleanupPreview(root = null) {
   root[PREVIEW_CLEANUP_KEY] = null;
 }
 
+function disposeSceneObject(object = null) {
+  if (!object || typeof object.traverse !== "function") return;
+  object.traverse((child) => {
+    if (child.geometry && typeof child.geometry.dispose === "function") child.geometry.dispose();
+    const materials = Array.isArray(child.material) ? child.material : [child.material];
+    materials.filter(Boolean).forEach((material) => {
+      Object.values(material).forEach((value) => {
+        if (value && typeof value.dispose === "function" && value.isTexture) value.dispose();
+      });
+      if (typeof material.dispose === "function") material.dispose();
+    });
+  });
+}
+
+function createGnatGlowTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  const glow = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  glow.addColorStop(0, "rgba(238,255,218,1)");
+  glow.addColorStop(0.16, "rgba(218,242,198,0.96)");
+  glow.addColorStop(0.42, "rgba(182,226,166,0.34)");
+  glow.addColorStop(1, "rgba(182,226,166,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, 64, 64);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createRing(radius = 1, z = 0, { color = 0xa4e0ad, opacity = 0.18, dashed = false } = {}) {
+  const segments = 192;
+  const material = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  if (dashed) {
+    const positions = [];
+    for (let i = 0; i < segments; i += 1) {
+      if (i % 2) continue;
+      const a0 = i / segments * Math.PI * 2;
+      const a1 = (i + 0.62) / segments * Math.PI * 2;
+      positions.push(
+        Math.cos(a0) * radius,
+        Math.sin(a0) * radius,
+        z,
+        Math.cos(a1) * radius,
+        Math.sin(a1) * radius,
+        z,
+      );
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    return new THREE.LineSegments(geometry, material);
+  }
+  const points = [];
+  for (let i = 0; i < segments; i += 1) {
+    const angle = i / segments * Math.PI * 2;
+    points.push(new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, z));
+  }
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  return new THREE.LineLoop(geometry, material);
+}
+
+function createPreviewGrid(size = 12000, step = 34, z = -2) {
+  const half = size / 2;
+  const positions = [];
+  for (let x = -half; x <= half; x += step) {
+    positions.push(x, -half, z, x, half, z);
+  }
+  for (let y = -half; y <= half; y += step) {
+    positions.push(-half, y, z, half, y, z);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  const material = new THREE.LineBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.028,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  return new THREE.LineSegments(geometry, material);
+}
+
+function cameraDistanceForViewRadius(radius = GNAT_CAMERA_VIEW_RADIUS, fovDeg = GNAT_CAMERA_FOV_DEG) {
+  return radius / Math.tan(THREE.MathUtils.degToRad(fovDeg / 2));
+}
+
 export function renderGnatSwarmPreview({ root, surface = null, settings = null } = {}) {
   if (!root) return null;
   cleanupPreview(root);
@@ -146,7 +248,9 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 240),
     clampNumber(idle.maxSpeedBoPerSec, 3.2, 0.1, 320),
   ]);
-  const scale = 42;
+  const scale = GNAT_WORLD_SCALE;
+  const zDepthBo = clampNumber(swarm.zDepthBo, 0, -500, 500);
+  const zDepthPx = zDepthBo * scale;
   const idleRadiusPx = Math.round(spawnRadiusBo * scale);
   const wanderMinPx = Math.round(wanderMinBo * scale);
   const wanderRadiusPx = Math.round(wanderMaxBo * scale);
@@ -163,20 +267,71 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const lingerSec = rangePair(personalityRanges.lingerSec, [wander.lingerMinSec, wander.lingerMaxSec]);
   const segmentDwellSec = rangePair(personalityRanges.segmentDwellSec, [0, 0]);
 
-  root.innerHTML = `
-    <div
-      class="gnatPreviewScene"
-      style="--idle-r:${idleRadiusPx}px;--wander-r:${wanderRadiusPx}px"
-    >
-      <div class="gnatPreviewRing gnatPreviewWanderRing" aria-hidden="true"></div>
-      <div class="gnatPreviewRing gnatPreviewIdleRing" aria-hidden="true"></div>
-      <div class="gnatPreviewSpawnPoint" aria-hidden="true"></div>
-      ${Array.from({ length: swarmTotal }, () => '<span class="gnatPreviewDot" aria-hidden="true"></span>').join("")}
-    </div>
-  `;
+  root.innerHTML = '<div class="gnatThreePreviewScene" aria-hidden="true"></div>';
+  const stage = root.querySelector(".gnatThreePreviewScene");
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(GNAT_CAMERA_FOV_DEG, 1, 0.1, 50000);
+  camera.position.set(0, 0, zDepthPx + cameraDistanceForViewRadius());
+  camera.lookAt(0, 0, zDepthPx);
 
-  const dots = Array.from(root.querySelectorAll(".gnatPreviewDot"));
-  const buildGnatState = (dot, index) => {
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    powerPreference: "high-performance",
+  });
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.domElement.className = "gnatThreeCanvas";
+  stage.appendChild(renderer.domElement);
+
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), STAGE_BLOOM_CONFIG.strength, STAGE_BLOOM_CONFIG.radius, STAGE_BLOOM_CONFIG.threshold);
+  composer.addPass(bloomPass);
+
+  const worldGroup = new THREE.Group();
+  worldGroup.name = "gnat-swarm-preview-world";
+  scene.add(worldGroup);
+  worldGroup.add(createPreviewGrid(12000, 34, zDepthPx - 2));
+  worldGroup.add(createRing(wanderRadiusPx, zDepthPx, { opacity: 0.1, dashed: true }));
+  worldGroup.add(createRing(idleRadiusPx, zDepthPx, { opacity: 0.2 }));
+  worldGroup.add(createRing(17, zDepthPx, { color: 0xdeebd8, opacity: 0.48 }));
+
+  const gnatTexture = createGnatGlowTexture();
+  const gnatMaterial = new THREE.SpriteMaterial({
+    map: gnatTexture,
+    transparent: true,
+    opacity: 0.95,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const sprites = Array.from({ length: swarmTotal }, () => {
+    const sprite = new THREE.Sprite(gnatMaterial.clone());
+    sprite.scale.set(22, 22, 1);
+    sprite.position.set(0, 0, zDepthPx);
+    worldGroup.add(sprite);
+    return sprite;
+  });
+
+  const resizePreview = () => {
+    const rect = stage.getBoundingClientRect();
+    const width = Math.max(1, Math.round(rect.width));
+    const height = Math.max(1, Math.round(rect.height));
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, STAGE_BLOOM_CONFIG.pixelRatio || 1.5);
+    renderer.setPixelRatio(pixelRatio);
+    renderer.setSize(width, height, false);
+    composer.setPixelRatio(pixelRatio);
+    composer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  };
+  const resizeObserver = typeof ResizeObserver === "function" ? new ResizeObserver(resizePreview) : null;
+  if (resizeObserver) resizeObserver.observe(stage);
+  window.addEventListener("resize", resizePreview);
+  resizePreview();
+
+  const buildGnatState = (sprite, index) => {
     const baseSpeedBoPerSec = clampNumber(randomInRange(baseSpeedRangeBoPerSec, 1.35), 1.35, 0.1, 320);
     const speedMultiplier = clampNumber(randomInRange(personalityRanges.speed, 1), 1, 0.05, 8);
     const effectiveSpeedBoPerSec = baseSpeedBoPerSec * speedMultiplier;
@@ -228,7 +383,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     const returnRerollRadiusPx = Math.max(arrivalRadiusPx * 0.5, segmentJitterPx * (0.95 - returnBias * 0.55));
     const start = randomInCircle(idleRadiusPx);
     return {
-      dot,
+      sprite,
       x: start.x,
       y: start.y,
       vx: effectiveSpeedBoPerSec * scale * 0.2,
@@ -271,7 +426,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       returnSpeedMultiplier,
     };
   };
-  const states = dots.map(buildGnatState);
+  const states = sprites.map(buildGnatState);
   const animation = {
     frame: 0,
     lastMs: performance.now(),
@@ -399,13 +554,20 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
         state.x *= 0.985;
         state.y *= 0.985;
       }
-      if (state.dot) state.dot.style.transform = `translate(${state.x.toFixed(2)}px, ${state.y.toFixed(2)}px) translate(-50%, -50%)`;
+      if (state.sprite) state.sprite.position.set(state.x, state.y, zDepthPx);
     });
+    composer.render();
     animation.frame = requestAnimationFrame(tick);
   };
   animation.frame = requestAnimationFrame(tick);
   root[PREVIEW_CLEANUP_KEY] = () => {
     if (animation.frame) cancelAnimationFrame(animation.frame);
+    window.removeEventListener("resize", resizePreview);
+    if (resizeObserver) resizeObserver.disconnect();
+    disposeSceneObject(scene);
+    composer.dispose();
+    renderer.dispose();
+    root.innerHTML = "";
   };
 
   return Object.freeze({
@@ -415,5 +577,6 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     wanderMinPx,
     wanderRadiusPx,
     swarmTotal,
+    zDepthBo,
   });
 }

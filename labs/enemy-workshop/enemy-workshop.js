@@ -54,6 +54,9 @@ function migrateEnemySettings(settings = {}) {
   if (next.swarm.spawnRadiusBo == null && Number.isFinite(Number(idle.idleRadiusBo))) {
     next.swarm.spawnRadiusBo = Number(idle.idleRadiusBo);
   }
+  if (!Number.isFinite(Number(next.swarm.zDepthBo))) {
+    next.swarm.zDepthBo = 0;
+  }
   if (!Array.isArray(next.swarm.baseSpeedBoPerSec)) {
     const base = Number(idle.baseSpeedBoPerSec);
     const max = Number(idle.maxSpeedBoPerSec);

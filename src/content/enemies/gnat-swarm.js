@@ -91,7 +91,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         "bias": 0
       }
     },
-    "spawnRadiusBo": 2
+    "spawnRadiusBo": 2,
+    "zDepthBo": 0
   }
 }
 );

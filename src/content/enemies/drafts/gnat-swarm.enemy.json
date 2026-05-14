@@ -89,7 +89,8 @@
           "bias": 0
         }
       },
-      "spawnRadiusBo": 2
+      "spawnRadiusBo": 2,
+      "zDepthBo": 0
     }
   }
 }

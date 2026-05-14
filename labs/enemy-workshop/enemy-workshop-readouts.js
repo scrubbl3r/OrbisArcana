@@ -13,7 +13,7 @@ function rangeText(range = []) {
 export function formatEnemyWorkshopSwarmReadout(surface = null) {
   if (!surface) return "Pending";
   const swarm = surface.swarm || {};
-  return `gnats total ${roundMetric(swarm.gnatsTotal, 0)} / spawn ${roundMetric(swarm.spawnRadiusBo)} BO / base speed ${rangeText(swarm.baseSpeedBoPerSec)} BO/s`;
+  return `gnats total ${roundMetric(swarm.gnatsTotal, 0)} / spawn ${roundMetric(swarm.spawnRadiusBo)} BO / z ${roundMetric(swarm.zDepthBo, 1)} BO / base speed ${rangeText(swarm.baseSpeedBoPerSec)} BO/s`;
 }
 
 export function formatEnemyWorkshopRuntimeReadout(surface = null) {
