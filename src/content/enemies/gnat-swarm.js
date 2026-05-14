@@ -3,13 +3,34 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
   "category": "enemy",
   "gnat": {
     "idle": {
-      "elasticJitterBo": 1,
-      "elasticJitterHz": 1,
-      "springDamping": 4,
-      "springStiffness": 9,
-      "targetJitterBo": 10,
-      "targetRetargetMaxSec": 20,
-      "targetRetargetMinSec": 5
+      "elasticJitterBo": [
+        1,
+        1
+      ],
+      "elasticJitterHz": [
+        1,
+        1
+      ],
+      "springDamping": [
+        4,
+        4
+      ],
+      "springStiffness": [
+        9,
+        9
+      ],
+      "targetJitterBo": [
+        10,
+        10
+      ],
+      "targetRetargetMaxSec": [
+        20,
+        20
+      ],
+      "targetRetargetMinSec": [
+        5,
+        5
+      ]
     },
     "personalityRanges": {
       "aggression": [
@@ -18,7 +39,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "arrivalRadiusBo": [
         1,
-        10
+        4
       ],
       "awareness": [
         0.24,
@@ -42,7 +63,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "segmentDwellSec": [
         0,
-        0
+        3
       ],
       "speed": [
         0.5,
@@ -57,16 +78,16 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         30
       ],
       "wanderRangeBo": [
-        30,
-        200
+        10,
+        50
       ],
       "wanderSegmentJitterBo": [
         0,
         0
       ],
       "wanderSegmentSpacingBo": [
-        1,
-        5
+        0.5,
+        3
       ]
     }
   },
@@ -77,11 +98,11 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
   "status": "draft",
   "swarm": {
     "baseSpeedBoPerSec": [
-      100,
-      100
+      10,
+      10
     ],
     "gnatSizeBo": 0.04,
-    "gnatsTotal": 70,
+    "gnatsTotal": 40,
     "spawnCurves": {
       "wanderChancePerMinute": {
         "amount": 1,
@@ -92,7 +113,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         "bias": 0
       }
     },
-    "spawnRadiusBo": 2,
+    "spawnRadiusBo": 1.5,
     "zDepthBo": 0
   }
 }
