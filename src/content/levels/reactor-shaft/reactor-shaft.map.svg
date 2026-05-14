@@ -24,14 +24,14 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.286007"
-     inkscape:cx="1405.5133"
-     inkscape:cy="1416.7885"
+     inkscape:cx="1316.8669"
+     inkscape:cy="1468.1102"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="17"
-     inkscape:window-y="163"
+     inkscape:window-y="135"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer13"
+     inkscape:current-layer="layer5"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -95,7 +95,8 @@
      inkscape:groupmode="layer"
      id="layer17"
      inkscape:label="depths"
-     style="display:inline">
+     style="display:inline"
+     sodipodi:insensitive="true">
     <path
        style="display:inline;fill:#0000be;fill-opacity:1;stroke:none;stroke-opacity:1"
        d="M 380.81185,1610.75 H 1709.0618 V 392.00004 l -624.25,2.75 -113.24995,706.62496 305.24995,-2.625 192,384 H 700.81185 v -320 h -320 z"
@@ -252,6 +253,28 @@
        x="515.16003"
        y="1530.8636"
        inkscape:label="id: plinth_01  z:orb,  anchor:bottom" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5"
+     inkscape:label="enemies">
+    <path
+       sodipodi:type="star"
+       style="fill:#ff00ff;stroke-width:1.88976"
+       id="path2"
+       inkscape:flatsided="true"
+       sodipodi:sides="6"
+       sodipodi:cx="1430.7854"
+       sodipodi:cy="1335.1405"
+       sodipodi:r1="25.754908"
+       sodipodi:r2="22.304403"
+       sodipodi:arg1="1.0471976"
+       sodipodi:arg2="1.5707963"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       d="m 1443.6629,1357.4449 -25.755,0 -12.8774,-22.3044 12.8774,-22.3044 25.755,0 12.8774,22.3044 z"
+       transform="matrix(0.63769201,0,0,0.63769201,529.937,534.27613)"
+       inkscape:label="gnats_01" />
   </g>
   <g
      inkscape:groupmode="layer"
