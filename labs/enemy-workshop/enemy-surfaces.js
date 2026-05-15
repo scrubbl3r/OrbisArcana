@@ -14,6 +14,17 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
       spawnRadiusBo: 2.2,
       gnatSizeBo: 0.04,
       zDepthBo: 0,
+      detectionRadiusBo: 10,
+      detectionBaseChance: 0.35,
+      detectionCheckSec: 1,
+      telegraphRadiusBo: 14,
+      telegraphBaseChance: 0.42,
+      telegraphDecay: 0.72,
+      telegraphCooldownSec: 1,
+      maxRelayGenerations: 5,
+      minSignalStrength: 0.08,
+      signalMemorySec: 1.6,
+      feedOffsetBo: 0.08,
       baseSpeedBoPerSec: Object.freeze([1.35, 3.2]),
       spawnCurves: Object.freeze({
         wanderChancePerMinute: Object.freeze({

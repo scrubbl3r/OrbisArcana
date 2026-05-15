@@ -69,6 +69,22 @@ function migrateEnemySettings(settings = {}) {
   if (!Number.isFinite(Number(next.swarm.zDepthBo))) {
     next.swarm.zDepthBo = 0;
   }
+  const swarmScalarFallbacks = {
+    detectionRadiusBo: 10,
+    detectionBaseChance: 0.35,
+    detectionCheckSec: 1,
+    telegraphRadiusBo: 14,
+    telegraphBaseChance: 0.42,
+    telegraphDecay: 0.72,
+    telegraphCooldownSec: 1,
+    maxRelayGenerations: 5,
+    minSignalStrength: 0.08,
+    signalMemorySec: 1.6,
+    feedOffsetBo: 0.08,
+  };
+  Object.entries(swarmScalarFallbacks).forEach(([key, fallback]) => {
+    if (!Number.isFinite(Number(next.swarm[key]))) next.swarm[key] = fallback;
+  });
   if (!Array.isArray(next.swarm.baseSpeedBoPerSec)) {
     const base = Number(idle.baseSpeedBoPerSec);
     const max = Number(idle.maxSpeedBoPerSec);

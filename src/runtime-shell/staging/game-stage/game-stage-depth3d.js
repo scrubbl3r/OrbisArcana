@@ -28,7 +28,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260514e";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260514f";
 import {
   applyThreeMeshFlags,
   disposeThreeObject,
@@ -157,6 +157,7 @@ export function createGameStageDepth3dLayer({
   let lastCameraZ = 0;
   const baseOrbWorldUnits = Math.max(1, clampNumber(orbDiameterWorldUnits, BO_WORLD_UNITS));
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
+  let currentOrbWorldPosition = null;
   let lastGlobe3dTickMs = 0;
   let lastEnemy3dTickMs = 0;
   let boundGlobe3dSpawns = Object.freeze([]);
@@ -369,7 +370,16 @@ export function createGameStageDepth3dLayer({
   function tickEnemy3dRuntime(nowMs = performance.now()) {
     const dtSec = lastEnemy3dTickMs ? Math.max(0.001, Math.min(0.05, (nowMs - lastEnemy3dTickMs) / 1000)) : 0.016;
     lastEnemy3dTickMs = nowMs;
-    gnatSwarm3dRuntime.update(nowMs, dtSec);
+    gnatSwarm3dRuntime.update(nowMs, dtSec, {
+      orbWorldPosition: currentOrbWorldPosition,
+    });
+    const enemyTrace = typeof gnatSwarm3dRuntime.getTrace === "function" ? gnatSwarm3dRuntime.getTrace() : null;
+    if (enemyTrace) {
+      root.dataset.enemy3dAlertDirect = String(enemyTrace.direct || 0);
+      root.dataset.enemy3dAlertRelayed = String(enemyTrace.relayed || 0);
+      root.dataset.enemy3dFeedingCount = String(enemyTrace.feeding || 0);
+      root.dataset.enemy3dSignalCount = String(enemyTrace.signals || 0);
+    }
   }
 
   function hasActiveGlobe3dAnimation() {
@@ -536,6 +546,7 @@ export function createGameStageDepth3dLayer({
       const orbDepth = resolveSceneOrbDepth(authoredScene);
       const levelGraphicsModel = authoredScene && authoredScene.levelGraphicsModel ? authoredScene.levelGraphicsModel : null;
       const starField = levelGraphicsModel && (levelGraphicsModel.starField || levelGraphicsModel.starsField);
+      currentOrbWorldPosition = null;
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;
@@ -596,6 +607,9 @@ export function createGameStageDepth3dLayer({
       if (disposed) return false;
       const handled = orb3dActorRuntime.setWorldPosition({ xW, yW, bo, zBO });
       if (!handled) return false;
+      currentOrbWorldPosition = Number.isFinite(Number(xW)) && Number.isFinite(Number(yW))
+        ? { xW: Number(xW), yW: Number(yW) }
+        : currentOrbWorldPosition;
       syncRootVisibility();
       renderLoop.scheduleAnimation();
       const lastFrame = renderLoop.getLastFrame();

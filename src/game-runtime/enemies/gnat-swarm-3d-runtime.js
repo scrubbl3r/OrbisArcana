@@ -46,6 +46,16 @@ function distance(a, b) {
   return Math.hypot((a.xW || 0) - (b.xW || 0), (a.yW || 0) - (b.yW || 0));
 }
 
+function normalizeUnit(value, fallback = 0) {
+  return clampNumber(value, fallback, 0, 1);
+}
+
+function shapedProximityChance({ distancePx = 0, radiusPx = 1, baseChance = 0, awareness = 1, strength = 1 } = {}) {
+  if (radiusPx <= 0 || distancePx > radiusPx) return 0;
+  const proximity = 1 - distancePx / radiusPx;
+  return normalizeUnit(baseChance * awareness * strength * proximity * proximity, 0);
+}
+
 function pointInLoop(point = {}, loop = null) {
   const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
   if (points.length < 3) return false;
@@ -149,6 +159,8 @@ export function createGnatSwarm3dRuntime({
   let mesh = null;
   let states = [];
   let bounds = Object.freeze({ loops: [], box: null });
+  let activeSignals = [];
+  let alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, signals: 0 });
 
   function disposeMesh() {
     if (mesh) {
@@ -156,6 +168,8 @@ export function createGnatSwarm3dRuntime({
       mesh = null;
     }
     states = [];
+    activeSignals = [];
+    alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, signals: 0 });
   }
 
   function chooseDestination(state) {
@@ -244,6 +258,88 @@ export function createGnatSwarm3dRuntime({
     }
   }
 
+  function emitSignal(state, nowSec = 0, strength = 1, generation = 0) {
+    if (!state || strength < state.minSignalStrength || generation > state.maxRelayGenerations) return;
+    activeSignals.push({
+      sourceIndex: state.index,
+      position: { xW: state.position.xW, yW: state.position.yW },
+      orbPosition: state.orbTarget ? { xW: state.orbTarget.xW, yW: state.orbTarget.yW } : null,
+      strength,
+      generation,
+      expiresAt: nowSec + state.signalMemorySec,
+    });
+  }
+
+  function startAlert(state, orbPosition = null, nowSec = 0, {
+    strength = 1,
+    generation = 0,
+    source = "direct",
+  } = {}) {
+    if (!state || !orbPosition) return;
+    if (state.mode === "feeding") return;
+    state.mode = "alerted";
+    state.isDwelling = false;
+    state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
+    state.destination = state.orbTarget;
+    state.route = buildRouteSegments({
+      from: state.position,
+      to: state.orbTarget,
+      spacingPx: randomInRange(state.segmentSpacingPx, 96),
+      jitterPx: state.segmentJitterPx * 0.45,
+      bounds,
+    });
+    state.routeIndex = 0;
+    state.target = state.route[0] || state.orbTarget;
+    state.nextTargetAt = nowSec + Math.min(0.35, randomInRange(state.idleRetargetSec, 1));
+    state.nextDetectAt = nowSec + state.detectionCheckSec;
+    state.nextSignalCheckAt = nowSec + state.telegraphCheckSec;
+    state.nextRelayAt = nowSec + state.telegraphCooldownSec;
+    state.alertGeneration = generation;
+    state.alertStrength = strength;
+    state.alertSource = source;
+    emitSignal(state, nowSec, strength, generation);
+  }
+
+  function scheduleAlertTarget(state, orbPosition = null, nowSec = 0) {
+    if (!state || !orbPosition) return;
+    state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
+    const targetMoved = distance(state.destination || state.orbTarget, state.orbTarget);
+    if (!state.route.length || targetMoved > Math.max(state.arrivalRadiusPx, state.segmentSpacingPx[0] * 0.5)) {
+      state.destination = state.orbTarget;
+      state.route = buildRouteSegments({
+        from: state.position,
+        to: state.orbTarget,
+        spacingPx: randomInRange(state.segmentSpacingPx, 96),
+        jitterPx: state.segmentJitterPx * 0.35,
+        bounds,
+      });
+      state.routeIndex = 0;
+    }
+    const segment = state.route[state.routeIndex] || state.orbTarget;
+    state.target = randomBoundedPointAround(segment, state.outboundRerollRadiusPx * 0.5, bounds);
+    state.nextTargetAt = nowSec + Math.max(0.15, Math.min(0.75, randomInRange(state.idleRetargetSec, 1)));
+  }
+
+  function startFeeding(state, orbPosition = null, nowSec = 0) {
+    if (!state || !orbPosition) return;
+    state.mode = "feeding";
+    state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
+    if (!Number.isFinite(state.feedAngle)) state.feedAngle = Math.random() * Math.PI * 2;
+    state.nextTargetAt = nowSec;
+    emitSignal(state, nowSec, Math.max(state.minSignalStrength, state.alertStrength * state.telegraphDecay), state.alertGeneration + 1);
+  }
+
+  function scheduleFeedTarget(state, orbPosition = null, nowSec = 0) {
+    if (!state || !orbPosition) return;
+    state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
+    state.feedAngle += state.feedOrbitSpeed * Math.max(0.001, state.lastFeedDt || 0.016);
+    state.target = {
+      xW: state.orbTarget.xW + Math.cos(state.feedAngle) * state.feedRadiusPx,
+      yW: state.orbTarget.yW + Math.sin(state.feedAngle) * state.feedRadiusPx,
+    };
+    state.nextTargetAt = nowSec + 0.12;
+  }
+
   function load(spawns = [], {
     boundaryLoops = [],
     boundaryBox = null,
@@ -284,6 +380,19 @@ export function createGnatSwarm3dRuntime({
     const spawnRadius = Math.max(0, clampNumber(swarm.spawnRadiusBo, 2, 0, 64)) * bo;
     const gnatSize = Math.max(0.5, clampNumber(swarm.gnatSizeBo, 0.04, 0.005, 1) * bo);
     const zDepthPx = -clampNumber(swarm.zDepthBo, getOrbZBO(), -500, 500) * bo;
+    const detectionRadiusPx = Math.max(0, clampNumber(swarm.detectionRadiusBo, 10, 0, 240) * bo);
+    const detectionBaseChance = normalizeUnit(swarm.detectionBaseChance, 0.35);
+    const detectionCheckSec = Math.max(0.1, clampNumber(swarm.detectionCheckSec, 1, 0.1, 60));
+    const telegraphRadiusPx = Math.max(0, clampNumber(swarm.telegraphRadiusBo, 14, 0, 320) * bo);
+    const telegraphBaseChance = normalizeUnit(swarm.telegraphBaseChance, 0.42);
+    const telegraphDecay = normalizeUnit(swarm.telegraphDecay, 0.72);
+    const telegraphCooldownSec = Math.max(0.1, clampNumber(swarm.telegraphCooldownSec, 1, 0.1, 60));
+    const maxRelayGenerations = Math.max(0, Math.round(clampNumber(swarm.maxRelayGenerations, 5, 0, 24)));
+    const minSignalStrength = normalizeUnit(swarm.minSignalStrength, 0.08);
+    const signalMemorySec = Math.max(0.1, clampNumber(swarm.signalMemorySec, 1.6, 0.1, 60));
+    const feedOffsetPx = clampNumber(swarm.feedOffsetBo, 0.08, -4, 12) * bo;
+    const awarenessRange = rangePair(personality.awareness, [0.5, 1]);
+    const aggressionRange = rangePair(personality.aggression, [0.2, 0.6]);
     const allStates = [];
     for (const spawn of Array.isArray(spawns) ? spawns : []) {
       if (String(spawn && (spawn.enemy || spawn.archetype) || "") !== "gnat-swarm") continue;
@@ -309,7 +418,10 @@ export function createGnatSwarm3dRuntime({
         const personalRouteCommitment = clampNumber(randomInRange(routeCommitment, 0.82), 0.82, 0, 1);
         const personalReturnBias = clampNumber(randomInRange(returnBias, 0.82), 0.82, 0, 1);
         const personalArrivalRadiusPx = Math.max(1, randomInRange(arrivalRadiusBo, 0.34) * bo);
+        const awareness = Math.max(0, randomInRange(awarenessRange, 0.5));
+        const aggression = Math.max(0, randomInRange(aggressionRange, 0.2));
         const state = {
+          index: allStates.length,
           mode: "idle",
           position: spawnPoint,
           spawn: center,
@@ -323,6 +435,12 @@ export function createGnatSwarm3dRuntime({
           lingerUntil: 0,
           nextRouteAt: Math.random() * 2,
           nextTargetAt: Math.random() * 0.5,
+          nextDetectAt: Math.random() * detectionCheckSec,
+          nextSignalCheckAt: Math.random() * detectionCheckSec,
+          nextRelayAt: Math.random() * telegraphCooldownSec,
+          alertGeneration: 0,
+          alertStrength: 0,
+          alertSource: "",
           speedPx: Math.max(1, randomInRange(baseSpeed, 2) * randomInRange(speedX, 1) * bo),
           spawnRadiusPx: spawnRadius,
           wanderRangePx: Math.max(spawnRadius, personalWanderRangeBo * bo),
@@ -346,6 +464,23 @@ export function createGnatSwarm3dRuntime({
           phaseX: Math.random() * Math.PI * 2,
           phaseY: Math.random() * Math.PI * 2,
           zDepthPx,
+          awareness,
+          aggression,
+          detectionRadiusPx,
+          detectionBaseChance,
+          detectionCheckSec,
+          telegraphRadiusPx,
+          telegraphBaseChance,
+          telegraphDecay,
+          telegraphCooldownSec,
+          telegraphCheckSec: detectionCheckSec,
+          maxRelayGenerations,
+          minSignalStrength,
+          signalMemorySec,
+          feedRadiusPx: Math.max(1, bo * 0.5 + feedOffsetPx),
+          feedAngle: Math.random() * Math.PI * 2,
+          feedOrbitSpeed: randomUnit() * (0.12 + aggression * 0.2),
+          lastFeedDt: 0.016,
           idleRetargetSec: [
             Math.max(0.05, Math.min(personalRetargetMinSec, personalRetargetMaxSec)),
             Math.max(0.05, Math.max(personalRetargetMinSec, personalRetargetMaxSec)),
@@ -377,11 +512,64 @@ export function createGnatSwarm3dRuntime({
   const scaleVec = new THREE.Vector3();
   const positionVec = new THREE.Vector3();
 
-  function update(nowMs = performance.now(), dtSec = 0.016) {
+  function update(nowMs = performance.now(), dtSec = 0.016, {
+    orbWorldPosition = null,
+  } = {}) {
     if (!mesh || !states.length) return;
     const nowSec = nowMs / 1000;
+    const orbPosition = orbWorldPosition && Number.isFinite(Number(orbWorldPosition.xW)) && Number.isFinite(Number(orbWorldPosition.yW))
+      ? { xW: Number(orbWorldPosition.xW), yW: Number(orbWorldPosition.yW) }
+      : null;
+    activeSignals = activeSignals.filter((signal) => signal && signal.expiresAt >= nowSec && signal.strength > 0);
+    const signalsSnapshot = activeSignals.slice();
+    let directAlerts = 0;
+    let relayedAlerts = 0;
+    let feedingCount = 0;
     for (let i = 0; i < states.length; i += 1) {
       const state = states[i];
+      if (orbPosition && state.mode !== "alerted" && state.mode !== "feeding" && nowSec >= state.nextDetectAt) {
+        state.nextDetectAt = nowSec + state.detectionCheckSec;
+        const detectionDistance = distance(state.position, orbPosition);
+        const chance = shapedProximityChance({
+          distancePx: detectionDistance,
+          radiusPx: state.detectionRadiusPx,
+          baseChance: state.detectionBaseChance,
+          awareness: state.awareness,
+          strength: 1,
+        });
+        if (chance > 0 && Math.random() < chance) {
+          directAlerts += 1;
+          startAlert(state, orbPosition, nowSec, { strength: 1, generation: 0, source: "direct" });
+        }
+      }
+      if (orbPosition && state.mode !== "alerted" && state.mode !== "feeding" && nowSec >= state.nextSignalCheckAt) {
+        state.nextSignalCheckAt = nowSec + state.telegraphCheckSec;
+        for (const signal of signalsSnapshot) {
+          if (!signal || signal.sourceIndex === state.index || signal.generation >= state.maxRelayGenerations || signal.strength < state.minSignalStrength) continue;
+          const signalDistance = distance(state.position, signal.position);
+          const chance = shapedProximityChance({
+            distancePx: signalDistance,
+            radiusPx: state.telegraphRadiusPx,
+            baseChance: state.telegraphBaseChance,
+            awareness: state.awareness,
+            strength: signal.strength,
+          });
+          if (chance > 0 && Math.random() < chance) {
+            relayedAlerts += 1;
+            startAlert(state, signal.orbPosition || orbPosition, nowSec, {
+              strength: signal.strength * state.telegraphDecay,
+              generation: signal.generation + 1,
+              source: "relay",
+            });
+            break;
+          }
+        }
+      }
+      if (orbPosition && (state.mode === "alerted" || state.mode === "feeding") && nowSec >= state.nextRelayAt) {
+        const nextStrength = Math.max(state.minSignalStrength, state.alertStrength || 1) * state.telegraphDecay;
+        emitSignal(state, nowSec, nextStrength, (state.alertGeneration || 0) + 1);
+        state.nextRelayAt = nowSec + state.telegraphCooldownSec;
+      }
       if (state.mode === "idle" && nowSec >= state.nextTargetAt) {
         scheduleIdleTarget(state, nowSec);
       }
@@ -391,6 +579,9 @@ export function createGnatSwarm3dRuntime({
       }
       if (state.mode === "idle" && state.wanderChancePerSec > 0 && Math.random() < state.wanderChancePerSec * dtSec) {
         startWander(state, nowSec);
+      }
+      if (orbPosition && state.mode === "alerted" && nowSec >= state.nextTargetAt) {
+        scheduleAlertTarget(state, orbPosition, nowSec);
       }
       if (state.mode === "outbound" && nowSec >= state.nextTargetAt) {
         scheduleWanderTarget(state, nowSec);
@@ -413,6 +604,20 @@ export function createGnatSwarm3dRuntime({
       }
       if (state.mode === "return" && (state.isDwelling || distance(state.position, state.route[state.routeIndex] || state.spawn) < Math.max(state.arrivalRadiusPx, state.spawnRadiusPx * 0.34))) {
         advanceRoute(state, nowSec, () => startCooldown(state, nowSec));
+      }
+      if (orbPosition && state.mode === "alerted") {
+        if (distance(state.position, orbPosition) <= Math.max(state.arrivalRadiusPx, state.feedRadiusPx * 0.35)) {
+          startFeeding(state, orbPosition, nowSec);
+        } else if (distance(state.position, state.route[state.routeIndex] || state.orbTarget || orbPosition) < Math.max(state.arrivalRadiusPx, state.scale * 1.5)) {
+          state.routeIndex += 1;
+          if (state.routeIndex >= state.route.length) scheduleAlertTarget(state, orbPosition, nowSec);
+          else state.target = state.route[state.routeIndex];
+        }
+      }
+      if (orbPosition && state.mode === "feeding") {
+        feedingCount += 1;
+        state.lastFeedDt = dtSec;
+        if (nowSec >= state.nextTargetAt) scheduleFeedTarget(state, orbPosition, nowSec);
       }
       const jitterX = Math.sin(nowSec * state.elasticJitterHz * 6.283 + state.phaseX) * state.elasticJitterPx + randomUnit() * state.targetJitterPx;
       const jitterY = Math.cos(nowSec * state.elasticJitterHz * 5.113 + state.phaseY) * state.elasticJitterPx + randomUnit() * state.targetJitterPx;
@@ -460,12 +665,19 @@ export function createGnatSwarm3dRuntime({
       mesh.setMatrixAt(i, matrix);
     }
     mesh.instanceMatrix.needsUpdate = true;
+    alertTrace = Object.freeze({
+      direct: directAlerts,
+      relayed: relayedAlerts,
+      feeding: feedingCount,
+      signals: activeSignals.length,
+    });
   }
 
   return Object.freeze({
     load,
     update,
     hasActiveVisuals: () => states.length > 0,
+    getTrace: () => alertTrace,
     clear: disposeMesh,
     dispose() {
       disposeMesh();
