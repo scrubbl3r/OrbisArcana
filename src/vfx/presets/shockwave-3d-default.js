@@ -4,7 +4,7 @@ export const SHOCKWAVE_3D_PRESET_DEFAULT = Object.freeze({
   expandMs: 100,
   decayMs: 100,
   startRatio: 1.00,
-  endRatio: 3.50,
+  endRatio: 5.00,
   icoDetail: 5,
   fresnelPower: 2.00,
   centerAlpha: 0.00,
@@ -13,5 +13,5 @@ export const SHOCKWAVE_3D_PRESET_DEFAULT = Object.freeze({
   colorR: 255,
   colorG: 255,
   colorB: 255,
-  colorA: 0.50,
+  colorA: 0.10,
 });
