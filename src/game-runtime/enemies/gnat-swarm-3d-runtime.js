@@ -666,7 +666,11 @@ export function createGnatSwarm3dRuntime({
     const returnSpeedMultiplier = rangePair(personality.returnSpeedMultiplier, [1.12, 1.12]);
     const spawnRadius = Math.max(0, clampNumber(swarm.spawnRadiusBo, 2, 0, 64)) * bo;
     const gnatSize = Math.max(0.5, clampNumber(swarm.gnatSizeBo, 0.04, 0.005, 1) * bo);
-    const zDepthPx = -clampNumber(swarm.zDepthBo, getOrbZBO(), -500, 500) * bo;
+    const authoredZDepthBo = Number(swarm.zDepthBo);
+    const resolvedZDepthBo = Number.isFinite(authoredZDepthBo) && authoredZDepthBo > 0
+      ? authoredZDepthBo
+      : Math.max(0, clampNumber(getOrbZBO(), 4, 0, 500));
+    const zDepthPx = -resolvedZDepthBo * bo;
     const detectionRadiusPx = Math.max(0, clampNumber(swarm.detectionRadiusBo, 10, 0, 240) * bo);
     const detectionBaseChance = normalizeUnit(swarm.detectionBaseChance, 0.35);
     const detectionCheckSec = Math.max(0.1, clampNumber(swarm.detectionCheckSec, 1, 0.1, 60));
