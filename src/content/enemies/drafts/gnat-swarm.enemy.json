@@ -2,7 +2,7 @@
   "schema": "orbis.enemy-workshop.draft.v1",
   "enemyId": "gnat-swarm",
   "label": "Gnat Swarm",
-  "savedAtMs": 1778870736108,
+  "savedAtMs": 1778870998291,
   "enemy": {
     "gnat": {
       "idle": {
@@ -78,7 +78,7 @@
           10,
           20
         ],
-        "wanderCurve": 0.8,
+        "wanderCurve": 0.7,
         "wanderRangeBo": [
           0,
           50
@@ -95,9 +95,9 @@
     },
     "swarm": {
       "baseSpeedBoPerSec": 5,
-      "detectionBaseChance": 0.1,
+      "detectionBaseChance": 0.33,
       "detectionCheckSec": 1,
-      "detectionRadiusBo": 8,
+      "detectionRadiusBo": 10,
       "feedLatchDrift": 0.007,
       "feedMigrationBoPerSec": 0.5,
       "feedMigrationRetargetSec": [
