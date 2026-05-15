@@ -12,7 +12,7 @@ import {
   loadLabProfileStore,
   persistLabProfileStore,
 } from "../shell/lab-profile-store.js";
-import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260514c";
+import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515a";
 import {
   buildEnemyDraftPayload,
   buildGnatSwarmEnemyModule,
@@ -22,7 +22,7 @@ import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-reg
 import {
   formatEnemyWorkshopRuntimeReadout,
   formatEnemyWorkshopSwarmReadout,
-} from "./enemy-workshop-readouts.js?v=20260514n";
+} from "./enemy-workshop-readouts.js?v=20260515a";
 
 const DRAFT_STORAGE_KEY = "orbis.enemyWorkshop.drafts.v1";
 
@@ -69,17 +69,37 @@ function migrateEnemySettings(settings = {}) {
   if (!Number.isFinite(Number(next.swarm.zDepthBo))) {
     next.swarm.zDepthBo = 0;
   }
+  if (!Number.isFinite(Number(next.swarm.signalRadiusBo)) && Number.isFinite(Number(next.swarm.telegraphRadiusBo))) {
+    next.swarm.signalRadiusBo = Number(next.swarm.telegraphRadiusBo);
+  }
+  if (!Number.isFinite(Number(next.swarm.signalBaseChance)) && Number.isFinite(Number(next.swarm.telegraphBaseChance))) {
+    next.swarm.signalBaseChance = Number(next.swarm.telegraphBaseChance);
+  }
+  if (!Number.isFinite(Number(next.swarm.signalDecay)) && Number.isFinite(Number(next.swarm.telegraphDecay))) {
+    next.swarm.signalDecay = Number(next.swarm.telegraphDecay);
+  }
+  if (!Number.isFinite(Number(next.swarm.signalHops)) && Number.isFinite(Number(next.swarm.maxRelayGenerations))) {
+    next.swarm.signalHops = Number(next.swarm.maxRelayGenerations);
+  }
+  if (!Number.isFinite(Number(next.swarm.signalCooldownSec)) && Number.isFinite(Number(next.swarm.telegraphCooldownSec))) {
+    next.swarm.signalCooldownSec = Number(next.swarm.telegraphCooldownSec);
+  }
+  delete next.swarm.telegraphRadiusBo;
+  delete next.swarm.telegraphBaseChance;
+  delete next.swarm.telegraphDecay;
+  delete next.swarm.telegraphCooldownSec;
+  delete next.swarm.maxRelayGenerations;
   const swarmScalarFallbacks = {
     detectionRadiusBo: 10,
     detectionBaseChance: 0.35,
     detectionCheckSec: 1,
     leashChaseBo: 40,
     leashFeedBo: 40,
-    telegraphRadiusBo: 14,
-    telegraphBaseChance: 0.42,
-    telegraphDecay: 0.72,
-    telegraphCooldownSec: 1,
-    maxRelayGenerations: 5,
+    signalRadiusBo: 14,
+    signalBaseChance: 0.42,
+    signalDecay: 0.72,
+    signalHops: 5,
+    signalCooldownSec: 1,
     minSignalStrength: 0.08,
     signalMemorySec: 1.6,
     feedOffsetBo: 0.08,

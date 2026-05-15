@@ -341,7 +341,7 @@ export function createGnatSwarm3dRuntime({
   }
 
   function emitSignal(state, nowSec = 0, strength = 1, generation = 0) {
-    if (!state || strength < state.minSignalStrength || generation > state.maxRelayGenerations) return;
+    if (!state || strength < state.minSignalStrength || generation > state.signalHops) return;
     activeSignals.push({
       sourceIndex: state.index,
       position: { xW: state.position.xW, yW: state.position.yW },
@@ -374,8 +374,8 @@ export function createGnatSwarm3dRuntime({
     state.target = state.route[0] || state.orbTarget;
     state.nextTargetAt = nowSec + Math.min(0.35, randomInRange(state.idleRetargetSec, 1));
     state.nextDetectAt = nowSec + state.detectionCheckSec;
-    state.nextSignalCheckAt = nowSec + state.telegraphCheckSec;
-    state.nextRelayAt = nowSec + state.telegraphCooldownSec;
+    state.nextSignalCheckAt = nowSec + state.signalCheckSec;
+    state.nextRelayAt = nowSec + state.signalCooldownSec;
     state.alertGeneration = generation;
     state.alertStrength = strength;
     state.alertSource = source;
@@ -417,7 +417,7 @@ export function createGnatSwarm3dRuntime({
     if (!Number.isFinite(state.feedAngle)) state.feedAngle = Math.random() * Math.PI * 2;
     if (!Number.isFinite(state.feedLatchAngle)) state.feedLatchAngle = state.feedAngle;
     state.nextTargetAt = nowSec;
-    emitSignal(state, nowSec, Math.max(state.minSignalStrength, state.alertStrength * state.telegraphDecay), state.alertGeneration + 1);
+    emitSignal(state, nowSec, Math.max(state.minSignalStrength, state.alertStrength * state.signalDecay), state.alertGeneration + 1);
   }
 
   function scheduleFeedTarget(state, orbPosition = null, nowSec = 0) {
@@ -513,11 +513,16 @@ export function createGnatSwarm3dRuntime({
     const detectionRadiusPx = Math.max(0, clampNumber(swarm.detectionRadiusBo, 10, 0, 240) * bo);
     const detectionBaseChance = normalizeUnit(swarm.detectionBaseChance, 0.35);
     const detectionCheckSec = Math.max(0.1, clampNumber(swarm.detectionCheckSec, 1, 0.1, 60));
-    const telegraphRadiusPx = Math.max(0, clampNumber(swarm.telegraphRadiusBo, 14, 0, 320) * bo);
-    const telegraphBaseChance = normalizeUnit(swarm.telegraphBaseChance, 0.42);
-    const telegraphDecay = normalizeUnit(swarm.telegraphDecay, 0.72);
-    const telegraphCooldownSec = Math.max(0.1, clampNumber(swarm.telegraphCooldownSec, 1, 0.1, 60));
-    const maxRelayGenerations = Math.max(0, Math.round(clampNumber(swarm.maxRelayGenerations, 5, 0, 24)));
+    const signalRadiusBo = Number.isFinite(Number(swarm.signalRadiusBo)) ? swarm.signalRadiusBo : swarm.telegraphRadiusBo;
+    const signalBaseChanceValue = Number.isFinite(Number(swarm.signalBaseChance)) ? swarm.signalBaseChance : swarm.telegraphBaseChance;
+    const signalDecayValue = Number.isFinite(Number(swarm.signalDecay)) ? swarm.signalDecay : swarm.telegraphDecay;
+    const signalCooldownValue = Number.isFinite(Number(swarm.signalCooldownSec)) ? swarm.signalCooldownSec : swarm.telegraphCooldownSec;
+    const signalHopsValue = Number.isFinite(Number(swarm.signalHops)) ? swarm.signalHops : swarm.maxRelayGenerations;
+    const signalRadiusPx = Math.max(0, clampNumber(signalRadiusBo, 14, 0, 320) * bo);
+    const signalBaseChance = normalizeUnit(signalBaseChanceValue, 0.42);
+    const signalDecay = normalizeUnit(signalDecayValue, 0.72);
+    const signalCooldownSec = Math.max(0.1, clampNumber(signalCooldownValue, 1, 0.1, 60));
+    const signalHops = Math.max(0, Math.round(clampNumber(signalHopsValue, 5, 0, 24)));
     const minSignalStrength = normalizeUnit(swarm.minSignalStrength, 0.08);
     const signalMemorySec = Math.max(0.1, clampNumber(swarm.signalMemorySec, 1.6, 0.1, 60));
     const feedOffsetPx = clampNumber(swarm.feedOffsetBo, 0.08, -4, 12) * bo;
@@ -575,7 +580,7 @@ export function createGnatSwarm3dRuntime({
           nextTargetAt: Math.random() * 0.5,
           nextDetectAt: Math.random() * detectionCheckSec,
           nextSignalCheckAt: Math.random() * detectionCheckSec,
-          nextRelayAt: Math.random() * telegraphCooldownSec,
+          nextRelayAt: Math.random() * signalCooldownSec,
           nextLeashCheckAt: Math.random() * 0.35,
           alertGeneration: 0,
           alertStrength: 0,
@@ -608,12 +613,12 @@ export function createGnatSwarm3dRuntime({
           detectionRadiusPx,
           detectionBaseChance,
           detectionCheckSec,
-          telegraphRadiusPx,
-          telegraphBaseChance,
-          telegraphDecay,
-          telegraphCooldownSec,
-          telegraphCheckSec: detectionCheckSec,
-          maxRelayGenerations,
+          signalRadiusPx,
+          signalBaseChance,
+          signalDecay,
+          signalCooldownSec,
+          signalCheckSec: detectionCheckSec,
+          signalHops,
           minSignalStrength,
           signalMemorySec,
           leashChasePx,
@@ -719,21 +724,21 @@ export function createGnatSwarm3dRuntime({
         }
       }
       if (orbPosition && state.mode !== "alerted" && state.mode !== "feeding" && nowSec >= state.nextSignalCheckAt) {
-        state.nextSignalCheckAt = nowSec + state.telegraphCheckSec;
+        state.nextSignalCheckAt = nowSec + state.signalCheckSec;
         for (const signal of signalsSnapshot) {
-          if (!signal || signal.sourceIndex === state.index || signal.generation >= state.maxRelayGenerations || signal.strength < state.minSignalStrength) continue;
+          if (!signal || signal.sourceIndex === state.index || signal.generation >= state.signalHops || signal.strength < state.minSignalStrength) continue;
           const signalDistance = distance(state.position, signal.position);
           const chance = shapedProximityChance({
             distancePx: signalDistance,
-            radiusPx: state.telegraphRadiusPx,
-            baseChance: state.telegraphBaseChance,
+            radiusPx: state.signalRadiusPx,
+            baseChance: state.signalBaseChance,
             awareness: state.awareness,
             strength: signal.strength,
           });
           if (chance > 0 && Math.random() < chance) {
             relayedAlerts += 1;
             startAlert(state, signal.orbPosition || orbPosition, nowSec, {
-              strength: signal.strength * state.telegraphDecay,
+              strength: signal.strength * state.signalDecay,
               generation: signal.generation + 1,
               source: "relay",
             });
@@ -742,9 +747,9 @@ export function createGnatSwarm3dRuntime({
         }
       }
       if (orbPosition && (state.mode === "alerted" || state.mode === "feeding") && nowSec >= state.nextRelayAt) {
-        const nextStrength = Math.max(state.minSignalStrength, state.alertStrength || 1) * state.telegraphDecay;
+        const nextStrength = Math.max(state.minSignalStrength, state.alertStrength || 1) * state.signalDecay;
         emitSignal(state, nowSec, nextStrength, (state.alertGeneration || 0) + 1);
-        state.nextRelayAt = nowSec + state.telegraphCooldownSec;
+        state.nextRelayAt = nowSec + state.signalCooldownSec;
       }
       if (orbPosition && (state.mode === "alerted" || state.mode === "feeding") && nowSec >= state.nextLeashCheckAt) {
         state.nextLeashCheckAt = nowSec + 0.25 + Math.random() * 0.25;

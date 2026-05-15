@@ -112,9 +112,13 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     "gnatsTotal": 40,
     "leashChaseBo": 20,
     "leashFeedBo": 20,
-    "maxRelayGenerations": 5,
     "minSignalStrength": 0.08,
+    "signalBaseChance": 0.42,
+    "signalCooldownSec": 1,
+    "signalDecay": 0.72,
+    "signalHops": 5,
     "signalMemorySec": 1.6,
+    "signalRadiusBo": 15,
     "spawnCurves": {
       "wanderChancePerMinute": {
         "amount": 0,
@@ -126,10 +130,6 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       }
     },
     "spawnRadiusBo": 0.3,
-    "telegraphBaseChance": 0.42,
-    "telegraphCooldownSec": 1,
-    "telegraphDecay": 0.72,
-    "telegraphRadiusBo": 15,
     "zDepthBo": 0
   }
 }
