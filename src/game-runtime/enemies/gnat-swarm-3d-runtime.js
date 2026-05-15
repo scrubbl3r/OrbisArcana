@@ -10,6 +10,10 @@ import { normalizeStunEffect, resolveStunApplication } from "../combat/stun-mode
 
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
+const GNAT_SIGNAL_FLASH_SEC = 0.35;
+const GNAT_COLOR_NEUTRAL = new THREE.Color(0x9dff8a);
+const GNAT_COLOR_ALERTED = new THREE.Color(0xff4b4b);
+const GNAT_COLOR_SIGNAL = new THREE.Color(0xffe45e);
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
   const numeric = Number(value);
@@ -579,9 +583,10 @@ export function createGnatSwarm3dRuntime({
     }
   }
 
-  function emitSignal(state, nowSec = 0, strength = 1, generation = 0) {
-    if (!state || strength < state.minSignalStrength || generation > state.signalHops) return;
-    activeSignals.push({
+	  function emitSignal(state, nowSec = 0, strength = 1, generation = 0) {
+	    if (!state || strength < state.minSignalStrength || generation > state.signalHops) return;
+	    state.signalFlashUntil = Math.max(state.signalFlashUntil || 0, nowSec + GNAT_SIGNAL_FLASH_SEC);
+	    activeSignals.push({
       sourceIndex: state.index,
       position: { xW: state.position.xW, yW: state.position.yW },
       orbPosition: state.orbTarget ? { xW: state.orbTarget.xW, yW: state.orbTarget.yW } : null,
@@ -900,9 +905,10 @@ export function createGnatSwarm3dRuntime({
           signalCooldownSec,
           signalCheckSec: detectionCheckSec,
           signalHops,
-          minSignalStrength,
-          signalMemorySec,
-          leashChasePx: Math.max(0, randomInRange(leashChaseBo, 40) * bo),
+	          minSignalStrength,
+	          signalMemorySec,
+	          signalFlashUntil: 0,
+	          leashChasePx: Math.max(0, randomInRange(leashChaseBo, 40) * bo),
           leashFeedPx: Math.max(0, randomInRange(leashFeedBo, 40) * bo),
           leashPathStepPx,
           gnatRadiusPx: Math.max(0.5, gnatSize * 0.5),
@@ -1042,9 +1048,10 @@ export function createGnatSwarm3dRuntime({
             awareness: state.awareness,
             strength: signal.strength,
           });
-          if (chance > 0 && Math.random() < chance) {
-            relayedAlerts += 1;
-            startAlert(state, signal.orbPosition || orbPosition, nowSec, {
+	          if (chance > 0 && Math.random() < chance) {
+	            relayedAlerts += 1;
+	            state.signalFlashUntil = Math.max(state.signalFlashUntil || 0, nowSec + GNAT_SIGNAL_FLASH_SEC);
+	            startAlert(state, signal.orbPosition || orbPosition, nowSec, {
               strength: signal.strength * state.signalDecay,
               generation: signal.generation + 1,
               source: "relay",
@@ -1214,10 +1221,18 @@ export function createGnatSwarm3dRuntime({
       positionVec.set(runtimePosition.x, runtimePosition.y, runtimePosition.z);
       quat.setFromEuler(state.spin);
       scaleVec.set(state.scale, state.scale * 0.55, state.scale);
-      matrix.compose(positionVec, quat, scaleVec);
-      mesh.setMatrixAt(i, matrix);
-    }
-    mesh.instanceMatrix.needsUpdate = true;
+	      matrix.compose(positionVec, quat, scaleVec);
+	      mesh.setMatrixAt(i, matrix);
+	      if (nowSec < (state.signalFlashUntil || 0)) {
+	        mesh.setColorAt(i, GNAT_COLOR_SIGNAL);
+	      } else if (state.mode === "alerted" || state.mode === "feeding") {
+	        mesh.setColorAt(i, GNAT_COLOR_ALERTED);
+	      } else {
+	        mesh.setColorAt(i, GNAT_COLOR_NEUTRAL);
+	      }
+	    }
+	    mesh.instanceMatrix.needsUpdate = true;
+	    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     emitFeedingCombat({ nowMs, dtSec, feedingCount, activeLiftLeach, activeLifeLeachPerSec });
     Object.assign(alertTrace, {
       direct: directAlerts,

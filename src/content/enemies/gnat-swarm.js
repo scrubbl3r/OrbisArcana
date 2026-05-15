@@ -102,8 +102,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
   "swarm": {
     "baseSpeedBoPerSec": 5,
     "damageDeliver": {
-      "lifeLeachPerSec": 5,
-      "liftLeach": 5
+      "lifeLeachPerSec": 7,
+      "liftLeach": 2
     },
     "damageReceive": {
       "stunDurationSec": [

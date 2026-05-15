@@ -7,6 +7,7 @@ const GNAT_CAMERA_VIEW_BO = 20;
 const GNAT_CAMERA_VIEW_RADIUS = GNAT_CAMERA_VIEW_BO * GNAT_WORLD_SCALE * 0.5;
 const GNAT_PREVIEW_PIXEL_RATIO = 1.25;
 const GNAT_PREVIEW_TARGET_FRAME_MS = 1000 / 30;
+const GNAT_PREVIEW_COLOR_NEUTRAL = new THREE.Color(0x9dff8a);
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
   const numeric = Number(value);
@@ -275,10 +276,12 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     roughness: 0.48,
     metalness: 0.08,
   });
-  const gnatMesh = new THREE.InstancedMesh(gnatGeometry, gnatMaterial, swarmTotal);
-  gnatMesh.name = "gnat-swarm-preview:cubes";
-  gnatMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  worldGroup.add(gnatMesh);
+	  const gnatMesh = new THREE.InstancedMesh(gnatGeometry, gnatMaterial, swarmTotal);
+	  gnatMesh.name = "gnat-swarm-preview:cubes";
+	  gnatMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+	  for (let i = 0; i < swarmTotal; i += 1) gnatMesh.setColorAt(i, GNAT_PREVIEW_COLOR_NEUTRAL);
+	  if (gnatMesh.instanceColor) gnatMesh.instanceColor.needsUpdate = true;
+	  worldGroup.add(gnatMesh);
   const gnatMatrix = new THREE.Matrix4();
   const gnatQuat = new THREE.Quaternion();
   const gnatPosition = new THREE.Vector3();
