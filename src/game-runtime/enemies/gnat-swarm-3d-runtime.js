@@ -341,7 +341,7 @@ export function createGnatSwarm3dRuntime({
     state.route = buildRouteSegments({
       from: state.position,
       to: state.spawn,
-      spacingPx: randomInRange(state.segmentSpacingPx, 96) * Math.max(0.45, 1 - state.returnBias * 0.3),
+      spacingPx: randomInRange(state.returnSegmentSpacingPx || state.segmentSpacingPx, 96) * Math.max(0.45, 1 - state.returnBias * 0.3),
       jitterPx: state.segmentJitterPx * Math.max(0.2, 1 - state.returnBias * 0.6),
       bounds,
     });
@@ -546,6 +546,7 @@ export function createGnatSwarm3dRuntime({
     const segmentDwellSec = rangePair(personality.segmentDwellSec, [0, 0]);
     const routeCommitment = rangePair(personality.routeCommitment, [0.82, 0.82]);
     const returnBias = rangePair(personality.returnBias, [0.82, 0.82]);
+    const returnSegmentSpacingBo = rangePair(personality.returnSegmentSpacingBo, segmentSpacingBo);
     const arrivalRadiusBo = rangePair(personality.arrivalRadiusBo, [0.34, 0.34]);
     const returnSpeedMultiplier = rangePair(personality.returnSpeedMultiplier, [1.12, 1.12]);
     const spawnRadius = Math.max(0, clampNumber(swarm.spawnRadiusBo, 2, 0, 64)) * bo;
@@ -573,7 +574,7 @@ export function createGnatSwarm3dRuntime({
     const feedMigrationPxPerSec = Math.max(0, clampNumber(swarm.feedMigrationBoPerSec, 0.5, 0, 12) * bo);
     const feedMigrationRetargetSec = rangePair(swarm.feedMigrationRetargetSec, [1, 6]);
     const leashChasePx = Math.max(0, clampNumber(swarm.leashChaseBo, 40, 0, 1000) * bo);
-    const leashFeedPx = Math.max(0, clampNumber(swarm.leashFeedBo, 40, 0, 1000) * bo);
+    const leashFeedBo = rangePair(swarm.leashFeedBo, [40, 40]);
     const leashPathStepPx = Math.max(bo, clampNumber(swarm.leashPathStepBo, 2, 0.5, 12) * bo);
     const awarenessRange = rangePair(personality.awareness, [0.5, 1]);
     const aggressionRange = rangePair(personality.aggression, [0.2, 0.6]);
@@ -631,6 +632,7 @@ export function createGnatSwarm3dRuntime({
           wanderRangePx: Math.max(spawnRadius, personalWanderRangeBo * bo),
           wanderChancePerSec: Math.max(0, personalWanderChancePerMinute / 60),
           segmentSpacingPx: [segmentSpacingBo[0] * bo, segmentSpacingBo[1] * bo],
+          returnSegmentSpacingPx: [returnSegmentSpacingBo[0] * bo, returnSegmentSpacingBo[1] * bo],
           segmentJitterPx: randomInRange(segmentJitterBo, 1) * bo,
           cooldownSec,
           lingerSec: randomInRange(lingerSec, 0.4),
@@ -651,6 +653,7 @@ export function createGnatSwarm3dRuntime({
           zDepthPx,
           awareness,
           aggression,
+          alertSpeedMultiplier: Math.max(0.1, 1 + aggression),
           detectionRadiusPx,
           detectionBaseChance,
           detectionCheckSec,
@@ -663,7 +666,7 @@ export function createGnatSwarm3dRuntime({
           minSignalStrength,
           signalMemorySec,
           leashChasePx,
-          leashFeedPx,
+          leashFeedPx: Math.max(0, randomInRange(leashFeedBo, 40) * bo),
           leashPathStepPx,
           gnatRadiusPx: Math.max(0.5, gnatSize * 0.5),
           feedContactRadiusPx: Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)),
@@ -863,7 +866,9 @@ export function createGnatSwarm3dRuntime({
       const modeDamping = state.mode === "feeding" ? Math.max(state.damping * 2.8, 28) : state.damping;
       state.velocity.xW += dx * modeStiffness * dtSec - state.velocity.xW * modeDamping * dtSec;
       state.velocity.yW += dy * modeStiffness * dtSec - state.velocity.yW * modeDamping * dtSec;
-      const modeSpeedMultiplier = state.mode === "return" ? state.returnSpeedMultiplier : 1;
+      const modeSpeedMultiplier = state.mode === "return"
+        ? state.returnSpeedMultiplier
+        : (state.mode === "alerted" ? state.alertSpeedMultiplier : 1);
       const speed = Math.hypot(state.velocity.xW, state.velocity.yW);
       const maxSpeed = state.mode === "feeding"
         ? Math.max(state.speedPx * 0.72, (state.feedBandPx + state.feedNipDepthPx) * 12)

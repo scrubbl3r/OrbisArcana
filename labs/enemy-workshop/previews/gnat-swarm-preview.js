@@ -338,6 +338,11 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       clampNumber(segmentSpacingRangeBo[0], 3, 0.2, 32) * scale,
       clampNumber(segmentSpacingRangeBo[1], 7, 0.2, 40) * scale,
     ];
+    const returnSegmentSpacingRangeBo = rangePair(personalityRanges.returnSegmentSpacingBo, segmentSpacingRangeBo);
+    const returnSegmentSpacingRangePx = [
+      clampNumber(returnSegmentSpacingRangeBo[0], segmentSpacingRangeBo[0], 0.2, 32) * scale,
+      clampNumber(returnSegmentSpacingRangeBo[1], segmentSpacingRangeBo[1], 0.2, 40) * scale,
+    ];
     const segmentJitterPx = clampNumber(randomInRange(personalityRanges.wanderSegmentJitterBo, 1.2), 1.2, 0, 16) * scale;
     const personalSegmentDwellSec = clampNumber(randomInRange(segmentDwellSec, 0), 0, 0, 12);
     const routeCommitment = clampNumber(randomInRange(personalityRanges.routeCommitment, legacyOutboundBias), 0.82, 0, 1);
@@ -381,6 +386,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       elasticJitterPx,
       elasticJitterHz: personalElasticJitterHz,
       segmentSpacingRangePx,
+      returnSegmentSpacingRangePx,
       segmentJitterPx,
       segmentDwellSec: personalSegmentDwellSec,
       routeCommitment,
@@ -506,8 +512,8 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
         state.mode = "return";
         state.isDwellingAtSegment = false;
         const returnSpacingRangePx = [
-          state.segmentSpacingRangePx[0] * Math.max(0.5, 1 - state.returnBias * 0.35),
-          state.segmentSpacingRangePx[1] * Math.max(0.55, 1 - state.returnBias * 0.25),
+          state.returnSegmentSpacingRangePx[0] * Math.max(0.5, 1 - state.returnBias * 0.35),
+          state.returnSegmentSpacingRangePx[1] * Math.max(0.55, 1 - state.returnBias * 0.25),
         ];
         state.routeSegments = buildRouteSegments({
           from: { x: state.x, y: state.y },

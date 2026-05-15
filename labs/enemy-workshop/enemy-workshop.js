@@ -22,11 +22,11 @@ import {
   buildGnatSwarmEnemyModule,
   ENEMY_WORKSHOP_TARGETS,
 } from "./enemy-workshop-publish.js";
-import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-registry.js?v=20260513a";
+import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-registry.js?v=20260515a";
 import {
   formatEnemyWorkshopRuntimeReadout,
   formatEnemyWorkshopSwarmReadout,
-} from "./enemy-workshop-readouts.js?v=20260515c";
+} from "./enemy-workshop-readouts.js?v=20260515d";
 
 const DRAFT_STORAGE_KEY = "orbis.enemyWorkshop.drafts.v1";
 
@@ -98,7 +98,6 @@ function migrateEnemySettings(settings = {}) {
     detectionBaseChance: 0.35,
     detectionCheckSec: 1,
     leashChaseBo: 40,
-    leashFeedBo: 40,
     signalRadiusBo: 14,
     signalBaseChance: 0.42,
     signalDecay: 0.72,
@@ -118,6 +117,10 @@ function migrateEnemySettings(settings = {}) {
   });
   if (!Array.isArray(next.swarm.feedMigrationRetargetSec)) {
     next.swarm.feedMigrationRetargetSec = [1, 6];
+  }
+  if (!Array.isArray(next.swarm.leashFeedBo)) {
+    const value = Number(next.swarm.leashFeedBo);
+    next.swarm.leashFeedBo = Number.isFinite(value) ? [value, value] : [40, 40];
   }
   if (Array.isArray(next.swarm.baseSpeedBoPerSec)) {
     next.swarm.baseSpeedBoPerSec = scalarSetting(next.swarm.baseSpeedBoPerSec, 1.35);
@@ -152,6 +155,11 @@ function migrateEnemySettings(settings = {}) {
   });
   if (!Array.isArray(personality.segmentDwellSec)) {
     personality.segmentDwellSec = [0, 0];
+  }
+  if (!Array.isArray(personality.returnSegmentSpacingBo)) {
+    personality.returnSegmentSpacingBo = Array.isArray(personality.wanderSegmentSpacingBo)
+      ? personality.wanderSegmentSpacingBo.slice()
+      : [3, 7];
   }
   if (!next.swarm.spawnCurves || typeof next.swarm.spawnCurves !== "object") {
     next.swarm.spawnCurves = {};
