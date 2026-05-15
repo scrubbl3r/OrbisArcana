@@ -29,8 +29,8 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
       feedNipHz: 7,
       feedStickiness: 0.42,
       feedLatchDrift: 0.002,
-      feedMigrationBoPerSec: 0.333,
-      feedMigrationRetargetSec: Object.freeze([1, 4]),
+      feedMigrationBoPerSec: 0.5,
+      feedMigrationRetargetSec: Object.freeze([1, 6]),
       baseSpeedBoPerSec: Object.freeze([1.35, 3.2]),
       spawnCurves: Object.freeze({
         wanderChancePerMinute: Object.freeze({

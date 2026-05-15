@@ -28,7 +28,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260514l";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260514m";
 import {
   applyThreeMeshFlags,
   disposeThreeObject,
@@ -57,7 +57,7 @@ import {
 import { createGameStageDepth3dRenderLoop } from "./game-stage-depth3d-render-loop.js?v=20260430b";
 import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260514a";
 import { createGameStageDepth3dTelemetry } from "./game-stage-depth3d-telemetry.js?v=20260430b";
-import { GNAT_SWARM_ENEMY_DEFAULT } from "../../../content/enemies/gnat-swarm.js?v=20260514l";
+import { GNAT_SWARM_ENEMY_DEFAULT } from "../../../content/enemies/gnat-swarm.js?v=20260514m";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;

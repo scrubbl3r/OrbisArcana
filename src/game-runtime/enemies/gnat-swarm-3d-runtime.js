@@ -337,7 +337,7 @@ export function createGnatSwarm3dRuntime({
     state.feedLatchAngle = state.feedAngle;
     state.feedPhase = Math.random() * Math.PI * 2;
     state.feedMigrationDirection = Math.random() < 0.5 ? -1 : 1;
-    state.nextFeedMigrationAt = nowSec + randomInRange(state.feedMigrationRetargetSec, 2.5);
+    state.nextFeedMigrationAt = nowSec + randomInRange(state.feedMigrationRetargetSec, 3.5);
     state.velocity.xW *= 0.18;
     state.velocity.yW *= 0.18;
     if (!Number.isFinite(state.feedAngle)) state.feedAngle = Math.random() * Math.PI * 2;
@@ -351,7 +351,7 @@ export function createGnatSwarm3dRuntime({
     state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
     if (nowSec >= state.nextFeedMigrationAt) {
       state.feedMigrationDirection = Math.random() < 0.5 ? -1 : 1;
-      state.nextFeedMigrationAt = nowSec + randomInRange(state.feedMigrationRetargetSec, 2.5);
+      state.nextFeedMigrationAt = nowSec + randomInRange(state.feedMigrationRetargetSec, 3.5);
     }
     state.feedLatchAngle += state.feedMigrationDirection * state.feedMigrationRadPerSec * Math.max(0.001, state.lastFeedDt || 0.016);
     state.feedLatchAngle += state.feedOrbitSpeed * Math.max(0.001, state.lastFeedDt || 0.016);
@@ -450,8 +450,8 @@ export function createGnatSwarm3dRuntime({
     const feedNipDepthPx = Math.max(0, clampNumber(swarm.feedNipDepthBo, 0.24, 0, 4) * bo);
     const feedNipHz = Math.max(0, clampNumber(swarm.feedNipHz, 7, 0, 40));
     const feedStickiness = normalizeUnit(swarm.feedStickiness, 0.42);
-    const feedMigrationPxPerSec = Math.max(0, clampNumber(swarm.feedMigrationBoPerSec, 1 / 3, 0, 12) * bo);
-    const feedMigrationRetargetSec = rangePair(swarm.feedMigrationRetargetSec, [1, 4]);
+    const feedMigrationPxPerSec = Math.max(0, clampNumber(swarm.feedMigrationBoPerSec, 0.5, 0, 12) * bo);
+    const feedMigrationRetargetSec = rangePair(swarm.feedMigrationRetargetSec, [1, 6]);
     const awarenessRange = rangePair(personality.awareness, [0.5, 1]);
     const aggressionRange = rangePair(personality.aggression, [0.2, 0.6]);
     const allStates = [];

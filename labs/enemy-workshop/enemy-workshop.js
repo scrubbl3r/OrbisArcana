@@ -85,13 +85,13 @@ function migrateEnemySettings(settings = {}) {
     feedNipHz: 7,
     feedStickiness: 0.42,
     feedLatchDrift: 0.002,
-    feedMigrationBoPerSec: 0.333,
+    feedMigrationBoPerSec: 0.5,
   };
   Object.entries(swarmScalarFallbacks).forEach(([key, fallback]) => {
     if (!Number.isFinite(Number(next.swarm[key]))) next.swarm[key] = fallback;
   });
   if (!Array.isArray(next.swarm.feedMigrationRetargetSec)) {
-    next.swarm.feedMigrationRetargetSec = [1, 4];
+    next.swarm.feedMigrationRetargetSec = [1, 6];
   }
   if (!Array.isArray(next.swarm.baseSpeedBoPerSec)) {
     const base = Number(idle.baseSpeedBoPerSec);

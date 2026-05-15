@@ -96,10 +96,10 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       5
     ],
     "feedLatchDrift": 0.002,
-    "feedMigrationBoPerSec": 0.333,
+    "feedMigrationBoPerSec": 0.5,
     "feedMigrationRetargetSec": [
       1,
-      4
+      6
     ],
     "feedNipDepthBo": 0.24,
     "feedNipHz": 7,
