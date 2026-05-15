@@ -332,6 +332,10 @@ export function createGnatSwarm3dRuntime({
     if (!state || !orbPosition) return;
     state.mode = "feeding";
     state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
+    const normal = normalFromPoints(state.orbTarget, state.position, state.feedAngle);
+    state.feedAngle = Math.atan2(normal.yW, normal.xW);
+    state.velocity.xW *= 0.18;
+    state.velocity.yW *= 0.18;
     if (!Number.isFinite(state.feedAngle)) state.feedAngle = Math.random() * Math.PI * 2;
     state.nextTargetAt = nowSec;
     emitSignal(state, nowSec, Math.max(state.minSignalStrength, state.alertStrength * state.telegraphDecay), state.alertGeneration + 1);
@@ -341,7 +345,7 @@ export function createGnatSwarm3dRuntime({
     if (!state || !orbPosition) return;
     state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
     state.feedAngle += state.feedOrbitSpeed * Math.max(0.001, state.lastFeedDt || 0.016);
-    state.feedAngle += randomUnit() * 0.08;
+    state.feedAngle += randomUnit() * 0.018;
     const targetRadiusPx = state.feedContactRadiusPx + Math.random() * state.feedBandPx;
     state.target = {
       xW: state.orbTarget.xW + Math.cos(state.feedAngle) * targetRadiusPx,
@@ -355,19 +359,27 @@ export function createGnatSwarm3dRuntime({
     const dx = next.xW - orbPosition.xW;
     const dy = next.yW - orbPosition.yW;
     const d = Math.hypot(dx, dy);
-    if (d >= state.feedContactRadiusPx) return next;
+    if (d >= state.feedContactRadiusPx && (state.mode !== "feeding" || d <= state.feedOuterRadiusPx)) return next;
     const normal = normalFromPoints(orbPosition, next, state.feedAngle);
+    const targetRadiusPx = state.mode === "feeding"
+      ? clampNumber(d, state.feedContactRadiusPx, state.feedContactRadiusPx, state.feedOuterRadiusPx)
+      : state.feedContactRadiusPx;
     const projected = {
-      xW: orbPosition.xW + normal.xW * state.feedContactRadiusPx,
-      yW: orbPosition.yW + normal.yW * state.feedContactRadiusPx,
+      xW: orbPosition.xW + normal.xW * targetRadiusPx,
+      yW: orbPosition.yW + normal.yW * targetRadiusPx,
     };
     const inwardSpeed = state.velocity.xW * normal.xW + state.velocity.yW * normal.yW;
     if (inwardSpeed < 0) {
       state.velocity.xW -= (1 + state.feedBounce) * inwardSpeed * normal.xW;
       state.velocity.yW -= (1 + state.feedBounce) * inwardSpeed * normal.yW;
     }
-    state.velocity.xW += normal.xW * state.feedBounce * 18;
-    state.velocity.yW += normal.yW * state.feedBounce * 18;
+    if (state.mode === "feeding" && d > state.feedOuterRadiusPx) {
+      state.velocity.xW *= 0.42;
+      state.velocity.yW *= 0.42;
+    } else {
+      state.velocity.xW += normal.xW * state.feedBounce * 10;
+      state.velocity.yW += normal.yW * state.feedBounce * 10;
+    }
     return projected;
   }
 
@@ -510,10 +522,11 @@ export function createGnatSwarm3dRuntime({
           signalMemorySec,
           gnatRadiusPx: Math.max(0.5, gnatSize * 0.5),
           feedContactRadiusPx: Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)),
-          feedBandPx: Math.max(1, bo * 0.25),
-          feedBounce: 0.48,
+          feedBandPx: Math.max(1, bo * 0.1),
+          feedOuterRadiusPx: Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)) + Math.max(1, bo * 0.1),
+          feedBounce: 0.28,
           feedAngle: Math.random() * Math.PI * 2,
-          feedOrbitSpeed: randomUnit() * (0.12 + aggression * 0.2),
+          feedOrbitSpeed: randomUnit() * (0.018 + aggression * 0.035),
           lastFeedDt: 0.016,
           idleRetargetSec: [
             Math.max(0.05, Math.min(personalRetargetMinSec, personalRetargetMaxSec)),
@@ -653,17 +666,22 @@ export function createGnatSwarm3dRuntime({
         state.lastFeedDt = dtSec;
         if (nowSec >= state.nextTargetAt) scheduleFeedTarget(state, orbPosition, nowSec);
       }
-      const jitterX = Math.sin(nowSec * state.elasticJitterHz * 6.283 + state.phaseX) * state.elasticJitterPx + randomUnit() * state.targetJitterPx;
-      const jitterY = Math.cos(nowSec * state.elasticJitterHz * 5.113 + state.phaseY) * state.elasticJitterPx + randomUnit() * state.targetJitterPx;
+      const feedJitterScale = state.mode === "feeding" ? 0.08 : 1;
+      const jitterX = (Math.sin(nowSec * state.elasticJitterHz * 6.283 + state.phaseX) * state.elasticJitterPx + randomUnit() * state.targetJitterPx) * feedJitterScale;
+      const jitterY = (Math.cos(nowSec * state.elasticJitterHz * 5.113 + state.phaseY) * state.elasticJitterPx + randomUnit() * state.targetJitterPx) * feedJitterScale;
       const tx = (state.target.xW || 0) + jitterX;
       const ty = (state.target.yW || 0) + jitterY;
       const dx = tx - (state.position.xW || 0);
       const dy = ty - (state.position.yW || 0);
-      state.velocity.xW += dx * state.stiffness * dtSec - state.velocity.xW * state.damping * dtSec;
-      state.velocity.yW += dy * state.stiffness * dtSec - state.velocity.yW * state.damping * dtSec;
+      const modeStiffness = state.mode === "feeding" ? Math.max(state.stiffness * 2.8, 34) : state.stiffness;
+      const modeDamping = state.mode === "feeding" ? Math.max(state.damping * 2.2, 18) : state.damping;
+      state.velocity.xW += dx * modeStiffness * dtSec - state.velocity.xW * modeDamping * dtSec;
+      state.velocity.yW += dy * modeStiffness * dtSec - state.velocity.yW * modeDamping * dtSec;
       const modeSpeedMultiplier = state.mode === "return" ? state.returnSpeedMultiplier : 1;
       const speed = Math.hypot(state.velocity.xW, state.velocity.yW);
-      const maxSpeed = state.speedPx * modeSpeedMultiplier;
+      const maxSpeed = state.mode === "feeding"
+        ? Math.max(state.speedPx * 0.28, state.feedBandPx * 5)
+        : state.speedPx * modeSpeedMultiplier;
       if (speed > maxSpeed) {
         state.velocity.xW *= maxSpeed / speed;
         state.velocity.yW *= maxSpeed / speed;
