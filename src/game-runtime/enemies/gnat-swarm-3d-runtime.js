@@ -56,6 +56,14 @@ function shapedProximityChance({ distancePx = 0, radiusPx = 1, baseChance = 0, a
   return normalizeUnit(baseChance * awareness * strength * proximity * proximity, 0);
 }
 
+function normalFromPoints(from = {}, to = {}, fallbackAngle = 0) {
+  const dx = (to.xW || 0) - (from.xW || 0);
+  const dy = (to.yW || 0) - (from.yW || 0);
+  const length = Math.hypot(dx, dy);
+  if (length > 0.000001) return { xW: dx / length, yW: dy / length };
+  return { xW: Math.cos(fallbackAngle), yW: Math.sin(fallbackAngle) };
+}
+
 function pointInLoop(point = {}, loop = null) {
   const points = Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [];
   if (points.length < 3) return false;
@@ -333,11 +341,34 @@ export function createGnatSwarm3dRuntime({
     if (!state || !orbPosition) return;
     state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
     state.feedAngle += state.feedOrbitSpeed * Math.max(0.001, state.lastFeedDt || 0.016);
+    state.feedAngle += randomUnit() * 0.08;
+    const targetRadiusPx = state.feedContactRadiusPx + Math.random() * state.feedBandPx;
     state.target = {
-      xW: state.orbTarget.xW + Math.cos(state.feedAngle) * state.feedRadiusPx,
-      yW: state.orbTarget.yW + Math.sin(state.feedAngle) * state.feedRadiusPx,
+      xW: state.orbTarget.xW + Math.cos(state.feedAngle) * targetRadiusPx,
+      yW: state.orbTarget.yW + Math.sin(state.feedAngle) * targetRadiusPx,
     };
-    state.nextTargetAt = nowSec + 0.12;
+    state.nextTargetAt = nowSec + 0.08 + Math.random() * 0.12;
+  }
+
+  function resolveOrbContact(state, next = null, orbPosition = null) {
+    if (!state || !next || !orbPosition) return next;
+    const dx = next.xW - orbPosition.xW;
+    const dy = next.yW - orbPosition.yW;
+    const d = Math.hypot(dx, dy);
+    if (d >= state.feedContactRadiusPx) return next;
+    const normal = normalFromPoints(orbPosition, next, state.feedAngle);
+    const projected = {
+      xW: orbPosition.xW + normal.xW * state.feedContactRadiusPx,
+      yW: orbPosition.yW + normal.yW * state.feedContactRadiusPx,
+    };
+    const inwardSpeed = state.velocity.xW * normal.xW + state.velocity.yW * normal.yW;
+    if (inwardSpeed < 0) {
+      state.velocity.xW -= (1 + state.feedBounce) * inwardSpeed * normal.xW;
+      state.velocity.yW -= (1 + state.feedBounce) * inwardSpeed * normal.yW;
+    }
+    state.velocity.xW += normal.xW * state.feedBounce * 18;
+    state.velocity.yW += normal.yW * state.feedBounce * 18;
+    return projected;
   }
 
   function load(spawns = [], {
@@ -477,7 +508,10 @@ export function createGnatSwarm3dRuntime({
           maxRelayGenerations,
           minSignalStrength,
           signalMemorySec,
-          feedRadiusPx: Math.max(1, bo * 0.5 + feedOffsetPx),
+          gnatRadiusPx: Math.max(0.5, gnatSize * 0.5),
+          feedContactRadiusPx: Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)),
+          feedBandPx: Math.max(1, bo * 0.25),
+          feedBounce: 0.48,
           feedAngle: Math.random() * Math.PI * 2,
           feedOrbitSpeed: randomUnit() * (0.12 + aggression * 0.2),
           lastFeedDt: 0.016,
@@ -606,7 +640,7 @@ export function createGnatSwarm3dRuntime({
         advanceRoute(state, nowSec, () => startCooldown(state, nowSec));
       }
       if (orbPosition && state.mode === "alerted") {
-        if (distance(state.position, orbPosition) <= Math.max(state.arrivalRadiusPx, state.feedRadiusPx * 0.35)) {
+        if (distance(state.position, orbPosition) <= Math.max(state.arrivalRadiusPx, state.feedContactRadiusPx + state.feedBandPx)) {
           startFeeding(state, orbPosition, nowSec);
         } else if (distance(state.position, state.route[state.routeIndex] || state.orbTarget || orbPosition) < Math.max(state.arrivalRadiusPx, state.scale * 1.5)) {
           state.routeIndex += 1;
@@ -638,10 +672,13 @@ export function createGnatSwarm3dRuntime({
         xW: state.position.xW + state.velocity.xW * dtSec,
         yW: state.position.yW + state.velocity.yW * dtSec,
       };
-      if (pointInBounds(next, bounds.loops)) {
-        state.position = clampToBox(next, bounds.box);
+      const resolvedNext = orbPosition && (state.mode === "alerted" || state.mode === "feeding")
+        ? resolveOrbContact(state, next, orbPosition)
+        : next;
+      if (pointInBounds(resolvedNext, bounds.loops)) {
+        state.position = clampToBox(resolvedNext, bounds.box);
       } else {
-        state.position = resolveBoundedPoint(next, {
+        state.position = resolveBoundedPoint(resolvedNext, {
           fallback: state.position,
           loops: bounds.loops,
           box: bounds.box,
