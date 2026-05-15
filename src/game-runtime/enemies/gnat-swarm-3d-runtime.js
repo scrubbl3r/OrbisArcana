@@ -23,8 +23,9 @@ function randomInRange(range = [], fallback = 1) {
 
 function curveUnitValue(t = 0, curve = null) {
   const linear = Math.min(1, Math.max(0, Number(t) || 0));
-  const bias = clampNumber(curve && curve.bias, 0, -1, 1);
-  const amount = clampNumber(curve && curve.amount, 0, 0, 1);
+  const scalar = Number(curve);
+  const bias = Number.isFinite(scalar) ? clampNumber(scalar, 0, -1, 1) : clampNumber(curve && curve.bias, 0, -1, 1);
+  const amount = Number.isFinite(scalar) ? Math.abs(bias) : clampNumber(curve && curve.amount, 0, 0, 1);
   if (Math.abs(bias) <= 0.0001 || amount <= 0.0001) return linear;
   const power = 1 + Math.abs(bias) * 4;
   const curved = bias < 0
@@ -555,6 +556,7 @@ export function createGnatSwarm3dRuntime({
     const segmentDwellSec = rangePair(personality.segmentDwellSec, [0, 0]);
     const routeCommitment = rangePair(personality.routeCommitment, [0.82, 0.82]);
     const returnBias = rangePair(personality.returnBias, [0.82, 0.82]);
+    const wanderCurve = clampNumber(personality.wanderCurve, 0, -1, 1);
     const returnSegmentSpacingBo = rangePair(personality.returnSegmentSpacingBo, segmentSpacingBo);
     const arrivalRadiusBo = rangePair(personality.arrivalRadiusBo, [0.34, 0.34]);
     const returnSpeedMultiplier = rangePair(personality.returnSpeedMultiplier, [1.12, 1.12]);
@@ -637,7 +639,7 @@ export function createGnatSwarm3dRuntime({
           spawnRadiusPx: spawnRadius,
           wanderRangeMinPx: personalWanderRangeMinBo * bo,
           wanderRangeMaxPx: Math.max(personalWanderRangeMinBo, personalWanderRangeMaxBo) * bo,
-          wanderRangeCurve: spawnCurves.wanderRangeBo || null,
+          wanderRangeCurve: wanderCurve,
           wanderChancePerSec: Math.max(0, personalWanderChancePerMinute / 60),
           segmentSpacingPx: [segmentSpacingBo[0] * bo, segmentSpacingBo[1] * bo],
           returnSegmentSpacingPx: [returnSegmentSpacingBo[0] * bo, returnSegmentSpacingBo[1] * bo],

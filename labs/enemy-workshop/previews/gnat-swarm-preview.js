@@ -28,8 +28,9 @@ function randomInRange(range = [], fallback = 1) {
 
 function curveUnitValue(t = 0, curve = null) {
   const linear = clampNumber(t, 0, 0, 1);
-  const bias = clampNumber(curve && curve.bias, 0, -1, 1);
-  const amount = clampNumber(curve && curve.amount, 0, 0, 1);
+  const scalar = Number(curve);
+  const bias = Number.isFinite(scalar) ? clampNumber(scalar, 0, -1, 1) : clampNumber(curve && curve.bias, 0, -1, 1);
+  const amount = Number.isFinite(scalar) ? Math.abs(bias) : clampNumber(curve && curve.amount, 0, 0, 1);
   if (Math.abs(bias) <= 0.0001 || amount <= 0.0001) return linear;
   const power = 1 + Math.abs(bias) * 4;
   const curved = bias < 0
@@ -203,8 +204,8 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     clampNumber(wander.rangeMaxBo, 5.8, 0.4, 20) * legacyWanderRangeMultiplier,
   ];
   const wanderRangeBo = rangePair(personalityRanges.wanderRangeBo, legacyWanderRangeBo);
-  const wanderMinBo = positiveFiniteNumber(wanderRangeBo[0], 2.8, 0.2);
-  const wanderMaxBo = Math.max(wanderMinBo, positiveFiniteNumber(wanderRangeBo[1], 5.8, 0.2));
+  const wanderMinBo = positiveFiniteNumber(wanderRangeBo[0], 2.8, 0);
+  const wanderMaxBo = Math.max(wanderMinBo, positiveFiniteNumber(wanderRangeBo[1], 5.8, 0));
   const baseSpeedRangeBoPerSec = rangePair(swarm.baseSpeedBoPerSec, [
     clampNumber(idle.baseSpeedBoPerSec, 1.35, 0.1, 240),
     clampNumber(idle.maxSpeedBoPerSec, 3.2, 0.1, 320),
@@ -351,7 +352,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       vy: 0,
       mode: "idle",
       target: randomInCircle(idleRadiusPx),
-      wanderDestination: randomInAnnulus(personalWanderMinPx, personalWanderRadiusPx, spawnCurves.wanderRangeBo),
+      wanderDestination: randomInAnnulus(personalWanderMinPx, personalWanderRadiusPx, personalityRanges.wanderCurve),
       routeSegments: [],
       routeIndex: 0,
       routeDwellUntil: 0,
@@ -366,7 +367,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       responseMultiplier,
       wanderRadiusPx: personalWanderRadiusPx,
       wanderMinPx: personalWanderMinPx,
-      wanderRangeCurve: spawnCurves.wanderRangeBo || null,
+      wanderRangeCurve: clampNumber(personalityRanges.wanderCurve, 0, -1, 1),
       wanderChancePerSec: personalChancePerMinute / 60,
       cooldownSec: personalCooldownSec,
       lingerSec: personalLingerSec,

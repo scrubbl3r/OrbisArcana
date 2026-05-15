@@ -70,8 +70,9 @@ function normalizeBox(boundaryBox = null, loops = []) {
 
 function curveUnitValue(t = 0, curve = null) {
   const linear = Math.min(1, Math.max(0, Number(t) || 0));
-  const bias = clampNumber(curve && curve.bias, 0, -1, 1);
-  const amount = clampNumber(curve && curve.amount, 0, 0, 1);
+  const scalar = Number(curve);
+  const bias = Number.isFinite(scalar) ? clampNumber(scalar, 0, -1, 1) : clampNumber(curve && curve.bias, 0, -1, 1);
+  const amount = Number.isFinite(scalar) ? Math.abs(bias) : clampNumber(curve && curve.amount, 0, 0, 1);
   if (Math.abs(bias) <= 0.0001 || amount <= 0.0001) return linear;
   const power = 1 + Math.abs(bias) * 4;
   const curved = bias < 0

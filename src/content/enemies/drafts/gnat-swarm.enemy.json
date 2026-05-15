@@ -82,6 +82,7 @@
           25,
           50
         ],
+        "wanderCurve": 0,
         "wanderSegmentJitterBo": [
           0,
           2
@@ -123,10 +124,6 @@
       "signalRadiusBo": 20,
       "spawnCurves": {
         "wanderChancePerMinute": {
-          "amount": 0,
-          "bias": 0
-        },
-        "wanderRangeBo": {
           "amount": 0,
           "bias": 0
         }

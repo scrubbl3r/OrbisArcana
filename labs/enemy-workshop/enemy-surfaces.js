@@ -39,10 +39,6 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
           bias: -0.25,
           amount: 0.45,
         }),
-        wanderRangeBo: Object.freeze({
-          bias: 0,
-          amount: 0,
-        }),
       }),
     }),
     gnat: Object.freeze({
@@ -60,6 +56,7 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
         wanderChancePerMinute: Object.freeze([16, 16]),
         wanderCooldownSec: Object.freeze([1.4, 5.5]),
         wanderRangeBo: Object.freeze([2.8, 5.8]),
+        wanderCurve: 0,
         wanderSegmentSpacingBo: Object.freeze([3, 7]),
         returnSegmentSpacingBo: Object.freeze([3, 7]),
         wanderSegmentJitterBo: Object.freeze([0.5, 2]),

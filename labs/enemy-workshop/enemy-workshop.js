@@ -22,7 +22,7 @@ import {
   buildGnatSwarmEnemyModule,
   ENEMY_WORKSHOP_TARGETS,
 } from "./enemy-workshop-publish.js";
-import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-registry.js?v=20260515b";
+import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-registry.js?v=20260515c";
 import {
   formatEnemyWorkshopRuntimeReadout,
   formatEnemyWorkshopSwarmReadout,
@@ -167,9 +167,15 @@ function migrateEnemySettings(settings = {}) {
   if (!next.swarm.spawnCurves.wanderChancePerMinute || typeof next.swarm.spawnCurves.wanderChancePerMinute !== "object") {
     next.swarm.spawnCurves.wanderChancePerMinute = { bias: -0.25, amount: 0.45 };
   }
-  if (!next.swarm.spawnCurves.wanderRangeBo || typeof next.swarm.spawnCurves.wanderRangeBo !== "object") {
-    next.swarm.spawnCurves.wanderRangeBo = { bias: 0, amount: 0 };
+  if (!Number.isFinite(Number(personality.wanderCurve))) {
+    const legacyRangeCurve = next.swarm.spawnCurves.wanderRangeBo;
+    const bias = Number(legacyRangeCurve && legacyRangeCurve.bias);
+    const amount = Number(legacyRangeCurve && legacyRangeCurve.amount);
+    personality.wanderCurve = Number.isFinite(bias) && Number.isFinite(amount)
+      ? Math.min(1, Math.max(-1, bias * Math.min(1, Math.max(0, amount))))
+      : 0;
   }
+  delete next.swarm.spawnCurves.wanderRangeBo;
   return next;
 }
 
