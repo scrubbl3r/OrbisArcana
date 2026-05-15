@@ -72,7 +72,7 @@ export function bootstrapStagingRuntimeBundle({
     kwsBootOrchestrator.bootAndAutostart(receiverRuntime);
   }
   if (receiverRuntime && receiverRuntime.orbSystem && typeof receiverRuntime.orbSystem.revive === "function") {
-    receiverRuntime.orbSystem.revive({ health: 300, atMs: performance.now() });
+    receiverRuntime.orbSystem.revive({ health: 1000, atMs: performance.now() });
   }
   receiverRuntime.lastImpact = null;
   setOrbInputSuppressed(false);

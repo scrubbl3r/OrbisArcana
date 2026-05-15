@@ -153,3 +153,11 @@ export const EVT_ORB_SHATTER_COMPLETE = "orb.shatter_complete";
 export const EVT_ORB_HEAL_BLOCKED = "orb.heal_blocked";
 export const EVT_ORB_HEALED = "orb.healed";
 export const EVT_ORB_REVIVED = "orb.revived";
+
+export const EVT_COMBAT_DAMAGE_REQUESTED = "combat.damage_requested";
+export const EVT_COMBAT_DAMAGE_APPLIED = "combat.damage_applied";
+export const EVT_COMBAT_DAMAGE_BLOCKED = "combat.damage_blocked";
+export const EVT_COMBAT_ENTITY_DIED = "combat.entity_died";
+export const EVT_COMBAT_STUN_APPLIED = "combat.stun_applied";
+export const EVT_COMBAT_STUN_RECOVERED = "combat.stun_recovered";
+export const EVT_COMBAT_MOTION_MODIFIER_CHANGED = "combat.motion_modifier_changed";

@@ -41,10 +41,10 @@ export function bootstrapStagingRuntimeContext({
   const eventBus = createEventBus();
   const gameState = createGameState({
     orb: {
-      maxHealth: 300,
-      health: 300,
+      maxHealth: 1000,
+      health: 1000,
       maxHits: Math.max(1, Math.round(Number(ORB_LIFECYCLE_DEFAULTS.maxHits) || 3)),
-      collisionDamage: 100,
+      collisionDamage: 334,
       collisionThreshold: IMPACT_TH,
       collisionCooldownMs: 250,
     },

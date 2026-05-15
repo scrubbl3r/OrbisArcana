@@ -1697,7 +1697,7 @@ function bindShellStageActions(shellContext) {
     const stage = shellContext && shellContext.runtime ? shellContext.runtime.stage : null;
     clearShellDeathOverlaySchedule(shellContext);
     if (receiverRuntime && receiverRuntime.orbSystem && typeof receiverRuntime.orbSystem.revive === "function") {
-      receiverRuntime.orbSystem.revive({ health: 300, atMs: performance.now() });
+      receiverRuntime.orbSystem.revive({ health: 1000, atMs: performance.now() });
       receiverRuntime.lastImpact = null;
     }
     if (stage && stage.worldSystem && typeof stage.worldSystem.reset === "function") {
