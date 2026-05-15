@@ -16,7 +16,7 @@ import {
   loadLabProfileStore,
   persistLabProfileStore,
 } from "../shell/lab-profile-store.js";
-import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515c";
+import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515d";
 import {
   buildEnemyDraftPayload,
   buildGnatSwarmEnemyModule,
@@ -73,6 +73,9 @@ function migrateEnemySettings(settings = {}) {
   if (!Number.isFinite(Number(next.swarm.zDepthBo))) {
     next.swarm.zDepthBo = 0;
   }
+  if (!next.swarm.damageReceive || typeof next.swarm.damageReceive !== "object") {
+    next.swarm.damageReceive = {};
+  }
   if (!Number.isFinite(Number(next.swarm.signalRadiusBo)) && Number.isFinite(Number(next.swarm.telegraphRadiusBo))) {
     next.swarm.signalRadiusBo = Number(next.swarm.telegraphRadiusBo);
   }
@@ -114,6 +117,12 @@ function migrateEnemySettings(settings = {}) {
   Object.entries(swarmScalarFallbacks).forEach(([key, fallback]) => {
     if (!Number.isFinite(Number(next.swarm[key]))) next.swarm[key] = fallback;
   });
+  if (!Number.isFinite(Number(next.swarm.damageReceive.stunThreshold))) {
+    next.swarm.damageReceive.stunThreshold = scalarSetting(personality.stunThreshold, 1);
+  }
+  if (!Number.isFinite(Number(next.swarm.damageReceive.stunDurationSec))) {
+    next.swarm.damageReceive.stunDurationSec = 2;
+  }
   if (!Array.isArray(next.swarm.feedMigrationRetargetSec)) {
     next.swarm.feedMigrationRetargetSec = [1, 6];
   }
@@ -182,10 +191,7 @@ function migrateEnemySettings(settings = {}) {
     const value = Number(personality.hp);
     personality.hp = Number.isFinite(value) ? [value, value] : [1, 1];
   }
-  if (!Array.isArray(personality.stunThreshold)) {
-    const value = Number(personality.stunThreshold);
-    personality.stunThreshold = Number.isFinite(value) ? [value, value] : [1, 1];
-  }
+  delete personality.stunThreshold;
   delete next.swarm.spawnCurves.wanderRangeBo;
   return next;
 }

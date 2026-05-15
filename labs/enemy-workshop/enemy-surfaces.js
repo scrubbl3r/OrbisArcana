@@ -26,6 +26,10 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
       signalCooldownSec: 1,
       minSignalStrength: 0.08,
       signalMemorySec: 1.6,
+      damageReceive: Object.freeze({
+        stunThreshold: 1,
+        stunDurationSec: 2,
+      }),
       feedOffsetBo: 0.08,
       feedNipDepthBo: 0.24,
       feedNipHz: 7,
@@ -69,7 +73,6 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
         awareness: Object.freeze([0.24, 0.82]),
         aggression: Object.freeze([0.08, 0.36]),
         hp: Object.freeze([1, 1]),
-        stunThreshold: Object.freeze([1, 1]),
       }),
     }),
   }),

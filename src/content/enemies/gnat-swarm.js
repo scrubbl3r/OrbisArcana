@@ -79,10 +79,6 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         1,
         1
       ],
-      "stunThreshold": [
-        1,
-        1
-      ],
       "wanderCurve": 0.8,
       "wanderRangeBo": [
         0,
@@ -108,6 +104,10 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     "detectionBaseChance": 0.5,
     "detectionCheckSec": 1,
     "detectionRadiusBo": 10,
+    "damageReceive": {
+      "stunDurationSec": 2,
+      "stunThreshold": 1
+    },
     "feedLatchDrift": 0.007,
     "feedMigrationBoPerSec": 0.5,
     "feedMigrationRetargetSec": [

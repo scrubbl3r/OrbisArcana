@@ -23,6 +23,15 @@ function randomInRange(range = [], fallback = 1) {
   return min + Math.random() * Math.max(0, max - min);
 }
 
+function scalarSetting(value, fallback = 0) {
+  if (Array.isArray(value)) {
+    const numbers = value.map(Number).filter(Number.isFinite);
+    if (numbers.length) return numbers.reduce((sum, number) => sum + number, 0) / numbers.length;
+  }
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
 function curveUnitValue(t = 0, curve = null) {
   const linear = Math.min(1, Math.max(0, Number(t) || 0));
   const scalar = Number(curve);
@@ -372,9 +381,10 @@ export function createGnatSwarm3dRuntime({
     state.routeIndex = 0;
     state.isDwelling = false;
     state.target = state.position;
-    state.stunUntilSec = Math.max(state.stunUntilSec || 0, nowSec + Math.max(0.05, Number(stun.durationMs || 0) / 1000));
-    state.velocity.xW *= 0.12;
-    state.velocity.yW *= 0.12;
+    state.stunUntilSec = Math.max(state.stunUntilSec || 0, nowSec + Math.max(0.05, Number(stun.durationMs || state.stunDurationMs || 0) / 1000));
+    state.stunBounceRemaining = 1;
+    state.velocity.xW *= 0.42;
+    state.velocity.yW = Math.max(state.velocity.yW * 0.16, state.stunGravityPxPerSec2 * 0.035);
     return true;
   }
 
@@ -414,15 +424,16 @@ export function createGnatSwarm3dRuntime({
       const result = resolveStunApplication({
         amount: stun.amount,
         threshold: state.stunThreshold,
-        durationMs: stun.durationMs,
+        durationMs: state.stunDurationMs,
         atMs: stun.atMs,
       });
       if (!result.stunned) continue;
-      if (!startStun(state, stun, nowSec)) continue;
+      const receivedStun = { ...stun, durationMs: state.stunDurationMs };
+      if (!startStun(state, receivedStun, nowSec)) continue;
       affected += 1;
       if (typeof onCombatEvent === "function") {
         onCombatEvent("combat.stun_applied", {
-          ...stun,
+          ...receivedStun,
           targetEntityId: `enemy:gnat-swarm:${state.index}`,
           threshold: state.stunThreshold,
           stunUntilMs: result.stunUntilMs,
@@ -606,6 +617,7 @@ export function createGnatSwarm3dRuntime({
     });
     const config = getConfig() || {};
     const swarm = config.swarm || {};
+    const damageReceive = swarm.damageReceive || {};
     const gnat = config.gnat || {};
     const idle = gnat.idle || {};
     const personality = gnat.personalityRanges || {};
@@ -661,10 +673,17 @@ export function createGnatSwarm3dRuntime({
     const leashChaseBo = rangePair(swarm.leashChaseBo, [40, 40]);
     const leashFeedBo = rangePair(swarm.leashFeedBo, [40, 40]);
     const leashPathStepPx = Math.max(bo, clampNumber(swarm.leashPathStepBo, 2, 0.5, 12) * bo);
+    const stunThreshold = Math.max(0, clampNumber(
+      damageReceive.stunThreshold,
+      scalarSetting(personality.stunThreshold, 1),
+      0,
+      Infinity,
+    ));
+    const stunDurationMs = Math.max(50, clampNumber(damageReceive.stunDurationSec, 2, 0.05, 30) * 1000);
+    const stunGravityPxPerSec2 = Math.max(bo * 4, bo * 40);
     const awarenessRange = rangePair(personality.awareness, [0.5, 1]);
     const aggressionRange = rangePair(personality.aggression, [0.2, 0.6]);
     const hpRange = rangePair(personality.hp, [1, 1]);
-    const stunThresholdRange = rangePair(personality.stunThreshold, [1, 1]);
     const allStates = [];
     for (const spawn of Array.isArray(spawns) ? spawns : []) {
       if (String(spawn && (spawn.enemy || spawn.archetype) || "") !== "gnat-swarm") continue;
@@ -713,8 +732,11 @@ export function createGnatSwarm3dRuntime({
           alertSource: "",
           maxHp: Math.max(0.1, randomInRange(hpRange, 1)),
           hp: 1,
-          stunThreshold: Math.max(0, randomInRange(stunThresholdRange, 1)),
+          stunThreshold,
+          stunDurationMs,
           stunUntilSec: 0,
+          stunBounceRemaining: 0,
+          stunGravityPxPerSec2,
           speedPx: Math.max(1, randomInRange(baseSpeed, 2) * randomInRange(speedX, 1) * bo),
           spawnRadiusPx: spawnRadius,
           wanderRangeMinPx: personalWanderRangeMinBo * bo,
@@ -969,16 +991,22 @@ export function createGnatSwarm3dRuntime({
       const ty = (state.target.yW || 0) + jitterY;
       const dx = tx - (state.position.xW || 0);
       const dy = ty - (state.position.yW || 0);
-      const modeStiffness = state.mode === "feeding" ? Math.max(state.stiffness * 5.6, 82) : (state.mode === "stunned" ? 0.2 : state.stiffness);
-      const modeDamping = state.mode === "feeding" ? Math.max(state.damping * 2.8, 28) : (state.mode === "stunned" ? Math.max(state.damping * 4, 18) : state.damping);
-      state.velocity.xW += dx * modeStiffness * dtSec - state.velocity.xW * modeDamping * dtSec;
-      state.velocity.yW += dy * modeStiffness * dtSec - state.velocity.yW * modeDamping * dtSec;
+      if (state.mode === "stunned") {
+        state.velocity.xW *= Math.max(0, 1 - (dtSec * 1.8));
+        state.velocity.yW += state.stunGravityPxPerSec2 * dtSec;
+        state.velocity.yW *= Math.max(0, 1 - (dtSec * 0.18));
+      } else {
+        const modeStiffness = state.mode === "feeding" ? Math.max(state.stiffness * 5.6, 82) : state.stiffness;
+        const modeDamping = state.mode === "feeding" ? Math.max(state.damping * 2.8, 28) : state.damping;
+        state.velocity.xW += dx * modeStiffness * dtSec - state.velocity.xW * modeDamping * dtSec;
+        state.velocity.yW += dy * modeStiffness * dtSec - state.velocity.yW * modeDamping * dtSec;
+      }
       const modeSpeedMultiplier = state.mode === "return"
         ? state.returnSpeedMultiplier
         : (state.mode === "alerted" ? state.alertSpeedMultiplier : 1);
       const speed = Math.hypot(state.velocity.xW, state.velocity.yW);
       const maxSpeed = state.mode === "stunned"
-        ? state.speedPx * 0.08
+        ? Math.max(state.speedPx * 0.35, state.stunGravityPxPerSec2 * 0.75)
         : state.mode === "feeding"
         ? Math.max(state.speedPx * 0.72, (state.feedBandPx + state.feedNipDepthPx) * 12)
         : state.speedPx * modeSpeedMultiplier;
@@ -1002,6 +1030,20 @@ export function createGnatSwarm3dRuntime({
       }
       if (boundedPointContains(resolvedNext, bounds)) {
         state.position = clampToBox(resolvedNext, bounds.box);
+      } else if (state.mode === "stunned") {
+        state.position = resolveBoundedPoint(resolvedNext, {
+          fallback: state.position,
+          loops: bounds.loops,
+          box: bounds.box,
+          nav: bounds.nav,
+        });
+        state.velocity.xW *= 0.18;
+        if (state.stunBounceRemaining > 0) {
+          state.velocity.yW = -Math.abs(state.velocity.yW) * 0.16;
+          state.stunBounceRemaining -= 1;
+        } else {
+          state.velocity.yW = 0;
+        }
       } else {
         state.position = resolveBoundedPoint(resolvedNext, {
           fallback: state.position,
