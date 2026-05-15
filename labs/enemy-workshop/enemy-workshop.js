@@ -12,7 +12,7 @@ import {
   loadLabProfileStore,
   persistLabProfileStore,
 } from "../shell/lab-profile-store.js";
-import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515b";
+import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515c";
 import {
   buildEnemyDraftPayload,
   buildGnatSwarmEnemyModule,
@@ -22,7 +22,7 @@ import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-reg
 import {
   formatEnemyWorkshopRuntimeReadout,
   formatEnemyWorkshopSwarmReadout,
-} from "./enemy-workshop-readouts.js?v=20260515b";
+} from "./enemy-workshop-readouts.js?v=20260515c";
 
 const DRAFT_STORAGE_KEY = "orbis.enemyWorkshop.drafts.v1";
 

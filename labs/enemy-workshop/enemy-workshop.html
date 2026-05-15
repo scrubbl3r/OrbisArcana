@@ -6,7 +6,7 @@
   <title>Enemy Workshop</title>
   <link rel="stylesheet" href="../shell/lab-workspaces.css?v=20260425a" />
   <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260410-vfxlab-semantics" />
-  <link rel="stylesheet" href="./enemy-workshop.css?v=20260515b" />
+  <link rel="stylesheet" href="./enemy-workshop.css?v=20260515c" />
   <script type="importmap">
     {
       "imports": {
@@ -50,8 +50,6 @@
         <div class="authoringTabs" role="tablist" aria-label="Enemy authoring surface">
           <button class="authoringTab active" type="button" role="tab" aria-selected="true" data-authoring-tab="gnat">Gnat</button>
           <button class="authoringTab" type="button" role="tab" aria-selected="false" data-authoring-tab="swarm">Swarm</button>
-          <button class="authoringTab" type="button" role="tab" aria-selected="false" data-authoring-tab="detect">Detect</button>
-          <button class="authoringTab" type="button" role="tab" aria-selected="false" data-authoring-tab="feed">Feed</button>
         </div>
 
         <div class="authoringPanel" data-authoring-panel="gnat">
@@ -104,9 +102,7 @@
               </div>
             </div>
           </section>
-        </div>
 
-        <div class="authoringPanel" data-authoring-panel="detect" hidden>
           <section class="controlGroup">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="detectControls">Detect</button>
             <div id="detectControls" class="controlGroupBody" hidden>
@@ -123,9 +119,7 @@
               </div>
             </div>
           </section>
-        </div>
 
-        <div class="authoringPanel" data-authoring-panel="feed" hidden>
           <section class="controlGroup">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="feedControls">Feed</button>
             <div id="feedControls" class="controlGroupBody" hidden>
@@ -142,6 +136,6 @@
       </aside>
     </section>
   </main>
-  <script type="module" src="./enemy-workshop.js?v=20260515b"></script>
+  <script type="module" src="./enemy-workshop.js?v=20260515c"></script>
 </body>
 </html>
