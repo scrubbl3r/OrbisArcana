@@ -36,8 +36,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         4
       ],
       "awareness": [
-        0.01,
-        0.1
+        0.05,
+        0.7
       ],
       "lingerSec": [
         0,
@@ -69,13 +69,13 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "wanderChancePerMinute": [
         0,
-        1
+        0.5
       ],
       "wanderCooldownSec": [
         10,
         20
       ],
-      "wanderCurve": 0.7,
+      "wanderCurve": 0.8,
       "wanderRangeBo": [
         0,
         30
