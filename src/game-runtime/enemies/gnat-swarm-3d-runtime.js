@@ -111,13 +111,20 @@ function resolveBoundedPoint(point = {}, {
   fallback = null,
   loops = [],
   box = null,
+  nav = null,
 } = {}) {
+  if (nav && typeof nav.resolvePoint === "function") {
+    return nav.resolvePoint(point, { fallback });
+  }
   const clamped = clampToBox(point, box);
   if (pointInBounds(clamped, loops)) return clamped;
   return fallback ? clampToBox(fallback, box) : clamped;
 }
 
 function randomBoundedPointAround(center = {}, radius = 1, bounds = {}) {
+  if (bounds && bounds.nav && typeof bounds.nav.randomPointAround === "function") {
+    return bounds.nav.randomPointAround(center, radius);
+  }
   for (let i = 0; i < 24; i += 1) {
     const candidate = clampToBox(randomPointAround(center, radius), bounds.box);
     if (pointInBounds(candidate, bounds.loops)) return candidate;
@@ -126,6 +133,9 @@ function randomBoundedPointAround(center = {}, radius = 1, bounds = {}) {
 }
 
 function segmentInBounds(from = {}, to = {}, bounds = {}, stepPx = 80) {
+  if (bounds && bounds.nav && typeof bounds.nav.segmentIsWalkable === "function") {
+    return bounds.nav.segmentIsWalkable(from, to, stepPx);
+  }
   const total = distance(from, to);
   const steps = Math.max(1, Math.ceil(total / Math.max(1, stepPx)));
   for (let i = 0; i <= steps; i += 1) {
@@ -140,6 +150,9 @@ function segmentInBounds(from = {}, to = {}, bounds = {}, stepPx = 80) {
 }
 
 function estimateBoundedPathDistance(from = {}, to = {}, bounds = {}, stepPx = 80) {
+  if (bounds && bounds.nav && typeof bounds.nav.distanceThroughLevel === "function") {
+    return bounds.nav.distanceThroughLevel(from, to);
+  }
   const direct = distance(from, to);
   if (!bounds || !bounds.box || !Array.isArray(bounds.loops) || !bounds.loops.length) return direct;
   const step = Math.max(8, stepPx);
@@ -198,6 +211,14 @@ function estimateBoundedPathDistance(from = {}, to = {}, bounds = {}, stepPx = 8
 }
 
 function buildRouteSegments({ from, to, spacingPx = 80, jitterPx = 0, bounds = {} } = {}) {
+  if (bounds && bounds.nav && typeof bounds.nav.buildRouteSegments === "function") {
+    return bounds.nav.buildRouteSegments({
+      from,
+      to,
+      spacingWorld: spacingPx,
+      jitterWorld: jitterPx,
+    });
+  }
   const total = Math.max(0.001, distance(from, to));
   const count = Math.max(1, Math.ceil(total / Math.max(1, spacingPx)));
   const segments = [];
@@ -209,12 +230,14 @@ function buildRouteSegments({ from, to, spacingPx = 80, jitterPx = 0, bounds = {
       fallback: segments[segments.length - 1] || from,
       loops: bounds.loops,
       box: bounds.box,
+      nav: bounds.nav,
     }));
   }
   segments[segments.length - 1] = resolveBoundedPoint(to, {
     fallback: segments[segments.length - 2] || from,
     loops: bounds.loops,
     box: bounds.box,
+    nav: bounds.nav,
   });
   return segments;
 }
@@ -473,11 +496,13 @@ export function createGnatSwarm3dRuntime({
   function load(spawns = [], {
     boundaryLoops = [],
     boundaryBox = null,
+    navGrid = null,
   } = {}) {
     disposeMesh();
     bounds = Object.freeze({
       loops: Array.isArray(boundaryLoops) ? boundaryLoops : [],
       box: boundaryBox || null,
+      nav: navGrid || null,
     });
     const config = getConfig() || {};
     const swarm = config.swarm || {};

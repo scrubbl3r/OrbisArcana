@@ -28,7 +28,11 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260515d";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260515e";
+import {
+  buildLevelNavGrid,
+  LEVEL_NAV_GRID_RESOLUTION_BO,
+} from "../../../game-runtime/level/nav/level-nav-grid.js?v=20260515a";
 import {
   applyThreeMeshFlags,
   disposeThreeObject,
@@ -551,11 +555,21 @@ export function createGameStageDepth3dLayer({
       const orbDepth = resolveSceneOrbDepth(authoredScene);
       const levelGraphicsModel = authoredScene && authoredScene.levelGraphicsModel ? authoredScene.levelGraphicsModel : null;
       const starField = levelGraphicsModel && (levelGraphicsModel.starField || levelGraphicsModel.starsField);
+      const boundaryLoops = sceneModel && Array.isArray(sceneModel.loops) ? sceneModel.loops : [];
+      const boundaryBox = sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null;
       currentOrbWorldPosition = null;
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;
       currentOrbZBO = resolveOrbTravelZBO({ depthLayers: layers, orbDepth }, LEVEL_DEPTH_DEFAULT_ORB_Z_BO);
+      const levelNavGrid = buildLevelNavGrid({
+        boundaryLoops,
+        boundaryBox,
+        bo: baseOrbWorldUnits,
+        resolutionBo: LEVEL_NAV_GRID_RESOLUTION_BO,
+      });
+      root.dataset.levelNavGridResolutionBo = String(LEVEL_NAV_GRID_RESOLUTION_BO);
+      root.dataset.levelNavGridCells = levelNavGrid ? String(levelNavGrid.cols * levelNavGrid.rows) : "0";
       telemetry.setDepthLayerLabel(layers);
       starField3dRuntime.load(starField);
       artPlane3dRuntime.load(artShapes);
@@ -582,8 +596,9 @@ export function createGameStageDepth3dLayer({
       }
       loadProps(props);
       gnatSwarm3dRuntime.load(enemySpawns, {
-        boundaryLoops: sceneModel && Array.isArray(sceneModel.loops) ? sceneModel.loops : [],
-        boundaryBox: sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null,
+        boundaryLoops,
+        boundaryBox,
+        navGrid: levelNavGrid,
       });
       root.dataset.enemy3dSpawnCount = String(enemySpawns.length);
       root.dataset.enemy3dObjectCount = String(enemyGroup.children.length);
