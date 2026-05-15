@@ -754,8 +754,8 @@ export function createGnatSwarm3dRuntime({
       if (orbPosition && (state.mode === "alerted" || state.mode === "feeding") && nowSec >= state.nextLeashCheckAt) {
         state.nextLeashCheckAt = nowSec + 0.25 + Math.random() * 0.25;
         const leashLimitPx = state.mode === "feeding" ? state.leashFeedPx : state.leashChasePx;
-        const leashTarget = orbPosition;
-        const leashDistance = estimateBoundedPathDistance(state.spawn, leashTarget, bounds, state.leashPathStepPx);
+        const leashFrom = state.mode === "feeding" ? state.spawn : state.position;
+        const leashDistance = estimateBoundedPathDistance(leashFrom, orbPosition, bounds, state.leashPathStepPx);
         if (leashLimitPx > 0 && leashDistance > leashLimitPx) {
           state.velocity.xW *= 0.35;
           state.velocity.yW *= 0.35;
