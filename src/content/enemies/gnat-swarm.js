@@ -44,16 +44,16 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         5
       ],
       "returnBias": [
-        0.2,
-        0.5
-      ],
-      "returnSegmentSpacingBo": [
-        2,
-        6
-      ],
-      "returnSpeedMultiplier": [
         0.5,
         1
+      ],
+      "returnSegmentSpacingBo": [
+        5,
+        10
+      ],
+      "returnSpeedMultiplier": [
+        1,
+        2
       ],
       "routeCommitment": [
         0.5,
@@ -61,7 +61,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "segmentDwellSec": [
         0,
-        5
+        2
       ],
       "speed": [
         0.8,
@@ -72,7 +72,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         2
       ],
       "wanderCooldownSec": [
-        5,
+        10,
         20
       ],
       "wanderRangeBo": [
@@ -84,8 +84,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         2
       ],
       "wanderSegmentSpacingBo": [
-        2,
-        6
+        3,
+        7
       ]
     }
   },
@@ -98,7 +98,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     "baseSpeedBoPerSec": 5,
     "detectionBaseChance": 0.1,
     "detectionCheckSec": 1,
-    "detectionRadiusBo": 5,
+    "detectionRadiusBo": 8,
     "feedLatchDrift": 0.007,
     "feedMigrationBoPerSec": 0.5,
     "feedMigrationRetargetSec": [
@@ -113,16 +113,16 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     "gnatsTotal": 40,
     "leashChaseBo": 10,
     "leashFeedBo": [
-      20,
+      16,
       20
     ],
     "minSignalStrength": 0.08,
     "signalBaseChance": 0.75,
     "signalCooldownSec": 1,
-    "signalDecay": 0.15,
-    "signalHops": 4,
+    "signalDecay": 0.25,
+    "signalHops": 5,
     "signalMemorySec": 1.6,
-    "signalRadiusBo": 15,
+    "signalRadiusBo": 20,
     "spawnCurves": {
       "wanderChancePerMinute": {
         "amount": 0,
