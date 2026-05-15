@@ -22,7 +22,7 @@ import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-reg
 import {
   formatEnemyWorkshopRuntimeReadout,
   formatEnemyWorkshopSwarmReadout,
-} from "./enemy-workshop-readouts.js?v=20260513a";
+} from "./enemy-workshop-readouts.js?v=20260514n";
 
 const DRAFT_STORAGE_KEY = "orbis.enemyWorkshop.drafts.v1";
 
@@ -73,6 +73,8 @@ function migrateEnemySettings(settings = {}) {
     detectionRadiusBo: 10,
     detectionBaseChance: 0.35,
     detectionCheckSec: 1,
+    leashChaseBo: 40,
+    leashFeedBo: 40,
     telegraphRadiusBo: 14,
     telegraphBaseChance: 0.42,
     telegraphDecay: 0.72,

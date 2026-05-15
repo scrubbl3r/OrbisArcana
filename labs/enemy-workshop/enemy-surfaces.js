@@ -17,6 +17,8 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
       detectionRadiusBo: 10,
       detectionBaseChance: 0.35,
       detectionCheckSec: 1,
+      leashChaseBo: 40,
+      leashFeedBo: 40,
       telegraphRadiusBo: 14,
       telegraphBaseChance: 0.42,
       telegraphDecay: 0.72,

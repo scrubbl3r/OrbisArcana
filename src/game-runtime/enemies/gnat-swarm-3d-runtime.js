@@ -125,6 +125,78 @@ function randomBoundedPointAround(center = {}, radius = 1, bounds = {}) {
   return resolveBoundedPoint(center, { fallback: center, loops: bounds.loops, box: bounds.box });
 }
 
+function segmentInBounds(from = {}, to = {}, bounds = {}, stepPx = 80) {
+  const total = distance(from, to);
+  const steps = Math.max(1, Math.ceil(total / Math.max(1, stepPx)));
+  for (let i = 0; i <= steps; i += 1) {
+    const t = i / steps;
+    const point = {
+      xW: (from.xW || 0) + ((to.xW || 0) - (from.xW || 0)) * t,
+      yW: (from.yW || 0) + ((to.yW || 0) - (from.yW || 0)) * t,
+    };
+    if (!pointInBounds(point, bounds.loops)) return false;
+  }
+  return true;
+}
+
+function estimateBoundedPathDistance(from = {}, to = {}, bounds = {}, stepPx = 80) {
+  const direct = distance(from, to);
+  if (!bounds || !bounds.box || !Array.isArray(bounds.loops) || !bounds.loops.length) return direct;
+  const step = Math.max(8, stepPx);
+  if (segmentInBounds(from, to, bounds, step * 0.5)) return direct;
+  const box = bounds.box;
+  const cols = Math.max(1, Math.ceil((box.rightXW - box.leftXW) / step));
+  const rows = Math.max(1, Math.ceil((box.bottomYW - box.topYW) / step));
+  if (cols * rows > 10000) return direct * 1.4;
+  const key = (col, row) => `${col},${row}`;
+  const cellPoint = (col, row) => ({
+    xW: box.leftXW + (col + 0.5) * step,
+    yW: box.topYW + (row + 0.5) * step,
+  });
+  const cellForPoint = (point) => ({
+    col: clampNumber(Math.floor(((point.xW || 0) - box.leftXW) / step), 0, 0, cols - 1),
+    row: clampNumber(Math.floor(((point.yW || 0) - box.topYW) / step), 0, 0, rows - 1),
+  });
+  const start = cellForPoint(from);
+  const goal = cellForPoint(to);
+  const open = [{ col: start.col, row: start.row, cost: 0, score: direct }];
+  const best = new Map([[key(start.col, start.row), 0]]);
+  const closed = new Set();
+  const neighbors = [
+    [-1, 0, 1], [1, 0, 1], [0, -1, 1], [0, 1, 1],
+    [-1, -1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, 1, Math.SQRT2], [1, 1, Math.SQRT2],
+  ];
+  while (open.length) {
+    open.sort((a, b) => a.score - b.score);
+    const current = open.shift();
+    const currentKey = key(current.col, current.row);
+    if (closed.has(currentKey)) continue;
+    if (current.col === goal.col && current.row === goal.row) {
+      return current.cost + distance(from, cellPoint(start.col, start.row)) + distance(to, cellPoint(goal.col, goal.row));
+    }
+    closed.add(currentKey);
+    for (const [dc, dr, weight] of neighbors) {
+      const col = current.col + dc;
+      const row = current.row + dr;
+      if (col < 0 || row < 0 || col >= cols || row >= rows) continue;
+      const neighborKey = key(col, row);
+      if (closed.has(neighborKey)) continue;
+      const point = cellPoint(col, row);
+      if (!pointInBounds(point, bounds.loops)) continue;
+      const nextCost = current.cost + step * weight;
+      if (nextCost >= (best.get(neighborKey) ?? Infinity)) continue;
+      best.set(neighborKey, nextCost);
+      open.push({
+        col,
+        row,
+        cost: nextCost,
+        score: nextCost + distance(point, to),
+      });
+    }
+  }
+  return direct * 1.4;
+}
+
 function buildRouteSegments({ from, to, spacingPx = 80, jitterPx = 0, bounds = {} } = {}) {
   const total = Math.max(0.001, distance(from, to));
   const count = Math.max(1, Math.ceil(total / Math.max(1, spacingPx)));
@@ -232,6 +304,8 @@ export function createGnatSwarm3dRuntime({
 
   function startReturn(state, nowSec = 0) {
     state.mode = "return";
+    state.orbTarget = null;
+    state.alertStrength = 0;
     state.destination = state.spawn;
     state.isDwelling = false;
     state.route = buildRouteSegments({
@@ -452,6 +526,9 @@ export function createGnatSwarm3dRuntime({
     const feedStickiness = normalizeUnit(swarm.feedStickiness, 0.42);
     const feedMigrationPxPerSec = Math.max(0, clampNumber(swarm.feedMigrationBoPerSec, 0.5, 0, 12) * bo);
     const feedMigrationRetargetSec = rangePair(swarm.feedMigrationRetargetSec, [1, 6]);
+    const leashChasePx = Math.max(0, clampNumber(swarm.leashChaseBo, 40, 0, 1000) * bo);
+    const leashFeedPx = Math.max(0, clampNumber(swarm.leashFeedBo, 40, 0, 1000) * bo);
+    const leashPathStepPx = Math.max(bo, clampNumber(swarm.leashPathStepBo, 2, 0.5, 12) * bo);
     const awarenessRange = rangePair(personality.awareness, [0.5, 1]);
     const aggressionRange = rangePair(personality.aggression, [0.2, 0.6]);
     const allStates = [];
@@ -499,6 +576,7 @@ export function createGnatSwarm3dRuntime({
           nextDetectAt: Math.random() * detectionCheckSec,
           nextSignalCheckAt: Math.random() * detectionCheckSec,
           nextRelayAt: Math.random() * telegraphCooldownSec,
+          nextLeashCheckAt: Math.random() * 0.35,
           alertGeneration: 0,
           alertStrength: 0,
           alertSource: "",
@@ -538,6 +616,9 @@ export function createGnatSwarm3dRuntime({
           maxRelayGenerations,
           minSignalStrength,
           signalMemorySec,
+          leashChasePx,
+          leashFeedPx,
+          leashPathStepPx,
           gnatRadiusPx: Math.max(0.5, gnatSize * 0.5),
           feedContactRadiusPx: Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)),
           feedBandPx: Math.max(1, bo * 0.1),
@@ -664,6 +745,17 @@ export function createGnatSwarm3dRuntime({
         const nextStrength = Math.max(state.minSignalStrength, state.alertStrength || 1) * state.telegraphDecay;
         emitSignal(state, nowSec, nextStrength, (state.alertGeneration || 0) + 1);
         state.nextRelayAt = nowSec + state.telegraphCooldownSec;
+      }
+      if (orbPosition && (state.mode === "alerted" || state.mode === "feeding") && nowSec >= state.nextLeashCheckAt) {
+        state.nextLeashCheckAt = nowSec + 0.25 + Math.random() * 0.25;
+        const leashLimitPx = state.mode === "feeding" ? state.leashFeedPx : state.leashChasePx;
+        const leashTarget = orbPosition;
+        const leashDistance = estimateBoundedPathDistance(state.spawn, leashTarget, bounds, state.leashPathStepPx);
+        if (leashLimitPx > 0 && leashDistance > leashLimitPx) {
+          state.velocity.xW *= 0.35;
+          state.velocity.yW *= 0.35;
+          startReturn(state, nowSec);
+        }
       }
       if (state.mode === "idle" && nowSec >= state.nextTargetAt) {
         scheduleIdleTarget(state, nowSec);
