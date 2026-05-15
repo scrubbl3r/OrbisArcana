@@ -37,7 +37,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "awareness": [
         0.05,
-        0.5
+        0.2
       ],
       "hp": [
         1,
