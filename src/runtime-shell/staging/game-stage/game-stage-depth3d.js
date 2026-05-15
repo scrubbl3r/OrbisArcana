@@ -30,7 +30,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260515k";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260515l";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -168,6 +168,7 @@ export function createGameStageDepth3dLayer({
   let combatEventBus = null;
   let lastGlobe3dTickMs = 0;
   let lastEnemy3dTickMs = 0;
+  let lastEnemyTelemetryAtMs = 0;
   let boundGlobe3dSpawns = Object.freeze([]);
   const telemetry = createGameStageDepth3dTelemetry({
     root,
@@ -398,8 +399,10 @@ export function createGameStageDepth3dLayer({
       orbRuntimePosition,
       orbAlive: currentOrbAlive,
     });
-    const enemyTrace = typeof gnatSwarm3dRuntime.getTrace === "function" ? gnatSwarm3dRuntime.getTrace() : null;
+    const shouldPublishEnemyTelemetry = nowMs - lastEnemyTelemetryAtMs >= 200;
+    const enemyTrace = shouldPublishEnemyTelemetry && typeof gnatSwarm3dRuntime.getTrace === "function" ? gnatSwarm3dRuntime.getTrace() : null;
     if (enemyTrace) {
+      lastEnemyTelemetryAtMs = nowMs;
       root.dataset.enemy3dAlertDirect = String(enemyTrace.direct || 0);
       root.dataset.enemy3dAlertRelayed = String(enemyTrace.relayed || 0);
       root.dataset.enemy3dFeedingCount = String(enemyTrace.feeding || 0);
@@ -410,10 +413,10 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dNav = enemyTrace.nav ? "grid" : "fallback";
       root.dataset.enemy3dNavCells = String(enemyTrace.navCells || 0);
       root.dataset.enemy3dNavResolutionBo = enemyTrace.navResolutionBo == null ? "" : String(enemyTrace.navResolutionBo);
-    }
-    const orbPosition = orb3dActorRuntime.getPosition();
-    if (orbPosition) {
-      root.dataset.enemy3dOrbRuntime = `${Math.round((Number(orbPosition.x) || 0) * 100) / 100},${Math.round((Number(orbPosition.y) || 0) * 100) / 100},${Math.round((Number(orbPosition.z) || 0) * 100) / 100}`;
+      const orbPosition = orb3dActorRuntime.getPosition();
+      if (orbPosition) {
+        root.dataset.enemy3dOrbRuntime = `${Math.round((Number(orbPosition.x) || 0) * 100) / 100},${Math.round((Number(orbPosition.y) || 0) * 100) / 100},${Math.round((Number(orbPosition.z) || 0) * 100) / 100}`;
+      }
     }
   }
 

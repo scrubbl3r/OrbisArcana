@@ -6,6 +6,7 @@ const GNAT_CAMERA_FOV_DEG = 45;
 const GNAT_CAMERA_VIEW_BO = 20;
 const GNAT_CAMERA_VIEW_RADIUS = GNAT_CAMERA_VIEW_BO * GNAT_WORLD_SCALE * 0.5;
 const GNAT_PREVIEW_PIXEL_RATIO = 1.25;
+const GNAT_PREVIEW_TARGET_FRAME_MS = 1000 / 30;
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
   const numeric = Number(value);
@@ -465,8 +466,18 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   states.forEach((state) => scheduleTarget(state, startSec));
 
   const tick = (nowMs) => {
+    if (document.hidden) {
+      animation.lastMs = nowMs;
+      animation.frame = requestAnimationFrame(tick);
+      return;
+    }
+    const elapsedMs = nowMs - animation.lastMs;
+    if (elapsedMs < GNAT_PREVIEW_TARGET_FRAME_MS) {
+      animation.frame = requestAnimationFrame(tick);
+      return;
+    }
     const nowSec = nowMs / 1000;
-    const dt = Math.min(0.04, Math.max(0.001, (nowMs - animation.lastMs) / 1000));
+    const dt = Math.min(0.05, Math.max(0.001, elapsedMs / 1000));
     animation.lastMs = nowMs;
     states.forEach((state) => {
       if ((state.mode === "idle" || state.mode === "cooldown") && nowSec >= state.cooldownUntil) {

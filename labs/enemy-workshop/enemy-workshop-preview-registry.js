@@ -1,4 +1,4 @@
-import { renderGnatSwarmPreview } from "./previews/gnat-swarm-preview.js?v=20260515c";
+import { renderGnatSwarmPreview } from "./previews/gnat-swarm-preview.js?v=20260515d";
 
 const PREVIEW_RENDERERS = Object.freeze({
   "gnat-swarm": renderGnatSwarmPreview,

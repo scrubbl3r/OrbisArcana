@@ -8,6 +8,9 @@ import {
 } from "../combat/combat-constants.js";
 import { normalizeStunEffect, resolveStunApplication } from "../combat/stun-model.js";
 
+const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
+const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
+
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return fallback;
@@ -256,6 +259,15 @@ function estimateBoundedPathDistance(from = {}, to = {}, bounds = {}, stepPx = 8
   return direct * 1.4;
 }
 
+function pathDistanceCacheKey(from = {}, to = {}, stepPx = 80) {
+  const step = Math.max(1, Number(stepPx) || 80);
+  const fx = Math.round((Number(from.xW) || 0) / step);
+  const fy = Math.round((Number(from.yW) || 0) / step);
+  const tx = Math.round((Number(to.xW) || 0) / step);
+  const ty = Math.round((Number(to.yW) || 0) / step);
+  return `${fx},${fy}:${tx},${ty}:${Math.round(step)}`;
+}
+
 function buildRouteSegments({ from, to, spacingPx = 80, jitterPx = 0, bounds = {} } = {}) {
   if (bounds && bounds.nav && typeof bounds.nav.buildRouteSegments === "function") {
     return bounds.nav.buildRouteSegments({
@@ -310,7 +322,12 @@ export function createGnatSwarm3dRuntime({
   let states = [];
   let bounds = Object.freeze({ loops: [], box: null });
   let activeSignals = [];
-  let alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, signals: 0, nav: false });
+  const alertTrace = { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null };
+  let pendingLifeLeachDamage = 0;
+  let lastDamageEmitAtMs = 0;
+  let lastMotionEmitAtMs = 0;
+  let lastLiftPenalty = 0;
+  let lastFeedingCount = 0;
 
   function disposeMesh() {
     if (mesh) {
@@ -319,7 +336,81 @@ export function createGnatSwarm3dRuntime({
     }
     states = [];
     activeSignals = [];
-    alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, signals: 0, nav: false });
+    pendingLifeLeachDamage = 0;
+    lastDamageEmitAtMs = 0;
+    lastMotionEmitAtMs = 0;
+    lastLiftPenalty = 0;
+    lastFeedingCount = 0;
+    Object.assign(alertTrace, { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null });
+  }
+
+  function compactActiveSignals(nowSec = 0) {
+    let write = 0;
+    for (let read = 0; read < activeSignals.length; read += 1) {
+      const signal = activeSignals[read];
+      if (!signal || signal.expiresAt < nowSec || signal.strength <= 0) continue;
+      activeSignals[write] = signal;
+      write += 1;
+    }
+    activeSignals.length = write;
+    return write;
+  }
+
+  function estimateCachedPathDistance(from = {}, to = {}, stepPx = 80, cache = null) {
+    if (!cache) return estimateBoundedPathDistance(from, to, bounds, stepPx);
+    const key = pathDistanceCacheKey(from, to, stepPx);
+    if (cache.has(key)) return cache.get(key);
+    const resolved = estimateBoundedPathDistance(from, to, bounds, stepPx);
+    cache.set(key, resolved);
+    return resolved;
+  }
+
+  function emitFeedingCombat({ nowMs = 0, dtSec = 0.016, feedingCount = 0, activeLiftLeach = 0, activeLifeLeachPerSec = 0 } = {}) {
+    if (typeof onCombatEvent !== "function") return;
+    const atMs = Number(nowMs) || 0;
+    pendingLifeLeachDamage += Math.max(0, activeLifeLeachPerSec) * Math.max(0, dtSec);
+    const liftChanged = Math.abs(activeLiftLeach - lastLiftPenalty) > 0.001 || feedingCount !== lastFeedingCount;
+    const shouldEmitLift = activeLiftLeach > 0 || lastLiftPenalty > 0;
+    if (shouldEmitLift && (liftChanged || atMs - lastMotionEmitAtMs >= GNAT_COMBAT_EMIT_INTERVAL_MS)) {
+      onCombatEvent("combat.motion_modifier_changed", {
+        kind: COMBAT_EFFECT_MOTION_MODIFIER,
+        modifierId: "gnat-swarm:feeding",
+        sourceEntityId: "enemy:gnat-swarm",
+        targetEntityId: COMBAT_ENTITY_ORB,
+        liftPenalty: activeLiftLeach,
+        liftMultiplier: 1,
+        durationMs: GNAT_LIFT_MODIFIER_DURATION_MS,
+        atMs,
+        tags: ["enemy", "gnat-swarm", "feeding", "lift-leach"],
+        meta: {
+          feedingCount,
+          liftLeachPerGnat: feedingCount > 0 ? activeLiftLeach / feedingCount : 0,
+        },
+      });
+      lastMotionEmitAtMs = atMs;
+      lastLiftPenalty = activeLiftLeach;
+      lastFeedingCount = feedingCount;
+    }
+    if (pendingLifeLeachDamage > 0 && (atMs - lastDamageEmitAtMs >= GNAT_COMBAT_EMIT_INTERVAL_MS || activeLifeLeachPerSec <= 0)) {
+      const damageAmount = pendingLifeLeachDamage;
+      pendingLifeLeachDamage = 0;
+      lastDamageEmitAtMs = atMs;
+      onCombatEvent("combat.damage_requested", {
+        kind: COMBAT_EFFECT_DAMAGE,
+        amount: damageAmount,
+        damageType: DAMAGE_TYPE_LEECH,
+        cause: DAMAGE_TYPE_LEECH,
+        sourceEntityId: "enemy:gnat-swarm",
+        targetEntityId: COMBAT_ENTITY_ORB,
+        atMs,
+        tags: ["enemy", "gnat-swarm", "feeding", "life-leach"],
+        meta: {
+          sourceSystem: "gnat-swarm-feeding",
+          feedingCount,
+          lifeLeachPerSec: activeLifeLeachPerSec,
+        },
+      });
+    }
   }
 
   function chooseDestination(state) {
@@ -629,7 +720,7 @@ export function createGnatSwarm3dRuntime({
       box: boundaryBox || null,
       nav: navGrid || null,
     });
-    alertTrace = Object.freeze({
+    Object.assign(alertTrace, {
       direct: 0,
       relayed: 0,
       feeding: 0,
@@ -867,6 +958,7 @@ export function createGnatSwarm3dRuntime({
   const quat = new THREE.Quaternion();
   const scaleVec = new THREE.Vector3();
   const positionVec = new THREE.Vector3();
+  const pathDistanceCache = new Map();
 
   function update(nowMs = performance.now(), dtSec = 0.016, {
     orbWorldPosition = null,
@@ -895,8 +987,8 @@ export function createGnatSwarm3dRuntime({
           z: orbRuntime.z == null ? 0 : orbRuntime.z - (Number(orbProjected.z) || 0),
         }
       : null;
-    activeSignals = activeSignals.filter((signal) => signal && signal.expiresAt >= nowSec && signal.strength > 0);
-    const signalsSnapshot = activeSignals.slice();
+    const signalCount = compactActiveSignals(nowSec);
+    pathDistanceCache.clear();
     let directAlerts = 0;
     let relayedAlerts = 0;
     let feedingCount = 0;
@@ -939,7 +1031,8 @@ export function createGnatSwarm3dRuntime({
       }
       if (orbPosition && state.mode !== "alerted" && state.mode !== "feeding" && state.mode !== "stunned" && nowSec >= state.nextSignalCheckAt) {
         state.nextSignalCheckAt = nowSec + state.signalCheckSec;
-        for (const signal of signalsSnapshot) {
+        for (let signalIndex = 0; signalIndex < signalCount; signalIndex += 1) {
+          const signal = activeSignals[signalIndex];
           if (!signal || signal.sourceIndex === state.index || signal.generation >= state.signalHops || signal.strength < state.minSignalStrength) continue;
           const signalDistance = distance(state.position, signal.position);
           const chance = shapedProximityChance({
@@ -969,7 +1062,7 @@ export function createGnatSwarm3dRuntime({
         state.nextLeashCheckAt = nowSec + 0.25 + Math.random() * 0.25;
         const leashLimitPx = state.mode === "feeding" ? state.leashFeedPx : state.leashChasePx;
         const leashFrom = state.mode === "feeding" ? state.spawn : state.position;
-        const leashDistance = estimateBoundedPathDistance(leashFrom, orbPosition, bounds, state.leashPathStepPx);
+        const leashDistance = estimateCachedPathDistance(leashFrom, orbPosition, state.leashPathStepPx, pathDistanceCache);
         if (leashLimitPx > 0 && leashDistance > leashLimitPx) {
           state.velocity.xW *= 0.35;
           state.velocity.yW *= 0.35;
@@ -1125,43 +1218,8 @@ export function createGnatSwarm3dRuntime({
       mesh.setMatrixAt(i, matrix);
     }
     mesh.instanceMatrix.needsUpdate = true;
-    if (typeof onCombatEvent === "function") {
-      const atMs = nowMs;
-      onCombatEvent("combat.motion_modifier_changed", {
-        kind: COMBAT_EFFECT_MOTION_MODIFIER,
-        modifierId: "gnat-swarm:feeding",
-        sourceEntityId: "enemy:gnat-swarm",
-        targetEntityId: COMBAT_ENTITY_ORB,
-        liftPenalty: activeLiftLeach,
-        liftMultiplier: 1,
-        durationMs: 120,
-        atMs,
-        tags: ["enemy", "gnat-swarm", "feeding", "lift-leach"],
-        meta: {
-          feedingCount,
-          liftLeachPerGnat: feedingCount > 0 ? activeLiftLeach / feedingCount : 0,
-        },
-      });
-      const lifeLeachDamage = activeLifeLeachPerSec * dtSec;
-      if (lifeLeachDamage > 0) {
-        onCombatEvent("combat.damage_requested", {
-          kind: COMBAT_EFFECT_DAMAGE,
-          amount: lifeLeachDamage,
-          damageType: DAMAGE_TYPE_LEECH,
-          cause: DAMAGE_TYPE_LEECH,
-          sourceEntityId: "enemy:gnat-swarm",
-          targetEntityId: COMBAT_ENTITY_ORB,
-          atMs,
-          tags: ["enemy", "gnat-swarm", "feeding", "life-leach"],
-          meta: {
-            sourceSystem: "gnat-swarm-feeding",
-            feedingCount,
-            lifeLeachPerSec: activeLifeLeachPerSec,
-          },
-        });
-      }
-    }
-    alertTrace = Object.freeze({
+    emitFeedingCombat({ nowMs, dtSec, feedingCount, activeLiftLeach, activeLifeLeachPerSec });
+    Object.assign(alertTrace, {
       direct: directAlerts,
       relayed: relayedAlerts,
       feeding: feedingCount,
