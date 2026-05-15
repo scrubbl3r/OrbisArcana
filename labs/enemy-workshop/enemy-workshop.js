@@ -16,7 +16,7 @@ import {
   loadLabProfileStore,
   persistLabProfileStore,
 } from "../shell/lab-profile-store.js";
-import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515e";
+import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515f";
 import {
   buildEnemyDraftPayload,
   buildGnatSwarmEnemyModule,
@@ -123,8 +123,9 @@ function migrateEnemySettings(settings = {}) {
   if (!Number.isFinite(Number(next.swarm.damageReceive.stunThreshold))) {
     next.swarm.damageReceive.stunThreshold = scalarSetting(personality.stunThreshold, 1);
   }
-  if (!Number.isFinite(Number(next.swarm.damageReceive.stunDurationSec))) {
-    next.swarm.damageReceive.stunDurationSec = 2;
+  if (!Array.isArray(next.swarm.damageReceive.stunDurationSec)) {
+    const value = Number(next.swarm.damageReceive.stunDurationSec);
+    next.swarm.damageReceive.stunDurationSec = Number.isFinite(value) ? [value, value] : [2, 2];
   }
   if (!Number.isFinite(Number(next.swarm.damageDeliver.liftLeach))) {
     next.swarm.damageDeliver.liftLeach = 5;

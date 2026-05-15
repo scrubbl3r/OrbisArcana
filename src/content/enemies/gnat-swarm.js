@@ -102,7 +102,10 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
   "swarm": {
     "baseSpeedBoPerSec": 5,
     "damageReceive": {
-      "stunDurationSec": 4,
+      "stunDurationSec": [
+        4,
+        4
+      ],
       "stunThreshold": 1
     },
     "damageDeliver": {

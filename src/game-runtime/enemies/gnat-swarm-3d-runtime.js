@@ -710,7 +710,7 @@ export function createGnatSwarm3dRuntime({
       0,
       Infinity,
     ));
-    const stunDurationMs = Math.max(50, clampNumber(damageReceive.stunDurationSec, 2, 0.05, 30) * 1000);
+    const stunDurationSec = rangePair(damageReceive.stunDurationSec, [2, 2]);
     const stunGravityPxPerSec2 = Math.max(bo * 4, bo * 40);
     const liftLeach = Math.max(0, clampNumber(damageDeliver.liftLeach, 5, 0, 100));
     const lifeLeachPerSec = Math.max(0, clampNumber(damageDeliver.lifeLeachPerSec, 5, 0, 10000));
@@ -767,7 +767,7 @@ export function createGnatSwarm3dRuntime({
           maxHp: Math.max(0.1, randomInRange(hpRange, 1)),
           hp: 1,
           stunThreshold,
-          stunDurationMs,
+          stunDurationMs: Math.max(50, randomInRange(stunDurationSec, 2) * 1000),
           stunUntilSec: 0,
           stunBounceRemaining: 0,
           stunGravityPxPerSec2,
