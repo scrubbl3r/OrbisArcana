@@ -30,7 +30,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260515j";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260515k";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -63,7 +63,7 @@ import {
 import { createGameStageDepth3dRenderLoop } from "./game-stage-depth3d-render-loop.js?v=20260430b";
 import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260514a";
 import { createGameStageDepth3dTelemetry } from "./game-stage-depth3d-telemetry.js?v=20260430b";
-import { GNAT_SWARM_ENEMY_DEFAULT } from "../../../content/enemies/gnat-swarm.js?v=20260515b";
+import { GNAT_SWARM_ENEMY_DEFAULT } from "../../../content/enemies/gnat-swarm.js?v=20260515c";
 
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
@@ -404,6 +404,8 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dAlertRelayed = String(enemyTrace.relayed || 0);
       root.dataset.enemy3dFeedingCount = String(enemyTrace.feeding || 0);
       root.dataset.enemy3dStunnedCount = String(enemyTrace.stunned || 0);
+      root.dataset.enemy3dLiftLeach = String(enemyTrace.liftLeach || 0);
+      root.dataset.enemy3dLifeLeachPerSec = String(enemyTrace.lifeLeachPerSec || 0);
       root.dataset.enemy3dSignalCount = String(enemyTrace.signals || 0);
       root.dataset.enemy3dNav = enemyTrace.nav ? "grid" : "fallback";
       root.dataset.enemy3dNavCells = String(enemyTrace.navCells || 0);

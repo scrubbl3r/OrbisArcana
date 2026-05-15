@@ -30,6 +30,10 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
         stunThreshold: 1,
         stunDurationSec: 2,
       }),
+      damageDeliver: Object.freeze({
+        liftLeach: 5,
+        lifeLeachPerSec: 5,
+      }),
       feedOffsetBo: 0.08,
       feedNipDepthBo: 0.24,
       feedNipHz: 7,

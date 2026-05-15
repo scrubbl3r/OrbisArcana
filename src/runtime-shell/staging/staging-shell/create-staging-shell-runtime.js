@@ -1529,7 +1529,13 @@ function startShellStageLoop(shellContext) {
     ),
     liftToThrustAccel: (l01) => {
       const phys = runtime.stage ? runtime.stage.phys : null;
-      return Math.max(0, Number(phys && phys.thrustMax) || 0) * clamp01(l01);
+      const receiverRuntime = resolveShellReceiverRuntime(runtime);
+      const nowMs = performance.now();
+      const liftPenalty = receiverRuntime && Number(receiverRuntime.combatLiftPenaltyUntilMs || 0) > nowMs
+        ? Math.max(0, Number(receiverRuntime.combatLiftPenalty) || 0)
+        : 0;
+      const effectiveLift01 = clamp01(clamp01(l01) - (liftPenalty / 100));
+      return Math.max(0, Number(phys && phys.thrustMax) || 0) * effectiveLift01;
     },
     getSpawnHoldConfig: () => (
       runtime.vfxDefaults &&

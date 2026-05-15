@@ -16,7 +16,7 @@ import {
   loadLabProfileStore,
   persistLabProfileStore,
 } from "../shell/lab-profile-store.js";
-import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515d";
+import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515e";
 import {
   buildEnemyDraftPayload,
   buildGnatSwarmEnemyModule,
@@ -76,6 +76,9 @@ function migrateEnemySettings(settings = {}) {
   if (!next.swarm.damageReceive || typeof next.swarm.damageReceive !== "object") {
     next.swarm.damageReceive = {};
   }
+  if (!next.swarm.damageDeliver || typeof next.swarm.damageDeliver !== "object") {
+    next.swarm.damageDeliver = {};
+  }
   if (!Number.isFinite(Number(next.swarm.signalRadiusBo)) && Number.isFinite(Number(next.swarm.telegraphRadiusBo))) {
     next.swarm.signalRadiusBo = Number(next.swarm.telegraphRadiusBo);
   }
@@ -122,6 +125,12 @@ function migrateEnemySettings(settings = {}) {
   }
   if (!Number.isFinite(Number(next.swarm.damageReceive.stunDurationSec))) {
     next.swarm.damageReceive.stunDurationSec = 2;
+  }
+  if (!Number.isFinite(Number(next.swarm.damageDeliver.liftLeach))) {
+    next.swarm.damageDeliver.liftLeach = 5;
+  }
+  if (!Number.isFinite(Number(next.swarm.damageDeliver.lifeLeachPerSec))) {
+    next.swarm.damageDeliver.lifeLeachPerSec = 5;
   }
   if (!Array.isArray(next.swarm.feedMigrationRetargetSec)) {
     next.swarm.feedMigrationRetargetSec = [1, 6];

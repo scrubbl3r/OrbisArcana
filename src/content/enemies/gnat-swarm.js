@@ -105,6 +105,10 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       "stunDurationSec": 4,
       "stunThreshold": 1
     },
+    "damageDeliver": {
+      "liftLeach": 5,
+      "lifeLeachPerSec": 5
+    },
     "detectionBaseChance": 0.5,
     "detectionCheckSec": 1,
     "detectionRadiusBo": 6,
