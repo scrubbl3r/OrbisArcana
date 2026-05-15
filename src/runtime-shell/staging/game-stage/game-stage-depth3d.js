@@ -384,6 +384,9 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dAlertRelayed = String(enemyTrace.relayed || 0);
       root.dataset.enemy3dFeedingCount = String(enemyTrace.feeding || 0);
       root.dataset.enemy3dSignalCount = String(enemyTrace.signals || 0);
+      root.dataset.enemy3dNav = enemyTrace.nav ? "grid" : "fallback";
+      root.dataset.enemy3dNavCells = String(enemyTrace.navCells || 0);
+      root.dataset.enemy3dNavResolutionBo = enemyTrace.navResolutionBo == null ? "" : String(enemyTrace.navResolutionBo);
     }
     const orbPosition = orb3dActorRuntime.getPosition();
     if (orbPosition) {

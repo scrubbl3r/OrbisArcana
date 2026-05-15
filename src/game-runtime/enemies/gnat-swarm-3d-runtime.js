@@ -121,6 +121,13 @@ function resolveBoundedPoint(point = {}, {
   return fallback ? clampToBox(fallback, box) : clamped;
 }
 
+function boundedPointContains(point = {}, bounds = {}) {
+  if (bounds && bounds.nav && typeof bounds.nav.containsPoint === "function") {
+    return bounds.nav.containsPoint(point);
+  }
+  return pointInBounds(point, bounds.loops);
+}
+
 function randomBoundedPointAround(center = {}, radius = 1, bounds = {}) {
   if (bounds && bounds.nav && typeof bounds.nav.randomPointAround === "function") {
     return bounds.nav.randomPointAround(center, radius);
@@ -263,7 +270,7 @@ export function createGnatSwarm3dRuntime({
   let states = [];
   let bounds = Object.freeze({ loops: [], box: null });
   let activeSignals = [];
-  let alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, signals: 0 });
+  let alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, signals: 0, nav: false });
 
   function disposeMesh() {
     if (mesh) {
@@ -272,7 +279,7 @@ export function createGnatSwarm3dRuntime({
     }
     states = [];
     activeSignals = [];
-    alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, signals: 0 });
+    alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, signals: 0, nav: false });
   }
 
   function chooseDestination(state) {
@@ -503,6 +510,15 @@ export function createGnatSwarm3dRuntime({
       loops: Array.isArray(boundaryLoops) ? boundaryLoops : [],
       box: boundaryBox || null,
       nav: navGrid || null,
+    });
+    alertTrace = Object.freeze({
+      direct: 0,
+      relayed: 0,
+      feeding: 0,
+      signals: 0,
+      nav: !!bounds.nav,
+      navCells: bounds.nav ? (bounds.nav.cols || 0) * (bounds.nav.rows || 0) : 0,
+      navResolutionBo: bounds.nav ? bounds.nav.resolutionBo : null,
     });
     const config = getConfig() || {};
     const swarm = config.swarm || {};
@@ -870,13 +886,14 @@ export function createGnatSwarm3dRuntime({
           yW: resolvedNext.yW + (state.target.yW - resolvedNext.yW) * stickiness,
         };
       }
-      if (pointInBounds(resolvedNext, bounds.loops)) {
+      if (boundedPointContains(resolvedNext, bounds)) {
         state.position = clampToBox(resolvedNext, bounds.box);
       } else {
         state.position = resolveBoundedPoint(resolvedNext, {
           fallback: state.position,
           loops: bounds.loops,
           box: bounds.box,
+          nav: bounds.nav,
         });
         state.velocity.xW *= -0.25;
         state.velocity.yW *= -0.25;
@@ -909,6 +926,9 @@ export function createGnatSwarm3dRuntime({
       relayed: relayedAlerts,
       feeding: feedingCount,
       signals: activeSignals.length,
+      nav: !!bounds.nav,
+      navCells: bounds.nav ? (bounds.nav.cols || 0) * (bounds.nav.rows || 0) : 0,
+      navResolutionBo: bounds.nav ? bounds.nav.resolutionBo : null,
     });
   }
 
