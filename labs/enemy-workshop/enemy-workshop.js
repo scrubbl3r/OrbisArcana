@@ -1,5 +1,9 @@
 import { renderLabWorkspaceNav } from "../shell/lab-workspaces.js";
 import {
+  initLabAuthoringTabs,
+  initLabCollapsibleControlGroups,
+} from "../shell/lab-ui.js?v=20260515a";
+import {
   connectProjectFolder,
   downloadTextFile,
   refreshProjectConnectUi,
@@ -204,8 +208,8 @@ function setPathValue(target = {}, path = "", value = null) {
 export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
   if (!root) return;
   renderLabWorkspaceNav({ root, currentWorkspaceId: "enemy-workshop" });
-  initCollapsibleControlGroups(root);
-  initAuthoringTabs(root);
+  initLabCollapsibleControlGroups({ root });
+  initLabAuthoringTabs({ root, defaultTabId: "gnat" });
   const previewRegistry = createEnemyWorkshopPreviewRegistry();
   const gnatSettingsRef = { value: null };
   const draftStore = createLabProfileStore();
@@ -280,49 +284,6 @@ export function bootEnemyWorkshop({ root = globalThis.document } = {}) {
     previewRegistry,
     gnatSettingsRef,
     preserveSettings: true,
-  });
-}
-
-function initAuthoringTabs(root = globalThis.document) {
-  if (!root || typeof root.querySelectorAll !== "function") return;
-  const setActive = (tabId = "gnat") => {
-    root.querySelectorAll("[data-authoring-tab]").forEach((tab) => {
-      const active = tab.getAttribute("data-authoring-tab") === tabId;
-      tab.classList.toggle("active", active);
-      tab.setAttribute("aria-selected", active ? "true" : "false");
-    });
-    root.querySelectorAll("[data-authoring-panel]").forEach((panel) => {
-      panel.hidden = panel.getAttribute("data-authoring-panel") !== tabId;
-    });
-  };
-  root.querySelectorAll("[data-authoring-tab]").forEach((tab) => {
-    tab.addEventListener("click", () => setActive(tab.getAttribute("data-authoring-tab") || "gnat"));
-  });
-  setActive("gnat");
-}
-
-function initCollapsibleControlGroups(root = globalThis.document) {
-  if (!root || typeof root.querySelectorAll !== "function") return;
-  const findBody = (toggle) => {
-    const controlsId = toggle ? toggle.getAttribute("aria-controls") : "";
-    if (!controlsId) return null;
-    if (typeof root.getElementById === "function") return root.getElementById(controlsId);
-    return globalThis.document && typeof globalThis.document.getElementById === "function"
-      ? globalThis.document.getElementById(controlsId)
-      : null;
-  };
-  root.querySelectorAll("[data-control-toggle]").forEach((toggle) => {
-    const body = findBody(toggle);
-    const expanded = toggle.getAttribute("aria-expanded") !== "false";
-    if (body) body.hidden = !expanded;
-  });
-  root.addEventListener("click", (event) => {
-    const toggle = event.target && event.target.closest ? event.target.closest("[data-control-toggle]") : null;
-    if (!toggle || !root.contains(toggle)) return;
-    const body = findBody(toggle);
-    const expanded = toggle.getAttribute("aria-expanded") !== "false";
-    toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
-    if (body) body.hidden = expanded;
   });
 }
 

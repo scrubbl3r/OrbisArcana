@@ -1,54 +1,12 @@
 :root {
-  --g: var(--text-strong);
   --bg: rgb(5, 6, 7);
   --panel: rgba(10, 12, 13, 0.92);
-  --border: var(--frame);
-  --lab-workspace-nav-muted: var(--text-muted);
-  --lab-workspace-nav-active: var(--text-strong);
   --enemy-workshop-viewport-width: 1600px;
   --enemy-workshop-sidebar-width: 530px;
   --enemy-workshop-main-gap: 16px;
   --enemy-workshop-card-padding-x: 14px;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  min-height: 100%;
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(900px 540px at 54% 38%, rgba(18, 31, 26, 0.38), rgba(0, 0, 0, 0) 58%),
-    radial-gradient(1200px 700px at 50% 35%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.48) 57%, rgba(0, 0, 0, 0.78) 100%);
-  opacity: 0.96;
-  z-index: 0;
-}
-
-.enemyWorkshopShell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.wrap {
-  position: relative;
-  z-index: 1;
-  max-width: calc(
+  --lab-shell-card-padding-x: var(--enemy-workshop-card-padding-x);
+  --lab-shell-max-width: calc(
     var(--enemy-workshop-viewport-width) +
     var(--enemy-workshop-sidebar-width) +
     var(--enemy-workshop-main-gap) +
@@ -56,47 +14,18 @@ body::before {
     2px +
     32px
   );
-  margin: 22px auto;
-  padding: 0 16px 48px;
-  gap: 16px;
-  align-items: start;
 }
 
-.studioBar,
-.card {
-  background: var(--panel);
-  border: 1px solid var(--frame);
-  border-radius: 16px;
-  box-shadow: 0 18px 80px rgba(0, 0, 0, 0.45);
+body::before {
+  background:
+    radial-gradient(900px 540px at 54% 38%, rgba(18, 31, 26, 0.38), rgba(0, 0, 0, 0) 58%),
+    radial-gradient(1200px 700px at 50% 35%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.48) 57%, rgba(0, 0, 0, 0.78) 100%);
+  opacity: 0.96;
 }
 
-.studioBar {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  flex-wrap: wrap;
-  padding: 10px 12px;
-}
-
-.studioBarGroup {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.studioWorkspaceGroup {
-  min-width: 0;
-  justify-content: flex-start;
-  flex: 1 1 auto;
-}
-
-.studioBarLabel {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-weight: 800;
+.enemyWorkshopShell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .enemyWorkshopTitle {
@@ -127,33 +56,6 @@ body::before {
   font: inherit;
   font-size: 12px;
   font-weight: 800;
-}
-
-.toolBtn {
-  color: var(--text);
-  background: rgba(var(--frame-rgb), 0.12);
-  border: 1px solid var(--frame);
-  border-radius: 10px;
-  padding: 6px 8px;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 900;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.toolBtn:hover {
-  border-color: var(--frame-strong);
-  color: var(--text-strong);
-}
-
-.toolBtn.secondary {
-  opacity: 0.9;
-}
-
-.card {
-  padding: 14px var(--enemy-workshop-card-padding-x) 16px;
-  overflow: hidden;
 }
 
 .enemyWorkshopMain {
@@ -305,139 +207,6 @@ body::before {
   text-align: right;
 }
 
-.authoringTabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  border-radius: 12px;
-  border: 1px solid var(--frame);
-  background: rgba(0, 0, 0, 0.18);
-  padding: 6px;
-}
-
-.authoringTab {
-  cursor: pointer;
-  border-radius: 9px;
-  border: 1px solid rgba(var(--frame-rgb), 0.36);
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 9px 10px;
-}
-
-.authoringTab.active {
-  background: rgba(var(--frame-rgb), 0.14);
-  color: var(--text-strong);
-}
-
-.authoringPanel {
-  display: grid;
-  gap: 12px;
-}
-
-.authoringPanel[hidden] {
-  display: none;
-}
-
-.controlGroup {
-  border: 1px solid rgba(var(--frame-rgb), 0.18);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.25);
-  overflow: hidden;
-}
-
-.controlGroupHeader {
-  width: 100%;
-  color: var(--text-strong);
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  padding: 12px;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 1000;
-  letter-spacing: 0.08em;
-  text-align: left;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.controlGroupHeader::after {
-  content: "-";
-  float: right;
-  color: var(--text-muted);
-}
-
-.controlGroupHeader[aria-expanded="false"]::after {
-  content: "+";
-}
-
-.controlGroupHeader:hover {
-  color: var(--text-strong);
-  background: rgba(var(--frame-rgb), 0.08);
-}
-
-.controlGroupBody {
-  border-top: 1px solid rgba(var(--frame-rgb), 0.14);
-  padding: 11px 12px 12px;
-}
-
-.controlGroupBody[hidden] {
-  display: none;
-}
-
-.controlGroupBody p {
-  margin: 10px 0 0;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.45;
-  font-weight: 800;
-}
-
-.paramFieldRows,
-.rangeFieldRows {
-  display: grid;
-  gap: 8px;
-}
-
-.paramFieldRow,
-.rangeFieldRow {
-  display: grid;
-  grid-template-columns: minmax(150px, 1fr) minmax(82px, 110px);
-  gap: 8px;
-  align-items: center;
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 900;
-  line-height: 1.25;
-}
-
-.rangeFieldRow {
-  grid-template-columns: minmax(150px, 1fr) minmax(64px, 88px) minmax(64px, 88px);
-}
-
-.paramFieldInput {
-  min-width: 0;
-  width: 100%;
-  color: var(--text);
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid var(--frame);
-  border-radius: 8px;
-  padding: 6px 7px;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.paramFieldInput.isInvalid {
-  border-color: rgba(255, 96, 96, 0.72);
-  color: rgb(255, 190, 190);
-}
-
 @media (max-width: 1280px) {
   .enemyWorkshopMain {
     grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
@@ -445,14 +214,6 @@ body::before {
 }
 
 @media (max-width: 960px) {
-  .studioBar {
-    align-items: stretch;
-  }
-
-  .studioBarGroup {
-    width: 100%;
-  }
-
   .enemyWorkshopMain {
     grid-template-columns: 1fr;
   }
@@ -484,11 +245,6 @@ body::before {
 }
 
 @media (max-width: 640px) {
-  .wrap {
-    margin-top: 12px;
-    padding-inline: 10px;
-  }
-
   .enemyViewport {
     min-height: clamp(360px, 66vh, 620px);
     border-radius: 12px;

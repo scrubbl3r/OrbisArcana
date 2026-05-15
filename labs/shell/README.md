@@ -10,6 +10,7 @@ or World Workshop:
 - profile actions such as create, rename, duplicate, delete, and lock
 - project connection helpers
 - generic publish helpers
+- shared Lab UI shell styles and small UI behaviors
 - generic surface activation
 - generic authoring adapter dispatch
 
@@ -28,3 +29,6 @@ targets should stay inside their workspace directory.
   capture/apply/default dispatch.
 - `lab-workspaces.js` and `lab-workspaces.css` own the shared first-class Lab
   workspace navigation.
+- `lab-ui.css` and `lab-ui.js` own shared first-class Lab UI primitives such as
+  shell layout, top bars, cards, authoring tabs, collapsible control groups, and
+  parameter field rows.
