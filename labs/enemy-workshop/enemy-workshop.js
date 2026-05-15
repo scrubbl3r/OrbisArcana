@@ -97,7 +97,6 @@ function migrateEnemySettings(settings = {}) {
     detectionRadiusBo: 10,
     detectionBaseChance: 0.35,
     detectionCheckSec: 1,
-    leashChaseBo: 40,
     signalRadiusBo: 14,
     signalBaseChance: 0.42,
     signalDecay: 0.72,
@@ -121,6 +120,10 @@ function migrateEnemySettings(settings = {}) {
   if (!Array.isArray(next.swarm.leashFeedBo)) {
     const value = Number(next.swarm.leashFeedBo);
     next.swarm.leashFeedBo = Number.isFinite(value) ? [value, value] : [40, 40];
+  }
+  if (!Array.isArray(next.swarm.leashChaseBo)) {
+    const value = Number(next.swarm.leashChaseBo);
+    next.swarm.leashChaseBo = Number.isFinite(value) ? [value, value] : [40, 40];
   }
   if (Array.isArray(next.swarm.baseSpeedBoPerSec)) {
     next.swarm.baseSpeedBoPerSec = scalarSetting(next.swarm.baseSpeedBoPerSec, 1.35);

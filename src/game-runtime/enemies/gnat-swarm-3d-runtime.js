@@ -584,7 +584,7 @@ export function createGnatSwarm3dRuntime({
     const feedStickiness = normalizeUnit(swarm.feedStickiness, 0.42);
     const feedMigrationPxPerSec = Math.max(0, clampNumber(swarm.feedMigrationBoPerSec, 0.5, 0, 12) * bo);
     const feedMigrationRetargetSec = rangePair(swarm.feedMigrationRetargetSec, [1, 6]);
-    const leashChasePx = Math.max(0, clampNumber(swarm.leashChaseBo, 40, 0, 1000) * bo);
+    const leashChaseBo = rangePair(swarm.leashChaseBo, [40, 40]);
     const leashFeedBo = rangePair(swarm.leashFeedBo, [40, 40]);
     const leashPathStepPx = Math.max(bo, clampNumber(swarm.leashPathStepBo, 2, 0.5, 12) * bo);
     const awarenessRange = rangePair(personality.awareness, [0.5, 1]);
@@ -675,7 +675,7 @@ export function createGnatSwarm3dRuntime({
           signalHops,
           minSignalStrength,
           signalMemorySec,
-          leashChasePx,
+          leashChasePx: Math.max(0, randomInRange(leashChaseBo, 40) * bo),
           leashFeedPx: Math.max(0, randomInRange(leashFeedBo, 40) * bo),
           leashPathStepPx,
           gnatRadiusPx: Math.max(0.5, gnatSize * 0.5),

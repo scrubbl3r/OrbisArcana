@@ -15,7 +15,7 @@ function rangeText(range = []) {
 export function formatEnemyWorkshopSwarmReadout(surface = null) {
   if (!surface) return "Pending";
   const swarm = surface.swarm || {};
-  return `gnats total ${roundMetric(swarm.gnatsTotal, 0)} / spawn ${roundMetric(swarm.spawnRadiusBo)} BO / detect ${roundMetric(swarm.detectionRadiusBo)} BO / leash ${roundMetric(swarm.leashChaseBo, 0)}/${rangeText(swarm.leashFeedBo)} BO / signal ${roundMetric(swarm.signalRadiusBo)} BO / size ${roundMetric(swarm.gnatSizeBo, 3)} BO / z ${roundMetric(swarm.zDepthBo, 1)} BO / base speed ${rangeText(swarm.baseSpeedBoPerSec)} BO/s`;
+  return `gnats total ${roundMetric(swarm.gnatsTotal, 0)} / spawn ${roundMetric(swarm.spawnRadiusBo)} BO / detect ${roundMetric(swarm.detectionRadiusBo)} BO / leash ${rangeText(swarm.leashChaseBo)}/${rangeText(swarm.leashFeedBo)} BO / signal ${roundMetric(swarm.signalRadiusBo)} BO / size ${roundMetric(swarm.gnatSizeBo, 3)} BO / z ${roundMetric(swarm.zDepthBo, 1)} BO / base speed ${rangeText(swarm.baseSpeedBoPerSec)} BO/s`;
 }
 
 export function formatEnemyWorkshopRuntimeReadout(surface = null) {
