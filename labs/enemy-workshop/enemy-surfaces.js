@@ -25,6 +25,10 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
       minSignalStrength: 0.08,
       signalMemorySec: 1.6,
       feedOffsetBo: 0.08,
+      feedNipDepthBo: 0.24,
+      feedNipHz: 7,
+      feedStickiness: 0.42,
+      feedLatchDrift: 0.002,
       baseSpeedBoPerSec: Object.freeze([1.35, 3.2]),
       spawnCurves: Object.freeze({
         wanderChancePerMinute: Object.freeze({

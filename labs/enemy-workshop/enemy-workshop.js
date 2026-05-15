@@ -12,7 +12,7 @@ import {
   loadLabProfileStore,
   persistLabProfileStore,
 } from "../shell/lab-profile-store.js";
-import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js";
+import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260514c";
 import {
   buildEnemyDraftPayload,
   buildGnatSwarmEnemyModule,
@@ -81,6 +81,10 @@ function migrateEnemySettings(settings = {}) {
     minSignalStrength: 0.08,
     signalMemorySec: 1.6,
     feedOffsetBo: 0.08,
+    feedNipDepthBo: 0.24,
+    feedNipHz: 7,
+    feedStickiness: 0.42,
+    feedLatchDrift: 0.002,
   };
   Object.entries(swarmScalarFallbacks).forEach(([key, fallback]) => {
     if (!Number.isFinite(Number(next.swarm[key]))) next.swarm[key] = fallback;

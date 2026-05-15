@@ -334,9 +334,12 @@ export function createGnatSwarm3dRuntime({
     state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
     const normal = normalFromPoints(state.orbTarget, state.position, state.feedAngle);
     state.feedAngle = Math.atan2(normal.yW, normal.xW);
+    state.feedLatchAngle = state.feedAngle;
+    state.feedPhase = Math.random() * Math.PI * 2;
     state.velocity.xW *= 0.18;
     state.velocity.yW *= 0.18;
     if (!Number.isFinite(state.feedAngle)) state.feedAngle = Math.random() * Math.PI * 2;
+    if (!Number.isFinite(state.feedLatchAngle)) state.feedLatchAngle = state.feedAngle;
     state.nextTargetAt = nowSec;
     emitSignal(state, nowSec, Math.max(state.minSignalStrength, state.alertStrength * state.telegraphDecay), state.alertGeneration + 1);
   }
@@ -344,14 +347,17 @@ export function createGnatSwarm3dRuntime({
   function scheduleFeedTarget(state, orbPosition = null, nowSec = 0) {
     if (!state || !orbPosition) return;
     state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
-    state.feedAngle += state.feedOrbitSpeed * Math.max(0.001, state.lastFeedDt || 0.016);
-    state.feedAngle += randomUnit() * 0.018;
-    const targetRadiusPx = state.feedContactRadiusPx + Math.random() * state.feedBandPx;
+    state.feedLatchAngle += state.feedOrbitSpeed * Math.max(0.001, state.lastFeedDt || 0.016);
+    state.feedAngle = state.feedLatchAngle;
+    const pulse = (Math.sin(nowSec * state.feedNipHz * Math.PI * 2 + state.feedPhase) + 1) * 0.5;
+    const nipOffsetPx = (pulse * pulse) * state.feedNipDepthPx;
+    const twitchPx = randomUnit() * state.feedNipDepthPx * 0.18;
+    const targetRadiusPx = state.feedContactRadiusPx + Math.max(0, nipOffsetPx + twitchPx);
     state.target = {
       xW: state.orbTarget.xW + Math.cos(state.feedAngle) * targetRadiusPx,
       yW: state.orbTarget.yW + Math.sin(state.feedAngle) * targetRadiusPx,
     };
-    state.nextTargetAt = nowSec + 0.08 + Math.random() * 0.12;
+    state.nextTargetAt = nowSec + 0.035 + Math.random() * 0.045;
   }
 
   function resolveOrbContact(state, next = null, orbPosition = null) {
@@ -434,6 +440,9 @@ export function createGnatSwarm3dRuntime({
     const minSignalStrength = normalizeUnit(swarm.minSignalStrength, 0.08);
     const signalMemorySec = Math.max(0.1, clampNumber(swarm.signalMemorySec, 1.6, 0.1, 60));
     const feedOffsetPx = clampNumber(swarm.feedOffsetBo, 0.08, -4, 12) * bo;
+    const feedNipDepthPx = Math.max(0, clampNumber(swarm.feedNipDepthBo, 0.24, 0, 4) * bo);
+    const feedNipHz = Math.max(0, clampNumber(swarm.feedNipHz, 7, 0, 40));
+    const feedStickiness = normalizeUnit(swarm.feedStickiness, 0.42);
     const awarenessRange = rangePair(personality.awareness, [0.5, 1]);
     const aggressionRange = rangePair(personality.aggression, [0.2, 0.6]);
     const allStates = [];
@@ -524,9 +533,14 @@ export function createGnatSwarm3dRuntime({
           feedContactRadiusPx: Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)),
           feedBandPx: Math.max(1, bo * 0.1),
           feedOuterRadiusPx: Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)) + Math.max(1, bo * 0.1),
-          feedBounce: 0.28,
+          feedBounce: 0.46,
+          feedNipDepthPx,
+          feedNipHz: feedNipHz * (0.85 + Math.random() * 0.3),
+          feedStickiness,
           feedAngle: Math.random() * Math.PI * 2,
-          feedOrbitSpeed: randomUnit() * (0.018 + aggression * 0.035),
+          feedLatchAngle: Math.random() * Math.PI * 2,
+          feedOrbitSpeed: randomUnit() * clampNumber(swarm.feedLatchDrift, 0.002, 0, 0.08) * (0.5 + aggression),
+          feedPhase: Math.random() * Math.PI * 2,
           lastFeedDt: 0.016,
           idleRetargetSec: [
             Math.max(0.05, Math.min(personalRetargetMinSec, personalRetargetMaxSec)),
@@ -691,14 +705,14 @@ export function createGnatSwarm3dRuntime({
       const ty = (state.target.yW || 0) + jitterY;
       const dx = tx - (state.position.xW || 0);
       const dy = ty - (state.position.yW || 0);
-      const modeStiffness = state.mode === "feeding" ? Math.max(state.stiffness * 2.8, 34) : state.stiffness;
-      const modeDamping = state.mode === "feeding" ? Math.max(state.damping * 2.2, 18) : state.damping;
+      const modeStiffness = state.mode === "feeding" ? Math.max(state.stiffness * 5.6, 82) : state.stiffness;
+      const modeDamping = state.mode === "feeding" ? Math.max(state.damping * 2.8, 28) : state.damping;
       state.velocity.xW += dx * modeStiffness * dtSec - state.velocity.xW * modeDamping * dtSec;
       state.velocity.yW += dy * modeStiffness * dtSec - state.velocity.yW * modeDamping * dtSec;
       const modeSpeedMultiplier = state.mode === "return" ? state.returnSpeedMultiplier : 1;
       const speed = Math.hypot(state.velocity.xW, state.velocity.yW);
       const maxSpeed = state.mode === "feeding"
-        ? Math.max(state.speedPx * 0.28, state.feedBandPx * 5)
+        ? Math.max(state.speedPx * 0.72, (state.feedBandPx + state.feedNipDepthPx) * 12)
         : state.speedPx * modeSpeedMultiplier;
       if (speed > maxSpeed) {
         state.velocity.xW *= maxSpeed / speed;
@@ -708,9 +722,16 @@ export function createGnatSwarm3dRuntime({
         xW: state.position.xW + state.velocity.xW * dtSec,
         yW: state.position.yW + state.velocity.yW * dtSec,
       };
-      const resolvedNext = orbPosition && (state.mode === "alerted" || state.mode === "feeding")
+      let resolvedNext = orbPosition && (state.mode === "alerted" || state.mode === "feeding")
         ? resolveOrbContact(state, next, orbPosition)
         : next;
+      if (state.mode === "feeding" && state.target) {
+        const stickiness = Math.max(0, Math.min(1, state.feedStickiness));
+        resolvedNext = {
+          xW: resolvedNext.xW + (state.target.xW - resolvedNext.xW) * stickiness,
+          yW: resolvedNext.yW + (state.target.yW - resolvedNext.yW) * stickiness,
+        };
+      }
       if (pointInBounds(resolvedNext, bounds.loops)) {
         state.position = clampToBox(resolvedNext, bounds.box);
       } else {
