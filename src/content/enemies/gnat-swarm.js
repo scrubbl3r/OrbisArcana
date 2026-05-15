@@ -36,8 +36,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         4
       ],
       "awareness": [
-        0.24,
-        0.82
+        0.01,
+        0.25
       ],
       "lingerSec": [
         0,
@@ -92,8 +92,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
   "status": "draft",
   "swarm": {
     "baseSpeedBoPerSec": 5,
-    "detectionBaseChance": 0.05,
-    "detectionCheckSec": 2,
+    "detectionBaseChance": 0.1,
+    "detectionCheckSec": 1,
     "detectionRadiusBo": 5,
     "feedLatchDrift": 0.002,
     "feedMigrationBoPerSec": 0.5,
@@ -107,13 +107,13 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     "feedStickiness": 0.42,
     "gnatSizeBo": 0.02,
     "gnatsTotal": 40,
-    "leashChaseBo": 11,
+    "leashChaseBo": 10,
     "leashFeedBo": 20,
     "minSignalStrength": 0.08,
-    "signalBaseChance": 0.42,
+    "signalBaseChance": 0.75,
     "signalCooldownSec": 1,
-    "signalDecay": 0.72,
-    "signalHops": 5,
+    "signalDecay": 0.15,
+    "signalHops": 4,
     "signalMemorySec": 1.6,
     "signalRadiusBo": 15,
     "spawnCurves": {
