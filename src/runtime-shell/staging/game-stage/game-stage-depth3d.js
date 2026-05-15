@@ -28,7 +28,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260514h";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260514i";
 import {
   applyThreeMeshFlags,
   disposeThreeObject,
@@ -372,6 +372,7 @@ export function createGameStageDepth3dLayer({
     lastEnemy3dTickMs = nowMs;
     gnatSwarm3dRuntime.update(nowMs, dtSec, {
       orbWorldPosition: currentOrbWorldPosition,
+      orbRuntimePosition: orb3dActorRuntime.getPosition(),
     });
     const enemyTrace = typeof gnatSwarm3dRuntime.getTrace === "function" ? gnatSwarm3dRuntime.getTrace() : null;
     if (enemyTrace) {
@@ -379,6 +380,10 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dAlertRelayed = String(enemyTrace.relayed || 0);
       root.dataset.enemy3dFeedingCount = String(enemyTrace.feeding || 0);
       root.dataset.enemy3dSignalCount = String(enemyTrace.signals || 0);
+    }
+    const orbPosition = orb3dActorRuntime.getPosition();
+    if (orbPosition) {
+      root.dataset.enemy3dOrbRuntime = `${Math.round((Number(orbPosition.x) || 0) * 100) / 100},${Math.round((Number(orbPosition.y) || 0) * 100) / 100},${Math.round((Number(orbPosition.z) || 0) * 100) / 100}`;
     }
   }
 

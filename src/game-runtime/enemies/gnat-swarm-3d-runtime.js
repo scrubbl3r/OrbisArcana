@@ -561,11 +561,29 @@ export function createGnatSwarm3dRuntime({
 
   function update(nowMs = performance.now(), dtSec = 0.016, {
     orbWorldPosition = null,
+    orbRuntimePosition = null,
   } = {}) {
     if (!mesh || !states.length) return;
     const nowSec = nowMs / 1000;
     const orbPosition = orbWorldPosition && Number.isFinite(Number(orbWorldPosition.xW)) && Number.isFinite(Number(orbWorldPosition.yW))
       ? { xW: Number(orbWorldPosition.xW), yW: Number(orbWorldPosition.yW) }
+      : null;
+    const orbRuntime = orbRuntimePosition && Number.isFinite(Number(orbRuntimePosition.x)) && Number.isFinite(Number(orbRuntimePosition.y))
+      ? {
+          x: Number(orbRuntimePosition.x),
+          y: Number(orbRuntimePosition.y),
+          z: Number.isFinite(Number(orbRuntimePosition.z)) ? Number(orbRuntimePosition.z) : null,
+        }
+      : null;
+    const orbProjected = orbPosition && orbRuntime
+      ? toRuntimePosition({ xW: orbPosition.xW, yW: orbPosition.yW, z: orbRuntime.z || 0 })
+      : null;
+    const orbVisualOffset = orbProjected && orbRuntime
+      ? {
+          x: orbRuntime.x - (Number(orbProjected.x) || 0),
+          y: orbRuntime.y - (Number(orbProjected.y) || 0),
+          z: orbRuntime.z == null ? 0 : orbRuntime.z - (Number(orbProjected.z) || 0),
+        }
       : null;
     activeSignals = activeSignals.filter((signal) => signal && signal.expiresAt >= nowSec && signal.strength > 0);
     const signalsSnapshot = activeSignals.slice();
@@ -713,6 +731,11 @@ export function createGnatSwarm3dRuntime({
         yW: state.position.yW,
         z: state.zDepthPx,
       });
+      if (orbVisualOffset && (state.mode === "alerted" || state.mode === "feeding")) {
+        runtimePosition.x += orbVisualOffset.x;
+        runtimePosition.y += orbVisualOffset.y;
+        runtimePosition.z += orbVisualOffset.z;
+      }
       positionVec.set(runtimePosition.x, runtimePosition.y, runtimePosition.z);
       quat.setFromEuler(state.spin);
       scaleVec.set(state.scale, state.scale * 0.55, state.scale);
