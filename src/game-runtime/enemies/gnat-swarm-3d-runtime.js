@@ -336,6 +336,8 @@ export function createGnatSwarm3dRuntime({
     state.feedAngle = Math.atan2(normal.yW, normal.xW);
     state.feedLatchAngle = state.feedAngle;
     state.feedPhase = Math.random() * Math.PI * 2;
+    state.feedMigrationDirection = Math.random() < 0.5 ? -1 : 1;
+    state.nextFeedMigrationAt = nowSec + randomInRange(state.feedMigrationRetargetSec, 2.5);
     state.velocity.xW *= 0.18;
     state.velocity.yW *= 0.18;
     if (!Number.isFinite(state.feedAngle)) state.feedAngle = Math.random() * Math.PI * 2;
@@ -347,6 +349,11 @@ export function createGnatSwarm3dRuntime({
   function scheduleFeedTarget(state, orbPosition = null, nowSec = 0) {
     if (!state || !orbPosition) return;
     state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
+    if (nowSec >= state.nextFeedMigrationAt) {
+      state.feedMigrationDirection = Math.random() < 0.5 ? -1 : 1;
+      state.nextFeedMigrationAt = nowSec + randomInRange(state.feedMigrationRetargetSec, 2.5);
+    }
+    state.feedLatchAngle += state.feedMigrationDirection * state.feedMigrationRadPerSec * Math.max(0.001, state.lastFeedDt || 0.016);
     state.feedLatchAngle += state.feedOrbitSpeed * Math.max(0.001, state.lastFeedDt || 0.016);
     state.feedAngle = state.feedLatchAngle;
     const pulse = (Math.sin(nowSec * state.feedNipHz * Math.PI * 2 + state.feedPhase) + 1) * 0.5;
@@ -443,6 +450,8 @@ export function createGnatSwarm3dRuntime({
     const feedNipDepthPx = Math.max(0, clampNumber(swarm.feedNipDepthBo, 0.24, 0, 4) * bo);
     const feedNipHz = Math.max(0, clampNumber(swarm.feedNipHz, 7, 0, 40));
     const feedStickiness = normalizeUnit(swarm.feedStickiness, 0.42);
+    const feedMigrationPxPerSec = Math.max(0, clampNumber(swarm.feedMigrationBoPerSec, 1 / 3, 0, 12) * bo);
+    const feedMigrationRetargetSec = rangePair(swarm.feedMigrationRetargetSec, [1, 4]);
     const awarenessRange = rangePair(personality.awareness, [0.5, 1]);
     const aggressionRange = rangePair(personality.aggression, [0.2, 0.6]);
     const allStates = [];
@@ -537,6 +546,13 @@ export function createGnatSwarm3dRuntime({
           feedNipDepthPx,
           feedNipHz: feedNipHz * (0.85 + Math.random() * 0.3),
           feedStickiness,
+          feedMigrationRadPerSec: feedMigrationPxPerSec / Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)),
+          feedMigrationRetargetSec: [
+            Math.max(0.1, feedMigrationRetargetSec[0]),
+            Math.max(0.1, feedMigrationRetargetSec[1]),
+          ],
+          feedMigrationDirection: Math.random() < 0.5 ? -1 : 1,
+          nextFeedMigrationAt: Math.random() * 4,
           feedAngle: Math.random() * Math.PI * 2,
           feedLatchAngle: Math.random() * Math.PI * 2,
           feedOrbitSpeed: randomUnit() * clampNumber(swarm.feedLatchDrift, 0.002, 0, 0.08) * (0.5 + aggression),
