@@ -734,7 +734,9 @@ export function createGnatSwarm3dRuntime({
       if (orbVisualOffset && (state.mode === "alerted" || state.mode === "feeding")) {
         runtimePosition.x += orbVisualOffset.x;
         runtimePosition.y += orbVisualOffset.y;
-        runtimePosition.z += orbVisualOffset.z;
+      }
+      if (orbRuntime && orbRuntime.z != null && (state.mode === "alerted" || state.mode === "feeding")) {
+        runtimePosition.z = orbRuntime.z;
       }
       positionVec.set(runtimePosition.x, runtimePosition.y, runtimePosition.z);
       quat.setFromEuler(state.spin);
