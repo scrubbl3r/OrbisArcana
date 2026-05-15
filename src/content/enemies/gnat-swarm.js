@@ -37,7 +37,11 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "awareness": [
         0.05,
-        0.7
+        0.5
+      ],
+      "hp": [
+        1,
+        1
       ],
       "lingerSec": [
         0,
@@ -75,10 +79,6 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         10,
         20
       ],
-      "hp": [
-        1,
-        1
-      ],
       "wanderCurve": 0.8,
       "wanderRangeBo": [
         0,
@@ -101,13 +101,13 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
   "status": "draft",
   "swarm": {
     "baseSpeedBoPerSec": 5,
-    "detectionBaseChance": 0.5,
-    "detectionCheckSec": 1,
-    "detectionRadiusBo": 10,
     "damageReceive": {
-      "stunDurationSec": 2,
+      "stunDurationSec": 4,
       "stunThreshold": 1
     },
+    "detectionBaseChance": 0.5,
+    "detectionCheckSec": 1,
+    "detectionRadiusBo": 6,
     "feedLatchDrift": 0.007,
     "feedMigrationBoPerSec": 0.5,
     "feedMigrationRetargetSec": [
