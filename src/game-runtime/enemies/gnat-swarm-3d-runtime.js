@@ -110,6 +110,24 @@ function clampToBox(point = {}, box = null) {
   };
 }
 
+function copyPoint(point = {}) {
+  return {
+    xW: clampNumber(point.xW, 0),
+    yW: clampNumber(point.yW, 0),
+  };
+}
+
+function physicsPointInBounds(point = {}, bounds = {}) {
+  const box = bounds && bounds.box;
+  if (box) {
+    const x = Number(point.xW);
+    const y = Number(point.yW);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+    if (x < box.leftXW || x > box.rightXW || y < box.topYW || y > box.bottomYW) return false;
+  }
+  return pointInBounds(point, bounds && bounds.loops);
+}
+
 function randomPointAround(center = {}, radius = 1, minRadius = 0, curve = null) {
   const angle = Math.random() * Math.PI * 2;
   const outer = Math.max(0, radius);
@@ -712,6 +730,7 @@ export function createGnatSwarm3dRuntime({
           index: allStates.length,
           mode: "idle",
           position: spawnPoint,
+          lastValidPosition: copyPoint(spawnPoint),
           spawn: center,
           destination: spawnPoint,
           target: spawnPoint,
@@ -875,6 +894,9 @@ export function createGnatSwarm3dRuntime({
               atMs: nowMs,
             });
           }
+          if (!physicsPointInBounds(state.position, bounds) && state.lastValidPosition) {
+            state.position = copyPoint(state.lastValidPosition);
+          }
           startReturn(state, nowSec);
         } else {
           stunnedCount += 1;
@@ -1028,15 +1050,14 @@ export function createGnatSwarm3dRuntime({
           yW: resolvedNext.yW + (state.target.yW - resolvedNext.yW) * stickiness,
         };
       }
-      if (boundedPointContains(resolvedNext, bounds)) {
+      if (state.mode === "stunned" && physicsPointInBounds(resolvedNext, bounds)) {
         state.position = clampToBox(resolvedNext, bounds.box);
+        state.lastValidPosition = copyPoint(state.position);
       } else if (state.mode === "stunned") {
-        state.position = resolveBoundedPoint(resolvedNext, {
-          fallback: state.position,
-          loops: bounds.loops,
-          box: bounds.box,
-          nav: bounds.nav,
-        });
+        state.position = state.lastValidPosition
+          ? copyPoint(state.lastValidPosition)
+          : clampToBox(state.position, bounds.box);
+        state.target = state.position;
         state.velocity.xW *= 0.18;
         if (state.stunBounceRemaining > 0) {
           state.velocity.yW = -Math.abs(state.velocity.yW) * 0.16;
@@ -1044,6 +1065,9 @@ export function createGnatSwarm3dRuntime({
         } else {
           state.velocity.yW = 0;
         }
+      } else if (boundedPointContains(resolvedNext, bounds)) {
+        state.position = clampToBox(resolvedNext, bounds.box);
+        state.lastValidPosition = copyPoint(state.position);
       } else {
         state.position = resolveBoundedPoint(resolvedNext, {
           fallback: state.position,
@@ -1051,6 +1075,9 @@ export function createGnatSwarm3dRuntime({
           box: bounds.box,
           nav: bounds.nav,
         });
+        if (boundedPointContains(state.position, bounds)) {
+          state.lastValidPosition = copyPoint(state.position);
+        }
         state.velocity.xW *= -0.25;
         state.velocity.yW *= -0.25;
         startReturn(state, nowSec);
