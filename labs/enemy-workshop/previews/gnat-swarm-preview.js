@@ -66,11 +66,12 @@ function randomInCircle(radius = 1) {
   };
 }
 
-function randomInAnnulus(minRadius = 0, maxRadius = 1) {
+function randomInAnnulus(minRadius = 0, maxRadius = 1, curve = null) {
   const inner = Math.max(0, Math.min(minRadius, maxRadius));
   const outer = Math.max(inner, maxRadius);
   const angle = Math.random() * Math.PI * 2;
-  const r = Math.sqrt(inner * inner + Math.random() * (outer * outer - inner * inner));
+  const shaped = curveUnitValue(Math.random(), curve);
+  const r = Math.sqrt(inner * inner + shaped * (outer * outer - inner * inner));
   return {
     x: Math.cos(angle) * r,
     y: Math.sin(angle) * r,
@@ -308,18 +309,8 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
     const damping = clampNumber(randomInRange(springDamping, 6.5), 6.5, 0, Infinity);
     const elasticJitterPx = clampNumber(randomInRange(elasticJitterBo, 0.12), 0.12, 0, Infinity) * scale;
     const personalElasticJitterHz = clampNumber(randomInRange(elasticJitterHz, 9), 9, 0, Infinity);
-    const personalWanderBo = clampNumber(
-      randomInRangeWithCurve(
-        personalityRanges.wanderRangeBo,
-        wanderMaxBo,
-        spawnCurves.wanderRangeBo,
-      ),
-      wanderMaxBo,
-      0.4,
-      Infinity,
-    );
-    const personalWanderRadiusPx = Math.round(Math.max(spawnRadiusBo, personalWanderBo) * scale);
-    const personalWanderMinPx = Math.min(wanderMinPx, personalWanderRadiusPx);
+    const personalWanderMinPx = Math.round(Math.max(0, wanderMinBo) * scale);
+    const personalWanderRadiusPx = Math.round(Math.max(wanderMinBo, wanderMaxBo) * scale);
     const personalChancePerMinute = clampNumber(
       randomInRangeWithCurve(
         personalityRanges.wanderChancePerMinute,
@@ -360,7 +351,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       vy: 0,
       mode: "idle",
       target: randomInCircle(idleRadiusPx),
-      wanderDestination: randomInAnnulus(personalWanderMinPx, personalWanderRadiusPx),
+      wanderDestination: randomInAnnulus(personalWanderMinPx, personalWanderRadiusPx, spawnCurves.wanderRangeBo),
       routeSegments: [],
       routeIndex: 0,
       routeDwellUntil: 0,
@@ -375,6 +366,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
       responseMultiplier,
       wanderRadiusPx: personalWanderRadiusPx,
       wanderMinPx: personalWanderMinPx,
+      wanderRangeCurve: spawnCurves.wanderRangeBo || null,
       wanderChancePerSec: personalChancePerMinute / 60,
       cooldownSec: personalCooldownSec,
       lingerSec: personalLingerSec,
@@ -428,7 +420,7 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   const startWander = (state, nowSec) => {
     state.mode = "outbound";
     state.isDwellingAtSegment = false;
-    state.wanderDestination = randomInAnnulus(state.wanderMinPx, state.wanderRadiusPx);
+    state.wanderDestination = randomInAnnulus(state.wanderMinPx, state.wanderRadiusPx, state.wanderRangeCurve);
     state.routeSegments = buildRouteSegments({
       from: { x: state.x, y: state.y },
       to: state.wanderDestination,

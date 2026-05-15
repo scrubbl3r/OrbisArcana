@@ -68,9 +68,24 @@ function normalizeBox(boundaryBox = null, loops = []) {
   };
 }
 
-function randomPointAround(center = {}, radius = 1) {
+function curveUnitValue(t = 0, curve = null) {
+  const linear = Math.min(1, Math.max(0, Number(t) || 0));
+  const bias = clampNumber(curve && curve.bias, 0, -1, 1);
+  const amount = clampNumber(curve && curve.amount, 0, 0, 1);
+  if (Math.abs(bias) <= 0.0001 || amount <= 0.0001) return linear;
+  const power = 1 + Math.abs(bias) * 4;
+  const curved = bias < 0
+    ? linear ** power
+    : 1 - (1 - linear) ** power;
+  return linear + (curved - linear) * amount;
+}
+
+function randomPointAround(center = {}, radius = 1, minRadius = 0, curve = null) {
   const angle = Math.random() * Math.PI * 2;
-  const r = Math.sqrt(Math.random()) * Math.max(0, radius);
+  const outer = Math.max(0, radius);
+  const inner = Math.min(outer, Math.max(0, minRadius));
+  const shaped = curveUnitValue(Math.random(), curve);
+  const r = Math.sqrt(inner * inner + shaped * Math.max(0, outer * outer - inner * inner));
   return {
     xW: clampNumber(center.xW, 0) + Math.cos(angle) * r,
     yW: clampNumber(center.yW, 0) + Math.sin(angle) * r,
@@ -140,9 +155,11 @@ export function buildLevelNavGrid({
     }
     return fallback ? clampToBox(fallback, box) : clamped;
   }
-  function randomPointAroundNav(center = {}, radius = 1) {
+  function randomPointAroundNav(center = {}, radius = 1, options = {}) {
+    const minRadius = clampNumber(options && options.minRadius, 0, 0, Infinity);
+    const curve = options && options.curve || null;
     for (let i = 0; i < 32; i += 1) {
-      const candidate = clampToBox(randomPointAround(center, radius), box);
+      const candidate = clampToBox(randomPointAround(center, radius, minRadius, curve), box);
       if (containsPoint(candidate)) return candidate;
     }
     return resolvePoint(center, { fallback: center });

@@ -22,7 +22,7 @@ import {
   buildGnatSwarmEnemyModule,
   ENEMY_WORKSHOP_TARGETS,
 } from "./enemy-workshop-publish.js";
-import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-registry.js?v=20260515a";
+import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-registry.js?v=20260515b";
 import {
   formatEnemyWorkshopRuntimeReadout,
   formatEnemyWorkshopSwarmReadout,

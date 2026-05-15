@@ -98,9 +98,12 @@ function clampToBox(point = {}, box = null) {
   };
 }
 
-function randomPointAround(center = {}, radius = 1) {
+function randomPointAround(center = {}, radius = 1, minRadius = 0, curve = null) {
   const angle = Math.random() * Math.PI * 2;
-  const r = Math.sqrt(Math.random()) * Math.max(0, radius);
+  const outer = Math.max(0, radius);
+  const inner = Math.min(outer, Math.max(0, minRadius));
+  const shaped = curveUnitValue(Math.random(), curve);
+  const r = Math.sqrt(inner * inner + shaped * Math.max(0, outer * outer - inner * inner));
   return {
     xW: clampNumber(center.xW, 0) + Math.cos(angle) * r,
     yW: clampNumber(center.yW, 0) + Math.sin(angle) * r,
@@ -128,12 +131,12 @@ function boundedPointContains(point = {}, bounds = {}) {
   return pointInBounds(point, bounds.loops);
 }
 
-function randomBoundedPointAround(center = {}, radius = 1, bounds = {}) {
+function randomBoundedPointAround(center = {}, radius = 1, bounds = {}, minRadius = 0, curve = null) {
   if (bounds && bounds.nav && typeof bounds.nav.randomPointAround === "function") {
-    return bounds.nav.randomPointAround(center, radius);
+    return bounds.nav.randomPointAround(center, radius, { minRadius, curve });
   }
   for (let i = 0; i < 24; i += 1) {
-    const candidate = clampToBox(randomPointAround(center, radius), bounds.box);
+    const candidate = clampToBox(randomPointAround(center, radius, minRadius, curve), bounds.box);
     if (pointInBounds(candidate, bounds.loops)) return candidate;
   }
   return resolveBoundedPoint(center, { fallback: center, loops: bounds.loops, box: bounds.box });
@@ -283,7 +286,13 @@ export function createGnatSwarm3dRuntime({
   }
 
   function chooseDestination(state) {
-    return randomBoundedPointAround(state.spawn, state.wanderRangePx, bounds);
+    return randomBoundedPointAround(
+      state.spawn,
+      state.wanderRangeMaxPx,
+      bounds,
+      state.wanderRangeMinPx,
+      state.wanderRangeCurve,
+    );
   }
 
   function chooseIdleTarget(state) {
@@ -585,11 +594,8 @@ export function createGnatSwarm3dRuntime({
       if (!center) continue;
       for (let i = 0; i < countPerSpawn; i += 1) {
         const spawnPoint = randomBoundedPointAround(center, spawnRadius, bounds);
-        const personalWanderRangeBo = randomInRangeWithCurve(
-          wanderRangeBo,
-          8,
-          spawnCurves.wanderRangeBo,
-        );
+        const personalWanderRangeMinBo = Math.max(0, clampNumber(wanderRangeBo[0], 0, 0, Infinity));
+        const personalWanderRangeMaxBo = Math.max(personalWanderRangeMinBo, clampNumber(wanderRangeBo[1], 8, 0, Infinity));
         const personalWanderChancePerMinute = randomInRangeWithCurve(
           wanderChancePerMinute,
           16,
@@ -629,7 +635,9 @@ export function createGnatSwarm3dRuntime({
           alertSource: "",
           speedPx: Math.max(1, randomInRange(baseSpeed, 2) * randomInRange(speedX, 1) * bo),
           spawnRadiusPx: spawnRadius,
-          wanderRangePx: Math.max(spawnRadius, personalWanderRangeBo * bo),
+          wanderRangeMinPx: personalWanderRangeMinBo * bo,
+          wanderRangeMaxPx: Math.max(personalWanderRangeMinBo, personalWanderRangeMaxBo) * bo,
+          wanderRangeCurve: spawnCurves.wanderRangeBo || null,
           wanderChancePerSec: Math.max(0, personalWanderChancePerMinute / 60),
           segmentSpacingPx: [segmentSpacingBo[0] * bo, segmentSpacingBo[1] * bo],
           returnSegmentSpacingPx: [returnSegmentSpacingBo[0] * bo, returnSegmentSpacingBo[1] * bo],
