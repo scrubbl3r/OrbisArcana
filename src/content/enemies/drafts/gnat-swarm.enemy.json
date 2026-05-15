@@ -2,7 +2,7 @@
   "schema": "orbis.enemy-workshop.draft.v1",
   "enemyId": "gnat-swarm",
   "label": "Gnat Swarm",
-  "savedAtMs": 1778814992880,
+  "savedAtMs": 1778862455454,
   "enemy": {
     "gnat": {
       "idle": {
@@ -105,7 +105,7 @@
       "feedStickiness": 0.42,
       "gnatSizeBo": 0.02,
       "gnatsTotal": 40,
-      "leashChaseBo": 20,
+      "leashChaseBo": 11,
       "leashFeedBo": 20,
       "minSignalStrength": 0.08,
       "signalBaseChance": 0.42,
