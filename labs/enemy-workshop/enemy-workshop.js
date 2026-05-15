@@ -178,6 +178,14 @@ function migrateEnemySettings(settings = {}) {
       ? Math.min(1, Math.max(-1, bias * Math.min(1, Math.max(0, amount))))
       : 0;
   }
+  if (!Array.isArray(personality.hp)) {
+    const value = Number(personality.hp);
+    personality.hp = Number.isFinite(value) ? [value, value] : [1, 1];
+  }
+  if (!Array.isArray(personality.stunThreshold)) {
+    const value = Number(personality.stunThreshold);
+    personality.stunThreshold = Number.isFinite(value) ? [value, value] : [1, 1];
+  }
   delete next.swarm.spawnCurves.wanderRangeBo;
   return next;
 }

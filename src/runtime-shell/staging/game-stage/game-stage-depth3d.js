@@ -1,4 +1,6 @@
 import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260501e";
+import { COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN } from "../../../game-runtime/combat/combat-constants.js";
+import { EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
 import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
   LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
@@ -28,7 +30,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260515f";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260515g";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -163,6 +165,7 @@ export function createGameStageDepth3dLayer({
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let currentOrbWorldPosition = null;
   let currentOrbAlive = true;
+  let combatEventBus = null;
   let lastGlobe3dTickMs = 0;
   let lastEnemy3dTickMs = 0;
   let boundGlobe3dSpawns = Object.freeze([]);
@@ -336,6 +339,11 @@ export function createGameStageDepth3dLayer({
       y: toDepthThreeY(yW, worldHeightPx),
       z,
     }),
+    onCombatEvent: (type, payload = {}) => {
+      if (combatEventBus && typeof combatEventBus.emit === "function") {
+        combatEventBus.emit(type, payload);
+      }
+    },
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
 
@@ -395,6 +403,7 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dAlertDirect = String(enemyTrace.direct || 0);
       root.dataset.enemy3dAlertRelayed = String(enemyTrace.relayed || 0);
       root.dataset.enemy3dFeedingCount = String(enemyTrace.feeding || 0);
+      root.dataset.enemy3dStunnedCount = String(enemyTrace.stunned || 0);
       root.dataset.enemy3dSignalCount = String(enemyTrace.signals || 0);
       root.dataset.enemy3dNav = enemyTrace.nav ? "grid" : "fallback";
       root.dataset.enemy3dNavCells = String(enemyTrace.navCells || 0);
@@ -654,6 +663,7 @@ export function createGameStageDepth3dLayer({
     },
     bindGlobe3dRuntime(args = {}) {
       if (disposed) return;
+      combatEventBus = args && args.eventBus ? args.eventBus : null;
       eventBindings.bind(args);
     },
     playOrbNod3d(payload = {}) {
@@ -729,8 +739,34 @@ export function createGameStageDepth3dLayer({
       if (disposed || !orb3dActorRuntime.hasModel()) {
         return { handled: false, skipped: "shockwave3d_runtime_missing" };
       }
-      const result = shockwave3dRuntime.play(payload);
+      const shockwavePayload = payload && typeof payload === "object" ? payload : {};
+      const result = shockwave3dRuntime.play(shockwavePayload);
       if (result && result.handled) {
+        const config = { ...SHOCKWAVE_3D_PRESET_DEFAULT, ...shockwavePayload };
+        const radiusBo = Math.max(0.1, (Number(config.endRatio) || Number(SHOCKWAVE_3D_PRESET_DEFAULT.endRatio) || 2.7) * 0.5);
+        const stunResult = gnatSwarm3dRuntime.applyCombatEffect({
+          kind: COMBAT_EFFECT_STUN,
+          sourceEntityId: COMBAT_ENTITY_ORB,
+          targetEntityId: "enemy:gnat-swarm",
+          centerWorld: currentOrbWorldPosition,
+          radiusBo,
+          amount: Number(shockwavePayload.stunAmount ?? shockwavePayload.stun ?? 10) || 10,
+          durationMs: Math.max(50, Number(shockwavePayload.stunDurationMs ?? shockwavePayload.stunDurationSec * 1000) || 2000),
+          atMs: performance.now(),
+          tags: ["spell", "shockwave"],
+        });
+        root.dataset.enemy3dLastShockwaveStunCount = String(stunResult && stunResult.affected || 0);
+        if (combatEventBus && typeof combatEventBus.emit === "function") {
+          combatEventBus.emit(EVT_COMBAT_STUN_APPLIED, {
+            kind: COMBAT_EFFECT_STUN,
+            sourceEntityId: COMBAT_ENTITY_ORB,
+            targetEntityId: "enemy:gnat-swarm",
+            aggregate: true,
+            affected: stunResult && stunResult.affected || 0,
+            radiusBo,
+            atMs: performance.now(),
+          });
+        }
         renderLoop.scheduleAnimation();
         renderLoop.renderFrame(renderLoop.getLastFrame() || {});
       }

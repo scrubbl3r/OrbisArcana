@@ -68,6 +68,8 @@ export const ENEMY_WORKSHOP_SURFACES = Object.freeze([
         lingerSec: Object.freeze([0.4, 2.2]),
         awareness: Object.freeze([0.24, 0.82]),
         aggression: Object.freeze([0.08, 0.36]),
+        hp: Object.freeze([1, 1]),
+        stunThreshold: Object.freeze([1, 1]),
       }),
     }),
   }),

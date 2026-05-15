@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { COMBAT_EFFECT_STUN } from "../combat/combat-constants.js";
+import { normalizeStunEffect, resolveStunApplication } from "../combat/stun-model.js";
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
   const numeric = Number(value);
@@ -259,6 +261,7 @@ export function createGnatSwarm3dRuntime({
   getBo = () => 42,
   getOrbZBO = () => 4,
   getConfig = () => null,
+  onCombatEvent = null,
   onNeedsFrame = null,
 } = {}) {
   const root = group || new THREE.Group();
@@ -274,7 +277,7 @@ export function createGnatSwarm3dRuntime({
   let states = [];
   let bounds = Object.freeze({ loops: [], box: null });
   let activeSignals = [];
-  let alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, signals: 0, nav: false });
+  let alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, stunned: 0, signals: 0, nav: false });
 
   function disposeMesh() {
     if (mesh) {
@@ -283,7 +286,7 @@ export function createGnatSwarm3dRuntime({
     }
     states = [];
     activeSignals = [];
-    alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, signals: 0, nav: false });
+    alertTrace = Object.freeze({ direct: 0, relayed: 0, feeding: 0, stunned: 0, signals: 0, nav: false });
   }
 
   function chooseDestination(state) {
@@ -360,6 +363,21 @@ export function createGnatSwarm3dRuntime({
     scheduleWanderTarget(state, nowSec);
   }
 
+  function startStun(state, stun = {}, nowSec = 0) {
+    if (!state || state.hp <= 0) return false;
+    state.mode = "stunned";
+    state.orbTarget = null;
+    state.alertStrength = 0;
+    state.route = [];
+    state.routeIndex = 0;
+    state.isDwelling = false;
+    state.target = state.position;
+    state.stunUntilSec = Math.max(state.stunUntilSec || 0, nowSec + Math.max(0.05, Number(stun.durationMs || 0) / 1000));
+    state.velocity.xW *= 0.12;
+    state.velocity.yW *= 0.12;
+    return true;
+  }
+
   function releaseOrbTargets({ atMs = null } = {}) {
     const now = Number(atMs);
     const nowSec = Number.isFinite(now)
@@ -376,6 +394,43 @@ export function createGnatSwarm3dRuntime({
     }
     if (released > 0 && typeof onNeedsFrame === "function") onNeedsFrame();
     return released;
+  }
+
+  function applyCombatEffect(effect = {}) {
+    const kind = String(effect && effect.kind || "");
+    if (kind !== COMBAT_EFFECT_STUN) return Object.freeze({ handled: false, affected: 0, reason: "unsupported_effect" });
+    const stun = normalizeStunEffect(effect);
+    const center = effect.centerWorld || effect.center || null;
+    if (!center || !Number.isFinite(Number(center.xW)) || !Number.isFinite(Number(center.yW))) {
+      return Object.freeze({ handled: false, affected: 0, reason: "missing_center" });
+    }
+    const bo = Math.max(1, Number(getBo()) || 42);
+    const radiusPx = Math.max(0, Number(effect.radiusBo) || 0) * bo;
+    const nowSec = stun.atMs / 1000;
+    let affected = 0;
+    for (const state of states) {
+      if (!state || state.hp <= 0) continue;
+      if (radiusPx > 0 && distance(state.position, center) > radiusPx) continue;
+      const result = resolveStunApplication({
+        amount: stun.amount,
+        threshold: state.stunThreshold,
+        durationMs: stun.durationMs,
+        atMs: stun.atMs,
+      });
+      if (!result.stunned) continue;
+      if (!startStun(state, stun, nowSec)) continue;
+      affected += 1;
+      if (typeof onCombatEvent === "function") {
+        onCombatEvent("combat.stun_applied", {
+          ...stun,
+          targetEntityId: `enemy:gnat-swarm:${state.index}`,
+          threshold: state.stunThreshold,
+          stunUntilMs: result.stunUntilMs,
+        });
+      }
+    }
+    if (affected > 0 && typeof onNeedsFrame === "function") onNeedsFrame();
+    return Object.freeze({ handled: true, affected });
   }
 
   function advanceRoute(state, nowSec = 0, onFinished = null) {
@@ -543,6 +598,7 @@ export function createGnatSwarm3dRuntime({
       direct: 0,
       relayed: 0,
       feeding: 0,
+      stunned: 0,
       signals: 0,
       nav: !!bounds.nav,
       navCells: bounds.nav ? (bounds.nav.cols || 0) * (bounds.nav.rows || 0) : 0,
@@ -607,6 +663,8 @@ export function createGnatSwarm3dRuntime({
     const leashPathStepPx = Math.max(bo, clampNumber(swarm.leashPathStepBo, 2, 0.5, 12) * bo);
     const awarenessRange = rangePair(personality.awareness, [0.5, 1]);
     const aggressionRange = rangePair(personality.aggression, [0.2, 0.6]);
+    const hpRange = rangePair(personality.hp, [1, 1]);
+    const stunThresholdRange = rangePair(personality.stunThreshold, [1, 1]);
     const allStates = [];
     for (const spawn of Array.isArray(spawns) ? spawns : []) {
       if (String(spawn && (spawn.enemy || spawn.archetype) || "") !== "gnat-swarm") continue;
@@ -653,6 +711,10 @@ export function createGnatSwarm3dRuntime({
           alertGeneration: 0,
           alertStrength: 0,
           alertSource: "",
+          maxHp: Math.max(0.1, randomInRange(hpRange, 1)),
+          hp: 1,
+          stunThreshold: Math.max(0, randomInRange(stunThresholdRange, 1)),
+          stunUntilSec: 0,
           speedPx: Math.max(1, randomInRange(baseSpeed, 2) * randomInRange(speedX, 1) * bo),
           spawnRadiusPx: spawnRadius,
           wanderRangeMinPx: personalWanderRangeMinBo * bo,
@@ -728,6 +790,7 @@ export function createGnatSwarm3dRuntime({
           },
           scale: gnatSize * (0.75 + Math.random() * 0.7),
         };
+        state.hp = state.maxHp;
         scheduleIdleTarget(state, 0);
         allStates.push(state);
       }
@@ -779,9 +842,24 @@ export function createGnatSwarm3dRuntime({
     let directAlerts = 0;
     let relayedAlerts = 0;
     let feedingCount = 0;
+    let stunnedCount = 0;
     for (let i = 0; i < states.length; i += 1) {
       const state = states[i];
-      if (orbPosition && state.mode !== "alerted" && state.mode !== "feeding" && nowSec >= state.nextDetectAt) {
+      if (state.mode === "stunned") {
+        if (nowSec >= state.stunUntilSec) {
+          if (typeof onCombatEvent === "function") {
+            onCombatEvent("combat.stun_recovered", {
+              targetEntityId: `enemy:gnat-swarm:${state.index}`,
+              atMs: nowMs,
+            });
+          }
+          startReturn(state, nowSec);
+        } else {
+          stunnedCount += 1;
+          state.target = state.position;
+        }
+      }
+      if (orbPosition && state.mode !== "alerted" && state.mode !== "feeding" && state.mode !== "stunned" && nowSec >= state.nextDetectAt) {
         state.nextDetectAt = nowSec + state.detectionCheckSec;
         const detectionDistance = distance(state.position, orbPosition);
         const chance = shapedProximityChance({
@@ -796,7 +874,7 @@ export function createGnatSwarm3dRuntime({
           startAlert(state, orbPosition, nowSec, { strength: 1, generation: 0, source: "direct" });
         }
       }
-      if (orbPosition && state.mode !== "alerted" && state.mode !== "feeding" && nowSec >= state.nextSignalCheckAt) {
+      if (orbPosition && state.mode !== "alerted" && state.mode !== "feeding" && state.mode !== "stunned" && nowSec >= state.nextSignalCheckAt) {
         state.nextSignalCheckAt = nowSec + state.signalCheckSec;
         for (const signal of signalsSnapshot) {
           if (!signal || signal.sourceIndex === state.index || signal.generation >= state.signalHops || signal.strength < state.minSignalStrength) continue;
@@ -884,22 +962,24 @@ export function createGnatSwarm3dRuntime({
         state.lastFeedDt = dtSec;
         if (nowSec >= state.nextTargetAt) scheduleFeedTarget(state, orbPosition, nowSec);
       }
-      const feedJitterScale = state.mode === "feeding" ? 0.08 : 1;
+      const feedJitterScale = state.mode === "feeding" ? 0.08 : (state.mode === "stunned" ? 0.02 : 1);
       const jitterX = (Math.sin(nowSec * state.elasticJitterHz * 6.283 + state.phaseX) * state.elasticJitterPx + randomUnit() * state.targetJitterPx) * feedJitterScale;
       const jitterY = (Math.cos(nowSec * state.elasticJitterHz * 5.113 + state.phaseY) * state.elasticJitterPx + randomUnit() * state.targetJitterPx) * feedJitterScale;
       const tx = (state.target.xW || 0) + jitterX;
       const ty = (state.target.yW || 0) + jitterY;
       const dx = tx - (state.position.xW || 0);
       const dy = ty - (state.position.yW || 0);
-      const modeStiffness = state.mode === "feeding" ? Math.max(state.stiffness * 5.6, 82) : state.stiffness;
-      const modeDamping = state.mode === "feeding" ? Math.max(state.damping * 2.8, 28) : state.damping;
+      const modeStiffness = state.mode === "feeding" ? Math.max(state.stiffness * 5.6, 82) : (state.mode === "stunned" ? 0.2 : state.stiffness);
+      const modeDamping = state.mode === "feeding" ? Math.max(state.damping * 2.8, 28) : (state.mode === "stunned" ? Math.max(state.damping * 4, 18) : state.damping);
       state.velocity.xW += dx * modeStiffness * dtSec - state.velocity.xW * modeDamping * dtSec;
       state.velocity.yW += dy * modeStiffness * dtSec - state.velocity.yW * modeDamping * dtSec;
       const modeSpeedMultiplier = state.mode === "return"
         ? state.returnSpeedMultiplier
         : (state.mode === "alerted" ? state.alertSpeedMultiplier : 1);
       const speed = Math.hypot(state.velocity.xW, state.velocity.yW);
-      const maxSpeed = state.mode === "feeding"
+      const maxSpeed = state.mode === "stunned"
+        ? state.speedPx * 0.08
+        : state.mode === "feeding"
         ? Math.max(state.speedPx * 0.72, (state.feedBandPx + state.feedNipDepthPx) * 12)
         : state.speedPx * modeSpeedMultiplier;
       if (speed > maxSpeed) {
@@ -959,6 +1039,7 @@ export function createGnatSwarm3dRuntime({
       direct: directAlerts,
       relayed: relayedAlerts,
       feeding: feedingCount,
+      stunned: stunnedCount,
       signals: activeSignals.length,
       nav: !!bounds.nav,
       navCells: bounds.nav ? (bounds.nav.cols || 0) * (bounds.nav.rows || 0) : 0,
@@ -970,6 +1051,7 @@ export function createGnatSwarm3dRuntime({
     load,
     update,
     releaseOrbTargets,
+    applyCombatEffect,
     hasActiveVisuals: () => states.length > 0,
     getTrace: () => alertTrace,
     clear: disposeMesh,
