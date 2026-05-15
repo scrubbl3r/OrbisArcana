@@ -12,7 +12,7 @@ import {
   loadLabProfileStore,
   persistLabProfileStore,
 } from "../shell/lab-profile-store.js";
-import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515a";
+import { ENEMY_WORKSHOP_SURFACES } from "./enemy-surfaces.js?v=20260515b";
 import {
   buildEnemyDraftPayload,
   buildGnatSwarmEnemyModule,
@@ -22,7 +22,7 @@ import { createEnemyWorkshopPreviewRegistry } from "./enemy-workshop-preview-reg
 import {
   formatEnemyWorkshopRuntimeReadout,
   formatEnemyWorkshopSwarmReadout,
-} from "./enemy-workshop-readouts.js?v=20260515a";
+} from "./enemy-workshop-readouts.js?v=20260515b";
 
 const DRAFT_STORAGE_KEY = "orbis.enemyWorkshop.drafts.v1";
 
@@ -115,14 +115,19 @@ function migrateEnemySettings(settings = {}) {
   if (!Array.isArray(next.swarm.feedMigrationRetargetSec)) {
     next.swarm.feedMigrationRetargetSec = [1, 6];
   }
-  if (!Array.isArray(next.swarm.baseSpeedBoPerSec)) {
+  if (Array.isArray(next.swarm.baseSpeedBoPerSec)) {
+    next.swarm.baseSpeedBoPerSec = scalarSetting(next.swarm.baseSpeedBoPerSec, 1.35);
+  }
+  if (!Number.isFinite(Number(next.swarm.baseSpeedBoPerSec))) {
     const base = Number(idle.baseSpeedBoPerSec);
     const max = Number(idle.maxSpeedBoPerSec);
     if (Number.isFinite(base) || Number.isFinite(max)) {
-      next.swarm.baseSpeedBoPerSec = [
+      next.swarm.baseSpeedBoPerSec = scalarSetting([
         Number.isFinite(base) ? base : max,
         Number.isFinite(max) ? max : base,
-      ];
+      ], 1.35);
+    } else {
+      next.swarm.baseSpeedBoPerSec = 1.35;
     }
   }
   if (Array.isArray(personality.speed) && personality.speed.some((value) => Number(value) > 10)) {

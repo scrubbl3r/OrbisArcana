@@ -91,10 +91,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
   "member": "gnat",
   "status": "draft",
   "swarm": {
-    "baseSpeedBoPerSec": [
-      5,
-      5
-    ],
+    "baseSpeedBoPerSec": 5,
     "detectionBaseChance": 0.05,
     "detectionCheckSec": 2,
     "detectionRadiusBo": 5,
