@@ -28,7 +28,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260515e";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260515f";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -52,7 +52,7 @@ import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
-import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260502a";
+import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260515a";
 import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=20260505h";
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,
@@ -162,6 +162,7 @@ export function createGameStageDepth3dLayer({
   const baseOrbWorldUnits = Math.max(1, clampNumber(orbDiameterWorldUnits, BO_WORLD_UNITS));
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let currentOrbWorldPosition = null;
+  let currentOrbAlive = true;
   let lastGlobe3dTickMs = 0;
   let lastEnemy3dTickMs = 0;
   let boundGlobe3dSpawns = Object.freeze([]);
@@ -278,6 +279,15 @@ export function createGameStageDepth3dLayer({
     orbGlobe3dRuntime,
     orbLifecycle3dRuntime,
     loadWorldSpawns: loadGlobe3dWorldSpawns,
+    onOrbDied: (payload = {}) => {
+      currentOrbAlive = false;
+      if (gnatSwarm3dRuntime && typeof gnatSwarm3dRuntime.releaseOrbTargets === "function") {
+        gnatSwarm3dRuntime.releaseOrbTargets(payload);
+      }
+    },
+    onOrbRevived: () => {
+      currentOrbAlive = true;
+    },
     scheduleFrame: renderLoop.scheduleAnimation,
   });
   const worldProps3dRuntime = createWorldProps3dRuntime({
@@ -374,9 +384,11 @@ export function createGameStageDepth3dLayer({
   function tickEnemy3dRuntime(nowMs = performance.now()) {
     const dtSec = lastEnemy3dTickMs ? Math.max(0.001, Math.min(0.05, (nowMs - lastEnemy3dTickMs) / 1000)) : 0.016;
     lastEnemy3dTickMs = nowMs;
+    const orbRuntimePosition = currentOrbAlive ? orb3dActorRuntime.getPosition() : null;
     gnatSwarm3dRuntime.update(nowMs, dtSec, {
-      orbWorldPosition: currentOrbWorldPosition,
-      orbRuntimePosition: orb3dActorRuntime.getPosition(),
+      orbWorldPosition: currentOrbAlive ? currentOrbWorldPosition : null,
+      orbRuntimePosition,
+      orbAlive: currentOrbAlive,
     });
     const enemyTrace = typeof gnatSwarm3dRuntime.getTrace === "function" ? gnatSwarm3dRuntime.getTrace() : null;
     if (enemyTrace) {
@@ -561,6 +573,7 @@ export function createGameStageDepth3dLayer({
       const boundaryLoops = sceneModel && Array.isArray(sceneModel.loops) ? sceneModel.loops : [];
       const boundaryBox = sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null;
       currentOrbWorldPosition = null;
+      currentOrbAlive = true;
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
       worldHeightPx = Math.max(1, clampNumber(state && state.worldHeightPx, worldHeightPx));
       depthLayerCount = layers.length;

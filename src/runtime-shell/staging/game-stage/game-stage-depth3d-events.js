@@ -16,6 +16,8 @@ export function createGameStageDepth3dEventBindings({
   orbGlobe3dRuntime = null,
   orbLifecycle3dRuntime = null,
   loadWorldSpawns = () => {},
+  onOrbDied = () => {},
+  onOrbRevived = () => {},
   scheduleFrame = () => {},
 } = {}) {
   const unsubs = [];
@@ -62,10 +64,12 @@ export function createGameStageDepth3dEventBindings({
       orbGlobe3dRuntime.setDead(true);
     }));
     unsubs.push(eventBus.on(EVT_ORB_DIED, (payload = {}) => {
+      onOrbDied(payload);
       orbLifecycle3dRuntime.startDissolve(payload);
       scheduleFrame();
     }));
     unsubs.push(eventBus.on(EVT_ORB_REVIVED, () => {
+      onOrbRevived();
       worldGlobe3dRuntime.resetToIdle();
       orbGlobe3dRuntime.revive();
       scheduleFrame();

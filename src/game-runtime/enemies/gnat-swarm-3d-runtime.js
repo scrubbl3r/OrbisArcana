@@ -360,6 +360,24 @@ export function createGnatSwarm3dRuntime({
     scheduleWanderTarget(state, nowSec);
   }
 
+  function releaseOrbTargets({ atMs = null } = {}) {
+    const now = Number(atMs);
+    const nowSec = Number.isFinite(now)
+      ? now / 1000
+      : (typeof performance !== "undefined" && performance.now ? performance.now() / 1000 : 0);
+    let released = 0;
+    activeSignals = [];
+    for (const state of states) {
+      if (!state || (state.mode !== "alerted" && state.mode !== "feeding")) continue;
+      state.velocity.xW *= 0.35;
+      state.velocity.yW *= 0.35;
+      startReturn(state, nowSec);
+      released += 1;
+    }
+    if (released > 0 && typeof onNeedsFrame === "function") onNeedsFrame();
+    return released;
+  }
+
   function advanceRoute(state, nowSec = 0, onFinished = null) {
     if (state.isDwelling) {
       if (nowSec < state.dwellUntil) return;
@@ -732,13 +750,14 @@ export function createGnatSwarm3dRuntime({
   function update(nowMs = performance.now(), dtSec = 0.016, {
     orbWorldPosition = null,
     orbRuntimePosition = null,
+    orbAlive = true,
   } = {}) {
     if (!mesh || !states.length) return;
     const nowSec = nowMs / 1000;
-    const orbPosition = orbWorldPosition && Number.isFinite(Number(orbWorldPosition.xW)) && Number.isFinite(Number(orbWorldPosition.yW))
+    const orbPosition = orbAlive && orbWorldPosition && Number.isFinite(Number(orbWorldPosition.xW)) && Number.isFinite(Number(orbWorldPosition.yW))
       ? { xW: Number(orbWorldPosition.xW), yW: Number(orbWorldPosition.yW) }
       : null;
-    const orbRuntime = orbRuntimePosition && Number.isFinite(Number(orbRuntimePosition.x)) && Number.isFinite(Number(orbRuntimePosition.y))
+    const orbRuntime = orbAlive && orbRuntimePosition && Number.isFinite(Number(orbRuntimePosition.x)) && Number.isFinite(Number(orbRuntimePosition.y))
       ? {
           x: Number(orbRuntimePosition.x),
           y: Number(orbRuntimePosition.y),
@@ -950,6 +969,7 @@ export function createGnatSwarm3dRuntime({
   return Object.freeze({
     load,
     update,
+    releaseOrbTargets,
     hasActiveVisuals: () => states.length > 0,
     getTrace: () => alertTrace,
     clear: disposeMesh,
