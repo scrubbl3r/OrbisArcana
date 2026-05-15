@@ -28,8 +28,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     },
     "personalityRanges": {
       "aggression": [
-        0.08,
-        0.36
+        0.5,
+        1.2
       ],
       "arrivalRadiusBo": [
         1,
@@ -41,22 +41,22 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "lingerSec": [
         0,
-        8
+        5
       ],
       "returnBias": [
-        0.6,
-        1
+        0.2,
+        0.5
       ],
       "returnSegmentSpacingBo": [
-        0.5,
-        5
+        2,
+        6
       ],
       "returnSpeedMultiplier": [
         0.5,
         1
       ],
       "routeCommitment": [
-        0.6,
+        0.5,
         0.95
       ],
       "segmentDwellSec": [
@@ -84,8 +84,8 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
         2
       ],
       "wanderSegmentSpacingBo": [
-        0.5,
-        5
+        2,
+        6
       ]
     }
   },
@@ -99,7 +99,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     "detectionBaseChance": 0.1,
     "detectionCheckSec": 1,
     "detectionRadiusBo": 5,
-    "feedLatchDrift": 0.002,
+    "feedLatchDrift": 0.007,
     "feedMigrationBoPerSec": 0.5,
     "feedMigrationRetargetSec": [
       1,
