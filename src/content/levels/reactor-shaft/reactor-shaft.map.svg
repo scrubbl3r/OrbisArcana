@@ -106,7 +106,7 @@
      inkscape:groupmode="layer"
      id="layer13"
      inkscape:label="fields"
-     style="display:none"
+     style="display:inline"
      sodipodi:insensitive="true">
     <rect
        style="display:inline;fill:#ff6600;fill-opacity:1;stroke-width:1.88976"
@@ -283,7 +283,8 @@
   <g
      inkscape:groupmode="layer"
      id="layer5"
-     inkscape:label="enemies">
+     inkscape:label="enemies"
+     sodipodi:insensitive="true">
     <circle
        style="fill:#ff00ff;stroke-width:1.88976"
        id="path4"
