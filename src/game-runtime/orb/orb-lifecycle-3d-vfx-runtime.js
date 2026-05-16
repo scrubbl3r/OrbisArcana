@@ -12,11 +12,16 @@ function clampInt(value, min, max, fallback) {
   return Math.round(clampNumber(value, min, max, fallback));
 }
 
+function smoothstep01(value) {
+  const t = Math.max(0, Math.min(1, Number(value) || 0));
+  return t * t * (3 - (2 * t));
+}
+
 export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) {
   const source = config && typeof config === "object" ? config : ORB_LIFECYCLE_3D_DEFAULTS;
   return Object.freeze({
     maxHits: clampInt(source.maxHits, 1, 12, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
-    maxCracks: clampInt(source.maxCracks, 3, 96, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
+    maxCracks: clampInt(source.maxCracks, 1, 12, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
     crackColor: Number(source.crackColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(source.crackAlpha, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
@@ -40,181 +45,93 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   });
 }
 
-function colorToVector(color) {
-  const c = new THREE.Color(Number(color) >>> 0);
-  return new THREE.Vector3(c.r, c.g, c.b);
+function randomUnitVector(rng) {
+  const theta = rng() * Math.PI * 2;
+  const z = (rng() * 2) - 1;
+  const r = Math.sqrt(Math.max(0, 1 - (z * z)));
+  return new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z).normalize();
 }
 
-function createVoronoiShellMaterial({
-  hitRatio = 0,
-  crackCount = 0,
-  baseCrackCount = 1,
-  seed = 1,
-  config = ORB_LIFECYCLE_3D_DEFAULTS,
+function tangentForNormal(normal, rng) {
+  const reference = Math.abs(normal.y) < 0.86 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+  const tangent = new THREE.Vector3().crossVectors(normal, reference).normalize();
+  const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
+  const angle = rng() * Math.PI * 2;
+  return tangent.multiplyScalar(Math.cos(angle)).add(bitangent.multiplyScalar(Math.sin(angle))).normalize();
+}
+
+function stepOnSphere(normal, tangent, stepAngle, bend) {
+  const next = normal.clone()
+    .multiplyScalar(Math.cos(stepAngle))
+    .add(tangent.clone().multiplyScalar(Math.sin(stepAngle)))
+    .normalize();
+  const newTangent = tangent.clone().add(normal.clone().multiplyScalar(-tangent.dot(normal))).normalize();
+  const turnAxis = next.clone();
+  newTangent.applyAxisAngle(turnAxis, bend).add(next.clone().multiplyScalar(-newTangent.dot(next))).normalize();
+  return { normal: next, tangent: newTangent };
+}
+
+function buildJaggedCrackPath({
+  rng,
+  radius,
+  lift,
+  routeIndex = 0,
+  routeProgress = 1,
+  branch = false,
+  startNormal = null,
 } = {}) {
-  const resolved = resolveOrbLifecycle3dConfig(config);
-  const shards = Math.max(0, Number(crackCount) || 0);
-  const baseShards = Math.max(1, Number(baseCrackCount) || 1);
-  return new THREE.ShaderMaterial({
-    name: "orb_lifecycle3d:voronoi_shell_material",
-    transparent: true,
-    depthWrite: false,
-    depthTest: true,
-    blending: THREE.NormalBlending,
-    uniforms: {
-      uTime: { value: 0 },
-      uHitRatio: { value: Math.max(0, Math.min(1, hitRatio)) },
-      uSeed: { value: (Number(seed) || 1) * 0.0000137 },
-      uBaseScale: { value: Math.max(2.2, Math.min(4.8, 1.7 + (Math.sqrt(baseShards) * 0.55))) },
-      uScale: { value: Math.max(2.2, Math.min(7.6, 1.7 + (Math.sqrt(Math.max(1, shards)) * 0.55))) },
-      uLineWidth: { value: Math.max(0.018, Math.min(0.18, resolved.crackWidthPx * 0.032)) },
-      uAlpha: { value: resolved.crackAlpha },
-      uCriticalGlow: { value: resolved.criticalGlow },
-      uMutationSpeed: { value: resolved.mutationSpeed },
-      uMutationAmount: { value: resolved.mutationAmount },
-      uDiffuseWash: { value: resolved.diffuseWash },
-      uEdgeBrightness: { value: resolved.edgeBrightness },
-      uCellDarkness: { value: resolved.cellDarkness },
-      uCellSharpness: { value: resolved.cellSharpness },
-      uDetailEmergence: { value: resolved.detailEmergence },
-      uCrackColor: { value: colorToVector(resolved.crackColor) },
-      uTroughColor: { value: new THREE.Vector3(0.008, 0.011, 0.014) },
-      uEnergyColor: { value: colorToVector(resolved.energyColor) },
-    },
-    vertexShader: `
-      varying vec3 vPos;
-      varying vec3 vNormal;
+  const pointCount = branch ? 7 : 13;
+  const reveal = smoothstep01(routeProgress);
+  const visibleCount = Math.max(2, Math.ceil(pointCount * reveal));
+  const arc = (branch ? 0.34 : 0.72) * (0.82 + (rng() * 0.36));
+  let normal = startNormal && typeof startNormal.clone === "function" ? startNormal.clone().normalize() : randomUnitVector(rng);
+  if (!branch && !startNormal && normal.z < -0.2) normal.z = Math.abs(normal.z);
+  normal.normalize();
+  let tangent = tangentForNormal(normal, rng);
+  const path = [normal.clone().multiplyScalar(radius + lift)];
 
-      void main() {
-        vPos = position;
-        vNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      precision highp float;
+  for (let i = 1; i < visibleCount; i += 1) {
+    const jag = (rng() - 0.5) * (branch ? 0.92 : 0.68);
+    const drift = Math.sin((routeIndex + 1) * 1.7 + i * 0.9) * 0.16;
+    const stepped = stepOnSphere(normal, tangent, arc / (pointCount - 1), jag + drift);
+    normal = stepped.normal;
+    tangent = stepped.tangent;
+    path.push(normal.clone().multiplyScalar(radius + lift));
+  }
 
-      uniform float uTime;
-      uniform float uHitRatio;
-      uniform float uSeed;
-      uniform float uBaseScale;
-      uniform float uScale;
-      uniform float uLineWidth;
-      uniform float uAlpha;
-      uniform float uCriticalGlow;
-      uniform float uMutationSpeed;
-      uniform float uMutationAmount;
-      uniform float uDiffuseWash;
-      uniform float uEdgeBrightness;
-      uniform float uCellDarkness;
-      uniform float uCellSharpness;
-      uniform float uDetailEmergence;
-      uniform vec3 uCrackColor;
-      uniform vec3 uTroughColor;
-      uniform vec3 uEnergyColor;
+  return path;
+}
 
-      varying vec3 vPos;
-      varying vec3 vNormal;
-
-      vec3 hash3(vec3 p) {
-        return fract(
-          sin(vec3(
-            dot(p, vec3(1.0, 57.0, 113.0)),
-            dot(p, vec3(57.0, 113.0, 1.0)),
-            dot(p, vec3(113.0, 1.0, 57.0))
-          ) + uSeed) * 43758.5453
-        );
-      }
-
-      float pcurve(float x, float a, float b) {
-        float k = pow(a + b, a + b) / (pow(a, a) * pow(b, b));
-        return k * pow(x, a) * pow(1.0 - x, b);
-      }
-
-      vec3 voronoi(vec3 x) {
-        vec3 n = floor(x);
-        vec3 f = fract(x);
-        float nearest = 8.0;
-        float secondNearest = 8.0;
-        float cellId = 0.0;
-
-        for (int k = -1; k <= 1; k += 1) {
-          for (int j = -1; j <= 1; j += 1) {
-            for (int i = -1; i <= 1; i += 1) {
-              vec3 g = vec3(float(i), float(j), float(k));
-              vec3 o = hash3(n + g);
-              vec3 staticPoint = o;
-              vec3 driftPoint = 0.5 + 0.5 * sin(vec3(uTime * uMutationSpeed) + 6.2831853 * o);
-              vec3 site = mix(staticPoint, driftPoint, uMutationAmount);
-              vec3 r = g + site - f;
-              float d = dot(r, r);
-              if (d < nearest) {
-                secondNearest = nearest;
-                nearest = d;
-                cellId = o.x + o.y + o.z;
-              } else if (d < secondNearest) {
-                secondNearest = d;
-              }
-            }
-          }
-        }
-
-        return vec3(nearest, cellId, max(0.0, secondNearest - nearest));
-      }
-
-      void main() {
-        vec3 normal = normalize(vPos);
-        vec3 coarseCell = voronoi(normal * uBaseScale);
-        vec3 detailCell = voronoi((normal * uScale) + vec3(13.7, -8.1, 5.3));
-        float emergence = clamp(uDetailEmergence, 0.0, 1.0);
-        float detailMix = smoothstep(max(0.0, emergence - 0.18), min(1.0, emergence + 0.18), uHitRatio);
-        float coarseD = clamp(coarseCell.x, 0.0, 1.0);
-        float detailD = clamp(detailCell.x, 0.0, 1.0);
-        float damage = pow(clamp(uHitRatio, 0.0, 1.0), 0.68);
-        float critical = pow(damage, 2.0) * max(0.0, uCriticalGlow - 1.0);
-        float pulse = 0.88 + 0.12 * sin(uTime * (1.35 + damage) + coarseCell.y * 12.0);
-
-        float sharpness = clamp(uCellSharpness, 0.0, 3.0);
-        float sharpT = sharpness / 3.0;
-        float fieldPower = mix(1.08, 2.35, sharpT);
-        float bandA = mix(2.4, 6.2, sharpT);
-        float bandB = mix(1.05, 2.15, sharpT);
-        float coarseField = pow(coarseD, fieldPower);
-        float detailField = pow(detailD, fieldPower);
-        float coarseDiffuse = smoothstep(0.03, 0.92, coarseField);
-        float detailDiffuse = smoothstep(0.03, 0.92, detailField);
-        float coarseBand = pcurve(clamp(coarseDiffuse, 0.0, 1.0), bandA, bandB);
-        float detailBand = pcurve(clamp(detailDiffuse, 0.0, 1.0), bandA, bandB) * detailMix;
-        float cloudyDiffuse = max(coarseDiffuse, detailDiffuse * detailMix * 0.86);
-        float cloudyBand = max(coarseBand, detailBand);
-        float coarseBorder = 1.0 - smoothstep(uLineWidth * mix(1.6, 0.42, sharpT), uLineWidth * mix(8.5, 2.0, sharpT), coarseCell.z);
-        float detailBorder = (1.0 - smoothstep(uLineWidth * mix(1.4, 0.36, sharpT), uLineWidth * mix(7.5, 1.8, sharpT), detailCell.z)) * detailMix;
-        float angularBorder = max(coarseBorder, detailBorder);
-        float diffuse = mix(cloudyDiffuse, max(cloudyDiffuse * 0.38, angularBorder), sharpT);
-        float brightBand = mix(cloudyBand, max(cloudyBand * 0.45, angularBorder), sharpT);
-        float hotEdge = max(cloudyBand * 0.22, angularBorder) * (0.45 + sharpT * 0.85);
-        float cellCore = 1.0 - smoothstep(0.0, 0.48, diffuse);
-        float facing = pow(1.0 - abs(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0))), 1.5);
-
-        vec3 greyEnergy = mix(vec3(0.24), uCrackColor, 0.76);
-        vec3 shellWash = mix(vec3(0.035), uEnergyColor, 0.22) * diffuse * uDiffuseWash;
-        vec3 color = mix(uTroughColor + shellWash, greyEnergy, brightBand * (0.82 + critical * 0.24));
-        color += uEnergyColor * hotEdge * damage * 0.36 * pulse * uEdgeBrightness;
-        color -= vec3(0.045) * cellCore * damage * uCellDarkness;
-        color += uEnergyColor * facing * damage * 0.16;
-
-        float alpha = damage * uAlpha * (
-          0.08 +
-          diffuse * 0.26 +
-          brightBand * (0.68 + critical * 0.20) +
-          hotEdge * 0.26
-        );
-
-        if (alpha < 0.008) discard;
-        gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.9));
-      }
-    `,
-  });
+function createCrackSegments(points, radius, material, name) {
+  if (!Array.isArray(points) || points.length < 2) return null;
+  const group = new THREE.Group();
+  group.name = name;
+  group.renderOrder = 12;
+  const up = new THREE.Vector3(0, 1, 0);
+  const quat = new THREE.Quaternion();
+  for (let i = 1; i < points.length; i += 1) {
+    const a = points[i - 1];
+    const b = points[i];
+    const length = a.distanceTo(b);
+    if (length <= 0.0001) continue;
+    const direction = b.clone().sub(a).normalize();
+    const geometry = new THREE.CylinderGeometry(
+      Math.max(0.025, radius),
+      Math.max(0.025, radius),
+      length,
+      5,
+      1,
+      false
+    );
+    const segment = new THREE.Mesh(geometry, material);
+    segment.name = `${name}:segment`;
+    segment.position.copy(a).add(b).multiplyScalar(0.5);
+    quat.setFromUnitVectors(up, direction);
+    segment.quaternion.copy(quat);
+    segment.renderOrder = 12;
+    group.add(segment);
+  }
+  return group.children.length > 0 ? group : null;
 }
 
 export function createOrbLifecycle3dCracks({
@@ -227,40 +144,61 @@ export function createOrbLifecycle3dCracks({
   const resolved = resolveOrbLifecycle3dConfig(config);
   const hits = clampInt(hitsTaken, 0, 99, 0);
   const total = Math.max(1, clampInt(maxHits, 1, 99, resolved.maxHits));
-  const crackCount = hits <= 0
-    ? 0
-    : Math.max(2, Math.min(resolved.maxCracks, Math.round((hits / total) * resolved.maxCracks)));
+  const ratio = Math.max(0, Math.min(1, hits / total));
+  const routeCount = hits <= 0 ? 0 : Math.max(1, Math.min(resolved.maxCracks, Math.ceil(ratio * resolved.maxCracks)));
   const group = new THREE.Group();
   group.name = "orb_lifecycle3d:cracks";
-  if (crackCount <= 0) return group;
+  if (routeCount <= 0) return group;
 
   const radius = Math.max(1, Number(bo) || 72) * 0.5;
-  const lift = Math.max(0, Number(resolved.crackLiftBO) || 0) * Math.max(1, Number(bo) || 72);
-  const ratio = Math.max(0, Math.min(1, hits / total));
-  const baseCrackCount = Math.max(1, Math.round(resolved.maxCracks / total));
-  const material = createVoronoiShellMaterial({
-    hitRatio: ratio,
-    crackCount,
-    baseCrackCount,
-    seed,
-    config: resolved,
+  const lift = Math.max(0.002, Number(resolved.crackLiftBO) || 0.006) * Math.max(1, Number(bo) || 72);
+  const rng = createRng((Number(seed) || 1) ^ 0x51f15e);
+  const crackWidth = Math.max(0.035, Number(resolved.crackWidthPx) || 1.35) * Math.max(1, Number(bo) || 72) * 0.0028;
+  const troughMaterial = new THREE.MeshBasicMaterial({
+    color: resolved.energyColor,
+    transparent: true,
+    opacity: Math.max(0.08, Math.min(0.95, resolved.crackAlpha * 0.68)),
+    depthWrite: false,
+    depthTest: true,
   });
-  const shell = new THREE.Mesh(
-    new THREE.SphereGeometry(radius + lift + 0.06, 72, 36),
-    material
-  );
-  shell.name = "orb_lifecycle3d:voronoi_energy_shell";
-  group.add(shell);
+  const edgeMaterial = new THREE.MeshBasicMaterial({
+    color: resolved.crackColor,
+    transparent: true,
+    opacity: Math.max(0.05, Math.min(1, resolved.crackAlpha * (0.55 + (ratio * 0.25)))),
+    depthWrite: false,
+    depthTest: true,
+  });
+
+  for (let i = 0; i < routeCount; i += 1) {
+    const routeProgress = Math.max(0, Math.min(1, (ratio * resolved.maxCracks) - i));
+    if (routeProgress <= 0) continue;
+    const path = buildJaggedCrackPath({ rng, radius, lift, routeIndex: i, routeProgress });
+    const trough = createCrackSegments(path, crackWidth * 2.35, troughMaterial, "orb_lifecycle3d:crack_trough");
+    const edge = createCrackSegments(path, crackWidth, edgeMaterial, "orb_lifecycle3d:crack_edge");
+    if (trough) group.add(trough);
+    if (edge) group.add(edge);
+
+    if (routeProgress > 0.48 && (i + hits) % 2 === 0) {
+      const branch = buildJaggedCrackPath({
+        rng,
+        radius,
+        lift: lift * 1.04,
+        routeIndex: i + 13,
+        routeProgress: Math.min(1, (routeProgress - 0.32) / 0.68),
+        branch: true,
+        startNormal: path[Math.max(1, Math.floor(path.length * 0.55))].clone().normalize(),
+      });
+      const branchMesh = createCrackSegments(branch, crackWidth * 0.72, edgeMaterial, "orb_lifecycle3d:crack_branch");
+      if (branchMesh) group.add(branchMesh);
+    }
+  }
+
   return group;
 }
 
 export function updateOrbLifecycle3dCracks(cracks, nowMs = performance.now()) {
-  if (!cracks || !cracks.traverse) return;
-  const t = Math.max(0, Number(nowMs) || performance.now()) / 1000;
-  cracks.traverse((child) => {
-    const uniforms = child && child.material && child.material.uniforms;
-    if (uniforms && uniforms.uTime) uniforms.uTime.value = t;
-  });
+  void cracks;
+  void nowMs;
 }
 
 export function createOrbLifecycle3dDissolveBurst({
