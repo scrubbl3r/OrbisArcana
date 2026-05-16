@@ -64,12 +64,6 @@ export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
     targetId: "teleport",
     effectId: "spell.teleport",
     presetId: "preset.spell-teleport.teleport",
-  }),
-  Object.freeze({
-    targetKind: "spell",
-    targetId: "light_heal",
-    effectId: "spell.light_heal",
-    presetId: "preset.light_heal.stub",
   })
 ]);
 

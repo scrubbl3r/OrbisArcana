@@ -16,7 +16,6 @@ export function createSpellActionHandlers({
   executeShockwave,
   executeBubbleShield,
   executeColorize,
-  healOrbOneClick,
   triggerShockwave,
   activateBubbleShield,
   applyColorize,
@@ -70,10 +69,6 @@ export function createSpellActionHandlers({
         teleportOrbToSpawnNeutralizePhysics,
         aboveGroundPx: Number.isFinite(payloadAboveGroundPx) ? payloadAboveGroundPx : domusTeleportAboveGroundPx,
       });
-    },
-    light_heal(payload = {}) {
-      if (typeof healOrbOneClick !== "function") return false;
-      return healOrbOneClick(payload);
     },
     trigger_shockwave(payload = {}) {
       void payload;

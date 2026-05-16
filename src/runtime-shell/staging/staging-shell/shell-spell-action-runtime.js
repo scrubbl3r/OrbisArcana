@@ -45,35 +45,6 @@ export function createShellSpellActionRuntime({
     executeShockwave: executors.executeShockwave,
     executeBubbleShield: executors.executeBubbleShield,
     executeColorize: executors.executeColorize,
-    healOrbOneClick: (payload = {}) => {
-      const receiverRuntime = typeof shellActions.resolveReceiverRuntime === "function"
-        ? shellActions.resolveReceiverRuntime(runtime)
-        : null;
-      const resourcesSystem = receiverRuntime && receiverRuntime.resourcesSystem;
-      const orbSystem = receiverRuntime && receiverRuntime.orbSystem;
-      if (!resourcesSystem || typeof resourcesSystem.consumeStoredGlobe !== "function") return false;
-      if (!orbSystem || typeof orbSystem.applyHeal !== "function") return false;
-      const gameState = receiverRuntime && receiverRuntime.gameState;
-      const orb = gameState && gameState.orb;
-      const currentHealth = Math.max(0, Number(orb && orb.health) || 0);
-      const maxHealth = Math.max(1, Number(orb && orb.maxHealth) || 1000);
-      if (currentHealth >= maxHealth) return false;
-      const spend = resourcesSystem.consumeStoredGlobe({
-        ...payload,
-        reason: "light_heal",
-        wordId: String(payload && (payload.wordId || payload.spellId) || "vivora"),
-        spellId: String(payload && (payload.spellId || payload.wordId) || "vivora"),
-      });
-      if (!spend || spend.ok !== true) return false;
-      const maxHits = Math.max(1, Number(orb && orb.maxHits) || 3);
-      const healAmount = Math.ceil(maxHealth / maxHits);
-      const heal = orbSystem.applyHeal({
-        ...payload,
-        amount: healAmount,
-        source: "light_heal",
-      });
-      return !!(heal && heal.applied);
-    },
     triggerShockwave: () => (
       getRuntimeVfx() && typeof getRuntimeVfx().triggerShockwave === "function"
         ? getRuntimeVfx().triggerShockwave()

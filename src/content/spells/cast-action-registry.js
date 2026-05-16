@@ -23,11 +23,6 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     globeCost: 1,
   }),
   Object.freeze({
-    id: "light_heal",
-    handlerKey: "light_heal",
-    globeCost: 1,
-  }),
-  Object.freeze({
     id: "shockwave",
     handlerKey: "trigger_shockwave",
     globeCost: 0,

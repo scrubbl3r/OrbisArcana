@@ -23,11 +23,6 @@ export const EVENT_DEFINITIONS = Object.freeze([
     defaultArgs: Object.freeze({}),
   }),
   Object.freeze({
-    id: "light_heal",
-    type: "event",
-    defaultArgs: Object.freeze({}),
-  }),
-  Object.freeze({
     id: "shockwave",
     type: "event",
     defaultArgs: Object.freeze({}),

@@ -87,15 +87,6 @@ export const VFX_EFFECT_REGISTRY = Object.freeze([
     publishTargets: ["preset", "binding"],
   }),
   Object.freeze({
-    id: "spell.light_heal",
-    label: "Light Heal",
-    category: "spell",
-    runtimeModuleId: "light_heal_runtime",
-    defaultPresetId: "preset.light_heal.stub",
-    supportedContexts: ["lab", "receiver"],
-    publishTargets: ["preset", "binding"],
-  }),
-  Object.freeze({
     id: "orb.nod",
     label: "Orb Nod",
     category: "orb",

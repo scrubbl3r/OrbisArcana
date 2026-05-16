@@ -36,11 +36,6 @@
       "token": "pyro"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/vivora.onnx",
-      "label": "vivora",
-      "token": "vivora"
-    },
-    {
       "path": "../../../assets/kws/openwakeword-models/electrum.onnx",
       "label": "electrum",
       "token": "electrum"
