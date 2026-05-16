@@ -12,17 +12,24 @@ export const INTERACTION_GRAPH_V2 = {
     ],
   },
   groups: {
-    wake_main_words: ["echovar", "electrum", "pyro"],
+    wake_main_words: ["echovar", "electrum", "pyro", "sanctum"],
     electrum_chain_words: ["rota"],
     wake_are_kay_nah_words: ["pyro"],
-    pyro_voice_chain_words: ["sanctum"],
   },
   rules: [
     {
       id: "wake_main",
       on: { word: "orbis" },
-      open: { id: "wake.main", words: ["echovar", "electrum", "pyro"], ttlMs: 1500 },
+      open: { id: "wake.main", words: ["echovar", "electrum", "pyro", "sanctum"], ttlMs: 1500 },
       //open: { id: "wake.main", words: "@wake_main_words", ttlMs: 1500 },
+    },
+    // BUBBLE SHIELD
+    {
+      id: "orbis_sanctum_cast",
+      on: { word: "sanctum" },
+      requires: "wake.main",
+      trigger: { spell: "bubble_shield" },
+      grace: {},
     },
     // TELEPORT HOME
     {
@@ -46,24 +53,11 @@ export const INTERACTION_GRAPH_V2 = {
       trigger: { spell: "aoe_electric" },
       grace: {},
     },
-    // ARE KAY NAH > AZERITH
+    // ARE KAY NAH DETECTION WAKE
     {
       id: "wake_are_kay_nah",
       on: { word: "are_kay_nah" },
       open: { id: "wake.are_kay_nah", words: ["pyro"], ttlMs: 1500 },
-    },
-    {
-      id: "pyro_voice_chain",
-      on: { word: "pyro" },
-      requires: "wake.are_kay_nah",
-      open: { id: "chain.pyro_voice", words: ["sanctum"], ttlMs: 1500 },
-    },
-    {
-      id: "pyro_sanctum_cast",
-      on: { word: "sanctum" },
-      requires: "chain.pyro_voice",
-      trigger: { spell: "bubble_shield" },
-      grace: {},
     },
     // PYRO AOE CHAIN
     {

@@ -1,4 +1,4 @@
-import { compileInteractionGraphV2ToCompiledInteractionGraphV2 } from "./compile-interaction-graph-v2.js?v=20260504a";
+import { compileInteractionGraphV2ToCompiledInteractionGraphV2 } from "./compile-interaction-graph-v2.js?v=20260515a";
 
 const ROOT_CONTEXT = "INTERACTION_GRAPH_V2";
 const ALLOWED_ROOT_KEYS = new Set(["version", "enabled", "defaults", "wake", "groups", "rules"]);

@@ -1,4 +1,4 @@
-import { COMPILED_INTERACTION_GRAPH_V2 } from "./compiled-interaction-graph-v2.js?v=20260504a";
+import { COMPILED_INTERACTION_GRAPH_V2 } from "./compiled-interaction-graph-v2.js?v=20260515a";
 import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js?v=20260415d";
 
 function asText(value) {
