@@ -10,7 +10,9 @@ import { normalizeStunEffect, resolveStunApplication } from "../combat/stun-mode
 
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
-const GNAT_SIGNAL_FLASH_SEC = 0.35;
+const GNAT_SIGNAL_FLASH_SEC = 1;
+const GNAT_SIGNAL_BLINK_PERIOD_SEC = 0.2;
+const GNAT_SIGNAL_BLINK_GAP_SEC = 0.05;
 const GNAT_COLOR_NEUTRAL = new THREE.Color(0x9dff8a);
 const GNAT_COLOR_ALERTED = new THREE.Color(0xff4b4b);
 const GNAT_COLOR_SIGNAL = new THREE.Color(0xffe45e);
@@ -84,6 +86,13 @@ function tintEmissiveWithInstanceColor(material = null) {
     );
   };
   material.customProgramCacheKey = () => "gnat-instance-emissive-tint";
+}
+
+function shouldShowSignalBlink(state = null, nowSec = 0) {
+  if (!state || nowSec >= (state.signalFlashUntil || 0)) return false;
+  const remainingSec = Math.max(0, state.signalFlashUntil - nowSec);
+  const elapsedSec = Math.max(0, GNAT_SIGNAL_FLASH_SEC - remainingSec);
+  return (elapsedSec % GNAT_SIGNAL_BLINK_PERIOD_SEC) < (GNAT_SIGNAL_BLINK_PERIOD_SEC - GNAT_SIGNAL_BLINK_GAP_SEC);
 }
 
 function shapedProximityChance({ distancePx = 0, radiusPx = 1, baseChance = 0, awareness = 1, strength = 1 } = {}) {
@@ -1235,7 +1244,7 @@ export function createGnatSwarm3dRuntime({
       scaleVec.set(state.scale, state.scale * 0.55, state.scale);
 	      matrix.compose(positionVec, quat, scaleVec);
 	      mesh.setMatrixAt(i, matrix);
-	      if (nowSec < (state.signalFlashUntil || 0)) {
+	      if (shouldShowSignalBlink(state, nowSec)) {
 	        mesh.setColorAt(i, GNAT_COLOR_SIGNAL);
 	      } else if (state.mode === "alerted" || state.mode === "feeding") {
 	        mesh.setColorAt(i, GNAT_COLOR_ALERTED);
