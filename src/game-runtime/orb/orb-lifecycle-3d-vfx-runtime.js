@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { createRng } from "./orb-lifecycle-vfx-runtime.js";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js";
 
-const MAX_VORONOI_CELLS = 16;
+const MAX_EROSION_CLUSTERS = 18;
+const HOLES_PER_CLUSTER = 5;
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -18,7 +19,7 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   const source = config && typeof config === "object" ? config : ORB_LIFECYCLE_3D_DEFAULTS;
   return Object.freeze({
     maxHits: clampInt(source.maxHits, 1, 12, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
-    maxCracks: clampInt(source.maxCracks, 2, MAX_VORONOI_CELLS, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
+    maxCracks: clampInt(source.maxCracks, 1, MAX_EROSION_CLUSTERS, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
     crackColor: Number(source.crackColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(source.crackAlpha, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
@@ -55,129 +56,72 @@ function tangentForNormal(normal, rng) {
   return tangent.multiplyScalar(Math.cos(angle)).add(bitangent.multiplyScalar(Math.sin(angle))).normalize();
 }
 
-function createSplitUniforms(splits) {
-  return splits.reduce((uniforms, split, index) => {
-    uniforms[`uSplitPlane${index}`] = { value: split.plane };
+function randomUnitVector(rng) {
+  const theta = rng() * Math.PI * 2;
+  const z = (rng() * 2) - 1;
+  const r = Math.sqrt(Math.max(0, 1 - (z * z)));
+  return new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z).normalize();
+}
+
+function createErosionUniforms(holes) {
+  return holes.reduce((uniforms, hole, index) => {
+    uniforms[`uHole${index}`] = { value: hole };
     return uniforms;
   }, {});
 }
 
-function buildSplitLines(splits) {
+function buildErosionLines(holes) {
   const lines = [];
-  splits.forEach((split, index) => {
+  holes.forEach((hole, index) => {
     lines.push(
-      `        if (abs(cellId - ${split.parentId.toFixed(1)}) < 0.5) {`,
-      `          float splitSide${index} = dot(n, normalize(uSplitPlane${index}));`,
-      `          float splitAa${index} = max(0.0006, fwidth(splitSide${index}));`,
-      `          seam = max(seam, 1.0 - smoothstep(uLineWidth, uLineWidth + splitAa${index}, abs(splitSide${index})));`,
-      `          cellId = splitSide${index} >= 0.0 ? ${split.positiveId.toFixed(1)} : ${split.negativeId.toFixed(1)};`,
-      "        }"
+      `        float d${index} = 1.0 - dot(n, normalize(uHole${index}.xyz));`,
+      `        float r${index} = uHole${index}.w * uGrowth;`,
+      `        float edge${index} = max(0.0006, fwidth(d${index}));`,
+      `        float void${index} = 1.0 - smoothstep(r${index}, r${index} + edge${index}, d${index});`,
+      `        float rim${index} = 1.0 - smoothstep(uEdgeWidth, uEdgeWidth + edge${index}, abs(d${index} - r${index}));`,
+      `        erosion = max(erosion, void${index});`,
+      `        rim = max(rim, rim${index} * (1.0 - void${index} * 0.35));`
     );
   });
   return lines.join("\n");
 }
 
-function leafSplitScore(leaf) {
-  const front = Math.max(0, leaf.center.z);
-  return leaf.area * (1 + (front * 1.35)) * Math.max(0.2, 1 - (leaf.depth * 0.035));
-}
-
-function selectBestLeafIndex(leaves) {
-  let bestIndex = 0;
-  let bestScore = -Infinity;
-  leaves.forEach((leaf, index) => {
-    const score = leafSplitScore(leaf);
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = index;
+function createErosionHoles(seed = 1, clusterCount = 1) {
+  const rng = createRng((Number(seed) || 1) ^ 0x3e80510);
+  const clusters = Math.max(1, Math.min(MAX_EROSION_CLUSTERS, Math.round(Number(clusterCount) || 1)));
+  const holes = [];
+  for (let cluster = 0; cluster < clusters; cluster += 1) {
+    const center = randomUnitVector(rng);
+    if (center.z < -0.55) center.z = Math.abs(center.z) * 0.72;
+    center.normalize();
+    const tangent = tangentForNormal(center, rng);
+    const bitangent = new THREE.Vector3().crossVectors(center, tangent).normalize();
+    const baseRadius = 0.0065 + (rng() * 0.0085);
+    holes.push(new THREE.Vector4(center.x, center.y, center.z, baseRadius * 1.28));
+    for (let satellite = 1; satellite < HOLES_PER_CLUSTER; satellite += 1) {
+      const angle = rng() * Math.PI * 2;
+      const offset = 0.105 + (rng() * 0.105);
+      const direction = tangent.clone()
+        .multiplyScalar(Math.cos(angle) * offset)
+        .add(bitangent.clone().multiplyScalar(Math.sin(angle) * offset));
+      const satelliteCenter = center.clone().add(direction).normalize();
+      const satelliteRadius = baseRadius * (0.72 + (rng() * 0.46));
+      holes.push(new THREE.Vector4(satelliteCenter.x, satelliteCenter.y, satelliteCenter.z, satelliteRadius));
     }
-  });
-  return bestIndex;
-}
-
-function splitLeaf(leaf, { rng, splits, nextIdRef }) {
-  const baseCenter = leaf.center.clone().normalize();
-  const tangent = tangentForNormal(baseCenter, rng);
-  const wobble = tangentForNormal(tangent, rng).multiplyScalar((rng() - 0.5) * 0.32);
-  const plane = tangent.add(wobble).normalize();
-  const positiveId = nextIdRef.value;
-  const negativeId = nextIdRef.value + 1;
-  nextIdRef.value += 2;
-  splits.push({
-    parentId: leaf.id,
-    positiveId,
-    negativeId,
-    plane,
-  });
-
-  const splitBias = 0.42 + (rng() * 0.16);
-  const positiveArea = leaf.area * splitBias;
-  const negativeArea = leaf.area - positiveArea;
-  return [
-    {
-      id: positiveId,
-      center: baseCenter.clone().add(plane.clone().multiplyScalar(0.72)).normalize(),
-      area: positiveArea,
-      depth: leaf.depth + 1,
-    },
-    {
-      id: negativeId,
-      center: baseCenter.clone().add(plane.clone().multiplyScalar(-0.72)).normalize(),
-      area: negativeArea,
-      depth: leaf.depth + 1,
-    },
-  ];
-}
-
-function subdivideLeafInto(leaves, leafIndex, childCount, context) {
-  const targetChildren = Math.max(2, Math.round(Number(childCount) || 2));
-  const localLeaves = [leaves.splice(leafIndex, 1)[0]];
-  while (
-    localLeaves.length < targetChildren &&
-    (leaves.length + localLeaves.length) < MAX_VORONOI_CELLS
-  ) {
-    const localIndex = selectBestLeafIndex(localLeaves);
-    const [leaf] = localLeaves.splice(localIndex, 1);
-    localLeaves.push(...splitLeaf(leaf, context));
   }
-  leaves.push(...localLeaves);
+  return holes;
 }
 
-function createHierarchicalSplits(seed = 1, startCells = 2, hitsTaken = 1) {
-  const rng = createRng((Number(seed) || 1) ^ 0x5ab1e31);
-  const start = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(startCells) || 2)));
-  const hits = Math.max(1, Math.round(Number(hitsTaken) || 1));
-  const leaves = [{
-    id: 0,
-    center: new THREE.Vector3(0, 0, 1),
-    area: 1,
-    depth: 0,
-  }];
-  const splits = [];
-  const context = {
-    rng,
-    splits,
-    nextIdRef: { value: 1 },
-  };
-
-  subdivideLeafInto(leaves, 0, start, context);
-  for (let hit = 2; hit <= hits && leaves.length < MAX_VORONOI_CELLS; hit += 1) {
-    subdivideLeafInto(leaves, selectBestLeafIndex(leaves), hit, context);
-  }
-
-  return splits;
-}
-
-function createHierarchicalFractureMaterial({
+function createErosionMaterial({
   hitRatio = 0,
-  hitsTaken = 1,
+  activeClusters = 1,
   seed = 1,
   config = ORB_LIFECYCLE_3D_DEFAULTS,
 } = {}) {
   const resolved = resolveOrbLifecycle3dConfig(config);
-  const splits = createHierarchicalSplits(seed, resolved.maxCracks, hitsTaken);
+  const holes = createErosionHoles(seed, activeClusters);
   return new THREE.ShaderMaterial({
-    name: "orb_lifecycle3d:hierarchical_fracture_material",
+    name: "orb_lifecycle3d:clustered_erosion_material",
     transparent: true,
     depthWrite: false,
     depthTest: true,
@@ -187,10 +131,12 @@ function createHierarchicalFractureMaterial({
     },
     uniforms: {
       uHitRatio: { value: Math.max(0, Math.min(1, hitRatio)) },
-      uLineWidth: { value: Math.max(0.0025, Math.min(0.06, resolved.crackWidthPx * 0.006)) },
+      uEdgeWidth: { value: Math.max(0.0015, Math.min(0.035, resolved.crackWidthPx * 0.0045)) },
+      uGrowth: { value: 0.72 + (Math.max(0, Math.min(1, hitRatio)) * 0.9) },
       uAlpha: { value: resolved.crackAlpha },
-      uCrackColor: { value: colorToVector(resolved.crackColor) },
-      ...createSplitUniforms(splits),
+      uRimColor: { value: colorToVector(resolved.crackColor) },
+      uVoidColor: { value: colorToVector(resolved.energyColor) },
+      ...createErosionUniforms(holes),
     },
     vertexShader: `
       varying vec3 vSphereNormal;
@@ -204,22 +150,25 @@ function createHierarchicalFractureMaterial({
       precision highp float;
 
       uniform float uHitRatio;
-      uniform float uLineWidth;
+      uniform float uEdgeWidth;
+      uniform float uGrowth;
       uniform float uAlpha;
-      uniform vec3 uCrackColor;
-      ${splits.map((split, index) => `uniform vec3 uSplitPlane${index};`).join("\n      ")}
+      uniform vec3 uRimColor;
+      uniform vec3 uVoidColor;
+      ${holes.map((hole, index) => `uniform vec4 uHole${index};`).join("\n      ")}
 
       varying vec3 vSphereNormal;
 
       void main() {
         vec3 n = normalize(vSphereNormal);
-        float cellId = 0.0;
-        float seam = 0.0;
-${buildSplitLines(splits)}
+        float erosion = 0.0;
+        float rim = 0.0;
+${buildErosionLines(holes)}
 
-        float alpha = seam * uAlpha * smoothstep(0.0, 0.18, uHitRatio);
+        vec3 color = mix(uVoidColor, uRimColor, rim);
+        float alpha = max(erosion * 0.76, rim) * uAlpha * smoothstep(0.0, 0.18, uHitRatio);
         if (alpha < 0.01) discard;
-        gl_FragColor = vec4(uCrackColor, alpha);
+        gl_FragColor = vec4(color, alpha);
       }
     `,
   });
@@ -236,15 +185,16 @@ export function createOrbLifecycle3dCracks({
   const hits = clampInt(hitsTaken, 0, 99, 0);
   const total = Math.max(1, clampInt(maxHits, 1, 99, resolved.maxHits));
   const ratio = Math.max(0, Math.min(1, hits / total));
+  const activeClusters = Math.max(1, Math.min(resolved.maxCracks, Math.ceil(ratio * resolved.maxCracks)));
   const group = new THREE.Group();
   group.name = "orb_lifecycle3d:cracks";
   if (hits <= 0) return group;
 
   const radius = Math.max(1, Number(bo) || 72) * 0.5;
   const lift = Math.max(0.002, Number(resolved.crackLiftBO) || 0.006) * Math.max(1, Number(bo) || 72);
-  const material = createHierarchicalFractureMaterial({
+  const material = createErosionMaterial({
     hitRatio: ratio,
-    hitsTaken: hits,
+    activeClusters,
     seed,
     config: resolved,
   });
@@ -252,7 +202,7 @@ export function createOrbLifecycle3dCracks({
     new THREE.SphereGeometry(radius + lift, 96, 48),
     material
   );
-  shell.name = "orb_lifecycle3d:hierarchical_fracture_shell";
+  shell.name = "orb_lifecycle3d:clustered_erosion_shell";
   shell.renderOrder = 12;
   group.add(shell);
 
