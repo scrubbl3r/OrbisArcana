@@ -2066,38 +2066,29 @@
               <button id="orbLifecycle3dApplyCrackBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="orbLifecycle3dCrackTotal">Major cracks</label>
-              <input id="orbLifecycle3dCrackTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="5" />
+              <label for="orbLifecycle3dCrackTotal">Voronoi cells</label>
+              <input id="orbLifecycle3dCrackTotal" class="paramFieldInput" type="number" min="3" max="3" step="1" value="3" />
             </div>
             <div class="rgbaParamRow">
-              <span class="rgbaLabel">Crack RGB</span>
+              <span class="rgbaLabel">Line RGB</span>
               <label for="orbLifecycle3dCrackR">r</label>
-              <input id="orbLifecycle3dCrackR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="248" />
+              <input id="orbLifecycle3dCrackR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
               <label for="orbLifecycle3dCrackG">g</label>
-              <input id="orbLifecycle3dCrackG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="253" />
+              <input id="orbLifecycle3dCrackG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
               <label for="orbLifecycle3dCrackB">b</label>
               <input id="orbLifecycle3dCrackB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
             </div>
             <div class="paramFieldRow">
-              <label for="orbLifecycle3dCrackAlpha">Crack opacity</label>
-              <input id="orbLifecycle3dCrackAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.88" />
+              <label for="orbLifecycle3dCrackAlpha">Line opacity</label>
+              <input id="orbLifecycle3dCrackAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.90" />
             </div>
             <div class="paramFieldRow">
-              <label for="orbLifecycle3dCrackStroke">Crack width</label>
-              <input id="orbLifecycle3dCrackStroke" class="paramFieldInput" type="number" min="0.25" max="12" step="0.25" value="1.35" />
+              <label for="orbLifecycle3dCrackStroke">Line width</label>
+              <input id="orbLifecycle3dCrackStroke" class="paramFieldInput" type="number" min="0.25" max="12" step="0.25" value="1.00" />
             </div>
             <div class="paramFieldRow">
               <label for="orbLifecycle3dCrackLift">Surface lift BO</label>
               <input id="orbLifecycle3dCrackLift" class="paramFieldInput" type="number" min="0" max="0.2" step="0.001" value="0.006" />
-            </div>
-            <div class="rgbaParamRow">
-              <span class="rgbaLabel">Trough RGB</span>
-              <label for="orbLifecycle3dEnergyR">r</label>
-              <input id="orbLifecycle3dEnergyR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="5" />
-              <label for="orbLifecycle3dEnergyG">g</label>
-              <input id="orbLifecycle3dEnergyG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="7" />
-              <label for="orbLifecycle3dEnergyB">b</label>
-              <input id="orbLifecycle3dEnergyB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="10" />
             </div>
           </div>
         </div>
@@ -2944,9 +2935,6 @@
       orbLifecycle3dCrackAlpha: $("orbLifecycle3dCrackAlpha"),
       orbLifecycle3dCrackStroke: $("orbLifecycle3dCrackStroke"),
       orbLifecycle3dCrackLift: $("orbLifecycle3dCrackLift"),
-      orbLifecycle3dEnergyR: $("orbLifecycle3dEnergyR"),
-      orbLifecycle3dEnergyG: $("orbLifecycle3dEnergyG"),
-      orbLifecycle3dEnergyB: $("orbLifecycle3dEnergyB"),
       orbLifecycle3dParticleCount: $("orbLifecycle3dParticleCount"),
       orbLifecycle3dParticleR: $("orbLifecycle3dParticleR"),
       orbLifecycle3dParticleG: $("orbLifecycle3dParticleG"),

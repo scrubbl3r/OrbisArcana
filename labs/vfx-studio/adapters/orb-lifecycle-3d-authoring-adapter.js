@@ -14,7 +14,6 @@ const ORB_LIFECYCLE_3D_FIELDS = Object.freeze([
 
 const ORB_LIFECYCLE_3D_COLOR_FIELDS = Object.freeze([
   ["crackColor", "orbLifecycle3dCrack"],
-  ["energyColor", "orbLifecycle3dEnergy"],
   ["particleColor", "orbLifecycle3dParticle"],
 ]);
 
@@ -48,9 +47,9 @@ function colorChannels(color) {
 function settingsFromDefaults(defaults = {}) {
   const settings = {
     orbLifecycle3dHitTotal: roundedNumber(defaults.maxHits, 10),
-    orbLifecycle3dCrackTotal: roundedNumber(defaults.maxCracks, 5),
-    orbLifecycle3dCrackAlpha: fixedNumber(defaults.crackAlpha, 2, 0.88),
-    orbLifecycle3dCrackStroke: fixedNumber(defaults.crackWidthPx, 2, 1.35),
+    orbLifecycle3dCrackTotal: roundedNumber(defaults.maxCracks, 3),
+    orbLifecycle3dCrackAlpha: fixedNumber(defaults.crackAlpha, 2, 0.9),
+    orbLifecycle3dCrackStroke: fixedNumber(defaults.crackWidthPx, 2, 1),
     orbLifecycle3dCrackLift: fixedNumber(defaults.crackLiftBO, 3, 0.006),
     orbLifecycle3dParticleCount: roundedNumber(defaults.particleCount, 72),
     orbLifecycle3dParticleSize: fixedNumber(defaults.particleSizePx, 2, 4.5),

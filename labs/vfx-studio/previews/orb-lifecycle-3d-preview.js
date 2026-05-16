@@ -45,7 +45,6 @@ function readLifecycle3dConfig(els = {}) {
     crackAlpha: clampNumber(els.orbLifecycle3dCrackAlpha && els.orbLifecycle3dCrackAlpha.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(els.orbLifecycle3dCrackStroke && els.orbLifecycle3dCrackStroke.value, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
     crackLiftBO: clampNumber(els.orbLifecycle3dCrackLift && els.orbLifecycle3dCrackLift.value, 0, 0.2, ORB_LIFECYCLE_3D_DEFAULTS.crackLiftBO),
-    energyColor: colorFromFields(els, "orbLifecycle3dEnergy", ORB_LIFECYCLE_3D_DEFAULTS.energyColor),
     particleCount: roundedNumber(els.orbLifecycle3dParticleCount && els.orbLifecycle3dParticleCount.value, ORB_LIFECYCLE_3D_DEFAULTS.particleCount),
     particleColor: colorFromFields(els, "orbLifecycle3dParticle", ORB_LIFECYCLE_3D_DEFAULTS.particleColor),
     particleSizePx: clampNumber(els.orbLifecycle3dParticleSize && els.orbLifecycle3dParticleSize.value, 0.5, 32, ORB_LIFECYCLE_3D_DEFAULTS.particleSizePx),

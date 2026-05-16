@@ -12,16 +12,11 @@ function clampInt(value, min, max, fallback) {
   return Math.round(clampNumber(value, min, max, fallback));
 }
 
-function smoothstep01(value) {
-  const t = Math.max(0, Math.min(1, Number(value) || 0));
-  return t * t * (3 - (2 * t));
-}
-
 export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) {
   const source = config && typeof config === "object" ? config : ORB_LIFECYCLE_3D_DEFAULTS;
   return Object.freeze({
     maxHits: clampInt(source.maxHits, 1, 12, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
-    maxCracks: clampInt(source.maxCracks, 1, 12, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
+    maxCracks: clampInt(source.maxCracks, 3, 3, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
     crackColor: Number(source.crackColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(source.crackAlpha, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
@@ -52,86 +47,92 @@ function randomUnitVector(rng) {
   return new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z).normalize();
 }
 
-function tangentForNormal(normal, rng) {
-  const reference = Math.abs(normal.y) < 0.86 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
-  const tangent = new THREE.Vector3().crossVectors(normal, reference).normalize();
-  const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
-  const angle = rng() * Math.PI * 2;
-  return tangent.multiplyScalar(Math.cos(angle)).add(bitangent.multiplyScalar(Math.sin(angle))).normalize();
+function colorToVector(color) {
+  const c = new THREE.Color(Number(color) >>> 0);
+  return new THREE.Vector3(c.r, c.g, c.b);
 }
 
-function stepOnSphere(normal, tangent, stepAngle, bend) {
-  const next = normal.clone()
-    .multiplyScalar(Math.cos(stepAngle))
-    .add(tangent.clone().multiplyScalar(Math.sin(stepAngle)))
-    .normalize();
-  const newTangent = tangent.clone().add(normal.clone().multiplyScalar(-tangent.dot(normal))).normalize();
-  const turnAxis = next.clone();
-  newTangent.applyAxisAngle(turnAxis, bend).add(next.clone().multiplyScalar(-newTangent.dot(next))).normalize();
-  return { normal: next, tangent: newTangent };
+function createUnequalVoronoiSites(seed = 1) {
+  const rng = createRng((Number(seed) || 1) ^ 0x7a11c3);
+  const weights = [-0.13, 0.025, 0.115];
+  return weights.map((weight) => {
+    const site = randomUnitVector(rng);
+    if (site.z < -0.45) site.z = Math.abs(site.z) * 0.7;
+    site.normalize();
+    return new THREE.Vector4(site.x, site.y, site.z, weight);
+  });
 }
 
-function buildJaggedCrackPath({
-  rng,
-  radius,
-  lift,
-  routeIndex = 0,
-  routeProgress = 1,
-  branch = false,
-  startNormal = null,
+function createLowCellVoronoiMaterial({
+  hitRatio = 0,
+  seed = 1,
+  config = ORB_LIFECYCLE_3D_DEFAULTS,
 } = {}) {
-  const pointCount = branch ? 7 : 13;
-  const reveal = smoothstep01(routeProgress);
-  const visibleCount = Math.max(2, Math.ceil(pointCount * reveal));
-  const arc = (branch ? 0.34 : 0.72) * (0.82 + (rng() * 0.36));
-  let normal = startNormal && typeof startNormal.clone === "function" ? startNormal.clone().normalize() : randomUnitVector(rng);
-  if (!branch && !startNormal && normal.z < -0.2) normal.z = Math.abs(normal.z);
-  normal.normalize();
-  let tangent = tangentForNormal(normal, rng);
-  const path = [normal.clone().multiplyScalar(radius + lift)];
+  const resolved = resolveOrbLifecycle3dConfig(config);
+  const sites = createUnequalVoronoiSites(seed);
+  return new THREE.ShaderMaterial({
+    name: "orb_lifecycle3d:low_cell_voronoi_material",
+    transparent: true,
+    depthWrite: false,
+    depthTest: true,
+    side: THREE.FrontSide,
+    extensions: {
+      derivatives: true,
+    },
+    uniforms: {
+      uHitRatio: { value: Math.max(0, Math.min(1, hitRatio)) },
+      uLineWidth: { value: Math.max(0.0025, Math.min(0.06, resolved.crackWidthPx * 0.006)) },
+      uAlpha: { value: resolved.crackAlpha },
+      uCrackColor: { value: colorToVector(resolved.crackColor) },
+      uSiteA: { value: sites[0] },
+      uSiteB: { value: sites[1] },
+      uSiteC: { value: sites[2] },
+    },
+    vertexShader: `
+      varying vec3 vSphereNormal;
 
-  for (let i = 1; i < visibleCount; i += 1) {
-    const jag = (rng() - 0.5) * (branch ? 0.92 : 0.68);
-    const drift = Math.sin((routeIndex + 1) * 1.7 + i * 0.9) * 0.16;
-    const stepped = stepOnSphere(normal, tangent, arc / (pointCount - 1), jag + drift);
-    normal = stepped.normal;
-    tangent = stepped.tangent;
-    path.push(normal.clone().multiplyScalar(radius + lift));
-  }
+      void main() {
+        vSphereNormal = normalize(position);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
 
-  return path;
-}
+      uniform float uHitRatio;
+      uniform float uLineWidth;
+      uniform float uAlpha;
+      uniform vec3 uCrackColor;
+      uniform vec4 uSiteA;
+      uniform vec4 uSiteB;
+      uniform vec4 uSiteC;
 
-function createCrackSegments(points, radius, material, name) {
-  if (!Array.isArray(points) || points.length < 2) return null;
-  const group = new THREE.Group();
-  group.name = name;
-  group.renderOrder = 12;
-  const up = new THREE.Vector3(0, 1, 0);
-  const quat = new THREE.Quaternion();
-  for (let i = 1; i < points.length; i += 1) {
-    const a = points[i - 1];
-    const b = points[i];
-    const length = a.distanceTo(b);
-    if (length <= 0.0001) continue;
-    const direction = b.clone().sub(a).normalize();
-    const geometry = new THREE.CylinderGeometry(
-      Math.max(0.025, radius),
-      Math.max(0.025, radius),
-      length,
-      5,
-      1,
-      false
-    );
-    const segment = new THREE.Mesh(geometry, material);
-    segment.name = `${name}:segment`;
-    segment.position.copy(a).add(b).multiplyScalar(0.5);
-    quat.setFromUnitVectors(up, direction);
-    segment.quaternion.copy(quat);
-    segment.renderOrder = 12;
-    group.add(segment);
-  }
-  return group.children.length > 0 ? group : null;
+      varying vec3 vSphereNormal;
+
+      float siteDistance(vec3 n, vec4 site) {
+        return (1.0 - dot(n, normalize(site.xyz))) + site.w;
+      }
+
+      void main() {
+        vec3 n = normalize(vSphereNormal);
+        float dA = siteDistance(n, uSiteA);
+        float dB = siteDistance(n, uSiteB);
+        float dC = siteDistance(n, uSiteC);
+        float nearest = min(dA, min(dB, dC));
+        float second = max(dA, max(dB, dC));
+        if (dA > nearest && dA < second) second = dA;
+        if (dB > nearest && dB < second) second = dB;
+        if (dC > nearest && dC < second) second = dC;
+
+        float seamGap = max(0.0, second - nearest);
+        float aa = max(0.0006, fwidth(seamGap));
+        float seam = 1.0 - smoothstep(uLineWidth, uLineWidth + aa, seamGap);
+        float alpha = seam * uAlpha * smoothstep(0.0, 0.18, uHitRatio);
+        if (alpha < 0.01) discard;
+        gl_FragColor = vec4(uCrackColor, alpha);
+      }
+    `,
+  });
 }
 
 export function createOrbLifecycle3dCracks({
@@ -145,53 +146,24 @@ export function createOrbLifecycle3dCracks({
   const hits = clampInt(hitsTaken, 0, 99, 0);
   const total = Math.max(1, clampInt(maxHits, 1, 99, resolved.maxHits));
   const ratio = Math.max(0, Math.min(1, hits / total));
-  const routeCount = hits <= 0 ? 0 : Math.max(1, Math.min(resolved.maxCracks, Math.ceil(ratio * resolved.maxCracks)));
   const group = new THREE.Group();
   group.name = "orb_lifecycle3d:cracks";
-  if (routeCount <= 0) return group;
+  if (hits <= 0) return group;
 
   const radius = Math.max(1, Number(bo) || 72) * 0.5;
   const lift = Math.max(0.002, Number(resolved.crackLiftBO) || 0.006) * Math.max(1, Number(bo) || 72);
-  const rng = createRng((Number(seed) || 1) ^ 0x51f15e);
-  const crackWidth = Math.max(0.035, Number(resolved.crackWidthPx) || 1.35) * Math.max(1, Number(bo) || 72) * 0.0028;
-  const troughMaterial = new THREE.MeshBasicMaterial({
-    color: resolved.energyColor,
-    transparent: true,
-    opacity: Math.max(0.08, Math.min(0.95, resolved.crackAlpha * 0.68)),
-    depthWrite: false,
-    depthTest: true,
+  const material = createLowCellVoronoiMaterial({
+    hitRatio: ratio,
+    seed,
+    config: resolved,
   });
-  const edgeMaterial = new THREE.MeshBasicMaterial({
-    color: resolved.crackColor,
-    transparent: true,
-    opacity: Math.max(0.05, Math.min(1, resolved.crackAlpha * (0.55 + (ratio * 0.25)))),
-    depthWrite: false,
-    depthTest: true,
-  });
-
-  for (let i = 0; i < routeCount; i += 1) {
-    const routeProgress = Math.max(0, Math.min(1, (ratio * resolved.maxCracks) - i));
-    if (routeProgress <= 0) continue;
-    const path = buildJaggedCrackPath({ rng, radius, lift, routeIndex: i, routeProgress });
-    const trough = createCrackSegments(path, crackWidth * 2.35, troughMaterial, "orb_lifecycle3d:crack_trough");
-    const edge = createCrackSegments(path, crackWidth, edgeMaterial, "orb_lifecycle3d:crack_edge");
-    if (trough) group.add(trough);
-    if (edge) group.add(edge);
-
-    if (routeProgress > 0.48 && (i + hits) % 2 === 0) {
-      const branch = buildJaggedCrackPath({
-        rng,
-        radius,
-        lift: lift * 1.04,
-        routeIndex: i + 13,
-        routeProgress: Math.min(1, (routeProgress - 0.32) / 0.68),
-        branch: true,
-        startNormal: path[Math.max(1, Math.floor(path.length * 0.55))].clone().normalize(),
-      });
-      const branchMesh = createCrackSegments(branch, crackWidth * 0.72, edgeMaterial, "orb_lifecycle3d:crack_branch");
-      if (branchMesh) group.add(branchMesh);
-    }
-  }
+  const shell = new THREE.Mesh(
+    new THREE.SphereGeometry(radius + lift, 96, 48),
+    material
+  );
+  shell.name = "orb_lifecycle3d:low_cell_voronoi_shell";
+  shell.renderOrder = 12;
+  group.add(shell);
 
   return group;
 }
