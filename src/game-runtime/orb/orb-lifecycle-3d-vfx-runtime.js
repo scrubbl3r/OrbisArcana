@@ -57,13 +57,36 @@ function colorToVector(color) {
 function createUnequalVoronoiSites(seed = 1, count = 3) {
   const rng = createRng((Number(seed) || 1) ^ 0x7a11c3);
   const cells = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(count) || 3)));
-  return Array.from({ length: MAX_VORONOI_CELLS }, (_, index) => {
+  return Array.from({ length: cells }, (_, index) => {
     const site = randomUnitVector(rng);
     if (site.z < -0.45) site.z = Math.abs(site.z) * 0.7;
     site.normalize();
     const weight = ((rng() - 0.5) * 0.18) + (Math.sin((index + 1) * 2.37) * 0.045);
-    return new THREE.Vector4(site.x, site.y, site.z, index < cells ? weight : 999);
+    return new THREE.Vector4(site.x, site.y, site.z, weight);
   });
+}
+
+function createSiteUniforms(sites) {
+  return sites.reduce((uniforms, site, index) => {
+    uniforms[`uSite${index}`] = { value: site };
+    return uniforms;
+  }, {});
+}
+
+function buildSiteDistanceLines(cellCount) {
+  const lines = [];
+  for (let i = 0; i < cellCount; i += 1) {
+    lines.push(
+      `        float d${i} = siteDistance(n, uSite${i});`,
+      `        if (d${i} < nearest) {`,
+      `          second = nearest;`,
+      `          nearest = d${i};`,
+      `        } else if (d${i} < second) {`,
+      `          second = d${i};`,
+      "        }"
+    );
+  }
+  return lines.join("\n");
 }
 
 function createLowCellVoronoiMaterial({
@@ -88,9 +111,8 @@ function createLowCellVoronoiMaterial({
       uHitRatio: { value: Math.max(0, Math.min(1, hitRatio)) },
       uLineWidth: { value: Math.max(0.0025, Math.min(0.06, resolved.crackWidthPx * 0.006)) },
       uAlpha: { value: resolved.crackAlpha },
-      uCellCount: { value: cellCount },
       uCrackColor: { value: colorToVector(resolved.crackColor) },
-      uSites: { value: sites },
+      ...createSiteUniforms(sites),
     },
     vertexShader: `
       varying vec3 vSphereNormal;
@@ -106,9 +128,8 @@ function createLowCellVoronoiMaterial({
       uniform float uHitRatio;
       uniform float uLineWidth;
       uniform float uAlpha;
-      uniform float uCellCount;
       uniform vec3 uCrackColor;
-      uniform vec4 uSites[${MAX_VORONOI_CELLS}];
+      ${sites.map((site, index) => `uniform vec4 uSite${index};`).join("\n      ")}
 
       varying vec3 vSphereNormal;
 
@@ -120,16 +141,7 @@ function createLowCellVoronoiMaterial({
         vec3 n = normalize(vSphereNormal);
         float nearest = 999.0;
         float second = 999.0;
-        for (int i = 0; i < ${MAX_VORONOI_CELLS}; i += 1) {
-          float active = step(float(i) + 0.5, uCellCount);
-          float d = mix(999.0, siteDistance(n, uSites[i]), active);
-          if (d < nearest) {
-            second = nearest;
-            nearest = d;
-          } else if (d < second) {
-            second = d;
-          }
-        }
+${buildSiteDistanceLines(cellCount)}
 
         float seamGap = max(0.0, second - nearest);
         float aa = max(0.0006, fwidth(seamGap));
