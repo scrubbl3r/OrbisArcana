@@ -1,4 +1,4 @@
-import { WORDBOOK_V2 } from "./wordbook-v2.js?v=20260415d";
+import { WORDBOOK_V2 } from "./wordbook-v2.js?v=20260515d";
 import { asObj, asText } from "./interactions-v2-normalizers.js";
 
 const MISSING_ID_LABEL = "(missing-id)";

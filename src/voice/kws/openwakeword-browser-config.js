@@ -1,8 +1,8 @@
-import { ACTIVE_WORDS_BY_ID } from "../wordbook.js";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260515d";
 import {
   KWS_INFER_DEFAULT_WORD_ID,
   KWS_SIM_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing.js";
+} from "../../content/spells/spell-runtime-routing.js?v=20260515d";
 
 function resolveActivePhraseById(id, fallback = "") {
   const word = ACTIVE_WORDS_BY_ID[String(id || "").trim().toLowerCase()];
@@ -22,7 +22,7 @@ export const OPENWAKEWORD_BROWSER_CONFIG_DEFAULT = Object.freeze({
   label: "openwakeword-browser",
   simulate: false,
   simulationIntervalMs: 1400,
-  manifestUrl: "./tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json?v=20260415d",
+  manifestUrl: "./tools/openwakeword-training/manifests/orbis-arcana-dev-spells.manifest.json?v=20260515d",
   melModelUrl: "./assets/kws/openwakeword-base-models/melspectrogram.onnx",
   embeddingModelUrl: "./assets/kws/openwakeword-base-models/embedding_model.onnx",
   requireOnnxDataPair: true,
