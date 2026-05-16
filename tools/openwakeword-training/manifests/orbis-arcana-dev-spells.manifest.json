@@ -16,6 +16,16 @@
       "token": "are kay nah"
     },
     {
+      "path": "../../../assets/kws/openwakeword-models/azerith.onnx",
+      "label": "azerith",
+      "token": "azerith"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/echovar.onnx",
+      "label": "echovar",
+      "token": "echovar"
+    },
+    {
       "path": "../../../assets/kws/openwakeword-models/domus.onnx",
       "label": "domus",
       "token": "domus"
@@ -24,6 +34,11 @@
       "path": "../../../assets/kws/openwakeword-models/pyro.onnx",
       "label": "pyro",
       "token": "pyro"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/vivora.onnx",
+      "label": "vivora",
+      "token": "vivora"
     },
     {
       "path": "../../../assets/kws/openwakeword-models/electrum.onnx",
@@ -39,16 +54,6 @@
       "path": "../../../assets/kws/openwakeword-models/rota.onnx",
       "label": "rota",
       "token": "rota"
-    },
-    {
-      "path": "../../../assets/kws/openwakeword-models/echovar.onnx",
-      "label": "echovar",
-      "token": "echovar"
-    },
-    {
-      "path": "../../../assets/kws/openwakeword-models/azerith.onnx",
-      "label": "azerith",
-      "token": "azerith"
     }
   ]
 }

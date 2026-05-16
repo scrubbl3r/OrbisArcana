@@ -14,6 +14,7 @@ const PREFERRED_KWS_TOKEN_ORDER = Object.freeze([
   "domus",
   "electrum",
   "pyro",
+  "vivora",
   "rota",
   "sanctum",
 ]);
