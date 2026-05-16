@@ -13,7 +13,7 @@ import {
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516b";
+} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516c";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 const ORB_STAGE_FILL_RATIO = 0.52;
@@ -238,9 +238,7 @@ export function createOrbLifecycle3dPreview({
 
   function hit() {
     const config = readLifecycle3dConfig(els);
-    const nextHitsTaken = Math.min(Math.max(1, Number(config.maxHits) || 1), hitsTaken + 1);
-    if (nextHitsTaken > hitsTaken) seed = ((Math.random() * 1e9) | 0) || 1;
-    hitsTaken = nextHitsTaken;
+    hitsTaken = Math.min(Math.max(1, Number(config.maxHits) || 1), hitsTaken + 1);
     apply();
     if (hitsTaken >= Math.max(1, Number(config.maxHits) || 1)) {
       removeBurst();

@@ -42,54 +42,101 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   });
 }
 
-function randomUnitVector(rng) {
-  const theta = rng() * Math.PI * 2;
-  const z = (rng() * 2) - 1;
-  const r = Math.sqrt(Math.max(0, 1 - (z * z)));
-  return new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z).normalize();
-}
-
 function colorToVector(color) {
   const c = new THREE.Color(Number(color) >>> 0);
   return new THREE.Vector3(c.r, c.g, c.b);
 }
 
-function createUnequalVoronoiSites(seed = 1, count = 3) {
-  const rng = createRng((Number(seed) || 1) ^ 0x7a11c3);
-  const cells = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(count) || 3)));
-  return Array.from({ length: cells }, (_, index) => {
-    const site = randomUnitVector(rng);
-    if (site.z < -0.45) site.z = Math.abs(site.z) * 0.7;
-    site.normalize();
-    const weight = ((rng() - 0.5) * 0.18) + (Math.sin((index + 1) * 2.37) * 0.045);
-    return new THREE.Vector4(site.x, site.y, site.z, weight);
-  });
+function tangentForNormal(normal, rng) {
+  const reference = Math.abs(normal.y) < 0.86 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+  const tangent = new THREE.Vector3().crossVectors(normal, reference).normalize();
+  const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
+  const angle = rng() * Math.PI * 2;
+  return tangent.multiplyScalar(Math.cos(angle)).add(bitangent.multiplyScalar(Math.sin(angle))).normalize();
 }
 
-function createSiteUniforms(sites) {
-  return sites.reduce((uniforms, site, index) => {
-    uniforms[`uSite${index}`] = { value: site };
+function createSplitUniforms(splits) {
+  return splits.reduce((uniforms, split, index) => {
+    uniforms[`uSplitPlane${index}`] = { value: split.plane };
     return uniforms;
   }, {});
 }
 
-function buildSiteDistanceLines(cellCount) {
+function buildSplitLines(splits) {
   const lines = [];
-  for (let i = 0; i < cellCount; i += 1) {
+  splits.forEach((split, index) => {
     lines.push(
-      `        float d${i} = siteDistance(n, uSite${i});`,
-      `        if (d${i} < nearest) {`,
-      `          second = nearest;`,
-      `          nearest = d${i};`,
-      `        } else if (d${i} < second) {`,
-      `          second = d${i};`,
+      `        if (abs(cellId - ${split.parentId.toFixed(1)}) < 0.5) {`,
+      `          float splitSide${index} = dot(n, normalize(uSplitPlane${index}));`,
+      `          float splitAa${index} = max(0.0006, fwidth(splitSide${index}));`,
+      `          seam = max(seam, 1.0 - smoothstep(uLineWidth, uLineWidth + splitAa${index}, abs(splitSide${index})));`,
+      `          cellId = splitSide${index} >= 0.0 ? ${split.positiveId.toFixed(1)} : ${split.negativeId.toFixed(1)};`,
       "        }"
     );
-  }
+  });
   return lines.join("\n");
 }
 
-function createLowCellVoronoiMaterial({
+function createHierarchicalSplits(seed = 1, cellCount = 2) {
+  const rng = createRng((Number(seed) || 1) ^ 0x5ab1e31);
+  const targetCells = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(cellCount) || 2)));
+  const leaves = [{
+    id: 0,
+    center: new THREE.Vector3(0, 0, 1),
+    area: 1,
+    depth: 0,
+  }];
+  const splits = [];
+  let nextId = 1;
+
+  while (leaves.length < targetCells) {
+    let bestIndex = 0;
+    let bestScore = -Infinity;
+    leaves.forEach((leaf, index) => {
+      const front = Math.max(0, leaf.center.z);
+      const score = leaf.area * (1 + (front * 1.35)) * (1 - (leaf.depth * 0.035));
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = index;
+      }
+    });
+
+    const leaf = leaves.splice(bestIndex, 1)[0];
+    const baseCenter = leaf.center.clone().normalize();
+    const tangent = tangentForNormal(baseCenter, rng);
+    const wobble = tangentForNormal(tangent, rng).multiplyScalar((rng() - 0.5) * 0.32);
+    const plane = tangent.add(wobble).normalize();
+    const positiveId = nextId;
+    const negativeId = nextId + 1;
+    nextId += 2;
+    splits.push({
+      parentId: leaf.id,
+      positiveId,
+      negativeId,
+      plane,
+    });
+
+    const splitBias = 0.42 + (rng() * 0.16);
+    const positiveArea = leaf.area * splitBias;
+    const negativeArea = leaf.area - positiveArea;
+    leaves.push({
+      id: positiveId,
+      center: baseCenter.clone().add(plane.clone().multiplyScalar(0.72)).normalize(),
+      area: positiveArea,
+      depth: leaf.depth + 1,
+    });
+    leaves.push({
+      id: negativeId,
+      center: baseCenter.clone().add(plane.clone().multiplyScalar(-0.72)).normalize(),
+      area: negativeArea,
+      depth: leaf.depth + 1,
+    });
+  }
+
+  return splits;
+}
+
+function createHierarchicalFractureMaterial({
   hitRatio = 0,
   activeCells = 3,
   seed = 1,
@@ -97,9 +144,9 @@ function createLowCellVoronoiMaterial({
 } = {}) {
   const resolved = resolveOrbLifecycle3dConfig(config);
   const cellCount = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(activeCells) || 3)));
-  const sites = createUnequalVoronoiSites(seed, cellCount);
+  const splits = createHierarchicalSplits(seed, cellCount);
   return new THREE.ShaderMaterial({
-    name: "orb_lifecycle3d:low_cell_voronoi_material",
+    name: "orb_lifecycle3d:hierarchical_fracture_material",
     transparent: true,
     depthWrite: false,
     depthTest: true,
@@ -112,7 +159,7 @@ function createLowCellVoronoiMaterial({
       uLineWidth: { value: Math.max(0.0025, Math.min(0.06, resolved.crackWidthPx * 0.006)) },
       uAlpha: { value: resolved.crackAlpha },
       uCrackColor: { value: colorToVector(resolved.crackColor) },
-      ...createSiteUniforms(sites),
+      ...createSplitUniforms(splits),
     },
     vertexShader: `
       varying vec3 vSphereNormal;
@@ -129,23 +176,16 @@ function createLowCellVoronoiMaterial({
       uniform float uLineWidth;
       uniform float uAlpha;
       uniform vec3 uCrackColor;
-      ${sites.map((site, index) => `uniform vec4 uSite${index};`).join("\n      ")}
+      ${splits.map((split, index) => `uniform vec3 uSplitPlane${index};`).join("\n      ")}
 
       varying vec3 vSphereNormal;
 
-      float siteDistance(vec3 n, vec4 site) {
-        return (1.0 - dot(n, normalize(site.xyz))) + site.w;
-      }
-
       void main() {
         vec3 n = normalize(vSphereNormal);
-        float nearest = 999.0;
-        float second = 999.0;
-${buildSiteDistanceLines(cellCount)}
+        float cellId = 0.0;
+        float seam = 0.0;
+${buildSplitLines(splits)}
 
-        float seamGap = max(0.0, second - nearest);
-        float aa = max(0.0006, fwidth(seamGap));
-        float seam = 1.0 - smoothstep(uLineWidth, uLineWidth + aa, seamGap);
         float alpha = seam * uAlpha * smoothstep(0.0, 0.18, uHitRatio);
         if (alpha < 0.01) discard;
         gl_FragColor = vec4(uCrackColor, alpha);
@@ -172,7 +212,7 @@ export function createOrbLifecycle3dCracks({
 
   const radius = Math.max(1, Number(bo) || 72) * 0.5;
   const lift = Math.max(0.002, Number(resolved.crackLiftBO) || 0.006) * Math.max(1, Number(bo) || 72);
-  const material = createLowCellVoronoiMaterial({
+  const material = createHierarchicalFractureMaterial({
     hitRatio: ratio,
     activeCells,
     seed,
@@ -182,7 +222,7 @@ export function createOrbLifecycle3dCracks({
     new THREE.SphereGeometry(radius + lift, 96, 48),
     material
   );
-  shell.name = "orb_lifecycle3d:low_cell_voronoi_shell";
+  shell.name = "orb_lifecycle3d:hierarchical_fracture_shell";
   shell.renderOrder = 12;
   group.add(shell);
 
