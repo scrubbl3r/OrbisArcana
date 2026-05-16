@@ -57,12 +57,12 @@ function colorToVector(color) {
 function createUnequalVoronoiSites(seed = 1, count = 3) {
   const rng = createRng((Number(seed) || 1) ^ 0x7a11c3);
   const cells = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(count) || 3)));
-  return Array.from({ length: cells }, (_, index) => {
+  return Array.from({ length: MAX_VORONOI_CELLS }, (_, index) => {
     const site = randomUnitVector(rng);
     if (site.z < -0.45) site.z = Math.abs(site.z) * 0.7;
     site.normalize();
     const weight = ((rng() - 0.5) * 0.18) + (Math.sin((index + 1) * 2.37) * 0.045);
-    return new THREE.Vector4(site.x, site.y, site.z, weight);
+    return new THREE.Vector4(site.x, site.y, site.z, index < cells ? weight : 999);
   });
 }
 
@@ -106,7 +106,7 @@ function createLowCellVoronoiMaterial({
       uniform float uHitRatio;
       uniform float uLineWidth;
       uniform float uAlpha;
-      uniform int uCellCount;
+      uniform float uCellCount;
       uniform vec3 uCrackColor;
       uniform vec4 uSites[${MAX_VORONOI_CELLS}];
 
@@ -121,8 +121,8 @@ function createLowCellVoronoiMaterial({
         float nearest = 999.0;
         float second = 999.0;
         for (int i = 0; i < ${MAX_VORONOI_CELLS}; i += 1) {
-          if (i >= uCellCount) break;
-          float d = siteDistance(n, uSites[i]);
+          float active = step(float(i) + 0.5, uCellCount);
+          float d = mix(999.0, siteDistance(n, uSites[i]), active);
           if (d < nearest) {
             second = nearest;
             nearest = d;
