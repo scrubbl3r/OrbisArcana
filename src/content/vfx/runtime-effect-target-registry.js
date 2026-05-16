@@ -60,7 +60,7 @@ const ORB_STATE_TARGETS = Object.freeze([
 ]);
 
 function buildSpellTargets() {
-  const supported = new Set(["aoe_flame", "aoe_electric", "bubble_shield", "shockwave", "teleport"]);
+  const supported = new Set(["aoe_flame", "aoe_electric", "bubble_shield", "shockwave", "teleport", "float"]);
   return (Array.isArray(CAST_ACTION_REGISTRY) ? CAST_ACTION_REGISTRY : [])
     .filter((entry) => supported.has(String((entry && entry.id) || "").toLowerCase()))
     .map((entry) => {

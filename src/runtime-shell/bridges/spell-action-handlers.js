@@ -8,6 +8,7 @@ export function createSpellActionHandlers({
   playFlameAoe,
   playFrostAoe,
   playTeleport,
+  toggleFloat,
   teleportOrbToSpawnNeutralizePhysics,
   executeAoeElectric,
   executeAoeFlame,
@@ -69,6 +70,10 @@ export function createSpellActionHandlers({
         teleportOrbToSpawnNeutralizePhysics,
         aboveGroundPx: Number.isFinite(payloadAboveGroundPx) ? payloadAboveGroundPx : domusTeleportAboveGroundPx,
       });
+    },
+    toggle_float(payload = {}) {
+      if (typeof toggleFloat !== "function") return false;
+      return toggleFloat(payload);
     },
     trigger_shockwave(payload = {}) {
       void payload;

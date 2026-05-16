@@ -1,5 +1,5 @@
-import { COMPILED_INTERACTION_GRAPH_V2 } from "./compiled-interaction-graph-v2.js?v=20260515d";
-import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js?v=20260515d";
+import { COMPILED_INTERACTION_GRAPH_V2 } from "./compiled-interaction-graph-v2.js?v=20260516a";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js?v=20260516a";
 
 function asText(value) {
   return String(value || "").trim();

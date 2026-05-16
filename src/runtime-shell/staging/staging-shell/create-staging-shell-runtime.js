@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260515d";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260516a";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
@@ -75,7 +75,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260515d";
+globalThis.__orbisStagingShellRuntimeVersion = "20260516a";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -248,6 +248,9 @@ function buildShellStageInitialState(phys = {}) {
     floatGraceUntilMs: 0,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
+    floatHoldActive: false,
+    floatHoldAnchorX: 0,
+    floatHoldAnchorY: yW,
     teleportHoldActive: false,
     teleportHoldAnchorY: yW,
     spawnHoldActive: false,
@@ -1096,6 +1099,9 @@ function resetShellOrbToGround(shellContext) {
     onGround,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
+    floatHoldActive: false,
+    floatHoldAnchorX: xW,
+    floatHoldAnchorY: yW,
     teleportHoldAnchorY: yW,
     spawnHoldActive: !!spawnPoint,
     spawnHoldAnchorX: xW,
@@ -2843,7 +2849,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260515d",
+  moduleCacheBustV = "20260516a",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

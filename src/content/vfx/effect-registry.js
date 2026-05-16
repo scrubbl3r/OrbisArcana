@@ -87,6 +87,15 @@ export const VFX_EFFECT_REGISTRY = Object.freeze([
     publishTargets: ["preset", "binding"],
   }),
   Object.freeze({
+    id: "spell.float",
+    label: "Float",
+    category: "spell",
+    runtimeModuleId: "float_runtime",
+    defaultPresetId: "preset.float.stub",
+    supportedContexts: ["lab", "receiver"],
+    publishTargets: ["preset", "binding"],
+  }),
+  Object.freeze({
     id: "orb.nod",
     label: "Orb Nod",
     category: "orb",

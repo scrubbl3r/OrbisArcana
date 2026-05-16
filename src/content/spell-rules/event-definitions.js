@@ -23,6 +23,11 @@ export const EVENT_DEFINITIONS = Object.freeze([
     defaultArgs: Object.freeze({}),
   }),
   Object.freeze({
+    id: "float",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
     id: "shockwave",
     type: "event",
     defaultArgs: Object.freeze({}),

@@ -37,6 +37,43 @@ export function createShellSpellActionRuntime({
         ? getRuntimeVfx().playTeleport(payload)
         : { handled: false }
     ),
+    toggleFloat: (payload = {}) => {
+      void payload;
+      const orbRuntimeState = runtime && runtime.orbRuntimeState;
+      if (!orbRuntimeState || typeof orbRuntimeState.get !== "function" || typeof orbRuntimeState.patch !== "function") {
+        return false;
+      }
+      const state = orbRuntimeState.get();
+      if (!state) return false;
+      if (state.floatHoldActive) {
+        orbRuntimeState.patch({
+          floatHoldActive: false,
+          floatGraceActive: false,
+          floatGraceUntilMs: 0,
+        });
+        return true;
+      }
+      const xW = Number.isFinite(Number(state.xW)) ? Number(state.xW) : 0;
+      const yW = Number.isFinite(Number(state.yW)) ? Number(state.yW) : 0;
+      orbRuntimeState.patch({
+        floatHoldActive: true,
+        floatHoldAnchorX: xW,
+        floatHoldAnchorY: yW,
+        floatGraceActive: false,
+        floatGraceUntilMs: 0,
+        teleportHoldActive: false,
+        spawnHoldActive: false,
+        v: 0,
+        vx: 0,
+        lift01: 0,
+        steerIntentX: 0,
+        steerActive: false,
+        onGround: false,
+        descendMs: 0,
+        shieldDescentBlocked: false,
+      });
+      return true;
+    },
     playFrostAoe: null,
     executeAoeElectric: executors.executeAoeElectric,
     executeAoeFlame: executors.executeAoeFlame,

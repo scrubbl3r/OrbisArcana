@@ -1,4 +1,4 @@
-import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260515d";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260516a";
 import { DEFAULT_KWS_LISTEN_POLICY_MODE } from "../voice-config.js";
 import {
   AXIS_WORD_IDS,
@@ -9,7 +9,7 @@ import {
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WORD_RUNTIME_ROUTING,
-} from "../../content/spells/spell-runtime-routing.js?v=20260515d";
+} from "../../content/spells/spell-runtime-routing.js?v=20260516a";
 import { COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS } from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
 
 function resolveActivePhrasesByIds(ids = []) {

@@ -161,6 +161,32 @@ export function runOrbRuntimePipeline({
     traceMeasure("receiverRuntime.orbSystem", () => runtime.orbSystem.tick(nowMs));
   }
 
+  if (state.floatHoldActive) {
+    const anchorX = Number.isFinite(Number(state.floatHoldAnchorX))
+      ? Number(state.floatHoldAnchorX)
+      : Number(state.xW || 0);
+    const anchorY = Number.isFinite(Number(state.floatHoldAnchorY))
+      ? Number(state.floatHoldAnchorY)
+      : Number(state.yW || 0);
+    state.xW = anchorX;
+    state.yW = anchorY;
+    state.v = 0;
+    state.vx = 0;
+    state.lift01 = 0;
+    state.steerIntentX = 0;
+    state.steerActive = false;
+    state.onGround = false;
+    state.descendMs = 0;
+    state.shieldDescentBlocked = false;
+
+    if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
+    if (typeof applyOrbTransform === "function") applyOrbTransform();
+    if (orbFxSystem && typeof orbFxSystem.tick === "function") traceMeasure("orbFx.tick", () => orbFxSystem.tick(ts, dt));
+    if (worldSystem && typeof worldSystem.tick === "function") traceMeasure("world.tick", () => worldSystem.tick(ts, dt));
+    if (typeof updateDebugReadout === "function") updateDebugReadout();
+    return;
+  }
+
   if (state.spawnHoldActive) {
     const spawnConfig = typeof getSpawnHoldConfig === "function" ? (getSpawnHoldConfig() || {}) : {};
     const releaseThreshold = clamp01(

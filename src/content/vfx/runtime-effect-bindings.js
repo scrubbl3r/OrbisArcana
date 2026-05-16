@@ -64,6 +64,12 @@ export const RUNTIME_EFFECT_BINDINGS = Object.freeze([
     targetId: "teleport",
     effectId: "spell.teleport",
     presetId: "preset.spell-teleport.teleport",
+  }),
+  Object.freeze({
+    targetKind: "spell",
+    targetId: "float",
+    effectId: "spell.float",
+    presetId: "preset.float.stub",
   })
 ]);
 

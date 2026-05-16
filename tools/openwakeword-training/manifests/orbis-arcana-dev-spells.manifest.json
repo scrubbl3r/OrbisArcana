@@ -36,6 +36,11 @@
       "token": "pyro"
     },
     {
+      "path": "../../../assets/kws/openwakeword-models/leviton.onnx",
+      "label": "leviton",
+      "token": "leviton"
+    },
+    {
       "path": "../../../assets/kws/openwakeword-models/electrum.onnx",
       "label": "electrum",
       "token": "electrum"

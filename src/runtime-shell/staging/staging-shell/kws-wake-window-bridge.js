@@ -1,4 +1,4 @@
-import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js?v=20260515d";
+import { INTERACTION_GRAPH_V2 } from "../../../content/interactions-v2/interaction-graph-v2.js?v=20260516a";
 import { ACTIVE_WORDS_BY_ID } from "../../../voice/wordbook.js";
 
 function normalizeShellWordId(value) {

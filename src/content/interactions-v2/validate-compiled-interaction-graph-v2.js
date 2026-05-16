@@ -1,4 +1,4 @@
-import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js?v=20260515d";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js?v=20260516a";
 import { EVENT_DEFINITIONS_BY_ID } from "../spell-rules/event-definitions.js";
 import { SIGNAL_DEFINITIONS_BY_ID } from "../spell-rules/signal-definitions.js";
 import {
