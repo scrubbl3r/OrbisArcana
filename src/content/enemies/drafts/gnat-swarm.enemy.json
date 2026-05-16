@@ -2,7 +2,7 @@
   "schema": "orbis.enemy-workshop.draft.v1",
   "enemyId": "gnat-swarm",
   "label": "Gnat Swarm",
-  "savedAtMs": 1778890598735,
+  "savedAtMs": 1778891436767,
   "enemy": {
     "gnat": {
       "idle": {
@@ -39,8 +39,8 @@
           4
         ],
         "awareness": [
-          0.05,
-          1
+          0.1,
+          0.3
         ],
         "hp": [
           1,
