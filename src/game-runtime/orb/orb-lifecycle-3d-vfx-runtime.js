@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { createRng } from "./orb-lifecycle-vfx-runtime.js";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js";
 
+const MAX_VORONOI_CELLS = 16;
+
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   const safe = Number.isFinite(n) ? n : fallback;
@@ -16,7 +18,7 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   const source = config && typeof config === "object" ? config : ORB_LIFECYCLE_3D_DEFAULTS;
   return Object.freeze({
     maxHits: clampInt(source.maxHits, 1, 12, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
-    maxCracks: clampInt(source.maxCracks, 3, 3, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
+    maxCracks: clampInt(source.maxCracks, 2, MAX_VORONOI_CELLS, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
     crackColor: Number(source.crackColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(source.crackAlpha, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
@@ -52,24 +54,27 @@ function colorToVector(color) {
   return new THREE.Vector3(c.r, c.g, c.b);
 }
 
-function createUnequalVoronoiSites(seed = 1) {
+function createUnequalVoronoiSites(seed = 1, count = 3) {
   const rng = createRng((Number(seed) || 1) ^ 0x7a11c3);
-  const weights = [-0.13, 0.025, 0.115];
-  return weights.map((weight) => {
+  const cells = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(count) || 3)));
+  return Array.from({ length: cells }, (_, index) => {
     const site = randomUnitVector(rng);
     if (site.z < -0.45) site.z = Math.abs(site.z) * 0.7;
     site.normalize();
+    const weight = ((rng() - 0.5) * 0.18) + (Math.sin((index + 1) * 2.37) * 0.045);
     return new THREE.Vector4(site.x, site.y, site.z, weight);
   });
 }
 
 function createLowCellVoronoiMaterial({
   hitRatio = 0,
+  activeCells = 3,
   seed = 1,
   config = ORB_LIFECYCLE_3D_DEFAULTS,
 } = {}) {
   const resolved = resolveOrbLifecycle3dConfig(config);
-  const sites = createUnequalVoronoiSites(seed);
+  const cellCount = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(activeCells) || 3)));
+  const sites = createUnequalVoronoiSites(seed, cellCount);
   return new THREE.ShaderMaterial({
     name: "orb_lifecycle3d:low_cell_voronoi_material",
     transparent: true,
@@ -83,10 +88,9 @@ function createLowCellVoronoiMaterial({
       uHitRatio: { value: Math.max(0, Math.min(1, hitRatio)) },
       uLineWidth: { value: Math.max(0.0025, Math.min(0.06, resolved.crackWidthPx * 0.006)) },
       uAlpha: { value: resolved.crackAlpha },
+      uCellCount: { value: cellCount },
       uCrackColor: { value: colorToVector(resolved.crackColor) },
-      uSiteA: { value: sites[0] },
-      uSiteB: { value: sites[1] },
-      uSiteC: { value: sites[2] },
+      uSites: { value: sites },
     },
     vertexShader: `
       varying vec3 vSphereNormal;
@@ -102,10 +106,9 @@ function createLowCellVoronoiMaterial({
       uniform float uHitRatio;
       uniform float uLineWidth;
       uniform float uAlpha;
+      uniform int uCellCount;
       uniform vec3 uCrackColor;
-      uniform vec4 uSiteA;
-      uniform vec4 uSiteB;
-      uniform vec4 uSiteC;
+      uniform vec4 uSites[${MAX_VORONOI_CELLS}];
 
       varying vec3 vSphereNormal;
 
@@ -115,14 +118,18 @@ function createLowCellVoronoiMaterial({
 
       void main() {
         vec3 n = normalize(vSphereNormal);
-        float dA = siteDistance(n, uSiteA);
-        float dB = siteDistance(n, uSiteB);
-        float dC = siteDistance(n, uSiteC);
-        float nearest = min(dA, min(dB, dC));
-        float second = max(dA, max(dB, dC));
-        if (dA > nearest && dA < second) second = dA;
-        if (dB > nearest && dB < second) second = dB;
-        if (dC > nearest && dC < second) second = dC;
+        float nearest = 999.0;
+        float second = 999.0;
+        for (int i = 0; i < ${MAX_VORONOI_CELLS}; i += 1) {
+          if (i >= uCellCount) break;
+          float d = siteDistance(n, uSites[i]);
+          if (d < nearest) {
+            second = nearest;
+            nearest = d;
+          } else if (d < second) {
+            second = d;
+          }
+        }
 
         float seamGap = max(0.0, second - nearest);
         float aa = max(0.0006, fwidth(seamGap));
@@ -146,6 +153,7 @@ export function createOrbLifecycle3dCracks({
   const hits = clampInt(hitsTaken, 0, 99, 0);
   const total = Math.max(1, clampInt(maxHits, 1, 99, resolved.maxHits));
   const ratio = Math.max(0, Math.min(1, hits / total));
+  const activeCells = Math.max(2, Math.min(MAX_VORONOI_CELLS, resolved.maxCracks + hits - 1));
   const group = new THREE.Group();
   group.name = "orb_lifecycle3d:cracks";
   if (hits <= 0) return group;
@@ -154,6 +162,7 @@ export function createOrbLifecycle3dCracks({
   const lift = Math.max(0.002, Number(resolved.crackLiftBO) || 0.006) * Math.max(1, Number(bo) || 72);
   const material = createLowCellVoronoiMaterial({
     hitRatio: ratio,
+    activeCells,
     seed,
     config: resolved,
   });

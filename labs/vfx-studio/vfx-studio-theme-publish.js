@@ -279,7 +279,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
       return [
         "export const ORB_LIFECYCLE_3D_DEFAULTS = Object.freeze({",
         `  maxHits: ${Math.round(toNum(p.orbLifecycle3dHitTotal, 10))},`,
-        "  maxCracks: 3,",
+        `  maxCracks: ${Math.round(clampNum(p.orbLifecycle3dCrackTotal, 2, 16, 2))},`,
         `  crackColor: ${colorHex("orbLifecycle3dCrack", 0xffffff)},`,
         `  crackAlpha: ${clampNum(p.orbLifecycle3dCrackAlpha, 0, 1, 0.9).toFixed(2)},`,
         `  crackWidthPx: ${Math.max(0.25, toNum(p.orbLifecycle3dCrackStroke, 1)).toFixed(2)},`,

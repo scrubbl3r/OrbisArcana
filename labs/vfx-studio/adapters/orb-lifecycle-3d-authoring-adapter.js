@@ -47,7 +47,7 @@ function colorChannels(color) {
 function settingsFromDefaults(defaults = {}) {
   const settings = {
     orbLifecycle3dHitTotal: roundedNumber(defaults.maxHits, 10),
-    orbLifecycle3dCrackTotal: roundedNumber(defaults.maxCracks, 3),
+    orbLifecycle3dCrackTotal: roundedNumber(defaults.maxCracks, 2),
     orbLifecycle3dCrackAlpha: fixedNumber(defaults.crackAlpha, 2, 0.9),
     orbLifecycle3dCrackStroke: fixedNumber(defaults.crackWidthPx, 2, 1),
     orbLifecycle3dCrackLift: fixedNumber(defaults.crackLiftBO, 3, 0.006),
