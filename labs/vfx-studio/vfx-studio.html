@@ -2090,6 +2090,38 @@
               <label for="orbLifecycle3dCrackLift">Surface lift BO</label>
               <input id="orbLifecycle3dCrackLift" class="paramFieldInput" type="number" min="0" max="0.2" step="0.001" value="0.006" />
             </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dStartHoleSizeMin">Start hole min</label>
+              <input id="orbLifecycle3dStartHoleSizeMin" class="paramFieldInput" type="number" min="0.001" max="0.08" step="0.001" value="0.010" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dStartHoleSizeMax">Start hole max</label>
+              <input id="orbLifecycle3dStartHoleSizeMax" class="paramFieldInput" type="number" min="0.001" max="0.12" step="0.001" value="0.020" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dChildHoleCountMin">Children min</label>
+              <input id="orbLifecycle3dChildHoleCountMin" class="paramFieldInput" type="number" min="0" max="16" step="1" value="4" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dChildHoleCountMax">Children max</label>
+              <input id="orbLifecycle3dChildHoleCountMax" class="paramFieldInput" type="number" min="0" max="24" step="1" value="9" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dChildHoleSizeMin">Child size min</label>
+              <input id="orbLifecycle3dChildHoleSizeMin" class="paramFieldInput" type="number" min="0.001" max="0.08" step="0.001" value="0.004" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dChildHoleSizeMax">Child size max</label>
+              <input id="orbLifecycle3dChildHoleSizeMax" class="paramFieldInput" type="number" min="0.001" max="0.12" step="0.001" value="0.012" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dChildHoleRangeMin">Child range min</label>
+              <input id="orbLifecycle3dChildHoleRangeMin" class="paramFieldInput" type="number" min="0.001" max="0.5" step="0.001" value="0.045" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dChildHoleRangeMax">Child range max</label>
+              <input id="orbLifecycle3dChildHoleRangeMax" class="paramFieldInput" type="number" min="0.001" max="0.8" step="0.001" value="0.145" />
+            </div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -2935,6 +2967,14 @@
       orbLifecycle3dCrackAlpha: $("orbLifecycle3dCrackAlpha"),
       orbLifecycle3dCrackStroke: $("orbLifecycle3dCrackStroke"),
       orbLifecycle3dCrackLift: $("orbLifecycle3dCrackLift"),
+      orbLifecycle3dStartHoleSizeMin: $("orbLifecycle3dStartHoleSizeMin"),
+      orbLifecycle3dStartHoleSizeMax: $("orbLifecycle3dStartHoleSizeMax"),
+      orbLifecycle3dChildHoleCountMin: $("orbLifecycle3dChildHoleCountMin"),
+      orbLifecycle3dChildHoleCountMax: $("orbLifecycle3dChildHoleCountMax"),
+      orbLifecycle3dChildHoleSizeMin: $("orbLifecycle3dChildHoleSizeMin"),
+      orbLifecycle3dChildHoleSizeMax: $("orbLifecycle3dChildHoleSizeMax"),
+      orbLifecycle3dChildHoleRangeMin: $("orbLifecycle3dChildHoleRangeMin"),
+      orbLifecycle3dChildHoleRangeMax: $("orbLifecycle3dChildHoleRangeMax"),
       orbLifecycle3dParticleCount: $("orbLifecycle3dParticleCount"),
       orbLifecycle3dParticleR: $("orbLifecycle3dParticleR"),
       orbLifecycle3dParticleG: $("orbLifecycle3dParticleG"),

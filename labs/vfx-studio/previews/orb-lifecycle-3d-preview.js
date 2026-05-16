@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { createWorldObjectInspector } from "../../world-workshop/inspectors/world-object-inspector.js?v=20260426a";
+import { ORB_BLOOM_CONFIG } from "../../world-workshop/effects/bloom/bloom-config.js?v=20260426a";
 import { createOrbModel } from "../../../src/game-runtime/orb/orb-3d-model.js?v=20260428a";
 import {
   createOpalescentOrbShellMaterial,
@@ -7,13 +8,13 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516a";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516b";
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516f";
+} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516g";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 const ORB_STAGE_FILL_RATIO = 0.52;
@@ -45,6 +46,14 @@ function readLifecycle3dConfig(els = {}) {
     crackAlpha: clampNumber(els.orbLifecycle3dCrackAlpha && els.orbLifecycle3dCrackAlpha.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(els.orbLifecycle3dCrackStroke && els.orbLifecycle3dCrackStroke.value, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
     crackLiftBO: clampNumber(els.orbLifecycle3dCrackLift && els.orbLifecycle3dCrackLift.value, 0, 0.2, ORB_LIFECYCLE_3D_DEFAULTS.crackLiftBO),
+    startHoleSizeMin: clampNumber(els.orbLifecycle3dStartHoleSizeMin && els.orbLifecycle3dStartHoleSizeMin.value, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMin),
+    startHoleSizeMax: clampNumber(els.orbLifecycle3dStartHoleSizeMax && els.orbLifecycle3dStartHoleSizeMax.value, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMax),
+    childHoleCountMin: roundedNumber(els.orbLifecycle3dChildHoleCountMin && els.orbLifecycle3dChildHoleCountMin.value, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMin),
+    childHoleCountMax: roundedNumber(els.orbLifecycle3dChildHoleCountMax && els.orbLifecycle3dChildHoleCountMax.value, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMax),
+    childHoleSizeMin: clampNumber(els.orbLifecycle3dChildHoleSizeMin && els.orbLifecycle3dChildHoleSizeMin.value, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.childHoleSizeMin),
+    childHoleSizeMax: clampNumber(els.orbLifecycle3dChildHoleSizeMax && els.orbLifecycle3dChildHoleSizeMax.value, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.childHoleSizeMax),
+    childHoleRangeMin: clampNumber(els.orbLifecycle3dChildHoleRangeMin && els.orbLifecycle3dChildHoleRangeMin.value, 0.001, 0.5, ORB_LIFECYCLE_3D_DEFAULTS.childHoleRangeMin),
+    childHoleRangeMax: clampNumber(els.orbLifecycle3dChildHoleRangeMax && els.orbLifecycle3dChildHoleRangeMax.value, 0.001, 0.8, ORB_LIFECYCLE_3D_DEFAULTS.childHoleRangeMax),
     particleCount: roundedNumber(els.orbLifecycle3dParticleCount && els.orbLifecycle3dParticleCount.value, ORB_LIFECYCLE_3D_DEFAULTS.particleCount),
     particleColor: colorFromFields(els, "orbLifecycle3dParticle", ORB_LIFECYCLE_3D_DEFAULTS.particleColor),
     particleSizePx: clampNumber(els.orbLifecycle3dParticleSize && els.orbLifecycle3dParticleSize.value, 0.5, 32, ORB_LIFECYCLE_3D_DEFAULTS.particleSizePx),
@@ -197,6 +206,7 @@ export function createOrbLifecycle3dPreview({
         minDistanceBo: 0.9,
         maxDistanceBo: 28,
         enableShadows: true,
+        bloom: ORB_BLOOM_CONFIG.enabled ? ORB_BLOOM_CONFIG : null,
         onFrame: () => {
           const t = (performance.now() - bornAt) / 1000;
           if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) {

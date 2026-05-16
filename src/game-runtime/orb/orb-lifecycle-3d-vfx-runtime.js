@@ -3,7 +3,7 @@ import { createRng } from "./orb-lifecycle-vfx-runtime.js";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js";
 
 const MAX_EROSION_CLUSTERS = 18;
-const HOLES_PER_CLUSTER = 5;
+const MAX_EROSION_HOLES = 160;
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -26,6 +26,14 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
     crackLiftBO: clampNumber(source.crackLiftBO, 0, 0.2, ORB_LIFECYCLE_3D_DEFAULTS.crackLiftBO),
     criticalGlow: clampNumber(source.criticalGlow, 0, 4, ORB_LIFECYCLE_3D_DEFAULTS.criticalGlow),
     energyColor: Number(source.energyColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.energyColor,
+    startHoleSizeMin: clampNumber(source.startHoleSizeMin, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMin),
+    startHoleSizeMax: clampNumber(source.startHoleSizeMax, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMax),
+    childHoleCountMin: clampInt(source.childHoleCountMin, 0, 16, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMin),
+    childHoleCountMax: clampInt(source.childHoleCountMax, 0, 24, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMax),
+    childHoleSizeMin: clampNumber(source.childHoleSizeMin, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.childHoleSizeMin),
+    childHoleSizeMax: clampNumber(source.childHoleSizeMax, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.childHoleSizeMax),
+    childHoleRangeMin: clampNumber(source.childHoleRangeMin, 0.001, 0.5, ORB_LIFECYCLE_3D_DEFAULTS.childHoleRangeMin),
+    childHoleRangeMax: clampNumber(source.childHoleRangeMax, 0.001, 0.8, ORB_LIFECYCLE_3D_DEFAULTS.childHoleRangeMax),
     mutationSpeed: clampNumber(source.mutationSpeed, 0, Infinity, ORB_LIFECYCLE_3D_DEFAULTS.mutationSpeed),
     mutationAmount: clampNumber(source.mutationAmount, 0, Infinity, ORB_LIFECYCLE_3D_DEFAULTS.mutationAmount),
     diffuseWash: clampNumber(source.diffuseWash, 0, 2, ORB_LIFECYCLE_3D_DEFAULTS.diffuseWash),
@@ -86,26 +94,40 @@ function buildErosionLines(holes) {
   return lines.join("\n");
 }
 
-function createErosionHoles(seed = 1, clusterCount = 1) {
+function rangeValue(rng, min, max) {
+  const a = Number(min) || 0;
+  const b = Number(max) || a;
+  const lo = Math.min(a, b);
+  const hi = Math.max(a, b);
+  return lo + (rng() * (hi - lo));
+}
+
+function rangeInt(rng, min, max) {
+  return Math.round(rangeValue(rng, min, max));
+}
+
+function createErosionHoles(seed = 1, clusterCount = 1, config = ORB_LIFECYCLE_3D_DEFAULTS) {
+  const resolved = resolveOrbLifecycle3dConfig(config);
   const rng = createRng((Number(seed) || 1) ^ 0x3e80510);
   const clusters = Math.max(1, Math.min(MAX_EROSION_CLUSTERS, Math.round(Number(clusterCount) || 1)));
   const holes = [];
-  for (let cluster = 0; cluster < clusters; cluster += 1) {
+  for (let cluster = 0; cluster < clusters && holes.length < MAX_EROSION_HOLES; cluster += 1) {
     const center = randomUnitVector(rng);
     if (center.z < -0.55) center.z = Math.abs(center.z) * 0.72;
     center.normalize();
     const tangent = tangentForNormal(center, rng);
     const bitangent = new THREE.Vector3().crossVectors(center, tangent).normalize();
-    const baseRadius = 0.0065 + (rng() * 0.0085);
+    const baseRadius = rangeValue(rng, resolved.startHoleSizeMin, resolved.startHoleSizeMax);
     holes.push(new THREE.Vector4(center.x, center.y, center.z, baseRadius * 1.28));
-    for (let satellite = 1; satellite < HOLES_PER_CLUSTER; satellite += 1) {
+    const childCount = Math.max(0, rangeInt(rng, resolved.childHoleCountMin, resolved.childHoleCountMax));
+    for (let satellite = 0; satellite < childCount && holes.length < MAX_EROSION_HOLES; satellite += 1) {
       const angle = rng() * Math.PI * 2;
-      const offset = 0.105 + (rng() * 0.105);
+      const offset = rangeValue(rng, resolved.childHoleRangeMin, resolved.childHoleRangeMax);
       const direction = tangent.clone()
         .multiplyScalar(Math.cos(angle) * offset)
         .add(bitangent.clone().multiplyScalar(Math.sin(angle) * offset));
       const satelliteCenter = center.clone().add(direction).normalize();
-      const satelliteRadius = baseRadius * (0.72 + (rng() * 0.46));
+      const satelliteRadius = rangeValue(rng, resolved.childHoleSizeMin, resolved.childHoleSizeMax);
       holes.push(new THREE.Vector4(satelliteCenter.x, satelliteCenter.y, satelliteCenter.z, satelliteRadius));
     }
   }
@@ -119,7 +141,7 @@ function createErosionMaterial({
   config = ORB_LIFECYCLE_3D_DEFAULTS,
 } = {}) {
   const resolved = resolveOrbLifecycle3dConfig(config);
-  const holes = createErosionHoles(seed, activeClusters);
+  const holes = createErosionHoles(seed, activeClusters, resolved);
   return new THREE.ShaderMaterial({
     name: "orb_lifecycle3d:clustered_erosion_material",
     transparent: true,
