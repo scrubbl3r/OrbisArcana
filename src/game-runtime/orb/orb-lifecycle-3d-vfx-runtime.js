@@ -24,9 +24,9 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
     crackAlpha: clampNumber(source.crackAlpha, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
     crackLiftBO: clampNumber(source.crackLiftBO, 0, 0.2, ORB_LIFECYCLE_3D_DEFAULTS.crackLiftBO),
-    edgeLightBrightness: clampNumber(source.edgeLightBrightness, 0, 3, ORB_LIFECYCLE_3D_DEFAULTS.edgeLightBrightness),
-    edgeLightRange: clampNumber(source.edgeLightRange, 0.2, 6, ORB_LIFECYCLE_3D_DEFAULTS.edgeLightRange),
-    holeEdgeSoftness: clampNumber(source.holeEdgeSoftness, 0.25, 8, ORB_LIFECYCLE_3D_DEFAULTS.holeEdgeSoftness),
+    edgeLightBrightness: clampNumber(source.edgeLightBrightness, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.edgeLightBrightness),
+    edgeLightRange: clampNumber(source.edgeLightRange, 0.2, 24, ORB_LIFECYCLE_3D_DEFAULTS.edgeLightRange),
+    holeEdgeSoftness: clampNumber(source.holeEdgeSoftness, 0, 8, ORB_LIFECYCLE_3D_DEFAULTS.holeEdgeSoftness),
     criticalGlow: clampNumber(source.criticalGlow, 0, 4, ORB_LIFECYCLE_3D_DEFAULTS.criticalGlow),
     energyColor: Number(source.energyColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.energyColor,
     startHoleSizeMin: clampNumber(source.startHoleSizeMin, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMin),
@@ -82,12 +82,14 @@ function buildErosionLines(holes) {
     lines.push(
       `        float d${index} = 1.0 - dot(n, normalize(uHole${index}.xyz));`,
       `        float r${index} = uHole${index}.w * uErosionGrowth;`,
-      `        float edge${index} = max(0.0006, fwidth(d${index}) * uHoleEdgeSoftness);`,
+      `        float baseEdge${index} = max(0.0006, fwidth(d${index}) * 2.0);`,
+      `        float edge${index} = max(baseEdge${index}, r${index} * uHoleEdgeSoftness);`,
       `        float aura${index} = max(0.004, r${index} * uEdgeLightRange);`,
-      `        float void${index} = 1.0 - smoothstep(r${index}, r${index} + edge${index}, d${index});`,
-      `        float outside${index} = smoothstep(r${index} - edge${index}, r${index} + edge${index} * 2.0, d${index});`,
+      `        float void${index} = 1.0 - smoothstep(r${index} - edge${index}, r${index} + edge${index}, d${index});`,
+      `        float outside${index} = smoothstep(r${index} - edge${index}, r${index} + edge${index} * 0.65, d${index});`,
       `        float stress${index} = outside${index} * (1.0 - smoothstep(r${index}, r${index} + aura${index}, d${index}));`,
       `        erosion = max(erosion, void${index});`,
+      `        holeCut = max(holeCut, void${index});`,
       `        edgeStress = max(edgeStress, stress${index});`
     );
   });
@@ -176,11 +178,13 @@ export function createOrbLifecycle3dErosionPatch({
     fragmentSource: `
         vec3 n = normalize(vLifecycleLocalNormal);
         float erosion = 0.0;
+        float holeCut = 0.0;
         float edgeStress = 0.0;
 ${buildErosionLines(holes)}
         float edgeLight = smoothstep(0.0, 0.7, uErosionOpacity) * edgeStress * uEdgeLightBrightness;
-        pearl += (pearl * 0.16 + vec3(0.08, 0.11, 0.12)) * edgeLight;
-        if (erosion * uErosionOpacity > 0.5) discard;
+        pearl = mix(pearl, vec3(1.0), clamp(edgeLight, 0.0, 1.0));
+        alpha *= 1.0 - clamp(holeCut * uErosionOpacity, 0.0, 1.0);
+        if (alpha * uOpacity < 0.01) discard;
     `,
   });
 }

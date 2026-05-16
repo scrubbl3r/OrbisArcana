@@ -2075,15 +2075,15 @@
             </div>
             <div class="paramFieldRow">
               <label for="orbLifecycle3dEdgeLightBrightness">Edge light</label>
-              <input id="orbLifecycle3dEdgeLightBrightness" class="paramFieldInput" type="number" min="0" max="3" step="0.01" value="1.00" />
+              <input id="orbLifecycle3dEdgeLightBrightness" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1.00" />
             </div>
             <div class="paramFieldRow">
               <label for="orbLifecycle3dEdgeLightRange">Edge range</label>
-              <input id="orbLifecycle3dEdgeLightRange" class="paramFieldInput" type="number" min="0.2" max="6" step="0.05" value="1.85" />
+              <input id="orbLifecycle3dEdgeLightRange" class="paramFieldInput" type="number" min="0.2" max="24" step="0.1" value="1.85" />
             </div>
             <div class="paramFieldRow">
               <label for="orbLifecycle3dHoleEdgeSoftness">Hole softness</label>
-              <input id="orbLifecycle3dHoleEdgeSoftness" class="paramFieldInput" type="number" min="0.25" max="8" step="0.05" value="1.00" />
+              <input id="orbLifecycle3dHoleEdgeSoftness" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="1.00" />
             </div>
             <div class="paramFieldRow">
               <label for="orbLifecycle3dStartHoleSizeMin">Start hole min</label>
@@ -2501,14 +2501,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260516i"),
+      import("./vfx-studio-bootstrap.js?v=20260516j"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
       import("./vfx-studio-surfaces.js?v=20260515c"),
-      import("./vfx-studio-theme-publish.js?v=20260516b"),
+      import("./vfx-studio-theme-publish.js?v=20260516c"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
