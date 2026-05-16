@@ -1,6 +1,7 @@
 const ORB_LIFECYCLE_3D_FIELDS = Object.freeze([
   "orbLifecycle3dHitTotal",
   "orbLifecycle3dCrackTotal",
+  "orbLifecycle3dSeed",
   "orbLifecycle3dCrackAlpha",
   "orbLifecycle3dEdgeLightBrightness",
   "orbLifecycle3dEdgeLightRange",
@@ -56,6 +57,7 @@ function settingsFromDefaults(defaults = {}) {
   const settings = {
     orbLifecycle3dHitTotal: roundedNumber(defaults.maxHits, 10),
     orbLifecycle3dCrackTotal: roundedNumber(defaults.maxCracks, 3),
+    orbLifecycle3dSeed: roundedNumber(defaults.erosionSeed, 1001),
     orbLifecycle3dCrackAlpha: fixedNumber(defaults.crackAlpha, 2, 0.92),
     orbLifecycle3dEdgeLightBrightness: fixedNumber(defaults.edgeLightBrightness, 2, 1),
     orbLifecycle3dEdgeLightRange: fixedNumber(defaults.edgeLightRange, 2, 1.85),

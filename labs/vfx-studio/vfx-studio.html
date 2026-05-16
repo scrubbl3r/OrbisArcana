@@ -2055,6 +2055,11 @@
               <input class="paramFieldInput" type="text" value="Rebuild cracks with a fresh seed" readonly />
               <button id="orbLifecycle3dRegenerateBtn" class="toolBtn" type="button">Regenerate</button>
             </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dSeed">Seed</label>
+              <input id="orbLifecycle3dSeed" class="paramFieldInput" type="number" min="1" max="999999999" step="1" value="1001" />
+              <button id="orbLifecycle3dRegenerateSeedBtn" class="toolBtn" type="button">Regenerate Seed</button>
+            </div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -2501,14 +2506,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260516k"),
+      import("./vfx-studio-bootstrap.js?v=20260516l"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
       import("./vfx-studio-surfaces.js?v=20260515c"),
-      import("./vfx-studio-theme-publish.js?v=20260516c"),
+      import("./vfx-studio-theme-publish.js?v=20260516d"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2523,7 +2528,7 @@
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
     import { createOrbGlobe3dAuthoringAdapter } from "./adapters/orb-globe-3d-authoring-adapter.js?v=20260502b";
     import { createOrbGlobeAuthoringAdapter } from "./adapters/orb-globe-authoring-adapter.js?v=20260425d";
-    import { createOrbLifecycle3dAuthoringAdapter } from "./adapters/orb-lifecycle-3d-authoring-adapter.js?v=20260516b";
+    import { createOrbLifecycle3dAuthoringAdapter } from "./adapters/orb-lifecycle-3d-authoring-adapter.js?v=20260516c";
     import { createOrbLifecycleAuthoringAdapter } from "./adapters/orb-lifecycle-authoring-adapter.js?v=20260425d";
     import { createOrbNodAuthoringAdapter } from "./adapters/orb-nod-authoring-adapter.js?v=20260425d";
     import { createOrbNod3dAuthoringAdapter } from "./adapters/orb-nod3d-authoring-adapter.js?v=20260427a";
@@ -2551,7 +2556,7 @@
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425d";
-    import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516d";
+    import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516e";
     import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425d";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260425d";
     import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-3d-default.js?v=20260502c";
@@ -2956,6 +2961,8 @@
       orbLifecycleStatus: $("orbLifecycleStatus"),
       orbLifecycle3dHitTotal: $("orbLifecycle3dHitTotal"),
       orbLifecycle3dCrackTotal: $("orbLifecycle3dCrackTotal"),
+      orbLifecycle3dSeed: $("orbLifecycle3dSeed"),
+      orbLifecycle3dRegenerateSeedBtn: $("orbLifecycle3dRegenerateSeedBtn"),
       orbLifecycle3dCrackAlpha: $("orbLifecycle3dCrackAlpha"),
       orbLifecycle3dEdgeLightBrightness: $("orbLifecycle3dEdgeLightBrightness"),
       orbLifecycle3dEdgeLightRange: $("orbLifecycle3dEdgeLightRange"),

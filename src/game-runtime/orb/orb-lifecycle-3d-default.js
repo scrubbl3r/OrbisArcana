@@ -1,6 +1,7 @@
 export const ORB_LIFECYCLE_3D_DEFAULTS = Object.freeze({
   maxHits: 10,
   maxCracks: 4,
+  erosionSeed: 1001,
   crackColor: 0xffffff,
   crackAlpha: 1.00,
   crackWidthPx: 1.50,

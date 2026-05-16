@@ -1,5 +1,5 @@
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260516d";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260516e";
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dDissolveBurst,
@@ -10,8 +10,8 @@ import {
 const CRACK_UPDATE_FPS = 30;
 const CRACK_UPDATE_INTERVAL_MS = 1000 / CRACK_UPDATE_FPS;
 
-function readSeed(payload = {}, fallback = 1) {
-  return Number(payload.fractureSeed || payload.seed || fallback) || 1;
+function readSeed(payload = {}, fallback = ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed) {
+  return Number(payload.fractureSeed || payload.seed || payload.erosionSeed || fallback) || 1;
 }
 
 function readMaxHits(payload = {}, fallback = ORB_LIFECYCLE_3D_DEFAULTS.maxHits) {
@@ -32,7 +32,7 @@ export function createOrbLifecycle3dRuntime({
   const state = {
     hitsTaken: 0,
     maxHits: readMaxHits(),
-    fractureSeed: 1,
+    fractureSeed: readSeed(currentConfig()),
     cracks: null,
     burst: null,
     lastCrackUpdateMs: 0,

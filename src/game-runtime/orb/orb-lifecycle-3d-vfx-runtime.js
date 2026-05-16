@@ -21,6 +21,7 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   return Object.freeze({
     maxHits: clampInt(source.maxHits, 1, 12, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
     maxCracks: clampInt(source.maxCracks, 1, MAX_EROSION_CLUSTERS_PER_HIT, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
+    erosionSeed: clampInt(source.erosionSeed, 1, 999999999, ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed),
     crackColor: Number(source.crackColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(source.crackAlpha, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),

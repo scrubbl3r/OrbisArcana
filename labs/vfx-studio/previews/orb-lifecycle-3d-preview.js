@@ -8,14 +8,14 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260516a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516d";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516e";
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516k";
+} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516l";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 const ORB_STAGE_FILL_RATIO = 0.52;
@@ -43,6 +43,7 @@ function readLifecycle3dConfig(els = {}) {
   return Object.freeze({
     maxHits: roundedNumber(els.orbLifecycle3dHitTotal && els.orbLifecycle3dHitTotal.value, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
     maxCracks: roundedNumber(els.orbLifecycle3dCrackTotal && els.orbLifecycle3dCrackTotal.value, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
+    erosionSeed: Math.max(1, roundedNumber(els.orbLifecycle3dSeed && els.orbLifecycle3dSeed.value, ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed)),
     crackColor: ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(els.orbLifecycle3dCrackAlpha && els.orbLifecycle3dCrackAlpha.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx,
@@ -129,7 +130,7 @@ export function createOrbLifecycle3dPreview({
   let cracks = null;
   let burst = null;
   let hitsTaken = 0;
-  let seed = 1001;
+  let seed = Math.max(1, Number(ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed) || 1001);
   let bornAt = 0;
   let activeOrbConfig = ORB_3D_VISUAL_DEFAULTS;
 
@@ -142,6 +143,21 @@ export function createOrbLifecycle3dPreview({
     if (els.orbLifecycle3dStatus) {
       els.orbLifecycle3dStatus.value = `Hits ${hitsTaken} / ${Math.max(1, Number(config.maxHits) || 1)}`;
     }
+  }
+
+  function syncSeedField() {
+    if (els.orbLifecycle3dSeed) els.orbLifecycle3dSeed.value = String(Math.max(1, Math.round(seed)));
+  }
+
+  function readSeedFromField(config = readLifecycle3dConfig(els)) {
+    seed = Math.max(1, Math.round(Number(config.erosionSeed) || Number(ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed) || 1001));
+    syncSeedField();
+  }
+
+  function rollSeed() {
+    seed = ((Math.random() * 1e9) | 0) || 1;
+    syncSeedField();
+    return seed;
   }
 
   function removeCracks() {
@@ -215,6 +231,7 @@ export function createOrbLifecycle3dPreview({
   function apply() {
     if (!els.previewRoot) return null;
     const config = readLifecycle3dConfig(els);
+    readSeedFromField(config);
     const bo = readBo();
     if (!inspector) {
       activeOrbConfig = (typeof getOrb3dVisualSettings === "function" && getOrb3dVisualSettings()) || ORB_3D_VISUAL_DEFAULTS;
@@ -297,8 +314,15 @@ export function createOrbLifecycle3dPreview({
   }
 
   function regenerate() {
-    seed = ((Math.random() * 1e9) | 0) || 1;
+    rollSeed();
     hitsTaken = 0;
+    removeBurst();
+    if (model) model.visible = true;
+    apply();
+  }
+
+  function regenerateSeed() {
+    rollSeed();
     removeBurst();
     if (model) model.visible = true;
     apply();
@@ -310,12 +334,14 @@ export function createOrbLifecycle3dPreview({
 
   function wire() {
     apply();
+    syncSeedField();
     if (els.orbLifecycle3dOrbVisibleBtn) els.orbLifecycle3dOrbVisibleBtn.addEventListener("click", () => toggleLayer(els.orbLifecycle3dOrbVisibleBtn));
     if (els.orbLifecycle3dApplyCrackBtn) els.orbLifecycle3dApplyCrackBtn.addEventListener("click", apply);
     if (els.orbLifecycle3dApplyParticleBtn) els.orbLifecycle3dApplyParticleBtn.addEventListener("click", apply);
     if (els.orbLifecycle3dHitBtn) els.orbLifecycle3dHitBtn.addEventListener("click", hit);
     if (els.orbLifecycle3dHealBtn) els.orbLifecycle3dHealBtn.addEventListener("click", heal);
     if (els.orbLifecycle3dRegenerateBtn) els.orbLifecycle3dRegenerateBtn.addEventListener("click", regenerate);
+    if (els.orbLifecycle3dRegenerateSeedBtn) els.orbLifecycle3dRegenerateSeedBtn.addEventListener("click", regenerateSeed);
   }
 
   return Object.freeze({
