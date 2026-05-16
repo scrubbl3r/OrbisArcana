@@ -62,17 +62,43 @@ function readLifecycle3dConfig(els = {}) {
   });
 }
 
+function resolvePreviewBounds(root) {
+  if (!root || typeof root.getBoundingClientRect !== "function") return null;
+  const rootBounds = root.getBoundingClientRect();
+  if (rootBounds.width > 1 && rootBounds.height > 1) return rootBounds;
+  const stage = root.closest && root.closest(".stage");
+  const fallback = stage || root.parentElement;
+  if (!fallback || typeof fallback.getBoundingClientRect !== "function") return rootBounds;
+  const fallbackBounds = fallback.getBoundingClientRect();
+  return fallbackBounds.width > 1 && fallbackBounds.height > 1 ? fallbackBounds : rootBounds;
+}
+
 function frameCameraToSsotOrbSize(inspector, root, bo) {
   if (!inspector || !inspector.camera || !root) return;
-  const bounds = root.getBoundingClientRect();
+  const bounds = resolvePreviewBounds(root);
+  if (!bounds || bounds.width <= 1 || bounds.height <= 1) return;
+  const viewportWidth = Math.max(1, Number(bounds.width) || 1);
   const viewportHeight = Math.max(1, Number(bounds.height) || 1);
   const camera = inspector.camera;
+  if (inspector.renderer && typeof inspector.renderer.setSize === "function") {
+    inspector.renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, 2));
+    inspector.renderer.setSize(Math.round(viewportWidth), Math.round(viewportHeight), false);
+  }
+  if (inspector.composer && typeof inspector.composer.setSize === "function") {
+    inspector.composer.setSize(Math.round(viewportWidth), Math.round(viewportHeight));
+  }
+  camera.aspect = viewportWidth / viewportHeight;
   const fovRadians = (Number(camera.fov) || 45) * Math.PI / 180;
   const distance = viewportHeight / (2 * Math.tan(fovRadians * 0.5));
   camera.position.set(0, 0, distance);
   camera.near = Math.max(0.1, bo * 0.05);
   camera.far = Math.max(2000, distance + (bo * 20));
   camera.updateProjectionMatrix();
+  if (Array.isArray(inspector.edgeMaterials)) {
+    inspector.edgeMaterials.forEach((material) => {
+      if (material && material.resolution) material.resolution.set(viewportWidth, viewportHeight);
+    });
+  }
   if (inspector.controls) {
     inspector.controls.target.set(0, 0, 0);
     inspector.controls.minDistance = Math.max(bo * 0.75, distance * 0.35);
@@ -206,6 +232,7 @@ export function createOrbLifecycle3dPreview({
       inspector.scene.add(model);
       bornAt = performance.now();
     }
+    frameCameraToSsotOrbSize(inspector, els.previewRoot, bo);
     hitsTaken = Math.min(hitsTaken, Math.max(1, Number(config.maxHits) || 1));
     rebuildCracks(config);
     updateStatus(config);
