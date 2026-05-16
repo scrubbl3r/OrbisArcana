@@ -1,6 +1,6 @@
 import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260501e";
-import { COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN } from "../../../game-runtime/combat/combat-constants.js";
-import { EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
+import { COMBAT_EFFECT_IMMUNITY, COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN } from "../../../game-runtime/combat/combat-constants.js";
+import { EVT_COMBAT_IMMUNITY_CHANGED, EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
 import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
   LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS,
@@ -394,10 +394,14 @@ export function createGameStageDepth3dLayer({
     const dtSec = lastEnemy3dTickMs ? Math.max(0.001, Math.min(0.05, (nowMs - lastEnemy3dTickMs) / 1000)) : 0.016;
     lastEnemy3dTickMs = nowMs;
     const orbRuntimePosition = currentOrbAlive ? orb3dActorRuntime.getPosition() : null;
+    const shieldCombat = bubbleShield3dRuntime && typeof bubbleShield3dRuntime.getCombatState === "function"
+      ? bubbleShield3dRuntime.getCombatState(nowMs)
+      : null;
     gnatSwarm3dRuntime.update(nowMs, dtSec, {
       orbWorldPosition: currentOrbAlive ? currentOrbWorldPosition : null,
       orbRuntimePosition,
       orbAlive: currentOrbAlive,
+      orbCombat: shieldCombat,
     });
     const shouldPublishEnemyTelemetry = nowMs - lastEnemyTelemetryAtMs >= 200;
     const enemyTrace = shouldPublishEnemyTelemetry && typeof gnatSwarm3dRuntime.getTrace === "function" ? gnatSwarm3dRuntime.getTrace() : null;
@@ -409,6 +413,8 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dStunnedCount = String(enemyTrace.stunned || 0);
       root.dataset.enemy3dLiftLeach = String(enemyTrace.liftLeach || 0);
       root.dataset.enemy3dLifeLeachPerSec = String(enemyTrace.lifeLeachPerSec || 0);
+      root.dataset.enemy3dShieldImmune = enemyTrace.shieldImmune ? "true" : "false";
+      root.dataset.enemy3dShieldContactRadiusPx = String(enemyTrace.shieldContactRadiusPx || 0);
       root.dataset.enemy3dSignalCount = String(enemyTrace.signals || 0);
       root.dataset.enemy3dNav = enemyTrace.nav ? "grid" : "fallback";
       root.dataset.enemy3dNavCells = String(enemyTrace.navCells || 0);
@@ -711,6 +717,27 @@ export function createGameStageDepth3dLayer({
         return { handled: false, skipped: "bubble_shield3d_runtime_missing" };
       }
       const result = bubbleShield3dRuntime.activate(payload);
+      const shieldCombat = bubbleShield3dRuntime && typeof bubbleShield3dRuntime.getCombatState === "function"
+        ? bubbleShield3dRuntime.getCombatState(performance.now())
+        : null;
+      if (result && result.handled && combatEventBus && typeof combatEventBus.emit === "function") {
+        combatEventBus.emit(EVT_COMBAT_IMMUNITY_CHANGED, {
+          kind: COMBAT_EFFECT_IMMUNITY,
+          immunityId: "bubble-shield",
+          sourceEntityId: COMBAT_ENTITY_ORB,
+          targetEntityId: COMBAT_ENTITY_ORB,
+          immune: true,
+          reason: "bubble_shield",
+          durationMs: Number(payload && payload.durationMs) || Number(shieldCombat && shieldCombat.remainingMs) || 0,
+          untilMs: Number(shieldCombat && shieldCombat.untilMs) || 0,
+          atMs: performance.now(),
+          tags: ["spell", "bubble-shield"],
+          meta: {
+            radiusWorldUnits: Number(shieldCombat && shieldCombat.radiusWorldUnits) || 0,
+            diameterRatio: Number(shieldCombat && shieldCombat.diameterRatio) || 0,
+          },
+        });
+      }
       if (perfTrace && typeof perfTrace.mark === "function") {
         perfTrace.mark("depth3d.bubbleShield.play.result", {
           handled: !!(result && result.handled),

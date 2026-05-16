@@ -52,6 +52,9 @@ export function createBubbleShield3dRuntime({
   let shield = null;
   let activeConfig = normalizeBubbleShield3dRuntimeConfig();
   let startedAtMs = 0;
+  let runtimeBo = 72;
+  let currentDiameterRatio = activeConfig.diameterRatio;
+  let activeUntilMs = 0;
 
   function requestFrame() {
     if (typeof onNeedsFrame === "function") onNeedsFrame();
@@ -96,6 +99,7 @@ export function createBubbleShield3dRuntime({
     const progress = duration <= 0 ? 1 : elapsedMs / duration;
     const eased = jelloEase(progress, activeConfig.overshoot, activeConfig.jiggleFrequency, activeConfig.jiggleDecay);
     const current = start + ((end - start) * eased);
+    currentDiameterRatio = current;
     shield.scale.setScalar(current / end);
   }
 
@@ -111,6 +115,8 @@ export function createBubbleShield3dRuntime({
     if (timer) clearTimeout(timer);
     raf = 0;
     timer = 0;
+    activeUntilMs = 0;
+    currentDiameterRatio = activeConfig.diameterRatio;
     removeShield();
     requestFrame();
   }
@@ -150,7 +156,10 @@ export function createBubbleShield3dRuntime({
       return { handled: false, skipped: "orb_model_missing" };
     }
     const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 72);
+    runtimeBo = bo;
     startedAtMs = Number(now()) || performance.now();
+    activeUntilMs = startedAtMs + activeConfig.durationMs;
+    currentDiameterRatio = activeConfig.startDiameterRatio;
     markTrace("bubbleShield3d.activate.config", {
       bo,
       durationMs: activeConfig.durationMs,
@@ -191,6 +200,18 @@ export function createBubbleShield3dRuntime({
     destroy: clear,
     isActive() {
       return !!shield || !!raf || !!timer;
+    },
+    getCombatState(nowMs = now()) {
+      const active = !!shield && (Number(nowMs) || 0) < activeUntilMs;
+      const radiusWorldUnits = Math.max(0, runtimeBo * 0.5 * currentDiameterRatio);
+      return Object.freeze({
+        active,
+        immune: active,
+        radiusWorldUnits,
+        diameterRatio: currentDiameterRatio,
+        untilMs: active ? activeUntilMs : 0,
+        remainingMs: active ? Math.max(0, activeUntilMs - (Number(nowMs) || 0)) : 0,
+      });
     },
   });
 }

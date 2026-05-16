@@ -347,7 +347,7 @@ export function createGnatSwarm3dRuntime({
   let states = [];
   let bounds = Object.freeze({ loops: [], box: null });
   let activeSignals = [];
-  const alertTrace = { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null };
+  const alertTrace = { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null };
   let pendingLifeLeachDamage = 0;
   let lastDamageEmitAtMs = 0;
   let lastMotionEmitAtMs = 0;
@@ -366,7 +366,7 @@ export function createGnatSwarm3dRuntime({
     lastMotionEmitAtMs = 0;
     lastLiftPenalty = 0;
     lastFeedingCount = 0;
-    Object.assign(alertTrace, { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null });
+    Object.assign(alertTrace, { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null });
   }
 
   function compactActiveSignals(nowSec = 0) {
@@ -685,20 +685,36 @@ export function createGnatSwarm3dRuntime({
     emitSignal(state, nowSec, Math.max(state.minSignalStrength, state.alertStrength * state.signalDecay), state.alertGeneration + 1);
   }
 
-  function scheduleFeedTarget(state, orbPosition = null, nowSec = 0) {
+  function resolveFeedContactRadiusPx(state = null, orbCombat = null) {
+    if (!state) return 1;
+    const shieldRadiusPx = Math.max(0, Number(orbCombat && orbCombat.radiusWorldUnits) || Number(orbCombat && orbCombat.contactRadiusPx) || 0);
+    const shieldContactRadiusPx = shieldRadiusPx > 0
+      ? shieldRadiusPx + Math.max(0, Number(state.feedContactPaddingPx) || 0)
+      : 0;
+    return Math.max(1, Number(state.feedContactRadiusPx) || 1, shieldContactRadiusPx);
+  }
+
+  function resolveFeedOuterRadiusPx(state = null, orbCombat = null) {
+    if (!state) return 1;
+    return resolveFeedContactRadiusPx(state, orbCombat) + Math.max(1, Number(state.feedBandPx) || 1);
+  }
+
+  function scheduleFeedTarget(state, orbPosition = null, nowSec = 0, orbCombat = null) {
     if (!state || !orbPosition) return;
     state.orbTarget = { xW: orbPosition.xW, yW: orbPosition.yW };
     if (nowSec >= state.nextFeedMigrationAt) {
       state.feedMigrationDirection = Math.random() < 0.5 ? -1 : 1;
       state.nextFeedMigrationAt = nowSec + randomInRange(state.feedMigrationRetargetSec, 3.5);
     }
-    state.feedLatchAngle += state.feedMigrationDirection * state.feedMigrationRadPerSec * Math.max(0.001, state.lastFeedDt || 0.016);
+    const feedContactRadiusPx = resolveFeedContactRadiusPx(state, orbCombat);
+    const feedMigrationRadPerSec = Math.max(0, Number(state.feedMigrationPxPerSec) || 0) / Math.max(1, feedContactRadiusPx);
+    state.feedLatchAngle += state.feedMigrationDirection * feedMigrationRadPerSec * Math.max(0.001, state.lastFeedDt || 0.016);
     state.feedLatchAngle += state.feedOrbitSpeed * Math.max(0.001, state.lastFeedDt || 0.016);
     state.feedAngle = state.feedLatchAngle;
     const pulse = (Math.sin(nowSec * state.feedNipHz * Math.PI * 2 + state.feedPhase) + 1) * 0.5;
     const nipOffsetPx = (pulse * pulse) * state.feedNipDepthPx;
     const twitchPx = randomUnit() * state.feedNipDepthPx * 0.18;
-    const targetRadiusPx = state.feedContactRadiusPx + Math.max(0, nipOffsetPx + twitchPx);
+    const targetRadiusPx = feedContactRadiusPx + Math.max(0, nipOffsetPx + twitchPx);
     state.target = {
       xW: state.orbTarget.xW + Math.cos(state.feedAngle) * targetRadiusPx,
       yW: state.orbTarget.yW + Math.sin(state.feedAngle) * targetRadiusPx,
@@ -706,16 +722,18 @@ export function createGnatSwarm3dRuntime({
     state.nextTargetAt = nowSec + 0.035 + Math.random() * 0.045;
   }
 
-  function resolveOrbContact(state, next = null, orbPosition = null) {
+  function resolveOrbContact(state, next = null, orbPosition = null, orbCombat = null) {
     if (!state || !next || !orbPosition) return next;
     const dx = next.xW - orbPosition.xW;
     const dy = next.yW - orbPosition.yW;
     const d = Math.hypot(dx, dy);
-    if (d >= state.feedContactRadiusPx && (state.mode !== "feeding" || d <= state.feedOuterRadiusPx)) return next;
+    const feedContactRadiusPx = resolveFeedContactRadiusPx(state, orbCombat);
+    const feedOuterRadiusPx = resolveFeedOuterRadiusPx(state, orbCombat);
+    if (d >= feedContactRadiusPx && (state.mode !== "feeding" || d <= feedOuterRadiusPx)) return next;
     const normal = normalFromPoints(orbPosition, next, state.feedAngle);
     const targetRadiusPx = state.mode === "feeding"
-      ? clampNumber(d, state.feedContactRadiusPx, state.feedContactRadiusPx, state.feedOuterRadiusPx)
-      : state.feedContactRadiusPx;
+      ? clampNumber(d, feedContactRadiusPx, feedContactRadiusPx, feedOuterRadiusPx)
+      : feedContactRadiusPx;
     const projected = {
       xW: orbPosition.xW + normal.xW * targetRadiusPx,
       yW: orbPosition.yW + normal.yW * targetRadiusPx,
@@ -725,7 +743,7 @@ export function createGnatSwarm3dRuntime({
       state.velocity.xW -= (1 + state.feedBounce) * inwardSpeed * normal.xW;
       state.velocity.yW -= (1 + state.feedBounce) * inwardSpeed * normal.yW;
     }
-    if (state.mode === "feeding" && d > state.feedOuterRadiusPx) {
+    if (state.mode === "feeding" && d > feedOuterRadiusPx) {
       state.velocity.xW *= 0.42;
       state.velocity.yW *= 0.42;
     } else {
@@ -753,6 +771,8 @@ export function createGnatSwarm3dRuntime({
       stunned: 0,
       liftLeach: 0,
       lifeLeachPerSec: 0,
+      shieldImmune: false,
+      shieldContactRadiusPx: 0,
       signals: 0,
       nav: !!bounds.nav,
       navCells: bounds.nav ? (bounds.nav.cols || 0) * (bounds.nav.rows || 0) : 0,
@@ -927,12 +947,13 @@ export function createGnatSwarm3dRuntime({
           signalCheckSec: detectionCheckSec,
           signalHops,
 	          minSignalStrength,
-	          signalMemorySec,
-	          signalFlashUntil: 0,
-	          leashChasePx: Math.max(0, randomInRange(leashChaseBo, 40) * bo),
+          signalMemorySec,
+          signalFlashUntil: 0,
+          leashChasePx: Math.max(0, randomInRange(leashChaseBo, 40) * bo),
           leashFeedPx: Math.max(0, randomInRange(leashFeedBo, 40) * bo),
           leashPathStepPx,
           gnatRadiusPx: Math.max(0.5, gnatSize * 0.5),
+          feedContactPaddingPx: Math.max(0.5, gnatSize * 0.5) + Math.max(0, feedOffsetPx),
           feedContactRadiusPx: Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)),
           feedBandPx: Math.max(1, bo * 0.1),
           feedOuterRadiusPx: Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)) + Math.max(1, bo * 0.1),
@@ -942,6 +963,7 @@ export function createGnatSwarm3dRuntime({
           feedStickiness,
           liftLeach,
           lifeLeachPerSec,
+          feedMigrationPxPerSec,
           feedMigrationRadPerSec: feedMigrationPxPerSec / Math.max(1, bo * 0.5 + gnatSize * 0.5 + Math.max(0, feedOffsetPx)),
           feedMigrationRetargetSec: [
             Math.max(0.1, feedMigrationRetargetSec[0]),
@@ -991,6 +1013,7 @@ export function createGnatSwarm3dRuntime({
     orbWorldPosition = null,
     orbRuntimePosition = null,
     orbAlive = true,
+    orbCombat = null,
   } = {}) {
     if (!mesh || !states.length) return;
     const nowSec = nowMs / 1000;
@@ -1007,6 +1030,7 @@ export function createGnatSwarm3dRuntime({
     const orbProjected = orbPosition && orbRuntime
       ? toRuntimePosition({ xW: orbPosition.xW, yW: orbPosition.yW, z: orbRuntime.z || 0 })
       : null;
+    const orbImmune = !!(orbCombat && orbCombat.immune);
     const orbVisualOffset = orbProjected && orbRuntime
       ? {
           x: orbRuntime.x - (Number(orbProjected.x) || 0),
@@ -1133,7 +1157,8 @@ export function createGnatSwarm3dRuntime({
         advanceRoute(state, nowSec, () => startCooldown(state, nowSec));
       }
       if (orbPosition && state.mode === "alerted") {
-        if (distance(state.position, orbPosition) <= Math.max(state.arrivalRadiusPx, state.feedContactRadiusPx + state.feedBandPx)) {
+        const feedOuterRadiusPx = resolveFeedOuterRadiusPx(state, orbCombat);
+        if (distance(state.position, orbPosition) <= Math.max(state.arrivalRadiusPx, feedOuterRadiusPx)) {
           startFeeding(state, orbPosition, nowSec);
         } else if (distance(state.position, state.route[state.routeIndex] || state.orbTarget || orbPosition) < Math.max(state.arrivalRadiusPx, state.scale * 1.5)) {
           state.routeIndex += 1;
@@ -1143,10 +1168,12 @@ export function createGnatSwarm3dRuntime({
       }
       if (orbPosition && state.mode === "feeding") {
         feedingCount += 1;
-        activeLiftLeach += state.liftLeach;
-        activeLifeLeachPerSec += state.lifeLeachPerSec;
+        if (!orbImmune) {
+          activeLiftLeach += state.liftLeach;
+          activeLifeLeachPerSec += state.lifeLeachPerSec;
+        }
         state.lastFeedDt = dtSec;
-        if (nowSec >= state.nextTargetAt) scheduleFeedTarget(state, orbPosition, nowSec);
+        if (nowSec >= state.nextTargetAt) scheduleFeedTarget(state, orbPosition, nowSec, orbCombat);
       }
       const feedJitterScale = state.mode === "feeding" ? 0.08 : (state.mode === "stunned" ? 0.02 : 1);
       const jitterX = (Math.sin(nowSec * state.elasticJitterHz * 6.283 + state.phaseX) * state.elasticJitterPx + randomUnit() * state.targetJitterPx) * feedJitterScale;
@@ -1183,7 +1210,7 @@ export function createGnatSwarm3dRuntime({
         yW: state.position.yW + state.velocity.yW * dtSec,
       };
       let resolvedNext = orbPosition && (state.mode === "alerted" || state.mode === "feeding")
-        ? resolveOrbContact(state, next, orbPosition)
+        ? resolveOrbContact(state, next, orbPosition, orbCombat)
         : next;
       if (state.mode === "feeding" && state.target) {
         const stickiness = Math.max(0, Math.min(1, state.feedStickiness));
@@ -1262,6 +1289,8 @@ export function createGnatSwarm3dRuntime({
       stunned: stunnedCount,
       liftLeach: activeLiftLeach,
       lifeLeachPerSec: activeLifeLeachPerSec,
+      shieldImmune: orbImmune,
+      shieldContactRadiusPx: Math.max(0, Number(orbCombat && orbCombat.radiusWorldUnits) || Number(orbCombat && orbCombat.contactRadiusPx) || 0),
       signals: activeSignals.length,
       nav: !!bounds.nav,
       navCells: bounds.nav ? (bounds.nav.cols || 0) * (bounds.nav.rows || 0) : 0,

@@ -161,3 +161,4 @@ export const EVT_COMBAT_ENTITY_DIED = "combat.entity_died";
 export const EVT_COMBAT_STUN_APPLIED = "combat.stun_applied";
 export const EVT_COMBAT_STUN_RECOVERED = "combat.stun_recovered";
 export const EVT_COMBAT_MOTION_MODIFIER_CHANGED = "combat.motion_modifier_changed";
+export const EVT_COMBAT_IMMUNITY_CHANGED = "combat.immunity_changed";
