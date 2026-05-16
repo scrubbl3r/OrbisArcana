@@ -80,8 +80,12 @@ function buildErosionLines(holes) {
       `        float d${index} = 1.0 - dot(n, normalize(uHole${index}.xyz));`,
       `        float r${index} = uHole${index}.w * uErosionGrowth;`,
       `        float edge${index} = max(0.0006, fwidth(d${index}));`,
+      `        float aura${index} = max(0.012, r${index} * 1.85);`,
       `        float void${index} = 1.0 - smoothstep(r${index}, r${index} + edge${index}, d${index});`,
-      `        erosion = max(erosion, void${index});`
+      `        float outside${index} = smoothstep(r${index} - edge${index}, r${index} + edge${index} * 2.0, d${index});`,
+      `        float stress${index} = outside${index} * (1.0 - smoothstep(r${index}, r${index} + aura${index}, d${index}));`,
+      `        erosion = max(erosion, void${index});`,
+      `        edgeStress = max(edgeStress, stress${index});`
     );
   });
   return lines.join("\n");
@@ -163,7 +167,10 @@ export function createOrbLifecycle3dErosionPatch({
     fragmentSource: `
         vec3 n = normalize(vLifecycleLocalNormal);
         float erosion = 0.0;
+        float edgeStress = 0.0;
 ${buildErosionLines(holes)}
+        float edgeLight = smoothstep(0.0, 0.7, uErosionOpacity) * edgeStress;
+        pearl += (pearl * 0.16 + vec3(0.08, 0.11, 0.12)) * edgeLight;
         if (erosion * uErosionOpacity > 0.5) discard;
     `,
   });
