@@ -2067,16 +2067,52 @@
           <div id="orbLifecycle3dEffectControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
               <label for="orbLifecycle3dHitTotal">Hit total</label>
-              <input id="orbLifecycle3dHitTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="10" />
+              <input id="orbLifecycle3dHitTotal" class="paramFieldInput" type="number" min="1" max="1000" step="1" value="10" />
               <button id="orbLifecycle3dApplyCrackBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dCrackTotal">Clusters per hit</label>
-              <input id="orbLifecycle3dCrackTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="3" />
             </div>
             <div class="paramFieldRow">
               <label for="orbLifecycle3dCrackAlpha">Erosion opacity</label>
               <input id="orbLifecycle3dCrackAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.92" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dNoiseScale">Noise scale</label>
+              <input id="orbLifecycle3dNoiseScale" class="paramFieldInput" type="number" min="0.1" max="24" step="0.05" value="2.20" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dNoiseContrast">Noise contrast</label>
+              <input id="orbLifecycle3dNoiseContrast" class="paramFieldInput" type="number" min="0.05" max="3" step="0.01" value="0.65" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dNoiseOctaves">Noise octaves</label>
+              <input id="orbLifecycle3dNoiseOctaves" class="paramFieldInput" type="number" min="1" max="8" step="1" value="5" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dNoiseLacunarity">Noise lacunarity</label>
+              <input id="orbLifecycle3dNoiseLacunarity" class="paramFieldInput" type="number" min="1.05" max="4" step="0.01" value="2.05" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dNoiseGain">Noise gain</label>
+              <input id="orbLifecycle3dNoiseGain" class="paramFieldInput" type="number" min="0.05" max="0.95" step="0.01" value="0.50" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dDetailScale">Detail scale</label>
+              <input id="orbLifecycle3dDetailScale" class="paramFieldInput" type="number" min="0.1" max="48" step="0.1" value="8.50" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dDetailAmount">Detail amount</label>
+              <input id="orbLifecycle3dDetailAmount" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.32" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dCoverageStart">Coverage start</label>
+              <input id="orbLifecycle3dCoverageStart" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.08" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dCoverageEnd">Coverage end</label>
+              <input id="orbLifecycle3dCoverageEnd" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.78" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dGrowthCurve">Growth curve</label>
+              <input id="orbLifecycle3dGrowthCurve" class="paramFieldInput" type="number" min="0.1" max="5" step="0.01" value="1.08" />
             </div>
             <div class="paramFieldRow">
               <label for="orbLifecycle3dEdgeLightBrightness">Edge light</label>
@@ -2089,38 +2125,6 @@
             <div class="paramFieldRow">
               <label for="orbLifecycle3dHoleEdgeSoftness">Hole softness</label>
               <input id="orbLifecycle3dHoleEdgeSoftness" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="1.00" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dStartHoleSizeMin">Start hole min</label>
-              <input id="orbLifecycle3dStartHoleSizeMin" class="paramFieldInput" type="number" min="0.001" max="0.08" step="0.001" value="0.010" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dStartHoleSizeMax">Start hole max</label>
-              <input id="orbLifecycle3dStartHoleSizeMax" class="paramFieldInput" type="number" min="0.001" max="0.12" step="0.001" value="0.020" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dChildHoleCountMin">Children min</label>
-              <input id="orbLifecycle3dChildHoleCountMin" class="paramFieldInput" type="number" min="0" max="16" step="1" value="4" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dChildHoleCountMax">Children max</label>
-              <input id="orbLifecycle3dChildHoleCountMax" class="paramFieldInput" type="number" min="0" max="12" step="1" value="9" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dChildHoleSizeMin">Child size min</label>
-              <input id="orbLifecycle3dChildHoleSizeMin" class="paramFieldInput" type="number" min="0.001" max="0.08" step="0.001" value="0.004" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dChildHoleSizeMax">Child size max</label>
-              <input id="orbLifecycle3dChildHoleSizeMax" class="paramFieldInput" type="number" min="0.001" max="0.12" step="0.001" value="0.012" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dChildHoleRangeMin">Child range min</label>
-              <input id="orbLifecycle3dChildHoleRangeMin" class="paramFieldInput" type="number" min="0.001" max="0.5" step="0.001" value="0.045" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dChildHoleRangeMax">Child range max</label>
-              <input id="orbLifecycle3dChildHoleRangeMax" class="paramFieldInput" type="number" min="0.001" max="0.8" step="0.001" value="0.145" />
             </div>
           </div>
         </div>
@@ -2506,14 +2510,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260516l"),
+      import("./vfx-studio-bootstrap.js?v=20260516m"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
       import("./vfx-studio-surfaces.js?v=20260515c"),
-      import("./vfx-studio-theme-publish.js?v=20260516d"),
+      import("./vfx-studio-theme-publish.js?v=20260516e"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2528,7 +2532,7 @@
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
     import { createOrbGlobe3dAuthoringAdapter } from "./adapters/orb-globe-3d-authoring-adapter.js?v=20260502b";
     import { createOrbGlobeAuthoringAdapter } from "./adapters/orb-globe-authoring-adapter.js?v=20260425d";
-    import { createOrbLifecycle3dAuthoringAdapter } from "./adapters/orb-lifecycle-3d-authoring-adapter.js?v=20260516c";
+    import { createOrbLifecycle3dAuthoringAdapter } from "./adapters/orb-lifecycle-3d-authoring-adapter.js?v=20260516d";
     import { createOrbLifecycleAuthoringAdapter } from "./adapters/orb-lifecycle-authoring-adapter.js?v=20260425d";
     import { createOrbNodAuthoringAdapter } from "./adapters/orb-nod-authoring-adapter.js?v=20260425d";
     import { createOrbNod3dAuthoringAdapter } from "./adapters/orb-nod3d-authoring-adapter.js?v=20260427a";
@@ -2556,7 +2560,7 @@
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425d";
-    import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516e";
+    import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516f";
     import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425d";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260425d";
     import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-3d-default.js?v=20260502c";
@@ -2960,21 +2964,22 @@
       orbLifecycleRegenerateBtn: $("orbLifecycleRegenerateBtn"),
       orbLifecycleStatus: $("orbLifecycleStatus"),
       orbLifecycle3dHitTotal: $("orbLifecycle3dHitTotal"),
-      orbLifecycle3dCrackTotal: $("orbLifecycle3dCrackTotal"),
       orbLifecycle3dSeed: $("orbLifecycle3dSeed"),
       orbLifecycle3dRegenerateSeedBtn: $("orbLifecycle3dRegenerateSeedBtn"),
       orbLifecycle3dCrackAlpha: $("orbLifecycle3dCrackAlpha"),
+      orbLifecycle3dNoiseScale: $("orbLifecycle3dNoiseScale"),
+      orbLifecycle3dNoiseContrast: $("orbLifecycle3dNoiseContrast"),
+      orbLifecycle3dNoiseOctaves: $("orbLifecycle3dNoiseOctaves"),
+      orbLifecycle3dNoiseLacunarity: $("orbLifecycle3dNoiseLacunarity"),
+      orbLifecycle3dNoiseGain: $("orbLifecycle3dNoiseGain"),
+      orbLifecycle3dDetailScale: $("orbLifecycle3dDetailScale"),
+      orbLifecycle3dDetailAmount: $("orbLifecycle3dDetailAmount"),
+      orbLifecycle3dCoverageStart: $("orbLifecycle3dCoverageStart"),
+      orbLifecycle3dCoverageEnd: $("orbLifecycle3dCoverageEnd"),
+      orbLifecycle3dGrowthCurve: $("orbLifecycle3dGrowthCurve"),
       orbLifecycle3dEdgeLightBrightness: $("orbLifecycle3dEdgeLightBrightness"),
       orbLifecycle3dEdgeLightRange: $("orbLifecycle3dEdgeLightRange"),
       orbLifecycle3dHoleEdgeSoftness: $("orbLifecycle3dHoleEdgeSoftness"),
-      orbLifecycle3dStartHoleSizeMin: $("orbLifecycle3dStartHoleSizeMin"),
-      orbLifecycle3dStartHoleSizeMax: $("orbLifecycle3dStartHoleSizeMax"),
-      orbLifecycle3dChildHoleCountMin: $("orbLifecycle3dChildHoleCountMin"),
-      orbLifecycle3dChildHoleCountMax: $("orbLifecycle3dChildHoleCountMax"),
-      orbLifecycle3dChildHoleSizeMin: $("orbLifecycle3dChildHoleSizeMin"),
-      orbLifecycle3dChildHoleSizeMax: $("orbLifecycle3dChildHoleSizeMax"),
-      orbLifecycle3dChildHoleRangeMin: $("orbLifecycle3dChildHoleRangeMin"),
-      orbLifecycle3dChildHoleRangeMax: $("orbLifecycle3dChildHoleRangeMax"),
       orbLifecycle3dParticleCount: $("orbLifecycle3dParticleCount"),
       orbLifecycle3dParticleR: $("orbLifecycle3dParticleR"),
       orbLifecycle3dParticleG: $("orbLifecycle3dParticleG"),

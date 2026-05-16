@@ -8,14 +8,14 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260516a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516e";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516f";
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516l";
+} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516m";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 const ORB_STAGE_FILL_RATIO = 0.52;
@@ -41,24 +41,25 @@ function colorFromFields(els, prefix, fallback) {
 
 function readLifecycle3dConfig(els = {}) {
   return Object.freeze({
-    maxHits: roundedNumber(els.orbLifecycle3dHitTotal && els.orbLifecycle3dHitTotal.value, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
-    maxCracks: roundedNumber(els.orbLifecycle3dCrackTotal && els.orbLifecycle3dCrackTotal.value, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
+    maxHits: Math.max(1, Math.min(1000, roundedNumber(els.orbLifecycle3dHitTotal && els.orbLifecycle3dHitTotal.value, ORB_LIFECYCLE_3D_DEFAULTS.maxHits))),
     erosionSeed: Math.max(1, roundedNumber(els.orbLifecycle3dSeed && els.orbLifecycle3dSeed.value, ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed)),
     crackColor: ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(els.orbLifecycle3dCrackAlpha && els.orbLifecycle3dCrackAlpha.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx,
     crackLiftBO: ORB_LIFECYCLE_3D_DEFAULTS.crackLiftBO,
+    noiseScale: clampNumber(els.orbLifecycle3dNoiseScale && els.orbLifecycle3dNoiseScale.value, 0.1, 24, ORB_LIFECYCLE_3D_DEFAULTS.noiseScale),
+    noiseContrast: clampNumber(els.orbLifecycle3dNoiseContrast && els.orbLifecycle3dNoiseContrast.value, 0.05, 3, ORB_LIFECYCLE_3D_DEFAULTS.noiseContrast),
+    noiseOctaves: roundedNumber(els.orbLifecycle3dNoiseOctaves && els.orbLifecycle3dNoiseOctaves.value, ORB_LIFECYCLE_3D_DEFAULTS.noiseOctaves),
+    noiseLacunarity: clampNumber(els.orbLifecycle3dNoiseLacunarity && els.orbLifecycle3dNoiseLacunarity.value, 1.05, 4, ORB_LIFECYCLE_3D_DEFAULTS.noiseLacunarity),
+    noiseGain: clampNumber(els.orbLifecycle3dNoiseGain && els.orbLifecycle3dNoiseGain.value, 0.05, 0.95, ORB_LIFECYCLE_3D_DEFAULTS.noiseGain),
+    detailScale: clampNumber(els.orbLifecycle3dDetailScale && els.orbLifecycle3dDetailScale.value, 0.1, 48, ORB_LIFECYCLE_3D_DEFAULTS.detailScale),
+    detailAmount: clampNumber(els.orbLifecycle3dDetailAmount && els.orbLifecycle3dDetailAmount.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.detailAmount),
+    coverageStart: clampNumber(els.orbLifecycle3dCoverageStart && els.orbLifecycle3dCoverageStart.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.coverageStart),
+    coverageEnd: clampNumber(els.orbLifecycle3dCoverageEnd && els.orbLifecycle3dCoverageEnd.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.coverageEnd),
+    growthCurve: clampNumber(els.orbLifecycle3dGrowthCurve && els.orbLifecycle3dGrowthCurve.value, 0.1, 5, ORB_LIFECYCLE_3D_DEFAULTS.growthCurve),
     edgeLightBrightness: clampNumber(els.orbLifecycle3dEdgeLightBrightness && els.orbLifecycle3dEdgeLightBrightness.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.edgeLightBrightness),
     edgeLightRange: clampNumber(els.orbLifecycle3dEdgeLightRange && els.orbLifecycle3dEdgeLightRange.value, 0.2, 24, ORB_LIFECYCLE_3D_DEFAULTS.edgeLightRange),
     holeEdgeSoftness: clampNumber(els.orbLifecycle3dHoleEdgeSoftness && els.orbLifecycle3dHoleEdgeSoftness.value, 0, 8, ORB_LIFECYCLE_3D_DEFAULTS.holeEdgeSoftness),
-    startHoleSizeMin: clampNumber(els.orbLifecycle3dStartHoleSizeMin && els.orbLifecycle3dStartHoleSizeMin.value, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMin),
-    startHoleSizeMax: clampNumber(els.orbLifecycle3dStartHoleSizeMax && els.orbLifecycle3dStartHoleSizeMax.value, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMax),
-    childHoleCountMin: roundedNumber(els.orbLifecycle3dChildHoleCountMin && els.orbLifecycle3dChildHoleCountMin.value, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMin),
-    childHoleCountMax: roundedNumber(els.orbLifecycle3dChildHoleCountMax && els.orbLifecycle3dChildHoleCountMax.value, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMax),
-    childHoleSizeMin: clampNumber(els.orbLifecycle3dChildHoleSizeMin && els.orbLifecycle3dChildHoleSizeMin.value, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.childHoleSizeMin),
-    childHoleSizeMax: clampNumber(els.orbLifecycle3dChildHoleSizeMax && els.orbLifecycle3dChildHoleSizeMax.value, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.childHoleSizeMax),
-    childHoleRangeMin: clampNumber(els.orbLifecycle3dChildHoleRangeMin && els.orbLifecycle3dChildHoleRangeMin.value, 0.001, 0.5, ORB_LIFECYCLE_3D_DEFAULTS.childHoleRangeMin),
-    childHoleRangeMax: clampNumber(els.orbLifecycle3dChildHoleRangeMax && els.orbLifecycle3dChildHoleRangeMax.value, 0.001, 0.8, ORB_LIFECYCLE_3D_DEFAULTS.childHoleRangeMax),
     particleCount: roundedNumber(els.orbLifecycle3dParticleCount && els.orbLifecycle3dParticleCount.value, ORB_LIFECYCLE_3D_DEFAULTS.particleCount),
     particleColor: colorFromFields(els, "orbLifecycle3dParticle", ORB_LIFECYCLE_3D_DEFAULTS.particleColor),
     particleSizePx: clampNumber(els.orbLifecycle3dParticleSize && els.orbLifecycle3dParticleSize.value, 0.5, 32, ORB_LIFECYCLE_3D_DEFAULTS.particleSizePx),

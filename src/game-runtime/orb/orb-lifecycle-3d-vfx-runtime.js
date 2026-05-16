@@ -2,10 +2,6 @@ import * as THREE from "three";
 import { createRng } from "./orb-lifecycle-vfx-runtime.js";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js";
 
-const MAX_EROSION_CLUSTERS_PER_HIT = 12;
-const MAX_EROSION_CLUSTERS = 144;
-const MAX_EROSION_CHILDREN_PER_CLUSTER = 12;
-
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   const safe = Number.isFinite(n) ? n : fallback;
@@ -19,26 +15,27 @@ function clampInt(value, min, max, fallback) {
 export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) {
   const source = config && typeof config === "object" ? config : ORB_LIFECYCLE_3D_DEFAULTS;
   return Object.freeze({
-    maxHits: clampInt(source.maxHits, 1, 12, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
-    maxCracks: clampInt(source.maxCracks, 1, MAX_EROSION_CLUSTERS_PER_HIT, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
+    maxHits: clampInt(source.maxHits, 1, 1000, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
     erosionSeed: clampInt(source.erosionSeed, 1, 999999999, ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed),
     crackColor: Number(source.crackColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(source.crackAlpha, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
     crackLiftBO: clampNumber(source.crackLiftBO, 0, 0.2, ORB_LIFECYCLE_3D_DEFAULTS.crackLiftBO),
+    noiseScale: clampNumber(source.noiseScale, 0.1, 24, ORB_LIFECYCLE_3D_DEFAULTS.noiseScale),
+    noiseContrast: clampNumber(source.noiseContrast, 0.05, 3, ORB_LIFECYCLE_3D_DEFAULTS.noiseContrast),
+    noiseOctaves: clampInt(source.noiseOctaves, 1, 8, ORB_LIFECYCLE_3D_DEFAULTS.noiseOctaves),
+    noiseLacunarity: clampNumber(source.noiseLacunarity, 1.05, 4, ORB_LIFECYCLE_3D_DEFAULTS.noiseLacunarity),
+    noiseGain: clampNumber(source.noiseGain, 0.05, 0.95, ORB_LIFECYCLE_3D_DEFAULTS.noiseGain),
+    detailScale: clampNumber(source.detailScale, 0.1, 48, ORB_LIFECYCLE_3D_DEFAULTS.detailScale),
+    detailAmount: clampNumber(source.detailAmount, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.detailAmount),
+    coverageStart: clampNumber(source.coverageStart, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.coverageStart),
+    coverageEnd: clampNumber(source.coverageEnd, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.coverageEnd),
+    growthCurve: clampNumber(source.growthCurve, 0.1, 5, ORB_LIFECYCLE_3D_DEFAULTS.growthCurve),
     edgeLightBrightness: clampNumber(source.edgeLightBrightness, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.edgeLightBrightness),
     edgeLightRange: clampNumber(source.edgeLightRange, 0.2, 24, ORB_LIFECYCLE_3D_DEFAULTS.edgeLightRange),
     holeEdgeSoftness: clampNumber(source.holeEdgeSoftness, 0, 8, ORB_LIFECYCLE_3D_DEFAULTS.holeEdgeSoftness),
     criticalGlow: clampNumber(source.criticalGlow, 0, 4, ORB_LIFECYCLE_3D_DEFAULTS.criticalGlow),
     energyColor: Number(source.energyColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.energyColor,
-    startHoleSizeMin: clampNumber(source.startHoleSizeMin, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMin),
-    startHoleSizeMax: clampNumber(source.startHoleSizeMax, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMax),
-    childHoleCountMin: clampInt(source.childHoleCountMin, 0, 16, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMin),
-    childHoleCountMax: clampInt(source.childHoleCountMax, 0, MAX_EROSION_CHILDREN_PER_CLUSTER, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMax),
-    childHoleSizeMin: clampNumber(source.childHoleSizeMin, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.childHoleSizeMin),
-    childHoleSizeMax: clampNumber(source.childHoleSizeMax, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.childHoleSizeMax),
-    childHoleRangeMin: clampNumber(source.childHoleRangeMin, 0.001, 0.5, ORB_LIFECYCLE_3D_DEFAULTS.childHoleRangeMin),
-    childHoleRangeMax: clampNumber(source.childHoleRangeMax, 0.001, 0.8, ORB_LIFECYCLE_3D_DEFAULTS.childHoleRangeMax),
     mutationSpeed: clampNumber(source.mutationSpeed, 0, Infinity, ORB_LIFECYCLE_3D_DEFAULTS.mutationSpeed),
     mutationAmount: clampNumber(source.mutationAmount, 0, Infinity, ORB_LIFECYCLE_3D_DEFAULTS.mutationAmount),
     diffuseWash: clampNumber(source.diffuseWash, 0, 2, ORB_LIFECYCLE_3D_DEFAULTS.diffuseWash),
@@ -56,91 +53,6 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   });
 }
 
-function randomFrontFaceVector(rng) {
-  const theta = rng() * Math.PI * 2;
-  const z = 0.12 + (rng() * 0.88);
-  const r = Math.sqrt(Math.max(0, 1 - (z * z)));
-  return new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z).normalize();
-}
-
-function createErosionUniforms(clusters) {
-  return clusters.reduce((uniforms, cluster, index) => {
-    uniforms[`uErosionCluster${index}`] = { value: cluster };
-    return uniforms;
-  }, {});
-}
-
-function buildClusterChildLines(index) {
-  const lines = [];
-  for (let childIndex = 0; childIndex < MAX_EROSION_CHILDREN_PER_CLUSTER; childIndex += 1) {
-    lines.push(
-      `        if (${childIndex}.0 < childCount${index}) {`,
-      `          float childSeed${index}_${childIndex} = clusterSeed${index} + ${Number(childIndex + 1).toFixed(1)} * 19.19;`,
-      `          float angle${index}_${childIndex} = hash11(childSeed${index}_${childIndex}) * 6.2831853;`,
-      `          float range${index}_${childIndex} = mix(uChildHoleRangeMin, uChildHoleRangeMax, hash11(childSeed${index}_${childIndex} + 3.7));`,
-      `          float radius${index}_${childIndex} = mix(uChildHoleSizeMin, uChildHoleSizeMax, hash11(childSeed${index}_${childIndex} + 7.3));`,
-      `          vec3 childDir${index}_${childIndex} = tangent${index} * cos(angle${index}_${childIndex}) * range${index}_${childIndex} + bitangent${index} * sin(angle${index}_${childIndex}) * range${index}_${childIndex};`,
-      `          vec3 childCenter${index}_${childIndex} = normalize(center${index} + childDir${index}_${childIndex});`,
-      `          childCenter${index}_${childIndex}.z = max(childCenter${index}_${childIndex}.z, 0.025);`,
-      `          childCenter${index}_${childIndex} = normalize(childCenter${index}_${childIndex});`,
-      `          applyErosionHole(n, childCenter${index}_${childIndex}, radius${index}_${childIndex} * uErosionGrowth, erosion, holeCut, edgeStress);`,
-      "        }"
-    );
-  }
-  return lines.join("\n");
-}
-
-function buildErosionLines(clusters) {
-  const lines = [];
-  clusters.forEach((cluster, index) => {
-    lines.push(
-      `        vec3 center${index} = normalize(uErosionCluster${index}.xyz);`,
-      `        float radius${index} = uErosionCluster${index}.w * uErosionGrowth;`,
-      `        float clusterSeed${index} = ${Number(index + 1).toFixed(1)} * 37.17;`,
-      `        vec3 reference${index} = abs(center${index}.y) < 0.86 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);`,
-      `        vec3 tangentBase${index} = normalize(cross(center${index}, reference${index}));`,
-      `        vec3 bitangentBase${index} = normalize(cross(center${index}, tangentBase${index}));`,
-      `        float tangentAngle${index} = hash11(clusterSeed${index} + 11.7) * 6.2831853;`,
-      `        vec3 tangent${index} = normalize(tangentBase${index} * cos(tangentAngle${index}) + bitangentBase${index} * sin(tangentAngle${index}));`,
-      `        vec3 bitangent${index} = normalize(cross(center${index}, tangent${index}));`,
-      `        float childCount${index} = floor(mix(uChildHoleCountMin, uChildHoleCountMax + 0.999, hash11(clusterSeed${index} + 5.1)));`,
-      `        applyErosionHole(n, center${index}, radius${index} * 1.28, erosion, holeCut, edgeStress);`,
-      buildClusterChildLines(index)
-    );
-  });
-  return lines.join("\n");
-}
-
-function rangeValue(rng, min, max) {
-  const a = Number(min) || 0;
-  const b = Number(max) || a;
-  const lo = Math.min(a, b);
-  const hi = Math.max(a, b);
-  return lo + (rng() * (hi - lo));
-}
-
-function createErosionClusters(seed = 1, clusterCount = 1, config = ORB_LIFECYCLE_3D_DEFAULTS) {
-  const resolved = resolveOrbLifecycle3dConfig(config);
-  const rng = createRng((Number(seed) || 1) ^ 0x3e80510);
-  const clusterTotal = Math.max(1, Math.min(MAX_EROSION_CLUSTERS, Math.round(Number(clusterCount) || 1)));
-  const clusters = [];
-  for (let cluster = 0; cluster < clusterTotal; cluster += 1) {
-    const center = randomFrontFaceVector(rng);
-    const baseRadius = rangeValue(rng, resolved.startHoleSizeMin, resolved.startHoleSizeMax);
-    clusters.push(new THREE.Vector4(center.x, center.y, center.z, baseRadius));
-  }
-  return clusters;
-}
-
-function activeClusterCount({
-  hitsTaken = 0,
-  config = ORB_LIFECYCLE_3D_DEFAULTS,
-} = {}) {
-  const resolved = resolveOrbLifecycle3dConfig(config);
-  const hits = clampInt(hitsTaken, 0, 99, 0);
-  return Math.max(0, Math.min(MAX_EROSION_CLUSTERS, hits * resolved.maxCracks));
-}
-
 export function createOrbLifecycle3dErosionPatch({
   hitsTaken = 0,
   maxHits = 3,
@@ -148,73 +60,130 @@ export function createOrbLifecycle3dErosionPatch({
   config = ORB_LIFECYCLE_3D_DEFAULTS,
 } = {}) {
   const resolved = resolveOrbLifecycle3dConfig(config);
-  const hits = clampInt(hitsTaken, 0, 99, 0);
-  const total = Math.max(1, clampInt(maxHits, 1, 99, resolved.maxHits));
+  const hits = clampInt(hitsTaken, 0, 1000, 0);
+  const total = Math.max(1, clampInt(maxHits, 1, 1000, resolved.maxHits));
   const hitRatio = Math.max(0, Math.min(1, hits / total));
-  const activeClusters = activeClusterCount({ hitsTaken: hits, config: resolved });
-  if (hits <= 0 || activeClusters <= 0) return null;
-  const clusters = createErosionClusters(seed, activeClusters, resolved);
+  if (hits <= 0 || hitRatio <= 0) return null;
+  const noiseSeed = Math.max(1, Number(seed) || Number(resolved.erosionSeed) || 1001);
 
   return Object.freeze({
-    clusters,
     uniforms: {
-      uErosionGrowth: { value: 0.82 + (hitRatio * 0.65) },
+      uDamageProgress: { value: hitRatio },
       uErosionOpacity: { value: resolved.crackAlpha },
+      uNoiseSeed: { value: noiseSeed },
+      uNoiseScale: { value: resolved.noiseScale },
+      uNoiseContrast: { value: resolved.noiseContrast },
+      uNoiseOctaves: { value: resolved.noiseOctaves },
+      uNoiseLacunarity: { value: resolved.noiseLacunarity },
+      uNoiseGain: { value: resolved.noiseGain },
+      uDetailScale: { value: resolved.detailScale },
+      uDetailAmount: { value: resolved.detailAmount },
+      uCoverageStart: { value: resolved.coverageStart },
+      uCoverageEnd: { value: resolved.coverageEnd },
+      uGrowthCurve: { value: resolved.growthCurve },
       uEdgeLightBrightness: { value: resolved.edgeLightBrightness },
       uEdgeLightRange: { value: resolved.edgeLightRange },
       uHoleEdgeSoftness: { value: resolved.holeEdgeSoftness },
-      uChildHoleCountMin: { value: resolved.childHoleCountMin },
-      uChildHoleCountMax: { value: resolved.childHoleCountMax },
-      uChildHoleSizeMin: { value: resolved.childHoleSizeMin },
-      uChildHoleSizeMax: { value: resolved.childHoleSizeMax },
-      uChildHoleRangeMin: { value: resolved.childHoleRangeMin },
-      uChildHoleRangeMax: { value: resolved.childHoleRangeMax },
-      ...createErosionUniforms(clusters),
     },
     uniformsSource: `
-      uniform float uErosionGrowth;
+      uniform float uDamageProgress;
       uniform float uErosionOpacity;
+      uniform float uNoiseSeed;
+      uniform float uNoiseScale;
+      uniform float uNoiseContrast;
+      uniform float uNoiseOctaves;
+      uniform float uNoiseLacunarity;
+      uniform float uNoiseGain;
+      uniform float uDetailScale;
+      uniform float uDetailAmount;
+      uniform float uCoverageStart;
+      uniform float uCoverageEnd;
+      uniform float uGrowthCurve;
       uniform float uEdgeLightBrightness;
       uniform float uEdgeLightRange;
       uniform float uHoleEdgeSoftness;
-      uniform float uChildHoleCountMin;
-      uniform float uChildHoleCountMax;
-      uniform float uChildHoleSizeMin;
-      uniform float uChildHoleSizeMax;
-      uniform float uChildHoleRangeMin;
-      uniform float uChildHoleRangeMax;
-      ${clusters.map((cluster, index) => `uniform vec4 uErosionCluster${index};`).join("\n      ")}
 
-      float hash11(float p) {
-        return fract(sin(p * 127.1) * 43758.5453123);
+      float hash31(vec3 p) {
+        p = fract(p * 0.1031);
+        p += dot(p, p.yzx + 33.33);
+        return fract((p.x + p.y) * p.z);
       }
 
-      void applyErosionHole(
-        vec3 n,
-        vec3 center,
-        float radius,
-        inout float erosion,
-        inout float holeCut,
-        inout float edgeStress
-      ) {
-        float d = 1.0 - dot(n, normalize(center));
-        float baseEdge = max(0.0006, fwidth(d) * 2.0);
-        float edge = max(baseEdge, radius * uHoleEdgeSoftness);
-        float aura = max(0.004, radius * uEdgeLightRange);
-        float voidAmount = 1.0 - smoothstep(radius - edge, radius + edge, d);
-        float outside = smoothstep(radius - edge, radius + edge * 0.65, d);
-        float stress = outside * (1.0 - smoothstep(radius, radius + aura, d));
-        erosion = max(erosion, voidAmount);
-        holeCut = max(holeCut, voidAmount);
-        edgeStress = max(edgeStress, stress);
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(
+            mix(hash31(i), hash31(i + vec3(1.0, 0.0, 0.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x),
+            f.y
+          ),
+          mix(
+            mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x),
+            mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x),
+            f.y
+          ),
+          f.z
+        );
+      }
+
+      float fbm(vec3 p, float octaves, float lacunarity, float gain) {
+        float value = 0.0;
+        float amp = 0.56;
+        float freq = 1.0;
+        for (int i = 0; i < 8; i += 1) {
+          if (float(i) >= octaves) break;
+          value += noise(p * freq) * amp;
+          freq *= lacunarity;
+          amp *= gain;
+          p += vec3(17.7, -11.3, 8.9);
+        }
+        return clamp(value, 0.0, 1.0);
+      }
+
+      float ridgedFbm(vec3 p) {
+        float value = 0.0;
+        float amp = 0.58;
+        float freq = 1.0;
+        for (int i = 0; i < 8; i += 1) {
+          if (float(i) >= uNoiseOctaves) break;
+          float ridge = 1.0 - abs(noise(p * freq) * 2.0 - 1.0);
+          ridge *= ridge;
+          value += ridge * amp;
+          freq *= uNoiseLacunarity * 1.04;
+          amp *= uNoiseGain * 0.92;
+          p += vec3(-6.4, 19.1, 12.8);
+        }
+        return clamp(value, 0.0, 1.0);
+      }
+
+      float perlinErosionField(vec3 p) {
+        float base = fbm(p, uNoiseOctaves, uNoiseLacunarity, uNoiseGain);
+        float ridge = ridgedFbm(p * 0.82 + vec3(3.4, -7.8, 2.1));
+        float broad = fbm(p * 0.46 + vec3(-11.2, 4.6, 9.3), uNoiseOctaves, uNoiseLacunarity, uNoiseGain);
+        return clamp(base * 0.46 + ridge * 0.34 + broad * 0.32, 0.0, 1.0);
       }
     `,
     fragmentSource: `
         vec3 n = normalize(vLifecycleLocalNormal);
-        float erosion = 0.0;
-        float holeCut = 0.0;
-        float edgeStress = 0.0;
-${buildErosionLines(clusters)}
+        vec3 seedOffset = vec3(
+          fract(uNoiseSeed * 0.0137) * 23.0,
+          fract(uNoiseSeed * 0.0271) * 31.0,
+          fract(uNoiseSeed * 0.0419) * 41.0
+        );
+        vec3 noisePoint = n * uNoiseScale + seedOffset;
+        float field = perlinErosionField(noisePoint);
+        float detail = fbm(n * uDetailScale + seedOffset.yzx + vec3(9.7, -4.1, 6.3), uNoiseOctaves, uNoiseLacunarity, uNoiseGain);
+        field = clamp(field + ((detail - 0.5) * uDetailAmount), 0.0, 1.0);
+        field = clamp((field - 0.5) * uNoiseContrast + 0.5, 0.0, 1.0);
+        float progress = pow(clamp(uDamageProgress, 0.0, 1.0), uGrowthCurve);
+        float threshold = mix(uCoverageStart, uCoverageEnd, progress);
+        float softness = max(0.001, uHoleEdgeSoftness * 0.035);
+        float holeCut = 1.0 - smoothstep(threshold - softness, threshold + softness, field);
+        float edgeWidth = max(0.002, uEdgeLightRange * 0.006);
+        float edgeStress = 1.0 - smoothstep(0.0, edgeWidth, abs(field - threshold));
+        edgeStress *= 1.0 - holeCut * 0.6;
         float edgeLight = smoothstep(0.0, 0.7, uErosionOpacity) * edgeStress * uEdgeLightBrightness;
         pearl = mix(pearl, vec3(1.0), clamp(edgeLight, 0.0, 1.0));
         alpha *= 1.0 - clamp(holeCut * uErosionOpacity, 0.0, 1.0);
