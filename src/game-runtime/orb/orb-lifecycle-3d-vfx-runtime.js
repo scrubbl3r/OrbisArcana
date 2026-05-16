@@ -14,6 +14,14 @@ function clampInt(value, min, max, fallback) {
   return Math.round(clampNumber(value, min, max, fallback));
 }
 
+function progressiveCellCount(startCells, hits) {
+  const start = Math.max(2, Math.round(Number(startCells) || 2));
+  const hitCount = Math.max(0, Math.round(Number(hits) || 0));
+  if (hitCount <= 1) return start;
+  const addedCells = ((hitCount * (hitCount + 1)) / 2) - 1;
+  return start + addedCells;
+}
+
 export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) {
   const source = config && typeof config === "object" ? config : ORB_LIFECYCLE_3D_DEFAULTS;
   return Object.freeze({
@@ -205,7 +213,7 @@ export function createOrbLifecycle3dCracks({
   const hits = clampInt(hitsTaken, 0, 99, 0);
   const total = Math.max(1, clampInt(maxHits, 1, 99, resolved.maxHits));
   const ratio = Math.max(0, Math.min(1, hits / total));
-  const activeCells = Math.max(2, Math.min(MAX_VORONOI_CELLS, resolved.maxCracks + hits - 1));
+  const activeCells = Math.max(2, Math.min(MAX_VORONOI_CELLS, progressiveCellCount(resolved.maxCracks, hits)));
   const group = new THREE.Group();
   group.name = "orb_lifecycle3d:cracks";
   if (hits <= 0) return group;
