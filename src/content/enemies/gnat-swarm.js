@@ -37,7 +37,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
       ],
       "awareness": [
         0.05,
-        0.2
+        1
       ],
       "hp": [
         1,
@@ -114,7 +114,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     },
     "detectionBaseChance": 0.5,
     "detectionCheckSec": 1,
-    "detectionRadiusBo": 6,
+    "detectionRadiusBo": 5,
     "feedLatchDrift": 0.007,
     "feedMigrationBoPerSec": 0.5,
     "feedMigrationRetargetSec": [
