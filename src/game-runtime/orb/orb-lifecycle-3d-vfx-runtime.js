@@ -14,14 +14,6 @@ function clampInt(value, min, max, fallback) {
   return Math.round(clampNumber(value, min, max, fallback));
 }
 
-function progressiveCellCount(startCells, hits) {
-  const start = Math.max(2, Math.round(Number(startCells) || 2));
-  const hitCount = Math.max(0, Math.round(Number(hits) || 0));
-  if (hitCount <= 1) return start;
-  const addedCells = ((hitCount * (hitCount + 1)) / 2) - 1;
-  return start + addedCells;
-}
-
 export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) {
   const source = config && typeof config === "object" ? config : ORB_LIFECYCLE_3D_DEFAULTS;
   return Object.freeze({
@@ -85,9 +77,76 @@ function buildSplitLines(splits) {
   return lines.join("\n");
 }
 
-function createHierarchicalSplits(seed = 1, cellCount = 2) {
+function leafSplitScore(leaf) {
+  const front = Math.max(0, leaf.center.z);
+  return leaf.area * (1 + (front * 1.35)) * Math.max(0.2, 1 - (leaf.depth * 0.035));
+}
+
+function selectBestLeafIndex(leaves) {
+  let bestIndex = 0;
+  let bestScore = -Infinity;
+  leaves.forEach((leaf, index) => {
+    const score = leafSplitScore(leaf);
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  });
+  return bestIndex;
+}
+
+function splitLeaf(leaf, { rng, splits, nextIdRef }) {
+  const baseCenter = leaf.center.clone().normalize();
+  const tangent = tangentForNormal(baseCenter, rng);
+  const wobble = tangentForNormal(tangent, rng).multiplyScalar((rng() - 0.5) * 0.32);
+  const plane = tangent.add(wobble).normalize();
+  const positiveId = nextIdRef.value;
+  const negativeId = nextIdRef.value + 1;
+  nextIdRef.value += 2;
+  splits.push({
+    parentId: leaf.id,
+    positiveId,
+    negativeId,
+    plane,
+  });
+
+  const splitBias = 0.42 + (rng() * 0.16);
+  const positiveArea = leaf.area * splitBias;
+  const negativeArea = leaf.area - positiveArea;
+  return [
+    {
+      id: positiveId,
+      center: baseCenter.clone().add(plane.clone().multiplyScalar(0.72)).normalize(),
+      area: positiveArea,
+      depth: leaf.depth + 1,
+    },
+    {
+      id: negativeId,
+      center: baseCenter.clone().add(plane.clone().multiplyScalar(-0.72)).normalize(),
+      area: negativeArea,
+      depth: leaf.depth + 1,
+    },
+  ];
+}
+
+function subdivideLeafInto(leaves, leafIndex, childCount, context) {
+  const targetChildren = Math.max(2, Math.round(Number(childCount) || 2));
+  const localLeaves = [leaves.splice(leafIndex, 1)[0]];
+  while (
+    localLeaves.length < targetChildren &&
+    (leaves.length + localLeaves.length) < MAX_VORONOI_CELLS
+  ) {
+    const localIndex = selectBestLeafIndex(localLeaves);
+    const [leaf] = localLeaves.splice(localIndex, 1);
+    localLeaves.push(...splitLeaf(leaf, context));
+  }
+  leaves.push(...localLeaves);
+}
+
+function createHierarchicalSplits(seed = 1, startCells = 2, hitsTaken = 1) {
   const rng = createRng((Number(seed) || 1) ^ 0x5ab1e31);
-  const targetCells = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(cellCount) || 2)));
+  const start = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(startCells) || 2)));
+  const hits = Math.max(1, Math.round(Number(hitsTaken) || 1));
   const leaves = [{
     id: 0,
     center: new THREE.Vector3(0, 0, 1),
@@ -95,50 +154,15 @@ function createHierarchicalSplits(seed = 1, cellCount = 2) {
     depth: 0,
   }];
   const splits = [];
-  let nextId = 1;
+  const context = {
+    rng,
+    splits,
+    nextIdRef: { value: 1 },
+  };
 
-  while (leaves.length < targetCells) {
-    let bestIndex = 0;
-    let bestScore = -Infinity;
-    leaves.forEach((leaf, index) => {
-      const front = Math.max(0, leaf.center.z);
-      const score = leaf.area * (1 + (front * 1.35)) * (1 - (leaf.depth * 0.035));
-      if (score > bestScore) {
-        bestScore = score;
-        bestIndex = index;
-      }
-    });
-
-    const leaf = leaves.splice(bestIndex, 1)[0];
-    const baseCenter = leaf.center.clone().normalize();
-    const tangent = tangentForNormal(baseCenter, rng);
-    const wobble = tangentForNormal(tangent, rng).multiplyScalar((rng() - 0.5) * 0.32);
-    const plane = tangent.add(wobble).normalize();
-    const positiveId = nextId;
-    const negativeId = nextId + 1;
-    nextId += 2;
-    splits.push({
-      parentId: leaf.id,
-      positiveId,
-      negativeId,
-      plane,
-    });
-
-    const splitBias = 0.42 + (rng() * 0.16);
-    const positiveArea = leaf.area * splitBias;
-    const negativeArea = leaf.area - positiveArea;
-    leaves.push({
-      id: positiveId,
-      center: baseCenter.clone().add(plane.clone().multiplyScalar(0.72)).normalize(),
-      area: positiveArea,
-      depth: leaf.depth + 1,
-    });
-    leaves.push({
-      id: negativeId,
-      center: baseCenter.clone().add(plane.clone().multiplyScalar(-0.72)).normalize(),
-      area: negativeArea,
-      depth: leaf.depth + 1,
-    });
+  subdivideLeafInto(leaves, 0, start, context);
+  for (let hit = 2; hit <= hits && leaves.length < MAX_VORONOI_CELLS; hit += 1) {
+    subdivideLeafInto(leaves, selectBestLeafIndex(leaves), hit, context);
   }
 
   return splits;
@@ -146,13 +170,12 @@ function createHierarchicalSplits(seed = 1, cellCount = 2) {
 
 function createHierarchicalFractureMaterial({
   hitRatio = 0,
-  activeCells = 3,
+  hitsTaken = 1,
   seed = 1,
   config = ORB_LIFECYCLE_3D_DEFAULTS,
 } = {}) {
   const resolved = resolveOrbLifecycle3dConfig(config);
-  const cellCount = Math.max(2, Math.min(MAX_VORONOI_CELLS, Math.round(Number(activeCells) || 3)));
-  const splits = createHierarchicalSplits(seed, cellCount);
+  const splits = createHierarchicalSplits(seed, resolved.maxCracks, hitsTaken);
   return new THREE.ShaderMaterial({
     name: "orb_lifecycle3d:hierarchical_fracture_material",
     transparent: true,
@@ -213,7 +236,6 @@ export function createOrbLifecycle3dCracks({
   const hits = clampInt(hitsTaken, 0, 99, 0);
   const total = Math.max(1, clampInt(maxHits, 1, 99, resolved.maxHits));
   const ratio = Math.max(0, Math.min(1, hits / total));
-  const activeCells = Math.max(2, Math.min(MAX_VORONOI_CELLS, progressiveCellCount(resolved.maxCracks, hits)));
   const group = new THREE.Group();
   group.name = "orb_lifecycle3d:cracks";
   if (hits <= 0) return group;
@@ -222,7 +244,7 @@ export function createOrbLifecycle3dCracks({
   const lift = Math.max(0.002, Number(resolved.crackLiftBO) || 0.006) * Math.max(1, Number(bo) || 72);
   const material = createHierarchicalFractureMaterial({
     hitRatio: ratio,
-    activeCells,
+    hitsTaken: hits,
     seed,
     config: resolved,
   });
