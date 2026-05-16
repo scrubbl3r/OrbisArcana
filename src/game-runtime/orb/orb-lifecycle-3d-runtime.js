@@ -5,7 +5,7 @@ import {
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "./orb-lifecycle-3d-vfx-runtime.js?v=20260516j";
+} from "./orb-lifecycle-3d-vfx-runtime.js?v=20260516k";
 
 const CRACK_UPDATE_FPS = 30;
 const CRACK_UPDATE_INTERVAL_MS = 1000 / CRACK_UPDATE_FPS;

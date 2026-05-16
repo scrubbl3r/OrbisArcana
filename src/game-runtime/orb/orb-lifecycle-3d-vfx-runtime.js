@@ -3,7 +3,8 @@ import { createRng } from "./orb-lifecycle-vfx-runtime.js";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js";
 
 const MAX_EROSION_CLUSTERS_PER_HIT = 12;
-const MAX_EROSION_HOLES = 160;
+const MAX_EROSION_CLUSTERS = 144;
+const MAX_EROSION_CHILDREN_PER_CLUSTER = 12;
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -32,7 +33,7 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
     startHoleSizeMin: clampNumber(source.startHoleSizeMin, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMin),
     startHoleSizeMax: clampNumber(source.startHoleSizeMax, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMax),
     childHoleCountMin: clampInt(source.childHoleCountMin, 0, 16, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMin),
-    childHoleCountMax: clampInt(source.childHoleCountMax, 0, 24, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMax),
+    childHoleCountMax: clampInt(source.childHoleCountMax, 0, MAX_EROSION_CHILDREN_PER_CLUSTER, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMax),
     childHoleSizeMin: clampNumber(source.childHoleSizeMin, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.childHoleSizeMin),
     childHoleSizeMax: clampNumber(source.childHoleSizeMax, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.childHoleSizeMax),
     childHoleRangeMin: clampNumber(source.childHoleRangeMin, 0.001, 0.5, ORB_LIFECYCLE_3D_DEFAULTS.childHoleRangeMin),
@@ -54,14 +55,6 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   });
 }
 
-function tangentForNormal(normal, rng) {
-  const reference = Math.abs(normal.y) < 0.86 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
-  const tangent = new THREE.Vector3().crossVectors(normal, reference).normalize();
-  const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
-  const angle = rng() * Math.PI * 2;
-  return tangent.multiplyScalar(Math.cos(angle)).add(bitangent.multiplyScalar(Math.sin(angle))).normalize();
-}
-
 function randomFrontFaceVector(rng) {
   const theta = rng() * Math.PI * 2;
   const z = 0.12 + (rng() * 0.88);
@@ -69,28 +62,49 @@ function randomFrontFaceVector(rng) {
   return new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z).normalize();
 }
 
-function createErosionUniforms(holes) {
-  return holes.reduce((uniforms, hole, index) => {
-    uniforms[`uHole${index}`] = { value: hole };
+function createErosionUniforms(clusters) {
+  return clusters.reduce((uniforms, cluster, index) => {
+    uniforms[`uErosionCluster${index}`] = { value: cluster };
     return uniforms;
   }, {});
 }
 
-function buildErosionLines(holes) {
+function buildClusterChildLines(index) {
   const lines = [];
-  holes.forEach((hole, index) => {
+  for (let childIndex = 0; childIndex < MAX_EROSION_CHILDREN_PER_CLUSTER; childIndex += 1) {
     lines.push(
-      `        float d${index} = 1.0 - dot(n, normalize(uHole${index}.xyz));`,
-      `        float r${index} = uHole${index}.w * uErosionGrowth;`,
-      `        float baseEdge${index} = max(0.0006, fwidth(d${index}) * 2.0);`,
-      `        float edge${index} = max(baseEdge${index}, r${index} * uHoleEdgeSoftness);`,
-      `        float aura${index} = max(0.004, r${index} * uEdgeLightRange);`,
-      `        float void${index} = 1.0 - smoothstep(r${index} - edge${index}, r${index} + edge${index}, d${index});`,
-      `        float outside${index} = smoothstep(r${index} - edge${index}, r${index} + edge${index} * 0.65, d${index});`,
-      `        float stress${index} = outside${index} * (1.0 - smoothstep(r${index}, r${index} + aura${index}, d${index}));`,
-      `        erosion = max(erosion, void${index});`,
-      `        holeCut = max(holeCut, void${index});`,
-      `        edgeStress = max(edgeStress, stress${index});`
+      `        if (${childIndex}.0 < childCount${index}) {`,
+      `          float childSeed${index}_${childIndex} = clusterSeed${index} + ${Number(childIndex + 1).toFixed(1)} * 19.19;`,
+      `          float angle${index}_${childIndex} = hash11(childSeed${index}_${childIndex}) * 6.2831853;`,
+      `          float range${index}_${childIndex} = mix(uChildHoleRangeMin, uChildHoleRangeMax, hash11(childSeed${index}_${childIndex} + 3.7));`,
+      `          float radius${index}_${childIndex} = mix(uChildHoleSizeMin, uChildHoleSizeMax, hash11(childSeed${index}_${childIndex} + 7.3));`,
+      `          vec3 childDir${index}_${childIndex} = tangent${index} * cos(angle${index}_${childIndex}) * range${index}_${childIndex} + bitangent${index} * sin(angle${index}_${childIndex}) * range${index}_${childIndex};`,
+      `          vec3 childCenter${index}_${childIndex} = normalize(center${index} + childDir${index}_${childIndex});`,
+      `          childCenter${index}_${childIndex}.z = max(childCenter${index}_${childIndex}.z, 0.025);`,
+      `          childCenter${index}_${childIndex} = normalize(childCenter${index}_${childIndex});`,
+      `          applyErosionHole(n, childCenter${index}_${childIndex}, radius${index}_${childIndex} * uErosionGrowth, erosion, holeCut, edgeStress);`,
+      "        }"
+    );
+  }
+  return lines.join("\n");
+}
+
+function buildErosionLines(clusters) {
+  const lines = [];
+  clusters.forEach((cluster, index) => {
+    lines.push(
+      `        vec3 center${index} = normalize(uErosionCluster${index}.xyz);`,
+      `        float radius${index} = uErosionCluster${index}.w * uErosionGrowth;`,
+      `        float clusterSeed${index} = ${Number(index + 1).toFixed(1)} * 37.17;`,
+      `        vec3 reference${index} = abs(center${index}.y) < 0.86 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);`,
+      `        vec3 tangentBase${index} = normalize(cross(center${index}, reference${index}));`,
+      `        vec3 bitangentBase${index} = normalize(cross(center${index}, tangentBase${index}));`,
+      `        float tangentAngle${index} = hash11(clusterSeed${index} + 11.7) * 6.2831853;`,
+      `        vec3 tangent${index} = normalize(tangentBase${index} * cos(tangentAngle${index}) + bitangentBase${index} * sin(tangentAngle${index}));`,
+      `        vec3 bitangent${index} = normalize(cross(center${index}, tangent${index}));`,
+      `        float childCount${index} = floor(mix(uChildHoleCountMin, uChildHoleCountMax + 0.999, hash11(clusterSeed${index} + 5.1)));`,
+      `        applyErosionHole(n, center${index}, radius${index} * 1.28, erosion, holeCut, edgeStress);`,
+      buildClusterChildLines(index)
     );
   });
   return lines.join("\n");
@@ -104,34 +118,17 @@ function rangeValue(rng, min, max) {
   return lo + (rng() * (hi - lo));
 }
 
-function rangeInt(rng, min, max) {
-  return Math.round(rangeValue(rng, min, max));
-}
-
-function createErosionHoles(seed = 1, clusterCount = 1, config = ORB_LIFECYCLE_3D_DEFAULTS) {
+function createErosionClusters(seed = 1, clusterCount = 1, config = ORB_LIFECYCLE_3D_DEFAULTS) {
   const resolved = resolveOrbLifecycle3dConfig(config);
   const rng = createRng((Number(seed) || 1) ^ 0x3e80510);
-  const clusters = Math.max(1, Math.round(Number(clusterCount) || 1));
-  const holes = [];
-  for (let cluster = 0; cluster < clusters && holes.length < MAX_EROSION_HOLES; cluster += 1) {
+  const clusterTotal = Math.max(1, Math.min(MAX_EROSION_CLUSTERS, Math.round(Number(clusterCount) || 1)));
+  const clusters = [];
+  for (let cluster = 0; cluster < clusterTotal; cluster += 1) {
     const center = randomFrontFaceVector(rng);
-    const tangent = tangentForNormal(center, rng);
-    const bitangent = new THREE.Vector3().crossVectors(center, tangent).normalize();
     const baseRadius = rangeValue(rng, resolved.startHoleSizeMin, resolved.startHoleSizeMax);
-    holes.push(new THREE.Vector4(center.x, center.y, center.z, baseRadius * 1.28));
-    const childCount = Math.max(0, rangeInt(rng, resolved.childHoleCountMin, resolved.childHoleCountMax));
-    for (let satellite = 0; satellite < childCount && holes.length < MAX_EROSION_HOLES; satellite += 1) {
-      const angle = rng() * Math.PI * 2;
-      const offset = rangeValue(rng, resolved.childHoleRangeMin, resolved.childHoleRangeMax);
-      const direction = tangent.clone()
-        .multiplyScalar(Math.cos(angle) * offset)
-        .add(bitangent.clone().multiplyScalar(Math.sin(angle) * offset));
-      const satelliteCenter = center.clone().add(direction).normalize();
-      const satelliteRadius = rangeValue(rng, resolved.childHoleSizeMin, resolved.childHoleSizeMax);
-      holes.push(new THREE.Vector4(satelliteCenter.x, satelliteCenter.y, satelliteCenter.z, satelliteRadius));
-    }
+    clusters.push(new THREE.Vector4(center.x, center.y, center.z, baseRadius));
   }
-  return holes;
+  return clusters;
 }
 
 function activeClusterCount({
@@ -140,7 +137,7 @@ function activeClusterCount({
 } = {}) {
   const resolved = resolveOrbLifecycle3dConfig(config);
   const hits = clampInt(hitsTaken, 0, 99, 0);
-  return Math.max(0, Math.min(MAX_EROSION_HOLES, hits * resolved.maxCracks));
+  return Math.max(0, Math.min(MAX_EROSION_CLUSTERS, hits * resolved.maxCracks));
 }
 
 export function createOrbLifecycle3dErosionPatch({
@@ -155,17 +152,23 @@ export function createOrbLifecycle3dErosionPatch({
   const hitRatio = Math.max(0, Math.min(1, hits / total));
   const activeClusters = activeClusterCount({ hitsTaken: hits, config: resolved });
   if (hits <= 0 || activeClusters <= 0) return null;
-  const holes = createErosionHoles(seed, activeClusters, resolved);
+  const clusters = createErosionClusters(seed, activeClusters, resolved);
 
   return Object.freeze({
-    holes,
+    clusters,
     uniforms: {
       uErosionGrowth: { value: 0.82 + (hitRatio * 0.65) },
       uErosionOpacity: { value: resolved.crackAlpha },
       uEdgeLightBrightness: { value: resolved.edgeLightBrightness },
       uEdgeLightRange: { value: resolved.edgeLightRange },
       uHoleEdgeSoftness: { value: resolved.holeEdgeSoftness },
-      ...createErosionUniforms(holes),
+      uChildHoleCountMin: { value: resolved.childHoleCountMin },
+      uChildHoleCountMax: { value: resolved.childHoleCountMax },
+      uChildHoleSizeMin: { value: resolved.childHoleSizeMin },
+      uChildHoleSizeMax: { value: resolved.childHoleSizeMax },
+      uChildHoleRangeMin: { value: resolved.childHoleRangeMin },
+      uChildHoleRangeMax: { value: resolved.childHoleRangeMax },
+      ...createErosionUniforms(clusters),
     },
     uniformsSource: `
       uniform float uErosionGrowth;
@@ -173,14 +176,44 @@ export function createOrbLifecycle3dErosionPatch({
       uniform float uEdgeLightBrightness;
       uniform float uEdgeLightRange;
       uniform float uHoleEdgeSoftness;
-      ${holes.map((hole, index) => `uniform vec4 uHole${index};`).join("\n      ")}
+      uniform float uChildHoleCountMin;
+      uniform float uChildHoleCountMax;
+      uniform float uChildHoleSizeMin;
+      uniform float uChildHoleSizeMax;
+      uniform float uChildHoleRangeMin;
+      uniform float uChildHoleRangeMax;
+      ${clusters.map((cluster, index) => `uniform vec4 uErosionCluster${index};`).join("\n      ")}
+
+      float hash11(float p) {
+        return fract(sin(p * 127.1) * 43758.5453123);
+      }
+
+      void applyErosionHole(
+        vec3 n,
+        vec3 center,
+        float radius,
+        inout float erosion,
+        inout float holeCut,
+        inout float edgeStress
+      ) {
+        float d = 1.0 - dot(n, normalize(center));
+        float baseEdge = max(0.0006, fwidth(d) * 2.0);
+        float edge = max(baseEdge, radius * uHoleEdgeSoftness);
+        float aura = max(0.004, radius * uEdgeLightRange);
+        float voidAmount = 1.0 - smoothstep(radius - edge, radius + edge, d);
+        float outside = smoothstep(radius - edge, radius + edge * 0.65, d);
+        float stress = outside * (1.0 - smoothstep(radius, radius + aura, d));
+        erosion = max(erosion, voidAmount);
+        holeCut = max(holeCut, voidAmount);
+        edgeStress = max(edgeStress, stress);
+      }
     `,
     fragmentSource: `
         vec3 n = normalize(vLifecycleLocalNormal);
         float erosion = 0.0;
         float holeCut = 0.0;
         float edgeStress = 0.0;
-${buildErosionLines(holes)}
+${buildErosionLines(clusters)}
         float edgeLight = smoothstep(0.0, 0.7, uErosionOpacity) * edgeStress * uEdgeLightBrightness;
         pearl = mix(pearl, vec3(1.0), clamp(edgeLight, 0.0, 1.0));
         alpha *= 1.0 - clamp(holeCut * uErosionOpacity, 0.0, 1.0);
