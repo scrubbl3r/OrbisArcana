@@ -6,15 +6,16 @@ import {
   createOpalescentOrbShellMaterial,
   createOrbPointLight,
   updateOrbPointLight,
-} from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
+} from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260516a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516b";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516c";
 import {
   createOrbLifecycle3dCracks,
+  createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516g";
+} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516h";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 const ORB_STAGE_FILL_RATIO = 0.52;
@@ -42,10 +43,10 @@ function readLifecycle3dConfig(els = {}) {
   return Object.freeze({
     maxHits: roundedNumber(els.orbLifecycle3dHitTotal && els.orbLifecycle3dHitTotal.value, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
     maxCracks: roundedNumber(els.orbLifecycle3dCrackTotal && els.orbLifecycle3dCrackTotal.value, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
-    crackColor: colorFromFields(els, "orbLifecycle3dCrack", ORB_LIFECYCLE_3D_DEFAULTS.crackColor),
+    crackColor: ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(els.orbLifecycle3dCrackAlpha && els.orbLifecycle3dCrackAlpha.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
-    crackWidthPx: clampNumber(els.orbLifecycle3dCrackStroke && els.orbLifecycle3dCrackStroke.value, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
-    crackLiftBO: clampNumber(els.orbLifecycle3dCrackLift && els.orbLifecycle3dCrackLift.value, 0, 0.2, ORB_LIFECYCLE_3D_DEFAULTS.crackLiftBO),
+    crackWidthPx: ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx,
+    crackLiftBO: ORB_LIFECYCLE_3D_DEFAULTS.crackLiftBO,
     startHoleSizeMin: clampNumber(els.orbLifecycle3dStartHoleSizeMin && els.orbLifecycle3dStartHoleSizeMin.value, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMin),
     startHoleSizeMax: clampNumber(els.orbLifecycle3dStartHoleSizeMax && els.orbLifecycle3dStartHoleSizeMax.value, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMax),
     childHoleCountMin: roundedNumber(els.orbLifecycle3dChildHoleCountMin && els.orbLifecycle3dChildHoleCountMin.value, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMin),
@@ -146,6 +147,21 @@ export function createOrbLifecycle3dPreview({
     cracks = null;
   }
 
+  function rebuildOrbShellMaterial(config = readLifecycle3dConfig(els)) {
+    if (!orbShellMesh) return;
+    const previous = shellMaterial;
+    shellMaterial = createOpalescentOrbShellMaterial(activeOrbConfig, {
+      lifecycleErosion: createOrbLifecycle3dErosionPatch({
+        hitsTaken,
+        maxHits: config.maxHits,
+        seed,
+        config,
+      }),
+    });
+    orbShellMesh.material = shellMaterial;
+    if (previous && previous !== shellMaterial && typeof previous.dispose === "function") previous.dispose();
+  }
+
   function removeBurst() {
     if (burst && burst.parent) burst.parent.remove(burst);
     if (burst) disposeThreeObject(burst);
@@ -182,6 +198,7 @@ export function createOrbLifecycle3dPreview({
   function rebuildCracks(config = readLifecycle3dConfig(els)) {
     if (!model) return;
     removeCracks();
+    rebuildOrbShellMaterial(config);
     cracks = createOrbLifecycle3dCracks({
       bo: readBo(),
       hitsTaken,
@@ -219,7 +236,14 @@ export function createOrbLifecycle3dPreview({
       });
       if (!inspector) return config;
       frameCameraToSsotOrbSize(inspector, els.previewRoot, bo);
-      shellMaterial = createOpalescentOrbShellMaterial(activeOrbConfig);
+      shellMaterial = createOpalescentOrbShellMaterial(activeOrbConfig, {
+        lifecycleErosion: createOrbLifecycle3dErosionPatch({
+          hitsTaken,
+          maxHits: config.maxHits,
+          seed,
+          config,
+        }),
+      });
       const created = createOrbModel({
         bo,
         shellMaterial,

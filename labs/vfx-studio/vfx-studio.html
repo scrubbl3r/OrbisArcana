@@ -2066,29 +2066,12 @@
               <button id="orbLifecycle3dApplyCrackBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="orbLifecycle3dCrackTotal">Erosion clusters</label>
-              <input id="orbLifecycle3dCrackTotal" class="paramFieldInput" type="number" min="1" max="18" step="1" value="12" />
-            </div>
-            <div class="rgbaParamRow">
-              <span class="rgbaLabel">Rim RGB</span>
-              <label for="orbLifecycle3dCrackR">r</label>
-              <input id="orbLifecycle3dCrackR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-              <label for="orbLifecycle3dCrackG">g</label>
-              <input id="orbLifecycle3dCrackG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-              <label for="orbLifecycle3dCrackB">b</label>
-              <input id="orbLifecycle3dCrackB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+              <label for="orbLifecycle3dCrackTotal">Clusters per hit</label>
+              <input id="orbLifecycle3dCrackTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="3" />
             </div>
             <div class="paramFieldRow">
               <label for="orbLifecycle3dCrackAlpha">Erosion opacity</label>
               <input id="orbLifecycle3dCrackAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.92" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dCrackStroke">Rim width</label>
-              <input id="orbLifecycle3dCrackStroke" class="paramFieldInput" type="number" min="0.25" max="12" step="0.25" value="1.50" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dCrackLift">Surface lift BO</label>
-              <input id="orbLifecycle3dCrackLift" class="paramFieldInput" type="number" min="0" max="0.2" step="0.001" value="0.006" />
             </div>
             <div class="paramFieldRow">
               <label for="orbLifecycle3dStartHoleSizeMin">Start hole min</label>
@@ -2556,7 +2539,7 @@
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425d";
-    import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260430a";
+    import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516c";
     import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425d";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260425d";
     import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-3d-default.js?v=20260502c";
@@ -2961,12 +2944,7 @@
       orbLifecycleStatus: $("orbLifecycleStatus"),
       orbLifecycle3dHitTotal: $("orbLifecycle3dHitTotal"),
       orbLifecycle3dCrackTotal: $("orbLifecycle3dCrackTotal"),
-      orbLifecycle3dCrackR: $("orbLifecycle3dCrackR"),
-      orbLifecycle3dCrackG: $("orbLifecycle3dCrackG"),
-      orbLifecycle3dCrackB: $("orbLifecycle3dCrackB"),
       orbLifecycle3dCrackAlpha: $("orbLifecycle3dCrackAlpha"),
-      orbLifecycle3dCrackStroke: $("orbLifecycle3dCrackStroke"),
-      orbLifecycle3dCrackLift: $("orbLifecycle3dCrackLift"),
       orbLifecycle3dStartHoleSizeMin: $("orbLifecycle3dStartHoleSizeMin"),
       orbLifecycle3dStartHoleSizeMax: $("orbLifecycle3dStartHoleSizeMax"),
       orbLifecycle3dChildHoleCountMin: $("orbLifecycle3dChildHoleCountMin"),

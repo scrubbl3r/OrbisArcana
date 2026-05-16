@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { createRng } from "./orb-lifecycle-vfx-runtime.js";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js";
 
-const MAX_EROSION_CLUSTERS = 18;
+const MAX_EROSION_CLUSTERS_PER_HIT = 12;
 const MAX_EROSION_HOLES = 160;
 
 function clampNumber(value, min, max, fallback) {
@@ -19,7 +19,7 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   const source = config && typeof config === "object" ? config : ORB_LIFECYCLE_3D_DEFAULTS;
   return Object.freeze({
     maxHits: clampInt(source.maxHits, 1, 12, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
-    maxCracks: clampInt(source.maxCracks, 1, MAX_EROSION_CLUSTERS, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
+    maxCracks: clampInt(source.maxCracks, 1, MAX_EROSION_CLUSTERS_PER_HIT, ORB_LIFECYCLE_3D_DEFAULTS.maxCracks),
     crackColor: Number(source.crackColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(source.crackAlpha, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
@@ -51,11 +51,6 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   });
 }
 
-function colorToVector(color) {
-  const c = new THREE.Color(Number(color) >>> 0);
-  return new THREE.Vector3(c.r, c.g, c.b);
-}
-
 function tangentForNormal(normal, rng) {
   const reference = Math.abs(normal.y) < 0.86 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
   const tangent = new THREE.Vector3().crossVectors(normal, reference).normalize();
@@ -64,9 +59,9 @@ function tangentForNormal(normal, rng) {
   return tangent.multiplyScalar(Math.cos(angle)).add(bitangent.multiplyScalar(Math.sin(angle))).normalize();
 }
 
-function randomUnitVector(rng) {
+function randomFrontFaceVector(rng) {
   const theta = rng() * Math.PI * 2;
-  const z = (rng() * 2) - 1;
+  const z = 0.12 + (rng() * 0.88);
   const r = Math.sqrt(Math.max(0, 1 - (z * z)));
   return new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z).normalize();
 }
@@ -83,12 +78,10 @@ function buildErosionLines(holes) {
   holes.forEach((hole, index) => {
     lines.push(
       `        float d${index} = 1.0 - dot(n, normalize(uHole${index}.xyz));`,
-      `        float r${index} = uHole${index}.w * uGrowth;`,
+      `        float r${index} = uHole${index}.w * uErosionGrowth;`,
       `        float edge${index} = max(0.0006, fwidth(d${index}));`,
       `        float void${index} = 1.0 - smoothstep(r${index}, r${index} + edge${index}, d${index});`,
-      `        float rim${index} = 1.0 - smoothstep(uEdgeWidth, uEdgeWidth + edge${index}, abs(d${index} - r${index}));`,
-      `        erosion = max(erosion, void${index});`,
-      `        rim = max(rim, rim${index} * (1.0 - void${index} * 0.35));`
+      `        erosion = max(erosion, void${index});`
     );
   });
   return lines.join("\n");
@@ -109,12 +102,10 @@ function rangeInt(rng, min, max) {
 function createErosionHoles(seed = 1, clusterCount = 1, config = ORB_LIFECYCLE_3D_DEFAULTS) {
   const resolved = resolveOrbLifecycle3dConfig(config);
   const rng = createRng((Number(seed) || 1) ^ 0x3e80510);
-  const clusters = Math.max(1, Math.min(MAX_EROSION_CLUSTERS, Math.round(Number(clusterCount) || 1)));
+  const clusters = Math.max(1, Math.round(Number(clusterCount) || 1));
   const holes = [];
   for (let cluster = 0; cluster < clusters && holes.length < MAX_EROSION_HOLES; cluster += 1) {
-    const center = randomUnitVector(rng);
-    if (center.z < -0.55) center.z = Math.abs(center.z) * 0.72;
-    center.normalize();
+    const center = randomFrontFaceVector(rng);
     const tangent = tangentForNormal(center, rng);
     const bitangent = new THREE.Vector3().crossVectors(center, tangent).normalize();
     const baseRadius = rangeValue(rng, resolved.startHoleSizeMin, resolved.startHoleSizeMax);
@@ -134,64 +125,46 @@ function createErosionHoles(seed = 1, clusterCount = 1, config = ORB_LIFECYCLE_3
   return holes;
 }
 
-function createErosionMaterial({
-  hitRatio = 0,
-  activeClusters = 1,
+function activeClusterCount({
+  hitsTaken = 0,
+  config = ORB_LIFECYCLE_3D_DEFAULTS,
+} = {}) {
+  const resolved = resolveOrbLifecycle3dConfig(config);
+  const hits = clampInt(hitsTaken, 0, 99, 0);
+  return Math.max(0, Math.min(MAX_EROSION_HOLES, hits * resolved.maxCracks));
+}
+
+export function createOrbLifecycle3dErosionPatch({
+  hitsTaken = 0,
+  maxHits = 3,
   seed = 1,
   config = ORB_LIFECYCLE_3D_DEFAULTS,
 } = {}) {
   const resolved = resolveOrbLifecycle3dConfig(config);
+  const hits = clampInt(hitsTaken, 0, 99, 0);
+  const total = Math.max(1, clampInt(maxHits, 1, 99, resolved.maxHits));
+  const hitRatio = Math.max(0, Math.min(1, hits / total));
+  const activeClusters = activeClusterCount({ hitsTaken: hits, config: resolved });
+  if (hits <= 0 || activeClusters <= 0) return null;
   const holes = createErosionHoles(seed, activeClusters, resolved);
-  return new THREE.ShaderMaterial({
-    name: "orb_lifecycle3d:clustered_erosion_material",
-    transparent: true,
-    depthWrite: false,
-    depthTest: true,
-    side: THREE.FrontSide,
-    extensions: {
-      derivatives: true,
-    },
+
+  return Object.freeze({
+    holes,
     uniforms: {
-      uHitRatio: { value: Math.max(0, Math.min(1, hitRatio)) },
-      uEdgeWidth: { value: Math.max(0.0015, Math.min(0.035, resolved.crackWidthPx * 0.0045)) },
-      uGrowth: { value: 0.72 + (Math.max(0, Math.min(1, hitRatio)) * 0.9) },
-      uAlpha: { value: resolved.crackAlpha },
-      uRimColor: { value: colorToVector(resolved.crackColor) },
-      uVoidColor: { value: colorToVector(resolved.energyColor) },
+      uErosionGrowth: { value: 0.82 + (hitRatio * 0.65) },
+      uErosionOpacity: { value: resolved.crackAlpha },
       ...createErosionUniforms(holes),
     },
-    vertexShader: `
-      varying vec3 vSphereNormal;
-
-      void main() {
-        vSphereNormal = normalize(position);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      precision highp float;
-
-      uniform float uHitRatio;
-      uniform float uEdgeWidth;
-      uniform float uGrowth;
-      uniform float uAlpha;
-      uniform vec3 uRimColor;
-      uniform vec3 uVoidColor;
+    uniformsSource: `
+      uniform float uErosionGrowth;
+      uniform float uErosionOpacity;
       ${holes.map((hole, index) => `uniform vec4 uHole${index};`).join("\n      ")}
-
-      varying vec3 vSphereNormal;
-
-      void main() {
-        vec3 n = normalize(vSphereNormal);
+    `,
+    fragmentSource: `
+        vec3 n = normalize(vLifecycleLocalNormal);
         float erosion = 0.0;
-        float rim = 0.0;
 ${buildErosionLines(holes)}
-
-        vec3 color = mix(uVoidColor, uRimColor, rim);
-        float alpha = max(erosion * 0.76, rim) * uAlpha * smoothstep(0.0, 0.18, uHitRatio);
-        if (alpha < 0.01) discard;
-        gl_FragColor = vec4(color, alpha);
-      }
+        if (erosion * uErosionOpacity > 0.5) discard;
     `,
   });
 }
@@ -204,30 +177,13 @@ export function createOrbLifecycle3dCracks({
   config = ORB_LIFECYCLE_3D_DEFAULTS,
 } = {}) {
   const resolved = resolveOrbLifecycle3dConfig(config);
-  const hits = clampInt(hitsTaken, 0, 99, 0);
-  const total = Math.max(1, clampInt(maxHits, 1, 99, resolved.maxHits));
-  const ratio = Math.max(0, Math.min(1, hits / total));
-  const activeClusters = Math.max(1, Math.min(resolved.maxCracks, Math.ceil(ratio * resolved.maxCracks)));
+  void bo;
+  void hitsTaken;
+  void maxHits;
+  void seed;
+  void resolved;
   const group = new THREE.Group();
   group.name = "orb_lifecycle3d:cracks";
-  if (hits <= 0) return group;
-
-  const radius = Math.max(1, Number(bo) || 72) * 0.5;
-  const lift = Math.max(0.002, Number(resolved.crackLiftBO) || 0.006) * Math.max(1, Number(bo) || 72);
-  const material = createErosionMaterial({
-    hitRatio: ratio,
-    activeClusters,
-    seed,
-    config: resolved,
-  });
-  const shell = new THREE.Mesh(
-    new THREE.SphereGeometry(radius + lift, 96, 48),
-    material
-  );
-  shell.name = "orb_lifecycle3d:clustered_erosion_shell";
-  shell.renderOrder = 12;
-  group.add(shell);
-
   return group;
 }
 

@@ -11,8 +11,9 @@ const scratchPastel = new THREE.Color();
 export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS, {
   bo = 72,
   surfaceDisplacement = null,
+  lifecycleErosion = null,
 } = {}) {
-  if (!surfaceDisplacement) return createBaseOpalescentOrbShellMaterial(config);
+  if (!surfaceDisplacement) return createBaseOpalescentOrbShellMaterial(config, { lifecycleErosion });
 
   const opalescenceSpeed = Number(config.opalescenceSpeed) || 1;
   const displacementUniforms = createOrbSurfaceDisplacementUniforms(surfaceDisplacement || { enabled: false }, { bo });
@@ -20,6 +21,9 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
     transparent: true,
     depthWrite: false,
     side: THREE.FrontSide,
+    extensions: {
+      derivatives: true,
+    },
     uniforms: {
       uTime: { value: 0 },
       uOpacity: { value: 1 },
@@ -27,6 +31,7 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
       uCyan: { value: new THREE.Color(config.shellCyanColor) },
       uViolet: { value: new THREE.Color(config.shellVioletColor) },
       uGold: { value: new THREE.Color(config.shellGoldColor) },
+      ...(lifecycleErosion && lifecycleErosion.uniforms ? lifecycleErosion.uniforms : {}),
       ...displacementUniforms,
     },
     vertexShader: `
@@ -49,6 +54,7 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
       varying vec3 vNormal;
       varying vec3 vViewPosition;
       varying vec3 vWorldPosition;
+      varying vec3 vLifecycleLocalNormal;
 
       void main() {
         vec3 n = normalize(normal);
@@ -68,6 +74,7 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
         vNormal = normalize(normalMatrix * normal);
         vViewPosition = -mvPosition.xyz;
         vWorldPosition = worldPosition.xyz;
+        vLifecycleLocalNormal = n;
         gl_Position = projectionMatrix * mvPosition;
       }
     `,
@@ -78,10 +85,12 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
       uniform vec3 uCyan;
       uniform vec3 uViolet;
       uniform vec3 uGold;
+      ${lifecycleErosion && lifecycleErosion.uniformsSource ? lifecycleErosion.uniformsSource : ""}
 
       varying vec3 vNormal;
       varying vec3 vViewPosition;
       varying vec3 vWorldPosition;
+      varying vec3 vLifecycleLocalNormal;
 
       void main() {
         vec3 viewDir = normalize(vViewPosition);
@@ -93,18 +102,24 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
         pastel = mix(pastel, uGold, driftB * ${Number(config.goldMix).toFixed(3)});
         vec3 pearl = mix(uBase, pastel, ${Number(config.shellPastelMix).toFixed(3)} + fresnel * ${Number(config.shellRimPastelMix).toFixed(3)} + driftC * ${Number(config.shellDriftPastelMix).toFixed(3)});
         float alpha = ${Number(config.shellCenterAlpha).toFixed(4)} + pow(fresnel, ${Number(config.shellRimAlphaPower).toFixed(3)}) * ${Number(config.shellRimAlpha).toFixed(3)};
+        ${lifecycleErosion && lifecycleErosion.fragmentSource ? lifecycleErosion.fragmentSource : ""}
         gl_FragColor = vec4(pearl * ${Number(config.shellLuminanceBoost).toFixed(3)}, alpha * uOpacity);
       }
     `,
   });
 }
 
-function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS) {
+function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS, {
+  lifecycleErosion = null,
+} = {}) {
   const opalescenceSpeed = Number(config.opalescenceSpeed) || 1;
   return new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
     side: THREE.FrontSide,
+    extensions: {
+      derivatives: true,
+    },
     uniforms: {
       uTime: { value: 0 },
       uOpacity: { value: 1 },
@@ -112,11 +127,13 @@ function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS) {
       uCyan: { value: new THREE.Color(config.shellCyanColor) },
       uViolet: { value: new THREE.Color(config.shellVioletColor) },
       uGold: { value: new THREE.Color(config.shellGoldColor) },
+      ...(lifecycleErosion && lifecycleErosion.uniforms ? lifecycleErosion.uniforms : {}),
     },
     vertexShader: `
       varying vec3 vNormal;
       varying vec3 vViewPosition;
       varying vec3 vWorldPosition;
+      varying vec3 vLifecycleLocalNormal;
 
       void main() {
         vec4 worldPosition = modelMatrix * vec4(position, 1.0);
@@ -124,6 +141,7 @@ function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS) {
         vNormal = normalize(normalMatrix * normal);
         vViewPosition = -mvPosition.xyz;
         vWorldPosition = worldPosition.xyz;
+        vLifecycleLocalNormal = normalize(position);
         gl_Position = projectionMatrix * mvPosition;
       }
     `,
@@ -134,10 +152,12 @@ function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS) {
       uniform vec3 uCyan;
       uniform vec3 uViolet;
       uniform vec3 uGold;
+      ${lifecycleErosion && lifecycleErosion.uniformsSource ? lifecycleErosion.uniformsSource : ""}
 
       varying vec3 vNormal;
       varying vec3 vViewPosition;
       varying vec3 vWorldPosition;
+      varying vec3 vLifecycleLocalNormal;
 
       void main() {
         vec3 viewDir = normalize(vViewPosition);
@@ -149,6 +169,7 @@ function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS) {
         pastel = mix(pastel, uGold, driftB * ${Number(config.goldMix).toFixed(3)});
         vec3 pearl = mix(uBase, pastel, ${Number(config.shellPastelMix).toFixed(3)} + fresnel * ${Number(config.shellRimPastelMix).toFixed(3)} + driftC * ${Number(config.shellDriftPastelMix).toFixed(3)});
         float alpha = ${Number(config.shellCenterAlpha).toFixed(4)} + pow(fresnel, ${Number(config.shellRimAlphaPower).toFixed(3)}) * ${Number(config.shellRimAlpha).toFixed(3)};
+        ${lifecycleErosion && lifecycleErosion.fragmentSource ? lifecycleErosion.fragmentSource : ""}
         gl_FragColor = vec4(pearl * ${Number(config.shellLuminanceBoost).toFixed(3)}, alpha * uOpacity);
       }
     `,

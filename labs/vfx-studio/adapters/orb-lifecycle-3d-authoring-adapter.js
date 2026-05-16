@@ -2,8 +2,6 @@ const ORB_LIFECYCLE_3D_FIELDS = Object.freeze([
   "orbLifecycle3dHitTotal",
   "orbLifecycle3dCrackTotal",
   "orbLifecycle3dCrackAlpha",
-  "orbLifecycle3dCrackStroke",
-  "orbLifecycle3dCrackLift",
   "orbLifecycle3dStartHoleSizeMin",
   "orbLifecycle3dStartHoleSizeMax",
   "orbLifecycle3dChildHoleCountMin",
@@ -21,7 +19,6 @@ const ORB_LIFECYCLE_3D_FIELDS = Object.freeze([
 ]);
 
 const ORB_LIFECYCLE_3D_COLOR_FIELDS = Object.freeze([
-  ["crackColor", "orbLifecycle3dCrack"],
   ["particleColor", "orbLifecycle3dParticle"],
 ]);
 
@@ -55,10 +52,8 @@ function colorChannels(color) {
 function settingsFromDefaults(defaults = {}) {
   const settings = {
     orbLifecycle3dHitTotal: roundedNumber(defaults.maxHits, 10),
-    orbLifecycle3dCrackTotal: roundedNumber(defaults.maxCracks, 12),
+    orbLifecycle3dCrackTotal: roundedNumber(defaults.maxCracks, 3),
     orbLifecycle3dCrackAlpha: fixedNumber(defaults.crackAlpha, 2, 0.92),
-    orbLifecycle3dCrackStroke: fixedNumber(defaults.crackWidthPx, 2, 1.5),
-    orbLifecycle3dCrackLift: fixedNumber(defaults.crackLiftBO, 3, 0.006),
     orbLifecycle3dStartHoleSizeMin: fixedNumber(defaults.startHoleSizeMin, 3, 0.01),
     orbLifecycle3dStartHoleSizeMax: fixedNumber(defaults.startHoleSizeMax, 3, 0.02),
     orbLifecycle3dChildHoleCountMin: roundedNumber(defaults.childHoleCountMin, 4),
