@@ -182,9 +182,13 @@ export function createOrbSystem({ gameState, eventBus }) {
     }
 
     const healthBefore = orb.health;
+    const hitsTakenBefore = Number(orb.hitsTaken) || 0;
     const combatResult = healthPool.applyDamage(amount);
     syncHealthToOrb();
     const lifecycleState = syncLifecycleToOrb();
+    if (orb.hitsTaken > hitsTakenBefore) {
+      orb.fractureSeed = createOrbLifeSeed();
+    }
     orb.lastDamageAtMs = atMs;
     orb.invulnUntilMs = atMs + Number(orb.collisionCooldownMs || 0);
     const appliedAmount = combatResult.amountApplied || (healthBefore - orb.health);

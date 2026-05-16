@@ -238,7 +238,9 @@ export function createOrbLifecycle3dPreview({
 
   function hit() {
     const config = readLifecycle3dConfig(els);
-    hitsTaken = Math.min(Math.max(1, Number(config.maxHits) || 1), hitsTaken + 1);
+    const nextHitsTaken = Math.min(Math.max(1, Number(config.maxHits) || 1), hitsTaken + 1);
+    if (nextHitsTaken > hitsTaken) seed = ((Math.random() * 1e9) | 0) || 1;
+    hitsTaken = nextHitsTaken;
     apply();
     if (hitsTaken >= Math.max(1, Number(config.maxHits) || 1)) {
       removeBurst();
