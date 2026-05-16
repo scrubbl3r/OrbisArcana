@@ -82,16 +82,19 @@ function frameCamera(inspector, root, bo) {
 export function createOrbLifecycle3dPreview({
   els = {},
   getOrbBaseVisualState = null,
+  getOrb3dVisualSettings = null,
 } = {}) {
   let inspector = null;
   let model = null;
   let shellMaterial = null;
   let pointLight = null;
+  let orbShellMesh = null;
   let cracks = null;
   let burst = null;
   let hitsTaken = 0;
   let seed = 1001;
   let bornAt = 0;
+  let activeOrbConfig = ORB_3D_VISUAL_DEFAULTS;
 
   function readBo() {
     const visualState = typeof getOrbBaseVisualState === "function" ? getOrbBaseVisualState() : null;
@@ -122,8 +125,25 @@ export function createOrbLifecycle3dPreview({
     model = null;
     shellMaterial = null;
     pointLight = null;
+    orbShellMesh = null;
     cracks = null;
     burst = null;
+  }
+
+  function layerVisible(button) {
+    return !button || button.getAttribute("aria-pressed") !== "false";
+  }
+
+  function applyLayerVisibility() {
+    if (orbShellMesh) orbShellMesh.visible = layerVisible(els.orbLifecycle3dOrbVisibleBtn);
+    if (inspector && typeof inspector.render === "function") inspector.render();
+  }
+
+  function toggleLayer(button) {
+    if (!button) return;
+    const visible = layerVisible(button);
+    button.setAttribute("aria-pressed", visible ? "false" : "true");
+    applyLayerVisibility();
   }
 
   function rebuildCracks(config = readLifecycle3dConfig(els)) {
@@ -144,6 +164,7 @@ export function createOrbLifecycle3dPreview({
     const config = readLifecycle3dConfig(els);
     const bo = readBo();
     if (!inspector) {
+      activeOrbConfig = (typeof getOrb3dVisualSettings === "function" && getOrb3dVisualSettings()) || ORB_3D_VISUAL_DEFAULTS;
       inspector = createWorldObjectInspector({
         root: els.previewRoot,
         bo,
@@ -157,14 +178,14 @@ export function createOrbLifecycle3dPreview({
           if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) {
             shellMaterial.uniforms.uTime.value = t;
           }
-          if (pointLight) updateOrbPointLight(pointLight, t, ORB_3D_VISUAL_DEFAULTS);
+          if (pointLight) updateOrbPointLight(pointLight, t, activeOrbConfig);
           if (cracks) updateOrbLifecycle3dCracks(cracks, performance.now());
           if (burst && !updateOrbLifecycle3dDissolveBurst(burst, performance.now())) removeBurst();
         },
       });
       if (!inspector) return config;
       frameCamera(inspector, els.previewRoot, bo);
-      shellMaterial = createOpalescentOrbShellMaterial(ORB_3D_VISUAL_DEFAULTS);
+      shellMaterial = createOpalescentOrbShellMaterial(activeOrbConfig);
       const created = createOrbModel({
         bo,
         shellMaterial,
@@ -175,7 +196,9 @@ export function createOrbLifecycle3dPreview({
         ringSegments: 192,
       });
       model = created.model;
-      pointLight = createOrbPointLight({ bo, config: ORB_3D_VISUAL_DEFAULTS });
+      orbShellMesh = model.getObjectByName("orb3d:shell") || null;
+      if (orbShellMesh) orbShellMesh.visible = layerVisible(els.orbLifecycle3dOrbVisibleBtn);
+      pointLight = createOrbPointLight({ bo, config: activeOrbConfig });
       model.add(pointLight);
       inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.025));
       inspector.scene.add(model);
@@ -225,6 +248,7 @@ export function createOrbLifecycle3dPreview({
 
   function wire() {
     apply();
+    if (els.orbLifecycle3dOrbVisibleBtn) els.orbLifecycle3dOrbVisibleBtn.addEventListener("click", () => toggleLayer(els.orbLifecycle3dOrbVisibleBtn));
     if (els.orbLifecycle3dApplyCrackBtn) els.orbLifecycle3dApplyCrackBtn.addEventListener("click", apply);
     if (els.orbLifecycle3dApplyParticleBtn) els.orbLifecycle3dApplyParticleBtn.addEventListener("click", apply);
     if (els.orbLifecycle3dHitBtn) els.orbLifecycle3dHitBtn.addEventListener("click", hit);

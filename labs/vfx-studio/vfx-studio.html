@@ -2030,6 +2030,13 @@
       </div>
 
       <div class="section" data-effect="orb-lifecycle-3d" hidden>
+        <div class="controlGroup" data-control-group>
+          <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="orbLifecycle3dOrbControls">Orb</button>
+            <button id="orbLifecycle3dOrbVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Orb visibility" title="Toggle Orb visibility"></button>
+          </div>
+          <div id="orbLifecycle3dOrbControls" class="controlGroupBody paramFieldRows" hidden></div>
+        </div>
         <div class="paramFieldRows">
           <div class="paramFieldRow">
             <label for="orbLifecycle3dHitTotal">Hit total</label>
@@ -2976,6 +2983,7 @@
       orbLifecycle3dParticleSpeedMax: $("orbLifecycle3dParticleSpeedMax"),
       orbLifecycle3dParticleDrag: $("orbLifecycle3dParticleDrag"),
       orbLifecycle3dParticleTtl: $("orbLifecycle3dParticleTtl"),
+      orbLifecycle3dOrbVisibleBtn: $("orbLifecycle3dOrbVisibleBtn"),
       orbLifecycle3dApplyCrackBtn: $("orbLifecycle3dApplyCrackBtn"),
       orbLifecycle3dApplyParticleBtn: $("orbLifecycle3dApplyParticleBtn"),
       orbLifecycle3dHitBtn: $("orbLifecycle3dHitBtn"),

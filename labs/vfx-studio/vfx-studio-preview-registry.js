@@ -175,6 +175,7 @@ export function createStudioPreviewRegistry({
   const orbLifecycle3dPreview = createOrbLifecycle3dPreview({
     els: previewEls.orbLifecycle3d,
     getOrbBaseVisualState,
+    getOrb3dVisualSettings: getOrb3dVisualSettings || (() => readOrb3dPreviewConfig(previewEls.orb3d)),
   });
   actions.applyOrbLifecycle3d = orbLifecycle3dPreview.apply;
   actions.clearOrbLifecycle3d = orbLifecycle3dPreview.clear;
