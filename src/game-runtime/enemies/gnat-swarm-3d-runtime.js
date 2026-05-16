@@ -13,6 +13,7 @@ const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
 const GNAT_SIGNAL_FLASH_SEC = 1;
 const GNAT_SIGNAL_BLINK_PERIOD_SEC = 0.2;
 const GNAT_SIGNAL_BLINK_GAP_SEC = 0.05;
+const GNAT_STUN_BOUNCE_ANGLE_RAD = THREE.MathUtils.degToRad(10);
 const GNAT_COLOR_NEUTRAL = new THREE.Color(0x9dff8a);
 const GNAT_COLOR_ALERTED = new THREE.Color(0xff4b4b);
 const GNAT_COLOR_SIGNAL = new THREE.Color(0xffe45e);
@@ -1229,7 +1230,10 @@ export function createGnatSwarm3dRuntime({
         state.target = state.position;
         state.velocity.xW *= 0.18;
         if (state.stunBounceRemaining > 0) {
-          state.velocity.yW = -Math.abs(state.velocity.yW) * 0.16;
+          const bounceSpeed = Math.abs(state.velocity.yW) * 0.16;
+          const bounceAngle = randomUnit() * GNAT_STUN_BOUNCE_ANGLE_RAD;
+          state.velocity.xW += Math.sin(bounceAngle) * bounceSpeed;
+          state.velocity.yW = -Math.cos(bounceAngle) * bounceSpeed;
           state.stunBounceRemaining -= 1;
         } else {
           state.velocity.yW = 0;
