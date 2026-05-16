@@ -2037,126 +2037,139 @@
           </div>
           <div id="orbLifecycle3dOrbControls" class="controlGroupBody paramFieldRows" hidden></div>
         </div>
-        <div class="paramFieldRows">
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dHitTotal">Hit total</label>
-            <input id="orbLifecycle3dHitTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="3" />
-            <button id="orbLifecycle3dApplyCrackBtn" class="toolBtn" type="button">Apply</button>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="orbLifecycle3dDamageControls">Orb Damage</button>
+          <div id="orbLifecycle3dDamageControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dHitBtn">Damage flow</label>
+              <input id="orbLifecycle3dStatus" class="paramFieldInput" type="text" value="Hits 0 / 3" readonly />
+              <button id="orbLifecycle3dHitBtn" class="toolBtn" type="button">Hit</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dHealBtn">Recovery</label>
+              <input class="paramFieldInput" type="text" value="Reverse one hit while preserving the same crack map" readonly />
+              <button id="orbLifecycle3dHealBtn" class="toolBtn" type="button">Heal</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dRegenerateBtn">Regenerate</label>
+              <input class="paramFieldInput" type="text" value="Rebuild cracks with a fresh seed" readonly />
+              <button id="orbLifecycle3dRegenerateBtn" class="toolBtn" type="button">Regenerate</button>
+            </div>
           </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dCrackTotal">Shard total</label>
-            <input id="orbLifecycle3dCrackTotal" class="paramFieldInput" type="number" min="3" max="96" step="1" value="22" />
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="orbLifecycle3dEffectControls">Orb Effect</button>
+          <div id="orbLifecycle3dEffectControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dHitTotal">Hit total</label>
+              <input id="orbLifecycle3dHitTotal" class="paramFieldInput" type="number" min="1" max="12" step="1" value="3" />
+              <button id="orbLifecycle3dApplyCrackBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dCrackTotal">Shard total</label>
+              <input id="orbLifecycle3dCrackTotal" class="paramFieldInput" type="number" min="3" max="96" step="1" value="22" />
+            </div>
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">Glow RGB</span>
+              <label for="orbLifecycle3dCrackR">r</label>
+              <input id="orbLifecycle3dCrackR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="248" />
+              <label for="orbLifecycle3dCrackG">g</label>
+              <input id="orbLifecycle3dCrackG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="253" />
+              <label for="orbLifecycle3dCrackB">b</label>
+              <input id="orbLifecycle3dCrackB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dCrackAlpha">Shell alpha</label>
+              <input id="orbLifecycle3dCrackAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.72" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dCrackStroke">Band width</label>
+              <input id="orbLifecycle3dCrackStroke" class="paramFieldInput" type="number" min="0.25" max="12" step="0.25" value="1.25" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dCrackLift">Shell offset BO</label>
+              <input id="orbLifecycle3dCrackLift" class="paramFieldInput" type="number" min="0" max="0.2" step="0.001" value="0.012" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dCriticalGlow">Critical glow</label>
+              <input id="orbLifecycle3dCriticalGlow" class="paramFieldInput" type="number" min="0" max="4" step="0.05" value="1.35" />
+            </div>
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">Energy RGB</span>
+              <label for="orbLifecycle3dEnergyR">r</label>
+              <input id="orbLifecycle3dEnergyR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="148" />
+              <label for="orbLifecycle3dEnergyG">g</label>
+              <input id="orbLifecycle3dEnergyG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="184" />
+              <label for="orbLifecycle3dEnergyB">b</label>
+              <input id="orbLifecycle3dEnergyB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="194" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dMutationSpeed">Mutation speed</label>
+              <input id="orbLifecycle3dMutationSpeed" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.12" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dMutationAmount">Mutation amount</label>
+              <input id="orbLifecycle3dMutationAmount" class="paramFieldInput" type="number" min="0" max="1.5" step="0.01" value="1" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dDiffuseWash">Diffuse wash</label>
+              <input id="orbLifecycle3dDiffuseWash" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="1" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dEdgeBrightness">Edge brightness</label>
+              <input id="orbLifecycle3dEdgeBrightness" class="paramFieldInput" type="number" min="0" max="3" step="0.01" value="1" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dCellDarkness">Cell darkness</label>
+              <input id="orbLifecycle3dCellDarkness" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="1" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dCellSharpness">Cell sharpness</label>
+              <input id="orbLifecycle3dCellSharpness" class="paramFieldInput" type="number" min="0" max="3" step="0.01" value="1" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dDetailEmergence">Detail emergence</label>
+              <input id="orbLifecycle3dDetailEmergence" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.58" />
+            </div>
           </div>
-          <div class="rgbaParamRow">
-            <span class="rgbaLabel">Glow RGB</span>
-            <label for="orbLifecycle3dCrackR">r</label>
-            <input id="orbLifecycle3dCrackR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="248" />
-            <label for="orbLifecycle3dCrackG">g</label>
-            <input id="orbLifecycle3dCrackG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="253" />
-            <label for="orbLifecycle3dCrackB">b</label>
-            <input id="orbLifecycle3dCrackB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dCrackAlpha">Shell alpha</label>
-            <input id="orbLifecycle3dCrackAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.72" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dCrackStroke">Band width</label>
-            <input id="orbLifecycle3dCrackStroke" class="paramFieldInput" type="number" min="0.25" max="12" step="0.25" value="1.25" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dCrackLift">Shell offset BO</label>
-            <input id="orbLifecycle3dCrackLift" class="paramFieldInput" type="number" min="0" max="0.2" step="0.001" value="0.012" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dCriticalGlow">Critical glow</label>
-            <input id="orbLifecycle3dCriticalGlow" class="paramFieldInput" type="number" min="0" max="4" step="0.05" value="1.35" />
-          </div>
-          <div class="rgbaParamRow">
-            <span class="rgbaLabel">Energy RGB</span>
-            <label for="orbLifecycle3dEnergyR">r</label>
-            <input id="orbLifecycle3dEnergyR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="148" />
-            <label for="orbLifecycle3dEnergyG">g</label>
-            <input id="orbLifecycle3dEnergyG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="184" />
-            <label for="orbLifecycle3dEnergyB">b</label>
-            <input id="orbLifecycle3dEnergyB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="194" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dMutationSpeed">Mutation speed</label>
-            <input id="orbLifecycle3dMutationSpeed" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.12" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dMutationAmount">Mutation amount</label>
-            <input id="orbLifecycle3dMutationAmount" class="paramFieldInput" type="number" min="0" max="1.5" step="0.01" value="1" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dDiffuseWash">Diffuse wash</label>
-            <input id="orbLifecycle3dDiffuseWash" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="1" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dEdgeBrightness">Edge brightness</label>
-            <input id="orbLifecycle3dEdgeBrightness" class="paramFieldInput" type="number" min="0" max="3" step="0.01" value="1" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dCellDarkness">Cell darkness</label>
-            <input id="orbLifecycle3dCellDarkness" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="1" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dCellSharpness">Cell sharpness</label>
-            <input id="orbLifecycle3dCellSharpness" class="paramFieldInput" type="number" min="0" max="3" step="0.01" value="1" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dDetailEmergence">Detail emergence</label>
-            <input id="orbLifecycle3dDetailEmergence" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.58" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dParticleCount">Particle count</label>
-            <input id="orbLifecycle3dParticleCount" class="paramFieldInput" type="number" min="0" max="512" step="1" value="72" />
-            <button id="orbLifecycle3dApplyParticleBtn" class="toolBtn" type="button">Apply</button>
-          </div>
-          <div class="rgbaParamRow">
-            <span class="rgbaLabel">Particle RGB</span>
-            <label for="orbLifecycle3dParticleR">r</label>
-            <input id="orbLifecycle3dParticleR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="223" />
-            <label for="orbLifecycle3dParticleG">g</label>
-            <input id="orbLifecycle3dParticleG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="247" />
-            <label for="orbLifecycle3dParticleB">b</label>
-            <input id="orbLifecycle3dParticleB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dParticleSize">Particle size</label>
-            <input id="orbLifecycle3dParticleSize" class="paramFieldInput" type="number" min="0.5" max="32" step="0.25" value="4.5" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dParticleSpeedMin">Particle speed min BO</label>
-            <input id="orbLifecycle3dParticleSpeedMin" class="paramFieldInput" type="number" min="0" max="16" step="0.05" value="1.35" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dParticleSpeedMax">Particle speed max BO</label>
-            <input id="orbLifecycle3dParticleSpeedMax" class="paramFieldInput" type="number" min="0" max="16" step="0.05" value="4.25" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dParticleDrag">Particle drag</label>
-            <input id="orbLifecycle3dParticleDrag" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="2.8" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dParticleTtl">Particle ttl (ms)</label>
-            <input id="orbLifecycle3dParticleTtl" class="paramFieldInput" type="number" min="80" max="6000" step="10" value="1050" />
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dHitBtn">Damage flow</label>
-            <input id="orbLifecycle3dStatus" class="paramFieldInput" type="text" value="Hits 0 / 3" readonly />
-            <button id="orbLifecycle3dHitBtn" class="toolBtn" type="button">Hit</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dHealBtn">Recovery</label>
-            <input class="paramFieldInput" type="text" value="Reverse one hit while preserving the same crack map" readonly />
-            <button id="orbLifecycle3dHealBtn" class="toolBtn" type="button">Heal</button>
-          </div>
-          <div class="paramFieldRow">
-            <label for="orbLifecycle3dRegenerateBtn">Regenerate</label>
-            <input class="paramFieldInput" type="text" value="Rebuild cracks with a fresh seed" readonly />
-            <button id="orbLifecycle3dRegenerateBtn" class="toolBtn" type="button">Regenerate</button>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="orbLifecycle3dDeathControls">Orb Death</button>
+          <div id="orbLifecycle3dDeathControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dParticleCount">Particle count</label>
+              <input id="orbLifecycle3dParticleCount" class="paramFieldInput" type="number" min="0" max="512" step="1" value="72" />
+              <button id="orbLifecycle3dApplyParticleBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">Particle RGB</span>
+              <label for="orbLifecycle3dParticleR">r</label>
+              <input id="orbLifecycle3dParticleR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="223" />
+              <label for="orbLifecycle3dParticleG">g</label>
+              <input id="orbLifecycle3dParticleG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="247" />
+              <label for="orbLifecycle3dParticleB">b</label>
+              <input id="orbLifecycle3dParticleB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dParticleSize">Particle size</label>
+              <input id="orbLifecycle3dParticleSize" class="paramFieldInput" type="number" min="0.5" max="32" step="0.25" value="4.5" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dParticleSpeedMin">Particle speed min BO</label>
+              <input id="orbLifecycle3dParticleSpeedMin" class="paramFieldInput" type="number" min="0" max="16" step="0.05" value="1.35" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dParticleSpeedMax">Particle speed max BO</label>
+              <input id="orbLifecycle3dParticleSpeedMax" class="paramFieldInput" type="number" min="0" max="16" step="0.05" value="4.25" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dParticleDrag">Particle drag</label>
+              <input id="orbLifecycle3dParticleDrag" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="2.8" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dParticleTtl">Particle ttl (ms)</label>
+              <input id="orbLifecycle3dParticleTtl" class="paramFieldInput" type="number" min="80" max="6000" step="10" value="1050" />
+            </div>
           </div>
         </div>
       </div>
