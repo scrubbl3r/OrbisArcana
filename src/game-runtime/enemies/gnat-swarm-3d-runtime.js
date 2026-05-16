@@ -75,6 +75,17 @@ function normalizeUnit(value, fallback = 0) {
   return clampNumber(value, fallback, 0, 1);
 }
 
+function tintEmissiveWithInstanceColor(material = null) {
+  if (!material) return;
+  material.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <emissivemap_fragment>",
+      "#include <emissivemap_fragment>\n\ttotalEmissiveRadiance *= diffuseColor.rgb;"
+    );
+  };
+  material.customProgramCacheKey = () => "gnat-instance-emissive-tint";
+}
+
 function shapedProximityChance({ distancePx = 0, radiusPx = 1, baseChance = 0, awareness = 1, strength = 1 } = {}) {
   if (radiusPx <= 0 || distancePx > radiusPx) return 0;
   const proximity = 1 - distancePx / radiusPx;
@@ -313,14 +324,15 @@ export function createGnatSwarm3dRuntime({
   onCombatEvent = null,
   onNeedsFrame = null,
 } = {}) {
-  const root = group || new THREE.Group();
-  const material = new THREE.MeshStandardMaterial({
-    color: 0xdfffcf,
-    emissive: 0x9dff8a,
-    emissiveIntensity: 1.4,
-    roughness: 0.48,
-    metalness: 0.08,
-  });
+	  const root = group || new THREE.Group();
+	  const material = new THREE.MeshStandardMaterial({
+	    color: 0xffffff,
+	    emissive: 0xffffff,
+	    emissiveIntensity: 1.4,
+	    roughness: 0.48,
+	    metalness: 0.08,
+	  });
+	  tintEmissiveWithInstanceColor(material);
   const geometry = new THREE.BoxGeometry(1, 1, 1);
   let mesh = null;
   let states = [];

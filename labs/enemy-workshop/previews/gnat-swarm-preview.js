@@ -87,6 +87,17 @@ function positiveFiniteNumber(value, fallback = 0, min = 0) {
   return Math.max(min, numeric);
 }
 
+function tintEmissiveWithInstanceColor(material = null) {
+  if (!material) return;
+  material.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <emissivemap_fragment>",
+      "#include <emissivemap_fragment>\n\ttotalEmissiveRadiance *= diffuseColor.rgb;"
+    );
+  };
+  material.customProgramCacheKey = () => "gnat-preview-instance-emissive-tint";
+}
+
 function distanceBetween(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
@@ -269,13 +280,14 @@ export function renderGnatSwarmPreview({ root, surface = null, settings = null }
   worldGroup.add(createRing(17, zDepthPx, { color: 0xdeebd8, opacity: 0.48 }));
 
   const gnatGeometry = new THREE.BoxGeometry(1, 1, 1);
-  const gnatMaterial = new THREE.MeshStandardMaterial({
-    color: 0xdfffcf,
-    emissive: 0x9dff8a,
-    emissiveIntensity: 1.2,
-    roughness: 0.48,
-    metalness: 0.08,
-  });
+	  const gnatMaterial = new THREE.MeshStandardMaterial({
+	    color: 0xffffff,
+	    emissive: 0xffffff,
+	    emissiveIntensity: 1.2,
+	    roughness: 0.48,
+	    metalness: 0.08,
+	  });
+	  tintEmissiveWithInstanceColor(gnatMaterial);
 	  const gnatMesh = new THREE.InstancedMesh(gnatGeometry, gnatMaterial, swarmTotal);
 	  gnatMesh.name = "gnat-swarm-preview:cubes";
 	  gnatMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
