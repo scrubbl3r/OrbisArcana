@@ -8,14 +8,14 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260516a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516c";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516d";
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516h";
+} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516i";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 const ORB_STAGE_FILL_RATIO = 0.52;
@@ -47,6 +47,9 @@ function readLifecycle3dConfig(els = {}) {
     crackAlpha: clampNumber(els.orbLifecycle3dCrackAlpha && els.orbLifecycle3dCrackAlpha.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx,
     crackLiftBO: ORB_LIFECYCLE_3D_DEFAULTS.crackLiftBO,
+    edgeLightBrightness: clampNumber(els.orbLifecycle3dEdgeLightBrightness && els.orbLifecycle3dEdgeLightBrightness.value, 0, 3, ORB_LIFECYCLE_3D_DEFAULTS.edgeLightBrightness),
+    edgeLightRange: clampNumber(els.orbLifecycle3dEdgeLightRange && els.orbLifecycle3dEdgeLightRange.value, 0.2, 6, ORB_LIFECYCLE_3D_DEFAULTS.edgeLightRange),
+    holeEdgeSoftness: clampNumber(els.orbLifecycle3dHoleEdgeSoftness && els.orbLifecycle3dHoleEdgeSoftness.value, 0.25, 8, ORB_LIFECYCLE_3D_DEFAULTS.holeEdgeSoftness),
     startHoleSizeMin: clampNumber(els.orbLifecycle3dStartHoleSizeMin && els.orbLifecycle3dStartHoleSizeMin.value, 0.001, 0.08, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMin),
     startHoleSizeMax: clampNumber(els.orbLifecycle3dStartHoleSizeMax && els.orbLifecycle3dStartHoleSizeMax.value, 0.001, 0.12, ORB_LIFECYCLE_3D_DEFAULTS.startHoleSizeMax),
     childHoleCountMin: roundedNumber(els.orbLifecycle3dChildHoleCountMin && els.orbLifecycle3dChildHoleCountMin.value, ORB_LIFECYCLE_3D_DEFAULTS.childHoleCountMin),

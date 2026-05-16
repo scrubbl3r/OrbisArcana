@@ -1,11 +1,11 @@
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260516c";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260516d";
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "./orb-lifecycle-3d-vfx-runtime.js?v=20260516h";
+} from "./orb-lifecycle-3d-vfx-runtime.js?v=20260516i";
 
 const CRACK_UPDATE_FPS = 30;
 const CRACK_UPDATE_INTERVAL_MS = 1000 / CRACK_UPDATE_FPS;
