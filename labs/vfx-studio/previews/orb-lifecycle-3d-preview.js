@@ -16,6 +16,8 @@ import {
 } from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260430b";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
+const ORB_STAGE_FILL_RATIO = 0.52;
+
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   const safe = Number.isFinite(n) ? n : fallback;
@@ -89,7 +91,10 @@ function frameCameraToSsotOrbSize(inspector, root, bo) {
   }
   camera.aspect = viewportWidth / viewportHeight;
   const fovRadians = (Number(camera.fov) || 45) * Math.PI / 180;
-  const distance = viewportHeight / (2 * Math.tan(fovRadians * 0.5));
+  const focalDistance = viewportHeight / (2 * Math.tan(fovRadians * 0.5));
+  const targetOrbPx = Math.max(1, Math.min(viewportWidth, viewportHeight) * ORB_STAGE_FILL_RATIO);
+  const framedOrbDistance = (Math.max(1, Number(bo) || 1) * focalDistance) / targetOrbPx;
+  const distance = Math.max(focalDistance, framedOrbDistance);
   camera.position.set(0, 0, distance);
   camera.near = Math.max(0.1, bo * 0.05);
   camera.far = Math.max(2000, distance + (bo * 20));
