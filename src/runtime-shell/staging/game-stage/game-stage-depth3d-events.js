@@ -47,6 +47,7 @@ export function createGameStageDepth3dEventBindings({
   function resolveOrbShaderHealth(payload = {}) {
     let healthSource = "previous";
     const maxHealth = Math.max(1, firstFinite(
+      payload.vitality && payload.vitality.maxHealth,
       payload.maxHealth,
       payload.max,
       payload.maxHp,
@@ -55,6 +56,7 @@ export function createGameStageDepth3dEventBindings({
       1000
     ));
     let health = firstFinite(
+      payload.vitality && payload.vitality.health,
       payload.health,
       payload.hp,
       payload.to,
@@ -81,18 +83,23 @@ export function createGameStageDepth3dEventBindings({
   }
 
   function applyOrbHpShaderState(payload = {}) {
+    const vitality = payload && typeof payload.vitality === "object" ? payload.vitality : null;
+    const vitalityShaderState = vitality && typeof vitality.shaderState === "object" ? vitality.shaderState : null;
     const { health, maxHealth, healthSource } = resolveOrbShaderHealth(payload);
     const healthRatio = clamp01(health / maxHealth);
-    const shaderState = {
+    const fallbackShaderState = {
       luminanceBoost: lerpFloat(1.2, 1.8, healthRatio),
       centerAlpha: lerpFloat(0.013, 0.018, healthRatio),
       spotIntensity: lerpFloat(24, 29, healthRatio),
       spotDistanceBO: lerpFloat(4.2, 4.9, healthRatio),
     };
+    const shaderState = vitalityShaderState || fallbackShaderState;
     if (root && root.dataset) {
       root.dataset.orbShaderHp = String(Math.round(health * 1000) / 1000);
       root.dataset.orbShaderMaxHp = String(Math.round(maxHealth * 1000) / 1000);
-      root.dataset.orbShaderHealthSource = healthSource;
+      root.dataset.orbShaderHealthSource = vitalityShaderState ? "vitality" : healthSource;
+      root.dataset.orbShaderVitalityHealth = vitality && vitality.health != null ? String(vitality.health) : "";
+      root.dataset.orbShaderVitalityRatio = vitality && vitality.healthRatio != null ? String(vitality.healthRatio) : "";
       root.dataset.orbShaderPayloadHealth = payload.health == null ? "" : String(payload.health);
       root.dataset.orbShaderPayloadTo = payload.to == null ? "" : String(payload.to);
       root.dataset.orbShaderPayloadHealthAfter = payload.healthAfter == null ? "" : String(payload.healthAfter);

@@ -54,7 +54,7 @@ import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
-import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517b";
+import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517c";
 import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=20260505h";
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,

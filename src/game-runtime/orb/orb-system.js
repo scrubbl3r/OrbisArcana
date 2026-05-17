@@ -40,6 +40,37 @@ function deriveHpLifecycleState({
   });
 }
 
+function clamp01(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.min(1, numeric));
+}
+
+function lerpFloat(from, to, t) {
+  return Number(from) + ((Number(to) - Number(from)) * clamp01(t));
+}
+
+export function deriveOrbVitalityState({
+  health = 0,
+  maxHealth = 1,
+} = {}) {
+  const resolvedMaxHealth = Math.max(1, Number(maxHealth) || 1);
+  const resolvedHealth = Math.max(0, Math.min(resolvedMaxHealth, Number(health) || 0));
+  const healthRatio = clamp01(resolvedHealth / resolvedMaxHealth);
+  return Object.freeze({
+    health: resolvedHealth,
+    maxHealth: resolvedMaxHealth,
+    healthRatio,
+    damageRatio: 1 - healthRatio,
+    shaderState: Object.freeze({
+      luminanceBoost: lerpFloat(1.2, 1.8, healthRatio),
+      centerAlpha: lerpFloat(0.013, 0.018, healthRatio),
+      spotIntensity: lerpFloat(24, 29, healthRatio),
+      spotDistanceBO: lerpFloat(4.2, 4.9, healthRatio),
+    }),
+  });
+}
+
 export function createOrbSystem({ gameState, eventBus }) {
   if (!gameState || !gameState.orb) throw new Error('createOrbSystem requires gameState.orb');
   if (!eventBus || typeof eventBus.emit !== 'function') throw new Error('createOrbSystem requires eventBus.emit');
@@ -71,16 +102,27 @@ export function createOrbSystem({ gameState, eventBus }) {
     return snapshot;
   }
 
+  function syncVitalityToOrb() {
+    const vitality = deriveOrbVitalityState({
+      health: orb.health,
+      maxHealth: orb.maxHealth,
+    });
+    orb.vitality = vitality;
+    return vitality;
+  }
+
   function syncHealthToOrb() {
     const snapshot = healthPool.getState();
     orb.maxHealth = snapshot.maxHp;
     orb.health = snapshot.hp;
     orb.alive = snapshot.alive;
     syncLifecycleToOrb();
+    syncVitalityToOrb();
     return snapshot;
   }
 
   syncLifecycleToOrb();
+  syncVitalityToOrb();
 
   function nowFrom(command) {
     if (command && Number.isFinite(command.atMs)) return Number(command.atMs);
@@ -171,6 +213,7 @@ export function createOrbSystem({ gameState, eventBus }) {
     const combatResult = healthPool.applyDamage(amount);
     syncHealthToOrb();
     const lifecycleState = syncLifecycleToOrb();
+    const vitality = syncVitalityToOrb();
     orb.lastDamageAtMs = atMs;
     orb.invulnUntilMs = atMs + Number(orb.collisionCooldownMs || 0);
     const appliedAmount = combatResult.amountApplied || (healthBefore - orb.health);
@@ -186,6 +229,7 @@ export function createOrbSystem({ gameState, eventBus }) {
       maxHits: lifecycleState.maxHits,
       hitsRemaining: lifecycleState.hitsRemaining,
       damageRatio: lifecycleState.damageRatio,
+      vitality,
       lifeId: lifecycleState.lifeId,
       fractureSeed: orb.fractureSeed,
       source,
@@ -212,6 +256,7 @@ export function createOrbSystem({ gameState, eventBus }) {
       maxHits: lifecycleState.maxHits,
       hitsRemaining: lifecycleState.hitsRemaining,
       damageRatio: lifecycleState.damageRatio,
+      vitality,
       lifeId: lifecycleState.lifeId,
       fractureSeed: orb.fractureSeed,
       atMs,
@@ -279,6 +324,7 @@ export function createOrbSystem({ gameState, eventBus }) {
     }
 
     const lifecycleState = syncLifecycleToOrb();
+    const vitality = syncVitalityToOrb();
 
     eventBus.emit(EVT_ORB_HEALED, {
       amountApplied: appliedAmount,
@@ -291,6 +337,7 @@ export function createOrbSystem({ gameState, eventBus }) {
       maxHits: lifecycleState.maxHits,
       hitsRemaining: lifecycleState.hitsRemaining,
       damageRatio: lifecycleState.damageRatio,
+      vitality,
       lifeId: lifecycleState.lifeId,
       fractureSeed: orb.fractureSeed,
       hitsRemoved: appliedAmount,
@@ -308,6 +355,7 @@ export function createOrbSystem({ gameState, eventBus }) {
       maxHits: lifecycleState.maxHits,
       hitsRemaining: lifecycleState.hitsRemaining,
       damageRatio: lifecycleState.damageRatio,
+      vitality,
       lifeId: lifecycleState.lifeId,
       fractureSeed: orb.fractureSeed,
       atMs,
@@ -331,6 +379,7 @@ export function createOrbSystem({ gameState, eventBus }) {
     orb.fractureSeed = createOrbLifeSeed();
     syncHealthToOrb();
     const lifecycleState = syncLifecycleToOrb();
+    const vitality = syncVitalityToOrb();
 
     eventBus.emit(EVT_ORB_REVIVED, {
       health: orb.health,
@@ -342,6 +391,7 @@ export function createOrbSystem({ gameState, eventBus }) {
       hitsTaken: lifecycleState.hitsTaken,
       hitsRemaining: lifecycleState.hitsRemaining,
       damageRatio: lifecycleState.damageRatio,
+      vitality,
       fractureSeed: orb.fractureSeed,
     });
     eventBus.emit(EVT_ORB_HEALTH_CHANGED, {
@@ -354,6 +404,7 @@ export function createOrbSystem({ gameState, eventBus }) {
       maxHits: lifecycleState.maxHits,
       hitsRemaining: lifecycleState.hitsRemaining,
       damageRatio: lifecycleState.damageRatio,
+      vitality,
       lifeId: lifecycleState.lifeId,
       fractureSeed: orb.fractureSeed,
       atMs,

@@ -144,6 +144,7 @@ export const EVT_RESOURCES_GLOBE_SPENT = "energy.globe_spent";
  * @property {number} [hitsTaken] HP damage taken, not legacy visual crack bands.
  * @property {number} [maxHits] Total HP used by lifecycle renderers.
  * @property {number} [damageRatio]
+ * @property {Object} [vitality] Renderer-neutral orb vitality derived from authoritative HP.
  */
 export const EVT_ORB_VISUAL_STATE_CHANGED = "orb.visual_state_changed";
 export const EVT_ORB_IMPACT_DETECTED = "orb.impact_detected";

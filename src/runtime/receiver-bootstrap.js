@@ -20,7 +20,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260516p";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260517c";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -293,7 +293,7 @@ export async function loadReceiverInitModules() {
   ] = await Promise.all([
     import("../events/event-bus.js"),
     import("../state/game-state.js"),
-    import("../game-runtime/orb/orb-system.js"),
+    import(`../game-runtime/orb/orb-system.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../game-runtime/orb/orb-lifecycle-vfx-runtime.js"),
     import("../game-runtime/audio/audio-system.js"),
     import("../game-runtime/input/input-systems-bundle.js"),
