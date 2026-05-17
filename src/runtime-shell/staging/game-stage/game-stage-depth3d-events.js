@@ -32,10 +32,31 @@ export function createGameStageDepth3dEventBindings({
   function syncOrbVisualLifecycleState(payload = {}, {
     lifecycleMode = "damage",
   } = {}) {
+    if (typeof traceMark === "function") {
+      traceMark("orb.shader.lifecycle.input", {
+        lifecycleMode,
+        health: Number(payload.health ?? payload.to ?? payload.healthAfter),
+        maxHealth: Number(payload.maxHealth ?? payload.max),
+        hitsTaken: Number(payload.hitsTaken),
+        maxHits: Number(payload.maxHits),
+        damageRatio: Number(payload.damageRatio),
+        lifeId: payload.lifeId,
+        fractureSeed: payload.fractureSeed,
+        atMs: Number(payload.atMs),
+      });
+    }
     if (lifecycleMode === "reset") {
       orbLifecycle3dRuntime.reset(payload);
     } else {
       orbLifecycle3dRuntime.syncDamageState(payload);
+    }
+    if (typeof traceMark === "function") {
+      traceMark("orb.shader.lifecycle.synced", {
+        lifecycleMode,
+        health: Number(payload.health ?? payload.to ?? payload.healthAfter),
+        maxHealth: Number(payload.maxHealth ?? payload.max),
+        atMs: Number(payload.atMs),
+      });
     }
     scheduleFrame();
   }

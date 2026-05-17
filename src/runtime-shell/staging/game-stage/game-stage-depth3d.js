@@ -56,7 +56,7 @@ import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
-import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517m";
+import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517n";
 import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=20260505h";
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,
@@ -285,9 +285,32 @@ export function createGameStageDepth3dLayer({
     getShaderBaseConfig: () => ORB_3D_VISUAL_DEFAULTS,
     getBurstPosition: () => orb3dActorRuntime.getPosition(),
     setLifecycleErosion: (patch = null) => orb3dActorRuntime.setLifecycleErosion(patch),
-    setShaderLayer: (id, layer = {}) => orbShaderMixer.setLayer(id, layer.values || layer, {
-      source: layer.id || id || "lifecycle3d",
-    }),
+    setShaderLayer: (id, layer = {}) => {
+      const source = layer.id || id || "lifecycle3d";
+      const values = layer.values || layer;
+      if (perfTrace && typeof perfTrace.mark === "function") {
+        perfTrace.mark("orb.shader.layer.request", {
+          id,
+          source,
+          health: Number(layer.health),
+          maxHealth: Number(layer.maxHealth),
+          hpRatio: Number(layer.hpRatio),
+          values: values && typeof values === "object" ? { ...values } : null,
+        });
+      }
+      const resolved = orbShaderMixer.setLayer(id, values, { source });
+      if (perfTrace && typeof perfTrace.mark === "function") {
+        perfTrace.mark("orb.shader.layer.resolved", {
+          id,
+          source,
+          resolved: resolved && typeof resolved === "object" ? { ...resolved } : null,
+          mixer: orbShaderMixer && typeof orbShaderMixer.getTrace === "function"
+            ? orbShaderMixer.getTrace()
+            : null,
+        });
+      }
+      return resolved;
+    },
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
   function traceOrbShaderApplied(requested = {}, source = "stage") {
@@ -849,6 +872,11 @@ export function createGameStageDepth3dLayer({
     },
     setOrbShaderState(shaderState = {}) {
       if (disposed) return { handled: false, skipped: "depth3d_disposed" };
+      if (perfTrace && typeof perfTrace.mark === "function") {
+        perfTrace.mark("orb.shader.api.request", {
+          values: shaderState && typeof shaderState === "object" ? { ...shaderState } : null,
+        });
+      }
       orbShaderMixer.setLayer("api", shaderState, {
         source: "api",
       });
