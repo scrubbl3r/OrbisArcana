@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createRng } from "./orb-lifecycle-vfx-runtime.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517d";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517e";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -27,13 +27,6 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
     spotDistanceMaxPct: clampNumber(source.spotDistanceMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMaxPct),
     goldMixMinPct: clampNumber(source.goldMixMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMinPct),
     goldMixMaxPct: clampNumber(source.goldMixMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMaxPct),
-    healLuminanceBoostPct: clampNumber(source.healLuminanceBoostPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.healLuminanceBoostPct),
-    healCenterAlphaPct: clampNumber(source.healCenterAlphaPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.healCenterAlphaPct),
-    healSpotIntensityPct: clampNumber(source.healSpotIntensityPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.healSpotIntensityPct),
-    healSpotDistancePct: clampNumber(source.healSpotDistancePct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.healSpotDistancePct),
-    healGoldMixPct: clampNumber(source.healGoldMixPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.healGoldMixPct),
-    healDurationMs: clampNumber(source.healDurationMs, 80, 10000, ORB_LIFECYCLE_3D_DEFAULTS.healDurationMs),
-    healEasing: String(source.healEasing || ORB_LIFECYCLE_3D_DEFAULTS.healEasing || "easeInOutQuad"),
     crackColor: Number(source.crackColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(source.crackAlpha, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),

@@ -5,4 +5,11 @@ export const HEAL_PRESET_DEFAULT = Object.freeze({
   cooldownMs: 1000,
   requireDamagedOrb: true,
   consumeOnFailedCast: false,
+  shaderPulseLuminanceBoostPct: 25,
+  shaderPulseCenterAlphaPct: 10,
+  shaderPulseSpotIntensityPct: 25,
+  shaderPulseSpotDistancePct: 10,
+  shaderPulseGoldMixPct: 25,
+  shaderPulseDurationMs: 150,
+  shaderPulseEasing: "easeInOutQuad",
 });

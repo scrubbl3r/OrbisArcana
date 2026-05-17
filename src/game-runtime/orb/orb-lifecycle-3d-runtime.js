@@ -1,11 +1,12 @@
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
 import { ORB_3D_VISUAL_DEFAULTS } from "./orb-3d-default.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517d";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517e";
 import {
   createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dDissolveBurst,
-} from "./orb-lifecycle-3d-vfx-runtime.js?v=20260517d";
+} from "./orb-lifecycle-3d-vfx-runtime.js?v=20260517e";
+import { resolveOrbLifecycle3dShaderLayer } from "./orb-shader-lifecycle-layer.js?v=20260517a";
 
 function readSeed(payload = {}, fallback = ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed) {
   return Number(payload.fractureSeed || payload.seed || payload.erosionSeed || fallback) || 1;
@@ -38,38 +39,23 @@ function readHealth(payload = {}, fallback = readMaxHealth(payload)) {
   return Math.max(0, Math.min(maxHealth, Number.isFinite(resolved) ? resolved : maxHealth));
 }
 
-function lerp(a, b, t) {
-  return a + ((b - a) * t);
-}
-
-function resolvePctLerp(baseValue, minPct, maxPct, hpRatio, min = -Infinity, max = Infinity) {
-  const base = Number(baseValue);
-  const fallback = Number.isFinite(base) ? base : 0;
-  const minValue = fallback * ((Number(minPct) || 0) / 100);
-  const maxValue = fallback * ((Number(maxPct) || 0) / 100);
-  return Math.max(min, Math.min(max, lerp(minValue, maxValue, hpRatio)));
-}
-
 export function resolveOrbLifecycle3dShaderState({
   health = 1000,
   maxHealth = 1000,
   lifecycleConfig = ORB_LIFECYCLE_3D_DEFAULTS,
   orbConfig = ORB_3D_VISUAL_DEFAULTS,
 } = {}) {
-  const resolvedMaxHealth = Math.max(1, Number(maxHealth) || 1000);
-  const resolvedHealth = Math.max(0, Math.min(resolvedMaxHealth, Number(health) || 0));
-  const hpRatio = Math.max(0, Math.min(1, resolvedHealth / resolvedMaxHealth));
-  const lifecycle = lifecycleConfig && typeof lifecycleConfig === "object" ? lifecycleConfig : ORB_LIFECYCLE_3D_DEFAULTS;
-  const orb = orbConfig && typeof orbConfig === "object" ? orbConfig : ORB_3D_VISUAL_DEFAULTS;
+  const layer = resolveOrbLifecycle3dShaderLayer({
+    health,
+    maxHealth,
+    lifecycleConfig,
+    orbConfig,
+  });
   return Object.freeze({
-    health: resolvedHealth,
-    maxHealth: resolvedMaxHealth,
-    hpRatio,
-    shellLuminanceBoost: resolvePctLerp(orb.shellLuminanceBoost, lifecycle.shellLuminanceBoostMinPct, lifecycle.shellLuminanceBoostMaxPct, hpRatio, 0, 12),
-    shellCenterAlpha: resolvePctLerp(orb.shellCenterAlpha, lifecycle.shellCenterAlphaMinPct, lifecycle.shellCenterAlphaMaxPct, hpRatio, 0, 1),
-    shadowSpotIntensity: resolvePctLerp(orb.shadowSpotIntensity, lifecycle.spotIntensityMinPct, lifecycle.spotIntensityMaxPct, hpRatio, 0, 10000),
-    shadowSpotDistanceBO: resolvePctLerp(orb.shadowSpotDistanceBO, lifecycle.spotDistanceMinPct, lifecycle.spotDistanceMaxPct, hpRatio, 0, 1000),
-    goldMix: resolvePctLerp(orb.goldMix, lifecycle.goldMixMinPct, lifecycle.goldMixMaxPct, hpRatio, 0, 2),
+    health: layer.health,
+    maxHealth: layer.maxHealth,
+    hpRatio: layer.hpRatio,
+    ...layer.values,
   });
 }
 
@@ -83,6 +69,7 @@ export function createOrbLifecycle3dRuntime({
   getShaderBaseConfig = () => ORB_3D_VISUAL_DEFAULTS,
   getBurstPosition = () => ({ x: 0, y: 0, z: 0 }),
   setLifecycleErosion = () => {},
+  setShaderLayer = null,
   setShaderState = () => {},
   now = () => performance.now(),
   onNeedsFrame = () => {},
@@ -159,15 +146,24 @@ export function createOrbLifecycle3dRuntime({
   }
 
   function applyShaderLifecycleState() {
-    const shaderState = resolveOrbLifecycle3dShaderState({
+    const shaderLayer = resolveOrbLifecycle3dShaderLayer({
       health: state.health,
       maxHealth: state.maxHealth,
       lifecycleConfig: currentConfig(),
       orbConfig: currentShaderBaseConfig(),
     });
-    if (typeof setShaderState === "function") setShaderState(shaderState);
+    if (typeof setShaderLayer === "function") {
+      setShaderLayer(shaderLayer.id, shaderLayer);
+    } else if (typeof setShaderState === "function") {
+      setShaderState(shaderLayer.values);
+    }
     requestFrame();
-    return shaderState;
+    return Object.freeze({
+      health: shaderLayer.health,
+      maxHealth: shaderLayer.maxHealth,
+      hpRatio: shaderLayer.hpRatio,
+      ...shaderLayer.values,
+    });
   }
 
   function syncDamageState(payload = {}) {

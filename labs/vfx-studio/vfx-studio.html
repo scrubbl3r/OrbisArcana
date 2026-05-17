@@ -1348,6 +1348,50 @@
             <label for="healConsumeOnFailedCast">Consume on failed cast</label>
             <input id="healConsumeOnFailedCast" type="checkbox" />
           </div>
+          <div class="orbLifecycleShaderSubhead">Orb shader pulse</div>
+          <div class="orbLifecycleShaderRangeRow healBoostRow">
+            <div class="orbLifecycleShaderRangeName">Luminance boost</div>
+            <div class="orbLifecycleShaderRangeField">
+              <label for="healShaderLuminanceBoostPct">+%</label>
+              <input id="healShaderLuminanceBoostPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="25" />
+            </div>
+          </div>
+          <div class="orbLifecycleShaderRangeRow healBoostRow">
+            <div class="orbLifecycleShaderRangeName">Center alpha</div>
+            <div class="orbLifecycleShaderRangeField">
+              <label for="healShaderCenterAlphaPct">+%</label>
+              <input id="healShaderCenterAlphaPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="10" />
+            </div>
+          </div>
+          <div class="orbLifecycleShaderRangeRow healBoostRow">
+            <div class="orbLifecycleShaderRangeName">Spot intensity</div>
+            <div class="orbLifecycleShaderRangeField">
+              <label for="healShaderSpotIntensityPct">+%</label>
+              <input id="healShaderSpotIntensityPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="25" />
+            </div>
+          </div>
+          <div class="orbLifecycleShaderRangeRow healBoostRow">
+            <div class="orbLifecycleShaderRangeName">Spot distance</div>
+            <div class="orbLifecycleShaderRangeField">
+              <label for="healShaderSpotDistancePct">+%</label>
+              <input id="healShaderSpotDistancePct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="10" />
+            </div>
+          </div>
+          <div class="orbLifecycleShaderRangeRow healBoostRow">
+            <div class="orbLifecycleShaderRangeName">Gold mix</div>
+            <div class="orbLifecycleShaderRangeField">
+              <label for="healShaderGoldMixPct">+%</label>
+              <input id="healShaderGoldMixPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="25" />
+            </div>
+          </div>
+          <div class="paramFieldRow">
+            <label for="healShaderPulseDurationMs">Pulse duration ms</label>
+            <input id="healShaderPulseDurationMs" class="paramFieldInput" type="number" min="80" max="10000" step="10" value="150" />
+          </div>
+          <div class="paramFieldRow">
+            <label for="healShaderPulseEasing">Pulse easing</label>
+            <input id="healShaderPulseEasing" class="paramFieldInput" type="text" value="easeInOutQuad" readonly />
+          </div>
         </div>
       </div>
 
@@ -2173,50 +2217,6 @@
                 <input id="orbLifecycle3dGoldMixMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="100" />
               </div>
             </div>
-            <div class="orbLifecycleShaderSubhead">Heal</div>
-            <div class="orbLifecycleShaderRangeRow healBoostRow">
-              <div class="orbLifecycleShaderRangeName">Luminance boost</div>
-              <div class="orbLifecycleShaderRangeField">
-                <label for="orbLifecycle3dHealLuminanceBoostPct">+%</label>
-                <input id="orbLifecycle3dHealLuminanceBoostPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="40" />
-              </div>
-            </div>
-            <div class="orbLifecycleShaderRangeRow healBoostRow">
-              <div class="orbLifecycleShaderRangeName">Center alpha</div>
-              <div class="orbLifecycleShaderRangeField">
-                <label for="orbLifecycle3dHealCenterAlphaPct">+%</label>
-                <input id="orbLifecycle3dHealCenterAlphaPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="0" />
-              </div>
-            </div>
-            <div class="orbLifecycleShaderRangeRow healBoostRow">
-              <div class="orbLifecycleShaderRangeName">Spot intensity</div>
-              <div class="orbLifecycleShaderRangeField">
-                <label for="orbLifecycle3dHealSpotIntensityPct">+%</label>
-                <input id="orbLifecycle3dHealSpotIntensityPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="40" />
-              </div>
-            </div>
-            <div class="orbLifecycleShaderRangeRow healBoostRow">
-              <div class="orbLifecycleShaderRangeName">Spot distance</div>
-              <div class="orbLifecycleShaderRangeField">
-                <label for="orbLifecycle3dHealSpotDistancePct">+%</label>
-                <input id="orbLifecycle3dHealSpotDistancePct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="0" />
-              </div>
-            </div>
-            <div class="orbLifecycleShaderRangeRow healBoostRow">
-              <div class="orbLifecycleShaderRangeName">Gold mix</div>
-              <div class="orbLifecycleShaderRangeField">
-                <label for="orbLifecycle3dHealGoldMixPct">+%</label>
-                <input id="orbLifecycle3dHealGoldMixPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="40" />
-              </div>
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dHealDurationMs">Heal duration ms</label>
-              <input id="orbLifecycle3dHealDurationMs" class="paramFieldInput" type="number" min="80" max="10000" step="10" value="2000" />
-            </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dHealEasing">Heal easing</label>
-              <input id="orbLifecycle3dHealEasing" class="paramFieldInput" type="text" value="easeInOutQuad" readonly />
-            </div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -2701,7 +2701,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260517e"),
+      import("./vfx-studio-bootstrap.js?v=20260517f"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2724,7 +2724,7 @@
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
     import { createOrbGlobe3dAuthoringAdapter } from "./adapters/orb-globe-3d-authoring-adapter.js?v=20260502b";
     import { createOrbGlobeAuthoringAdapter } from "./adapters/orb-globe-authoring-adapter.js?v=20260425d";
-    import { createOrbLifecycle3dAuthoringAdapter } from "./adapters/orb-lifecycle-3d-authoring-adapter.js?v=20260517b";
+    import { createOrbLifecycle3dAuthoringAdapter } from "./adapters/orb-lifecycle-3d-authoring-adapter.js?v=20260517c";
     import { createOrbLifecycleAuthoringAdapter } from "./adapters/orb-lifecycle-authoring-adapter.js?v=20260425d";
     import { createOrbNodAuthoringAdapter } from "./adapters/orb-nod-authoring-adapter.js?v=20260425d";
     import { createOrbNod3dAuthoringAdapter } from "./adapters/orb-nod3d-authoring-adapter.js?v=20260427a";
@@ -2753,7 +2753,7 @@
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425d";
-    import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517d";
+    import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517e";
     import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425d";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260425d";
     import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-3d-default.js?v=20260502c";
@@ -3004,6 +3004,13 @@
       healCooldownMs: $("healCooldownMs"),
       healRequireDamagedOrb: $("healRequireDamagedOrb"),
       healConsumeOnFailedCast: $("healConsumeOnFailedCast"),
+      healShaderLuminanceBoostPct: $("healShaderLuminanceBoostPct"),
+      healShaderCenterAlphaPct: $("healShaderCenterAlphaPct"),
+      healShaderSpotIntensityPct: $("healShaderSpotIntensityPct"),
+      healShaderSpotDistancePct: $("healShaderSpotDistancePct"),
+      healShaderGoldMixPct: $("healShaderGoldMixPct"),
+      healShaderPulseDurationMs: $("healShaderPulseDurationMs"),
+      healShaderPulseEasing: $("healShaderPulseEasing"),
 
       playElectric: $("playElectric"),
       electricMs: $("electricMs"),
@@ -3210,13 +3217,6 @@
       orbLifecycle3dSpotDistanceMaxPct: $("orbLifecycle3dSpotDistanceMaxPct"),
       orbLifecycle3dGoldMixMinPct: $("orbLifecycle3dGoldMixMinPct"),
       orbLifecycle3dGoldMixMaxPct: $("orbLifecycle3dGoldMixMaxPct"),
-      orbLifecycle3dHealLuminanceBoostPct: $("orbLifecycle3dHealLuminanceBoostPct"),
-      orbLifecycle3dHealCenterAlphaPct: $("orbLifecycle3dHealCenterAlphaPct"),
-      orbLifecycle3dHealSpotIntensityPct: $("orbLifecycle3dHealSpotIntensityPct"),
-      orbLifecycle3dHealSpotDistancePct: $("orbLifecycle3dHealSpotDistancePct"),
-      orbLifecycle3dHealGoldMixPct: $("orbLifecycle3dHealGoldMixPct"),
-      orbLifecycle3dHealDurationMs: $("orbLifecycle3dHealDurationMs"),
-      orbLifecycle3dHealEasing: $("orbLifecycle3dHealEasing"),
       previewOrbTeleport: $("previewOrbTeleport"),
       orbTeleportFlickerOnMs: $("orbTeleportFlickerOnMs"),
       orbTeleportApplyFlickerOnBtn: $("orbTeleportApplyFlickerOnBtn"),

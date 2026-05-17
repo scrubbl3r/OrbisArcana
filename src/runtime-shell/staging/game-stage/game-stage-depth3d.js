@@ -45,8 +45,10 @@ import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/worl
 import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260502c";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
 import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260504f";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517d";
-import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260517e";
+import { ORB_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-3d-default.js?v=20260428a";
+import { createOrbShaderMixer } from "../../../game-runtime/orb/orb-shader-mixer.js?v=20260517a";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517e";
+import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260517f";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505i";
@@ -269,17 +271,23 @@ export function createGameStageDepth3dLayer({
     onCountChange: telemetry.setOrbGlobeCount,
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
+  const orbShaderMixer = createOrbShaderMixer({
+    baseConfig: ORB_3D_VISUAL_DEFAULTS,
+    applyShaderState: (shaderState = {}) => orb3dActorRuntime.setShaderState(shaderState),
+    onApplied: (shaderState = {}, source = "mixer") => traceOrbShaderApplied(shaderState, source),
+    onNeedsFrame: () => renderLoop.scheduleAnimation(),
+  });
   const orbLifecycle3dRuntime = createOrbLifecycle3dRuntime({
     getOrbModel: () => orb3dActorRuntime.getModel(),
     getBurstParent: () => actorGroup,
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => ORB_LIFECYCLE_3D_DEFAULTS,
+    getShaderBaseConfig: () => ORB_3D_VISUAL_DEFAULTS,
     getBurstPosition: () => orb3dActorRuntime.getPosition(),
     setLifecycleErosion: (patch = null) => orb3dActorRuntime.setLifecycleErosion(patch),
-    setShaderState: (shaderState = {}) => {
-      orb3dActorRuntime.setShaderState(shaderState);
-      traceOrbShaderApplied(shaderState, "lifecycle3d");
-    },
+    setShaderLayer: (id, layer = {}) => orbShaderMixer.setLayer(id, layer.values || layer, {
+      source: layer.id || id || "lifecycle3d",
+    }),
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
   function traceOrbShaderApplied(requested = {}, source = "stage") {
@@ -291,6 +299,9 @@ export function createGameStageDepth3dLayer({
       source,
       requested: requested && typeof requested === "object" ? { ...requested } : null,
       applied,
+      mixer: orbShaderMixer && typeof orbShaderMixer.getTrace === "function"
+        ? orbShaderMixer.getTrace()
+        : null,
     });
   }
   const eventBindings = createGameStageDepth3dEventBindings({
@@ -838,8 +849,9 @@ export function createGameStageDepth3dLayer({
     },
     setOrbShaderState(shaderState = {}) {
       if (disposed) return { handled: false, skipped: "depth3d_disposed" };
-      orb3dActorRuntime.setShaderState(shaderState);
-      traceOrbShaderApplied(shaderState, "api");
+      orbShaderMixer.setLayer("api", shaderState, {
+        source: "api",
+      });
       renderLoop.scheduleAnimation();
       renderLoop.renderFrame(renderLoop.getLastFrame() || {});
       return { handled: true };

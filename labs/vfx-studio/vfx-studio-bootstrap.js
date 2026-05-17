@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260517e";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260517f";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
