@@ -18,14 +18,11 @@
  * @property {boolean} shieldDescentBlocked
  * @property {boolean} floatGraceActive
  * @property {number} floatGraceUntilMs
+ * @property {boolean} floatGracePersistent
+ * @property {string} floatGraceSource
+ * @property {boolean} floatGraceSuppressInput
  * @property {number} floatGraceAnchorY
  * @property {number} floatGracePhase
- * @property {boolean} floatHoldActive
- * @property {number} floatHoldAnchorX
- * @property {number} floatHoldAnchorY
- * @property {number} floatHoldStartedAtMs
- * @property {number} floatHoldPhase
- * @property {number} floatHoldDriftPhase
  * @property {boolean} teleportHoldActive
  * @property {number} teleportHoldAnchorY
  * @property {boolean} spawnHoldActive
@@ -58,14 +55,11 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     shieldDescentBlocked: false,
     floatGraceActive: false,
     floatGraceUntilMs: 0,
+    floatGracePersistent: false,
+    floatGraceSource: "",
+    floatGraceSuppressInput: false,
     floatGraceAnchorY: 0,
     floatGracePhase: 0,
-    floatHoldActive: false,
-    floatHoldAnchorX: 0,
-    floatHoldAnchorY: 0,
-    floatHoldStartedAtMs: 0,
-    floatHoldPhase: 0,
-    floatHoldDriftPhase: 0,
     teleportHoldActive: false,
     teleportHoldAnchorY: 0,
     spawnHoldActive: false,
@@ -103,14 +97,11 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     state.shieldDescentBlocked = false;
     state.floatGraceActive = false;
     state.floatGraceUntilMs = 0;
+    state.floatGracePersistent = false;
+    state.floatGraceSource = "";
+    state.floatGraceSuppressInput = false;
     state.floatGraceAnchorY = 0;
     state.floatGracePhase = 0;
-    state.floatHoldActive = false;
-    state.floatHoldAnchorX = 0;
-    state.floatHoldAnchorY = 0;
-    state.floatHoldStartedAtMs = 0;
-    state.floatHoldPhase = 0;
-    state.floatHoldDriftPhase = 0;
     state.teleportHoldActive = false;
     state.teleportHoldAnchorY = 0;
     state.spawnHoldActive = false;

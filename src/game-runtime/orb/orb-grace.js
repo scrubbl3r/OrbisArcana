@@ -14,11 +14,17 @@ export function resolveOrbGracePayload(rawGrace, { defaultTtlMs = 2500 } = {}) {
   const source = (rawGrace && typeof rawGrace === "object" && !Array.isArray(rawGrace))
     ? rawGrace
     : {};
+  const persistent = source.persistent === true || source.ttlMs === Infinity;
   const ttlCandidate = Number(source.ttlMs);
-  const ttlMs = Number.isFinite(ttlCandidate) && ttlCandidate > 0
+  const ttlMs = persistent
+    ? 0
+    : Number.isFinite(ttlCandidate) && ttlCandidate > 0
     ? ttlCandidate
     : resolveOrbGraceDefaultTtlMs({ defaultTtlMs }, defaultTtlMs);
   return Object.freeze({
-    ttlMs: Math.max(50, ttlMs),
+    ttlMs: persistent ? 0 : Math.max(50, ttlMs),
+    persistent,
+    source: String(source.source || ""),
+    suppressInput: source.suppressInput === true,
   });
 }

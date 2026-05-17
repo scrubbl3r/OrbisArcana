@@ -38,29 +38,26 @@ export function createShellSpellActionRuntime({
         : { handled: false }
     ),
     toggleFloat: (payload = {}) => {
-      void payload;
       const orbRuntimeState = runtime && runtime.orbRuntimeState;
       if (!orbRuntimeState || typeof orbRuntimeState.get !== "function" || typeof orbRuntimeState.patch !== "function") {
         return false;
       }
       const state = orbRuntimeState.get();
       if (!state) return false;
-      if (state.floatHoldActive) {
+      if (state.floatGraceActive && state.floatGracePersistent && String(state.floatGraceSource || "") === "float") {
         orbRuntimeState.patch({
-          floatHoldActive: false,
           floatGraceActive: false,
           floatGraceUntilMs: 0,
-          floatHoldStartedAtMs: 0,
-          floatHoldDriftPhase: 0,
+          floatGracePersistent: false,
+          floatGraceSource: "",
+          floatGraceSuppressInput: false,
         });
         if (typeof shellActions.setOrbFloatHoldVisual === "function") {
           shellActions.setOrbFloatHoldVisual({ active: false, atMs: Number(payload && payload.atMs) || performance.now() });
         }
         return true;
       }
-      const xW = Number.isFinite(Number(state.xW)) ? Number(state.xW) : 0;
       const yW = Number.isFinite(Number(state.yW)) ? Number(state.yW) : 0;
-      const atMs = Number(payload && payload.atMs) || performance.now();
       const stage = runtime && runtime.stage ? runtime.stage : null;
       const phys = stage && stage.phys ? stage.phys : {};
       const yFloor = typeof shellActions.groundCenterWorld === "function"
@@ -77,14 +74,14 @@ export function createShellSpellActionRuntime({
         : yW;
       const phase = Math.random() * Math.PI * 2;
       orbRuntimeState.patch({
-        floatHoldActive: true,
-        floatHoldAnchorX: xW,
-        floatHoldAnchorY: anchorY,
-        floatHoldStartedAtMs: atMs,
-        floatHoldPhase: phase,
-        floatHoldDriftPhase: phase,
-        floatGraceActive: false,
+        yW: anchorY,
+        floatGraceActive: true,
         floatGraceUntilMs: 0,
+        floatGracePersistent: true,
+        floatGraceSource: "float",
+        floatGraceSuppressInput: true,
+        floatGraceAnchorY: anchorY,
+        floatGracePhase: phase,
         teleportHoldActive: false,
         spawnHoldActive: false,
         v: 0,
@@ -99,7 +96,7 @@ export function createShellSpellActionRuntime({
       if (typeof shellActions.setOrbFloatHoldVisual === "function") {
         shellActions.setOrbFloatHoldVisual({
           active: false,
-          atMs,
+          atMs: Number(payload && payload.atMs) || performance.now(),
           phase,
         });
       }

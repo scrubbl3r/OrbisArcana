@@ -161,50 +161,6 @@ export function runOrbRuntimePipeline({
     traceMeasure("receiverRuntime.orbSystem", () => runtime.orbSystem.tick(nowMs));
   }
 
-  if (state.floatHoldActive) {
-    const anchorX = Number.isFinite(Number(state.floatHoldAnchorX))
-      ? Number(state.floatHoldAnchorX)
-      : Number(state.xW || 0);
-    const anchorY = Number.isFinite(Number(state.floatHoldAnchorY))
-      ? Number(state.floatHoldAnchorY)
-      : Number(state.yW || 0);
-    const bo = Math.max(1, (Number(phys.orbRadiusPx) || 0) * 2);
-    const driftPhase = Number(state.floatHoldDriftPhase) || Number(state.floatHoldPhase) || 0;
-    const bounds = typeof getLateralBounds === "function" ? (getLateralBounds() || null) : null;
-    const left = Number(bounds && bounds.left);
-    const right = Number(bounds && bounds.right);
-    const yFloor = (typeof groundCenterWorld === "function") ? Number(groundCenterWorld()) || anchorY : anchorY;
-    const yCeil = (typeof getCeilingWorld === "function")
-      ? Number(getCeilingWorld()) || anchorY
-      : (Number(phys.orbRadiusPx) || anchorY);
-    const dragFactor = Math.max(0, -Number(phys.downDrag) || 0);
-    const bobAmp = clamp(1.8 + (state.gravityMul * 1.2) + (dragFactor * 1.8), 1.8, 6.0);
-    const bobHz = clamp(0.8 + (state.gravityMul * 0.25) + (dragFactor * 0.15), 0.8, 1.7);
-    state.floatHoldPhase = (Number(state.floatHoldPhase) || 0) + (Math.PI * 2 * bobHz * dt);
-    state.floatHoldDriftPhase = driftPhase + (Math.PI * 2 * 0.08 * dt);
-    const drift = Math.sin(state.floatHoldDriftPhase) * (bo * 0.035);
-    const bob = Math.sin(state.floatHoldPhase) * bobAmp;
-    state.xW = (Number.isFinite(left) && Number.isFinite(right) && right > left)
-      ? clamp(anchorX + drift, left, right)
-      : anchorX + drift;
-    state.yW = clamp(anchorY + bob, yCeil, yFloor);
-    state.v = 0;
-    state.vx = 0;
-    state.lift01 = 0;
-    state.steerIntentX = 0;
-    state.steerActive = false;
-    state.onGround = false;
-    state.descendMs = 0;
-    state.shieldDescentBlocked = false;
-
-    if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
-    if (typeof applyOrbTransform === "function") applyOrbTransform();
-    if (orbFxSystem && typeof orbFxSystem.tick === "function") traceMeasure("orbFx.tick", () => orbFxSystem.tick(ts, dt));
-    if (worldSystem && typeof worldSystem.tick === "function") traceMeasure("world.tick", () => worldSystem.tick(ts, dt));
-    if (typeof updateDebugReadout === "function") updateDebugReadout();
-    return;
-  }
-
   if (state.spawnHoldActive) {
     const spawnConfig = typeof getSpawnHoldConfig === "function" ? (getSpawnHoldConfig() || {}) : {};
     const releaseThreshold = clamp01(
@@ -282,15 +238,57 @@ export function runOrbRuntimePipeline({
     return;
   }
 
-  stepOrbLateralMotion({
-    dt,
-    state,
-    steering: typeof getCameraSteeringState === "function" ? getCameraSteeringState() : null,
-    bounds: typeof getLateralBounds === "function" ? getLateralBounds() : null,
-  });
+  const graceActive = typeof isFloatGraceActive === "function"
+    ? isFloatGraceActive(nowMs)
+    : !!(state.floatGraceActive && (
+        state.floatGracePersistent || Number(state.floatGraceUntilMs || 0) > Number(nowMs || 0)
+      ));
+  const graceSuppressInput = graceActive && !!state.floatGraceSuppressInput;
+
+  if (graceSuppressInput) {
+    const yFloor = (typeof groundCenterWorld === "function") ? Number(groundCenterWorld()) || 0 : 0;
+    const yCeil = (typeof getCeilingWorld === "function")
+      ? Number(getCeilingWorld()) || 0
+      : (Number(phys.orbRadiusPx) || 0);
+    const anchorY = Number.isFinite(Number(state.floatGraceAnchorY)) ? Number(state.floatGraceAnchorY) : Number(state.yW || yFloor);
+    const dragFactor = Math.max(0, -Number(phys.downDrag) || 0);
+    const bobAmp = clamp(1.8 + (state.gravityMul * 1.2) + (dragFactor * 1.8), 1.8, 6.0);
+    const bobHz = clamp(0.8 + (state.gravityMul * 0.25) + (dragFactor * 0.15), 0.8, 1.7);
+    state.floatGracePhase += (Math.PI * 2 * bobHz * dt);
+    const targetY = anchorY + (Math.sin(state.floatGracePhase) * bobAmp);
+    const holdHz = clamp(8 + (state.gravityMul * 3) + (dragFactor * 2), 8, 18);
+    const alpha = 1 - Math.exp(-holdHz * dt);
+    state.yW += (clamp(targetY, yCeil, yFloor) - state.yW) * alpha;
+    state.v = 0;
+    state.vx = 0;
+    state.lift01 = 0;
+    state.steerIntentX = 0;
+    state.steerActive = false;
+    state.onGround = false;
+    state.descendMs = 0;
+    state.shieldDescentBlocked = false;
+
+    if (typeof updateOrbStrokeColor === "function") updateOrbStrokeColor(dt);
+    if (typeof applyOrbTransform === "function") applyOrbTransform();
+    if (orbFxSystem && typeof orbFxSystem.tick === "function") traceMeasure("orbFx.tick", () => orbFxSystem.tick(ts, dt));
+    if (worldSystem && typeof worldSystem.tick === "function") traceMeasure("world.tick", () => worldSystem.tick(ts, dt));
+    if (typeof updateDebugReadout === "function") updateDebugReadout();
+    return;
+  }
+
+  if (!graceSuppressInput) {
+    stepOrbLateralMotion({
+      dt,
+      state,
+      steering: typeof getCameraSteeringState === "function" ? getCameraSteeringState() : null,
+      bounds: typeof getLateralBounds === "function" ? getLateralBounds() : null,
+    });
+  }
 
   const g = phys.gBase * state.gravityMul;
-  const baseThrust = (typeof liftToThrustAccel === "function")
+  const baseThrust = graceSuppressInput
+    ? 0
+    : (typeof liftToThrustAccel === "function")
     ? Number(liftToThrustAccel(state.lift01)) || 0
     : (Number(phys.thrustMax) || 0) * clamp01(state.lift01);
   const dynamicLiftBoost = resolveDynamicLiftBoost({
@@ -315,9 +313,9 @@ export function runOrbRuntimePipeline({
   state.v = clamp(state.v, -phys.maxUpSpeed, phys.maxDownSpeed);
   state.yW += state.v * dt;
 
-  if (typeof isFloatGraceActive === "function" && isFloatGraceActive(nowMs)) {
+  if (graceActive) {
     const upwardIntent = (thrust > (g + 180)) || (state.v < -22);
-    if (upwardIntent) {
+    if (upwardIntent && !graceSuppressInput) {
       if (typeof clearFloatGrace === "function") clearFloatGrace();
     } else {
       const dragFactor = Math.max(0, -Number(signedFallDrag) || 0);
@@ -330,6 +328,12 @@ export function runOrbRuntimePipeline({
       const alpha = 1 - Math.exp(-holdHz * dt);
       state.yW += (targetY - state.yW) * alpha;
       state.v = 0;
+      if (graceSuppressInput) {
+        state.vx = 0;
+        state.lift01 = 0;
+        state.steerIntentX = 0;
+        state.steerActive = false;
+      }
     }
   }
 

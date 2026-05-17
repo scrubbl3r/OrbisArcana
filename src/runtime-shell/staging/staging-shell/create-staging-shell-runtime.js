@@ -35,7 +35,7 @@ import {
   executeShellWordCastAction,
   handleShellVoiceSpellCast,
 } from "./shell-voice-spell-runtime.js";
-import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260516g";
+import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260516h";
 import { bindShellKwsEventRuntime } from "./shell-kws-event-runtime.js";
 import { bindShellKwsTraceRuntime } from "./shell-kws-trace-runtime.js";
 import {
@@ -75,7 +75,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260516g";
+globalThis.__orbisStagingShellRuntimeVersion = "20260516h";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -246,14 +246,11 @@ function buildShellStageInitialState(phys = {}) {
     shieldDescentBlocked: false,
     floatGraceActive: false,
     floatGraceUntilMs: 0,
+    floatGracePersistent: false,
+    floatGraceSource: "",
+    floatGraceSuppressInput: false,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
-    floatHoldActive: false,
-    floatHoldAnchorX: 0,
-    floatHoldAnchorY: yW,
-    floatHoldStartedAtMs: 0,
-    floatHoldPhase: 0,
-    floatHoldDriftPhase: 0,
     teleportHoldActive: false,
     teleportHoldAnchorY: yW,
     spawnHoldActive: false,
@@ -1100,14 +1097,13 @@ function resetShellOrbToGround(shellContext) {
     steerIntentX: 0,
     steerActive: false,
     onGround,
+    floatGraceActive: false,
+    floatGraceUntilMs: 0,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
-    floatHoldActive: false,
-    floatHoldAnchorX: xW,
-    floatHoldAnchorY: yW,
-    floatHoldStartedAtMs: 0,
-    floatHoldPhase: 0,
-    floatHoldDriftPhase: 0,
+    floatGracePersistent: false,
+    floatGraceSource: "",
+    floatGraceSuppressInput: false,
     teleportHoldAnchorY: yW,
     spawnHoldActive: !!spawnPoint,
     spawnHoldAnchorX: xW,
@@ -1213,7 +1209,7 @@ function tickShellStageRuntime(shellContext, dt) {
 
   if (state.floatGraceActive) {
     const untilMs = Number(state.floatGraceUntilMs) || 0;
-    if (untilMs > nowMs) {
+    if (state.floatGracePersistent || untilMs > nowMs) {
       const anchorY = Number.isFinite(Number(state.floatGraceAnchorY)) ? Number(state.floatGraceAnchorY) : Number(state.yW || yFloor);
       const phase = Number(state.floatGracePhase) || 0;
       const bob = Math.sin(phase + (nowMs * 0.008)) * 6;
@@ -1224,6 +1220,9 @@ function tickShellStageRuntime(shellContext, dt) {
     }
     state.floatGraceActive = false;
     state.floatGraceUntilMs = 0;
+    state.floatGracePersistent = false;
+    state.floatGraceSource = "";
+    state.floatGraceSuppressInput = false;
   }
 
   if (state.teleportHoldActive) {
@@ -1579,12 +1578,17 @@ function startShellStageLoop(shellContext) {
       const state = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
         ? runtime.orbRuntimeState.get()
         : null;
-      return !!(state && state.floatGraceActive && Number(state.floatGraceUntilMs) > Number(frameNowMs || 0));
+      return !!(state && state.floatGraceActive && (
+        state.floatGracePersistent || Number(state.floatGraceUntilMs) > Number(frameNowMs || 0)
+      ));
     },
     clearFloatGrace: () => {
       patchShellOrbRuntime(shellContext, {
         floatGraceActive: false,
         floatGraceUntilMs: 0,
+        floatGracePersistent: false,
+        floatGraceSource: "",
+        floatGraceSuppressInput: false,
       });
     },
     groundCenterWorld: () => traceMeasure("world.groundCenter", () => shellGroundCenterWorld(shellContext)),
@@ -2102,7 +2106,13 @@ async function initShellReceiverHostRuntime(shellContext) {
       executeWordCastAction: (castActionId, context = {}) => executeShellWordCastAction(shellContext, castActionId, context),
       grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
       clearFloatGrace: () => {
-        patchShellOrbRuntime(shellContext, { floatGraceActive: false, floatGraceUntilMs: 0 });
+        patchShellOrbRuntime(shellContext, {
+          floatGraceActive: false,
+          floatGraceUntilMs: 0,
+          floatGracePersistent: false,
+          floatGraceSource: "",
+          floatGraceSuppressInput: false,
+        });
       },
       resetOrbStrokeColor: () => shellClearColorize(shellContext),
       updateDebugReadout: () => {},
@@ -2318,8 +2328,8 @@ function syncActiveStageFloatHoldVisual(shellContext) {
   if (!orbState || !setFloatHoldVisual) return;
   setFloatHoldVisual.method.call(setFloatHoldVisual.activeAdapter, {
     active: false,
-    atMs: Number(orbState.floatHoldStartedAtMs) || performance.now(),
-    phase: Number(orbState.floatHoldPhase) || 0,
+    atMs: performance.now(),
+    phase: Number(orbState.floatGracePhase) || 0,
   });
 }
 
@@ -2892,7 +2902,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260516g",
+  moduleCacheBustV = "20260516h",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

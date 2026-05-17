@@ -20,7 +20,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260516c";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260516h";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -311,7 +311,7 @@ export async function loadReceiverInitModules() {
     import("../runtime-effects/teleport.js"),
     import(`../runtime-effects/shockwave.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../runtime-effects/bubble-shield.js"),
-    import("../runtime-effects/float-grace.js"),
+    import(`../runtime-effects/float-grace.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import("../runtime-effects/colorize.js"),
     import("../game-runtime/triggers/spell-cast-executor.js"),
     import(`../game-runtime/orb/orb-runtime-pipeline.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),

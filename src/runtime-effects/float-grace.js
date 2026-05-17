@@ -5,6 +5,9 @@ export function clearOrbGraceRuntime({
   patchOrbRuntime({
     floatGraceActive: false,
     floatGraceUntilMs: 0,
+    floatGracePersistent: false,
+    floatGraceSource: "",
+    floatGraceSuppressInput: false,
   });
 }
 
@@ -19,11 +22,15 @@ export function grantOrbGraceRuntime({
 } = {}) {
   if (typeof patchOrbRuntime !== "function" || typeof getOrbRuntime !== "function") return;
   const ttlCandidate = Number(grace && grace.ttlMs);
-  const dur = Math.max(50, ttlCandidate || Number(durationMs) || Number(defaultTtlMs) || 2500);
+  const persistent = !!(grace && grace.persistent);
+  const dur = persistent ? 0 : Math.max(50, ttlCandidate || Number(durationMs) || Number(defaultTtlMs) || 2500);
   const orbRuntime = getOrbRuntime();
   patchOrbRuntime({
     floatGraceActive: true,
-    floatGraceUntilMs: Number(nowMs) + dur,
+    floatGraceUntilMs: persistent ? 0 : Number(nowMs) + dur,
+    floatGracePersistent: persistent,
+    floatGraceSource: String(grace && grace.source || ""),
+    floatGraceSuppressInput: !!(grace && grace.suppressInput),
     floatGraceAnchorY: Number(orbRuntime && orbRuntime.yW) || 0,
     floatGracePhase: (typeof random === "function" ? random() : Math.random()) * Math.PI * 2,
   });
@@ -37,6 +44,7 @@ export function isOrbGraceActiveRuntime({
   if (typeof getOrbRuntime !== "function") return false;
   const orbRt = getOrbRuntime();
   if (!orbRt || !orbRt.floatGraceActive) return false;
+  if (orbRt.floatGracePersistent) return true;
   if ((Number(nowMs) || 0) <= Number(orbRt.floatGraceUntilMs || 0)) return true;
   if (typeof clearOrbGrace === "function") clearOrbGrace();
   return false;
