@@ -9,14 +9,14 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260516a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517c";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517d";
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260517c";
+} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260517d";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 const ORB_STAGE_FILL_RATIO = 0.52;
@@ -32,6 +32,12 @@ const ORB_LIFECYCLE_SHADER_RANGE_FIELDS = Object.freeze([
   "orbLifecycle3dSpotDistanceMaxPct",
   "orbLifecycle3dGoldMixMinPct",
   "orbLifecycle3dGoldMixMaxPct",
+  "orbLifecycle3dHealLuminanceBoostPct",
+  "orbLifecycle3dHealCenterAlphaPct",
+  "orbLifecycle3dHealSpotIntensityPct",
+  "orbLifecycle3dHealSpotDistancePct",
+  "orbLifecycle3dHealGoldMixPct",
+  "orbLifecycle3dHealDurationMs",
 ]);
 
 function clampNumber(value, min, max, fallback) {
@@ -71,6 +77,13 @@ function readLifecycle3dConfig(els = {}) {
     spotDistanceMaxPct: roundedNumber(els.orbLifecycle3dSpotDistanceMaxPct && els.orbLifecycle3dSpotDistanceMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMaxPct),
     goldMixMinPct: roundedNumber(els.orbLifecycle3dGoldMixMinPct && els.orbLifecycle3dGoldMixMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMinPct),
     goldMixMaxPct: roundedNumber(els.orbLifecycle3dGoldMixMaxPct && els.orbLifecycle3dGoldMixMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMaxPct),
+    healLuminanceBoostPct: roundedNumber(els.orbLifecycle3dHealLuminanceBoostPct && els.orbLifecycle3dHealLuminanceBoostPct.value, ORB_LIFECYCLE_3D_DEFAULTS.healLuminanceBoostPct),
+    healCenterAlphaPct: roundedNumber(els.orbLifecycle3dHealCenterAlphaPct && els.orbLifecycle3dHealCenterAlphaPct.value, ORB_LIFECYCLE_3D_DEFAULTS.healCenterAlphaPct),
+    healSpotIntensityPct: roundedNumber(els.orbLifecycle3dHealSpotIntensityPct && els.orbLifecycle3dHealSpotIntensityPct.value, ORB_LIFECYCLE_3D_DEFAULTS.healSpotIntensityPct),
+    healSpotDistancePct: roundedNumber(els.orbLifecycle3dHealSpotDistancePct && els.orbLifecycle3dHealSpotDistancePct.value, ORB_LIFECYCLE_3D_DEFAULTS.healSpotDistancePct),
+    healGoldMixPct: roundedNumber(els.orbLifecycle3dHealGoldMixPct && els.orbLifecycle3dHealGoldMixPct.value, ORB_LIFECYCLE_3D_DEFAULTS.healGoldMixPct),
+    healDurationMs: Math.max(80, Math.min(10000, roundedNumber(els.orbLifecycle3dHealDurationMs && els.orbLifecycle3dHealDurationMs.value, ORB_LIFECYCLE_3D_DEFAULTS.healDurationMs))),
+    healEasing: String(els.orbLifecycle3dHealEasing && els.orbLifecycle3dHealEasing.value || ORB_LIFECYCLE_3D_DEFAULTS.healEasing || "easeInOutQuad"),
     crackColor: ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(els.orbLifecycle3dCrackAlpha && els.orbLifecycle3dCrackAlpha.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx,
