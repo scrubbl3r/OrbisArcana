@@ -14,12 +14,36 @@ export function createGameStageDepth3dEventBindings({
   worldGlobe3dRuntime = null,
   orbGlobe3dRuntime = null,
   orbLifecycle3dRuntime = null,
+  setOrbShaderState = () => {},
   loadWorldSpawns = () => {},
   onOrbDied = () => {},
   onOrbRevived = () => {},
   scheduleFrame = () => {},
 } = {}) {
   const unsubs = [];
+
+  function clamp01(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.min(1, numeric));
+  }
+
+  function lerpFloat(from, to, t) {
+    return Number(from) + ((Number(to) - Number(from)) * clamp01(t));
+  }
+
+  function applyOrbHpShaderState(payload = {}) {
+    const maxHealth = Math.max(1, Number(payload.maxHealth ?? payload.max) || 1000);
+    const health = Math.max(0, Math.min(maxHealth, Number(payload.health ?? payload.to ?? payload.healthAfter) || 0));
+    const healthRatio = clamp01(health / maxHealth);
+    const shaderState = {
+      luminanceBoost: lerpFloat(1.2, 1.7, healthRatio),
+      centerAlpha: lerpFloat(0.013, 0.018, healthRatio),
+      spotIntensity: lerpFloat(22, 27, healthRatio),
+      spotDistanceBO: lerpFloat(4.1, 4.8, healthRatio),
+    };
+    if (typeof setOrbShaderState === "function") setOrbShaderState(shaderState);
+  }
 
   function clear() {
     while (unsubs.length) {
@@ -47,6 +71,7 @@ export function createGameStageDepth3dEventBindings({
     }));
     unsubs.push(eventBus.on(EVT_ORB_HEALTH_CHANGED, (payload = {}) => {
       orbLifecycle3dRuntime.syncDamageState(payload);
+      applyOrbHpShaderState(payload);
       scheduleFrame();
     }));
     unsubs.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
@@ -71,6 +96,7 @@ export function createGameStageDepth3dEventBindings({
     }));
     unsubs.push(eventBus.on(EVT_ORB_REVIVED, (payload = {}) => {
       orbLifecycle3dRuntime.reset(payload);
+      applyOrbHpShaderState(payload);
       scheduleFrame();
     }));
   }
