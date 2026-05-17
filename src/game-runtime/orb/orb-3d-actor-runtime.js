@@ -1,4 +1,4 @@
-import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260517b";
+import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260517c";
 import {
   createOrbNod3dRuntime,
   createOrbNod3dSurfaceDisplacementConfig,

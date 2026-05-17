@@ -1,4 +1,4 @@
-import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260517c";
+import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260517d";
 import { COMBAT_EFFECT_IMMUNITY, COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN } from "../../../game-runtime/combat/combat-constants.js";
 import { EVT_COMBAT_IMMUNITY_CHANGED, EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
 import {
@@ -45,8 +45,8 @@ import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/world/worl
 import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-globe-3d-runtime.js?v=20260502c";
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
 import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260504f";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516f";
-import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260516i";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517a";
+import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260517a";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505i";

@@ -268,6 +268,12 @@ export function createOrb3dRuntime({
         shellCenterAlpha: readUniformValue(uniforms, "uShellCenterAlpha"),
         goldMix: readUniformValue(uniforms, "uGoldMix"),
         opacity: readUniformValue(uniforms, "uOpacity"),
+        damageProgress: readUniformValue(uniforms, "uDamageProgress"),
+        erosionOpacity: readUniformValue(uniforms, "uErosionOpacity"),
+        coverageStart: readUniformValue(uniforms, "uCoverageStart"),
+        coverageEnd: readUniformValue(uniforms, "uCoverageEnd"),
+        growthCurve: readUniformValue(uniforms, "uGrowthCurve"),
+        holeEdgeSoftness: readUniformValue(uniforms, "uHoleEdgeSoftness"),
       },
       pointLight: pointLight
         ? {

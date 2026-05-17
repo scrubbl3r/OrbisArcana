@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createRng } from "./orb-lifecycle-vfx-runtime.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517a";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -178,16 +178,18 @@ export function createOrbLifecycle3dErosionPatch({
         float detail = fbm(n * uDetailScale + uNoiseSeedOffset.yzx + vec3(9.7, -4.1, 6.3), uNoiseOctaves, uNoiseLacunarity, uNoiseGain);
         field = clamp(field + ((detail - 0.5) * uDetailAmount), 0.0, 1.0);
         field = clamp((field - 0.5) * uNoiseContrast + 0.5, 0.0, 1.0);
-        float progress = pow(clamp(uDamageProgress, 0.0, 1.0), uGrowthCurve);
+        float damageProgress = clamp(uDamageProgress, 0.0, 1.0);
+        float progress = pow(damageProgress, uGrowthCurve);
         float threshold = mix(uCoverageStart, uCoverageEnd, progress);
         float softness = max(0.001, uHoleEdgeSoftness * 0.035);
         float holeCut = 1.0 - smoothstep(threshold - softness, threshold + softness, field);
         float edgeWidth = max(0.002, uEdgeLightRange * 0.006);
         float edgeStress = 1.0 - smoothstep(0.0, edgeWidth, abs(field - threshold));
         edgeStress *= 1.0 - holeCut * 0.6;
-        float edgeLight = smoothstep(0.0, 0.7, uErosionOpacity) * edgeStress * uEdgeLightBrightness;
+        float erosionStrength = smoothstep(0.0, 1.0, damageProgress) * uErosionOpacity;
+        float edgeLight = smoothstep(0.0, 0.7, erosionStrength) * edgeStress * uEdgeLightBrightness;
         pearl = mix(pearl, vec3(1.0), clamp(edgeLight, 0.0, 1.0));
-        alpha *= 1.0 - clamp(holeCut * uErosionOpacity, 0.0, 1.0);
+        alpha *= 1.0 - clamp(holeCut * erosionStrength, 0.0, 1.0);
         if (alpha * uOpacity < 0.01) discard;
     `,
   });
