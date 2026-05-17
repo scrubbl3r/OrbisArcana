@@ -12,7 +12,7 @@ export const INTERACTION_GRAPH_V2 = {
     ],
   },
   groups: {
-    wake_main_words: ["echovar", "electrum", "pyro", "sanctum", "leviton"],
+    wake_main_words: ["echovar", "electrum", "pyro", "sanctum", "leviton", "modulon"],
     electrum_chain_words: ["rota"],
     wake_are_kay_nah_words: ["pyro"],
   },
@@ -20,7 +20,7 @@ export const INTERACTION_GRAPH_V2 = {
     {
       id: "wake_main",
       on: { word: "orbis" },
-      open: { id: "wake.main", words: ["echovar", "electrum", "pyro", "sanctum", "leviton"], ttlMs: 1500 },
+      open: { id: "wake.main", words: ["echovar", "electrum", "pyro", "sanctum", "leviton", "modulon"], ttlMs: 1500 },
       //open: { id: "wake.main", words: "@wake_main_words", ttlMs: 1500 },
     },
     // BUBBLE SHIELD
@@ -45,6 +45,14 @@ export const INTERACTION_GRAPH_V2 = {
       on: { word: "leviton" },
       requires: "wake.main",
       trigger: { spell: "float" },
+      grace: {},
+    },
+    // ORB SPIN ABILITY WINDOW
+    {
+      id: "orbis_modulon_orb_spin",
+      on: { word: "modulon" },
+      requires: "wake.main",
+      trigger: { spell: "orb_spin" },
       grace: {},
     },
     // ELECTRIC AOE CHAIN

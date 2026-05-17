@@ -43,6 +43,13 @@ const ORB_STATE_TARGETS = Object.freeze([
     label: "orb-state.spawn",
     vfxCategory: "orb",
   }),
+  Object.freeze({
+    id: "orb-state.spin",
+    targetKind: "orb-state",
+    targetId: "spin",
+    label: "orb-state.spin",
+    vfxCategory: "orb",
+  }),
 ]);
 
 function buildSpellTargets() {

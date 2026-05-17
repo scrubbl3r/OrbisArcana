@@ -12,6 +12,7 @@ import {
  * @property {(atMs?: number) => void} reset Clears shake + spin-window runtime state and invokes reset hooks.
  * @property {(sample?: {shakeVal01?:number, groove01?:number, atMs?:number}) => boolean} processShakeSample Returns `true` if a shake hit was registered.
  * @property {(frame?: {raw?:Object, atMs?:number, stabilityOn?:boolean, stabilityVisualGate?:boolean}) => void} processSpinFrame
+ * @property {(options?: {atMs?:number, durationMs?:number, transitionMs?:number, source?:string}) => boolean} enableFlatSpinAbilityWindow
  * @property {(code:string, atMs?:number) => void} setPendingDirection
  * @property {() => number} getShakeCooldownUntil
  */
@@ -54,6 +55,8 @@ export function createInputGestureSystem({
     flatSpinOffHoldMs: Math.max(0, Number(config.flatSpinOffHoldMs) || 280),
     flatSpinGateRefreshMs: Math.max(0, Number(config.flatSpinGateRefreshMs) || 1100),
     flatSpinMinSpeed01: Number.isFinite(Number(config.flatSpinMinSpeed01)) ? Number(config.flatSpinMinSpeed01) : 0.02,
+    flatSpinAbilityWindowMs: Math.max(50, Number(config.flatSpinAbilityWindowMs) || 1500),
+    flatSpinAbilityTransitionMs: Math.max(0, Number(config.flatSpinAbilityTransitionMs) || 500),
   };
 
   const state = {
@@ -67,6 +70,13 @@ export function createInputGestureSystem({
       releaseMs: 0,
       lastTs: 0,
       lastGateRefreshMs: 0,
+    },
+    flatSpinAbility: {
+      active: false,
+      untilMs: 0,
+      transitionUntilMs: 0,
+      source: "",
+      lastRefreshMs: 0,
     },
   };
 
@@ -109,6 +119,7 @@ export function createInputGestureSystem({
     state.pendingSd = null;
     state.pendingSdAt = 0;
     closeFlatSpinWindow("reset", Number(atMs) || nowMs());
+    clearFlatSpinAbility();
     state.flatSpin.lastTs = 0;
     state.flatSpin.holdMs = 0;
     state.flatSpin.releaseMs = 0;
@@ -217,6 +228,52 @@ export function createInputGestureSystem({
     }
   }
 
+  function clearFlatSpinAbility() {
+    state.flatSpinAbility.active = false;
+    state.flatSpinAbility.untilMs = 0;
+    state.flatSpinAbility.transitionUntilMs = 0;
+    state.flatSpinAbility.source = "";
+    state.flatSpinAbility.lastRefreshMs = 0;
+  }
+
+  function enableFlatSpinAbilityWindow({
+    atMs = nowMs(),
+    durationMs,
+    transitionMs,
+    source = "",
+  } = {}) {
+    const now = Number(atMs) || nowMs();
+    const transition = Math.max(0, Number(transitionMs) || cfg.flatSpinAbilityTransitionMs);
+    const dur = Math.max(transition + 50, Number(durationMs) || cfg.flatSpinAbilityWindowMs);
+    state.flatSpinAbility.active = true;
+    state.flatSpinAbility.untilMs = now + dur;
+    state.flatSpinAbility.transitionUntilMs = now + transition;
+    state.flatSpinAbility.source = String(source || "flat_spin_ability");
+    state.flatSpinAbility.lastRefreshMs = now;
+    state.flatSpin.holdMs = 0;
+    state.flatSpin.releaseMs = 0;
+    return true;
+  }
+
+  function refreshFlatSpinAbility(now) {
+    if (!state.flatSpinAbility.active) return false;
+    state.flatSpinAbility.untilMs = now + cfg.flatSpinAbilityWindowMs;
+    state.flatSpinAbility.lastRefreshMs = now;
+    return true;
+  }
+
+  function getFlatSpinAbilityState(atMs = nowMs()) {
+    const now = Number(atMs) || nowMs();
+    return {
+      active: !!state.flatSpinAbility.active && now <= Number(state.flatSpinAbility.untilMs || 0),
+      transitionActive: !!state.flatSpinAbility.active && now < Number(state.flatSpinAbility.transitionUntilMs || 0),
+      untilMs: Number(state.flatSpinAbility.untilMs) || 0,
+      transitionUntilMs: Number(state.flatSpinAbility.transitionUntilMs) || 0,
+      source: String(state.flatSpinAbility.source || ""),
+      lastRefreshMs: Number(state.flatSpinAbility.lastRefreshMs) || 0,
+    };
+  }
+
   function closeFlatSpinWindow(reason, atMs) {
     const fs = state.flatSpin;
     if (!fs.active) return;
@@ -242,6 +299,19 @@ export function createInputGestureSystem({
     const fs = state.flatSpin;
     const dt = fs.lastTs ? clamp(now - fs.lastTs, 0, 120) : 0;
     fs.lastTs = now;
+    const ability = getFlatSpinAbilityState(now);
+    if (!ability.active) {
+      if (state.flatSpinAbility.active) clearFlatSpinAbility();
+      fs.holdMs = 0;
+      fs.releaseMs = 0;
+      if (fs.active) closeFlatSpinWindow("ability_expired", now);
+      return;
+    }
+    if (ability.transitionActive) {
+      fs.holdMs = 0;
+      fs.releaseMs = 0;
+      return;
+    }
 
     const axisInfo = axisFromCanonicalSpin(raw);
     void stabilityOn;
@@ -262,8 +332,12 @@ export function createInputGestureSystem({
         && (Number(axisInfo.gap) >= gapOffReq);
       if (sameAxis) {
         fs.releaseMs = 0;
+        refreshFlatSpinAbility(now);
         if ((now - fs.lastGateRefreshMs) >= cfg.flatSpinGateRefreshMs) {
           fs.lastGateRefreshMs = now;
+          if (eventBus && typeof eventBus.emit === "function") {
+            eventBus.emit(EVT_SPELL_WINDOW_SPIN_OPENED, { axis: fs.axis, atMs: now, refresh: true });
+          }
         }
         return;
       }
@@ -286,6 +360,7 @@ export function createInputGestureSystem({
     fs.axis = axisInfo.axis;
     fs.holdMs += dt;
     if (fs.holdMs >= cfg.flatSpinOnHoldMs) {
+      refreshFlatSpinAbility(now);
       openFlatSpinWindow(fs.axis, now);
     }
   }
@@ -299,6 +374,8 @@ export function createInputGestureSystem({
     reset,
     processShakeSample,
     processFlatSpinFrame,
+    enableFlatSpinAbilityWindow,
+    getFlatSpinAbilityState,
     setPendingDirection,
     getShakeCooldownUntil,
   };

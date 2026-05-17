@@ -78,6 +78,23 @@ export function createShellSpellActionRuntime({
       });
       return true;
     },
+    enableOrbSpin: (payload = {}) => {
+      const receiverRuntime = typeof shellActions.resolveReceiverRuntime === "function"
+        ? shellActions.resolveReceiverRuntime(runtime)
+        : null;
+      const inputGestureSystem = receiverRuntime && receiverRuntime.inputGestureSystem;
+      if (!inputGestureSystem || typeof inputGestureSystem.enableFlatSpinAbilityWindow !== "function") {
+        return false;
+      }
+      const durationMs = Number(payload && payload.durationMs);
+      const transitionMs = Number(payload && payload.transitionMs);
+      return inputGestureSystem.enableFlatSpinAbilityWindow({
+        atMs: Number(payload && payload.atMs) || performance.now(),
+        durationMs: Number.isFinite(durationMs) ? durationMs : 1500,
+        transitionMs: Number.isFinite(transitionMs) ? transitionMs : 500,
+        source: "modulon",
+      });
+    },
     playFrostAoe: null,
     executeAoeElectric: executors.executeAoeElectric,
     executeAoeFlame: executors.executeAoeFlame,

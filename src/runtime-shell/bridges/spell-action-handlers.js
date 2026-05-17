@@ -9,6 +9,7 @@ export function createSpellActionHandlers({
   playFrostAoe,
   playTeleport,
   toggleFloat,
+  enableOrbSpin,
   teleportOrbToSpawnNeutralizePhysics,
   executeAoeElectric,
   executeAoeFlame,
@@ -74,6 +75,10 @@ export function createSpellActionHandlers({
     toggle_float(payload = {}) {
       if (typeof toggleFloat !== "function") return false;
       return toggleFloat(payload);
+    },
+    enable_orb_spin(payload = {}) {
+      if (typeof enableOrbSpin !== "function") return false;
+      return enableOrbSpin(payload);
     },
     trigger_shockwave(payload = {}) {
       void payload;

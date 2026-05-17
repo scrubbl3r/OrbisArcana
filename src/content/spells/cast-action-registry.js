@@ -28,6 +28,11 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     globeCost: 1,
   }),
   Object.freeze({
+    id: "orb_spin",
+    handlerKey: "enable_orb_spin",
+    globeCost: 0,
+  }),
+  Object.freeze({
     id: "shockwave",
     handlerKey: "trigger_shockwave",
     globeCost: 0,

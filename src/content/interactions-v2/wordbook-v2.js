@@ -43,6 +43,7 @@ const WORDBOOK_V2_WORD_ROWS = Object.freeze([
   makeWord({ id: "domus" }),
   makeWord({ id: "pyro" }),
   makeWord({ id: "leviton", label: "Leviton" }),
+  makeWord({ id: "modulon", label: "Modulon" }),
   makeWord({ id: "electrum" }),
   makeWord({ id: "sanctum" }),
   makeWord({ id: "rota" }),

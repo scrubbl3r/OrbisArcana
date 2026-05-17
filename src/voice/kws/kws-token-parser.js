@@ -5,11 +5,11 @@ import {
   EVT_VOICE_TOKEN_DETECTED,
 } from "../../contracts/events.js";
 import { buildKwsWordAliasIndex } from "./build-kws-word-alias-index.js";
-import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260516a";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260516c";
 import {
   WAKE_REQUIRED_WORD_IDS,
   WORD_RUNTIME_ROUTING_BY_WORD_ID,
-} from "../../content/spells/spell-runtime-routing.js?v=20260516a";
+} from "../../content/spells/spell-runtime-routing.js?v=20260516c";
 import {
   COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
 } from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
