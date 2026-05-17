@@ -35,7 +35,7 @@ import {
   executeShellWordCastAction,
   handleShellVoiceSpellCast,
 } from "./shell-voice-spell-runtime.js";
-import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260516d";
+import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260516g";
 import { bindShellKwsEventRuntime } from "./shell-kws-event-runtime.js";
 import { bindShellKwsTraceRuntime } from "./shell-kws-trace-runtime.js";
 import {
@@ -75,7 +75,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260516c";
+globalThis.__orbisStagingShellRuntimeVersion = "20260516g";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -253,6 +253,7 @@ function buildShellStageInitialState(phys = {}) {
     floatHoldAnchorY: yW,
     floatHoldStartedAtMs: 0,
     floatHoldPhase: 0,
+    floatHoldDriftPhase: 0,
     teleportHoldActive: false,
     teleportHoldAnchorY: yW,
     spawnHoldActive: false,
@@ -1106,6 +1107,7 @@ function resetShellOrbToGround(shellContext) {
     floatHoldAnchorY: yW,
     floatHoldStartedAtMs: 0,
     floatHoldPhase: 0,
+    floatHoldDriftPhase: 0,
     teleportHoldAnchorY: yW,
     spawnHoldActive: !!spawnPoint,
     spawnHoldAnchorX: xW,
@@ -2315,7 +2317,7 @@ function syncActiveStageFloatHoldVisual(shellContext) {
   const setFloatHoldVisual = getActiveShellStageMethod(shellContext, "setOrbFloatHoldVisual");
   if (!orbState || !setFloatHoldVisual) return;
   setFloatHoldVisual.method.call(setFloatHoldVisual.activeAdapter, {
-    active: !!orbState.floatHoldActive,
+    active: false,
     atMs: Number(orbState.floatHoldStartedAtMs) || performance.now(),
     phase: Number(orbState.floatHoldPhase) || 0,
   });
@@ -2781,6 +2783,8 @@ async function initShellKwsRuntime(shellContext) {
       applyColorize: (payload) => shellApplyColorize(shellContext, payload),
       clearColorize: () => shellClearColorize(shellContext),
       grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
+      groundCenterWorld: () => shellGroundCenterWorld(shellContext),
+      ceilingWorld: () => shellCeilingWorld(shellContext),
       setOrbFloatHoldVisual: (payload = {}) => callActiveShellStageMethod(shellContext, "setOrbFloatHoldVisual", payload, "active_stage_float_hold_missing"),
       resolveReceiverRuntime: resolveShellReceiverRuntime,
     },
@@ -2888,7 +2892,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260516c",
+  moduleCacheBustV = "20260516g",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

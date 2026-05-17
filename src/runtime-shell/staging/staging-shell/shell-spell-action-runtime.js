@@ -51,6 +51,7 @@ export function createShellSpellActionRuntime({
           floatGraceActive: false,
           floatGraceUntilMs: 0,
           floatHoldStartedAtMs: 0,
+          floatHoldDriftPhase: 0,
         });
         if (typeof shellActions.setOrbFloatHoldVisual === "function") {
           shellActions.setOrbFloatHoldVisual({ active: false, atMs: Number(payload && payload.atMs) || performance.now() });
@@ -60,12 +61,28 @@ export function createShellSpellActionRuntime({
       const xW = Number.isFinite(Number(state.xW)) ? Number(state.xW) : 0;
       const yW = Number.isFinite(Number(state.yW)) ? Number(state.yW) : 0;
       const atMs = Number(payload && payload.atMs) || performance.now();
+      const stage = runtime && runtime.stage ? runtime.stage : null;
+      const phys = stage && stage.phys ? stage.phys : {};
+      const yFloor = typeof shellActions.groundCenterWorld === "function"
+        ? Number(shellActions.groundCenterWorld())
+        : yW;
+      const yCeil = typeof shellActions.ceilingWorld === "function"
+        ? Number(shellActions.ceilingWorld())
+        : (Number(phys.orbRadiusPx) || yW);
+      const radius = Number(phys.orbRadiusPx) || 50;
+      const hasFloor = Number.isFinite(yFloor);
+      const hoverRoomY = hasFloor ? Math.max(yCeil, yFloor - Math.max(6, radius * 0.16)) : yW;
+      const anchorY = hasFloor && yW >= (yFloor - Math.max(4, radius * 0.12))
+        ? hoverRoomY
+        : yW;
+      const phase = Math.random() * Math.PI * 2;
       orbRuntimeState.patch({
         floatHoldActive: true,
         floatHoldAnchorX: xW,
-        floatHoldAnchorY: yW,
+        floatHoldAnchorY: anchorY,
         floatHoldStartedAtMs: atMs,
-        floatHoldPhase: Math.random() * Math.PI * 2,
+        floatHoldPhase: phase,
+        floatHoldDriftPhase: phase,
         floatGraceActive: false,
         floatGraceUntilMs: 0,
         teleportHoldActive: false,
@@ -81,9 +98,9 @@ export function createShellSpellActionRuntime({
       });
       if (typeof shellActions.setOrbFloatHoldVisual === "function") {
         shellActions.setOrbFloatHoldVisual({
-          active: true,
+          active: false,
           atMs,
-          phase: orbRuntimeState.get().floatHoldPhase,
+          phase,
         });
       }
       return true;

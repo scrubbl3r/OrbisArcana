@@ -25,6 +25,7 @@
  * @property {number} floatHoldAnchorY
  * @property {number} floatHoldStartedAtMs
  * @property {number} floatHoldPhase
+ * @property {number} floatHoldDriftPhase
  * @property {boolean} teleportHoldActive
  * @property {number} teleportHoldAnchorY
  * @property {boolean} spawnHoldActive
@@ -64,6 +65,7 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     floatHoldAnchorY: 0,
     floatHoldStartedAtMs: 0,
     floatHoldPhase: 0,
+    floatHoldDriftPhase: 0,
     teleportHoldActive: false,
     teleportHoldAnchorY: 0,
     spawnHoldActive: false,
@@ -108,6 +110,7 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     state.floatHoldAnchorY = 0;
     state.floatHoldStartedAtMs = 0;
     state.floatHoldPhase = 0;
+    state.floatHoldDriftPhase = 0;
     state.teleportHoldActive = false;
     state.teleportHoldAnchorY = 0;
     state.spawnHoldActive = false;

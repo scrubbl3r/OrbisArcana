@@ -169,13 +169,7 @@ export function runOrbRuntimePipeline({
       ? Number(state.floatHoldAnchorY)
       : Number(state.yW || 0);
     const bo = Math.max(1, (Number(phys.orbRadiusPx) || 0) * 2);
-    const startedAtMs = Number.isFinite(Number(state.floatHoldStartedAtMs))
-      ? Number(state.floatHoldStartedAtMs)
-      : Number(nowMs || 0);
-    const phase = Number(state.floatHoldPhase) || 0;
-    const t = Math.max(0, (Number(nowMs || 0) - startedAtMs) / 1000);
-    const drift = Math.sin((t * Math.PI * 2 * 0.08) + phase) * (bo * 0.035);
-    const bob = Math.sin((t * Math.PI * 2 * 0.72) + (phase * 0.61)) * (bo * 0.045);
+    const driftPhase = Number(state.floatHoldDriftPhase) || Number(state.floatHoldPhase) || 0;
     const bounds = typeof getLateralBounds === "function" ? (getLateralBounds() || null) : null;
     const left = Number(bounds && bounds.left);
     const right = Number(bounds && bounds.right);
@@ -183,6 +177,13 @@ export function runOrbRuntimePipeline({
     const yCeil = (typeof getCeilingWorld === "function")
       ? Number(getCeilingWorld()) || anchorY
       : (Number(phys.orbRadiusPx) || anchorY);
+    const dragFactor = Math.max(0, -Number(phys.downDrag) || 0);
+    const bobAmp = clamp(1.8 + (state.gravityMul * 1.2) + (dragFactor * 1.8), 1.8, 6.0);
+    const bobHz = clamp(0.8 + (state.gravityMul * 0.25) + (dragFactor * 0.15), 0.8, 1.7);
+    state.floatHoldPhase = (Number(state.floatHoldPhase) || 0) + (Math.PI * 2 * bobHz * dt);
+    state.floatHoldDriftPhase = driftPhase + (Math.PI * 2 * 0.08 * dt);
+    const drift = Math.sin(state.floatHoldDriftPhase) * (bo * 0.035);
+    const bob = Math.sin(state.floatHoldPhase) * bobAmp;
     state.xW = (Number.isFinite(left) && Number.isFinite(right) && right > left)
       ? clamp(anchorX + drift, left, right)
       : anchorX + drift;
