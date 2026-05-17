@@ -1,4 +1,5 @@
 import {
+  EVT_ORB_DAMAGE_APPLIED,
   EVT_ORB_DIED,
   EVT_ORB_HEALTH_CHANGED,
   EVT_ORB_REVIVED,
@@ -90,6 +91,24 @@ export function createGameStageDepth3dEventBindings({
       orbLifecycle3dRuntime.syncDamageState(payload);
       applyOrbHpShaderState(payload);
       scheduleFrame();
+    }));
+    unsubs.push(eventBus.on(EVT_ORB_DAMAGE_APPLIED, (payload = {}) => {
+      if (typeof traceMark !== "function") return;
+      traceMark("orb.damage.applied", {
+        amount: roundMetric(payload.amount),
+        healthBefore: roundMetric(payload.healthBefore),
+        healthAfter: roundMetric(payload.healthAfter),
+        maxHealth: roundMetric(payload.maxHealth),
+        impact: roundMetric(payload.impact),
+        rawImpact: roundMetric(payload.rawImpact),
+        impactThreshold: roundMetric(payload.impactThreshold),
+        impactDamageAmount: roundMetric(payload.impactDamageAmount),
+        gravityMul: roundMetric(payload.gravityMul),
+        fallDrag: roundMetric(payload.fallDrag),
+        source: String(payload.source || ""),
+        cause: String(payload.cause || ""),
+        atMs: roundMetric(payload.atMs, 1),
+      });
     }));
     unsubs.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
       orbGlobe3dRuntime.load(payload);

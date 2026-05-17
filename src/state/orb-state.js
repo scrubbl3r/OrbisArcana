@@ -18,8 +18,8 @@ export function createOrbState(config = {}) {
     collisionCooldownMs: Number.isFinite(config.collisionCooldownMs) ? Math.max(0, Math.floor(config.collisionCooldownMs)) : 250,
     impactDamageMin: Number.isFinite(config.impactDamageMin) ? Math.max(0, Number(config.impactDamageMin)) : 1,
     impactDamageMax: Number.isFinite(config.impactDamageMax) ? Math.max(0, Number(config.impactDamageMax)) : maxHealth,
-    impactDamageCurve: Number.isFinite(config.impactDamageCurve) ? Math.max(0.1, Number(config.impactDamageCurve)) : 1.45,
-    impactKillImpactMultiplier: Number.isFinite(config.impactKillImpactMultiplier) ? Math.max(0.1, Number(config.impactKillImpactMultiplier)) : 2.35,
+    impactDamageCurve: Number.isFinite(config.impactDamageCurve) ? Math.max(0.1, Number(config.impactDamageCurve)) : 1.6,
+    impactKillImpactMultiplier: Number.isFinite(config.impactKillImpactMultiplier) ? Math.max(0.1, Number(config.impactKillImpactMultiplier)) : 5.5,
     impactFullDamageImpact: Number.isFinite(config.impactFullDamageImpact) ? Math.max(1, Number(config.impactFullDamageImpact)) : 1000,
 
     // Derived gameplay/status fields.

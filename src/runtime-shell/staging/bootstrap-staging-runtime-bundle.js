@@ -108,7 +108,14 @@ export function bootstrapStagingRuntimeBundle({
         updateDebugReadout();
         return { applied: false, reason: "combat_immunity" };
       }
-      orbSystem.applyImpact({ impact, source, atMs });
+      orbSystem.applyImpact({
+        impact,
+        source,
+        atMs,
+        rawImpact: meta.rawImpact,
+        gravityMul: meta.gravityMul,
+        fallDrag: meta.fallDrag,
+      });
       updateDebugReadout();
       return { applied: true };
     },

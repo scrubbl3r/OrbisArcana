@@ -155,13 +155,13 @@ export function createOrbSystem({ gameState, eventBus }) {
     const thresholdValue = Math.max(0, Number(threshold) || 0);
     const overThreshold = Math.max(0, impactValue - thresholdValue);
     if (overThreshold <= 0) return 0;
-    const killImpactMultiplier = clampNumber(orb.impactKillImpactMultiplier, 2.35, 0.1, 20);
+    const killImpactMultiplier = clampNumber(orb.impactKillImpactMultiplier, 5.5, 0.1, 20);
     const fallbackFullDamageImpact = Math.max(1, Number(orb.impactFullDamageImpact) || 1000);
     const fullDamageImpact = thresholdValue > 0
       ? Math.max(1, thresholdValue * killImpactMultiplier)
       : fallbackFullDamageImpact;
     const severity = clamp01(overThreshold / fullDamageImpact);
-    const curve = clampNumber(orb.impactDamageCurve, 1.45, 0.1, 5);
+    const curve = clampNumber(orb.impactDamageCurve, 1.6, 0.1, 5);
     const minDamage = clampNumber(orb.impactDamageMin, 1, 0, orb.maxHealth);
     const maxDamage = Math.max(minDamage, clampNumber(orb.impactDamageMax, orb.maxHealth, minDamage, orb.maxHealth));
     return Math.max(
@@ -210,6 +210,11 @@ export function createOrbSystem({ gameState, eventBus }) {
       cause: DAMAGE_TYPE_IMPACT,
       damageType: DAMAGE_TYPE_IMPACT,
       impact,
+      rawImpact: command.rawImpact,
+      gravityMul: command.gravityMul,
+      fallDrag: command.fallDrag,
+      impactThreshold: threshold,
+      impactDamageAmount,
     });
   }
 
@@ -264,6 +269,11 @@ export function createOrbSystem({ gameState, eventBus }) {
       fractureSeed: orb.fractureSeed,
       source,
       impact: command.impact,
+      rawImpact: command.rawImpact,
+      gravityMul: command.gravityMul,
+      fallDrag: command.fallDrag,
+      impactThreshold: command.impactThreshold,
+      impactDamageAmount: command.impactDamageAmount,
       cause: damageEffect.cause,
       atMs,
     });
