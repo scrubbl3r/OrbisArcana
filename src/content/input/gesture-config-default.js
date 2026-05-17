@@ -2,7 +2,6 @@ export const INPUT_GESTURE_CONFIG_DEFAULT = Object.freeze({
   shake: Object.freeze({
     cooldownMs: 2500,
     mode: 2,
-    liftGate: 0.30,
     smoothGateMin: 1.00,
     smoothHoldMs: 250,
     smoothRecentMs: 500,

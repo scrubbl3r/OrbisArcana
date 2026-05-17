@@ -64,11 +64,10 @@ export function attachShellReceiverImpulseAdapter({
           if (stabilityVisualState) stabilityVisualState.stabilityVisualGate = !!next;
         },
         applyStabilityVisuals,
-        processShakeDoubleBang: (shakeVal01, atMs, lift01) => {
+        processShakeDoubleBang: (shakeVal01, atMs) => {
           if (inputGestureSystem && typeof inputGestureSystem.processShakeSample === "function") {
             inputGestureSystem.processShakeSample({
               shakeVal01,
-              lift01,
               atMs,
             });
           }

@@ -76,7 +76,6 @@ export function bootstrapStagingRuntimeContext({
     gestureConfig: {
       shakeCooldownMs: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.cooldownMs,
       shakeMode: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.mode,
-      liftShakeGate: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.liftGate,
       smoothShakeGateMin: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.smoothGateMin,
       smoothShakeHoldMs: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.smoothHoldMs,
       smoothShakeRecentMs: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.smoothRecentMs,

@@ -86,7 +86,7 @@
       applyStabilityVisuals();
       updateStability(motion.dynamics01, nowMs);
       updateVariability(motion.dynamics01, nowMs);
-      processShakeDoubleBang(motion.shake01, nowMs, motion.lift01);
+      processShakeDoubleBang(motion.shake01, nowMs);
     };
   }
 
