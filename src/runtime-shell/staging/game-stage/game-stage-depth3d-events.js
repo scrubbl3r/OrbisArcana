@@ -58,13 +58,49 @@ export function createGameStageDepth3dEventBindings({
     };
   }
 
-  function applyOrbHpShaderState(payload = {}, eventSource = "health_changed") {
+  function readPayloadHealth(payload = {}) {
     const vitality = payload && typeof payload.vitality === "object" ? payload.vitality : null;
+    const maxHealth = Math.max(1, Number(payload.maxHealth ?? payload.max ?? (vitality && vitality.maxHealth)) || 1);
+    const health = Math.max(0, Math.min(maxHealth, Number(payload.health ?? payload.to ?? payload.healthAfter ?? maxHealth) || 0));
+    return { health, maxHealth, hasHealth: Number.isFinite(Number(payload.health ?? payload.to ?? payload.healthAfter)) };
+  }
+
+  function isVitalityConsistentWithPayload(vitality = null, payload = {}) {
+    if (!vitality || typeof vitality !== "object" || !vitality.shaderState || typeof vitality.shaderState !== "object") return false;
+    const { health, maxHealth, hasHealth } = readPayloadHealth(payload);
+    if (!hasHealth) return true;
+    const vitalityHealth = Number(vitality.health);
+    const vitalityMaxHealth = Number(vitality.maxHealth);
+    const vitalityRatio = Number(vitality.healthRatio);
+    if (!Number.isFinite(vitalityHealth) || !Number.isFinite(vitalityMaxHealth) || vitalityMaxHealth <= 0) return false;
+    if (Math.abs(vitalityHealth - health) > 0.001) return false;
+    if (Math.abs(vitalityMaxHealth - maxHealth) > 0.001) return false;
+    return !Number.isFinite(vitalityRatio) || Math.abs(vitalityRatio - clamp01(health / maxHealth)) <= 0.001;
+  }
+
+  function resolvePayloadVitality(payload = {}) {
+    const vitality = payload && typeof payload.vitality === "object" ? payload.vitality : null;
+    if (isVitalityConsistentWithPayload(vitality, payload)) {
+      return { vitality, source: "vitality" };
+    }
+    const { health, maxHealth, hasHealth } = readPayloadHealth(payload);
+    if (!hasHealth && vitality && typeof vitality === "object") {
+      return { vitality, source: "vitality_unverified" };
+    }
+    return {
+      vitality: deriveFallbackVitality({ health, maxHealth }),
+      source: vitality ? "derived_mismatch" : "derived",
+    };
+  }
+
+  function applyOrbHpShaderState(payload = {}, eventSource = "health_changed") {
+    const resolvedVitality = resolvePayloadVitality(payload);
+    const vitality = resolvedVitality.vitality;
     const vitalityShaderState = vitality && typeof vitality.shaderState === "object" ? vitality.shaderState : null;
     if (root && root.dataset) {
       root.dataset.orbShaderEventCount = String((Number(root.dataset.orbShaderEventCount) || 0) + 1);
       root.dataset.orbShaderLastEventAt = roundMetric(payload && payload.atMs, 1);
-      root.dataset.orbShaderHealthSource = vitalityShaderState ? eventSource : "missing";
+      root.dataset.orbShaderHealthSource = vitalityShaderState ? `${eventSource}:${resolvedVitality.source}` : "missing";
       root.dataset.orbShaderHp = roundMetric(vitality && vitality.health);
       root.dataset.orbShaderMaxHp = roundMetric(vitality && vitality.maxHealth);
       root.dataset.orbShaderHealthRatio = roundMetric(vitality && vitality.healthRatio);
@@ -76,7 +112,7 @@ export function createGameStageDepth3dEventBindings({
     if (typeof traceMark === "function") {
       traceMark("orb.shader.vitality", {
         source: vitalityShaderState ? eventSource : "missing",
-        healthSource: vitalityShaderState ? "vitality" : "missing",
+        healthSource: vitalityShaderState ? resolvedVitality.source : "missing",
         health: roundMetric(vitality && vitality.health),
         maxHealth: roundMetric(vitality && vitality.maxHealth),
         healthRatio: roundMetric(vitality && vitality.healthRatio),
@@ -116,7 +152,7 @@ export function createGameStageDepth3dEventBindings({
     const vitality = orb.vitality && typeof orb.vitality === "object"
       ? orb.vitality
       : deriveFallbackVitality({ health, maxHealth });
-    return {
+    const payload = {
       health,
       maxHealth,
       max: maxHealth,
@@ -129,6 +165,8 @@ export function createGameStageDepth3dEventBindings({
       fractureSeed: orb.fractureSeed,
       atMs,
     };
+    payload.vitality = resolvePayloadVitality(payload).vitality;
+    return payload;
   }
 
   function clear() {
