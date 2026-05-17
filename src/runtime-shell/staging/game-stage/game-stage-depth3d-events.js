@@ -40,10 +40,20 @@ export function createGameStageDepth3dEventBindings({
     return Number(from) + ((Number(to) - Number(from)) * clamp01(t));
   }
 
-  function deriveFallbackVitality({ health = 0, maxHealth = 1 } = {}) {
+  function deriveFallbackVitality({
+    health = 0,
+    maxHealth = 1,
+    hitsTaken = null,
+    maxHits = null,
+  } = {}) {
     const resolvedMaxHealth = Math.max(1, Number(maxHealth) || 1);
     const resolvedHealth = Math.max(0, Math.min(resolvedMaxHealth, Number(health) || 0));
-    const healthRatio = clamp01(resolvedHealth / resolvedMaxHealth);
+    const resolvedMaxHits = Math.max(1, Number(maxHits) || resolvedMaxHealth);
+    const resolvedHitsTaken = Math.max(0, Math.min(resolvedMaxHits, Number(hitsTaken) || 0));
+    const hasLifecycleHits = Number.isFinite(Number(hitsTaken)) && Number.isFinite(Number(maxHits)) && resolvedMaxHits > 0;
+    const healthRatio = hasLifecycleHits
+      ? clamp01(1 - (resolvedHitsTaken / resolvedMaxHits))
+      : clamp01(resolvedHealth / resolvedMaxHealth);
     return {
       health: resolvedHealth,
       maxHealth: resolvedMaxHealth,
@@ -61,21 +71,33 @@ export function createGameStageDepth3dEventBindings({
   function readPayloadHealth(payload = {}) {
     const vitality = payload && typeof payload.vitality === "object" ? payload.vitality : null;
     const maxHealth = Math.max(1, Number(payload.maxHealth ?? payload.max ?? (vitality && vitality.maxHealth)) || 1);
-    const health = Math.max(0, Math.min(maxHealth, Number(payload.health ?? payload.to ?? payload.healthAfter ?? maxHealth) || 0));
-    return { health, maxHealth, hasHealth: Number.isFinite(Number(payload.health ?? payload.to ?? payload.healthAfter)) };
+    const maxHits = Math.max(1, Number(payload.maxHits ?? maxHealth) || maxHealth);
+    const hasHitsTaken = Number.isFinite(Number(payload.hitsTaken));
+    const hitsTaken = Math.max(0, Math.min(maxHits, Number(payload.hitsTaken) || 0));
+    const healthFromHits = Math.max(0, maxHealth - hitsTaken);
+    const health = Math.max(0, Math.min(maxHealth, Number(payload.health ?? payload.to ?? payload.healthAfter ?? healthFromHits) || 0));
+    return {
+      health,
+      maxHealth,
+      hitsTaken,
+      maxHits,
+      hasHealth: Number.isFinite(Number(payload.health ?? payload.to ?? payload.healthAfter)),
+      hasHitsTaken,
+    };
   }
 
   function isVitalityConsistentWithPayload(vitality = null, payload = {}) {
     if (!vitality || typeof vitality !== "object" || !vitality.shaderState || typeof vitality.shaderState !== "object") return false;
-    const { health, maxHealth, hasHealth } = readPayloadHealth(payload);
-    if (!hasHealth) return true;
+    const { health, maxHealth, hitsTaken, maxHits, hasHealth, hasHitsTaken } = readPayloadHealth(payload);
+    if (!hasHealth && !hasHitsTaken) return true;
     const vitalityHealth = Number(vitality.health);
     const vitalityMaxHealth = Number(vitality.maxHealth);
     const vitalityRatio = Number(vitality.healthRatio);
     if (!Number.isFinite(vitalityHealth) || !Number.isFinite(vitalityMaxHealth) || vitalityMaxHealth <= 0) return false;
-    if (Math.abs(vitalityHealth - health) > 0.001) return false;
-    if (Math.abs(vitalityMaxHealth - maxHealth) > 0.001) return false;
-    return !Number.isFinite(vitalityRatio) || Math.abs(vitalityRatio - clamp01(health / maxHealth)) <= 0.001;
+    if (hasHealth && Math.abs(vitalityHealth - health) > 0.001) return false;
+    if (hasHealth && Math.abs(vitalityMaxHealth - maxHealth) > 0.001) return false;
+    const expectedRatio = hasHitsTaken ? clamp01(1 - (hitsTaken / maxHits)) : clamp01(health / maxHealth);
+    return !Number.isFinite(vitalityRatio) || Math.abs(vitalityRatio - expectedRatio) <= 0.001;
   }
 
   function resolvePayloadVitality(payload = {}) {
@@ -83,12 +105,12 @@ export function createGameStageDepth3dEventBindings({
     if (isVitalityConsistentWithPayload(vitality, payload)) {
       return { vitality, source: "vitality" };
     }
-    const { health, maxHealth, hasHealth } = readPayloadHealth(payload);
-    if (!hasHealth && vitality && typeof vitality === "object") {
+    const { health, maxHealth, hitsTaken, maxHits, hasHealth, hasHitsTaken } = readPayloadHealth(payload);
+    if (!hasHealth && !hasHitsTaken && vitality && typeof vitality === "object") {
       return { vitality, source: "vitality_unverified" };
     }
     return {
-      vitality: deriveFallbackVitality({ health, maxHealth }),
+      vitality: deriveFallbackVitality({ health, maxHealth, hitsTaken, maxHits }),
       source: vitality ? "derived_mismatch" : "derived",
     };
   }
@@ -149,9 +171,6 @@ export function createGameStageDepth3dEventBindings({
     const health = Math.max(0, Math.min(maxHealth, Number(orb.health ?? maxHealth) || 0));
     const maxHits = Math.max(1, Number(orb.maxHits ?? maxHealth) || maxHealth);
     const hitsTaken = Math.max(0, Math.min(maxHits, Number(orb.hitsTaken ?? (maxHealth - health)) || 0));
-    const vitality = orb.vitality && typeof orb.vitality === "object"
-      ? orb.vitality
-      : deriveFallbackVitality({ health, maxHealth });
     const payload = {
       health,
       maxHealth,
@@ -165,7 +184,10 @@ export function createGameStageDepth3dEventBindings({
       fractureSeed: orb.fractureSeed,
       atMs,
     };
-    payload.vitality = resolvePayloadVitality(payload).vitality;
+    payload.vitality = resolvePayloadVitality({
+      ...payload,
+      vitality: orb.vitality && typeof orb.vitality === "object" ? orb.vitality : null,
+    }).vitality;
     return payload;
   }
 
