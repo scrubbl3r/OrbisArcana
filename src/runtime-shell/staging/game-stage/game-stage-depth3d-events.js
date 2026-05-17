@@ -37,10 +37,10 @@ export function createGameStageDepth3dEventBindings({
     const health = Math.max(0, Math.min(maxHealth, Number(payload.health ?? payload.to ?? payload.healthAfter) || 0));
     const healthRatio = clamp01(health / maxHealth);
     const shaderState = {
-      luminanceBoost: lerpFloat(1.2, 1.7, healthRatio),
+      luminanceBoost: lerpFloat(1.2, 1.8, healthRatio),
       centerAlpha: lerpFloat(0.013, 0.018, healthRatio),
-      spotIntensity: lerpFloat(22, 27, healthRatio),
-      spotDistanceBO: lerpFloat(4.1, 4.8, healthRatio),
+      spotIntensity: lerpFloat(24, 29, healthRatio),
+      spotDistanceBO: lerpFloat(4.2, 4.9, healthRatio),
     };
     if (root && root.dataset) {
       root.dataset.orbShaderHp = String(Math.round(health * 1000) / 1000);
