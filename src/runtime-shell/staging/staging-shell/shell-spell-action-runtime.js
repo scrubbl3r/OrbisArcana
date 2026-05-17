@@ -1,5 +1,13 @@
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
-import { resolveOrbGraceDefaultTtlMs } from "../../../game-runtime/orb/orb-grace.js";
+import { resolveOrbGraceDefaultTtlMs, resolveOrbGracePayload } from "../../../game-runtime/orb/orb-grace.js";
+
+export const FLOAT_GRACE_PROFILE = Object.freeze({
+  source: "float",
+  persistent: true,
+  suppressInput: true,
+  breakOnLift: false,
+  breakOnMotion: false,
+});
 
 export function createShellSpellActionRuntime({
   runtime = null,
@@ -75,15 +83,16 @@ export function createShellSpellActionRuntime({
         ? hoverRoomY
         : yW;
       const phase = Math.random() * Math.PI * 2;
+      const floatGrace = resolveOrbGracePayload(FLOAT_GRACE_PROFILE);
       orbRuntimeState.patch({
         yW: anchorY,
         floatGraceActive: true,
-        floatGraceUntilMs: 0,
-        floatGracePersistent: true,
-        floatGraceSource: "float",
-        floatGraceSuppressInput: true,
-        floatGraceBreakOnLift: false,
-        floatGraceBreakOnMotion: false,
+        floatGraceUntilMs: Number(floatGrace && floatGrace.ttlMs) || 0,
+        floatGracePersistent: !!(floatGrace && floatGrace.persistent),
+        floatGraceSource: String(floatGrace && floatGrace.source || ""),
+        floatGraceSuppressInput: !!(floatGrace && floatGrace.suppressInput),
+        floatGraceBreakOnLift: floatGrace ? floatGrace.breakOnLift !== false : true,
+        floatGraceBreakOnMotion: floatGrace ? floatGrace.breakOnMotion !== false : true,
         floatGraceAnchorY: anchorY,
         floatGracePhase: phase,
         teleportHoldActive: false,
