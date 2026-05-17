@@ -83,6 +83,21 @@ export function createGameStageDepth3dEventBindings({
     return payload;
   }
 
+  function buildDefaultOrbVisualLifecyclePayload(atMs = performance.now()) {
+    return {
+      health: 1000,
+      maxHealth: 1000,
+      max: 1000,
+      hitsTaken: 0,
+      maxHits: 1000,
+      hitsRemaining: 1000,
+      damageRatio: 0,
+      lifeId: "",
+      fractureSeed: "",
+      atMs,
+    };
+  }
+
   function clear() {
     while (unsubs.length) {
       const off = unsubs.pop();
@@ -91,14 +106,32 @@ export function createGameStageDepth3dEventBindings({
   }
 
   function bind({ eventBus = null, spawns = [], gameState = null } = {}) {
+    const initialPayload = buildOrbVisualLifecyclePayloadFromState(gameState);
+    if (typeof traceMark === "function") {
+      traceMark("orb.shader.lifecycle.bind", {
+        hasEventBus: Boolean(eventBus && typeof eventBus.on === "function"),
+        hasGameState: Boolean(gameState && typeof gameState === "object"),
+        hasGameStateOrb: Boolean(gameState && gameState.orb && typeof gameState.orb === "object"),
+        gameStateKeys: gameState && typeof gameState === "object" ? Object.keys(gameState).slice(0, 20) : [],
+        spawnCount: Array.isArray(spawns) ? spawns.length : 0,
+        initialPayloadPresent: Boolean(initialPayload),
+      });
+    }
     if (root && root.dataset) {
       root.dataset.depthGlobe3dBound = eventBus && typeof eventBus.on === "function" ? "true" : "false";
     }
     clear();
     loadWorldSpawns(spawns);
-    const initialPayload = buildOrbVisualLifecyclePayloadFromState(gameState);
     if (initialPayload) {
       syncOrbVisualLifecycleState(initialPayload);
+    } else {
+      if (typeof traceMark === "function") {
+        traceMark("orb.shader.lifecycle.initial_missing", {
+          seededFallback: true,
+          reason: gameState && typeof gameState === "object" ? "game_state_missing_orb" : "game_state_missing",
+        });
+      }
+      syncOrbVisualLifecycleState(buildDefaultOrbVisualLifecyclePayload(), { lifecycleMode: "reset" });
     }
     if (!eventBus || typeof eventBus.on !== "function") return;
 
@@ -112,6 +145,18 @@ export function createGameStageDepth3dEventBindings({
       orbGlobe3dRuntime.reconcileInventory(payload.globes || []);
     }));
     unsubs.push(eventBus.on(EVT_ORB_HEALTH_CHANGED, (payload = {}) => {
+      if (typeof traceMark === "function") {
+        traceMark("orb.shader.lifecycle.health_event", {
+          health: Number(payload.health ?? payload.to ?? payload.healthAfter),
+          maxHealth: Number(payload.maxHealth ?? payload.max),
+          hitsTaken: Number(payload.hitsTaken),
+          maxHits: Number(payload.maxHits),
+          damageRatio: Number(payload.damageRatio),
+          source: String(payload.source || ""),
+          cause: String(payload.cause || ""),
+          atMs: Number(payload.atMs),
+        });
+      }
       syncOrbVisualLifecycleState(payload);
     }));
     unsubs.push(eventBus.on(EVT_ORB_DAMAGE_APPLIED, (payload = {}) => {

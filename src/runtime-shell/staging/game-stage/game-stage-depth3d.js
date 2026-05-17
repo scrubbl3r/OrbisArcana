@@ -56,7 +56,7 @@ import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
-import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517n";
+import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517o";
 import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=20260505h";
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,
@@ -277,6 +277,14 @@ export function createGameStageDepth3dLayer({
     onApplied: (shaderState = {}, source = "mixer") => traceOrbShaderApplied(shaderState, source),
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
+  if (perfTrace && typeof perfTrace.mark === "function") {
+    perfTrace.mark("orb.shader.mixer.ready", {
+      baseConfig: { ...ORB_3D_VISUAL_DEFAULTS },
+      mixer: orbShaderMixer && typeof orbShaderMixer.getTrace === "function"
+        ? orbShaderMixer.getTrace()
+        : null,
+    });
+  }
   const orbLifecycle3dRuntime = createOrbLifecycle3dRuntime({
     getOrbModel: () => orb3dActorRuntime.getModel(),
     getBurstParent: () => actorGroup,

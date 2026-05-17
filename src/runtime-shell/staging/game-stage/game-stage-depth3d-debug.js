@@ -1,4 +1,4 @@
-export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260508-art-trace-a";
+export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260517-orb-shader-mixer-trace-b";
 
 export function publishDepth3dModuleVersion(version = GAME_STAGE_DEPTH3D_TRACE_VERSION) {
   globalThis.__orbisDepth3dModuleVersion = String(version || "");

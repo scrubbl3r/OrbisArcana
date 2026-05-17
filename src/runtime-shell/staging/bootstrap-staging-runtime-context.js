@@ -207,6 +207,7 @@ export function bootstrapStagingRuntimeContext({
   if (typeof bindGlobe3dRuntime === "function") {
     bindGlobe3dRuntime({
       eventBus,
+      gameState,
       spawns: resolvedGlobeSpawns,
       getOrbRadiusPx: getOrbFxRadiusPx,
     });
