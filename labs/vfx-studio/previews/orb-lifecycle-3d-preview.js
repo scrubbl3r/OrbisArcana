@@ -5,6 +5,7 @@ import { createOrbModel } from "../../../src/game-runtime/orb/orb-3d-model.js?v=
 import {
   createOpalescentOrbShellMaterial,
   createOrbPointLight,
+  createOrbShadowSpotLight,
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260516a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
@@ -19,11 +20,28 @@ import {
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 const ORB_STAGE_FILL_RATIO = 0.52;
+const ORB_LIFECYCLE_PREVIEW_HP_MAX = 1000;
+const ORB_LIFECYCLE_SHADER_RANGE_FIELDS = Object.freeze([
+  "orbLifecycle3dLuminanceBoostMinPct",
+  "orbLifecycle3dLuminanceBoostMaxPct",
+  "orbLifecycle3dCenterAlphaMinPct",
+  "orbLifecycle3dCenterAlphaMaxPct",
+  "orbLifecycle3dSpotIntensityMinPct",
+  "orbLifecycle3dSpotIntensityMaxPct",
+  "orbLifecycle3dSpotDistanceMinPct",
+  "orbLifecycle3dSpotDistanceMaxPct",
+  "orbLifecycle3dGoldMixMinPct",
+  "orbLifecycle3dGoldMixMaxPct",
+]);
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   const safe = Number.isFinite(n) ? n : fallback;
   return Math.max(min, Math.min(max, safe));
+}
+
+function lerp(a, b, t) {
+  return a + ((b - a) * t);
 }
 
 function roundedNumber(value, fallback = 0) {
@@ -137,6 +155,7 @@ export function createOrbLifecycle3dPreview({
   let model = null;
   let shellMaterial = null;
   let pointLight = null;
+  let shadowSpot = null;
   let orbShellMesh = null;
   let cracks = null;
   let burst = null;
@@ -150,9 +169,58 @@ export function createOrbLifecycle3dPreview({
     return Math.max(16, Number(visualState && visualState.diameterPx) || 72);
   }
 
+  function readHpRatio(config = readLifecycle3dConfig(els)) {
+    const maxHits = Math.max(1, Number(config.maxHits) || 1);
+    return Math.max(0, Math.min(1, 1 - (Math.max(0, Math.min(maxHits, hitsTaken)) / maxHits)));
+  }
+
+  function readHp(config = readLifecycle3dConfig(els)) {
+    return Math.round(readHpRatio(config) * ORB_LIFECYCLE_PREVIEW_HP_MAX);
+  }
+
+  function resolvePctLerp(baseValue, minPct, maxPct, hpRatio, min = -Infinity, max = Infinity) {
+    const base = Number(baseValue);
+    const fallback = Number.isFinite(base) ? base : 0;
+    const minValue = fallback * ((Number(minPct) || 0) / 100);
+    const maxValue = fallback * ((Number(maxPct) || 0) / 100);
+    return Math.max(min, Math.min(max, lerp(minValue, maxValue, hpRatio)));
+  }
+
+  function resolveOrbShaderLifecycleState(config = readLifecycle3dConfig(els)) {
+    const hpRatio = readHpRatio(config);
+    const baseConfig = activeOrbConfig || ORB_3D_VISUAL_DEFAULTS;
+    return Object.freeze({
+      hp: Math.round(hpRatio * ORB_LIFECYCLE_PREVIEW_HP_MAX),
+      hpRatio,
+      shellLuminanceBoost: resolvePctLerp(baseConfig.shellLuminanceBoost, config.shellLuminanceBoostMinPct, config.shellLuminanceBoostMaxPct, hpRatio, 0, 12),
+      shellCenterAlpha: resolvePctLerp(baseConfig.shellCenterAlpha, config.shellCenterAlphaMinPct, config.shellCenterAlphaMaxPct, hpRatio, 0, 1),
+      shadowSpotIntensity: resolvePctLerp(baseConfig.shadowSpotIntensity, config.spotIntensityMinPct, config.spotIntensityMaxPct, hpRatio, 0, 10000),
+      shadowSpotDistanceBO: resolvePctLerp(baseConfig.shadowSpotDistanceBO, config.spotDistanceMinPct, config.spotDistanceMaxPct, hpRatio, 0, 1000),
+      goldMix: resolvePctLerp(baseConfig.goldMix, config.goldMixMinPct, config.goldMixMaxPct, hpRatio, 0, 2),
+    });
+  }
+
+  function applyOrbShaderLifecycleState(config = readLifecycle3dConfig(els)) {
+    const shaderState = resolveOrbShaderLifecycleState(config);
+    const uniforms = shellMaterial && shellMaterial.uniforms ? shellMaterial.uniforms : null;
+    if (uniforms && uniforms.uShellLuminanceBoost) uniforms.uShellLuminanceBoost.value = shaderState.shellLuminanceBoost;
+    if (uniforms && uniforms.uShellCenterAlpha) uniforms.uShellCenterAlpha.value = shaderState.shellCenterAlpha;
+    if (uniforms && uniforms.uGoldMix) uniforms.uGoldMix.value = shaderState.goldMix;
+    if (shadowSpot) {
+      const bo = readBo();
+      shadowSpot.intensity = shaderState.shadowSpotIntensity;
+      shadowSpot.distance = shaderState.shadowSpotDistanceBO * bo;
+      if (shadowSpot.shadow && shadowSpot.shadow.camera) {
+        shadowSpot.shadow.camera.far = Math.max(1, shadowSpot.distance);
+        shadowSpot.shadow.camera.updateProjectionMatrix();
+      }
+    }
+    return shaderState;
+  }
+
   function updateStatus(config = readLifecycle3dConfig(els)) {
     if (els.orbLifecycle3dStatus) {
-      els.orbLifecycle3dStatus.value = `Hits ${hitsTaken} / ${Math.max(1, Number(config.maxHits) || 1)}`;
+      els.orbLifecycle3dStatus.value = `Hits ${hitsTaken} / ${Math.max(1, Number(config.maxHits) || 1)} - HP ${readHp(config)} / ${ORB_LIFECYCLE_PREVIEW_HP_MAX}`;
     }
   }
 
@@ -189,6 +257,7 @@ export function createOrbLifecycle3dPreview({
       }),
     });
     orbShellMesh.material = shellMaterial;
+    applyOrbShaderLifecycleState(config);
     if (previous && previous !== shellMaterial && typeof previous.dispose === "function") previous.dispose();
   }
 
@@ -204,6 +273,7 @@ export function createOrbLifecycle3dPreview({
     model = null;
     shellMaterial = null;
     pointLight = null;
+    shadowSpot = null;
     orbShellMesh = null;
     cracks = null;
     burst = null;
@@ -260,7 +330,7 @@ export function createOrbLifecycle3dPreview({
           if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) {
             shellMaterial.uniforms.uTime.value = t;
           }
-          if (pointLight) updateOrbPointLight(pointLight, t, activeOrbConfig);
+          if (pointLight) updateOrbPointLight(pointLight, t, { ...activeOrbConfig, goldMix: resolveOrbShaderLifecycleState(readLifecycle3dConfig(els)).goldMix });
           if (cracks) updateOrbLifecycle3dCracks(cracks, performance.now());
           if (burst && !updateOrbLifecycle3dDissolveBurst(burst, performance.now())) removeBurst();
         },
@@ -289,6 +359,12 @@ export function createOrbLifecycle3dPreview({
       if (orbShellMesh) orbShellMesh.visible = layerVisible(els.orbLifecycle3dOrbVisibleBtn);
       pointLight = createOrbPointLight({ bo, config: activeOrbConfig });
       model.add(pointLight);
+      shadowSpot = createOrbShadowSpotLight({ bo, config: activeOrbConfig });
+      if (shadowSpot) {
+        shadowSpot.position.set(bo * 0.35, bo * 0.55, bo * 1.8);
+        shadowSpot.target = model;
+        inspector.scene.add(shadowSpot);
+      }
       inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.025));
       inspector.scene.add(model);
       bornAt = performance.now();
@@ -296,6 +372,7 @@ export function createOrbLifecycle3dPreview({
     frameCameraToSsotOrbSize(inspector, els.previewRoot, bo);
     hitsTaken = Math.min(hitsTaken, Math.max(1, Number(config.maxHits) || 1));
     rebuildCracks(config);
+    applyOrbShaderLifecycleState(config);
     updateStatus(config);
     inspector.render();
     return config;
@@ -349,6 +426,15 @@ export function createOrbLifecycle3dPreview({
     if (els.orbLifecycle3dOrbVisibleBtn) els.orbLifecycle3dOrbVisibleBtn.addEventListener("click", () => toggleLayer(els.orbLifecycle3dOrbVisibleBtn));
     if (els.orbLifecycle3dApplyCrackBtn) els.orbLifecycle3dApplyCrackBtn.addEventListener("click", apply);
     if (els.orbLifecycle3dApplyParticleBtn) els.orbLifecycle3dApplyParticleBtn.addEventListener("click", apply);
+    ORB_LIFECYCLE_SHADER_RANGE_FIELDS.forEach((id) => {
+      const field = els[id];
+      if (field) field.addEventListener("input", () => {
+        const config = readLifecycle3dConfig(els);
+        applyOrbShaderLifecycleState(config);
+        updateStatus(config);
+        if (inspector && typeof inspector.render === "function") inspector.render();
+      });
+    });
     if (els.orbLifecycle3dHitBtn) els.orbLifecycle3dHitBtn.addEventListener("click", hit);
     if (els.orbLifecycle3dHealBtn) els.orbLifecycle3dHealBtn.addEventListener("click", heal);
     if (els.orbLifecycle3dRegenerateBtn) els.orbLifecycle3dRegenerateBtn.addEventListener("click", regenerate);
