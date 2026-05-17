@@ -3,7 +3,7 @@ export const INPUT_GESTURE_CONFIG_DEFAULT = Object.freeze({
     cooldownMs: 2500,
     mode: 2,
     grooveGate: 0.20,
-    liftGate: 0.12,
+    liftGate: 0.30,
     lampThreshold: 0.90,
     directionRecentMs: 750,
     rearmThreshold: 0.10,

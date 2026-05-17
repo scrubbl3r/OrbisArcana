@@ -45,7 +45,7 @@ export function createInputGestureSystem({
     shakeCooldownMs: Math.max(0, Number(config.shakeCooldownMs) || 2500),
     shakeMode: Math.max(1, Math.min(3, Math.round(Number(config.shakeMode) || 2))),
     grooveShakeGate: Number.isFinite(Number(config.grooveShakeGate)) ? Number(config.grooveShakeGate) : 0.20,
-    liftShakeGate: Number.isFinite(Number(config.liftShakeGate)) ? Number(config.liftShakeGate) : 0.12,
+    liftShakeGate: Number.isFinite(Number(config.liftShakeGate)) ? Number(config.liftShakeGate) : 0.30,
     shakeLampThr: Number.isFinite(Number(config.shakeLampThr)) ? Number(config.shakeLampThr) : 0.90,
     sdRecentMs: Math.max(0, Number(config.sdRecentMs) || 750),
     flatSpinDominanceOn: Number.isFinite(Number(config.flatSpinDominanceOn)) ? Number(config.flatSpinDominanceOn) : 0.72,
