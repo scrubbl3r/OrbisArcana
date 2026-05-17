@@ -1,4 +1,4 @@
-import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260517a";
+import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260517b";
 import { COMBAT_EFFECT_IMMUNITY, COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN } from "../../../game-runtime/combat/combat-constants.js";
 import { EVT_COMBAT_IMMUNITY_CHANGED, EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
 import {
@@ -54,7 +54,7 @@ import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
-import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517d";
+import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517e";
 import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=20260505h";
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,

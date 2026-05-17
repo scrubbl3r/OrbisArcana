@@ -32,6 +32,8 @@ export function createGameStageDepth3dEventBindings({
     const vitality = payload && typeof payload.vitality === "object" ? payload.vitality : null;
     const vitalityShaderState = vitality && typeof vitality.shaderState === "object" ? vitality.shaderState : null;
     if (root && root.dataset) {
+      root.dataset.orbShaderEventCount = String((Number(root.dataset.orbShaderEventCount) || 0) + 1);
+      root.dataset.orbShaderLastEventAt = roundMetric(payload && payload.atMs, 1);
       root.dataset.orbShaderHealthSource = vitalityShaderState ? "vitality" : "missing";
       root.dataset.orbShaderHp = roundMetric(vitality && vitality.health);
       root.dataset.orbShaderMaxHp = roundMetric(vitality && vitality.maxHealth);
@@ -82,12 +84,14 @@ export function createGameStageDepth3dEventBindings({
       orbGlobe3dRuntime.consume(payload);
     }));
     unsubs.push(eventBus.on(EVT_ORB_DIED, (payload = {}) => {
+      if (root && root.dataset) root.dataset.orbShaderLastLifecycleEvent = "died";
       orbGlobe3dRuntime.setDead(true);
       onOrbDied(payload);
       orbLifecycle3dRuntime.startDissolve(payload);
       scheduleFrame();
     }));
     unsubs.push(eventBus.on(EVT_ORB_REVIVED, (payload = {}) => {
+      if (root && root.dataset) root.dataset.orbShaderLastLifecycleEvent = "revived";
       onOrbRevived();
       worldGlobe3dRuntime.resetToIdle();
       orbGlobe3dRuntime.revive();

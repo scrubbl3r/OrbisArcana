@@ -166,6 +166,9 @@ export function createOrb3dActorRuntime({
   function setLifecycleErosion(lifecycleErosion = null) {
     if (orbRuntime && typeof orbRuntime.setLifecycleErosion === "function") {
       orbRuntime.setLifecycleErosion(lifecycleErosion);
+      if (currentShaderState && typeof orbRuntime.setShaderState === "function") {
+        orbRuntime.setShaderState(currentShaderState);
+      }
       if (typeof onNeedsFrame === "function") onNeedsFrame();
     }
   }
