@@ -30,6 +30,34 @@ export function createGameStageDepth3dEventBindings({
     return String(Math.round(numeric * decimals) / decimals);
   }
 
+  function clamp01(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.min(1, numeric));
+  }
+
+  function lerpFloat(from, to, t) {
+    return Number(from) + ((Number(to) - Number(from)) * clamp01(t));
+  }
+
+  function deriveFallbackVitality({ health = 0, maxHealth = 1 } = {}) {
+    const resolvedMaxHealth = Math.max(1, Number(maxHealth) || 1);
+    const resolvedHealth = Math.max(0, Math.min(resolvedMaxHealth, Number(health) || 0));
+    const healthRatio = clamp01(resolvedHealth / resolvedMaxHealth);
+    return {
+      health: resolvedHealth,
+      maxHealth: resolvedMaxHealth,
+      healthRatio,
+      damageRatio: 1 - healthRatio,
+      shaderState: {
+        luminanceBoost: lerpFloat(1.2, 1.8, healthRatio),
+        centerAlpha: lerpFloat(0.013, 0.018, healthRatio),
+        spotIntensity: lerpFloat(24, 29, healthRatio),
+        spotDistanceBO: lerpFloat(4.2, 4.9, healthRatio),
+      },
+    };
+  }
+
   function applyOrbHpShaderState(payload = {}, eventSource = "health_changed") {
     const vitality = payload && typeof payload.vitality === "object" ? payload.vitality : null;
     const vitalityShaderState = vitality && typeof vitality.shaderState === "object" ? vitality.shaderState : null;
@@ -78,6 +106,31 @@ export function createGameStageDepth3dEventBindings({
     return shaderState;
   }
 
+  function buildOrbVisualLifecyclePayloadFromState(gameState = null, atMs = performance.now()) {
+    const orb = gameState && gameState.orb && typeof gameState.orb === "object" ? gameState.orb : null;
+    if (!orb) return null;
+    const maxHealth = Math.max(1, Number(orb.maxHealth ?? orb.max ?? 1000) || 1000);
+    const health = Math.max(0, Math.min(maxHealth, Number(orb.health ?? maxHealth) || 0));
+    const maxHits = Math.max(1, Number(orb.maxHits ?? maxHealth) || maxHealth);
+    const hitsTaken = Math.max(0, Math.min(maxHits, Number(orb.hitsTaken ?? (maxHealth - health)) || 0));
+    const vitality = orb.vitality && typeof orb.vitality === "object"
+      ? orb.vitality
+      : deriveFallbackVitality({ health, maxHealth });
+    return {
+      health,
+      maxHealth,
+      max: maxHealth,
+      hitsTaken,
+      maxHits,
+      hitsRemaining: Math.max(0, maxHits - hitsTaken),
+      damageRatio: maxHits > 0 ? hitsTaken / maxHits : 0,
+      vitality,
+      lifeId: orb.lifeId,
+      fractureSeed: orb.fractureSeed,
+      atMs,
+    };
+  }
+
   function clear() {
     while (unsubs.length) {
       const off = unsubs.pop();
@@ -85,12 +138,16 @@ export function createGameStageDepth3dEventBindings({
     }
   }
 
-  function bind({ eventBus = null, spawns = [] } = {}) {
+  function bind({ eventBus = null, spawns = [], gameState = null } = {}) {
     if (root && root.dataset) {
       root.dataset.depthGlobe3dBound = eventBus && typeof eventBus.on === "function" ? "true" : "false";
     }
     clear();
     loadWorldSpawns(spawns);
+    const initialPayload = buildOrbVisualLifecyclePayloadFromState(gameState);
+    if (initialPayload) {
+      syncOrbVisualLifecycleState(initialPayload, { source: "initial" });
+    }
     if (!eventBus || typeof eventBus.on !== "function") return;
 
     unsubs.push(eventBus.on(EVT_PICKUP_COLLECTED, (payload = {}) => {
