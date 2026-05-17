@@ -93,12 +93,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
     }
   };
 
-  const isDiversityLampLit = () => (
-    receiverStabilityVisualController && typeof receiverStabilityVisualController.isDiversityLampLit === "function"
-      ? !!receiverStabilityVisualController.isDiversityLampLit()
-      : false
-  );
-
   const stageWorldItems =
     stageAdapters && typeof stageAdapters.getWorldItems === "function"
       ? stageAdapters.getWorldItems()
@@ -181,7 +175,6 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
       }
     },
     gestureHooks: {
-      isDiversityLampLit,
       flashShakeLamp: () => {
         if (shellHooks && typeof shellHooks.flashShakeLamp === "function") shellHooks.flashShakeLamp();
       },

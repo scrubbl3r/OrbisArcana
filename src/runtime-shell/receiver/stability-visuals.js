@@ -12,7 +12,6 @@ export function getReceiverStabilityVisualState({
   return {
     showStable,
     showVar,
-    diversityLampLit: showVar,
   };
 }
 
@@ -58,13 +57,8 @@ export function createReceiverStabilityVisualController({
     });
   }
 
-  function isDiversityLampLit() {
-    return !!computeState().diversityLampLit;
-  }
-
   return {
     apply,
-    isDiversityLampLit,
   };
 }
 
@@ -88,12 +82,7 @@ export function createInlineReceiverStabilityVisualController({
     });
   }
 
-  function isDiversityLampLit() {
-    return !!computeState().diversityLampLit;
-  }
-
   return {
     apply,
-    isDiversityLampLit,
   };
 }

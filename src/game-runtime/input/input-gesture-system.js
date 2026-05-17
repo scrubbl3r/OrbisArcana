@@ -11,7 +11,7 @@ import {
  * @property {() => void} stop
  * @property {(atMs?: number) => void} reset Clears shake + spin-window runtime state and invokes reset hooks.
  * @property {(frame?: {smooth01?:number, atMs?:number}) => boolean} processSmoothGateFrame Returns `true` while shake is allowed by recent smooth hold.
- * @property {(sample?: {shakeVal01?:number, groove01?:number, lift01?:number, atMs?:number}) => boolean} processShakeSample Returns `true` if a shake hit was registered.
+ * @property {(sample?: {shakeVal01?:number, lift01?:number, atMs?:number}) => boolean} processShakeSample Returns `true` if a shake hit was registered.
  * @property {(frame?: {raw?:Object, atMs?:number, stabilityOn?:boolean, stabilityVisualGate?:boolean}) => void} processSpinFrame
  * @property {(options?: {atMs?:number, durationMs?:number, transitionMs?:number, source?:string}) => boolean} enableFlatSpinAbilityWindow
  * @property {(code:string, atMs?:number) => void} setPendingDirection
@@ -45,7 +45,6 @@ export function createInputGestureSystem({
   const cfg = {
     shakeCooldownMs: Math.max(0, Number(config.shakeCooldownMs) || 2500),
     shakeMode: Math.max(1, Math.min(3, Math.round(Number(config.shakeMode) || 2))),
-    grooveShakeGate: Number.isFinite(Number(config.grooveShakeGate)) ? Number(config.grooveShakeGate) : 0.20,
     liftShakeGate: Number.isFinite(Number(config.liftShakeGate)) ? Number(config.liftShakeGate) : 0.30,
     smoothShakeGateMin: Number.isFinite(Number(config.smoothShakeGateMin)) ? Number(config.smoothShakeGateMin) : 1.00,
     smoothShakeHoldMs: Math.max(0, Number(config.smoothShakeHoldMs) || 250),
@@ -160,11 +159,10 @@ export function createInputGestureSystem({
     return now <= state.smoothGate.qualifiedUntilMs;
   }
 
-  function processShakeSample({ shakeVal01, groove01, lift01, atMs = nowMs() } = {}) {
+  function processShakeSample({ shakeVal01, lift01, atMs = nowMs() } = {}) {
     const now = Number(atMs) || nowMs();
     const v = Number(shakeVal01);
     if (!Number.isFinite(v)) return false;
-    if (Number(groove01) > cfg.grooveShakeGate) return false;
     if (Number(lift01) > cfg.liftShakeGate) return false;
     if (now > state.smoothGate.qualifiedUntilMs) return false;
 
@@ -178,7 +176,6 @@ export function createInputGestureSystem({
 
   function registerShakeHit(now) {
     if (now < state.shakeCooldownUntil) return false;
-    if (typeof hooks.isDiversityLampLit === "function" && hooks.isDiversityLampLit()) return false;
     if (typeof hooks.flashShakeLamp === "function") hooks.flashShakeLamp(400);
 
     let shakeCode = "";
