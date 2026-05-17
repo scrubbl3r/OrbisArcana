@@ -50,15 +50,19 @@ export function createShellSpellActionRuntime({
           floatHoldActive: false,
           floatGraceActive: false,
           floatGraceUntilMs: 0,
+          floatHoldStartedAtMs: 0,
         });
         return true;
       }
       const xW = Number.isFinite(Number(state.xW)) ? Number(state.xW) : 0;
       const yW = Number.isFinite(Number(state.yW)) ? Number(state.yW) : 0;
+      const atMs = Number(payload && payload.atMs) || performance.now();
       orbRuntimeState.patch({
         floatHoldActive: true,
         floatHoldAnchorX: xW,
         floatHoldAnchorY: yW,
+        floatHoldStartedAtMs: atMs,
+        floatHoldPhase: Math.random() * Math.PI * 2,
         floatGraceActive: false,
         floatGraceUntilMs: 0,
         teleportHoldActive: false,

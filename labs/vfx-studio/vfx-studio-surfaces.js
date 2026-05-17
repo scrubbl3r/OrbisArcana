@@ -182,7 +182,7 @@ export function createLabEffectSurfaces({
       authoringAdapter: createTeleport3dAuthoringAdapter,
     }),
     "float": Object.freeze({
-      label: "Float",
+      label: "Float 3D",
       category: "spell",
       panes: Object.freeze(["vfx"]),
       settingsKey: "bank-orb-3d",
@@ -192,7 +192,7 @@ export function createLabEffectSurfaces({
       previewFile: "bank-orb-3d-preview.js",
       autoPreviewKey: "applyBankOrb3d",
       defaultBindTarget: "spell.float",
-      publishNote: "Blank-orb stub lane for Float; visual design is pending.",
+      publishNote: "Blank-orb stub lane for Float 3D; visual design is pending.",
     }),
     "orb-base": Object.freeze({
       label: "Orb Base",

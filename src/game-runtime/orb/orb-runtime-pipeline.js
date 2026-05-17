@@ -168,8 +168,25 @@ export function runOrbRuntimePipeline({
     const anchorY = Number.isFinite(Number(state.floatHoldAnchorY))
       ? Number(state.floatHoldAnchorY)
       : Number(state.yW || 0);
-    state.xW = anchorX;
-    state.yW = anchorY;
+    const bo = Math.max(1, (Number(phys.orbRadiusPx) || 0) * 2);
+    const startedAtMs = Number.isFinite(Number(state.floatHoldStartedAtMs))
+      ? Number(state.floatHoldStartedAtMs)
+      : Number(nowMs || 0);
+    const phase = Number(state.floatHoldPhase) || 0;
+    const t = Math.max(0, (Number(nowMs || 0) - startedAtMs) / 1000);
+    const drift = Math.sin((t * Math.PI * 2 * 0.08) + phase) * (bo * 0.035);
+    const bob = Math.sin((t * Math.PI * 2 * 0.72) + (phase * 0.61)) * (bo * 0.045);
+    const bounds = typeof getLateralBounds === "function" ? (getLateralBounds() || null) : null;
+    const left = Number(bounds && bounds.left);
+    const right = Number(bounds && bounds.right);
+    const yFloor = (typeof groundCenterWorld === "function") ? Number(groundCenterWorld()) || anchorY : anchorY;
+    const yCeil = (typeof getCeilingWorld === "function")
+      ? Number(getCeilingWorld()) || anchorY
+      : (Number(phys.orbRadiusPx) || anchorY);
+    state.xW = (Number.isFinite(left) && Number.isFinite(right) && right > left)
+      ? clamp(anchorX + drift, left, right)
+      : anchorX + drift;
+    state.yW = clamp(anchorY + bob, yCeil, yFloor);
     state.v = 0;
     state.vx = 0;
     state.lift01 = 0;

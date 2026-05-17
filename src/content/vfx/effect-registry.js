@@ -88,7 +88,7 @@ export const VFX_EFFECT_REGISTRY = Object.freeze([
   }),
   Object.freeze({
     id: "spell.float",
-    label: "Float",
+    label: "Float 3D",
     category: "spell",
     runtimeModuleId: "float_runtime",
     defaultPresetId: "preset.float.stub",
