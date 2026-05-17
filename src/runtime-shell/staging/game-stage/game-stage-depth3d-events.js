@@ -64,6 +64,20 @@ export function createGameStageDepth3dEventBindings({
     return vitalityShaderState;
   }
 
+  function syncOrbVisualLifecycleState(payload = {}, {
+    source = "health_changed",
+    lifecycleMode = "damage",
+  } = {}) {
+    if (lifecycleMode === "reset") {
+      orbLifecycle3dRuntime.reset(payload);
+    } else {
+      orbLifecycle3dRuntime.syncDamageState(payload);
+    }
+    const shaderState = applyOrbHpShaderState(payload, source);
+    scheduleFrame();
+    return shaderState;
+  }
+
   function clear() {
     while (unsubs.length) {
       const off = unsubs.pop();
@@ -89,9 +103,7 @@ export function createGameStageDepth3dEventBindings({
       orbGlobe3dRuntime.reconcileInventory(payload.globes || []);
     }));
     unsubs.push(eventBus.on(EVT_ORB_HEALTH_CHANGED, (payload = {}) => {
-      orbLifecycle3dRuntime.syncDamageState(payload);
-      applyOrbHpShaderState(payload, "health_changed");
-      scheduleFrame();
+      syncOrbVisualLifecycleState(payload, { source: "health_changed" });
     }));
     unsubs.push(eventBus.on(EVT_ORB_DAMAGE_APPLIED, (payload = {}) => {
       if (typeof traceMark === "function") {
@@ -111,7 +123,6 @@ export function createGameStageDepth3dEventBindings({
           atMs: roundMetric(payload.atMs, 1),
         });
       }
-      applyOrbHpShaderState(payload, "damage_applied");
     }));
     unsubs.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
       orbGlobe3dRuntime.load(payload);
@@ -145,15 +156,16 @@ export function createGameStageDepth3dEventBindings({
       onOrbRevived();
       worldGlobe3dRuntime.resetToIdle();
       orbGlobe3dRuntime.revive();
-      orbLifecycle3dRuntime.reset(payload);
-      applyOrbHpShaderState(payload, "revived");
-      scheduleFrame();
+      syncOrbVisualLifecycleState(payload, {
+        source: "revived",
+        lifecycleMode: "reset",
+      });
     }));
   }
 
   return Object.freeze({
     bind,
-    syncOrbHpShaderState: applyOrbHpShaderState,
+    syncOrbHpShaderState: syncOrbVisualLifecycleState,
     dispose: clear,
   });
 }
