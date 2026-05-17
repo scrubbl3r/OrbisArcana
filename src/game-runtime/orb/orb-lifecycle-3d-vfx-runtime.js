@@ -65,12 +65,18 @@ export function createOrbLifecycle3dErosionPatch({
   const hitRatio = Math.max(0, Math.min(1, hits / total));
   if (hits <= 0 || hitRatio <= 0) return null;
   const noiseSeed = Math.max(1, Number(seed) || Number(resolved.erosionSeed) || 1001);
+  const seedRng = createRng(noiseSeed);
+  const seedOffset = new THREE.Vector3(
+    seedRng() * 23,
+    seedRng() * 31,
+    seedRng() * 41
+  );
 
   return Object.freeze({
     uniforms: {
       uDamageProgress: { value: hitRatio },
       uErosionOpacity: { value: resolved.crackAlpha },
-      uNoiseSeed: { value: noiseSeed },
+      uNoiseSeedOffset: { value: seedOffset },
       uNoiseScale: { value: resolved.noiseScale },
       uNoiseContrast: { value: resolved.noiseContrast },
       uNoiseOctaves: { value: resolved.noiseOctaves },
@@ -88,7 +94,7 @@ export function createOrbLifecycle3dErosionPatch({
     uniformsSource: `
       uniform float uDamageProgress;
       uniform float uErosionOpacity;
-      uniform float uNoiseSeed;
+      uniform vec3 uNoiseSeedOffset;
       uniform float uNoiseScale;
       uniform float uNoiseContrast;
       uniform float uNoiseOctaves;
@@ -167,14 +173,9 @@ export function createOrbLifecycle3dErosionPatch({
     `,
     fragmentSource: `
         vec3 n = normalize(vLifecycleLocalNormal);
-        vec3 seedOffset = vec3(
-          fract(uNoiseSeed * 0.0137) * 23.0,
-          fract(uNoiseSeed * 0.0271) * 31.0,
-          fract(uNoiseSeed * 0.0419) * 41.0
-        );
-        vec3 noisePoint = n * uNoiseScale + seedOffset;
+        vec3 noisePoint = n * uNoiseScale + uNoiseSeedOffset;
         float field = perlinErosionField(noisePoint);
-        float detail = fbm(n * uDetailScale + seedOffset.yzx + vec3(9.7, -4.1, 6.3), uNoiseOctaves, uNoiseLacunarity, uNoiseGain);
+        float detail = fbm(n * uDetailScale + uNoiseSeedOffset.yzx + vec3(9.7, -4.1, 6.3), uNoiseOctaves, uNoiseLacunarity, uNoiseGain);
         field = clamp(field + ((detail - 0.5) * uDetailAmount), 0.0, 1.0);
         field = clamp((field - 0.5) * uNoiseContrast + 0.5, 0.0, 1.0);
         float progress = pow(clamp(uDamageProgress, 0.0, 1.0), uGrowthCurve);
