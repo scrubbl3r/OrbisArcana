@@ -525,6 +525,42 @@
       font-size:12px;
       font-weight:800;
     }
+    .orbLifecycleShaderRangeRows{
+      gap:8px;
+    }
+    .orbLifecycleShaderRangeRow{
+      display:grid;
+      grid-template-columns: minmax(112px, 1fr) minmax(68px, 86px) minmax(68px, 86px);
+      gap:8px;
+      align-items:end;
+      padding:8px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:8px;
+      background: rgba(255,255,255,.035);
+    }
+    .orbLifecycleShaderRangeName{
+      align-self:center;
+      color: var(--text-strong);
+      font-size:12px;
+      font-weight:900;
+      line-height:1.2;
+    }
+    .orbLifecycleShaderRangeField{
+      display:grid;
+      gap:4px;
+    }
+    .orbLifecycleShaderRangeField label{
+      color: var(--text-muted);
+      font-size:10px;
+      font-weight:950;
+      line-height:1;
+      text-transform:uppercase;
+    }
+    .orbLifecycleShaderRangeField .paramFieldInput{
+      min-height:30px;
+      padding:5px 7px;
+      text-align:right;
+    }
     .rgbaParamRow{
       display:grid;
       grid-template-columns: auto repeat(4, auto minmax(54px, 1fr)) auto;
@@ -2035,36 +2071,61 @@
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="orbLifecycle3dOrbControls">Orb</button>
             <button id="orbLifecycle3dOrbVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Orb visibility" title="Toggle Orb visibility"></button>
           </div>
-          <div id="orbLifecycle3dOrbControls" class="controlGroupBody paramFieldRows" hidden>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dLuminanceBoostMinPct">Luminance min %</label>
-              <input id="orbLifecycle3dLuminanceBoostMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="80" />
-              <label for="orbLifecycle3dLuminanceBoostMaxPct">max %</label>
-              <input id="orbLifecycle3dLuminanceBoostMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="120" />
+          <div id="orbLifecycle3dOrbControls" class="controlGroupBody paramFieldRows orbLifecycleShaderRangeRows" hidden>
+            <div class="orbLifecycleShaderRangeRow">
+              <div class="orbLifecycleShaderRangeName">Luminance boost</div>
+              <div class="orbLifecycleShaderRangeField">
+                <label for="orbLifecycle3dLuminanceBoostMinPct">Min %</label>
+                <input id="orbLifecycle3dLuminanceBoostMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="80" />
+              </div>
+              <div class="orbLifecycleShaderRangeField">
+                <label for="orbLifecycle3dLuminanceBoostMaxPct">Max %</label>
+                <input id="orbLifecycle3dLuminanceBoostMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="120" />
+              </div>
             </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dCenterAlphaMinPct">Center alpha min %</label>
-              <input id="orbLifecycle3dCenterAlphaMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="87" />
-              <label for="orbLifecycle3dCenterAlphaMaxPct">max %</label>
-              <input id="orbLifecycle3dCenterAlphaMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="120" />
+            <div class="orbLifecycleShaderRangeRow">
+              <div class="orbLifecycleShaderRangeName">Center alpha</div>
+              <div class="orbLifecycleShaderRangeField">
+                <label for="orbLifecycle3dCenterAlphaMinPct">Min %</label>
+                <input id="orbLifecycle3dCenterAlphaMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="87" />
+              </div>
+              <div class="orbLifecycleShaderRangeField">
+                <label for="orbLifecycle3dCenterAlphaMaxPct">Max %</label>
+                <input id="orbLifecycle3dCenterAlphaMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="120" />
+              </div>
             </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dSpotIntensityMinPct">Spot intensity min %</label>
-              <input id="orbLifecycle3dSpotIntensityMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="100" />
-              <label for="orbLifecycle3dSpotIntensityMaxPct">max %</label>
-              <input id="orbLifecycle3dSpotIntensityMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="121" />
+            <div class="orbLifecycleShaderRangeRow">
+              <div class="orbLifecycleShaderRangeName">Spot intensity</div>
+              <div class="orbLifecycleShaderRangeField">
+                <label for="orbLifecycle3dSpotIntensityMinPct">Min %</label>
+                <input id="orbLifecycle3dSpotIntensityMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="100" />
+              </div>
+              <div class="orbLifecycleShaderRangeField">
+                <label for="orbLifecycle3dSpotIntensityMaxPct">Max %</label>
+                <input id="orbLifecycle3dSpotIntensityMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="121" />
+              </div>
             </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dSpotDistanceMinPct">Spot distance min %</label>
-              <input id="orbLifecycle3dSpotDistanceMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="93" />
-              <label for="orbLifecycle3dSpotDistanceMaxPct">max %</label>
-              <input id="orbLifecycle3dSpotDistanceMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="109" />
+            <div class="orbLifecycleShaderRangeRow">
+              <div class="orbLifecycleShaderRangeName">Spot distance</div>
+              <div class="orbLifecycleShaderRangeField">
+                <label for="orbLifecycle3dSpotDistanceMinPct">Min %</label>
+                <input id="orbLifecycle3dSpotDistanceMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="93" />
+              </div>
+              <div class="orbLifecycleShaderRangeField">
+                <label for="orbLifecycle3dSpotDistanceMaxPct">Max %</label>
+                <input id="orbLifecycle3dSpotDistanceMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="109" />
+              </div>
             </div>
-            <div class="paramFieldRow">
-              <label for="orbLifecycle3dGoldMixMinPct">Gold mix min %</label>
-              <input id="orbLifecycle3dGoldMixMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="100" />
-              <label for="orbLifecycle3dGoldMixMaxPct">max %</label>
-              <input id="orbLifecycle3dGoldMixMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="100" />
+            <div class="orbLifecycleShaderRangeRow">
+              <div class="orbLifecycleShaderRangeName">Gold mix</div>
+              <div class="orbLifecycleShaderRangeField">
+                <label for="orbLifecycle3dGoldMixMinPct">Min %</label>
+                <input id="orbLifecycle3dGoldMixMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="100" />
+              </div>
+              <div class="orbLifecycleShaderRangeField">
+                <label for="orbLifecycle3dGoldMixMaxPct">Max %</label>
+                <input id="orbLifecycle3dGoldMixMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="100" />
+              </div>
             </div>
           </div>
         </div>
