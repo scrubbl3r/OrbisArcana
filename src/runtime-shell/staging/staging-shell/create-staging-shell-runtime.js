@@ -20,9 +20,9 @@ import {
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260507am";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507l";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260517a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507r";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260517a";
 import { createShellReceiverConfigs } from "./receiver-configs.js?v=20260517y";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
@@ -2146,6 +2146,12 @@ async function initShellReceiverHostRuntime(shellContext) {
   if (runtime.stage) {
     runtime.stage.worldSystem = runtimeContext && runtimeContext.worldSystem ? runtimeContext.worldSystem : null;
   }
+  if (runtimeContext) {
+    runtime.gameState = runtimeContext.gameState || runtime.gameState || null;
+    runtime.orbSystem = runtimeContext.orbSystem || runtime.orbSystem || null;
+    runtime.resourcesSystem = runtimeContext.resourcesSystem || runtime.resourcesSystem || null;
+    runtime.spellDispatchSystem = runtimeContext.spellDispatchSystem || runtime.spellDispatchSystem || null;
+  }
 
   return runtime.receiverImpulseRuntime;
 }
@@ -2913,7 +2919,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260517y",
+  moduleCacheBustV = "20260517z",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
