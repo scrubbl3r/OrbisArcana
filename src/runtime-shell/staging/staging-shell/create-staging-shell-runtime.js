@@ -10,7 +10,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260516d";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260516e";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260516d";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260516e";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
@@ -2307,6 +2307,20 @@ function syncActiveStageGlobe3dRuntime(shellContext) {
   });
 }
 
+function syncActiveStageFloatHoldVisual(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  const orbState = runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+    ? runtime.orbRuntimeState.get()
+    : null;
+  const setFloatHoldVisual = getActiveShellStageMethod(shellContext, "setOrbFloatHoldVisual");
+  if (!orbState || !setFloatHoldVisual) return;
+  setFloatHoldVisual.method.call(setFloatHoldVisual.activeAdapter, {
+    active: !!orbState.floatHoldActive,
+    atMs: Number(orbState.floatHoldStartedAtMs) || performance.now(),
+    phase: Number(orbState.floatHoldPhase) || 0,
+  });
+}
+
 function syncActiveShellStage(shellContext) {
   if (!shellContext) return null;
   const modeState = getShellModeState(shellContext);
@@ -2335,6 +2349,7 @@ function syncActiveShellStage(shellContext) {
     if (runtime && runtime.stage) {
       resetShellOrbToGround(shellContext);
       activateShellStageVisuals(shellContext);
+      syncActiveStageFloatHoldVisual(shellContext);
     }
   });
   return shellContext.activeStageAdapter;

@@ -227,6 +227,9 @@ export function createOrb3dActorRuntime({
     isSpinColorActive() {
       return !!(orbRuntime && typeof orbRuntime.isSpinColorActive === "function" && orbRuntime.isSpinColorActive());
     },
+    isFloatHoldVisualActive() {
+      return !!floatHoldVisual.active;
+    },
     hasModel() {
       return !!getModel();
     },

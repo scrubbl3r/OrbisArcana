@@ -1,4 +1,4 @@
-import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260516d";
+import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260516e";
 import { COMBAT_EFFECT_IMMUNITY, COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN } from "../../../game-runtime/combat/combat-constants.js";
 import { EVT_COMBAT_IMMUNITY_CHANGED, EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
 import {
@@ -434,6 +434,7 @@ export function createGameStageDepth3dLayer({
       || orbLifecycle3dRuntime.hasActiveVisuals()
       || orb3dActorRuntime.isNodActive()
       || orb3dActorRuntime.isSpinColorActive()
+      || orb3dActorRuntime.isFloatHoldVisualActive()
       || teleport3dRuntime.isActive()
       || bubbleShield3dRuntime.isActive()
       || flameAoe3dRuntime.isActive()
