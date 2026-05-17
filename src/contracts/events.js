@@ -140,6 +140,10 @@ export const EVT_RESOURCES_GLOBE_SPENT = "energy.globe_spent";
  * @typedef {Object} OrbLifecyclePayload
  * @property {number} atMs
  * @property {number} [health]
+ * @property {number} [maxHealth]
+ * @property {number} [hitsTaken] HP damage taken, not legacy visual crack bands.
+ * @property {number} [maxHits] Total HP used by lifecycle renderers.
+ * @property {number} [damageRatio]
  */
 export const EVT_ORB_VISUAL_STATE_CHANGED = "orb.visual_state_changed";
 export const EVT_ORB_IMPACT_DETECTED = "orb.impact_detected";

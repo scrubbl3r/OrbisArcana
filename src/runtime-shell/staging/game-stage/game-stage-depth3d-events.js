@@ -1,7 +1,6 @@
 import {
-  EVT_ORB_DAMAGE_APPLIED,
   EVT_ORB_DIED,
-  EVT_ORB_HEALED,
+  EVT_ORB_HEALTH_CHANGED,
   EVT_ORB_REVIVED,
   EVT_PICKUP_COLLECTED,
   EVT_RESOURCES_GLOBE_INVENTORY_CHANGED,
@@ -46,12 +45,8 @@ export function createGameStageDepth3dEventBindings({
     unsubs.push(eventBus.on(EVT_RESOURCES_GLOBE_INVENTORY_CHANGED, (payload = {}) => {
       orbGlobe3dRuntime.reconcileInventory(payload.globes || []);
     }));
-    unsubs.push(eventBus.on(EVT_ORB_DAMAGE_APPLIED, (payload = {}) => {
-      orbLifecycle3dRuntime.applyDamage(payload);
-      scheduleFrame();
-    }));
-    unsubs.push(eventBus.on(EVT_ORB_HEALED, (payload = {}) => {
-      orbLifecycle3dRuntime.heal(payload);
+    unsubs.push(eventBus.on(EVT_ORB_HEALTH_CHANGED, (payload = {}) => {
+      orbLifecycle3dRuntime.syncDamageState(payload);
       scheduleFrame();
     }));
     unsubs.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {

@@ -18,10 +18,11 @@ export function createOrbState(config = {}) {
     collisionCooldownMs: Number.isFinite(config.collisionCooldownMs) ? Math.max(0, Math.floor(config.collisionCooldownMs)) : 250,
 
     // Derived gameplay/status fields.
-    hitsTaken: Number.isFinite(config.hitsTaken) ? Math.max(0, Math.floor(config.hitsTaken)) : 0,
+    hitsTaken: Number.isFinite(config.hitsTaken) ? Math.max(0, Math.floor(config.hitsTaken)) : maxHealth - health,
+    hitsRemaining: health,
     lifeId: Number.isFinite(config.lifeId) ? Math.max(1, Math.floor(config.lifeId)) : 1,
     fractureSeed: resolveOrbLifeSeed(config.fractureSeed, createOrbLifeSeed()),
-    visualState: config.visualState || (health <= 0 ? 'shattered' : health <= maxHealth / 3 ? 'crack_2' : health <= maxHealth * 2 / 3 ? 'crack_1' : 'pristine'),
+    visualState: config.visualState || (alive ? 'pristine' : 'shattered'),
 
     invulnUntilMs: config.invulnUntilMs ?? 0,
     deathAtMs: config.deathAtMs ?? null,

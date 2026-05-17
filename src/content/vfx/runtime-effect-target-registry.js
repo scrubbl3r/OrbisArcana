@@ -9,20 +9,6 @@ const ORB_STATE_TARGETS = Object.freeze([
     vfxCategory: "orb",
   }),
   Object.freeze({
-    id: "orb-state.crack_1",
-    targetKind: "orb-state",
-    targetId: "crack_1",
-    label: "orb-state.crack_1",
-    vfxCategory: "orb",
-  }),
-  Object.freeze({
-    id: "orb-state.crack_2",
-    targetKind: "orb-state",
-    targetId: "crack_2",
-    label: "orb-state.crack_2",
-    vfxCategory: "orb",
-  }),
-  Object.freeze({
     id: "orb-state.shattered",
     targetKind: "orb-state",
     targetId: "shattered",

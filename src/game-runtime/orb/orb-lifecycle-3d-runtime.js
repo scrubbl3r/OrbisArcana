@@ -15,7 +15,19 @@ function readSeed(payload = {}, fallback = ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed
 }
 
 function readMaxHits(payload = {}, fallback = ORB_LIFECYCLE_3D_DEFAULTS.maxHits) {
-  return Math.max(1, Math.min(1000, Number(payload.maxHits) || Number(fallback) || ORB_LIFECYCLE_3D_DEFAULTS.maxHits || 3));
+  return Math.max(1, Math.min(1000, Number(payload.maxHits) || Number(payload.maxHealth) || Number(payload.max) || Number(fallback) || ORB_LIFECYCLE_3D_DEFAULTS.maxHits || 3));
+}
+
+function readHitsTaken(payload = {}, fallback = 0, maxHits = readMaxHits(payload)) {
+  if (payload.hitsTaken != null) {
+    return Math.max(0, Math.min(maxHits, Number(payload.hitsTaken) || 0));
+  }
+  const maxHealth = Number(payload.maxHealth ?? payload.max);
+  const health = Number(payload.health ?? payload.to ?? payload.healthAfter);
+  if (Number.isFinite(maxHealth) && maxHealth > 0 && Number.isFinite(health)) {
+    return Math.max(0, Math.min(maxHits, Math.floor(maxHealth - Math.max(0, Math.min(maxHealth, health)))));
+  }
+  return Math.max(0, Math.min(maxHits, Number(fallback) || 0));
 }
 
 export function createOrbLifecycle3dRuntime({
@@ -98,8 +110,8 @@ export function createOrbLifecycle3dRuntime({
   }
 
   function syncDamageState(payload = {}) {
-    state.hitsTaken = Math.max(0, Number(payload.hitsTaken) || 0);
     state.maxHits = readMaxHits(payload, state.maxHits);
+    state.hitsTaken = readHitsTaken(payload, state.hitsTaken, state.maxHits);
     state.fractureSeed = readSeed(payload, state.fractureSeed);
     setOrbVisible(true);
     clearBurst();

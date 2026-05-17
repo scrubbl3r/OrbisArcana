@@ -1,5 +1,4 @@
 import {
-  EVT_ORB_VISUAL_STATE_CHANGED,
   EVT_ORB_IMPACT_DETECTED,
   EVT_ORB_DAMAGE_BLOCKED,
   EVT_ORB_DAMAGE_APPLIED,
@@ -19,9 +18,27 @@ import {
   DAMAGE_TYPE_IMPACT,
 } from "../combat/combat-constants.js";
 import { normalizeDamageEffect, normalizeHealEffect } from "../combat/damage-model.js";
-import { createHealthPool, deriveHitBandState } from "../combat/health-pool.js";
+import { createHealthPool } from "../combat/health-pool.js";
 import { createOrbLifeSeed, resolveOrbLifeSeed } from "../../state/orb-life-instance.js";
-import { createOrbLifecycle } from "./orb-lifecycle.js";
+
+function deriveHpLifecycleState({
+  health = 0,
+  maxHealth = 1,
+  alive = true,
+  lifeId = 1,
+} = {}) {
+  const resolvedMaxHealth = Math.max(1, Math.floor(Number(maxHealth) || 1));
+  const resolvedHealth = Math.max(0, Math.min(resolvedMaxHealth, Math.floor(Number(health) || 0)));
+  const hitsTaken = resolvedMaxHealth - resolvedHealth;
+  return Object.freeze({
+    maxHits: resolvedMaxHealth,
+    hitsTaken,
+    hitsRemaining: resolvedHealth,
+    damageRatio: resolvedMaxHealth > 0 ? hitsTaken / resolvedMaxHealth : 1,
+    dead: !alive || resolvedHealth <= 0,
+    lifeId: Math.max(1, Math.floor(Number(lifeId) || 1)),
+  });
+}
 
 export function createOrbSystem({ gameState, eventBus }) {
   if (!gameState || !gameState.orb) throw new Error('createOrbSystem requires gameState.orb');
@@ -29,40 +46,29 @@ export function createOrbSystem({ gameState, eventBus }) {
   const orb = gameState.orb;
   orb.maxHealth = Math.max(1, Math.floor(Number(orb.maxHealth) || 1000));
   orb.health = Math.max(0, Math.min(orb.maxHealth, Number(orb.health) || orb.maxHealth));
-  orb.maxHits = Math.max(1, Math.round(Number(orb.maxHits) || 3));
+  orb.maxHits = orb.maxHealth;
   if (!Number.isFinite(Number(orb.collisionDamage))) {
-    orb.collisionDamage = Math.ceil(orb.maxHealth / orb.maxHits);
+    orb.collisionDamage = Math.ceil(orb.maxHealth / 3);
   }
   const healthPool = createHealthPool({
     maxHp: orb.maxHealth,
     hp: orb.health,
     alive: orb.alive,
   });
-  const lifecycle = createOrbLifecycle({
-    maxHits: orb.maxHits,
-    hitsTaken: deriveHitBandState({ hp: orb.health, maxHp: orb.maxHealth, maxHits: orb.maxHits }).hitsTaken,
-    dead: !orb.alive || Number(orb.health) <= 0,
-    lifeId: Number(orb.lifeId) || 1,
-  });
+  orb.lifeId = Math.max(1, Math.floor(Number(orb.lifeId) || 1));
   orb.fractureSeed = resolveOrbLifeSeed(orb.fractureSeed, createOrbLifeSeed());
 
   function syncLifecycleToOrb() {
-    const snapshot = lifecycle.getState();
-    orb.maxHits = snapshot.maxHits;
-    orb.lifeId = snapshot.lifeId;
-    const hitState = deriveHitBandState({
-      hp: orb.health,
-      maxHp: orb.maxHealth,
-      maxHits: orb.maxHits,
+    const snapshot = deriveHpLifecycleState({
+      health: orb.health,
+      maxHealth: orb.maxHealth,
+      alive: orb.alive,
+      lifeId: orb.lifeId,
     });
-    orb.hitsTaken = hitState.hitsTaken;
-    orb.hitsRemaining = hitState.hitsRemaining;
-    return {
-      ...snapshot,
-      hitsTaken: orb.hitsTaken,
-      hitsRemaining: orb.hitsRemaining,
-      damageRatio: hitState.damageRatio,
-    };
+    orb.maxHits = snapshot.maxHits;
+    orb.hitsTaken = snapshot.hitsTaken;
+    orb.hitsRemaining = snapshot.hitsRemaining;
+    return snapshot;
   }
 
   function syncHealthToOrb() {
@@ -84,26 +90,6 @@ export function createOrbSystem({ gameState, eventBus }) {
 
   function clampHealth(h, maxHealth) {
     return Math.max(0, Math.min(maxHealth, Math.floor(Number(h) || 0)));
-  }
-
-  function visualFromHealth(health) {
-    if (health <= 0) return 'shattered';
-    if (health <= orb.maxHealth / 3) return 'crack_2';
-    if (health <= orb.maxHealth * 2 / 3) return 'crack_1';
-    return 'pristine';
-  }
-
-  function updateVisualState(atMs) {
-    const prev = orb.visualState;
-    const next = visualFromHealth(orb.health);
-    if (prev === next) return;
-    orb.visualState = next;
-    eventBus.emit(EVT_ORB_VISUAL_STATE_CHANGED, {
-      from: prev,
-      to: next,
-      health: orb.health,
-      atMs,
-    });
   }
 
   function resolveDamageAmount(command) {
@@ -193,8 +179,13 @@ export function createOrbSystem({ gameState, eventBus }) {
       amount: appliedAmount,
       healthBefore,
       healthAfter: orb.health,
+      health: orb.health,
+      maxHealth: orb.maxHealth,
+      max: orb.maxHealth,
       hitsTaken: orb.hitsTaken,
       maxHits: lifecycleState.maxHits,
+      hitsRemaining: lifecycleState.hitsRemaining,
+      damageRatio: lifecycleState.damageRatio,
       lifeId: lifecycleState.lifeId,
       fractureSeed: orb.fractureSeed,
       source,
@@ -207,21 +198,27 @@ export function createOrbSystem({ gameState, eventBus }) {
       amount: appliedAmount,
       healthBefore,
       healthAfter: orb.health,
+      maxHealth: orb.maxHealth,
       targetAlive: orb.alive,
     });
 
     eventBus.emit(EVT_ORB_HEALTH_CHANGED, {
       from: healthBefore,
       to: orb.health,
+      health: orb.health,
       max: orb.maxHealth,
+      maxHealth: orb.maxHealth,
+      hitsTaken: lifecycleState.hitsTaken,
+      maxHits: lifecycleState.maxHits,
+      hitsRemaining: lifecycleState.hitsRemaining,
+      damageRatio: lifecycleState.damageRatio,
+      lifeId: lifecycleState.lifeId,
+      fractureSeed: orb.fractureSeed,
       atMs,
     });
 
-    updateVisualState(atMs);
-
     if (combatResult.died || orb.health === 0) {
       orb.deathAtMs = atMs;
-      lifecycle.markDead();
       const deathState = syncLifecycleToOrb();
       eventBus.emit(EVT_ORB_DIED, {
         atMs,
@@ -287,11 +284,16 @@ export function createOrbSystem({ gameState, eventBus }) {
       amountApplied: appliedAmount,
       healthBefore: before,
       healthAfter: orb.health,
+      health: orb.health,
+      maxHealth: orb.maxHealth,
+      max: orb.maxHealth,
       hitsTaken: lifecycleState.hitsTaken,
       maxHits: lifecycleState.maxHits,
+      hitsRemaining: lifecycleState.hitsRemaining,
+      damageRatio: lifecycleState.damageRatio,
       lifeId: lifecycleState.lifeId,
       fractureSeed: orb.fractureSeed,
-      hitsRemoved: 0,
+      hitsRemoved: appliedAmount,
       source,
       atMs,
     });
@@ -299,11 +301,18 @@ export function createOrbSystem({ gameState, eventBus }) {
     eventBus.emit(EVT_ORB_HEALTH_CHANGED, {
       from: before,
       to: orb.health,
+      health: orb.health,
       max: orb.maxHealth,
+      maxHealth: orb.maxHealth,
+      hitsTaken: lifecycleState.hitsTaken,
+      maxHits: lifecycleState.maxHits,
+      hitsRemaining: lifecycleState.hitsRemaining,
+      damageRatio: lifecycleState.damageRatio,
+      lifeId: lifecycleState.lifeId,
+      fractureSeed: orb.fractureSeed,
       atMs,
     });
 
-    updateVisualState(atMs);
     return { applied: true, health: orb.health };
   }
 
@@ -318,25 +327,38 @@ export function createOrbSystem({ gameState, eventBus }) {
     orb.deathAtMs = null;
     orb.lastDamageAtMs = -Infinity;
     orb.invulnUntilMs = 0;
-    const lifecycleState = lifecycle.resetLife();
+    orb.lifeId = Math.max(1, Math.floor(Number(orb.lifeId) || 1)) + 1;
     orb.fractureSeed = createOrbLifeSeed();
     syncHealthToOrb();
+    const lifecycleState = syncLifecycleToOrb();
 
     eventBus.emit(EVT_ORB_REVIVED, {
       health: orb.health,
+      maxHealth: orb.maxHealth,
+      max: orb.maxHealth,
       atMs,
       lifeId: lifecycleState.lifeId,
       maxHits: lifecycleState.maxHits,
+      hitsTaken: lifecycleState.hitsTaken,
+      hitsRemaining: lifecycleState.hitsRemaining,
+      damageRatio: lifecycleState.damageRatio,
       fractureSeed: orb.fractureSeed,
     });
     eventBus.emit(EVT_ORB_HEALTH_CHANGED, {
       from: before,
       to: orb.health,
+      health: orb.health,
       max: orb.maxHealth,
+      maxHealth: orb.maxHealth,
+      hitsTaken: lifecycleState.hitsTaken,
+      maxHits: lifecycleState.maxHits,
+      hitsRemaining: lifecycleState.hitsRemaining,
+      damageRatio: lifecycleState.damageRatio,
+      lifeId: lifecycleState.lifeId,
+      fractureSeed: orb.fractureSeed,
       atMs,
     });
 
-    updateVisualState(atMs);
     return { revived: orb.alive, health: orb.health };
   }
 
