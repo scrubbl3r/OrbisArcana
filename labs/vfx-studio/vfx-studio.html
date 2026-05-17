@@ -2035,7 +2035,38 @@
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="orbLifecycle3dOrbControls">Orb</button>
             <button id="orbLifecycle3dOrbVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Orb visibility" title="Toggle Orb visibility"></button>
           </div>
-          <div id="orbLifecycle3dOrbControls" class="controlGroupBody paramFieldRows" hidden></div>
+          <div id="orbLifecycle3dOrbControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dLuminanceBoostMinPct">Luminance min %</label>
+              <input id="orbLifecycle3dLuminanceBoostMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="80" />
+              <label for="orbLifecycle3dLuminanceBoostMaxPct">max %</label>
+              <input id="orbLifecycle3dLuminanceBoostMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="120" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dCenterAlphaMinPct">Center alpha min %</label>
+              <input id="orbLifecycle3dCenterAlphaMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="87" />
+              <label for="orbLifecycle3dCenterAlphaMaxPct">max %</label>
+              <input id="orbLifecycle3dCenterAlphaMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="120" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dSpotIntensityMinPct">Spot intensity min %</label>
+              <input id="orbLifecycle3dSpotIntensityMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="100" />
+              <label for="orbLifecycle3dSpotIntensityMaxPct">max %</label>
+              <input id="orbLifecycle3dSpotIntensityMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="121" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dSpotDistanceMinPct">Spot distance min %</label>
+              <input id="orbLifecycle3dSpotDistanceMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="93" />
+              <label for="orbLifecycle3dSpotDistanceMaxPct">max %</label>
+              <input id="orbLifecycle3dSpotDistanceMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="109" />
+            </div>
+            <div class="paramFieldRow">
+              <label for="orbLifecycle3dGoldMixMinPct">Gold mix min %</label>
+              <input id="orbLifecycle3dGoldMixMinPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="100" />
+              <label for="orbLifecycle3dGoldMixMaxPct">max %</label>
+              <input id="orbLifecycle3dGoldMixMaxPct" class="paramFieldInput" type="number" min="0" max="300" step="1" value="100" />
+            </div>
+          </div>
         </div>
         <div class="controlGroup" data-control-group>
           <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="orbLifecycle3dDamageControls">Orb Damage</button>
@@ -2519,14 +2550,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260516n"),
+      import("./vfx-studio-bootstrap.js?v=20260517a"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
       import("./vfx-studio-surfaces.js?v=20260515c"),
-      import("./vfx-studio-theme-publish.js?v=20260516e"),
+      import("./vfx-studio-theme-publish.js?v=20260517a"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2541,7 +2572,7 @@
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
     import { createOrbGlobe3dAuthoringAdapter } from "./adapters/orb-globe-3d-authoring-adapter.js?v=20260502b";
     import { createOrbGlobeAuthoringAdapter } from "./adapters/orb-globe-authoring-adapter.js?v=20260425d";
-    import { createOrbLifecycle3dAuthoringAdapter } from "./adapters/orb-lifecycle-3d-authoring-adapter.js?v=20260516d";
+    import { createOrbLifecycle3dAuthoringAdapter } from "./adapters/orb-lifecycle-3d-authoring-adapter.js?v=20260517a";
     import { createOrbLifecycleAuthoringAdapter } from "./adapters/orb-lifecycle-authoring-adapter.js?v=20260425d";
     import { createOrbNodAuthoringAdapter } from "./adapters/orb-nod-authoring-adapter.js?v=20260425d";
     import { createOrbNod3dAuthoringAdapter } from "./adapters/orb-nod3d-authoring-adapter.js?v=20260427a";
@@ -2569,7 +2600,7 @@
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
     import { ORB_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-default.js?v=20260425d";
-    import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516f";
+    import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517c";
     import { ORB_LIFECYCLE_DEFAULTS } from "../../src/game-runtime/orb/orb-lifecycle-default.js?v=20260425d";
     import { WORLD_GLOBE_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-default.js?v=20260425d";
     import { WORLD_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/world/world-globe-3d-default.js?v=20260502c";
@@ -3005,6 +3036,16 @@
       orbLifecycle3dHealBtn: $("orbLifecycle3dHealBtn"),
       orbLifecycle3dRegenerateBtn: $("orbLifecycle3dRegenerateBtn"),
       orbLifecycle3dStatus: $("orbLifecycle3dStatus"),
+      orbLifecycle3dLuminanceBoostMinPct: $("orbLifecycle3dLuminanceBoostMinPct"),
+      orbLifecycle3dLuminanceBoostMaxPct: $("orbLifecycle3dLuminanceBoostMaxPct"),
+      orbLifecycle3dCenterAlphaMinPct: $("orbLifecycle3dCenterAlphaMinPct"),
+      orbLifecycle3dCenterAlphaMaxPct: $("orbLifecycle3dCenterAlphaMaxPct"),
+      orbLifecycle3dSpotIntensityMinPct: $("orbLifecycle3dSpotIntensityMinPct"),
+      orbLifecycle3dSpotIntensityMaxPct: $("orbLifecycle3dSpotIntensityMaxPct"),
+      orbLifecycle3dSpotDistanceMinPct: $("orbLifecycle3dSpotDistanceMinPct"),
+      orbLifecycle3dSpotDistanceMaxPct: $("orbLifecycle3dSpotDistanceMaxPct"),
+      orbLifecycle3dGoldMixMinPct: $("orbLifecycle3dGoldMixMinPct"),
+      orbLifecycle3dGoldMixMaxPct: $("orbLifecycle3dGoldMixMaxPct"),
       previewOrbTeleport: $("previewOrbTeleport"),
       orbTeleportFlickerOnMs: $("orbTeleportFlickerOnMs"),
       orbTeleportApplyFlickerOnBtn: $("orbTeleportApplyFlickerOnBtn"),

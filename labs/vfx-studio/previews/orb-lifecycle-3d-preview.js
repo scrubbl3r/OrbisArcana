@@ -8,14 +8,14 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260516a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260516f";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517c";
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260516n";
+} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260517c";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 const ORB_STAGE_FILL_RATIO = 0.52;
@@ -43,6 +43,16 @@ function readLifecycle3dConfig(els = {}) {
   return Object.freeze({
     maxHits: Math.max(1, Math.min(1000, roundedNumber(els.orbLifecycle3dHitTotal && els.orbLifecycle3dHitTotal.value, ORB_LIFECYCLE_3D_DEFAULTS.maxHits))),
     erosionSeed: Math.max(1, roundedNumber(els.orbLifecycle3dSeed && els.orbLifecycle3dSeed.value, ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed)),
+    shellLuminanceBoostMinPct: roundedNumber(els.orbLifecycle3dLuminanceBoostMinPct && els.orbLifecycle3dLuminanceBoostMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.shellLuminanceBoostMinPct),
+    shellLuminanceBoostMaxPct: roundedNumber(els.orbLifecycle3dLuminanceBoostMaxPct && els.orbLifecycle3dLuminanceBoostMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.shellLuminanceBoostMaxPct),
+    shellCenterAlphaMinPct: roundedNumber(els.orbLifecycle3dCenterAlphaMinPct && els.orbLifecycle3dCenterAlphaMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.shellCenterAlphaMinPct),
+    shellCenterAlphaMaxPct: roundedNumber(els.orbLifecycle3dCenterAlphaMaxPct && els.orbLifecycle3dCenterAlphaMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.shellCenterAlphaMaxPct),
+    spotIntensityMinPct: roundedNumber(els.orbLifecycle3dSpotIntensityMinPct && els.orbLifecycle3dSpotIntensityMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.spotIntensityMinPct),
+    spotIntensityMaxPct: roundedNumber(els.orbLifecycle3dSpotIntensityMaxPct && els.orbLifecycle3dSpotIntensityMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.spotIntensityMaxPct),
+    spotDistanceMinPct: roundedNumber(els.orbLifecycle3dSpotDistanceMinPct && els.orbLifecycle3dSpotDistanceMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMinPct),
+    spotDistanceMaxPct: roundedNumber(els.orbLifecycle3dSpotDistanceMaxPct && els.orbLifecycle3dSpotDistanceMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMaxPct),
+    goldMixMinPct: roundedNumber(els.orbLifecycle3dGoldMixMinPct && els.orbLifecycle3dGoldMixMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMinPct),
+    goldMixMaxPct: roundedNumber(els.orbLifecycle3dGoldMixMaxPct && els.orbLifecycle3dGoldMixMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMaxPct),
     crackColor: ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(els.orbLifecycle3dCrackAlpha && els.orbLifecycle3dCrackAlpha.value, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx,

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createRng } from "./orb-lifecycle-vfx-runtime.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517b";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517c";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -17,6 +17,16 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
   return Object.freeze({
     maxHits: clampInt(source.maxHits, 1, 1000, ORB_LIFECYCLE_3D_DEFAULTS.maxHits),
     erosionSeed: clampInt(source.erosionSeed, 1, 999999999, ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed),
+    shellLuminanceBoostMinPct: clampNumber(source.shellLuminanceBoostMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.shellLuminanceBoostMinPct),
+    shellLuminanceBoostMaxPct: clampNumber(source.shellLuminanceBoostMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.shellLuminanceBoostMaxPct),
+    shellCenterAlphaMinPct: clampNumber(source.shellCenterAlphaMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.shellCenterAlphaMinPct),
+    shellCenterAlphaMaxPct: clampNumber(source.shellCenterAlphaMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.shellCenterAlphaMaxPct),
+    spotIntensityMinPct: clampNumber(source.spotIntensityMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.spotIntensityMinPct),
+    spotIntensityMaxPct: clampNumber(source.spotIntensityMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.spotIntensityMaxPct),
+    spotDistanceMinPct: clampNumber(source.spotDistanceMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMinPct),
+    spotDistanceMaxPct: clampNumber(source.spotDistanceMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMaxPct),
+    goldMixMinPct: clampNumber(source.goldMixMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMinPct),
+    goldMixMaxPct: clampNumber(source.goldMixMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMaxPct),
     crackColor: Number(source.crackColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
     crackAlpha: clampNumber(source.crackAlpha, 0, 1, ORB_LIFECYCLE_3D_DEFAULTS.crackAlpha),
     crackWidthPx: clampNumber(source.crackWidthPx, 0.25, 12, ORB_LIFECYCLE_3D_DEFAULTS.crackWidthPx),
