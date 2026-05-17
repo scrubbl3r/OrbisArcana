@@ -1,14 +1,10 @@
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260516f";
 import {
-  createOrbLifecycle3dCracks,
+  createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
-  updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
 } from "./orb-lifecycle-3d-vfx-runtime.js?v=20260516n";
-
-const CRACK_UPDATE_FPS = 30;
-const CRACK_UPDATE_INTERVAL_MS = 1000 / CRACK_UPDATE_FPS;
 
 function readSeed(payload = {}, fallback = ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed) {
   return Number(payload.fractureSeed || payload.seed || payload.erosionSeed || fallback) || 1;
@@ -38,6 +34,7 @@ export function createOrbLifecycle3dRuntime({
   getBo = () => 72,
   getConfig = () => ORB_LIFECYCLE_3D_DEFAULTS,
   getBurstPosition = () => ({ x: 0, y: 0, z: 0 }),
+  setLifecycleErosion = () => {},
   now = () => performance.now(),
   onNeedsFrame = () => {},
 } = {}) {
@@ -45,9 +42,8 @@ export function createOrbLifecycle3dRuntime({
     hitsTaken: 0,
     maxHits: readMaxHits(),
     fractureSeed: readSeed(currentConfig()),
-    cracks: null,
+    hasErosion: false,
     burst: null,
-    lastCrackUpdateMs: 0,
   };
 
   function currentConfig() {
@@ -71,13 +67,9 @@ export function createOrbLifecycle3dRuntime({
     if (typeof onNeedsFrame === "function") onNeedsFrame();
   }
 
-  function removeCracks() {
-    if (state.cracks && state.cracks.parent) {
-      state.cracks.parent.remove(state.cracks);
-    }
-    if (state.cracks) disposeThreeObject(state.cracks);
-    state.cracks = null;
-    state.lastCrackUpdateMs = 0;
+  function applyErosionPatch(patch = null) {
+    state.hasErosion = !!patch;
+    if (typeof setLifecycleErosion === "function") setLifecycleErosion(patch);
   }
 
   function clearBurst() {
@@ -93,19 +85,20 @@ export function createOrbLifecycle3dRuntime({
     if (model) model.visible = !!visible;
   }
 
-  function rebuildCracks() {
+  function rebuildErosion() {
     const model = currentOrbModel();
-    removeCracks();
-    if (!model || state.hitsTaken <= 0) return;
-    state.cracks = createOrbLifecycle3dCracks({
+    if (!model || state.hitsTaken <= 0) {
+      applyErosionPatch(null);
+      return;
+    }
+    const patch = createOrbLifecycle3dErosionPatch({
       bo: currentBo(),
       hitsTaken: state.hitsTaken,
       maxHits: state.maxHits,
       seed: state.fractureSeed,
       config: currentConfig(),
     });
-    model.add(state.cracks);
-    state.lastCrackUpdateMs = 0;
+    applyErosionPatch(patch);
     requestFrame();
   }
 
@@ -115,7 +108,7 @@ export function createOrbLifecycle3dRuntime({
     state.fractureSeed = readSeed(payload, state.fractureSeed);
     setOrbVisible(true);
     clearBurst();
-    rebuildCracks();
+    rebuildErosion();
     requestFrame();
   }
 
@@ -124,7 +117,7 @@ export function createOrbLifecycle3dRuntime({
     state.maxHits = readMaxHits(payload, state.maxHits);
     state.fractureSeed = readSeed(payload, state.fractureSeed);
     clearBurst();
-    removeCracks();
+    applyErosionPatch(null);
     setOrbVisible(false);
 
     state.burst = createOrbLifecycle3dDissolveBurst({
@@ -149,26 +142,16 @@ export function createOrbLifecycle3dRuntime({
     state.maxHits = readMaxHits(payload, state.maxHits);
     state.fractureSeed = readSeed(payload, state.fractureSeed);
     clearBurst();
-    removeCracks();
+    applyErosionPatch(null);
     setOrbVisible(true);
   }
 
   function update(nowMs = now()) {
-    if (
-      state.cracks &&
-      (
-        !state.lastCrackUpdateMs ||
-        Math.max(0, Number(nowMs) || 0) - state.lastCrackUpdateMs >= CRACK_UPDATE_INTERVAL_MS
-      )
-    ) {
-      state.lastCrackUpdateMs = Math.max(0, Number(nowMs) || 0);
-      updateOrbLifecycle3dCracks(state.cracks, nowMs);
-    }
     if (state.burst && !updateOrbLifecycle3dDissolveBurst(state.burst, nowMs)) {
       clearBurst();
       return false;
     }
-    return !!state.cracks || !!state.burst;
+    return !!state.burst;
   }
 
   function attachOrbModel() {
@@ -177,12 +160,12 @@ export function createOrbLifecycle3dRuntime({
       return;
     }
     setOrbVisible(true);
-    rebuildCracks();
+    rebuildErosion();
   }
 
   function dispose() {
     clearBurst();
-    removeCracks();
+    applyErosionPatch(null);
   }
 
   return Object.freeze({
@@ -194,10 +177,10 @@ export function createOrbLifecycle3dRuntime({
     update,
     attachOrbModel,
     detachOrbModel() {
-      removeCracks();
+      applyErosionPatch(null);
     },
     hasActiveVisuals() {
-      return !!state.cracks || !!state.burst;
+      return !!state.hasErosion || !!state.burst;
     },
     dispose,
   });

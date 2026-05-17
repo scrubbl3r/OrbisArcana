@@ -1,4 +1,4 @@
-import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260501c";
+import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260516a";
 import {
   createOrbNod3dRuntime,
   createOrbNod3dSurfaceDisplacementConfig,
@@ -130,6 +130,13 @@ export function createOrb3dActorRuntime({
     }
   }
 
+  function setLifecycleErosion(lifecycleErosion = null) {
+    if (orbRuntime && typeof orbRuntime.setLifecycleErosion === "function") {
+      orbRuntime.setLifecycleErosion(lifecycleErosion);
+      if (typeof onNeedsFrame === "function") onNeedsFrame();
+    }
+  }
+
   function playNod(payload = {}) {
     if (!nodRuntime || typeof nodRuntime.play !== "function") {
       return { handled: false, skipped: "orb_nod3d_runtime_missing" };
@@ -157,6 +164,7 @@ export function createOrb3dActorRuntime({
     setWorldPosition,
     playNod,
     setOpacity,
+    setLifecycleErosion,
     applySpinColor,
     clearSpinColor,
     update,

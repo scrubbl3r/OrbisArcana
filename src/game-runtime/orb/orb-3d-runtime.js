@@ -31,10 +31,13 @@ export function createOrb3dRuntime({
   includeCore = false,
   includeRibs = false,
   surfaceDisplacement = null,
+  lifecycleErosion = null,
 } = {}) {
-  const shellMaterial = createOpalescentOrbShellMaterial(config, {
+  let currentLifecycleErosion = lifecycleErosion;
+  let shellMaterial = createOpalescentOrbShellMaterial(config, {
     bo,
     surfaceDisplacement,
+    lifecycleErosion: currentLifecycleErosion,
   });
   const { model, metrics } = createOrb3dModel({
     bo,
@@ -67,6 +70,7 @@ export function createOrb3dRuntime({
   const scratchSpinCyan = new THREE.Color();
   const scratchSpinViolet = new THREE.Color();
   const scratchSpinGold = new THREE.Color();
+  let currentOpacity = 1;
   let disposed = false;
 
   function applyShellSpinTint() {
@@ -123,6 +127,7 @@ export function createOrb3dRuntime({
   function setOpacity(alpha = 1) {
     if (disposed) return;
     const value = clamp01(alpha);
+    currentOpacity = value;
     model.visible = value > 0.001;
     if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uOpacity) {
       shellMaterial.uniforms.uOpacity.value = value;
@@ -147,6 +152,31 @@ export function createOrb3dRuntime({
       || spinColorState.targetMix > 0.002;
   }
 
+  function setLifecycleErosion(nextLifecycleErosion = null) {
+    if (disposed) return;
+    currentLifecycleErosion = nextLifecycleErosion;
+    const previousMaterial = shellMaterial;
+    shellMaterial = createOpalescentOrbShellMaterial(config, {
+      bo,
+      surfaceDisplacement,
+      lifecycleErosion: currentLifecycleErosion,
+    });
+    if (shellMaterial.uniforms && shellMaterial.uniforms.uTime && previousMaterial.uniforms && previousMaterial.uniforms.uTime) {
+      shellMaterial.uniforms.uTime.value = previousMaterial.uniforms.uTime.value;
+    }
+    if (shellMaterial.uniforms && shellMaterial.uniforms.uOpacity) {
+      shellMaterial.uniforms.uOpacity.value = currentOpacity;
+    }
+    applyShellSpinTint();
+    const shell = model.getObjectByName("orb3d:shell");
+    if (shell && shell.material !== shellMaterial) {
+      shell.material = shellMaterial;
+    }
+    if (previousMaterial && previousMaterial !== shellMaterial && typeof previousMaterial.dispose === "function") {
+      previousMaterial.dispose();
+    }
+  }
+
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -159,7 +189,9 @@ export function createOrb3dRuntime({
   return Object.freeze({
     model,
     metrics,
-    shellMaterial,
+    get shellMaterial() {
+      return shellMaterial;
+    },
     pointLight,
     shadowSpot,
     setTime,
@@ -168,6 +200,7 @@ export function createOrb3dRuntime({
     setOpacity,
     applySpinColor,
     clearSpinColor,
+    setLifecycleErosion,
     isSpinColorActive,
     dispose,
   });
