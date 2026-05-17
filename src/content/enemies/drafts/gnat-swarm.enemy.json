@@ -2,7 +2,7 @@
   "schema": "orbis.enemy-workshop.draft.v1",
   "enemyId": "gnat-swarm",
   "label": "Gnat Swarm",
-  "savedAtMs": 1778980829968,
+  "savedAtMs": 1778997894540,
   "enemy": {
     "gnat": {
       "idle": {
@@ -100,8 +100,8 @@
     "swarm": {
       "baseSpeedBoPerSec": 5,
       "damageDeliver": {
-        "lifeLeachPerSec": 5,
-        "liftLeach": 10
+        "lifeLeachPerSec": 10,
+        "liftLeach": 3
       },
       "damageReceive": {
         "stunDurationSec": [
