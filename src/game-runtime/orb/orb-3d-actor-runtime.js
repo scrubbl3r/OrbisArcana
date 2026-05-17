@@ -1,4 +1,4 @@
-import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260517a";
+import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260517b";
 import {
   createOrbNod3dRuntime,
   createOrbNod3dSurfaceDisplacementConfig,
@@ -206,6 +206,20 @@ export function createOrb3dActorRuntime({
     }
   }
 
+  function getShaderTrace() {
+    return {
+      hasModel: !!getModel(),
+      bo: getBo(),
+      zBO,
+      depthPx: depth,
+      position,
+      cachedShaderState: currentShaderState ? { ...currentShaderState } : null,
+      runtime: orbRuntime && typeof orbRuntime.getShaderTrace === "function"
+        ? orbRuntime.getShaderTrace()
+        : null,
+    };
+  }
+
   function setFloatHoldVisual({ active = false, atMs = null, phase = null } = {}) {
     const nextActive = !!active;
     if (floatHoldVisual.active === nextActive) return { handled: true, active: nextActive };
@@ -229,6 +243,7 @@ export function createOrb3dActorRuntime({
     applySpinColor,
     clearSpinColor,
     setShaderState,
+    getShaderTrace,
     setFloatHoldVisual,
     update,
     getBo,

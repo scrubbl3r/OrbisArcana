@@ -1,4 +1,4 @@
-import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260517b";
+import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260517c";
 import { COMBAT_EFFECT_IMMUNITY, COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN } from "../../../game-runtime/combat/combat-constants.js";
 import { EVT_COMBAT_IMMUNITY_CHANGED, EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
 import {
@@ -278,12 +278,26 @@ export function createGameStageDepth3dLayer({
     setLifecycleErosion: (patch = null) => orb3dActorRuntime.setLifecycleErosion(patch),
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
+  function traceOrbShaderApplied(requested = {}, source = "stage") {
+    if (!perfTrace || typeof perfTrace.mark !== "function") return;
+    const applied = typeof orb3dActorRuntime.getShaderTrace === "function"
+      ? orb3dActorRuntime.getShaderTrace()
+      : null;
+    perfTrace.mark("orb.shader.applied", {
+      source,
+      requested: requested && typeof requested === "object" ? { ...requested } : null,
+      applied,
+    });
+  }
   const eventBindings = createGameStageDepth3dEventBindings({
     root,
     worldGlobe3dRuntime,
     orbGlobe3dRuntime,
     orbLifecycle3dRuntime,
-    setOrbShaderState: (shaderState = {}) => orb3dActorRuntime.setShaderState(shaderState),
+    setOrbShaderState: (shaderState = {}) => {
+      orb3dActorRuntime.setShaderState(shaderState);
+      traceOrbShaderApplied(shaderState, "event");
+    },
     loadWorldSpawns: loadGlobe3dWorldSpawns,
     onOrbDied: (payload = {}) => {
       currentOrbAlive = false;
@@ -825,6 +839,7 @@ export function createGameStageDepth3dLayer({
     setOrbShaderState(shaderState = {}) {
       if (disposed) return { handled: false, skipped: "depth3d_disposed" };
       orb3dActorRuntime.setShaderState(shaderState);
+      traceOrbShaderApplied(shaderState, "api");
       renderLoop.scheduleAnimation();
       renderLoop.renderFrame(renderLoop.getLastFrame() || {});
       return { handled: true };

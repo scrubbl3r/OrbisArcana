@@ -30,6 +30,13 @@ function clampNumber(value, fallback, min = -Infinity, max = Infinity) {
   return Math.max(min, Math.min(max, resolved));
 }
 
+function readUniformValue(uniforms = null, key = "") {
+  const uniform = uniforms && key ? uniforms[key] : null;
+  if (!uniform) return null;
+  const value = uniform.value;
+  return Number.isFinite(Number(value)) ? Number(value) : null;
+}
+
 export function createOrb3dRuntime({
   bo = 72,
   config = ORB_3D_VISUAL_DEFAULTS,
@@ -245,6 +252,42 @@ export function createOrb3dRuntime({
     applyLightState();
   }
 
+  function getShaderTrace() {
+    const uniforms = shellMaterial && shellMaterial.uniforms ? shellMaterial.uniforms : null;
+    const resolvedBo = Math.max(1, Number(bo) || 72);
+    return {
+      disposed,
+      bo: resolvedBo,
+      currentOpacity,
+      modelVisible: !!(model && model.visible),
+      hasLifecycleErosion: !!currentLifecycleErosion,
+      materialUuid: shellMaterial && shellMaterial.uuid ? shellMaterial.uuid : "",
+      shaderState: { ...shaderState },
+      uniforms: {
+        shellLuminanceBoost: readUniformValue(uniforms, "uShellLuminanceBoost"),
+        shellCenterAlpha: readUniformValue(uniforms, "uShellCenterAlpha"),
+        goldMix: readUniformValue(uniforms, "uGoldMix"),
+        opacity: readUniformValue(uniforms, "uOpacity"),
+      },
+      pointLight: pointLight
+        ? {
+            intensity: Number(pointLight.intensity) || 0,
+            distance: Number(pointLight.distance) || 0,
+            distanceBO: (Number(pointLight.distance) || 0) / resolvedBo,
+            visible: pointLight.visible !== false,
+          }
+        : null,
+      shadowSpot: shadowSpot
+        ? {
+            intensity: Number(shadowSpot.intensity) || 0,
+            distance: Number(shadowSpot.distance) || 0,
+            distanceBO: (Number(shadowSpot.distance) || 0) / resolvedBo,
+            visible: shadowSpot.visible !== false,
+          }
+        : null,
+    };
+  }
+
   function isSpinColorActive() {
     return Math.abs(spinColorState.currentMix - spinColorState.targetMix) > 0.002
       || spinColorState.targetMix > 0.002;
@@ -300,6 +343,7 @@ export function createOrb3dRuntime({
     applySpinColor,
     clearSpinColor,
     setShaderState,
+    getShaderTrace,
     setLifecycleErosion,
     isSpinColorActive,
     dispose,
