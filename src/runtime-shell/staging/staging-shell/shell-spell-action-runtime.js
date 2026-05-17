@@ -51,6 +51,8 @@ export function createShellSpellActionRuntime({
           floatGracePersistent: false,
           floatGraceSource: "",
           floatGraceSuppressInput: false,
+          floatGraceBreakOnLift: true,
+          floatGraceBreakOnMotion: true,
         });
         if (typeof shellActions.setOrbFloatHoldVisual === "function") {
           shellActions.setOrbFloatHoldVisual({ active: false, atMs: Number(payload && payload.atMs) || performance.now() });
@@ -80,6 +82,8 @@ export function createShellSpellActionRuntime({
         floatGracePersistent: true,
         floatGraceSource: "float",
         floatGraceSuppressInput: true,
+        floatGraceBreakOnLift: false,
+        floatGraceBreakOnMotion: false,
         floatGraceAnchorY: anchorY,
         floatGracePhase: phase,
         teleportHoldActive: false,

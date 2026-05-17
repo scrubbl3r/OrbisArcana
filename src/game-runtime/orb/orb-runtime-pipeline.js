@@ -244,6 +244,8 @@ export function runOrbRuntimePipeline({
         state.floatGracePersistent || Number(state.floatGraceUntilMs || 0) > Number(nowMs || 0)
       ));
   const graceSuppressInput = graceActive && !!state.floatGraceSuppressInput;
+  const graceBreakOnLift = state.floatGraceBreakOnLift !== false;
+  const graceBreakOnMotion = state.floatGraceBreakOnMotion !== false;
 
   if (graceSuppressInput) {
     const yFloor = (typeof groundCenterWorld === "function") ? Number(groundCenterWorld()) || 0 : 0;
@@ -315,7 +317,7 @@ export function runOrbRuntimePipeline({
 
   if (graceActive) {
     const upwardIntent = (thrust > (g + 180)) || (state.v < -22);
-    if (upwardIntent && !graceSuppressInput) {
+    if (graceBreakOnLift && upwardIntent && !graceSuppressInput) {
       if (typeof clearFloatGrace === "function") clearFloatGrace();
     } else {
       const dragFactor = Math.max(0, -Number(signedFallDrag) || 0);

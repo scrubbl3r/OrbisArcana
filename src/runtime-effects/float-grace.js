@@ -8,6 +8,8 @@ export function clearOrbGraceRuntime({
     floatGracePersistent: false,
     floatGraceSource: "",
     floatGraceSuppressInput: false,
+    floatGraceBreakOnLift: true,
+    floatGraceBreakOnMotion: true,
   });
 }
 
@@ -31,6 +33,8 @@ export function grantOrbGraceRuntime({
     floatGracePersistent: persistent,
     floatGraceSource: String(grace && grace.source || ""),
     floatGraceSuppressInput: !!(grace && grace.suppressInput),
+    floatGraceBreakOnLift: grace && grace.breakOnLift !== false,
+    floatGraceBreakOnMotion: grace && grace.breakOnMotion !== false,
     floatGraceAnchorY: Number(orbRuntime && orbRuntime.yW) || 0,
     floatGracePhase: (typeof random === "function" ? random() : Math.random()) * Math.PI * 2,
   });

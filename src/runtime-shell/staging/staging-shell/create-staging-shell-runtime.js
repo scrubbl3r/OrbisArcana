@@ -249,6 +249,8 @@ function buildShellStageInitialState(phys = {}) {
     floatGracePersistent: false,
     floatGraceSource: "",
     floatGraceSuppressInput: false,
+    floatGraceBreakOnLift: true,
+    floatGraceBreakOnMotion: true,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
     teleportHoldActive: false,
@@ -1104,6 +1106,8 @@ function resetShellOrbToGround(shellContext) {
     floatGracePersistent: false,
     floatGraceSource: "",
     floatGraceSuppressInput: false,
+    floatGraceBreakOnLift: true,
+    floatGraceBreakOnMotion: true,
     teleportHoldAnchorY: yW,
     spawnHoldActive: !!spawnPoint,
     spawnHoldAnchorX: xW,
@@ -1223,6 +1227,8 @@ function tickShellStageRuntime(shellContext, dt) {
     state.floatGracePersistent = false;
     state.floatGraceSource = "";
     state.floatGraceSuppressInput = false;
+    state.floatGraceBreakOnLift = true;
+    state.floatGraceBreakOnMotion = true;
   }
 
   if (state.teleportHoldActive) {
@@ -1589,6 +1595,8 @@ function startShellStageLoop(shellContext) {
         floatGracePersistent: false,
         floatGraceSource: "",
         floatGraceSuppressInput: false,
+        floatGraceBreakOnLift: true,
+        floatGraceBreakOnMotion: true,
       });
     },
     groundCenterWorld: () => traceMeasure("world.groundCenter", () => shellGroundCenterWorld(shellContext)),
@@ -2112,6 +2120,8 @@ async function initShellReceiverHostRuntime(shellContext) {
           floatGracePersistent: false,
           floatGraceSource: "",
           floatGraceSuppressInput: false,
+          floatGraceBreakOnLift: true,
+          floatGraceBreakOnMotion: true,
         });
       },
       resetOrbStrokeColor: () => shellClearColorize(shellContext),

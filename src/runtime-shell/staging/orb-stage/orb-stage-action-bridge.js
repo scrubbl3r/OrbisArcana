@@ -142,6 +142,8 @@ export function createOrbStageActionBridge({
         floatGracePersistent: !!resolvedGrace.persistent,
         floatGraceSource: String(resolvedGrace.source || ""),
         floatGraceSuppressInput: !!resolvedGrace.suppressInput,
+        floatGraceBreakOnLift: resolvedGrace.breakOnLift !== false,
+        floatGraceBreakOnMotion: resolvedGrace.breakOnMotion !== false,
         floatGraceAnchorY: anchorY,
         floatGracePhase: Math.random() * Math.PI * 2,
       });

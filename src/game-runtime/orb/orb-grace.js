@@ -26,5 +26,7 @@ export function resolveOrbGracePayload(rawGrace, { defaultTtlMs = 2500 } = {}) {
     persistent,
     source: String(source.source || ""),
     suppressInput: source.suppressInput === true,
+    breakOnLift: source.breakOnLift !== false,
+    breakOnMotion: source.breakOnMotion !== false,
   });
 }
