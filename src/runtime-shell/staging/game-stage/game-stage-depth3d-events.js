@@ -30,13 +30,13 @@ export function createGameStageDepth3dEventBindings({
     return String(Math.round(numeric * decimals) / decimals);
   }
 
-  function applyOrbHpShaderState(payload = {}) {
+  function applyOrbHpShaderState(payload = {}, eventSource = "health_changed") {
     const vitality = payload && typeof payload.vitality === "object" ? payload.vitality : null;
     const vitalityShaderState = vitality && typeof vitality.shaderState === "object" ? vitality.shaderState : null;
     if (root && root.dataset) {
       root.dataset.orbShaderEventCount = String((Number(root.dataset.orbShaderEventCount) || 0) + 1);
       root.dataset.orbShaderLastEventAt = roundMetric(payload && payload.atMs, 1);
-      root.dataset.orbShaderHealthSource = vitalityShaderState ? "vitality" : "missing";
+      root.dataset.orbShaderHealthSource = vitalityShaderState ? eventSource : "missing";
       root.dataset.orbShaderHp = roundMetric(vitality && vitality.health);
       root.dataset.orbShaderMaxHp = roundMetric(vitality && vitality.maxHealth);
       root.dataset.orbShaderHealthRatio = roundMetric(vitality && vitality.healthRatio);
@@ -47,7 +47,8 @@ export function createGameStageDepth3dEventBindings({
     }
     if (typeof traceMark === "function") {
       traceMark("orb.shader.vitality", {
-        source: vitalityShaderState ? "vitality" : "missing",
+        source: vitalityShaderState ? eventSource : "missing",
+        healthSource: vitalityShaderState ? "vitality" : "missing",
         health: roundMetric(vitality && vitality.health),
         maxHealth: roundMetric(vitality && vitality.maxHealth),
         healthRatio: roundMetric(vitality && vitality.healthRatio),
@@ -89,26 +90,28 @@ export function createGameStageDepth3dEventBindings({
     }));
     unsubs.push(eventBus.on(EVT_ORB_HEALTH_CHANGED, (payload = {}) => {
       orbLifecycle3dRuntime.syncDamageState(payload);
-      applyOrbHpShaderState(payload);
+      applyOrbHpShaderState(payload, "health_changed");
       scheduleFrame();
     }));
     unsubs.push(eventBus.on(EVT_ORB_DAMAGE_APPLIED, (payload = {}) => {
-      if (typeof traceMark !== "function") return;
-      traceMark("orb.damage.applied", {
-        amount: roundMetric(payload.amount),
-        healthBefore: roundMetric(payload.healthBefore),
-        healthAfter: roundMetric(payload.healthAfter),
-        maxHealth: roundMetric(payload.maxHealth),
-        impact: roundMetric(payload.impact),
-        rawImpact: roundMetric(payload.rawImpact),
-        impactThreshold: roundMetric(payload.impactThreshold),
-        impactDamageAmount: roundMetric(payload.impactDamageAmount),
-        gravityMul: roundMetric(payload.gravityMul),
-        fallDrag: roundMetric(payload.fallDrag),
-        source: String(payload.source || ""),
-        cause: String(payload.cause || ""),
-        atMs: roundMetric(payload.atMs, 1),
-      });
+      if (typeof traceMark === "function") {
+        traceMark("orb.damage.applied", {
+          amount: roundMetric(payload.amount),
+          healthBefore: roundMetric(payload.healthBefore),
+          healthAfter: roundMetric(payload.healthAfter),
+          maxHealth: roundMetric(payload.maxHealth),
+          impact: roundMetric(payload.impact),
+          rawImpact: roundMetric(payload.rawImpact),
+          impactThreshold: roundMetric(payload.impactThreshold),
+          impactDamageAmount: roundMetric(payload.impactDamageAmount),
+          gravityMul: roundMetric(payload.gravityMul),
+          fallDrag: roundMetric(payload.fallDrag),
+          source: String(payload.source || ""),
+          cause: String(payload.cause || ""),
+          atMs: roundMetric(payload.atMs, 1),
+        });
+      }
+      applyOrbHpShaderState(payload, "damage_applied");
     }));
     unsubs.push(eventBus.on(EVT_VOICE_SPELL_LOADED, (payload = {}) => {
       orbGlobe3dRuntime.load(payload);
@@ -143,7 +146,7 @@ export function createGameStageDepth3dEventBindings({
       worldGlobe3dRuntime.resetToIdle();
       orbGlobe3dRuntime.revive();
       orbLifecycle3dRuntime.reset(payload);
-      applyOrbHpShaderState(payload);
+      applyOrbHpShaderState(payload, "revived");
       scheduleFrame();
     }));
   }

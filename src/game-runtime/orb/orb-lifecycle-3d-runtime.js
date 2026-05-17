@@ -1,10 +1,10 @@
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517a";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517b";
 import {
   createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dDissolveBurst,
-} from "./orb-lifecycle-3d-vfx-runtime.js?v=20260517a";
+} from "./orb-lifecycle-3d-vfx-runtime.js?v=20260517b";
 
 function readSeed(payload = {}, fallback = ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed) {
   return Number(payload.fractureSeed || payload.seed || payload.erosionSeed || fallback) || 1;
