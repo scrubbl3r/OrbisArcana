@@ -1,6 +1,6 @@
 export const ORB_LIFECYCLE_3D_DEFAULTS = Object.freeze({
   maxHits: 10,
-  erosionSeed: 836170163,
+  erosionSeed: 865931166,
   crackColor: 0xffffff,
   crackAlpha: 1.00,
   crackWidthPx: 1.50,
@@ -12,8 +12,8 @@ export const ORB_LIFECYCLE_3D_DEFAULTS = Object.freeze({
   noiseGain: 0.30,
   detailScale: 1.00,
   detailAmount: 0.30,
-  coverageStart: 0.15,
-  coverageEnd: 0.52,
+  coverageStart: 0.20,
+  coverageEnd: 0.58,
   growthCurve: 0.90,
   edgeLightBrightness: 1.00,
   edgeLightRange: 1.00,
