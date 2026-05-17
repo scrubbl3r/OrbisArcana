@@ -19,6 +19,7 @@ export function createGameStageDepth3dEventBindings({
   onOrbDied = () => {},
   onOrbRevived = () => {},
   scheduleFrame = () => {},
+  traceMark = null,
 } = {}) {
   const unsubs = [];
 
@@ -42,6 +43,19 @@ export function createGameStageDepth3dEventBindings({
       root.dataset.orbShaderCenterAlpha = roundMetric(vitalityShaderState && vitalityShaderState.centerAlpha);
       root.dataset.orbShaderSpotIntensity = roundMetric(vitalityShaderState && vitalityShaderState.spotIntensity);
       root.dataset.orbShaderSpotDistanceBO = roundMetric(vitalityShaderState && vitalityShaderState.spotDistanceBO);
+    }
+    if (typeof traceMark === "function") {
+      traceMark("orb.shader.vitality", {
+        source: vitalityShaderState ? "vitality" : "missing",
+        health: roundMetric(vitality && vitality.health),
+        maxHealth: roundMetric(vitality && vitality.maxHealth),
+        healthRatio: roundMetric(vitality && vitality.healthRatio),
+        luminanceBoost: roundMetric(vitalityShaderState && vitalityShaderState.luminanceBoost),
+        centerAlpha: roundMetric(vitalityShaderState && vitalityShaderState.centerAlpha),
+        spotIntensity: roundMetric(vitalityShaderState && vitalityShaderState.spotIntensity),
+        spotDistanceBO: roundMetric(vitalityShaderState && vitalityShaderState.spotDistanceBO),
+        atMs: roundMetric(payload && payload.atMs, 1),
+      });
     }
     if (!vitalityShaderState) return null;
     if (typeof setOrbShaderState === "function") setOrbShaderState(vitalityShaderState);
@@ -85,6 +99,12 @@ export function createGameStageDepth3dEventBindings({
     }));
     unsubs.push(eventBus.on(EVT_ORB_DIED, (payload = {}) => {
       if (root && root.dataset) root.dataset.orbShaderLastLifecycleEvent = "died";
+      if (typeof traceMark === "function") {
+        traceMark("orb.shader.lifecycle", {
+          event: "died",
+          atMs: roundMetric(payload && payload.atMs, 1),
+        });
+      }
       orbGlobe3dRuntime.setDead(true);
       onOrbDied(payload);
       orbLifecycle3dRuntime.startDissolve(payload);
@@ -92,6 +112,14 @@ export function createGameStageDepth3dEventBindings({
     }));
     unsubs.push(eventBus.on(EVT_ORB_REVIVED, (payload = {}) => {
       if (root && root.dataset) root.dataset.orbShaderLastLifecycleEvent = "revived";
+      if (typeof traceMark === "function") {
+        traceMark("orb.shader.lifecycle", {
+          event: "revived",
+          health: roundMetric(payload && payload.health),
+          maxHealth: roundMetric(payload && payload.maxHealth),
+          atMs: roundMetric(payload && payload.atMs, 1),
+        });
+      }
       onOrbRevived();
       worldGlobe3dRuntime.resetToIdle();
       orbGlobe3dRuntime.revive();
