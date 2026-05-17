@@ -10,7 +10,8 @@ import {
  * @property {() => void} start
  * @property {() => void} stop
  * @property {(atMs?: number) => void} reset Clears shake + spin-window runtime state and invokes reset hooks.
- * @property {(sample?: {shakeVal01?:number, groove01?:number, lift01?:number, smooth01?:number, atMs?:number}) => boolean} processShakeSample Returns `true` if a shake hit was registered.
+ * @property {(frame?: {smooth01?:number, atMs?:number}) => boolean} processSmoothGateFrame Returns `true` while shake is allowed by recent smooth hold.
+ * @property {(sample?: {shakeVal01?:number, groove01?:number, lift01?:number, atMs?:number}) => boolean} processShakeSample Returns `true` if a shake hit was registered.
  * @property {(frame?: {raw?:Object, atMs?:number, stabilityOn?:boolean, stabilityVisualGate?:boolean}) => void} processSpinFrame
  * @property {(options?: {atMs?:number, durationMs?:number, transitionMs?:number, source?:string}) => boolean} enableFlatSpinAbilityWindow
  * @property {(code:string, atMs?:number) => void} setPendingDirection
@@ -47,6 +48,8 @@ export function createInputGestureSystem({
     grooveShakeGate: Number.isFinite(Number(config.grooveShakeGate)) ? Number(config.grooveShakeGate) : 0.20,
     liftShakeGate: Number.isFinite(Number(config.liftShakeGate)) ? Number(config.liftShakeGate) : 0.30,
     smoothShakeGateMin: Number.isFinite(Number(config.smoothShakeGateMin)) ? Number(config.smoothShakeGateMin) : 1.00,
+    smoothShakeHoldMs: Math.max(0, Number(config.smoothShakeHoldMs) || 250),
+    smoothShakeRecentMs: Math.max(0, Number(config.smoothShakeRecentMs) || 500),
     shakeLampThr: Number.isFinite(Number(config.shakeLampThr)) ? Number(config.shakeLampThr) : 0.90,
     sdRecentMs: Math.max(0, Number(config.sdRecentMs) || 750),
     flatSpinDominanceOn: Number.isFinite(Number(config.flatSpinDominanceOn)) ? Number(config.flatSpinDominanceOn) : 0.72,
@@ -65,6 +68,11 @@ export function createInputGestureSystem({
     shakeCooldownUntil: 0,
     pendingSd: null,
     pendingSdAt: 0,
+    smoothGate: {
+      holdMs: 0,
+      lastTs: 0,
+      qualifiedUntilMs: 0,
+    },
     flatSpin: {
       active: false,
       axis: "",
@@ -122,6 +130,9 @@ export function createInputGestureSystem({
     state.pendingSdAt = 0;
     closeFlatSpinWindow("reset", Number(atMs) || nowMs());
     clearFlatSpinAbility();
+    state.smoothGate.holdMs = 0;
+    state.smoothGate.lastTs = 0;
+    state.smoothGate.qualifiedUntilMs = 0;
     state.flatSpin.lastTs = 0;
     state.flatSpin.holdMs = 0;
     state.flatSpin.releaseMs = 0;
@@ -132,13 +143,30 @@ export function createInputGestureSystem({
     if (typeof hooks.onReset === "function") hooks.onReset(Number(atMs) || nowMs());
   }
 
-  function processShakeSample({ shakeVal01, groove01, lift01, smooth01, atMs = nowMs() } = {}) {
+  function processSmoothGateFrame({ smooth01, atMs = nowMs() } = {}) {
+    const now = Number(atMs) || nowMs();
+    const dt = state.smoothGate.lastTs > 0 ? Math.max(0, now - state.smoothGate.lastTs) : 0;
+    state.smoothGate.lastTs = now;
+
+    if (Number(smooth01) >= cfg.smoothShakeGateMin) {
+      state.smoothGate.holdMs += dt;
+      if (state.smoothGate.holdMs >= cfg.smoothShakeHoldMs) {
+        state.smoothGate.qualifiedUntilMs = now + cfg.smoothShakeRecentMs;
+      }
+    } else {
+      state.smoothGate.holdMs = 0;
+    }
+
+    return now <= state.smoothGate.qualifiedUntilMs;
+  }
+
+  function processShakeSample({ shakeVal01, groove01, lift01, atMs = nowMs() } = {}) {
     const now = Number(atMs) || nowMs();
     const v = Number(shakeVal01);
     if (!Number.isFinite(v)) return false;
     if (Number(groove01) > cfg.grooveShakeGate) return false;
     if (Number(lift01) > cfg.liftShakeGate) return false;
-    if (Number(smooth01) < cfg.smoothShakeGateMin) return false;
+    if (now > state.smoothGate.qualifiedUntilMs) return false;
 
     if (now < state.shakeCooldownUntil && typeof hooks.forceShakeLampOff === "function") {
       hooks.forceShakeLampOff();
@@ -371,6 +399,7 @@ export function createInputGestureSystem({
     stop,
     reset,
     processShakeSample,
+    processSmoothGateFrame,
     processFlatSpinFrame,
     enableFlatSpinAbilityWindow,
     getFlatSpinAbilityState,

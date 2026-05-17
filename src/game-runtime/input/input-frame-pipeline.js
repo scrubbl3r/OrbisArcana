@@ -101,11 +101,15 @@ export function runInputFramePipeline({
     inputDynamicsSystem.processFrame({ dynamics01: dynamics, atMs: nowMs });
   }
 
+  if (inputGestureSystem && typeof inputGestureSystem.processSmoothGateFrame === "function") {
+    inputGestureSystem.processSmoothGateFrame({ smooth01: smooth, atMs: nowMs });
+  }
+
   if (typeof applyStabilityVisuals === "function") {
     applyStabilityVisuals();
   }
 
   if (typeof processShakeDoubleBang === "function") {
-    processShakeDoubleBang(shake, nowMs, groove, lift, smooth);
+    processShakeDoubleBang(shake, nowMs, groove, lift);
   }
 }
