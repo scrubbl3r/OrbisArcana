@@ -347,7 +347,7 @@ import { RECEIVER_CONFIG_DEFAULT } from "./receiver-config-default.js?v=20260511
 
   function createSignalProcessor(options){
     const settings = {
-      shakeLampThreshold: Number(options && options.shakeLampThreshold) || 1.45,
+      shakeLampThreshold: Number(options && options.shakeLampThreshold) || 0.95,
     };
     const getLiftMixerWeights = (options && typeof options.getLiftMixerWeights === "function")
       ? options.getLiftMixerWeights
