@@ -75,7 +75,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260517s";
+globalThis.__orbisStagingShellRuntimeVersion = "20260517t";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2913,7 +2913,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260517s",
+  moduleCacheBustV = "20260517t",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
@@ -3039,6 +3039,7 @@ export async function createStagingShellRuntime({
     }
     shellContext.runtime.signalProcessor = (typeof window.createSignalProcessor === "function")
       ? window.createSignalProcessor({
+          shakeLampThreshold: Number(createShellReceiverConfigs().INPUT_GESTURE_CFG?.shake?.lampThreshold) || 0.90,
           getLiftMixerWeights: () => getShellLiftMixerWeights(shellContext),
         })
       : null;

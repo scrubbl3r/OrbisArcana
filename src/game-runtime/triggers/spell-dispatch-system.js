@@ -611,8 +611,9 @@ export function createSpellDispatchSystem({
         emitCastBlocked(payload, gateState.reason);
         return;
       }
-      if (!legacyFallbacksEnabled()) return;
       const group = normGroup(payload.group);
+      if (ruleEngineEnabled && group) return;
+      if (!ruleEngineEnabled && !legacyFallbacksEnabled()) return;
       const now = nowMs();
 
       let entry = null;
