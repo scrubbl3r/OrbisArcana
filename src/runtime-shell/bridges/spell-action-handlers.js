@@ -72,7 +72,10 @@ export function createSpellActionHandlers({
         aboveGroundPx: Number.isFinite(payloadAboveGroundPx) ? payloadAboveGroundPx : domusTeleportAboveGroundPx,
       });
     },
-    toggle_float(payload = {}) {
+    toggle_float(payload = {}, context = {}) {
+      if (context && typeof context.deferGrace === "function" && payload && payload.grace) {
+        context.deferGrace();
+      }
       if (typeof toggleFloat !== "function") return false;
       return toggleFloat(payload);
     },
