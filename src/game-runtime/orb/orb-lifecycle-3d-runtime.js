@@ -1,4 +1,5 @@
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
+import { ORB_3D_VISUAL_DEFAULTS } from "./orb-3d-default.js";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517c";
 import {
   createOrbLifecycle3dErosionPatch,
@@ -26,6 +27,52 @@ function readHitsTaken(payload = {}, fallback = 0, maxHits = readMaxHits(payload
   return Math.max(0, Math.min(maxHits, Number(fallback) || 0));
 }
 
+function readMaxHealth(payload = {}, fallback = 1000) {
+  return Math.max(1, Number(payload.maxHealth ?? payload.max ?? fallback) || fallback || 1000);
+}
+
+function readHealth(payload = {}, fallback = readMaxHealth(payload)) {
+  const maxHealth = readMaxHealth(payload, fallback);
+  const health = Number(payload.health ?? payload.to ?? payload.healthAfter);
+  const resolved = Number.isFinite(health) ? health : Number(fallback);
+  return Math.max(0, Math.min(maxHealth, Number.isFinite(resolved) ? resolved : maxHealth));
+}
+
+function lerp(a, b, t) {
+  return a + ((b - a) * t);
+}
+
+function resolvePctLerp(baseValue, minPct, maxPct, hpRatio, min = -Infinity, max = Infinity) {
+  const base = Number(baseValue);
+  const fallback = Number.isFinite(base) ? base : 0;
+  const minValue = fallback * ((Number(minPct) || 0) / 100);
+  const maxValue = fallback * ((Number(maxPct) || 0) / 100);
+  return Math.max(min, Math.min(max, lerp(minValue, maxValue, hpRatio)));
+}
+
+export function resolveOrbLifecycle3dShaderState({
+  health = 1000,
+  maxHealth = 1000,
+  lifecycleConfig = ORB_LIFECYCLE_3D_DEFAULTS,
+  orbConfig = ORB_3D_VISUAL_DEFAULTS,
+} = {}) {
+  const resolvedMaxHealth = Math.max(1, Number(maxHealth) || 1000);
+  const resolvedHealth = Math.max(0, Math.min(resolvedMaxHealth, Number(health) || 0));
+  const hpRatio = Math.max(0, Math.min(1, resolvedHealth / resolvedMaxHealth));
+  const lifecycle = lifecycleConfig && typeof lifecycleConfig === "object" ? lifecycleConfig : ORB_LIFECYCLE_3D_DEFAULTS;
+  const orb = orbConfig && typeof orbConfig === "object" ? orbConfig : ORB_3D_VISUAL_DEFAULTS;
+  return Object.freeze({
+    health: resolvedHealth,
+    maxHealth: resolvedMaxHealth,
+    hpRatio,
+    shellLuminanceBoost: resolvePctLerp(orb.shellLuminanceBoost, lifecycle.shellLuminanceBoostMinPct, lifecycle.shellLuminanceBoostMaxPct, hpRatio, 0, 12),
+    shellCenterAlpha: resolvePctLerp(orb.shellCenterAlpha, lifecycle.shellCenterAlphaMinPct, lifecycle.shellCenterAlphaMaxPct, hpRatio, 0, 1),
+    shadowSpotIntensity: resolvePctLerp(orb.shadowSpotIntensity, lifecycle.spotIntensityMinPct, lifecycle.spotIntensityMaxPct, hpRatio, 0, 10000),
+    shadowSpotDistanceBO: resolvePctLerp(orb.shadowSpotDistanceBO, lifecycle.spotDistanceMinPct, lifecycle.spotDistanceMaxPct, hpRatio, 0, 1000),
+    goldMix: resolvePctLerp(orb.goldMix, lifecycle.goldMixMinPct, lifecycle.goldMixMaxPct, hpRatio, 0, 2),
+  });
+}
+
 export function createOrbLifecycle3dRuntime({
   orbModel = null,
   burstParent = null,
@@ -33,14 +80,18 @@ export function createOrbLifecycle3dRuntime({
   getBurstParent = () => burstParent,
   getBo = () => 72,
   getConfig = () => ORB_LIFECYCLE_3D_DEFAULTS,
+  getShaderBaseConfig = () => ORB_3D_VISUAL_DEFAULTS,
   getBurstPosition = () => ({ x: 0, y: 0, z: 0 }),
   setLifecycleErosion = () => {},
+  setShaderState = () => {},
   now = () => performance.now(),
   onNeedsFrame = () => {},
 } = {}) {
   const state = {
     hitsTaken: 0,
     maxHits: readMaxHits(),
+    health: 1000,
+    maxHealth: 1000,
     fractureSeed: readSeed(currentConfig()),
     hasErosion: false,
     burst: null,
@@ -49,6 +100,11 @@ export function createOrbLifecycle3dRuntime({
   function currentConfig() {
     const config = typeof getConfig === "function" ? getConfig() : null;
     return config && typeof config === "object" ? config : ORB_LIFECYCLE_3D_DEFAULTS;
+  }
+
+  function currentShaderBaseConfig() {
+    const config = typeof getShaderBaseConfig === "function" ? getShaderBaseConfig() : null;
+    return config && typeof config === "object" ? config : ORB_3D_VISUAL_DEFAULTS;
   }
 
   function currentBo() {
@@ -102,22 +158,40 @@ export function createOrbLifecycle3dRuntime({
     requestFrame();
   }
 
+  function applyShaderLifecycleState() {
+    const shaderState = resolveOrbLifecycle3dShaderState({
+      health: state.health,
+      maxHealth: state.maxHealth,
+      lifecycleConfig: currentConfig(),
+      orbConfig: currentShaderBaseConfig(),
+    });
+    if (typeof setShaderState === "function") setShaderState(shaderState);
+    requestFrame();
+    return shaderState;
+  }
+
   function syncDamageState(payload = {}) {
     state.maxHits = readMaxHits(payload, state.maxHits);
     state.hitsTaken = readHitsTaken(payload, state.hitsTaken, state.maxHits);
+    state.maxHealth = readMaxHealth(payload, state.maxHealth);
+    state.health = readHealth(payload, state.health);
     state.fractureSeed = readSeed(payload, state.fractureSeed);
     setOrbVisible(true);
     clearBurst();
     rebuildErosion();
+    applyShaderLifecycleState();
     requestFrame();
   }
 
   function startDissolve(payload = {}) {
     state.hitsTaken = Math.max(state.hitsTaken, Number(payload.hitsTaken) || state.maxHits);
     state.maxHits = readMaxHits(payload, state.maxHits);
+    state.maxHealth = readMaxHealth(payload, state.maxHealth);
+    state.health = readHealth({ ...payload, health: 0 }, 0);
     state.fractureSeed = readSeed(payload, state.fractureSeed);
     clearBurst();
     applyErosionPatch(null);
+    applyShaderLifecycleState();
     setOrbVisible(false);
 
     state.burst = createOrbLifecycle3dDissolveBurst({
@@ -140,9 +214,12 @@ export function createOrbLifecycle3dRuntime({
   function reset(payload = {}) {
     state.hitsTaken = 0;
     state.maxHits = readMaxHits(payload, state.maxHits);
+    state.maxHealth = readMaxHealth(payload, state.maxHealth);
+    state.health = readHealth(payload, state.maxHealth);
     state.fractureSeed = readSeed(payload, state.fractureSeed);
     clearBurst();
     applyErosionPatch(null);
+    applyShaderLifecycleState();
     setOrbVisible(true);
   }
 
@@ -161,6 +238,7 @@ export function createOrbLifecycle3dRuntime({
     }
     setOrbVisible(true);
     rebuildErosion();
+    applyShaderLifecycleState();
   }
 
   function dispose() {
