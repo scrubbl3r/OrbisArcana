@@ -68,6 +68,11 @@ export function createGameStageRuntimeAdapter({
         depth3dRuntime.clearOrbSpinColor();
       }
     },
+    setOrbShaderState(shaderState = {}) {
+      return depth3dRuntime && typeof depth3dRuntime.setOrbShaderState === "function"
+        ? depth3dRuntime.setOrbShaderState(shaderState)
+        : { handled: false, skipped: "depth3d_runtime_missing" };
+    },
     setOrbFloatHoldVisual(payload = {}) {
       return depth3dRuntime && typeof depth3dRuntime.setOrbFloatHoldVisual === "function"
         ? depth3dRuntime.setOrbFloatHoldVisual(payload)

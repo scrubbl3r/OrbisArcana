@@ -31,6 +31,9 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
       uCyan: { value: new THREE.Color(config.shellCyanColor) },
       uViolet: { value: new THREE.Color(config.shellVioletColor) },
       uGold: { value: new THREE.Color(config.shellGoldColor) },
+      uShellLuminanceBoost: { value: Number(config.shellLuminanceBoost) || 1 },
+      uShellCenterAlpha: { value: Number(config.shellCenterAlpha) || 0 },
+      uGoldMix: { value: Number(config.goldMix) || 0 },
       ...(lifecycleErosion && lifecycleErosion.uniforms ? lifecycleErosion.uniforms : {}),
       ...displacementUniforms,
     },
@@ -85,6 +88,9 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
       uniform vec3 uCyan;
       uniform vec3 uViolet;
       uniform vec3 uGold;
+      uniform float uShellLuminanceBoost;
+      uniform float uShellCenterAlpha;
+      uniform float uGoldMix;
       ${lifecycleErosion && lifecycleErosion.uniformsSource ? lifecycleErosion.uniformsSource : ""}
 
       varying vec3 vNormal;
@@ -99,11 +105,11 @@ export function createOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS
         float driftB = sin((vWorldPosition.y * ${Number(config.driftScaleY).toFixed(4)}) + uTime * ${(Number(config.driftRateB) * opalescenceSpeed).toFixed(4)} + ${Number(config.driftPhaseB).toFixed(4)}) * 0.5 + 0.5;
         float driftC = sin((vWorldPosition.z * ${Number(config.driftScaleZ).toFixed(4)}) + uTime * ${(Number(config.driftRateC) * opalescenceSpeed).toFixed(4)} + ${Number(config.driftPhaseC).toFixed(4)}) * 0.5 + 0.5;
         vec3 pastel = mix(uCyan, uViolet, driftA);
-        pastel = mix(pastel, uGold, driftB * ${Number(config.goldMix).toFixed(3)});
+        pastel = mix(pastel, uGold, driftB * uGoldMix);
         vec3 pearl = mix(uBase, pastel, ${Number(config.shellPastelMix).toFixed(3)} + fresnel * ${Number(config.shellRimPastelMix).toFixed(3)} + driftC * ${Number(config.shellDriftPastelMix).toFixed(3)});
-        float alpha = ${Number(config.shellCenterAlpha).toFixed(4)} + pow(fresnel, ${Number(config.shellRimAlphaPower).toFixed(3)}) * ${Number(config.shellRimAlpha).toFixed(3)};
+        float alpha = uShellCenterAlpha + pow(fresnel, ${Number(config.shellRimAlphaPower).toFixed(3)}) * ${Number(config.shellRimAlpha).toFixed(3)};
         ${lifecycleErosion && lifecycleErosion.fragmentSource ? lifecycleErosion.fragmentSource : ""}
-        gl_FragColor = vec4(pearl * ${Number(config.shellLuminanceBoost).toFixed(3)}, alpha * uOpacity);
+        gl_FragColor = vec4(pearl * uShellLuminanceBoost, alpha * uOpacity);
       }
     `,
   });
@@ -127,6 +133,9 @@ function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS, {
       uCyan: { value: new THREE.Color(config.shellCyanColor) },
       uViolet: { value: new THREE.Color(config.shellVioletColor) },
       uGold: { value: new THREE.Color(config.shellGoldColor) },
+      uShellLuminanceBoost: { value: Number(config.shellLuminanceBoost) || 1 },
+      uShellCenterAlpha: { value: Number(config.shellCenterAlpha) || 0 },
+      uGoldMix: { value: Number(config.goldMix) || 0 },
       ...(lifecycleErosion && lifecycleErosion.uniforms ? lifecycleErosion.uniforms : {}),
     },
     vertexShader: `
@@ -152,6 +161,9 @@ function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS, {
       uniform vec3 uCyan;
       uniform vec3 uViolet;
       uniform vec3 uGold;
+      uniform float uShellLuminanceBoost;
+      uniform float uShellCenterAlpha;
+      uniform float uGoldMix;
       ${lifecycleErosion && lifecycleErosion.uniformsSource ? lifecycleErosion.uniformsSource : ""}
 
       varying vec3 vNormal;
@@ -166,11 +178,11 @@ function createBaseOpalescentOrbShellMaterial(config = ORB_3D_VISUAL_DEFAULTS, {
         float driftB = sin((vWorldPosition.y * ${Number(config.driftScaleY).toFixed(4)}) + uTime * ${(Number(config.driftRateB) * opalescenceSpeed).toFixed(4)} + ${Number(config.driftPhaseB).toFixed(4)}) * 0.5 + 0.5;
         float driftC = sin((vWorldPosition.z * ${Number(config.driftScaleZ).toFixed(4)}) + uTime * ${(Number(config.driftRateC) * opalescenceSpeed).toFixed(4)} + ${Number(config.driftPhaseC).toFixed(4)}) * 0.5 + 0.5;
         vec3 pastel = mix(uCyan, uViolet, driftA);
-        pastel = mix(pastel, uGold, driftB * ${Number(config.goldMix).toFixed(3)});
+        pastel = mix(pastel, uGold, driftB * uGoldMix);
         vec3 pearl = mix(uBase, pastel, ${Number(config.shellPastelMix).toFixed(3)} + fresnel * ${Number(config.shellRimPastelMix).toFixed(3)} + driftC * ${Number(config.shellDriftPastelMix).toFixed(3)});
-        float alpha = ${Number(config.shellCenterAlpha).toFixed(4)} + pow(fresnel, ${Number(config.shellRimAlphaPower).toFixed(3)}) * ${Number(config.shellRimAlpha).toFixed(3)};
+        float alpha = uShellCenterAlpha + pow(fresnel, ${Number(config.shellRimAlphaPower).toFixed(3)}) * ${Number(config.shellRimAlpha).toFixed(3)};
         ${lifecycleErosion && lifecycleErosion.fragmentSource ? lifecycleErosion.fragmentSource : ""}
-        gl_FragColor = vec4(pearl * ${Number(config.shellLuminanceBoost).toFixed(3)}, alpha * uOpacity);
+        gl_FragColor = vec4(pearl * uShellLuminanceBoost, alpha * uOpacity);
       }
     `,
   });

@@ -1,4 +1,4 @@
-import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260516a";
+import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260517a";
 import {
   createOrbNod3dRuntime,
   createOrbNod3dSurfaceDisplacementConfig,
@@ -27,6 +27,7 @@ export function createOrb3dActorRuntime({
   let position = Object.freeze({ x: 0, y: 0, z: -depth });
   let basePosition = position;
   let lastTimeSec = 0;
+  let currentShaderState = null;
   const floatHoldVisual = {
     active: false,
     startedAtSec: 0,
@@ -75,6 +76,9 @@ export function createOrb3dActorRuntime({
         enabled: false,
       }),
     });
+    if (currentShaderState && typeof orbRuntime.setShaderState === "function") {
+      orbRuntime.setShaderState(currentShaderState);
+    }
     nodRuntime = createOrbNod3dRuntime({
       getMaterial: () => orbRuntime && orbRuntime.shellMaterial,
       getBo: () => bo || resolvedBO,
@@ -189,6 +193,16 @@ export function createOrb3dActorRuntime({
     }
   }
 
+  function setShaderState(shaderState = {}) {
+    currentShaderState = shaderState && typeof shaderState === "object"
+      ? { ...(currentShaderState || {}), ...shaderState }
+      : currentShaderState;
+    if (orbRuntime && typeof orbRuntime.setShaderState === "function") {
+      orbRuntime.setShaderState(currentShaderState || {});
+      if (typeof onNeedsFrame === "function") onNeedsFrame();
+    }
+  }
+
   function setFloatHoldVisual({ active = false, atMs = null, phase = null } = {}) {
     const nextActive = !!active;
     if (floatHoldVisual.active === nextActive) return { handled: true, active: nextActive };
@@ -211,6 +225,7 @@ export function createOrb3dActorRuntime({
     setLifecycleErosion,
     applySpinColor,
     clearSpinColor,
+    setShaderState,
     setFloatHoldVisual,
     update,
     getBo,
