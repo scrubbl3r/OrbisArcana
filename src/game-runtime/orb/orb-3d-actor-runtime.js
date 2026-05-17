@@ -25,6 +25,13 @@ export function createOrb3dActorRuntime({
   let zBO = Math.max(0, clampNumber(typeof getDefaultZBO === "function" ? getDefaultZBO() : getDefaultZBO, 1));
   let depth = zBO * Math.max(1, Number(fallbackBo) || 72);
   let position = Object.freeze({ x: 0, y: 0, z: -depth });
+  let basePosition = position;
+  let lastTimeSec = 0;
+  const floatHoldVisual = {
+    active: false,
+    startedAtSec: 0,
+    phase: 0,
+  };
 
   function notifyModelChanged() {
     if (typeof onModelChanged === "function") onModelChanged(getModel());
@@ -106,21 +113,43 @@ export function createOrb3dActorRuntime({
       y: Number(runtimePosition.y) || 0,
       z: Number(runtimePosition.z) || -depth,
     });
-    if (orbRuntime && typeof orbRuntime.setPosition === "function") {
-      orbRuntime.setPosition(position);
-    }
+    basePosition = position;
+    applyActorPosition(lastTimeSec);
     publishTelemetry();
     if (typeof onNeedsFrame === "function") onNeedsFrame();
     return true;
   }
 
+  function resolveFloatHoldOffset(timeSec = lastTimeSec) {
+    if (!floatHoldVisual.active) return { x: 0, y: 0, z: 0 };
+    const t = Math.max(0, (Number(timeSec) || 0) - floatHoldVisual.startedAtSec);
+    const resolvedBo = getBo();
+    return {
+      x: Math.sin((t * Math.PI * 2 * 0.08) + floatHoldVisual.phase) * resolvedBo * 0.02,
+      y: Math.sin((t * Math.PI * 2 * 0.72) + (floatHoldVisual.phase * 0.61)) * resolvedBo * 0.04,
+      z: 0,
+    };
+  }
+
+  function applyActorPosition(timeSec = lastTimeSec) {
+    if (!orbRuntime || typeof orbRuntime.setPosition !== "function") return;
+    const offset = resolveFloatHoldOffset(timeSec);
+    orbRuntime.setPosition({
+      x: Number(basePosition.x) + offset.x,
+      y: Number(basePosition.y) + offset.y,
+      z: Number(basePosition.z) + offset.z,
+    });
+  }
+
   function update(timeSec = 0) {
+    lastTimeSec = Number(timeSec) || 0;
     if (orbRuntime && typeof orbRuntime.setTime === "function") {
-      orbRuntime.setTime(timeSec);
+      orbRuntime.setTime(lastTimeSec);
     }
     if (nodRuntime && typeof nodRuntime.update === "function") {
-      nodRuntime.update(timeSec);
+      nodRuntime.update(lastTimeSec);
     }
+    applyActorPosition(lastTimeSec);
   }
 
   function setOpacity(alpha = 1) {
@@ -160,6 +189,21 @@ export function createOrb3dActorRuntime({
     }
   }
 
+  function setFloatHoldVisual({ active = false, atMs = null, phase = null } = {}) {
+    const nextActive = !!active;
+    if (floatHoldVisual.active === nextActive) return { handled: true, active: nextActive };
+    floatHoldVisual.active = nextActive;
+    floatHoldVisual.startedAtSec = Number.isFinite(Number(atMs))
+      ? Number(atMs) / 1000
+      : lastTimeSec;
+    floatHoldVisual.phase = Number.isFinite(Number(phase))
+      ? Number(phase)
+      : Math.random() * Math.PI * 2;
+    applyActorPosition(lastTimeSec);
+    if (typeof onNeedsFrame === "function") onNeedsFrame();
+    return { handled: true, active: nextActive };
+  }
+
   return Object.freeze({
     setWorldPosition,
     playNod,
@@ -167,6 +211,7 @@ export function createOrb3dActorRuntime({
     setLifecycleErosion,
     applySpinColor,
     clearSpinColor,
+    setFloatHoldVisual,
     update,
     getBo,
     getModel,

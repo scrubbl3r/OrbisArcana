@@ -10,7 +10,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260508l";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260516d";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -35,7 +35,7 @@ import {
   executeShellWordCastAction,
   handleShellVoiceSpellCast,
 } from "./shell-voice-spell-runtime.js";
-import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js";
+import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260516d";
 import { bindShellKwsEventRuntime } from "./shell-kws-event-runtime.js";
 import { bindShellKwsTraceRuntime } from "./shell-kws-trace-runtime.js";
 import {
@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260516c";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260516d";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
@@ -1394,6 +1394,25 @@ function updateShellSpinColorFromMotionState(shellContext, motionState) {
     direction: "",
     applied3dColorKey: "",
   });
+  const receiverRuntime = resolveShellReceiverRuntime(runtime);
+  const inputGestureSystem = receiverRuntime && receiverRuntime.inputGestureSystem;
+  const ability = inputGestureSystem && typeof inputGestureSystem.getFlatSpinAbilityState === "function"
+    ? inputGestureSystem.getFlatSpinAbilityState(performance.now())
+    : null;
+  const spinAbilityReady = !!(ability && ability.active && !ability.transitionActive);
+  if (!spinAbilityReady) {
+    state.active = false;
+    state.axis = "";
+    state.direction = "";
+    if (orbColorRuntime && typeof orbColorRuntime.clearSpinColor === "function") {
+      orbColorRuntime.clearSpinColor();
+    }
+    if (canClear3dSpin && state.applied3dColorKey) {
+      clear3dSpin.method.call(clear3dSpin.activeAdapter);
+      state.applied3dColorKey = "";
+    }
+    return;
+  }
   const spinAcquire = !!axis && dominance >= 0.48 && gap >= 0.03;
   const spinHold = !!axis && dominance >= 0.38 && gap >= 0.015;
 
@@ -2747,6 +2766,7 @@ async function initShellKwsRuntime(shellContext) {
       applyColorize: (payload) => shellApplyColorize(shellContext, payload),
       clearColorize: () => shellClearColorize(shellContext),
       grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
+      setOrbFloatHoldVisual: (payload = {}) => callActiveShellStageMethod(shellContext, "setOrbFloatHoldVisual", payload, "active_stage_float_hold_missing"),
       resolveReceiverRuntime: resolveShellReceiverRuntime,
     },
   });

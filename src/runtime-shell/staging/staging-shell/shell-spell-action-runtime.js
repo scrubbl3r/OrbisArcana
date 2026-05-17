@@ -52,6 +52,9 @@ export function createShellSpellActionRuntime({
           floatGraceUntilMs: 0,
           floatHoldStartedAtMs: 0,
         });
+        if (typeof shellActions.setOrbFloatHoldVisual === "function") {
+          shellActions.setOrbFloatHoldVisual({ active: false, atMs: Number(payload && payload.atMs) || performance.now() });
+        }
         return true;
       }
       const xW = Number.isFinite(Number(state.xW)) ? Number(state.xW) : 0;
@@ -76,6 +79,13 @@ export function createShellSpellActionRuntime({
         descendMs: 0,
         shieldDescentBlocked: false,
       });
+      if (typeof shellActions.setOrbFloatHoldVisual === "function") {
+        shellActions.setOrbFloatHoldVisual({
+          active: true,
+          atMs,
+          phase: orbRuntimeState.get().floatHoldPhase,
+        });
+      }
       return true;
     },
     enableOrbSpin: (payload = {}) => {

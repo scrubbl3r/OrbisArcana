@@ -1,4 +1,4 @@
-import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260516a";
+import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260516d";
 import { COMBAT_EFFECT_IMMUNITY, COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN } from "../../../game-runtime/combat/combat-constants.js";
 import { EVT_COMBAT_IMMUNITY_CHANGED, EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
 import {
@@ -816,6 +816,15 @@ export function createGameStageDepth3dLayer({
       orb3dActorRuntime.clearSpinColor();
       renderLoop.scheduleAnimation();
       renderLoop.renderFrame(renderLoop.getLastFrame() || {});
+    },
+    setOrbFloatHoldVisual(payload = {}) {
+      if (disposed || !orb3dActorRuntime.hasModel()) {
+        return { handled: false, skipped: "orb_float_hold_runtime_missing" };
+      }
+      const result = orb3dActorRuntime.setFloatHoldVisual(payload);
+      renderLoop.scheduleAnimation();
+      renderLoop.renderFrame(renderLoop.getLastFrame() || {});
+      return result || { handled: false };
     },
     renderFrame: renderLoop.renderFrame,
     dispose() {

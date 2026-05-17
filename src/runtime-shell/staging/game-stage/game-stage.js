@@ -1,5 +1,5 @@
-import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260515d";
-import { createGameStageRuntimeAdapter } from "./game-stage-runtime-adapter.js?v=20260507a";
+import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260516d";
+import { createGameStageRuntimeAdapter } from "./game-stage-runtime-adapter.js?v=20260516d";
 
 export function renderGameStage(root, {
   level = null,
