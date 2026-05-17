@@ -50,6 +50,12 @@ function lerpFloat(from, to, t) {
   return Number(from) + ((Number(to) - Number(from)) * clamp01(t));
 }
 
+function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
+  const numeric = Number(value);
+  const resolved = Number.isFinite(numeric) ? numeric : fallback;
+  return Math.max(min, Math.min(max, resolved));
+}
+
 export function deriveOrbVitalityState({
   health = 0,
   maxHealth = 1,
@@ -141,6 +147,29 @@ export function createOrbSystem({ gameState, eventBus }) {
     return orb.collisionDamage;
   }
 
+  function resolveImpactDamageAmount({
+    impact = 0,
+    threshold = 0,
+  } = {}) {
+    const impactValue = Math.max(0, Number(impact) || 0);
+    const thresholdValue = Math.max(0, Number(threshold) || 0);
+    const overThreshold = Math.max(0, impactValue - thresholdValue);
+    if (overThreshold <= 0) return 0;
+    const killImpactMultiplier = clampNumber(orb.impactKillImpactMultiplier, 2.35, 0.1, 20);
+    const fallbackFullDamageImpact = Math.max(1, Number(orb.impactFullDamageImpact) || 1000);
+    const fullDamageImpact = thresholdValue > 0
+      ? Math.max(1, thresholdValue * killImpactMultiplier)
+      : fallbackFullDamageImpact;
+    const severity = clamp01(overThreshold / fullDamageImpact);
+    const curve = clampNumber(orb.impactDamageCurve, 1.45, 0.1, 5);
+    const minDamage = clampNumber(orb.impactDamageMin, 1, 0, orb.maxHealth);
+    const maxDamage = Math.max(minDamage, clampNumber(orb.impactDamageMax, orb.maxHealth, minDamage, orb.maxHealth));
+    return Math.max(
+      0,
+      Math.min(orb.maxHealth, minDamage + ((maxDamage - minDamage) * (severity ** curve)))
+    );
+  }
+
   function resolveThreshold(command) {
     if (command && Number.isFinite(command.threshold)) return Number(command.threshold);
     return orb.collisionThreshold;
@@ -173,8 +202,9 @@ export function createOrbSystem({ gameState, eventBus }) {
       return { applied: false, reason: 'below_threshold' };
     }
 
+    const impactDamageAmount = resolveImpactDamageAmount({ impact, threshold });
     return applyDamage({
-      amount: resolveDamageAmount(command),
+      amount: impactDamageAmount > 0 ? impactDamageAmount : resolveDamageAmount(command),
       source,
       atMs,
       cause: DAMAGE_TYPE_IMPACT,
