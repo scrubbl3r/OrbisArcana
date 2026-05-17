@@ -106,6 +106,6 @@ export function runInputFramePipeline({
   }
 
   if (typeof processShakeDoubleBang === "function") {
-    processShakeDoubleBang(shake, nowMs, groove, speed);
+    processShakeDoubleBang(shake, nowMs, groove);
   }
 }

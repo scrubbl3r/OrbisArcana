@@ -10,7 +10,7 @@ import {
  * @property {() => void} start
  * @property {() => void} stop
  * @property {(atMs?: number) => void} reset Clears shake + spin-window runtime state and invokes reset hooks.
- * @property {(sample?: {shakeVal01?:number, groove01?:number, speed01?:number, atMs?:number}) => boolean} processShakeSample Returns `true` if a shake hit was registered.
+ * @property {(sample?: {shakeVal01?:number, groove01?:number, atMs?:number}) => boolean} processShakeSample Returns `true` if a shake hit was registered.
  * @property {(frame?: {raw?:Object, atMs?:number, stabilityOn?:boolean, stabilityVisualGate?:boolean}) => void} processSpinFrame
  * @property {(options?: {atMs?:number, durationMs?:number, transitionMs?:number, source?:string}) => boolean} enableFlatSpinAbilityWindow
  * @property {(code:string, atMs?:number) => void} setPendingDirection
@@ -45,8 +45,7 @@ export function createInputGestureSystem({
     shakeCooldownMs: Math.max(0, Number(config.shakeCooldownMs) || 2500),
     shakeMode: Math.max(1, Math.min(3, Math.round(Number(config.shakeMode) || 2))),
     grooveShakeGate: Number.isFinite(Number(config.grooveShakeGate)) ? Number(config.grooveShakeGate) : 0.20,
-    shakeSpeedGateMax01: Number.isFinite(Number(config.shakeSpeedGateMax01)) ? Number(config.shakeSpeedGateMax01) : 0.02,
-    shakeLampThr: Number.isFinite(Number(config.shakeLampThr)) ? Number(config.shakeLampThr) : 0.95,
+    shakeLampThr: Number.isFinite(Number(config.shakeLampThr)) ? Number(config.shakeLampThr) : 1.40,
     sdRecentMs: Math.max(0, Number(config.sdRecentMs) || 750),
     flatSpinDominanceOn: Number.isFinite(Number(config.flatSpinDominanceOn)) ? Number(config.flatSpinDominanceOn) : 0.72,
     flatSpinDominanceOff: Number.isFinite(Number(config.flatSpinDominanceOff)) ? Number(config.flatSpinDominanceOff) : 0.60,
@@ -131,12 +130,11 @@ export function createInputGestureSystem({
     if (typeof hooks.onReset === "function") hooks.onReset(Number(atMs) || nowMs());
   }
 
-  function processShakeSample({ shakeVal01, groove01, speed01, atMs = nowMs() } = {}) {
+  function processShakeSample({ shakeVal01, groove01, atMs = nowMs() } = {}) {
     const now = Number(atMs) || nowMs();
     const v = Number(shakeVal01);
     if (!Number.isFinite(v)) return false;
     if (Number(groove01) > cfg.grooveShakeGate) return false;
-    if (Number(speed01) > cfg.shakeSpeedGateMax01) return false;
 
     if (now < state.shakeCooldownUntil && typeof hooks.forceShakeLampOff === "function") {
       hooks.forceShakeLampOff();
