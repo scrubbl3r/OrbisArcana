@@ -199,7 +199,7 @@ export function createGameStageDepth3dLayer({
     isDisposed: () => disposed,
     hasActiveAnimation: hasActiveGlobe3dAnimation,
     renderNow: doRenderFrame,
-    allowInternalAnimationLoop: true,
+    allowInternalAnimationLoop: false,
   });
   const orb3dActorRuntime = createOrb3dActorRuntime({
     parent: actorGroup,
