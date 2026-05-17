@@ -21,6 +21,10 @@ export function createGameStageDepth3dEventBindings({
   scheduleFrame = () => {},
 } = {}) {
   const unsubs = [];
+  const orbShaderHealthState = {
+    health: 1000,
+    maxHealth: 1000,
+  };
 
   function clamp01(value) {
     const numeric = Number(value);
@@ -32,9 +36,47 @@ export function createGameStageDepth3dEventBindings({
     return Number(from) + ((Number(to) - Number(from)) * clamp01(t));
   }
 
+  function firstFinite(...values) {
+    for (const value of values) {
+      const numeric = Number(value);
+      if (Number.isFinite(numeric)) return numeric;
+    }
+    return null;
+  }
+
+  function resolveOrbShaderHealth(payload = {}) {
+    const maxHealth = Math.max(1, firstFinite(
+      payload.maxHealth,
+      payload.max,
+      payload.maxHp,
+      payload.maxHits,
+      orbShaderHealthState.maxHealth,
+      1000
+    ));
+    let health = firstFinite(
+      payload.health,
+      payload.hp,
+      payload.to,
+      payload.healthAfter,
+      payload.hitsRemaining
+    );
+    if (health == null && Number.isFinite(Number(payload.hitsTaken))) {
+      health = maxHealth - Number(payload.hitsTaken);
+    }
+    if (health == null && Number.isFinite(Number(payload.damageRatio))) {
+      health = maxHealth * (1 - clamp01(payload.damageRatio));
+    }
+    if (health == null) health = orbShaderHealthState.health;
+    orbShaderHealthState.maxHealth = maxHealth;
+    orbShaderHealthState.health = Math.max(0, Math.min(maxHealth, health));
+    return {
+      health: orbShaderHealthState.health,
+      maxHealth,
+    };
+  }
+
   function applyOrbHpShaderState(payload = {}) {
-    const maxHealth = Math.max(1, Number(payload.maxHealth ?? payload.max) || 1000);
-    const health = Math.max(0, Math.min(maxHealth, Number(payload.health ?? payload.to ?? payload.healthAfter) || 0));
+    const { health, maxHealth } = resolveOrbShaderHealth(payload);
     const healthRatio = clamp01(health / maxHealth);
     const shaderState = {
       luminanceBoost: lerpFloat(1.2, 1.8, healthRatio),
