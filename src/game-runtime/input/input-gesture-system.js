@@ -56,7 +56,7 @@ export function createInputGestureSystem({
     flatSpinGateRefreshMs: Math.max(0, Number(config.flatSpinGateRefreshMs) || 1100),
     flatSpinMinSpeed01: Number.isFinite(Number(config.flatSpinMinSpeed01)) ? Number(config.flatSpinMinSpeed01) : 0.02,
     flatSpinAbilityWindowMs: Math.max(50, Number(config.flatSpinAbilityWindowMs) || 1500),
-    flatSpinAbilityTransitionMs: Math.max(0, Number(config.flatSpinAbilityTransitionMs) || 500),
+    flatSpinAbilityTransitionMs: Math.max(0, Number(config.flatSpinAbilityTransitionMs) || 0),
   };
 
   const state = {
@@ -307,12 +307,6 @@ export function createInputGestureSystem({
       if (fs.active) closeFlatSpinWindow("ability_expired", now);
       return;
     }
-    if (ability.transitionActive) {
-      fs.holdMs = 0;
-      fs.releaseMs = 0;
-      return;
-    }
-
     const axisInfo = axisFromCanonicalSpin(raw);
     void stabilityOn;
     // Preserve the older "always responsive" spin feel by qualifying from the visual

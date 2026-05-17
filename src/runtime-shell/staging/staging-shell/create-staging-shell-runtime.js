@@ -1399,7 +1399,7 @@ function updateShellSpinColorFromMotionState(shellContext, motionState) {
   const ability = inputGestureSystem && typeof inputGestureSystem.getFlatSpinAbilityState === "function"
     ? inputGestureSystem.getFlatSpinAbilityState(performance.now())
     : null;
-  const spinAbilityReady = !!(ability && ability.active && !ability.transitionActive);
+  const spinAbilityReady = !!(ability && ability.active);
   if (!spinAbilityReady) {
     state.active = false;
     state.axis = "";

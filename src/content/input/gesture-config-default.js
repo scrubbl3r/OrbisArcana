@@ -17,6 +17,6 @@ export const INPUT_GESTURE_CONFIG_DEFAULT = Object.freeze({
     gateRefreshMs: 1100,
     minSpeed01: 0.02,
     abilityWindowMs: 1500,
-    abilityTransitionMs: 500,
+    abilityTransitionMs: 0,
   }),
 });

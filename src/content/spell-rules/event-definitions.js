@@ -30,7 +30,7 @@ export const EVENT_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: "orb_spin",
     type: "event",
-    defaultArgs: Object.freeze({ durationMs: 1500, transitionMs: 500 }),
+    defaultArgs: Object.freeze({ durationMs: 1500, transitionMs: 0 }),
   }),
   Object.freeze({
     id: "shockwave",
