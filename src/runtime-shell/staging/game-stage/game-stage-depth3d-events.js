@@ -42,6 +42,15 @@ export function createGameStageDepth3dEventBindings({
       spotIntensity: lerpFloat(22, 27, healthRatio),
       spotDistanceBO: lerpFloat(4.1, 4.8, healthRatio),
     };
+    if (root && root.dataset) {
+      root.dataset.orbShaderHp = String(Math.round(health * 1000) / 1000);
+      root.dataset.orbShaderMaxHp = String(Math.round(maxHealth * 1000) / 1000);
+      root.dataset.orbShaderHealthRatio = String(Math.round(healthRatio * 1000) / 1000);
+      root.dataset.orbShaderLuminanceBoost = String(Math.round(shaderState.luminanceBoost * 1000) / 1000);
+      root.dataset.orbShaderCenterAlpha = String(Math.round(shaderState.centerAlpha * 1000) / 1000);
+      root.dataset.orbShaderSpotIntensity = String(Math.round(shaderState.spotIntensity * 1000) / 1000);
+      root.dataset.orbShaderSpotDistanceBO = String(Math.round(shaderState.spotDistanceBO * 1000) / 1000);
+    }
     if (typeof setOrbShaderState === "function") setOrbShaderState(shaderState);
   }
 
