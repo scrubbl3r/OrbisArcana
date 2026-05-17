@@ -23,7 +23,7 @@ import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260507l";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
 import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260507r";
-import { createShellReceiverConfigs } from "./receiver-configs.js?v=20260516e";
+import { createShellReceiverConfigs } from "./receiver-configs.js?v=20260516f";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";
 import {
@@ -75,7 +75,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260516m";
+globalThis.__orbisStagingShellRuntimeVersion = "20260516n";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2912,7 +2912,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260516m",
+  moduleCacheBustV = "20260516n",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
