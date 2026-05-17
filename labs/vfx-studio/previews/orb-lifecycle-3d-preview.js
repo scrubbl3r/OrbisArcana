@@ -21,6 +21,7 @@ import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/th
 
 const ORB_STAGE_FILL_RATIO = 0.52;
 const ORB_LIFECYCLE_PREVIEW_HP_MAX = 1000;
+const ORB_LIFECYCLE_PREVIEW_HEAL_AMOUNT = 500;
 const ORB_LIFECYCLE_SHADER_RANGE_FIELDS = Object.freeze([
   "orbLifecycle3dLuminanceBoostMinPct",
   "orbLifecycle3dLuminanceBoostMaxPct",
@@ -173,6 +174,7 @@ export function createOrbLifecycle3dPreview({
   let cracks = null;
   let burst = null;
   let hitsTaken = 0;
+  let previewHp = ORB_LIFECYCLE_PREVIEW_HP_MAX;
   let seed = Math.max(1, Number(ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed) || 1001);
   let bornAt = 0;
   let activeOrbConfig = ORB_3D_VISUAL_DEFAULTS;
@@ -182,13 +184,37 @@ export function createOrbLifecycle3dPreview({
     return Math.max(16, Number(visualState && visualState.diameterPx) || 72);
   }
 
-  function readHpRatio(config = readLifecycle3dConfig(els)) {
-    const maxHits = Math.max(1, Number(config.maxHits) || 1);
-    return Math.max(0, Math.min(1, 1 - (Math.max(0, Math.min(maxHits, hitsTaken)) / maxHits)));
+  function readMaxHits(config = readLifecycle3dConfig(els)) {
+    return Math.max(1, Number(config.maxHits) || 1);
   }
 
-  function readHp(config = readLifecycle3dConfig(els)) {
-    return Math.round(readHpRatio(config) * ORB_LIFECYCLE_PREVIEW_HP_MAX);
+  function syncHitsFromPreviewHp(config = readLifecycle3dConfig(els)) {
+    const maxHits = readMaxHits(config);
+    const damagedHp = ORB_LIFECYCLE_PREVIEW_HP_MAX - Math.max(0, Math.min(ORB_LIFECYCLE_PREVIEW_HP_MAX, previewHp));
+    const hitSize = ORB_LIFECYCLE_PREVIEW_HP_MAX / maxHits;
+    hitsTaken = previewHp <= 0
+      ? maxHits
+      : Math.max(0, Math.min(maxHits, Math.floor(damagedHp / hitSize)));
+    return hitsTaken;
+  }
+
+  function setPreviewHp(nextHp, config = readLifecycle3dConfig(els)) {
+    previewHp = Math.max(0, Math.min(ORB_LIFECYCLE_PREVIEW_HP_MAX, Number(nextHp) || 0));
+    syncHitsFromPreviewHp(config);
+    return previewHp;
+  }
+
+  function readHpRatio() {
+    return Math.max(0, Math.min(1, previewHp / ORB_LIFECYCLE_PREVIEW_HP_MAX));
+  }
+
+  function readHp() {
+    return Math.round(Math.max(0, Math.min(ORB_LIFECYCLE_PREVIEW_HP_MAX, previewHp)));
+  }
+
+  function readHitDamageAmount(config = readLifecycle3dConfig(els)) {
+    const maxHits = Math.max(1, Number(config.maxHits) || 1);
+    return ORB_LIFECYCLE_PREVIEW_HP_MAX / maxHits;
   }
 
   function resolvePctLerp(baseValue, minPct, maxPct, hpRatio, min = -Infinity, max = Infinity) {
@@ -200,10 +226,10 @@ export function createOrbLifecycle3dPreview({
   }
 
   function resolveOrbShaderLifecycleState(config = readLifecycle3dConfig(els)) {
-    const hpRatio = readHpRatio(config);
+    const hpRatio = readHpRatio();
     const baseConfig = activeOrbConfig || ORB_3D_VISUAL_DEFAULTS;
     return Object.freeze({
-      hp: Math.round(hpRatio * ORB_LIFECYCLE_PREVIEW_HP_MAX),
+      hp: readHp(),
       hpRatio,
       shellLuminanceBoost: resolvePctLerp(baseConfig.shellLuminanceBoost, config.shellLuminanceBoostMinPct, config.shellLuminanceBoostMaxPct, hpRatio, 0, 12),
       shellCenterAlpha: resolvePctLerp(baseConfig.shellCenterAlpha, config.shellCenterAlphaMinPct, config.shellCenterAlphaMaxPct, hpRatio, 0, 1),
@@ -233,7 +259,7 @@ export function createOrbLifecycle3dPreview({
 
   function updateStatus(config = readLifecycle3dConfig(els)) {
     if (els.orbLifecycle3dStatus) {
-      els.orbLifecycle3dStatus.value = `Hits ${hitsTaken} / ${Math.max(1, Number(config.maxHits) || 1)} - HP ${readHp(config)} / ${ORB_LIFECYCLE_PREVIEW_HP_MAX}`;
+      els.orbLifecycle3dStatus.value = `Hits ${hitsTaken} / ${readMaxHits(config)} - HP ${readHp()} / ${ORB_LIFECYCLE_PREVIEW_HP_MAX}`;
     }
   }
 
@@ -383,7 +409,7 @@ export function createOrbLifecycle3dPreview({
       bornAt = performance.now();
     }
     frameCameraToSsotOrbSize(inspector, els.previewRoot, bo);
-    hitsTaken = Math.min(hitsTaken, Math.max(1, Number(config.maxHits) || 1));
+    setPreviewHp(previewHp, config);
     rebuildCracks(config);
     applyOrbShaderLifecycleState(config);
     updateStatus(config);
@@ -393,9 +419,9 @@ export function createOrbLifecycle3dPreview({
 
   function hit() {
     const config = readLifecycle3dConfig(els);
-    hitsTaken = Math.min(Math.max(1, Number(config.maxHits) || 1), hitsTaken + 1);
+    setPreviewHp(previewHp - readHitDamageAmount(config), config);
     apply();
-    if (hitsTaken >= Math.max(1, Number(config.maxHits) || 1)) {
+    if (previewHp <= 0) {
       removeBurst();
       if (model) model.visible = false;
       burst = createOrbLifecycle3dDissolveBurst({
@@ -408,7 +434,8 @@ export function createOrbLifecycle3dPreview({
   }
 
   function heal() {
-    hitsTaken = Math.max(0, hitsTaken - 1);
+    const config = readLifecycle3dConfig(els);
+    setPreviewHp(previewHp + ORB_LIFECYCLE_PREVIEW_HEAL_AMOUNT, config);
     removeBurst();
     if (model) model.visible = true;
     apply();
@@ -416,7 +443,7 @@ export function createOrbLifecycle3dPreview({
 
   function regenerate() {
     rollSeed();
-    hitsTaken = 0;
+    setPreviewHp(ORB_LIFECYCLE_PREVIEW_HP_MAX);
     removeBurst();
     if (model) model.visible = true;
     apply();
