@@ -78,6 +78,7 @@ export function bootstrapStagingRuntimeContext({
       shakeMode: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.mode,
       grooveShakeGate: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.grooveGate,
       liftShakeGate: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.liftGate,
+      smoothShakeGateMin: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.smoothGateMin,
       shakeLampThr: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.lampThreshold,
       sdRecentMs: INPUT_GESTURE_CFG.shake && INPUT_GESTURE_CFG.shake.directionRecentMs,
       flatSpinDominanceOn: INPUT_GESTURE_CFG.flatSpin && INPUT_GESTURE_CFG.flatSpin.dominanceOn,

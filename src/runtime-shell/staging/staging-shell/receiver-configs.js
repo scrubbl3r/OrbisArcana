@@ -1,4 +1,4 @@
-import { INPUT_GESTURE_CONFIG_DEFAULT } from "../../../content/input/gesture-config-default.js?v=20260517u";
+import { INPUT_GESTURE_CONFIG_DEFAULT } from "../../../content/input/gesture-config-default.js?v=20260517v";
 import { INPUT_DYNAMICS_CONFIG_DEFAULT } from "../../../content/input/dynamics-config-default.js?v=20260511a";
 
 function cloneJsonLike(value) {

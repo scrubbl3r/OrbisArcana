@@ -4,6 +4,7 @@ export const INPUT_GESTURE_CONFIG_DEFAULT = Object.freeze({
     mode: 2,
     grooveGate: 0.20,
     liftGate: 0.30,
+    smoothGateMin: 1.00,
     lampThreshold: 0.90,
     directionRecentMs: 750,
     rearmThreshold: 0.10,
