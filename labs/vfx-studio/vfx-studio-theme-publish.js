@@ -192,6 +192,18 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
+    case "heal":
+      return [
+        "export const HEAL_PRESET_DEFAULT = Object.freeze({",
+        `  globeCost: ${Math.round(clampNum(p.healGlobeCost, 0, 999, 1))},`,
+        `  healAmountHp: ${Math.round(clampNum(p.healAmountHp, 1, 100000, 500))},`,
+        `  castDurationMs: ${Math.round(clampNum(p.healCastDurationMs, 0, 60000, 250))},`,
+        `  cooldownMs: ${Math.round(clampNum(p.healCooldownMs, 0, 600000, 1000))},`,
+        `  requireDamagedOrb: ${p.healRequireDamagedOrb === false ? "false" : "true"},`,
+        `  consumeOnFailedCast: ${p.healConsumeOnFailedCast === true ? "true" : "false"},`,
+        "});",
+        "",
+      ].join("\n");
     case "flame-aoe-3d": {
       const keys = [
         "durationMs",

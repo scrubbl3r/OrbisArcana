@@ -3,6 +3,7 @@ import { createBubbleShield3dPreview } from "./previews/bubble-shield-3d-preview
 import { createShockwavePreview } from "./previews/shockwave-preview.js?v=20260425d";
 import { createShockwave3dPreview } from "./previews/shockwave-3d-preview.js?v=20260506a";
 import { createFlameAoePreview } from "./previews/flame-aoe-preview.js?v=20260425d";
+import { createHealPreview } from "./previews/heal-preview.js?v=20260517a";
 import { createElectricAoePreview } from "./previews/electric-aoe-preview.js?v=20260425d";
 import { createOrbBasePreview } from "./previews/orb-base-preview.js?v=20260425d";
 import { createOrbTemplatePreview } from "./previews/orb-template-preview.js?v=20260425d";
@@ -96,6 +97,14 @@ export function createStudioPreviewRegistry({
   actions.clearFlame = flamePreview.clear;
   actions.playFlame = flamePreview.play;
   flamePreview.wire();
+
+  const healPreview = createHealPreview({
+    els: previewEls.heal,
+  });
+  actions.applyHeal = healPreview.apply;
+  actions.clearHeal = healPreview.clear;
+  actions.playHeal = healPreview.play;
+  healPreview.wire();
 
   const electricPreview = createElectricAoePreview({
     els: previewEls.electric,

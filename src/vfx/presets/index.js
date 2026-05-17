@@ -4,6 +4,7 @@ export { SHOCKWAVE_PRESET_DEFAULT } from "./shockwave-default.js";
 export { SHOCKWAVE_3D_PRESET_DEFAULT } from "./shockwave-3d-default.js?v=20260506a";
 export { FLAME_AOE_PRESET_DEFAULT } from "./flame-aoe-default.js";
 export { FLAME_AOE_3D_PRESET_DEFAULT } from "./flame-aoe-3d-default.js";
+export { HEAL_PRESET_DEFAULT } from "./heal-default.js";
 export { ELECTRIC_AOE_PRESET_DEFAULT } from "./electric-aoe-default.js";
 export { ORB_SHATTER_PRESET_DEFAULT } from "./orb-shatter-default.js";
 export { ORB_NOD_PRESET_DEFAULT } from "./orb-nod-default.js";

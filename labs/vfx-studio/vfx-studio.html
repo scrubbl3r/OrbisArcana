@@ -1047,6 +1047,9 @@
           <div class="flameLayer" id="flameLaneLayer"></div>
           <div class="orb atOrigin" id="flameLaneOrb"></div>
         </div>
+        <div class="previewLane" id="healPreviewRoot" data-preview-root hidden aria-hidden="true">
+          <input id="healPreviewReadout" class="paramFieldInput" type="text" value="500 HP for 1 globe" readonly />
+        </div>
         <div class="previewLane" id="electricPreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="electricLayer" id="electricLaneLayer"></div>
           <div class="orb atOrigin" id="electricLaneOrb"></div>
@@ -1312,6 +1315,38 @@
             <label for="flameFillA">a</label>
             <input id="flameFillA" class="paramFieldInput" type="number" min="0" max="1" value="0.20" step="0.01" />
             <button id="flameApplyFillColorBtn" class="toolBtn" type="button">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-effect="heal" hidden>
+        <div class="row">
+          <button id="previewHeal" class="toolBtn" type="button">Preview</button>
+        </div>
+        <div class="paramFieldRows">
+          <div class="paramFieldRow">
+            <label for="healGlobeCost">Globe cost</label>
+            <input id="healGlobeCost" class="paramFieldInput" type="number" min="0" max="999" step="1" value="1" />
+          </div>
+          <div class="paramFieldRow">
+            <label for="healAmountHp">Heal amount HP</label>
+            <input id="healAmountHp" class="paramFieldInput" type="number" min="1" max="100000" step="1" value="500" />
+          </div>
+          <div class="paramFieldRow">
+            <label for="healCastDurationMs">Cast duration ms</label>
+            <input id="healCastDurationMs" class="paramFieldInput" type="number" min="0" max="60000" step="10" value="250" />
+          </div>
+          <div class="paramFieldRow">
+            <label for="healCooldownMs">Cooldown ms</label>
+            <input id="healCooldownMs" class="paramFieldInput" type="number" min="0" max="600000" step="10" value="1000" />
+          </div>
+          <div class="paramFieldRow">
+            <label for="healRequireDamagedOrb">Require damaged orb</label>
+            <input id="healRequireDamagedOrb" type="checkbox" checked />
+          </div>
+          <div class="paramFieldRow">
+            <label for="healConsumeOnFailedCast">Consume on failed cast</label>
+            <input id="healConsumeOnFailedCast" type="checkbox" />
           </div>
         </div>
       </div>
@@ -2666,14 +2701,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260517d"),
+      import("./vfx-studio-bootstrap.js?v=20260517e"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
-      import("./vfx-studio-surfaces.js?v=20260515c"),
-      import("./vfx-studio-theme-publish.js?v=20260517b"),
+      import("./vfx-studio-surfaces.js?v=20260517a"),
+      import("./vfx-studio-theme-publish.js?v=20260517c"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2684,6 +2719,7 @@
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
     import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260505e";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
+    import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517a";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260428a";
     import { createOrbBaseAuthoringAdapter } from "./adapters/orb-base-authoring-adapter.js?v=20260425d";
     import { createOrbGlobe3dAuthoringAdapter } from "./adapters/orb-globe-3d-authoring-adapter.js?v=20260502b";
@@ -2709,8 +2745,9 @@
       BUBBLE_SHIELD_PRESET_DEFAULT,
       BUBBLE_SHIELD_3D_PRESET_DEFAULT,
       ORB_SPAWN_PRESET_DEFAULT,
-      TELEPORT_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260505a";
+      TELEPORT_PRESET_DEFAULT,
+      HEAL_PRESET_DEFAULT
+    } from "../../src/vfx/presets/index.js?v=20260517a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
@@ -2742,6 +2779,7 @@
       createElectricAoeAuthoringAdapter,
       createFlameAoe3dAuthoringAdapter,
       createFlameAoeAuthoringAdapter,
+      createHealAuthoringAdapter,
       createOrb3dAuthoringAdapter,
       createOrbBaseAuthoringAdapter,
       createOrbGlobe3dAuthoringAdapter,
@@ -2784,6 +2822,7 @@
       shockPreviewRoot: $("shockPreviewRoot"),
       shockwave3dPreviewRoot: $("shockwave3dPreviewRoot"),
       flamePreviewRoot: $("flamePreviewRoot"),
+      healPreviewRoot: $("healPreviewRoot"),
       electricPreviewRoot: $("electricPreviewRoot"),
       orbBasePreviewRoot: $("orbBasePreviewRoot"),
       orbTemplatePreviewRoot: $("orbTemplatePreviewRoot"),
@@ -2956,6 +2995,15 @@
       flameFillB: $("flameFillB"),
       flameFillA: $("flameFillA"),
       flameApplyFillColorBtn: $("flameApplyFillColorBtn"),
+
+      previewHeal: $("previewHeal"),
+      healPreviewReadout: $("healPreviewReadout"),
+      healGlobeCost: $("healGlobeCost"),
+      healAmountHp: $("healAmountHp"),
+      healCastDurationMs: $("healCastDurationMs"),
+      healCooldownMs: $("healCooldownMs"),
+      healRequireDamagedOrb: $("healRequireDamagedOrb"),
+      healConsumeOnFailedCast: $("healConsumeOnFailedCast"),
 
       playElectric: $("playElectric"),
       electricMs: $("electricMs"),
@@ -3352,6 +3400,7 @@
       electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
       flameAoePresetDefault: FLAME_AOE_PRESET_DEFAULT,
       flameAoe3dPresetDefault: FLAME_AOE_3D_PRESET_DEFAULT,
+      healPresetDefault: HEAL_PRESET_DEFAULT,
       shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
       orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
       orb3dVisualDefaults: ORB_3D_VISUAL_DEFAULTS,
