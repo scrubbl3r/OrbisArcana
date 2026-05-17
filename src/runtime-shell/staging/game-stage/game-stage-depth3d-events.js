@@ -45,6 +45,7 @@ export function createGameStageDepth3dEventBindings({
   }
 
   function resolveOrbShaderHealth(payload = {}) {
+    let healthSource = "previous";
     const maxHealth = Math.max(1, firstFinite(
       payload.maxHealth,
       payload.max,
@@ -60,11 +61,14 @@ export function createGameStageDepth3dEventBindings({
       payload.healthAfter,
       payload.hitsRemaining
     );
+    if (health != null) healthSource = "health";
     if (health == null && Number.isFinite(Number(payload.hitsTaken))) {
       health = maxHealth - Number(payload.hitsTaken);
+      healthSource = "hitsTaken";
     }
     if (health == null && Number.isFinite(Number(payload.damageRatio))) {
       health = maxHealth * (1 - clamp01(payload.damageRatio));
+      healthSource = "damageRatio";
     }
     if (health == null) health = orbShaderHealthState.health;
     orbShaderHealthState.maxHealth = maxHealth;
@@ -72,11 +76,12 @@ export function createGameStageDepth3dEventBindings({
     return {
       health: orbShaderHealthState.health,
       maxHealth,
+      healthSource,
     };
   }
 
   function applyOrbHpShaderState(payload = {}) {
-    const { health, maxHealth } = resolveOrbShaderHealth(payload);
+    const { health, maxHealth, healthSource } = resolveOrbShaderHealth(payload);
     const healthRatio = clamp01(health / maxHealth);
     const shaderState = {
       luminanceBoost: lerpFloat(1.2, 1.8, healthRatio),
@@ -87,6 +92,13 @@ export function createGameStageDepth3dEventBindings({
     if (root && root.dataset) {
       root.dataset.orbShaderHp = String(Math.round(health * 1000) / 1000);
       root.dataset.orbShaderMaxHp = String(Math.round(maxHealth * 1000) / 1000);
+      root.dataset.orbShaderHealthSource = healthSource;
+      root.dataset.orbShaderPayloadHealth = payload.health == null ? "" : String(payload.health);
+      root.dataset.orbShaderPayloadTo = payload.to == null ? "" : String(payload.to);
+      root.dataset.orbShaderPayloadHealthAfter = payload.healthAfter == null ? "" : String(payload.healthAfter);
+      root.dataset.orbShaderPayloadHitsTaken = payload.hitsTaken == null ? "" : String(payload.hitsTaken);
+      root.dataset.orbShaderPayloadMaxHits = payload.maxHits == null ? "" : String(payload.maxHits);
+      root.dataset.orbShaderPayloadDamageRatio = payload.damageRatio == null ? "" : String(payload.damageRatio);
       root.dataset.orbShaderHealthRatio = String(Math.round(healthRatio * 1000) / 1000);
       root.dataset.orbShaderLuminanceBoost = String(Math.round(shaderState.luminanceBoost * 1000) / 1000);
       root.dataset.orbShaderCenterAlpha = String(Math.round(shaderState.centerAlpha * 1000) / 1000);
@@ -94,6 +106,7 @@ export function createGameStageDepth3dEventBindings({
       root.dataset.orbShaderSpotDistanceBO = String(Math.round(shaderState.spotDistanceBO * 1000) / 1000);
     }
     if (typeof setOrbShaderState === "function") setOrbShaderState(shaderState);
+    return shaderState;
   }
 
   function clear() {
@@ -154,6 +167,7 @@ export function createGameStageDepth3dEventBindings({
 
   return Object.freeze({
     bind,
+    syncOrbHpShaderState: applyOrbHpShaderState,
     dispose: clear,
   });
 }
