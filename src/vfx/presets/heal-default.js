@@ -10,6 +10,6 @@ export const HEAL_PRESET_DEFAULT = Object.freeze({
   shaderPulsePointLightIntensityPct: 25,
   shaderPulsePointLightDistancePct: 10,
   shaderPulseGoldMixPct: 25,
-  shaderPulseDurationMs: 150,
+  shaderPulseDurationMs: 1500,
   shaderPulseEasing: "easeInOutQuad",
 });
