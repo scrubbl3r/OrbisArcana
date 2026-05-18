@@ -41,9 +41,9 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSubdivisions: 64,
   wakeLeanAmount: 0.35,
   wakeLeanLag: 8.5,
-  wakeLiftBo: 0.6,
+  wakeLiftBo: 1.1,
   wakeLiftCoreRadiusBo: 0.25,
-  wakeStretchStrength: 1,
+  wakeStretchStrength: 1.35,
   wakeDisplaceBo: 0.12,
   wakeDisplaceScale: 1.8,
   wakeDisplaceSpeed: 0.35,
@@ -581,15 +581,22 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         vec3 stretchDirection = normalize(uWakeStretchDirection + vec3(0.0, 0.0001, 0.0));
         float stretchDot = dot(shellNormal, stretchDirection);
         float tail = clamp(stretchDot * 0.5 + 0.5, 0.0, 1.0);
-        vec3 local = position;
+        vec3 radialVec = position - stretchDirection * dot(position, stretchDirection);
+        float axisCoord = dot(position, stretchDirection);
         float coreStretch = length(uWakeCoreOffset);
         float coreRadius = max(0.0001, uWakeCoreRadius);
         float coreWidth = clamp(coreRadius / max(coreRadius + coreStretch, 0.0001), 0.08, 0.68);
-        float shellPull = smoothstep(1.0 - coreWidth * 2.4, 0.98, stretchDot);
-        float leadingCompression = 1.0 - smoothstep(-0.55, 0.82, stretchDot);
+        float stretchAmount = coreStretch * uWakeStretchStrength;
+        float shellPull = smoothstep(1.0 - coreWidth * 3.2, 0.98, stretchDot);
         float equatorGrip = sin(tail * 3.14159265359);
-        local += stretchDirection * coreStretch * uWakeStretchStrength * (shellPull * 0.86 + equatorGrip * 0.16);
-        local -= shellNormal * coreStretch * uWakeStretchStrength * leadingCompression * 0.18;
+        float plumeRise = pow(tail, 1.28) * 1.18 + shellPull * 0.42 + equatorGrip * 0.14;
+        float undersideLift = (1.0 - tail) * 0.18;
+        axisCoord += stretchAmount * (plumeRise + undersideLift);
+        float stretchRatio = clamp(stretchAmount / max(coreRadius + coreStretch, 0.0001), 0.0, 1.0);
+        float upperTaper = smoothstep(0.40, 1.0, tail) * stretchRatio;
+        float lowerHug = (1.0 - smoothstep(0.0, 0.34, tail)) * stretchRatio;
+        float radialScale = clamp(1.0 - upperTaper * 0.34 - lowerHug * 0.16, 0.42, 1.08);
+        vec3 local = radialVec * radialScale + stretchDirection * axisCoord;
 
         vec2 radialPlane = local.xz;
         float radius = length(radialPlane);
