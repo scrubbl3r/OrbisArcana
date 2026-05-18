@@ -47,8 +47,8 @@ import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-glob
 import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260504f";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-3d-default.js?v=20260428a";
 import { createOrbShaderMixer } from "../../../game-runtime/orb/orb-shader-mixer.js?v=20260517a";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517e";
-import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260517f";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517f";
+import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260517g";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505i";
@@ -303,6 +303,12 @@ export function createGameStageDepth3dLayer({
           health: Number(layer.health),
           maxHealth: Number(layer.maxHealth),
           hpRatio: Number(layer.hpRatio),
+          config: {
+            spotIntensityMinPct: Number(ORB_LIFECYCLE_3D_DEFAULTS.spotIntensityMinPct),
+            spotIntensityMaxPct: Number(ORB_LIFECYCLE_3D_DEFAULTS.spotIntensityMaxPct),
+            spotDistanceMinPct: Number(ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMinPct),
+            spotDistanceMaxPct: Number(ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMaxPct),
+          },
           values: values && typeof values === "object" ? { ...values } : null,
         });
       }

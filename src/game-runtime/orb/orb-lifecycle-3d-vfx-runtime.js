@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createRng } from "./orb-lifecycle-vfx-runtime.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517e";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517f";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);

@@ -9,7 +9,7 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260516a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517e";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517f";
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dErosionPatch,
@@ -220,6 +220,8 @@ export function createOrbLifecycle3dPreview({
       hpRatio,
       shellLuminanceBoost: resolvePctLerp(baseConfig.shellLuminanceBoost, config.shellLuminanceBoostMinPct, config.shellLuminanceBoostMaxPct, hpRatio, 0, 12),
       shellCenterAlpha: resolvePctLerp(baseConfig.shellCenterAlpha, config.shellCenterAlphaMinPct, config.shellCenterAlphaMaxPct, hpRatio, 0, 1),
+      pointLightIntensity: resolvePctLerp(baseConfig.lightIntensity, config.spotIntensityMinPct, config.spotIntensityMaxPct, hpRatio, 0, 10000),
+      pointLightDistanceBO: resolvePctLerp(baseConfig.lightDistanceBO, config.spotDistanceMinPct, config.spotDistanceMaxPct, hpRatio, 0, 1000),
       shadowSpotIntensity: resolvePctLerp(baseConfig.shadowSpotIntensity, config.spotIntensityMinPct, config.spotIntensityMaxPct, hpRatio, 0, 10000),
       shadowSpotDistanceBO: resolvePctLerp(baseConfig.shadowSpotDistanceBO, config.spotDistanceMinPct, config.spotDistanceMaxPct, hpRatio, 0, 1000),
       goldMix: resolvePctLerp(baseConfig.goldMix, config.goldMixMinPct, config.goldMixMaxPct, hpRatio, 0, 2),
@@ -232,6 +234,11 @@ export function createOrbLifecycle3dPreview({
     if (uniforms && uniforms.uShellLuminanceBoost) uniforms.uShellLuminanceBoost.value = shaderState.shellLuminanceBoost;
     if (uniforms && uniforms.uShellCenterAlpha) uniforms.uShellCenterAlpha.value = shaderState.shellCenterAlpha;
     if (uniforms && uniforms.uGoldMix) uniforms.uGoldMix.value = shaderState.goldMix;
+    if (pointLight) {
+      const bo = readBo();
+      pointLight.intensity = shaderState.pointLightIntensity;
+      pointLight.distance = shaderState.pointLightDistanceBO * bo;
+    }
     if (shadowSpot) {
       const bo = readBo();
       shadowSpot.intensity = shaderState.shadowSpotIntensity;
