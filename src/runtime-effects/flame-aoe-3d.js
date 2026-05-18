@@ -49,23 +49,11 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeLengthBo: clampNumber(source.wakeLengthBo, 0.05, 4, fallback.wakeLengthBo),
     wakeRadiusBo: clampNumber(source.wakeRadiusBo, 0.02, 2, fallback.wakeRadiusBo),
     wakeSubdivisions: clampInt(source.wakeSubdivisions, 12, 192, fallback.wakeSubdivisions),
-    wakeLeanOffsetBo: clampNumber(source.wakeLeanOffsetBo, 0, 4, fallback.wakeLeanOffsetBo),
     wakeLeanAmount: clampNumber(source.wakeLeanAmount, 0, 10, fallback.wakeLeanAmount),
     wakeLeanLag: clampNumber(source.wakeLeanLag, 0.1, 30, fallback.wakeLeanLag),
-    wakeLagGraph0Pct: optionalNumber(source.wakeLagGraph0Pct ?? fallback.wakeLagGraph0Pct ?? 0, 0, 100),
-    wakeLagGraph0Amount: optionalNumber(source.wakeLagGraph0Amount ?? fallback.wakeLagGraph0Amount ?? 0, 0, 10),
-    wakeLagGraph1Pct: optionalNumber(source.wakeLagGraph1Pct ?? fallback.wakeLagGraph1Pct ?? 35, 0, 100),
-    wakeLagGraph1Amount: optionalNumber(source.wakeLagGraph1Amount ?? fallback.wakeLagGraph1Amount ?? 0, 0, 10),
-    wakeLagGraph2Pct: optionalNumber(source.wakeLagGraph2Pct ?? fallback.wakeLagGraph2Pct ?? 100, 0, 100),
-    wakeLagGraph2Amount: optionalNumber(source.wakeLagGraph2Amount ?? fallback.wakeLagGraph2Amount ?? 1, 0, 10),
-    wakeXDampGraph0Pct: optionalNumber(source.wakeXDampGraph0Pct ?? fallback.wakeXDampGraph0Pct ?? 0, 0, 100),
-    wakeXDampGraph0Damp: optionalNumber(source.wakeXDampGraph0Damp ?? fallback.wakeXDampGraph0Damp ?? 1, 0, 1),
-    wakeXDampGraph1Pct: optionalNumber(source.wakeXDampGraph1Pct ?? fallback.wakeXDampGraph1Pct ?? 30, 0, 100),
-    wakeXDampGraph1Damp: optionalNumber(source.wakeXDampGraph1Damp ?? fallback.wakeXDampGraph1Damp ?? 0.9, 0, 1),
-    wakeXDampGraph2Pct: optionalNumber(source.wakeXDampGraph2Pct ?? fallback.wakeXDampGraph2Pct ?? 100, 0, 100),
-    wakeXDampGraph2Damp: optionalNumber(source.wakeXDampGraph2Damp ?? fallback.wakeXDampGraph2Damp ?? 0, 0, 1),
-    wakeLeadingStrength: clampNumber(source.wakeLeadingStrength, 0, 1, fallback.wakeLeadingStrength ?? 0.8),
-    wakeLeadingWidth: clampNumber(source.wakeLeadingWidth, 0.05, 1, fallback.wakeLeadingWidth ?? 0.45),
+    wakeLiftBo: clampNumber(source.wakeLiftBo, 0, 4, fallback.wakeLiftBo ?? 0.6),
+    wakeLiftCoreRadiusBo: clampNumber(source.wakeLiftCoreRadiusBo, 0.02, 2, fallback.wakeLiftCoreRadiusBo ?? 0.25),
+    wakeStretchStrength: clampNumber(source.wakeStretchStrength, 0, 4, fallback.wakeStretchStrength ?? 1),
     wakeDisplaceBo: clampNumber(source.wakeDisplaceBo, 0, 0.5, fallback.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(source.wakeDisplaceScale, 0.2, 8, fallback.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(source.wakeDisplaceSpeed, 0, 4, fallback.wakeDisplaceSpeed),
@@ -105,13 +93,6 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
 
 function createWakeElasticShellGeometry(radius, radialSegments = 64, heightSegments = 32) {
   const geometry = new THREE.SphereGeometry(radius, radialSegments, heightSegments);
-  const wakeHeights = [];
-  const positions = geometry.getAttribute("position");
-  const safeRadius = Math.max(0.0001, Number(radius) || 1);
-  for (let i = 0; i < positions.count; i += 1) {
-    wakeHeights.push(clampNumber((positions.getY(i) / safeRadius) * 0.5 + 0.5, 0, 1, 0.5));
-  }
-  geometry.setAttribute("wakeHeight", new THREE.Float32BufferAttribute(wakeHeights, 1));
   geometry.computeBoundingSphere();
   return geometry;
 }
@@ -138,30 +119,6 @@ function getWakeAlphaGradientStops(config) {
     const alpha = optionalNumber(config[`wakeAlphaGradient${i}A`], 0, 1);
     if ([pct, alpha].some((v) => v === "")) continue;
     stops.push({ pct: pct / 100, alpha });
-  }
-  stops.sort((a, b) => a.pct - b.pct);
-  return stops;
-}
-
-function getWakeLagGraphStops(config) {
-  const stops = [];
-  for (let i = 0; i < 3; i += 1) {
-    const pct = optionalNumber(config[`wakeLagGraph${i}Pct`], 0, 100);
-    const amount = optionalNumber(config[`wakeLagGraph${i}Amount`], 0, 10);
-    if ([pct, amount].some((v) => v === "")) continue;
-    stops.push({ pct: pct / 100, amount });
-  }
-  stops.sort((a, b) => a.pct - b.pct);
-  return stops;
-}
-
-function getWakeXDampGraphStops(config) {
-  const stops = [];
-  for (let i = 0; i < 3; i += 1) {
-    const pct = optionalNumber(config[`wakeXDampGraph${i}Pct`], 0, 100);
-    const damp = optionalNumber(config[`wakeXDampGraph${i}Damp`], 0, 1);
-    if ([pct, damp].some((v) => v === "")) continue;
-    stops.push({ pct: pct / 100, damp });
   }
   stops.sort((a, b) => a.pct - b.pct);
   return stops;
@@ -271,8 +228,6 @@ function createAuraShellMaterial(config) {
 function createWakeMaterial(config) {
   const graphStops = getWakeGraphStops(config);
   const alphaStops = getWakeAlphaGradientStops(config);
-  const lagStops = getWakeLagGraphStops(config);
-  const xDampStops = getWakeXDampGraphStops(config);
   const graphStopValues = [0, 1, 1, 1];
   const graphColors = [
     new THREE.Vector4(0, 0, 0, 0),
@@ -289,18 +244,6 @@ function createWakeMaterial(config) {
   alphaStops.slice(0, 4).forEach((stop, index) => {
     alphaStopValues[index] = stop.pct;
     alphaValues[index] = stop.alpha;
-  });
-  const lagStopValues = [0, 0.35, 1];
-  const lagAmounts = [0, 0, 1];
-  lagStops.slice(0, 3).forEach((stop, index) => {
-    lagStopValues[index] = stop.pct;
-    lagAmounts[index] = stop.amount;
-  });
-  const xDampStopValues = [0, 0.3, 1];
-  const xDampValues = [1, 0.9, 0];
-  xDampStops.slice(0, 3).forEach((stop, index) => {
-    xDampStopValues[index] = stop.pct;
-    xDampValues[index] = stop.damp;
   });
   const graphEnabled = config.wakeGraphEnabled !== 0;
   return new THREE.ShaderMaterial({
@@ -344,21 +287,12 @@ function createWakeMaterial(config) {
       uWakeAlphaGradientValues: { value: alphaValues },
       uWakeMotionOffset: { value: new THREE.Vector3() },
       uWakeCoreOffset: { value: new THREE.Vector3(0, 1, 0) },
+      uWakeCoreRadius: { value: config.wakeLiftCoreRadiusPx },
       uWakeStretchDirection: { value: new THREE.Vector3(0, 1, 0) },
-      uWakeVertexLagOffset: { value: new THREE.Vector2() },
-      uWakeLagDirection: { value: new THREE.Vector2() },
-      uWakeLeadingStrength: { value: config.wakeLeadingStrength },
-      uWakeLeadingWidth: { value: config.wakeLeadingWidth },
-      uWakeLagGraphCount: { value: Math.max(0, Math.min(3, lagStops.length)) },
-      uWakeLagGraphStops: { value: lagStopValues },
-      uWakeLagGraphAmounts: { value: lagAmounts },
-      uWakeXDampGraphCount: { value: Math.max(0, Math.min(3, xDampStops.length)) },
-      uWakeXDampGraphStops: { value: xDampStopValues },
-      uWakeXDampGraphValues: { value: xDampValues },
+      uWakeStretchStrength: { value: config.wakeStretchStrength },
     },
     vertexShader: `
       precision highp float;
-      attribute float wakeHeight;
       uniform float uTime;
       uniform float uWakeDisplaceDepth;
       uniform float uWakeDisplaceScale;
@@ -368,17 +302,9 @@ function createWakeMaterial(config) {
       uniform float uWakeDisplaceInfluenceTop;
       uniform vec3 uWakeMotionOffset;
       uniform vec3 uWakeCoreOffset;
+      uniform float uWakeCoreRadius;
       uniform vec3 uWakeStretchDirection;
-      uniform vec2 uWakeVertexLagOffset;
-      uniform vec2 uWakeLagDirection;
-      uniform float uWakeLeadingStrength;
-      uniform float uWakeLeadingWidth;
-      uniform int uWakeLagGraphCount;
-      uniform float uWakeLagGraphStops[3];
-      uniform float uWakeLagGraphAmounts[3];
-      uniform int uWakeXDampGraphCount;
-      uniform float uWakeXDampGraphStops[3];
-      uniform float uWakeXDampGraphValues[3];
+      uniform float uWakeStretchStrength;
       varying vec3 vLocalPos;
       varying float vTail;
       varying float vWakeHeight;
@@ -392,69 +318,20 @@ function createWakeMaterial(config) {
         for (int i = 0; i < 3; i += 1) { value += noise(p * freq) * amp; freq *= 1.82; amp *= 0.42; p += vec3(7.3, -11.9, 5.1); }
         return clamp(value, 0.0, 1.0);
       }
-      float sampleWakeLagGraph(float value) {
-        float t = clamp(value, 0.0, 1.0);
-        if (uWakeLagGraphCount <= 0) return 0.0;
-        if (uWakeLagGraphCount == 1) return uWakeLagGraphAmounts[0];
-        float result = uWakeLagGraphAmounts[0];
-        if (t <= uWakeLagGraphStops[0]) return result;
-        for (int i = 0; i < 2; i += 1) {
-          if (i >= uWakeLagGraphCount - 1) break;
-          float left = uWakeLagGraphStops[i];
-          float right = max(left + 0.0001, uWakeLagGraphStops[i + 1]);
-          result = uWakeLagGraphAmounts[i + 1];
-          if (t <= right) {
-            result = mix(uWakeLagGraphAmounts[i], uWakeLagGraphAmounts[i + 1], clamp((t - left) / (right - left), 0.0, 1.0));
-            break;
-          }
-        }
-        return result;
-      }
-      float sampleWakeXDampGraph(float value) {
-        float t = clamp(value, 0.0, 1.0);
-        if (uWakeXDampGraphCount <= 0) return 0.0;
-        if (uWakeXDampGraphCount == 1) return clamp(uWakeXDampGraphValues[0], 0.0, 1.0);
-        float result = clamp(uWakeXDampGraphValues[0], 0.0, 1.0);
-        if (t <= uWakeXDampGraphStops[0]) return result;
-        for (int i = 0; i < 2; i += 1) {
-          if (i >= uWakeXDampGraphCount - 1) break;
-          float left = uWakeXDampGraphStops[i];
-          float right = max(left + 0.0001, uWakeXDampGraphStops[i + 1]);
-          result = clamp(uWakeXDampGraphValues[i + 1], 0.0, 1.0);
-          if (t <= right) {
-            result = mix(uWakeXDampGraphValues[i], uWakeXDampGraphValues[i + 1], clamp((t - left) / (right - left), 0.0, 1.0));
-            break;
-          }
-        }
-        return clamp(result, 0.0, 1.0);
-      }
       void main() {
         vec3 shellNormal = normalize(position + vec3(0.0, 0.0001, 0.0));
         vec3 stretchDirection = normalize(uWakeStretchDirection + vec3(0.0, 0.0001, 0.0));
         float stretchDot = dot(shellNormal, stretchDirection);
         float tail = clamp(stretchDot * 0.5 + 0.5, 0.0, 1.0);
         vec3 local = position;
-        float vertexLagAmount = sampleWakeLagGraph(tail);
-        float xDamp = sampleWakeXDampGraph(tail);
         float coreStretch = length(uWakeCoreOffset);
-        float shellPull = smoothstep(-0.16, 0.96, stretchDot);
+        float coreRadius = max(0.0001, uWakeCoreRadius);
+        float coreWidth = clamp(coreRadius / max(coreRadius + coreStretch, 0.0001), 0.08, 0.68);
+        float shellPull = smoothstep(1.0 - coreWidth * 2.4, 0.98, stretchDot);
         float leadingCompression = 1.0 - smoothstep(-0.55, 0.82, stretchDot);
         float equatorGrip = sin(tail * 3.14159265359);
-        local += stretchDirection * coreStretch * (shellPull * 0.86 + equatorGrip * 0.16);
-        local -= shellNormal * coreStretch * leadingCompression * 0.18;
-        vec2 localPlane = vec2(dot(local, vec3(1.0, 0.0, 0.0)), dot(local, stretchDirection));
-        float localPlaneLen = length(localPlane);
-        float directionLen = length(uWakeLagDirection);
-        float leadingMask = 0.0;
-        if (localPlaneLen > 0.0001 && directionLen > 0.0001) {
-          vec2 leadingDirection = -uWakeLagDirection / directionLen;
-          float leadingDot = dot(localPlane / localPlaneLen, leadingDirection);
-          float width = clamp(uWakeLeadingWidth, 0.05, 1.0);
-          leadingMask = smoothstep(1.0 - width, 1.0, leadingDot) * clamp(uWakeLeadingStrength, 0.0, 1.0);
-        }
-        float leadingMultiplier = 1.0 - leadingMask;
-        vec3 planarLag = vec3(uWakeVertexLagOffset.x * (1.0 - xDamp), uWakeVertexLagOffset.y, 0.0);
-        local += planarLag * vertexLagAmount * leadingMultiplier;
+        local += stretchDirection * coreStretch * uWakeStretchStrength * (shellPull * 0.86 + equatorGrip * 0.16);
+        local -= shellNormal * coreStretch * uWakeStretchStrength * leadingCompression * 0.18;
         vec2 radialPlane = local.xz;
         float radius = length(radialPlane);
         vec2 radialDir = radius > 0.0001 ? radialPlane / radius : vec2(1.0, 0.0);
@@ -637,16 +514,10 @@ export function createFlameAoe3dRuntime({
   const lastPosition = new THREE.Vector3();
   const currentPosition = new THREE.Vector3();
   const rawMotionOffset = new THREE.Vector3();
-  const targetWakeOffset = new THREE.Vector3();
-  const wakeOffset = new THREE.Vector3();
   const liftCoreOffset = new THREE.Vector3(0, 1, 0);
   const targetLiftCoreOffset = new THREE.Vector3(0, 1, 0);
   const stretchDirection = new THREE.Vector3(0, 1, 0);
-  const targetVertexLagOffset = new THREE.Vector3();
-  const vertexLagOffset = new THREE.Vector3();
   const shaderMotion = new THREE.Vector3();
-  const shaderVertexLag = new THREE.Vector2();
-  const shaderLagDirection = new THREE.Vector2();
 
   function measureTrace(name, fn) {
     if (typeof traceMeasure === "function") return traceMeasure(name, fn);
@@ -672,14 +543,10 @@ export function createFlameAoe3dRuntime({
     const bo = Math.max(1, Number(runtimeBo) || 72);
     const position = readOrbPosition();
     if (!position) {
-      targetLiftCoreOffset.set(0, bo * 0.34, 0);
-      targetWakeOffset.copy(targetLiftCoreOffset);
-      targetVertexLagOffset.copy(targetLiftCoreOffset).multiplyScalar(0.42);
+      targetLiftCoreOffset.set(0, bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6), 0);
     } else if (!motionInitialized) {
       lastPosition.copy(position);
-      targetLiftCoreOffset.set(0, bo * 0.34, 0);
-      targetWakeOffset.copy(targetLiftCoreOffset);
-      targetVertexLagOffset.copy(targetLiftCoreOffset).multiplyScalar(0.42);
+      targetLiftCoreOffset.set(0, bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6), 0);
       motionInitialized = true;
     } else {
       const safeDt = Math.max(1 / 240, Math.min(0.12, Number(dtSec) || (1 / 60)));
@@ -688,19 +555,15 @@ export function createFlameAoe3dRuntime({
       const vz = (position.z - lastPosition.z) / safeDt;
       lastPosition.copy(position);
       const leanAmount = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 10, 0.35);
-      const buoyancy = bo * 0.34;
+      const buoyancy = bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6);
       const maxStretch = bo * Math.min(1.7, clampNumber(activeConfig && activeConfig.wakeLengthBo, 0.05, 4, 1));
       rawMotionOffset.set(-vx * 0.085, -vy * 0.085, -vz * 0.055);
       rawMotionOffset.clampLength(0, maxStretch * 0.72);
       targetLiftCoreOffset.set(0, buoyancy, 0).addScaledVector(rawMotionOffset, leanAmount * 0.22);
       targetLiftCoreOffset.clampLength(bo * 0.08, maxStretch);
-      targetWakeOffset.copy(targetLiftCoreOffset);
-      targetVertexLagOffset.copy(targetLiftCoreOffset).multiplyScalar(0.42);
     }
     const alpha = expLerpAlpha(dtSec, activeConfig && activeConfig.wakeLeanLag);
-    wakeOffset.lerp(targetWakeOffset, alpha);
     liftCoreOffset.lerp(targetLiftCoreOffset, alpha);
-    vertexLagOffset.lerp(targetVertexLagOffset, alpha);
     if (wakePivot) {
       wakePivot.position.x = 0;
       wakePivot.position.z = 0;
@@ -716,16 +579,11 @@ export function createFlameAoe3dRuntime({
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeCoreOffset) {
       wakeMaterial.uniforms.uWakeCoreOffset.value.copy(liftCoreOffset);
     }
+    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeCoreRadius) {
+      wakeMaterial.uniforms.uWakeCoreRadius.value = bo * clampNumber(activeConfig && activeConfig.wakeLiftCoreRadiusBo, 0.02, 2, 0.25);
+    }
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeStretchDirection) {
       wakeMaterial.uniforms.uWakeStretchDirection.value.copy(stretchDirection);
-    }
-    shaderVertexLag.set(vertexLagOffset.x, vertexLagOffset.y);
-    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeVertexLagOffset) {
-      wakeMaterial.uniforms.uWakeVertexLagOffset.value.copy(shaderVertexLag);
-    }
-    shaderLagDirection.set(targetVertexLagOffset.x, targetVertexLagOffset.y);
-    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeLagDirection) {
-      wakeMaterial.uniforms.uWakeLagDirection.value.copy(shaderLagDirection);
     }
   }
 
@@ -744,16 +602,10 @@ export function createFlameAoe3dRuntime({
     lastPosition.set(0, 0, 0);
     currentPosition.set(0, 0, 0);
     rawMotionOffset.set(0, 0, 0);
-    targetWakeOffset.set(0, 0, 0);
-    wakeOffset.set(0, 0, 0);
     liftCoreOffset.set(0, 1, 0);
     targetLiftCoreOffset.set(0, 1, 0);
     stretchDirection.set(0, 1, 0);
-    targetVertexLagOffset.set(0, 0, 0);
-    vertexLagOffset.set(0, 0, 0);
     shaderMotion.set(0, 0, 0);
-    shaderVertexLag.set(0, 0);
-    shaderLagDirection.set(0, 0);
     if (group && group.parent) group.parent.remove(group);
     if (group) disposeThreeObject(group);
     group = null;
@@ -795,7 +647,7 @@ export function createFlameAoe3dRuntime({
         lastPosition.copy(initialPosition);
         motionInitialized = true;
       }
-      liftCoreOffset.set(0, bo * 0.34, 0);
+      liftCoreOffset.set(0, bo * config.wakeLiftBo, 0);
       targetLiftCoreOffset.copy(liftCoreOffset);
       stretchDirection.set(0, 1, 0);
       group = new THREE.Group();
@@ -810,6 +662,7 @@ export function createFlameAoe3dRuntime({
       wakeMaterial = createWakeMaterial({
         ...config,
         wakeDisplacePx: bo * config.wakeDisplaceBo,
+        wakeLiftCoreRadiusPx: bo * config.wakeLiftCoreRadiusBo,
       });
       const wake = new THREE.Mesh(
         createWakeElasticShellGeometry(

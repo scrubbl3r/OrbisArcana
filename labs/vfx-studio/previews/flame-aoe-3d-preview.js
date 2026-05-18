@@ -39,23 +39,11 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeLengthBo: 0.95,
   wakeRadiusBo: 0.5,
   wakeSubdivisions: 64,
-  wakeLeanOffsetBo: 0.5,
   wakeLeanAmount: 0.35,
   wakeLeanLag: 8.5,
-  wakeLagGraph0Pct: 0,
-  wakeLagGraph0Amount: 0,
-  wakeLagGraph1Pct: 35,
-  wakeLagGraph1Amount: 0,
-  wakeLagGraph2Pct: 100,
-  wakeLagGraph2Amount: 1,
-  wakeXDampGraph0Pct: 0,
-  wakeXDampGraph0Damp: 1,
-  wakeXDampGraph1Pct: 30,
-  wakeXDampGraph1Damp: 0.9,
-  wakeXDampGraph2Pct: 100,
-  wakeXDampGraph2Damp: 0,
-  wakeLeadingStrength: 0.8,
-  wakeLeadingWidth: 0.45,
+  wakeLiftBo: 0.6,
+  wakeLiftCoreRadiusBo: 0.25,
+  wakeStretchStrength: 1,
   wakeDisplaceBo: 0.12,
   wakeDisplaceScale: 1.8,
   wakeDisplaceSpeed: 0.35,
@@ -187,23 +175,11 @@ function readFlameWakeConfig(els = {}) {
     wakeLengthBo: clampNumber(els.flameAoe3dWakeLengthBo && els.flameAoe3dWakeLengthBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLengthBo),
     wakeRadiusBo: clampNumber(els.flameAoe3dWakeRadiusBo && els.flameAoe3dWakeRadiusBo.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeRadiusBo),
     wakeSubdivisions: Math.round(clampNumber(els.flameAoe3dWakeSubdivisions && els.flameAoe3dWakeSubdivisions.value, 12, 192, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSubdivisions)),
-    wakeLeanOffsetBo: clampNumber(els.flameAoe3dWakeLeanOffsetBo && els.flameAoe3dWakeLeanOffsetBo.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanOffsetBo),
     wakeLeanAmount: clampNumber(els.flameAoe3dWakeLeanAmount && els.flameAoe3dWakeLeanAmount.value, 0, 10, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanAmount),
     wakeLeanLag: clampNumber(els.flameAoe3dWakeLeanLag && els.flameAoe3dWakeLeanLag.value, 0.1, 30, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanLag),
-    wakeLagGraph0Pct: readOptionalNumber(els.flameAoe3dWakeLagGraph0Pct && els.flameAoe3dWakeLagGraph0Pct.value, 0, 100),
-    wakeLagGraph0Amount: readOptionalNumber(els.flameAoe3dWakeLagGraph0Amount && els.flameAoe3dWakeLagGraph0Amount.value, 0, 10),
-    wakeLagGraph1Pct: readOptionalNumber(els.flameAoe3dWakeLagGraph1Pct && els.flameAoe3dWakeLagGraph1Pct.value, 0, 100),
-    wakeLagGraph1Amount: readOptionalNumber(els.flameAoe3dWakeLagGraph1Amount && els.flameAoe3dWakeLagGraph1Amount.value, 0, 10),
-    wakeLagGraph2Pct: readOptionalNumber(els.flameAoe3dWakeLagGraph2Pct && els.flameAoe3dWakeLagGraph2Pct.value, 0, 100),
-    wakeLagGraph2Amount: readOptionalNumber(els.flameAoe3dWakeLagGraph2Amount && els.flameAoe3dWakeLagGraph2Amount.value, 0, 10),
-    wakeXDampGraph0Pct: readOptionalNumber(els.flameAoe3dWakeXDampGraph0Pct && els.flameAoe3dWakeXDampGraph0Pct.value, 0, 100),
-    wakeXDampGraph0Damp: readOptionalNumber(els.flameAoe3dWakeXDampGraph0Damp && els.flameAoe3dWakeXDampGraph0Damp.value, 0, 1),
-    wakeXDampGraph1Pct: readOptionalNumber(els.flameAoe3dWakeXDampGraph1Pct && els.flameAoe3dWakeXDampGraph1Pct.value, 0, 100),
-    wakeXDampGraph1Damp: readOptionalNumber(els.flameAoe3dWakeXDampGraph1Damp && els.flameAoe3dWakeXDampGraph1Damp.value, 0, 1),
-    wakeXDampGraph2Pct: readOptionalNumber(els.flameAoe3dWakeXDampGraph2Pct && els.flameAoe3dWakeXDampGraph2Pct.value, 0, 100),
-    wakeXDampGraph2Damp: readOptionalNumber(els.flameAoe3dWakeXDampGraph2Damp && els.flameAoe3dWakeXDampGraph2Damp.value, 0, 1),
-    wakeLeadingStrength: clampNumber(els.flameAoe3dWakeLeadingStrength && els.flameAoe3dWakeLeadingStrength.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeadingStrength),
-    wakeLeadingWidth: clampNumber(els.flameAoe3dWakeLeadingWidth && els.flameAoe3dWakeLeadingWidth.value, 0.05, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeadingWidth),
+    wakeLiftBo: clampNumber(els.flameAoe3dWakeLiftBo && els.flameAoe3dWakeLiftBo.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLiftBo),
+    wakeLiftCoreRadiusBo: clampNumber(els.flameAoe3dWakeLiftCoreRadiusBo && els.flameAoe3dWakeLiftCoreRadiusBo.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLiftCoreRadiusBo),
+    wakeStretchStrength: clampNumber(els.flameAoe3dWakeStretchStrength && els.flameAoe3dWakeStretchStrength.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeStretchStrength),
     wakeDisplaceBo: clampNumber(els.flameAoe3dWakeDisplaceBo && els.flameAoe3dWakeDisplaceBo.value, 0, 0.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(els.flameAoe3dWakeDisplaceScale && els.flameAoe3dWakeDisplaceScale.value, 0.2, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(els.flameAoe3dWakeDisplaceSpeed && els.flameAoe3dWakeDisplaceSpeed.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceSpeed),
@@ -247,23 +223,11 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeLengthBo) els.flameAoe3dWakeLengthBo.value = String(Number(cfg.wakeLengthBo).toFixed(2));
   if (els.flameAoe3dWakeRadiusBo) els.flameAoe3dWakeRadiusBo.value = String(Number(cfg.wakeRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSubdivisions) els.flameAoe3dWakeSubdivisions.value = String(Math.round(Number(cfg.wakeSubdivisions)));
-  if (els.flameAoe3dWakeLeanOffsetBo) els.flameAoe3dWakeLeanOffsetBo.value = String(Number(cfg.wakeLeanOffsetBo).toFixed(2));
   if (els.flameAoe3dWakeLeanAmount) els.flameAoe3dWakeLeanAmount.value = String(Number(cfg.wakeLeanAmount).toFixed(2));
   if (els.flameAoe3dWakeLeanLag) els.flameAoe3dWakeLeanLag.value = String(Number(cfg.wakeLeanLag).toFixed(2));
-  for (let i = 0; i < 3; i += 1) {
-    const pctEl = els[`flameAoe3dWakeLagGraph${i}Pct`];
-    const amountEl = els[`flameAoe3dWakeLagGraph${i}Amount`];
-    if (pctEl) pctEl.value = cfg[`wakeLagGraph${i}Pct`] == null ? "" : String(cfg[`wakeLagGraph${i}Pct`]);
-    if (amountEl) amountEl.value = cfg[`wakeLagGraph${i}Amount`] == null ? "" : String(cfg[`wakeLagGraph${i}Amount`]);
-  }
-  for (let i = 0; i < 3; i += 1) {
-    const pctEl = els[`flameAoe3dWakeXDampGraph${i}Pct`];
-    const dampEl = els[`flameAoe3dWakeXDampGraph${i}Damp`];
-    if (pctEl) pctEl.value = cfg[`wakeXDampGraph${i}Pct`] == null ? "" : String(cfg[`wakeXDampGraph${i}Pct`]);
-    if (dampEl) dampEl.value = cfg[`wakeXDampGraph${i}Damp`] == null ? "" : String(cfg[`wakeXDampGraph${i}Damp`]);
-  }
-  if (els.flameAoe3dWakeLeadingStrength) els.flameAoe3dWakeLeadingStrength.value = String(Number(cfg.wakeLeadingStrength).toFixed(2));
-  if (els.flameAoe3dWakeLeadingWidth) els.flameAoe3dWakeLeadingWidth.value = String(Number(cfg.wakeLeadingWidth).toFixed(2));
+  if (els.flameAoe3dWakeLiftBo) els.flameAoe3dWakeLiftBo.value = String(Number(cfg.wakeLiftBo).toFixed(2));
+  if (els.flameAoe3dWakeLiftCoreRadiusBo) els.flameAoe3dWakeLiftCoreRadiusBo.value = String(Number(cfg.wakeLiftCoreRadiusBo).toFixed(2));
+  if (els.flameAoe3dWakeStretchStrength) els.flameAoe3dWakeStretchStrength.value = String(Number(cfg.wakeStretchStrength).toFixed(2));
   if (els.flameAoe3dWakeDisplaceBo) els.flameAoe3dWakeDisplaceBo.value = String(Number(cfg.wakeDisplaceBo).toFixed(3));
   if (els.flameAoe3dWakeDisplaceScale) els.flameAoe3dWakeDisplaceScale.value = String(Number(cfg.wakeDisplaceScale).toFixed(2));
   if (els.flameAoe3dWakeDisplaceSpeed) els.flameAoe3dWakeDisplaceSpeed.value = String(Number(cfg.wakeDisplaceSpeed).toFixed(2));
@@ -312,15 +276,8 @@ function layerVisible(button) {
   return !button || button.getAttribute("aria-pressed") !== "false";
 }
 
-function createWakeTeardropGeometry(radius, length, radialSegments = 64, heightSegments = 32) {
+function createWakeElasticShellGeometry(radius, _length, radialSegments = 64, heightSegments = 32) {
   const geometry = new THREE.SphereGeometry(radius, radialSegments, heightSegments);
-  const wakeHeights = [];
-  const positions = geometry.getAttribute("position");
-  const safeRadius = Math.max(0.0001, Number(radius) || 1);
-  for (let i = 0; i < positions.count; i += 1) {
-    wakeHeights.push(clampNumber((positions.getY(i) / safeRadius) * 0.5 + 0.5, 0, 1, 0.5));
-  }
-  geometry.setAttribute("wakeHeight", new THREE.Float32BufferAttribute(wakeHeights, 1));
   geometry.computeBoundingSphere();
   return geometry;
 }
@@ -532,6 +489,10 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeDisplaceSoftness: { value: config.wakeDisplaceSoftness },
       uWakeDisplaceInfluenceBottom: { value: config.wakeDisplaceInfluenceBottom },
       uWakeDisplaceInfluenceTop: { value: config.wakeDisplaceInfluenceTop },
+      uWakeCoreOffset: { value: new THREE.Vector3(0, Number(config.wakeLiftPx) || 1, 0) },
+      uWakeCoreRadius: { value: Number(config.wakeLiftCoreRadiusPx) || 1 },
+      uWakeStretchDirection: { value: new THREE.Vector3(0, 1, 0) },
+      uWakeStretchStrength: { value: config.wakeStretchStrength },
       uWakeNoiseScale: { value: config.wakeNoiseScale },
       uWakeNoiseSpeed: { value: config.wakeNoiseSpeed },
       uWakeNoiseDensityBottom: { value: config.wakeNoiseDensityBottom },
@@ -560,8 +521,6 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
     vertexShader: `
       precision highp float;
 
-      attribute float wakeHeight;
-
       uniform float uTime;
       uniform float uWakeDisplaceDepth;
       uniform float uWakeDisplaceScale;
@@ -569,6 +528,10 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeDisplaceSoftness;
       uniform float uWakeDisplaceInfluenceBottom;
       uniform float uWakeDisplaceInfluenceTop;
+      uniform vec3 uWakeCoreOffset;
+      uniform float uWakeCoreRadius;
+      uniform vec3 uWakeStretchDirection;
+      uniform float uWakeStretchStrength;
 
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
@@ -614,8 +577,19 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       }
 
       void main() {
-        float tail = clamp(uv.y, 0.0, 1.0);
+        vec3 shellNormal = normalize(position + vec3(0.0, 0.0001, 0.0));
+        vec3 stretchDirection = normalize(uWakeStretchDirection + vec3(0.0, 0.0001, 0.0));
+        float stretchDot = dot(shellNormal, stretchDirection);
+        float tail = clamp(stretchDot * 0.5 + 0.5, 0.0, 1.0);
         vec3 local = position;
+        float coreStretch = length(uWakeCoreOffset);
+        float coreRadius = max(0.0001, uWakeCoreRadius);
+        float coreWidth = clamp(coreRadius / max(coreRadius + coreStretch, 0.0001), 0.08, 0.68);
+        float shellPull = smoothstep(1.0 - coreWidth * 2.4, 0.98, stretchDot);
+        float leadingCompression = 1.0 - smoothstep(-0.55, 0.82, stretchDot);
+        float equatorGrip = sin(tail * 3.14159265359);
+        local += stretchDirection * coreStretch * uWakeStretchStrength * (shellPull * 0.86 + equatorGrip * 0.16);
+        local -= shellNormal * coreStretch * uWakeStretchStrength * leadingCompression * 0.18;
 
         vec2 radialPlane = local.xz;
         float radius = length(radialPlane);
@@ -655,7 +629,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         vWorldPos = worldPos.xyz;
         vLocalPos = local;
         vTail = tail;
-        vWakeHeight = clamp(wakeHeight, 0.0, 1.0);
+        vWakeHeight = tail;
         gl_Position = projectionMatrix * viewMatrix * worldPos;
       }
     `,
@@ -687,6 +661,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform int uWakeAlphaGradientCount;
       uniform float uWakeAlphaGradientStops[4];
       uniform float uWakeAlphaGradientValues[4];
+      uniform vec3 uWakeStretchDirection;
 
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
@@ -867,24 +842,17 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 
       void main() {
         vec3 surface = normalize(vLocalPos + vec3(0.0, 0.001, 0.0));
+        vec3 stretchDirection = normalize(uWakeStretchDirection + vec3(0.0, 0.0001, 0.0));
 
         float perlinTime = uTime * uWakeNoiseSpeed;
         float perlinFrequency = 4.25 / max(0.1, uWakeNoiseScale);
-        vec3 perlinFlow = vec3(
-          surface.x * perlinFrequency,
-          (vTail * 1.35 - perlinTime * 0.42) * perlinFrequency,
-          surface.z * perlinFrequency
-        );
+        vec3 perlinFlow = surface * perlinFrequency + stretchDirection * ((vTail * 1.35 - perlinTime * 0.42) * perlinFrequency);
         float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, clamp(vTail, 0.0, 1.0));
         float perlin = perlinMusgraveField(perlinFlow);
 
         float simplexTime = uTime * uWakeSimplexSpeed;
         float simplexFrequency = 4.25 / max(0.1, uWakeSimplexScale);
-        vec3 simplexFlow = vec3(
-          surface.x * simplexFrequency,
-          (vTail * 1.52 - simplexTime * 0.5) * simplexFrequency,
-          surface.z * simplexFrequency
-        );
+        vec3 simplexFlow = surface * simplexFrequency + stretchDirection * ((vTail * 1.52 - simplexTime * 0.5) * simplexFrequency);
         float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, clamp(vTail, 0.0, 1.0));
         float simplex = simplexGranularField(simplexFlow);
 
@@ -995,9 +963,11 @@ export function createFlameAoe3dPreview({
     wakeMaterial = createWakeMaterial({
       ...wakeConfig,
       wakeDisplacePx: bo * wakeConfig.wakeDisplaceBo,
+      wakeLiftPx: bo * wakeConfig.wakeLiftBo,
+      wakeLiftCoreRadiusPx: bo * wakeConfig.wakeLiftCoreRadiusBo,
     });
     wakeMesh = new THREE.Mesh(
-      createWakeTeardropGeometry(
+      createWakeElasticShellGeometry(
         bo * wakeConfig.wakeRadiusBo,
         bo * wakeConfig.wakeLengthBo,
         wakeConfig.wakeSubdivisions,
@@ -1083,13 +1053,11 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyWakeLengthBtn,
       els.flameAoe3dApplyWakeRadiusBtn,
       els.flameAoe3dApplyWakeSubdivisionsBtn,
-      els.flameAoe3dApplyWakeLeanOffsetBtn,
       els.flameAoe3dApplyWakeLeanAmountBtn,
       els.flameAoe3dApplyWakeLeanLagBtn,
-      els.flameAoe3dApplyWakeLagGraphBtn,
-      els.flameAoe3dApplyWakeXDampGraphBtn,
-      els.flameAoe3dApplyWakeLeadingStrengthBtn,
-      els.flameAoe3dApplyWakeLeadingWidthBtn,
+      els.flameAoe3dApplyWakeLiftBtn,
+      els.flameAoe3dApplyWakeLiftCoreRadiusBtn,
+      els.flameAoe3dApplyWakeStretchStrengthBtn,
       els.flameAoe3dApplyWakeDisplaceBtn,
       els.flameAoe3dApplyWakeDisplaceScaleBtn,
       els.flameAoe3dApplyWakeDisplaceSpeedBtn,

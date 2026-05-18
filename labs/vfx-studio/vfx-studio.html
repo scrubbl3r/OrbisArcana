@@ -589,13 +589,6 @@
     .rgbaParamRow.wakeAlphaGradientRow{
       grid-template-columns: auto minmax(86px, 1fr) auto minmax(86px, 1fr);
     }
-    .rgbaParamRow.wakeLagGraphRow{
-      grid-template-columns: minmax(132px, 132px) auto minmax(104px, 1fr) auto minmax(104px, 1fr);
-    }
-    .rgbaParamRow.wakeLagGraphApplyRow{
-      grid-template-columns: minmax(132px, 132px) auto 1fr;
-      justify-items:start;
-    }
     .rgbaParamRow .rgbaLabel,
     .rgbaParamRow label{
       font-size:12px;
@@ -1781,11 +1774,6 @@
           <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dPhysicsControls">Physics</button>
           <div id="flameAoe3dPhysicsControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeLeanOffsetBo">Lean offset BO</label>
-              <input id="flameAoe3dWakeLeanOffsetBo" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="0.50" />
-              <button id="flameAoe3dApplyWakeLeanOffsetBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
               <label for="flameAoe3dWakeLeanAmount">Lean amount</label>
               <input id="flameAoe3dWakeLeanAmount" class="paramFieldInput" type="number" min="0" max="10" step="0.01" value="0.35" />
               <button id="flameAoe3dApplyWakeLeanAmountBtn" class="toolBtn" type="button">Apply</button>
@@ -1795,65 +1783,20 @@
               <input id="flameAoe3dWakeLeanLag" class="paramFieldInput" type="number" min="0.1" max="30" step="0.1" value="8.5" />
               <button id="flameAoe3dApplyWakeLeanLagBtn" class="toolBtn" type="button">Apply</button>
             </div>
-            <div class="rgbaParamRow wakeLagGraphRow">
-              <span class="rgbaLabel">Lag graph</span>
-              <label for="flameAoe3dWakeLagGraph0Pct">%</label>
-              <input id="flameAoe3dWakeLagGraph0Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="0" />
-              <label for="flameAoe3dWakeLagGraph0Amount">amount</label>
-              <input id="flameAoe3dWakeLagGraph0Amount" class="paramFieldInput" type="number" min="0" max="10" step="0.01" value="0" />
-            </div>
-            <div class="rgbaParamRow wakeLagGraphRow">
-              <span class="rgbaLabel"></span>
-              <label for="flameAoe3dWakeLagGraph1Pct">%</label>
-              <input id="flameAoe3dWakeLagGraph1Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="35" />
-              <label for="flameAoe3dWakeLagGraph1Amount">amount</label>
-              <input id="flameAoe3dWakeLagGraph1Amount" class="paramFieldInput" type="number" min="0" max="10" step="0.01" value="0" />
-            </div>
-            <div class="rgbaParamRow wakeLagGraphRow">
-              <span class="rgbaLabel"></span>
-              <label for="flameAoe3dWakeLagGraph2Pct">%</label>
-              <input id="flameAoe3dWakeLagGraph2Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="100" />
-              <label for="flameAoe3dWakeLagGraph2Amount">amount</label>
-              <input id="flameAoe3dWakeLagGraph2Amount" class="paramFieldInput" type="number" min="0" max="10" step="0.01" value="1" />
-            </div>
-            <div class="rgbaParamRow wakeLagGraphApplyRow">
-              <span class="rgbaLabel"></span>
-              <button id="flameAoe3dApplyWakeLagGraphBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="rgbaParamRow wakeLagGraphRow">
-              <span class="rgbaLabel">X damp graph</span>
-              <label for="flameAoe3dWakeXDampGraph0Pct">%</label>
-              <input id="flameAoe3dWakeXDampGraph0Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="0" />
-              <label for="flameAoe3dWakeXDampGraph0Damp">damp</label>
-              <input id="flameAoe3dWakeXDampGraph0Damp" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1" />
-            </div>
-            <div class="rgbaParamRow wakeLagGraphRow">
-              <span class="rgbaLabel"></span>
-              <label for="flameAoe3dWakeXDampGraph1Pct">%</label>
-              <input id="flameAoe3dWakeXDampGraph1Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="30" />
-              <label for="flameAoe3dWakeXDampGraph1Damp">damp</label>
-              <input id="flameAoe3dWakeXDampGraph1Damp" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.9" />
-            </div>
-            <div class="rgbaParamRow wakeLagGraphRow">
-              <span class="rgbaLabel"></span>
-              <label for="flameAoe3dWakeXDampGraph2Pct">%</label>
-              <input id="flameAoe3dWakeXDampGraph2Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="100" />
-              <label for="flameAoe3dWakeXDampGraph2Damp">damp</label>
-              <input id="flameAoe3dWakeXDampGraph2Damp" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0" />
-            </div>
-            <div class="rgbaParamRow wakeLagGraphApplyRow">
-              <span class="rgbaLabel"></span>
-              <button id="flameAoe3dApplyWakeXDampGraphBtn" class="toolBtn" type="button">Apply</button>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeLiftBo">Lift BO</label>
+              <input id="flameAoe3dWakeLiftBo" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="0.60" />
+              <button id="flameAoe3dApplyWakeLiftBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeLeadingStrength">Leading strength</label>
-              <input id="flameAoe3dWakeLeadingStrength" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.8" />
-              <button id="flameAoe3dApplyWakeLeadingStrengthBtn" class="toolBtn" type="button">Apply</button>
+              <label for="flameAoe3dWakeLiftCoreRadiusBo">Lift core radius BO</label>
+              <input id="flameAoe3dWakeLiftCoreRadiusBo" class="paramFieldInput" type="number" min="0.02" max="2" step="0.01" value="0.25" />
+              <button id="flameAoe3dApplyWakeLiftCoreRadiusBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeLeadingWidth">Leading width</label>
-              <input id="flameAoe3dWakeLeadingWidth" class="paramFieldInput" type="number" min="0.05" max="1" step="0.01" value="0.45" />
-              <button id="flameAoe3dApplyWakeLeadingWidthBtn" class="toolBtn" type="button">Apply</button>
+              <label for="flameAoe3dWakeStretchStrength">Stretch strength</label>
+              <input id="flameAoe3dWakeStretchStrength" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="1.00" />
+              <button id="flameAoe3dApplyWakeStretchStrengthBtn" class="toolBtn" type="button">Apply</button>
             </div>
           </div>
         </div>
@@ -3240,30 +3183,16 @@
       flameAoe3dApplyWakeRadiusBtn: $("flameAoe3dApplyWakeRadiusBtn"),
       flameAoe3dWakeSubdivisions: $("flameAoe3dWakeSubdivisions"),
       flameAoe3dApplyWakeSubdivisionsBtn: $("flameAoe3dApplyWakeSubdivisionsBtn"),
-      flameAoe3dWakeLeanOffsetBo: $("flameAoe3dWakeLeanOffsetBo"),
-      flameAoe3dApplyWakeLeanOffsetBtn: $("flameAoe3dApplyWakeLeanOffsetBtn"),
       flameAoe3dWakeLeanAmount: $("flameAoe3dWakeLeanAmount"),
       flameAoe3dApplyWakeLeanAmountBtn: $("flameAoe3dApplyWakeLeanAmountBtn"),
       flameAoe3dWakeLeanLag: $("flameAoe3dWakeLeanLag"),
       flameAoe3dApplyWakeLeanLagBtn: $("flameAoe3dApplyWakeLeanLagBtn"),
-      flameAoe3dWakeLagGraph0Pct: $("flameAoe3dWakeLagGraph0Pct"),
-      flameAoe3dWakeLagGraph0Amount: $("flameAoe3dWakeLagGraph0Amount"),
-      flameAoe3dWakeLagGraph1Pct: $("flameAoe3dWakeLagGraph1Pct"),
-      flameAoe3dWakeLagGraph1Amount: $("flameAoe3dWakeLagGraph1Amount"),
-      flameAoe3dWakeLagGraph2Pct: $("flameAoe3dWakeLagGraph2Pct"),
-      flameAoe3dWakeLagGraph2Amount: $("flameAoe3dWakeLagGraph2Amount"),
-      flameAoe3dApplyWakeLagGraphBtn: $("flameAoe3dApplyWakeLagGraphBtn"),
-      flameAoe3dWakeXDampGraph0Pct: $("flameAoe3dWakeXDampGraph0Pct"),
-      flameAoe3dWakeXDampGraph0Damp: $("flameAoe3dWakeXDampGraph0Damp"),
-      flameAoe3dWakeXDampGraph1Pct: $("flameAoe3dWakeXDampGraph1Pct"),
-      flameAoe3dWakeXDampGraph1Damp: $("flameAoe3dWakeXDampGraph1Damp"),
-      flameAoe3dWakeXDampGraph2Pct: $("flameAoe3dWakeXDampGraph2Pct"),
-      flameAoe3dWakeXDampGraph2Damp: $("flameAoe3dWakeXDampGraph2Damp"),
-      flameAoe3dApplyWakeXDampGraphBtn: $("flameAoe3dApplyWakeXDampGraphBtn"),
-      flameAoe3dWakeLeadingStrength: $("flameAoe3dWakeLeadingStrength"),
-      flameAoe3dApplyWakeLeadingStrengthBtn: $("flameAoe3dApplyWakeLeadingStrengthBtn"),
-      flameAoe3dWakeLeadingWidth: $("flameAoe3dWakeLeadingWidth"),
-      flameAoe3dApplyWakeLeadingWidthBtn: $("flameAoe3dApplyWakeLeadingWidthBtn"),
+      flameAoe3dWakeLiftBo: $("flameAoe3dWakeLiftBo"),
+      flameAoe3dApplyWakeLiftBtn: $("flameAoe3dApplyWakeLiftBtn"),
+      flameAoe3dWakeLiftCoreRadiusBo: $("flameAoe3dWakeLiftCoreRadiusBo"),
+      flameAoe3dApplyWakeLiftCoreRadiusBtn: $("flameAoe3dApplyWakeLiftCoreRadiusBtn"),
+      flameAoe3dWakeStretchStrength: $("flameAoe3dWakeStretchStrength"),
+      flameAoe3dApplyWakeStretchStrengthBtn: $("flameAoe3dApplyWakeStretchStrengthBtn"),
       flameAoe3dWakeDisplaceBo: $("flameAoe3dWakeDisplaceBo"),
       flameAoe3dApplyWakeDisplaceBtn: $("flameAoe3dApplyWakeDisplaceBtn"),
       flameAoe3dWakeDisplaceScale: $("flameAoe3dWakeDisplaceScale"),
