@@ -103,49 +103,15 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
   return Object.freeze(out);
 }
 
-function createWakeTeardropGeometry(radius, length, radialSegments = 64, heightSegments = 32) {
-  const geometry = new THREE.BufferGeometry();
-  const positions = [];
-  const normals = [];
-  const uvs = [];
+function createWakeElasticShellGeometry(radius, radialSegments = 64, heightSegments = 32) {
+  const geometry = new THREE.SphereGeometry(radius, radialSegments, heightSegments);
   const wakeHeights = [];
-  const indices = [];
-  const stretch = Math.max(0, length - (radius * 2));
-  for (let yIndex = 0; yIndex <= heightSegments; yIndex += 1) {
-    const t = yIndex / heightSegments;
-    const phi = Math.PI * (1 - t);
-    const sphereY = Math.cos(phi) * radius;
-    const upper01 = Math.max(0, sphereY / radius);
-    const stretchAmount = Math.pow(upper01, 1.65) * stretch;
-    const centerY = sphereY + stretchAmount;
-    const profile = Math.sin(phi) * radius;
-    for (let xIndex = 0; xIndex <= radialSegments; xIndex += 1) {
-      const u = xIndex / radialSegments;
-      const angle = u * Math.PI * 2;
-      const x = Math.cos(angle) * profile;
-      const z = Math.sin(angle) * profile;
-      positions.push(x, centerY, z);
-      normals.push(x, sphereY, z);
-      uvs.push(u, t);
-      wakeHeights.push(t);
-    }
+  const positions = geometry.getAttribute("position");
+  const safeRadius = Math.max(0.0001, Number(radius) || 1);
+  for (let i = 0; i < positions.count; i += 1) {
+    wakeHeights.push(clampNumber((positions.getY(i) / safeRadius) * 0.5 + 0.5, 0, 1, 0.5));
   }
-  const stride = radialSegments + 1;
-  for (let yIndex = 0; yIndex < heightSegments; yIndex += 1) {
-    for (let xIndex = 0; xIndex < radialSegments; xIndex += 1) {
-      const a = yIndex * stride + xIndex;
-      const b = a + 1;
-      const c = a + stride;
-      const d = c + 1;
-      indices.push(a, c, b, b, c, d);
-    }
-  }
-  geometry.setIndex(indices);
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
-  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
   geometry.setAttribute("wakeHeight", new THREE.Float32BufferAttribute(wakeHeights, 1));
-  geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   return geometry;
 }
@@ -377,6 +343,8 @@ function createWakeMaterial(config) {
       uWakeAlphaGradientStops: { value: alphaStopValues },
       uWakeAlphaGradientValues: { value: alphaValues },
       uWakeMotionOffset: { value: new THREE.Vector3() },
+      uWakeCoreOffset: { value: new THREE.Vector3(0, 1, 0) },
+      uWakeStretchDirection: { value: new THREE.Vector3(0, 1, 0) },
       uWakeVertexLagOffset: { value: new THREE.Vector2() },
       uWakeLagDirection: { value: new THREE.Vector2() },
       uWakeLeadingStrength: { value: config.wakeLeadingStrength },
@@ -399,6 +367,8 @@ function createWakeMaterial(config) {
       uniform float uWakeDisplaceInfluenceBottom;
       uniform float uWakeDisplaceInfluenceTop;
       uniform vec3 uWakeMotionOffset;
+      uniform vec3 uWakeCoreOffset;
+      uniform vec3 uWakeStretchDirection;
       uniform vec2 uWakeVertexLagOffset;
       uniform vec2 uWakeLagDirection;
       uniform float uWakeLeadingStrength;
@@ -459,11 +429,20 @@ function createWakeMaterial(config) {
         return clamp(result, 0.0, 1.0);
       }
       void main() {
-        float tail = clamp(uv.y, 0.0, 1.0);
+        vec3 shellNormal = normalize(position + vec3(0.0, 0.0001, 0.0));
+        vec3 stretchDirection = normalize(uWakeStretchDirection + vec3(0.0, 0.0001, 0.0));
+        float stretchDot = dot(shellNormal, stretchDirection);
+        float tail = clamp(stretchDot * 0.5 + 0.5, 0.0, 1.0);
         vec3 local = position;
-        float vertexLagAmount = sampleWakeLagGraph(wakeHeight);
-        float xDamp = sampleWakeXDampGraph(wakeHeight);
-        vec2 localPlane = vec2(local.x, local.y);
+        float vertexLagAmount = sampleWakeLagGraph(tail);
+        float xDamp = sampleWakeXDampGraph(tail);
+        float coreStretch = length(uWakeCoreOffset);
+        float shellPull = smoothstep(-0.16, 0.96, stretchDot);
+        float leadingCompression = 1.0 - smoothstep(-0.55, 0.82, stretchDot);
+        float equatorGrip = sin(tail * 3.14159265359);
+        local += stretchDirection * coreStretch * (shellPull * 0.86 + equatorGrip * 0.16);
+        local -= shellNormal * coreStretch * leadingCompression * 0.18;
+        vec2 localPlane = vec2(dot(local, vec3(1.0, 0.0, 0.0)), dot(local, stretchDirection));
         float localPlaneLen = length(localPlane);
         float directionLen = length(uWakeLagDirection);
         float leadingMask = 0.0;
@@ -474,8 +453,8 @@ function createWakeMaterial(config) {
           leadingMask = smoothstep(1.0 - width, 1.0, leadingDot) * clamp(uWakeLeadingStrength, 0.0, 1.0);
         }
         float leadingMultiplier = 1.0 - leadingMask;
-        local.x += uWakeVertexLagOffset.x * vertexLagAmount * (1.0 - xDamp) * leadingMultiplier;
-        local.y += uWakeVertexLagOffset.y * vertexLagAmount * leadingMultiplier;
+        vec3 planarLag = vec3(uWakeVertexLagOffset.x * (1.0 - xDamp), uWakeVertexLagOffset.y, 0.0);
+        local += planarLag * vertexLagAmount * leadingMultiplier;
         vec2 radialPlane = local.xz;
         float radius = length(radialPlane);
         vec2 radialDir = radius > 0.0001 ? radialPlane / radius : vec2(1.0, 0.0);
@@ -495,7 +474,7 @@ function createWakeMaterial(config) {
         local.xz += radialDir * mix(clamp(bulge, -1.0, 1.0), blob, 0.58) * uWakeDisplaceDepth * influence * mask;
         vLocalPos = local;
         vTail = tail;
-        vWakeHeight = clamp(wakeHeight, 0.0, 1.0);
+        vWakeHeight = tail;
         gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(local, 1.0);
       }
     `,
@@ -507,6 +486,7 @@ function createWakeMaterial(config) {
       uniform float uWakeGraphEnabled; uniform int uWakeGraphCount; uniform float uWakeGraphStops[4]; uniform vec4 uWakeGraphColors[4];
       uniform int uWakeAlphaGradientCount; uniform float uWakeAlphaGradientStops[4]; uniform float uWakeAlphaGradientValues[4];
       uniform vec3 uWakeMotionOffset;
+      uniform vec3 uWakeStretchDirection;
       varying vec3 vLocalPos; varying float vTail; varying float vWakeHeight;
       float hash31(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
       float noise(vec3 p) {
@@ -605,15 +585,16 @@ function createWakeMaterial(config) {
       }
       void main() {
         vec3 surface = normalize(vLocalPos + vec3(0.0, 0.001, 0.0));
+        vec3 stretchDirection = normalize(uWakeStretchDirection + vec3(0.0, 0.0001, 0.0));
         float perlinTime = uTime * uWakeNoiseSpeed;
         float perlinFrequency = 4.25 / max(0.1, uWakeNoiseScale);
         vec3 motionFlow = vec3(uWakeMotionOffset.x, -uWakeMotionOffset.y * 0.55, uWakeMotionOffset.z) * (0.25 + vTail * 0.85);
-        vec3 perlinFlow = vec3(surface.x * perlinFrequency, (vTail * 1.35 - perlinTime * 0.42) * perlinFrequency, surface.z * perlinFrequency) + motionFlow;
+        vec3 perlinFlow = surface * perlinFrequency + stretchDirection * ((vTail * 1.35 - perlinTime * 0.42) * perlinFrequency) + motionFlow;
         float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, clamp(vTail, 0.0, 1.0));
         float perlin = perlinMusgraveField(perlinFlow);
         float simplexTime = uTime * uWakeSimplexSpeed;
         float simplexFrequency = 4.25 / max(0.1, uWakeSimplexScale);
-        vec3 simplexFlow = vec3(surface.x * simplexFrequency, (vTail * 1.52 - simplexTime * 0.5) * simplexFrequency, surface.z * simplexFrequency) + motionFlow * 1.35;
+        vec3 simplexFlow = surface * simplexFrequency + stretchDirection * ((vTail * 1.52 - simplexTime * 0.5) * simplexFrequency) + motionFlow * 1.35;
         float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, clamp(vTail, 0.0, 1.0));
         float simplex = simplexGranularField(simplexFlow);
         float noiseMix = clamp(uWakeNoiseMix, 0.0, 1.0);
@@ -658,6 +639,9 @@ export function createFlameAoe3dRuntime({
   const rawMotionOffset = new THREE.Vector3();
   const targetWakeOffset = new THREE.Vector3();
   const wakeOffset = new THREE.Vector3();
+  const liftCoreOffset = new THREE.Vector3(0, 1, 0);
+  const targetLiftCoreOffset = new THREE.Vector3(0, 1, 0);
+  const stretchDirection = new THREE.Vector3(0, 1, 0);
   const targetVertexLagOffset = new THREE.Vector3();
   const vertexLagOffset = new THREE.Vector3();
   const shaderMotion = new THREE.Vector3();
@@ -688,12 +672,14 @@ export function createFlameAoe3dRuntime({
     const bo = Math.max(1, Number(runtimeBo) || 72);
     const position = readOrbPosition();
     if (!position) {
-      targetWakeOffset.set(0, 0, 0);
-      targetVertexLagOffset.set(0, 0, 0);
+      targetLiftCoreOffset.set(0, bo * 0.34, 0);
+      targetWakeOffset.copy(targetLiftCoreOffset);
+      targetVertexLagOffset.copy(targetLiftCoreOffset).multiplyScalar(0.42);
     } else if (!motionInitialized) {
       lastPosition.copy(position);
-      targetWakeOffset.set(0, 0, 0);
-      targetVertexLagOffset.set(0, 0, 0);
+      targetLiftCoreOffset.set(0, bo * 0.34, 0);
+      targetWakeOffset.copy(targetLiftCoreOffset);
+      targetVertexLagOffset.copy(targetLiftCoreOffset).multiplyScalar(0.42);
       motionInitialized = true;
     } else {
       const safeDt = Math.max(1 / 240, Math.min(0.12, Number(dtSec) || (1 / 60)));
@@ -702,23 +688,36 @@ export function createFlameAoe3dRuntime({
       const vz = (position.z - lastPosition.z) / safeDt;
       lastPosition.copy(position);
       const leanAmount = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 10, 0.35);
-      rawMotionOffset.set(-vx * 0.1, -vy * 0.1, -vz * 0.06);
-      rawMotionOffset.clampLength(0, bo * 0.42);
-      targetWakeOffset.copy(rawMotionOffset).multiplyScalar(leanAmount);
-      targetVertexLagOffset.copy(rawMotionOffset).multiplyScalar(0.35);
+      const buoyancy = bo * 0.34;
+      const maxStretch = bo * Math.min(1.7, clampNumber(activeConfig && activeConfig.wakeLengthBo, 0.05, 4, 1));
+      rawMotionOffset.set(-vx * 0.085, -vy * 0.085, -vz * 0.055);
+      rawMotionOffset.clampLength(0, maxStretch * 0.72);
+      targetLiftCoreOffset.set(0, buoyancy, 0).addScaledVector(rawMotionOffset, leanAmount * 0.22);
+      targetLiftCoreOffset.clampLength(bo * 0.08, maxStretch);
+      targetWakeOffset.copy(targetLiftCoreOffset);
+      targetVertexLagOffset.copy(targetLiftCoreOffset).multiplyScalar(0.42);
     }
     const alpha = expLerpAlpha(dtSec, activeConfig && activeConfig.wakeLeanLag);
     wakeOffset.lerp(targetWakeOffset, alpha);
+    liftCoreOffset.lerp(targetLiftCoreOffset, alpha);
     vertexLagOffset.lerp(targetVertexLagOffset, alpha);
     if (wakePivot) {
       wakePivot.position.x = 0;
       wakePivot.position.z = 0;
-      wakePivot.rotation.z = THREE.MathUtils.clamp(-wakeOffset.x / (bo * 1.15), -0.34, 0.34);
-      wakePivot.rotation.x = THREE.MathUtils.clamp(wakeOffset.z / (bo * 1.35), -0.22, 0.22);
+      wakePivot.rotation.set(0, 0, 0);
     }
-    shaderMotion.set(0, 0, 0);
+    stretchDirection.copy(liftCoreOffset);
+    if (stretchDirection.lengthSq() < 0.0001) stretchDirection.set(0, 1, 0);
+    stretchDirection.normalize();
+    shaderMotion.copy(liftCoreOffset).multiplyScalar(1 / bo);
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeMotionOffset) {
       wakeMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
+    }
+    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeCoreOffset) {
+      wakeMaterial.uniforms.uWakeCoreOffset.value.copy(liftCoreOffset);
+    }
+    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeStretchDirection) {
+      wakeMaterial.uniforms.uWakeStretchDirection.value.copy(stretchDirection);
     }
     shaderVertexLag.set(vertexLagOffset.x, vertexLagOffset.y);
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeVertexLagOffset) {
@@ -747,6 +746,9 @@ export function createFlameAoe3dRuntime({
     rawMotionOffset.set(0, 0, 0);
     targetWakeOffset.set(0, 0, 0);
     wakeOffset.set(0, 0, 0);
+    liftCoreOffset.set(0, 1, 0);
+    targetLiftCoreOffset.set(0, 1, 0);
+    stretchDirection.set(0, 1, 0);
     targetVertexLagOffset.set(0, 0, 0);
     vertexLagOffset.set(0, 0, 0);
     shaderMotion.set(0, 0, 0);
@@ -793,6 +795,9 @@ export function createFlameAoe3dRuntime({
         lastPosition.copy(initialPosition);
         motionInitialized = true;
       }
+      liftCoreOffset.set(0, bo * 0.34, 0);
+      targetLiftCoreOffset.copy(liftCoreOffset);
+      stretchDirection.set(0, 1, 0);
       group = new THREE.Group();
       group.name = "flame_aoe3d:runtime";
       auraMaterial = createAuraShellMaterial(config);
@@ -807,23 +812,20 @@ export function createFlameAoe3dRuntime({
         wakeDisplacePx: bo * config.wakeDisplaceBo,
       });
       const wake = new THREE.Mesh(
-        createWakeTeardropGeometry(
+        createWakeElasticShellGeometry(
           bo * config.wakeRadiusBo,
-          bo * config.wakeLengthBo,
           config.wakeSubdivisions,
           Math.max(8, Math.round(config.wakeSubdivisions * 0.5))
         ),
         wakeMaterial
       );
-      wake.name = "flame_aoe3d:directional_wake";
+      wake.name = "flame_aoe3d:elastic_flame_shell";
       wake.renderOrder = 10;
       wakeMesh = wake;
-      const wakeBottomY = -bo * config.wakeRadiusBo;
-      const pivotY = wakeBottomY + (bo * config.wakeLeanOffsetBo);
       wakePivot = new THREE.Group();
-      wakePivot.name = "flame_aoe3d:directional_wake_pivot";
-      wakePivot.position.set(0, pivotY, 0);
-      wake.position.set(0, -pivotY, 0);
+      wakePivot.name = "flame_aoe3d:elastic_flame_shell_pivot";
+      wakePivot.position.set(0, 0, 0);
+      wake.position.set(0, 0, 0);
       group.add(aura);
       wakePivot.add(wake);
       group.add(wakePivot);

@@ -313,51 +313,14 @@ function layerVisible(button) {
 }
 
 function createWakeTeardropGeometry(radius, length, radialSegments = 64, heightSegments = 32) {
-  const geometry = new THREE.BufferGeometry();
-  const positions = [];
-  const normals = [];
-  const uvs = [];
+  const geometry = new THREE.SphereGeometry(radius, radialSegments, heightSegments);
   const wakeHeights = [];
-  const indices = [];
-  const stretch = Math.max(0, length - (radius * 2));
-
-  for (let yIndex = 0; yIndex <= heightSegments; yIndex += 1) {
-    const t = yIndex / heightSegments;
-    const phi = Math.PI * (1 - t);
-    const sphereY = Math.cos(phi) * radius;
-    const upper01 = Math.max(0, sphereY / radius);
-    const stretchAmount = Math.pow(upper01, 1.65) * stretch;
-    const centerY = sphereY + stretchAmount;
-    const profile = Math.sin(phi) * radius;
-    for (let xIndex = 0; xIndex <= radialSegments; xIndex += 1) {
-      const u = xIndex / radialSegments;
-      const angle = u * Math.PI * 2;
-      const x = Math.cos(angle) * profile;
-      const z = Math.sin(angle) * profile;
-      positions.push(x, centerY, z);
-      normals.push(x, sphereY, z);
-      uvs.push(u, t);
-      wakeHeights.push(t);
-    }
+  const positions = geometry.getAttribute("position");
+  const safeRadius = Math.max(0.0001, Number(radius) || 1);
+  for (let i = 0; i < positions.count; i += 1) {
+    wakeHeights.push(clampNumber((positions.getY(i) / safeRadius) * 0.5 + 0.5, 0, 1, 0.5));
   }
-
-  const stride = radialSegments + 1;
-  for (let yIndex = 0; yIndex < heightSegments; yIndex += 1) {
-    for (let xIndex = 0; xIndex < radialSegments; xIndex += 1) {
-      const a = yIndex * stride + xIndex;
-      const b = a + 1;
-      const c = a + stride;
-      const d = c + 1;
-      indices.push(a, c, b, b, c, d);
-    }
-  }
-
-  geometry.setIndex(indices);
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
-  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
   geometry.setAttribute("wakeHeight", new THREE.Float32BufferAttribute(wakeHeights, 1));
-  geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   return geometry;
 }
