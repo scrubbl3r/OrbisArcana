@@ -52,7 +52,7 @@ import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifec
 import {
   getOrbHealPulseLayerId,
   resolveOrbHealPulseShaderLayer,
-} from "../../../game-runtime/orb/orb-shader-heal-pulse-layer.js?v=20260517a";
+} from "../../../game-runtime/orb/orb-shader-heal-pulse-layer.js?v=20260517b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505i";
@@ -515,7 +515,8 @@ export function createGameStageDepth3dLayer({
   function startHealShaderPulse(payload = {}) {
     if (disposed || !orbShaderMixer || typeof orbShaderMixer.setLayer !== "function") return;
     const durationMs = Math.max(80, Number(HEAL_PRESET_DEFAULT.shaderPulseDurationMs) || 1500);
-    const startedAtMs = Number(payload.atMs) || performance.now();
+    const payloadAtMs = Number(payload.atMs);
+    const startedAtMs = performance.now();
     const token = healPulseToken + 1;
     healPulseToken = token;
     if (healPulseFrame && typeof cancelAnimationFrame === "function") {
@@ -548,6 +549,8 @@ export function createGameStageDepth3dLayer({
           healthBefore,
           healthAfter,
           maxHealth,
+          payloadAtMs: Number.isFinite(payloadAtMs) ? Math.round(payloadAtMs * 10) / 10 : "",
+          visualAgeMs: Math.max(0, Math.round((startedAtMs - (Number.isFinite(payloadAtMs) ? payloadAtMs : startedAtMs)) * 10) / 10),
           values: layer && layer.values ? { ...layer.values } : null,
         });
       }
