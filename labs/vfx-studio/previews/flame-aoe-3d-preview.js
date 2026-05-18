@@ -1032,6 +1032,7 @@ export function createFlameAoe3dPreview({
     if (!button) return;
     const visible = layerVisible(button);
     button.setAttribute("aria-pressed", visible ? "false" : "true");
+    button.dispatchEvent(new Event("change", { bubbles: true }));
     apply();
   }
 
