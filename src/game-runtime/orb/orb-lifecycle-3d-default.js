@@ -5,7 +5,7 @@ export const ORB_LIFECYCLE_3D_DEFAULTS = Object.freeze({
   shellLuminanceBoostMaxPct: 120,
   shellCenterAlphaMinPct: 87,
   shellCenterAlphaMaxPct: 120,
-  spotIntensityMinPct: 100,
+  spotIntensityMinPct: 0,
   spotIntensityMaxPct: 121,
   spotDistanceMinPct: 93,
   spotDistanceMaxPct: 109,

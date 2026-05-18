@@ -7,11 +7,11 @@ function clamp01(value) {
 }
 
 export function createCameraInputSteering({
-  smoothingAlpha = 1,
+  smoothingAlpha = 0.25,
   holdMissingMs = 95,
   holdConfidenceFloor = 0.56,
 } = {}) {
-  const alpha = clamp01(smoothingAlpha) || 1;
+  const alpha = clamp01(smoothingAlpha) || 0.25;
   const holdMs = Math.max(0, Number(holdMissingMs) || 0);
   const holdFloor = clamp01(holdConfidenceFloor);
   let filteredX01 = 0.5;

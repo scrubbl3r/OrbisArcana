@@ -1,6 +1,6 @@
 import { createCamStore } from "./cam-store/create-cam-store.js?v=20260420h";
 import { createInitialCameraInputState } from "./camera-input-state.js?v=20260501u";
-import { createCameraInputSteering } from "./camera-input-steering.js?v=20260501u";
+import { createCameraInputSteering } from "./camera-input-steering.js?v=20260517a";
 import { createCameraInputTracker } from "./camera-input-tracker.js?v=20260430h";
 import { createOrbControlTracker } from "./orb-control-tracker.js?v=20260430d";
 import { createOrbControlLiteTracker } from "./orb-control-lite-tracker.js?v=20260501u";
