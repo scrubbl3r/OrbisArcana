@@ -56,6 +56,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeStretchStrength: clampNumber(source.wakeStretchStrength, 0, 4, fallback.wakeStretchStrength ?? 1),
     wakeOrbHugRadiusBo: clampNumber(source.wakeOrbHugRadiusBo, 0.2, 2, fallback.wakeOrbHugRadiusBo ?? 0.56),
     wakeEnvelopeBlendBo: clampNumber(source.wakeEnvelopeBlendBo, 0.01, 2, fallback.wakeEnvelopeBlendBo ?? 0.34),
+    wakeDisplaceEnabled: source.wakeDisplaceEnabled === false || source.wakeDisplaceEnabled === 0 || source.wakeDisplaceEnabled === "0" ? 0 : 1,
     wakeDisplaceBo: clampNumber(source.wakeDisplaceBo, 0, 0.5, fallback.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(source.wakeDisplaceScale, 0.2, 8, fallback.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(source.wakeDisplaceSpeed, 0, 4, fallback.wakeDisplaceSpeed),
@@ -683,7 +684,7 @@ export function createFlameAoe3dRuntime({
       aura.renderOrder = 8;
       wakeMaterial = createWakeMaterial({
         ...config,
-        wakeDisplacePx: bo * config.wakeDisplaceBo,
+        wakeDisplacePx: config.wakeDisplaceEnabled ? bo * config.wakeDisplaceBo : 0,
         wakeLiftCoreRadiusPx: bo * config.wakeLiftCoreRadiusBo,
         wakeOrbHugRadiusPx: bo * config.wakeOrbHugRadiusBo,
         wakeEnvelopeBlendPx: bo * config.wakeEnvelopeBlendBo,

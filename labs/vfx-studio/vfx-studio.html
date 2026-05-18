@@ -1897,7 +1897,10 @@
           </div>
         </div>
         <div class="controlGroup" data-control-group>
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeDisplaceControls">Wake Displace</button>
+          <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeDisplaceControls">Wake Displace</button>
+            <button id="flameAoe3dWakeDisplaceVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Wake Displace visibility" title="Toggle Wake Displace visibility"></button>
+          </div>
           <div id="flameAoe3dWakeDisplaceControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeDisplaceBo">Bulge amount BO</label>
@@ -3282,6 +3285,7 @@
       flameAoe3dWakeGraphEnabled: $("flameAoe3dWakeGraphEnabled"),
       flameAoe3dWakeGraphVisibleBtn: $("flameAoe3dWakeGraphVisibleBtn"),
       flameAoe3dApplyWakeGraphBtn: $("flameAoe3dApplyWakeGraphBtn"),
+      flameAoe3dWakeDisplaceVisibleBtn: $("flameAoe3dWakeDisplaceVisibleBtn"),
       previewBankOrb3d: $("previewBankOrb3d"),
     };
 

@@ -46,6 +46,7 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeStretchStrength: 1.35,
   wakeOrbHugRadiusBo: 0.56,
   wakeEnvelopeBlendBo: 0.34,
+  wakeDisplaceEnabled: 1,
   wakeDisplaceBo: 0.12,
   wakeDisplaceScale: 1.8,
   wakeDisplaceSpeed: 0.35,
@@ -184,6 +185,7 @@ function readFlameWakeConfig(els = {}) {
     wakeStretchStrength: clampNumber(els.flameAoe3dWakeStretchStrength && els.flameAoe3dWakeStretchStrength.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeStretchStrength),
     wakeOrbHugRadiusBo: clampNumber(els.flameAoe3dWakeOrbHugRadiusBo && els.flameAoe3dWakeOrbHugRadiusBo.value, 0.2, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeOrbHugRadiusBo),
     wakeEnvelopeBlendBo: clampNumber(els.flameAoe3dWakeEnvelopeBlendBo && els.flameAoe3dWakeEnvelopeBlendBo.value, 0.01, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeEnvelopeBlendBo),
+    wakeDisplaceEnabled: layerVisible(els.flameAoe3dWakeDisplaceVisibleBtn) ? 1 : 0,
     wakeDisplaceBo: clampNumber(els.flameAoe3dWakeDisplaceBo && els.flameAoe3dWakeDisplaceBo.value, 0, 0.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(els.flameAoe3dWakeDisplaceScale && els.flameAoe3dWakeDisplaceScale.value, 0.2, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(els.flameAoe3dWakeDisplaceSpeed && els.flameAoe3dWakeDisplaceSpeed.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceSpeed),
@@ -234,6 +236,8 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeStretchStrength) els.flameAoe3dWakeStretchStrength.value = String(Number(cfg.wakeStretchStrength).toFixed(2));
   if (els.flameAoe3dWakeOrbHugRadiusBo) els.flameAoe3dWakeOrbHugRadiusBo.value = String(Number(cfg.wakeOrbHugRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeEnvelopeBlendBo) els.flameAoe3dWakeEnvelopeBlendBo.value = String(Number(cfg.wakeEnvelopeBlendBo).toFixed(2));
+  const displaceEnabled = cfg.wakeDisplaceEnabled !== false && cfg.wakeDisplaceEnabled !== 0 && cfg.wakeDisplaceEnabled !== "0";
+  if (els.flameAoe3dWakeDisplaceVisibleBtn) els.flameAoe3dWakeDisplaceVisibleBtn.setAttribute("aria-pressed", displaceEnabled ? "true" : "false");
   if (els.flameAoe3dWakeDisplaceBo) els.flameAoe3dWakeDisplaceBo.value = String(Number(cfg.wakeDisplaceBo).toFixed(3));
   if (els.flameAoe3dWakeDisplaceScale) els.flameAoe3dWakeDisplaceScale.value = String(Number(cfg.wakeDisplaceScale).toFixed(2));
   if (els.flameAoe3dWakeDisplaceSpeed) els.flameAoe3dWakeDisplaceSpeed.value = String(Number(cfg.wakeDisplaceSpeed).toFixed(2));
@@ -982,7 +986,7 @@ export function createFlameAoe3dPreview({
     model.add(auraShellMesh);
     wakeMaterial = createWakeMaterial({
       ...wakeConfig,
-      wakeDisplacePx: bo * wakeConfig.wakeDisplaceBo,
+      wakeDisplacePx: wakeConfig.wakeDisplaceEnabled ? bo * wakeConfig.wakeDisplaceBo : 0,
       wakeLiftPx: bo * wakeConfig.wakeLiftBo,
       wakeLiftCoreRadiusPx: bo * wakeConfig.wakeLiftCoreRadiusBo,
       wakeOrbHugRadiusPx: bo * wakeConfig.wakeOrbHugRadiusBo,
@@ -1024,6 +1028,13 @@ export function createFlameAoe3dPreview({
     applyLayerVisibility();
   }
 
+  function toggleDisplace(button) {
+    if (!button) return;
+    const visible = layerVisible(button);
+    button.setAttribute("aria-pressed", visible ? "false" : "true");
+    apply();
+  }
+
   function toggleGraph(button) {
     if (!button) return;
     const visible = layerVisible(button);
@@ -1063,6 +1074,7 @@ export function createFlameAoe3dPreview({
     if (els.flameAoe3dOrbVisibleBtn) els.flameAoe3dOrbVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dOrbVisibleBtn));
     if (els.flameAoe3dAuraVisibleBtn) els.flameAoe3dAuraVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dAuraVisibleBtn));
     if (els.flameAoe3dWakeVisibleBtn) els.flameAoe3dWakeVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dWakeVisibleBtn));
+    if (els.flameAoe3dWakeDisplaceVisibleBtn) els.flameAoe3dWakeDisplaceVisibleBtn.addEventListener("click", () => toggleDisplace(els.flameAoe3dWakeDisplaceVisibleBtn));
     if (els.flameAoe3dWakeGraphVisibleBtn) els.flameAoe3dWakeGraphVisibleBtn.addEventListener("click", () => toggleGraph(els.flameAoe3dWakeGraphVisibleBtn));
     [
       els.flameAoe3dApplyAuraAlphaBtn,

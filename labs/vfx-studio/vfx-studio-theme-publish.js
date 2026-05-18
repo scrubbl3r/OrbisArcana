@@ -219,6 +219,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "wakeLeanAmount", "wakeLeanLag",
         "wakeLiftBo", "wakeLiftCoreRadiusBo", "wakeStretchStrength",
         "wakeOrbHugRadiusBo", "wakeEnvelopeBlendBo",
+        "wakeDisplaceEnabled",
         "wakeDisplaceBo", "wakeDisplaceScale", "wakeDisplaceSpeed", "wakeDisplaceSoftness", "wakeDisplaceInfluenceBottom", "wakeDisplaceInfluenceTop",
         "wakeNoiseScale", "wakeNoiseSpeed", "wakeNoiseDensityBottom", "wakeNoiseDensityTop", "wakeNoiseContrast", "wakeNoiseOctaves", "wakeNoiseLacunarity", "wakeNoiseGain",
         "wakeSimplexScale", "wakeSimplexSpeed", "wakeSimplexDensityBottom", "wakeSimplexDensityTop", "wakeSimplexContrast", "wakeSimplexOctaves", "wakeSimplexLacunarity", "wakeSimplexGain",

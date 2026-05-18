@@ -92,6 +92,7 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
   wakeStretchStrength: 1.35,
   wakeOrbHugRadiusBo: 0.56,
   wakeEnvelopeBlendBo: 0.34,
+  wakeDisplaceEnabled: 1,
   wakeDisplaceBo: 0.12,
   wakeDisplaceScale: 1.8,
   wakeDisplaceSpeed: 0.35,
@@ -193,6 +194,7 @@ export function createFlameAoe3dAuthoringAdapter() {
       wakeStretchStrength: fixedNumber(els && els.flameAoe3dWakeStretchStrength && els.flameAoe3dWakeStretchStrength.value, 2, FLAME_AOE_3D_DEFAULTS.wakeStretchStrength),
       wakeOrbHugRadiusBo: fixedNumber(els && els.flameAoe3dWakeOrbHugRadiusBo && els.flameAoe3dWakeOrbHugRadiusBo.value, 2, FLAME_AOE_3D_DEFAULTS.wakeOrbHugRadiusBo),
       wakeEnvelopeBlendBo: fixedNumber(els && els.flameAoe3dWakeEnvelopeBlendBo && els.flameAoe3dWakeEnvelopeBlendBo.value, 2, FLAME_AOE_3D_DEFAULTS.wakeEnvelopeBlendBo),
+      wakeDisplaceEnabled: (els && els.flameAoe3dWakeDisplaceVisibleBtn && els.flameAoe3dWakeDisplaceVisibleBtn.getAttribute("aria-pressed") === "false") ? 0 : 1,
       wakeDisplaceBo: fixedNumber(els && els.flameAoe3dWakeDisplaceBo && els.flameAoe3dWakeDisplaceBo.value, 3, FLAME_AOE_3D_DEFAULTS.wakeDisplaceBo),
       wakeDisplaceScale: fixedNumber(els && els.flameAoe3dWakeDisplaceScale && els.flameAoe3dWakeDisplaceScale.value, 2, FLAME_AOE_3D_DEFAULTS.wakeDisplaceScale),
       wakeDisplaceSpeed: fixedNumber(els && els.flameAoe3dWakeDisplaceSpeed && els.flameAoe3dWakeDisplaceSpeed.value, 2, FLAME_AOE_3D_DEFAULTS.wakeDisplaceSpeed),
@@ -256,6 +258,9 @@ export function createFlameAoe3dAuthoringAdapter() {
     });
     if (els.flameAoe3dWakeGraphVisibleBtn && settings.wakeGraphEnabled != null) {
       els.flameAoe3dWakeGraphVisibleBtn.setAttribute("aria-pressed", String(settings.wakeGraphEnabled) === "0" ? "false" : "true");
+    }
+    if (els.flameAoe3dWakeDisplaceVisibleBtn && settings.wakeDisplaceEnabled != null) {
+      els.flameAoe3dWakeDisplaceVisibleBtn.setAttribute("aria-pressed", String(settings.wakeDisplaceEnabled) === "0" ? "false" : "true");
     }
     if (typeof applyPreview === "function") applyPreview();
     return true;
