@@ -1,8 +1,8 @@
 export const HEAL_PRESET_DEFAULT = Object.freeze({
   globeCost: 1,
   healAmountHp: 500,
-  castDurationMs: 250,
-  cooldownMs: 1000,
+  castDurationMs: 0,
+  cooldownMs: 0,
   requireDamagedOrb: true,
   consumeOnFailedCast: false,
   shaderPulseLuminanceBoostPct: 25,
