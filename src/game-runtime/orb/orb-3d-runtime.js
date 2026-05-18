@@ -3,9 +3,8 @@ import { createOrb3dModel } from "./orb-3d-model.js?v=20260501b";
 import {
   createOpalescentOrbShellMaterial,
   createOrbPointLight,
-  createOrbShadowSpotLight,
   updateOrbPointLight,
-} from "./orb-3d-material.js?v=20260517a";
+} from "./orb-3d-material.js?v=20260517b";
 import { ORB_3D_VISUAL_DEFAULTS } from "./orb-3d-default.js";
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
 
@@ -65,9 +64,6 @@ export function createOrb3dRuntime({
   const basePointLightIntensity = pointLight ? Number(pointLight.intensity) || 0 : 0;
   const basePointLightDistance = pointLight ? Number(pointLight.distance) || 0 : 0;
 
-  const shadowSpot = createOrbShadowSpotLight({ bo, config });
-  const baseShadowSpotIntensity = shadowSpot ? Number(shadowSpot.intensity) || 0 : 0;
-  const baseShadowSpotDistance = shadowSpot ? Number(shadowSpot.distance) || 0 : 0;
   const baseShellColors = {
     base: new THREE.Color(config.shellBaseColor),
     cyan: new THREE.Color(config.shellCyanColor),
@@ -94,8 +90,6 @@ export function createOrb3dRuntime({
     goldMix: clampNumber(config.goldMix, 0, 0, 2),
     pointLightIntensity: basePointLightIntensity,
     pointLightDistance: basePointLightDistance,
-    shadowSpotIntensity: baseShadowSpotIntensity,
-    shadowSpotDistance: baseShadowSpotDistance,
   };
   let disposed = false;
 
@@ -111,14 +105,6 @@ export function createOrb3dRuntime({
     if (pointLight) {
       pointLight.intensity = shaderState.pointLightIntensity * currentOpacity;
       pointLight.distance = shaderState.pointLightDistance;
-    }
-    if (shadowSpot) {
-      shadowSpot.intensity = shaderState.shadowSpotIntensity * currentOpacity;
-      shadowSpot.distance = shaderState.shadowSpotDistance;
-      if (shadowSpot.shadow && shadowSpot.shadow.camera) {
-        shadowSpot.shadow.camera.far = Math.max(1, shaderState.shadowSpotDistance);
-        shadowSpot.shadow.camera.updateProjectionMatrix();
-      }
     }
   }
 
@@ -166,7 +152,6 @@ export function createOrb3dRuntime({
   function setPosition({ x = 0, y = 0, z = 0 } = {}) {
     if (disposed) return;
     model.position.set(Number(x) || 0, Number(y) || 0, Number(z) || 0);
-    if (shadowSpot) shadowSpot.position.copy(model.position);
   }
 
   function setScale(scale = 1) {
@@ -219,33 +204,19 @@ export function createOrb3dRuntime({
     if (nextState.goldMix != null) {
       shaderState.goldMix = clampNumber(nextState.goldMix, shaderState.goldMix, 0, 2);
     }
-    if (nextState.lightIntensity != null || nextState.pointLightIntensity != null || nextState.spotIntensity != null) {
+    if (nextState.lightIntensity != null || nextState.pointLightIntensity != null) {
       shaderState.pointLightIntensity = clampNumber(
-        nextState.lightIntensity ?? nextState.pointLightIntensity ?? nextState.spotIntensity,
+        nextState.lightIntensity ?? nextState.pointLightIntensity,
         shaderState.pointLightIntensity,
         0,
         10000
       );
     }
-    if (nextState.lightDistance != null || nextState.lightDistanceBO != null || nextState.pointLightDistance != null || nextState.pointLightDistanceBO != null || nextState.spotDistance != null || nextState.spotDistanceBO != null) {
-      const distanceBO = nextState.lightDistanceBO ?? nextState.pointLightDistanceBO ?? nextState.spotDistanceBO;
+    if (nextState.lightDistance != null || nextState.lightDistanceBO != null || nextState.pointLightDistance != null || nextState.pointLightDistanceBO != null) {
+      const distanceBO = nextState.lightDistanceBO ?? nextState.pointLightDistanceBO;
       shaderState.pointLightDistance = distanceBO != null
         ? Math.max(0, Number(distanceBO) || 0) * Math.max(1, Number(bo) || 72)
-        : clampNumber(nextState.lightDistance ?? nextState.pointLightDistance ?? nextState.spotDistance, shaderState.pointLightDistance, 0, Infinity);
-    }
-    if (nextState.spotIntensity != null || nextState.shadowSpotIntensity != null) {
-      shaderState.shadowSpotIntensity = clampNumber(
-        nextState.spotIntensity ?? nextState.shadowSpotIntensity,
-        shaderState.shadowSpotIntensity,
-        0,
-        10000
-      );
-    }
-    if (nextState.spotDistance != null || nextState.spotDistanceBO != null || nextState.shadowSpotDistance != null || nextState.shadowSpotDistanceBO != null) {
-      const distanceBO = nextState.spotDistanceBO ?? nextState.shadowSpotDistanceBO;
-      shaderState.shadowSpotDistance = distanceBO != null
-        ? Math.max(0, Number(distanceBO) || 0) * Math.max(1, Number(bo) || 72)
-        : clampNumber(nextState.spotDistance ?? nextState.shadowSpotDistance, shaderState.shadowSpotDistance, 0, Infinity);
+        : clampNumber(nextState.lightDistance ?? nextState.pointLightDistance, shaderState.pointLightDistance, 0, Infinity);
     }
     applyShaderUniformState();
     updateOrbPointLight(pointLight, currentTime, { ...config, goldMix: shaderState.goldMix });
@@ -281,14 +252,6 @@ export function createOrb3dRuntime({
             distance: Number(pointLight.distance) || 0,
             distanceBO: (Number(pointLight.distance) || 0) / resolvedBo,
             visible: pointLight.visible !== false,
-          }
-        : null,
-      shadowSpot: shadowSpot
-        ? {
-            intensity: Number(shadowSpot.intensity) || 0,
-            distance: Number(shadowSpot.distance) || 0,
-            distanceBO: (Number(shadowSpot.distance) || 0) / resolvedBo,
-            visible: shadowSpot.visible !== false,
           }
         : null,
     };
@@ -329,9 +292,7 @@ export function createOrb3dRuntime({
     if (disposed) return;
     disposed = true;
     if (model.parent) model.parent.remove(model);
-    if (shadowSpot && shadowSpot.parent) shadowSpot.parent.remove(shadowSpot);
     disposeThreeObject(model);
-    if (shadowSpot) disposeThreeObject(shadowSpot);
   }
 
   return Object.freeze({
@@ -341,7 +302,6 @@ export function createOrb3dRuntime({
       return shellMaterial;
     },
     pointLight,
-    shadowSpot,
     setTime,
     setPosition,
     setScale,

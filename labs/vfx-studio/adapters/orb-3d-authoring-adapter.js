@@ -27,19 +27,10 @@ const ORB_3D_NUMBER_FIELDS = Object.freeze([
   "orb3dLightShadowNormalBias",
   "orb3dLightShadowNearBO",
   "orb3dLightShadowFarBO",
-  "orb3dShadowSpotIntensity",
-  "orb3dShadowSpotDistanceBO",
-  "orb3dShadowSpotAngle",
-  "orb3dShadowSpotPenumbra",
-  "orb3dShadowSpotDecay",
-  "orb3dShadowSpotMapSize",
-  "orb3dShadowSpotBias",
-  "orb3dShadowSpotNormalBias",
 ]);
 
 const ORB_3D_BOOLEAN_FIELDS = Object.freeze([
   "orb3dLightCastShadow",
-  "orb3dShadowSpotEnabled",
 ]);
 
 const ORB_3D_COLOR_GROUPS = Object.freeze([
@@ -48,7 +39,6 @@ const ORB_3D_COLOR_GROUPS = Object.freeze([
   ["shellVioletColor", "orb3dShellViolet"],
   ["shellGoldColor", "orb3dShellGold"],
   ["lightColor", "orb3dLight"],
-  ["shadowSpotColor", "orb3dShadowSpot"],
 ]);
 
 const SETTING_BY_FIELD = Object.freeze({
@@ -81,15 +71,6 @@ const SETTING_BY_FIELD = Object.freeze({
   orb3dLightShadowNormalBias: "lightShadowNormalBias",
   orb3dLightShadowNearBO: "lightShadowNearBO",
   orb3dLightShadowFarBO: "lightShadowFarBO",
-  orb3dShadowSpotEnabled: "shadowSpotEnabled",
-  orb3dShadowSpotIntensity: "shadowSpotIntensity",
-  orb3dShadowSpotDistanceBO: "shadowSpotDistanceBO",
-  orb3dShadowSpotAngle: "shadowSpotAngle",
-  orb3dShadowSpotPenumbra: "shadowSpotPenumbra",
-  orb3dShadowSpotDecay: "shadowSpotDecay",
-  orb3dShadowSpotMapSize: "shadowSpotMapSize",
-  orb3dShadowSpotBias: "shadowSpotBias",
-  orb3dShadowSpotNormalBias: "shadowSpotNormalBias",
 });
 
 function fixedNumber(value, digits, fallback = 0) {
@@ -163,16 +144,6 @@ function settingsFromDefaults(defaults = {}) {
     lightShadowNormalBias: fixedNumber(defaults.lightShadowNormalBias, 3, 0.018),
     lightShadowNearBO: fixedNumber(defaults.lightShadowNearBO, 2, 0.08),
     lightShadowFarBO: fixedNumber(defaults.lightShadowFarBO, 2, 10),
-    shadowSpotEnabled: defaults.shadowSpotEnabled === true,
-    shadowSpotColor: roundedNumber(defaults.shadowSpotColor, 0xdaf6ff),
-    shadowSpotIntensity: fixedNumber(defaults.shadowSpotIntensity, 1, 24),
-    shadowSpotDistanceBO: fixedNumber(defaults.shadowSpotDistanceBO, 2, 4.5),
-    shadowSpotAngle: fixedNumber(defaults.shadowSpotAngle, 2, 0.48),
-    shadowSpotPenumbra: fixedNumber(defaults.shadowSpotPenumbra, 2, 0.78),
-    shadowSpotDecay: fixedNumber(defaults.shadowSpotDecay, 2, 1.4),
-    shadowSpotMapSize: roundedNumber(defaults.shadowSpotMapSize, 512),
-    shadowSpotBias: fixedNumber(defaults.shadowSpotBias, 5, -0.00035),
-    shadowSpotNormalBias: fixedNumber(defaults.shadowSpotNormalBias, 3, 0.018),
   };
 }
 

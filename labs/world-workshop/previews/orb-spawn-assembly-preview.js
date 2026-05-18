@@ -4,8 +4,8 @@ import { createOrbModel } from "../../../src/game-runtime/orb/orb-3d-model.js?v=
 import { createPlinthModel } from "../generators/plinth-generator.js?v=20260426a";
 import { createWorldObjectInspector } from "../inspectors/world-object-inspector.js?v=20260426a";
 import { ORB_BLOOM_CONFIG } from "../effects/bloom/bloom-config.js?v=20260426a";
-import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { createOpalescentOrbShellMaterial, createOrbPointLight, createOrbShadowSpotLight, updateOrbPointLight } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
+import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
+import { createOpalescentOrbShellMaterial, createOrbPointLight, updateOrbPointLight } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260517b";
 import { GRAPHITE_CONFIG } from "../materials/graphite/graphite-config.js?v=20260426a";
 import { createGraphiteMaterial } from "../materials/graphite/graphite-material.js?v=20260426a";
 import { addLineEdges } from "../../../src/game-runtime/rendering/three/three-line-utils.js?v=20260428a";
@@ -21,7 +21,6 @@ export function renderOrbSpawnAssemblyPreview({
   const animatedMaterials = [];
   const animatedLights = [];
   const animatedNodes = [];
-  const shadowRigs = [];
   const inspector = createWorldObjectInspector({
     root,
     bo,
@@ -51,10 +50,6 @@ export function renderOrbSpawnAssemblyPreview({
           baseY + bobY,
           driftZ
         );
-      });
-      shadowRigs.forEach(({ light, target, source, targetY }) => {
-        light.position.copy(source.position);
-        target.position.set(0, targetY, 0);
       });
     },
   });
@@ -120,21 +115,6 @@ export function renderOrbSpawnAssemblyPreview({
   inspector.scene.add(orbModel);
   animatedNodes.push({ node: orbModel, baseY: orbBaseY, idle: ORB_IDLE_CONFIG });
 
-  const shadowSpot = createOrbShadowSpotLight({ bo, config: ORB_MATERIAL_CONFIG });
-  if (shadowSpot) {
-    const shadowTarget = new THREE.Object3D();
-    shadowSpot.position.copy(orbModel.position);
-    shadowTarget.position.set(0, plinthMetrics.plinthHeight - plinthMetrics.columnCenterY, 0);
-    shadowSpot.target = shadowTarget;
-    inspector.scene.add(shadowSpot, shadowTarget);
-    shadowRigs.push({
-      light: shadowSpot,
-      target: shadowTarget,
-      source: orbModel,
-      targetY: plinthMetrics.plinthHeight - plinthMetrics.columnCenterY,
-    });
-  }
-
   const ambient = new THREE.AmbientLight(0xffffff, 0.018);
   inspector.scene.add(ambient);
   const fill = new THREE.HemisphereLight(0xbfdfff, 0x050507, 0.055);
@@ -146,7 +126,6 @@ export function renderOrbSpawnAssemblyPreview({
     orbDiameter: orbMetrics.diameter,
     orbRadius: orbMetrics.radius,
     orbClearance,
-    shadowSpot: Boolean(shadowSpot),
     groundPlaneSize,
     assemblyScale: GRAPHITE_CONFIG.assemblyScale,
   });

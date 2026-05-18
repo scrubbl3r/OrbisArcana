@@ -212,32 +212,6 @@ export function createOrbPointLight({
   return light;
 }
 
-export function createOrbShadowSpotLight({
-  bo = 72,
-  config = ORB_3D_VISUAL_DEFAULTS,
-} = {}) {
-  if (!config.shadowSpotEnabled) return null;
-
-  const baseOrb = Number(bo) || 72;
-  const light = new THREE.SpotLight(
-    config.shadowSpotColor,
-    Number(config.shadowSpotIntensity) || 0,
-    baseOrb * (Number(config.shadowSpotDistanceBO) || 1),
-    Number(config.shadowSpotAngle) || 0.5,
-    Number(config.shadowSpotPenumbra) || 0,
-    Number(config.shadowSpotDecay) || 1
-  );
-
-  light.castShadow = true;
-  light.shadow.mapSize.width = Number(config.shadowSpotMapSize) || 512;
-  light.shadow.mapSize.height = Number(config.shadowSpotMapSize) || 512;
-  light.shadow.bias = Number(config.shadowSpotBias) || 0;
-  light.shadow.normalBias = Number(config.shadowSpotNormalBias) || 0;
-  light.shadow.camera.near = baseOrb * 0.05;
-  light.shadow.camera.far = baseOrb * (Number(config.shadowSpotDistanceBO) || 1);
-  return light;
-}
-
 export function updateOrbPointLight(light, time = 0, config = ORB_3D_VISUAL_DEFAULTS) {
   if (!light) return;
 

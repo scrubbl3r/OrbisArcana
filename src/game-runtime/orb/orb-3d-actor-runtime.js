@@ -1,4 +1,4 @@
-import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260517c";
+import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260517d";
 import {
   createOrbNod3dRuntime,
   createOrbNod3dSurfaceDisplacementConfig,
@@ -90,9 +90,6 @@ export function createOrb3dActorRuntime({
         castShadow: false,
       });
       if (parent && typeof parent.add === "function") parent.add(orbRuntime.model);
-    }
-    if (orbRuntime.shadowSpot && parent && typeof parent.add === "function") {
-      parent.add(orbRuntime.shadowSpot);
     }
     notifyModelChanged();
   }

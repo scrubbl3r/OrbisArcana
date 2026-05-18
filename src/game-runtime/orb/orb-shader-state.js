@@ -6,8 +6,6 @@ export const ORB_SHADER_STATE_KEYS = Object.freeze([
   "goldMix",
   "pointLightIntensity",
   "pointLightDistanceBO",
-  "shadowSpotIntensity",
-  "shadowSpotDistanceBO",
 ]);
 
 const KEY_LIMITS = Object.freeze({
@@ -16,8 +14,6 @@ const KEY_LIMITS = Object.freeze({
   goldMix: Object.freeze({ min: 0, max: 2 }),
   pointLightIntensity: Object.freeze({ min: 0, max: 10000 }),
   pointLightDistanceBO: Object.freeze({ min: 0, max: 1000 }),
-  shadowSpotIntensity: Object.freeze({ min: 0, max: 10000 }),
-  shadowSpotDistanceBO: Object.freeze({ min: 0, max: 1000 }),
 });
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
@@ -39,13 +35,9 @@ function readShaderValue(source = {}, key = "") {
     case "shellCenterAlpha":
       return source.centerAlpha;
     case "pointLightIntensity":
-      return source.lightIntensity ?? source.spotIntensity;
+      return source.lightIntensity;
     case "pointLightDistanceBO":
-      return source.lightDistanceBO ?? source.spotDistanceBO;
-    case "shadowSpotIntensity":
-      return source.spotIntensity;
-    case "shadowSpotDistanceBO":
-      return source.spotDistanceBO;
+      return source.lightDistanceBO;
     default:
       return undefined;
   }
@@ -71,16 +63,12 @@ export function buildOrbShaderBaseState(config = ORB_3D_VISUAL_DEFAULTS) {
     goldMix: source.goldMix,
     pointLightIntensity: source.lightIntensity,
     pointLightDistanceBO: source.lightDistanceBO,
-    shadowSpotIntensity: source.shadowSpotIntensity,
-    shadowSpotDistanceBO: source.shadowSpotDistanceBO,
   }, {
     shellLuminanceBoost: ORB_3D_VISUAL_DEFAULTS.shellLuminanceBoost,
     shellCenterAlpha: ORB_3D_VISUAL_DEFAULTS.shellCenterAlpha,
     goldMix: ORB_3D_VISUAL_DEFAULTS.goldMix,
     pointLightIntensity: ORB_3D_VISUAL_DEFAULTS.lightIntensity,
     pointLightDistanceBO: ORB_3D_VISUAL_DEFAULTS.lightDistanceBO,
-    shadowSpotIntensity: ORB_3D_VISUAL_DEFAULTS.shadowSpotIntensity,
-    shadowSpotDistanceBO: ORB_3D_VISUAL_DEFAULTS.shadowSpotDistanceBO,
   });
 }
 

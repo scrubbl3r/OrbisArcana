@@ -5,9 +5,8 @@ import { ORB_BLOOM_CONFIG } from "../../world-workshop/effects/bloom/bloom-confi
 import {
   createOpalescentOrbShellMaterial,
   createOrbPointLight,
-  createOrbShadowSpotLight,
   updateOrbPointLight,
-} from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
+} from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260517b";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -64,16 +63,6 @@ export function readOrb3dPreviewConfig(els = {}) {
     lightShadowNormalBias: clampNumber(els.orb3dLightShadowNormalBias && els.orb3dLightShadowNormalBias.value, 0, 0.2, 0.018),
     lightShadowNearBO: clampNumber(els.orb3dLightShadowNearBO && els.orb3dLightShadowNearBO.value, 0.01, 4, 0.08),
     lightShadowFarBO: clampNumber(els.orb3dLightShadowFarBO && els.orb3dLightShadowFarBO.value, 0.1, 40, 10),
-    shadowSpotEnabled: !!(els.orb3dShadowSpotEnabled && els.orb3dShadowSpotEnabled.checked),
-    shadowSpotColor: colorFromFields(els, "orb3dShadowSpot", 0xdaf6ff),
-    shadowSpotIntensity: clampNumber(els.orb3dShadowSpotIntensity && els.orb3dShadowSpotIntensity.value, 0, 1000, 24),
-    shadowSpotDistanceBO: clampNumber(els.orb3dShadowSpotDistanceBO && els.orb3dShadowSpotDistanceBO.value, 0, 40, 4.5),
-    shadowSpotAngle: clampNumber(els.orb3dShadowSpotAngle && els.orb3dShadowSpotAngle.value, 0.01, 1.5, 0.48),
-    shadowSpotPenumbra: clampNumber(els.orb3dShadowSpotPenumbra && els.orb3dShadowSpotPenumbra.value, 0, 1, 0.78),
-    shadowSpotDecay: clampNumber(els.orb3dShadowSpotDecay && els.orb3dShadowSpotDecay.value, 0, 4, 1.4),
-    shadowSpotMapSize: roundedNumber(els.orb3dShadowSpotMapSize && els.orb3dShadowSpotMapSize.value, 512),
-    shadowSpotBias: clampNumber(els.orb3dShadowSpotBias && els.orb3dShadowSpotBias.value, -0.02, 0.02, -0.00035),
-    shadowSpotNormalBias: clampNumber(els.orb3dShadowSpotNormalBias && els.orb3dShadowSpotNormalBias.value, 0, 0.2, 0.018),
   });
 }
 
@@ -103,7 +92,6 @@ export function createOrb3dPreview({
   let inspector = null;
   let shellMaterial = null;
   let orbLight = null;
-  let shadowSpot = null;
   let model = null;
   let activeConfig = null;
   let createdAt = 0;
@@ -118,7 +106,6 @@ export function createOrb3dPreview({
     inspector = null;
     shellMaterial = null;
     orbLight = null;
-    shadowSpot = null;
     model = null;
   }
 
@@ -163,13 +150,6 @@ export function createOrb3dPreview({
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
     model.add(orbLight);
-
-    shadowSpot = createOrbShadowSpotLight({ bo, config: activeConfig });
-    if (shadowSpot) {
-      shadowSpot.position.set(bo * 0.35, bo * 0.55, bo * 1.8);
-      shadowSpot.target = model;
-      inspector.scene.add(shadowSpot);
-    }
 
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.025));
     inspector.scene.add(model);

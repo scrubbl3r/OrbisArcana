@@ -5,8 +5,8 @@ import {
   createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dDissolveBurst,
-} from "./orb-lifecycle-3d-vfx-runtime.js?v=20260517e";
-import { resolveOrbLifecycle3dShaderLayer } from "./orb-shader-lifecycle-layer.js?v=20260517c";
+} from "./orb-lifecycle-3d-vfx-runtime.js?v=20260517f";
+import { resolveOrbLifecycle3dShaderLayer } from "./orb-shader-lifecycle-layer.js?v=20260517d";
 
 function readSeed(payload = {}, fallback = ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed) {
   return Number(payload.fractureSeed || payload.seed || payload.erosionSeed || fallback) || 1;

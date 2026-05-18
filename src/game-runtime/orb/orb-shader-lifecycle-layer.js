@@ -24,10 +24,10 @@ export function resolveOrbLifecycle3dShaderLayer({
   const hpRatio = Math.max(0, Math.min(1, resolvedHealth / resolvedMaxHealth));
   const lifecycle = lifecycleConfig && typeof lifecycleConfig === "object" ? lifecycleConfig : ORB_LIFECYCLE_3D_DEFAULTS;
   const orb = orbConfig && typeof orbConfig === "object" ? orbConfig : ORB_3D_VISUAL_DEFAULTS;
-  const pointLightIntensityMinPct = lifecycle.pointLightIntensityMinPct ?? lifecycle.spotIntensityMinPct;
-  const pointLightIntensityMaxPct = lifecycle.pointLightIntensityMaxPct ?? lifecycle.spotIntensityMaxPct;
-  const pointLightDistanceMinPct = lifecycle.pointLightDistanceMinPct ?? lifecycle.spotDistanceMinPct;
-  const pointLightDistanceMaxPct = lifecycle.pointLightDistanceMaxPct ?? lifecycle.spotDistanceMaxPct;
+  const pointLightIntensityMinPct = lifecycle.pointLightIntensityMinPct;
+  const pointLightIntensityMaxPct = lifecycle.pointLightIntensityMaxPct;
+  const pointLightDistanceMinPct = lifecycle.pointLightDistanceMinPct;
+  const pointLightDistanceMaxPct = lifecycle.pointLightDistanceMaxPct;
   const pointLightIntensity = resolvePctLerp(orb.lightIntensity, pointLightIntensityMinPct, pointLightIntensityMaxPct, hpRatio, 0, 10000);
   const pointLightDistanceBO = resolvePctLerp(orb.lightDistanceBO, pointLightDistanceMinPct, pointLightDistanceMaxPct, hpRatio, 0, 1000);
   return Object.freeze({

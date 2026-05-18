@@ -5,10 +5,9 @@ import { createOrbModel } from "../../../src/game-runtime/orb/orb-3d-model.js?v=
 import {
   createOpalescentOrbShellMaterial,
   createOrbPointLight,
-  createOrbShadowSpotLight,
   updateOrbPointLight,
-} from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260516a";
-import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
+} from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260517b";
+import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517g";
 import {
   createOrbLifecycle3dCracks,
@@ -16,7 +15,7 @@ import {
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dCracks,
   updateOrbLifecycle3dDissolveBurst,
-} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260517e";
+} from "../../../src/game-runtime/orb/orb-lifecycle-3d-vfx-runtime.js?v=20260517f";
 import { disposeThreeObject } from "../../../src/game-runtime/rendering/three/three-object-utils.js";
 
 const ORB_STAGE_FILL_RATIO = 0.52;
@@ -156,7 +155,6 @@ export function createOrbLifecycle3dPreview({
   let model = null;
   let shellMaterial = null;
   let pointLight = null;
-  let shadowSpot = null;
   let orbShellMesh = null;
   let cracks = null;
   let burst = null;
@@ -237,15 +235,6 @@ export function createOrbLifecycle3dPreview({
       pointLight.intensity = shaderState.pointLightIntensity;
       pointLight.distance = shaderState.pointLightDistanceBO * bo;
     }
-    if (shadowSpot) {
-      const bo = readBo();
-      shadowSpot.intensity = shaderState.pointLightIntensity;
-      shadowSpot.distance = shaderState.pointLightDistanceBO * bo;
-      if (shadowSpot.shadow && shadowSpot.shadow.camera) {
-        shadowSpot.shadow.camera.far = Math.max(1, shadowSpot.distance);
-        shadowSpot.shadow.camera.updateProjectionMatrix();
-      }
-    }
     return shaderState;
   }
 
@@ -304,7 +293,6 @@ export function createOrbLifecycle3dPreview({
     model = null;
     shellMaterial = null;
     pointLight = null;
-    shadowSpot = null;
     orbShellMesh = null;
     cracks = null;
     burst = null;
@@ -390,12 +378,6 @@ export function createOrbLifecycle3dPreview({
       if (orbShellMesh) orbShellMesh.visible = layerVisible(els.orbLifecycle3dOrbVisibleBtn);
       pointLight = createOrbPointLight({ bo, config: activeOrbConfig });
       model.add(pointLight);
-      shadowSpot = createOrbShadowSpotLight({ bo, config: activeOrbConfig });
-      if (shadowSpot) {
-        shadowSpot.position.set(bo * 0.35, bo * 0.55, bo * 1.8);
-        shadowSpot.target = model;
-        inspector.scene.add(shadowSpot);
-      }
       inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.025));
       inspector.scene.add(model);
       bornAt = performance.now();
