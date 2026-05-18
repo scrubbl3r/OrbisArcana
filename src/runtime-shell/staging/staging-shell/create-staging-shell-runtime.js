@@ -10,7 +10,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260517s";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260517t";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -35,7 +35,7 @@ import {
   executeShellWordCastAction,
   handleShellVoiceSpellCast,
 } from "./shell-voice-spell-runtime.js";
-import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260516h";
+import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260517a";
 import { bindShellKwsEventRuntime } from "./shell-kws-event-runtime.js";
 import { bindShellKwsTraceRuntime } from "./shell-kws-trace-runtime.js";
 import {
@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260517v";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260517w";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";

@@ -2,6 +2,7 @@ import {
   EVT_ORB_DAMAGE_APPLIED,
   EVT_ORB_DIED,
   EVT_ORB_HEALTH_CHANGED,
+  EVT_ORB_HEALED,
   EVT_ORB_REVIVED,
   EVT_PICKUP_COLLECTED,
   EVT_RESOURCES_GLOBE_INVENTORY_CHANGED,
@@ -15,6 +16,7 @@ export function createGameStageDepth3dEventBindings({
   worldGlobe3dRuntime = null,
   orbGlobe3dRuntime = null,
   orbLifecycle3dRuntime = null,
+  startOrbHealShaderPulse = null,
   loadWorldSpawns = () => {},
   onOrbDied = () => {},
   onOrbRevived = () => {},
@@ -158,6 +160,21 @@ export function createGameStageDepth3dEventBindings({
         });
       }
       syncOrbVisualLifecycleState(payload);
+    }));
+    unsubs.push(eventBus.on(EVT_ORB_HEALED, (payload = {}) => {
+      if (typeof traceMark === "function") {
+        traceMark("orb.heal.applied", {
+          amountApplied: roundMetric(payload.amountApplied),
+          healthBefore: roundMetric(payload.healthBefore),
+          healthAfter: roundMetric(payload.healthAfter),
+          maxHealth: roundMetric(payload.maxHealth),
+          source: String(payload.source || ""),
+          atMs: roundMetric(payload.atMs, 1),
+        });
+      }
+      if (typeof startOrbHealShaderPulse === "function") {
+        startOrbHealShaderPulse(payload);
+      }
     }));
     unsubs.push(eventBus.on(EVT_ORB_DAMAGE_APPLIED, (payload = {}) => {
       if (typeof traceMark === "function") {

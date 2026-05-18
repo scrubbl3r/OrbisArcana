@@ -1,8 +1,8 @@
-import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260516c";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260517a";
 import {
   KWS_FLASH_TOKEN_WORD_IDS,
   WAKE_WINDOW_WORD_IDS as KWS_WAKE_WINDOW_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing.js?v=20260516c";
+} from "../../content/spells/spell-runtime-routing.js?v=20260517a";
 import {
   COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
   COMPILED_INTERACTION_GRAPH_V2_WAKE_TTL_MS,

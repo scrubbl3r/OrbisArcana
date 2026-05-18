@@ -59,6 +59,11 @@
       "path": "../../../assets/kws/openwakeword-models/rota.onnx",
       "label": "rota",
       "token": "rota"
+    },
+    {
+      "path": "../../../assets/kws/openwakeword-models/salubrium.onnx",
+      "label": "salubrium",
+      "token": "salubrium"
     }
   ]
 }

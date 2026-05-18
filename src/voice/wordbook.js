@@ -1,4 +1,4 @@
-import { WORDBOOK_V2_WORDS } from "../content/interactions-v2/wordbook-v2.js?v=20260516c";
+import { WORDBOOK_V2_WORDS } from "../content/interactions-v2/wordbook-v2.js?v=20260517a";
 
 // Canonical runtime view for words.
 export const WORDS = Object.freeze(

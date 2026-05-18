@@ -6,7 +6,7 @@ import {
   WAKE_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WINDOW_WORD_IDS,
-} from "../spells/spell-runtime-routing.js?v=20260515d";
+} from "../spells/spell-runtime-routing.js?v=20260517a";
 
 function buildWakeWindowWordSignals() {
   const wakeWordIds = new Set(

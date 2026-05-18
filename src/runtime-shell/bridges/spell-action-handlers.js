@@ -17,6 +17,7 @@ export function createSpellActionHandlers({
   executeTeleport,
   executeShockwave,
   executeBubbleShield,
+  executeHeal,
   executeColorize,
   triggerShockwave,
   activateBubbleShield,
@@ -95,6 +96,10 @@ export function createSpellActionHandlers({
         activateBubbleShield,
         durationMs: Number.isFinite(durationMs) ? durationMs : bubbleShieldMs,
       });
+    },
+    heal(payload = {}) {
+      if (typeof executeHeal !== "function") return false;
+      return executeHeal(payload) !== false;
     },
     colorize(payload = {}) {
       if (typeof executeColorize !== "function") return;

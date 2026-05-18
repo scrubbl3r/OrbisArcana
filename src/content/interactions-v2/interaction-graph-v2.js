@@ -12,7 +12,7 @@ export const INTERACTION_GRAPH_V2 = {
     ],
   },
   groups: {
-    wake_main_words: ["echovar", "electrum", "pyro", "sanctum", "leviton", "modulon"],
+    wake_main_words: ["echovar", "electrum", "pyro", "sanctum", "leviton", "modulon", "salubrium"],
     electrum_chain_words: ["rota"],
     wake_are_kay_nah_words: ["pyro"],
   },
@@ -20,7 +20,7 @@ export const INTERACTION_GRAPH_V2 = {
     {
       id: "wake_main",
       on: { word: "orbis" },
-      open: { id: "wake.main", words: ["echovar", "electrum", "pyro", "sanctum", "leviton", "modulon"], ttlMs: 1500 },
+      open: { id: "wake.main", words: ["echovar", "electrum", "pyro", "sanctum", "leviton", "modulon", "salubrium"], ttlMs: 1500 },
       //open: { id: "wake.main", words: "@wake_main_words", ttlMs: 1500 },
     },
     // BUBBLE SHIELD
@@ -54,6 +54,13 @@ export const INTERACTION_GRAPH_V2 = {
       requires: "wake.main",
       trigger: { spell: "orb_spin" },
       grace: {},
+    },
+    // HEAL
+    {
+      id: "orbis_salubrium_heal_cast",
+      on: { word: "salubrium" },
+      requires: "wake.main",
+      trigger: { spell: "heal" },
     },
     // ELECTRIC AOE CHAIN
     {

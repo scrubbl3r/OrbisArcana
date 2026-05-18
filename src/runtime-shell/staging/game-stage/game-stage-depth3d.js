@@ -49,6 +49,10 @@ import { ORB_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-3d-default
 import { createOrbShaderMixer } from "../../../game-runtime/orb/orb-shader-mixer.js?v=20260517a";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517g";
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260517h";
+import {
+  getOrbHealPulseLayerId,
+  resolveOrbHealPulseShaderLayer,
+} from "../../../game-runtime/orb/orb-shader-heal-pulse-layer.js?v=20260517a";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260505i";
@@ -56,7 +60,8 @@ import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260505e";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
-import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517o";
+import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
+import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517p";
 import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=20260505h";
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,
@@ -197,6 +202,8 @@ export function createGameStageDepth3dLayer({
   }
   let bloomMarkedReady = false;
   let bloomMarkedRender = false;
+  let healPulseFrame = 0;
+  let healPulseToken = 0;
   const renderLoop = createGameStageDepth3dRenderLoop({
     isDisposed: () => disposed,
     hasActiveAnimation: hasActiveGlobe3dAnimation,
@@ -346,6 +353,7 @@ export function createGameStageDepth3dLayer({
     worldGlobe3dRuntime,
     orbGlobe3dRuntime,
     orbLifecycle3dRuntime,
+    startOrbHealShaderPulse: startHealShaderPulse,
     loadWorldSpawns: loadGlobe3dWorldSpawns,
     onOrbDied: (payload = {}) => {
       currentOrbAlive = false;
@@ -493,6 +501,73 @@ export function createGameStageDepth3dLayer({
     }
   }
 
+  function cancelHealPulse({ clearLayer = true } = {}) {
+    healPulseToken += 1;
+    if (healPulseFrame && typeof cancelAnimationFrame === "function") {
+      cancelAnimationFrame(healPulseFrame);
+    }
+    healPulseFrame = 0;
+    if (clearLayer && orbShaderMixer && typeof orbShaderMixer.clearLayer === "function") {
+      orbShaderMixer.clearLayer(getOrbHealPulseLayerId(), { source: "healPulse.clear" });
+    }
+  }
+
+  function startHealShaderPulse(payload = {}) {
+    if (disposed || !orbShaderMixer || typeof orbShaderMixer.setLayer !== "function") return;
+    const durationMs = Math.max(80, Number(HEAL_PRESET_DEFAULT.shaderPulseDurationMs) || 1500);
+    const startedAtMs = Number(payload.atMs) || performance.now();
+    const token = healPulseToken + 1;
+    healPulseToken = token;
+    if (healPulseFrame && typeof cancelAnimationFrame === "function") {
+      cancelAnimationFrame(healPulseFrame);
+      healPulseFrame = 0;
+    }
+    const healthBefore = Number(payload.healthBefore ?? payload.from ?? 0);
+    const healthAfter = Number(payload.healthAfter ?? payload.health ?? payload.to ?? 0);
+    const maxHealth = Math.max(1, Number(payload.maxHealth ?? payload.max) || 1000);
+    let lastTraceBucket = -1;
+
+    const step = (nowMs = performance.now()) => {
+      if (disposed || token !== healPulseToken) return;
+      const progress = Math.max(0, Math.min(1, (Number(nowMs) - startedAtMs) / durationMs));
+      const layer = resolveOrbHealPulseShaderLayer({
+        healthBefore,
+        healthAfter,
+        maxHealth,
+        progress,
+        healConfig: HEAL_PRESET_DEFAULT,
+        lifecycleConfig: ORB_LIFECYCLE_3D_DEFAULTS,
+        orbConfig: ORB_3D_VISUAL_DEFAULTS,
+      });
+      orbShaderMixer.setLayer(getOrbHealPulseLayerId(), layer.values, { source: "healPulse" });
+      const traceBucket = progress >= 1 ? 2 : progress >= 0.5 ? 1 : 0;
+      if (traceBucket !== lastTraceBucket && perfTrace && typeof perfTrace.mark === "function") {
+        lastTraceBucket = traceBucket;
+        perfTrace.mark("orb.shader.heal_pulse", {
+          progress: Math.round(progress * 1000) / 1000,
+          healthBefore,
+          healthAfter,
+          maxHealth,
+          values: layer && layer.values ? { ...layer.values } : null,
+        });
+      }
+      renderLoop.scheduleAnimation();
+      renderLoop.renderFrame(renderLoop.getLastFrame() || {});
+      if (progress >= 1) {
+        healPulseFrame = 0;
+        orbShaderMixer.clearLayer(getOrbHealPulseLayerId(), { source: "healPulse.complete" });
+        renderLoop.scheduleAnimation();
+        renderLoop.renderFrame(renderLoop.getLastFrame() || {});
+        return;
+      }
+      if (typeof requestAnimationFrame === "function") {
+        healPulseFrame = requestAnimationFrame(step);
+      }
+    };
+
+    step(startedAtMs);
+  }
+
   function hasActiveGlobe3dAnimation() {
     return (
       worldGlobe3dRuntime.hasAnimatingVisuals()
@@ -506,6 +581,7 @@ export function createGameStageDepth3dLayer({
       || flameAoe3dRuntime.isActive()
       || shockwave3dRuntime.isActive()
       || gnatSwarm3dRuntime.hasActiveVisuals()
+      || !!healPulseFrame
     );
   }
 
@@ -910,6 +986,7 @@ export function createGameStageDepth3dLayer({
     renderFrame: renderLoop.renderFrame,
     dispose() {
       disposed = true;
+      cancelHealPulse({ clearLayer: false });
       renderLoop.dispose();
       eventBindings.dispose();
       teleport3dRuntime.destroy();

@@ -20,7 +20,7 @@ export const RULE_ENGINE_SOURCE_READOUT = Object.freeze({
 });
 
 const BOOTSTRAP_FLAG_USE_IN_RECEIVER = "useInReceiverBootstrap";
-const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260517o";
+const RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V = "20260517p";
 const VALIDATION_ERROR_DELIMITER = " | ";
 const FIELD_ENABLED = "enabled";
 const FIELD_SIGNALS = "signals";
@@ -320,7 +320,7 @@ export async function loadReceiverInitModules() {
     import("../ui/theme/apply-game-theme-css-vars.js"),
     import("../ui/dev-console/apply-dev-console-theme-css-vars.js"),
     import(`../game-runtime/input/input-frame-pipeline.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
-    import("../vfx/presets/index.js?v=20260506e"),
+    import("../vfx/presets/index.js?v=20260517b"),
     import("../content/spells/cast-action-registry.js"),
     import("../content/spells/runtime-spells.js"),
     import("../content/spells/validate-spell-runtime-routing.js"),

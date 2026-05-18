@@ -43,6 +43,11 @@ export const EVENT_DEFINITIONS = Object.freeze([
     defaultArgs: Object.freeze({}),
   }),
   Object.freeze({
+    id: "heal",
+    type: "event",
+    defaultArgs: Object.freeze({}),
+  }),
+  Object.freeze({
     id: "colorize",
     type: "event",
     defaultArgs: Object.freeze({ r: 1, g: 1, b: 1, alpha: 1, fadeInMs: 0, fadeOutMs: 0 }),

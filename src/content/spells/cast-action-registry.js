@@ -43,6 +43,11 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
     globeCost: 1,
   }),
   Object.freeze({
+    id: "heal",
+    handlerKey: "heal",
+    globeCost: 1,
+  }),
+  Object.freeze({
     id: "colorize",
     handlerKey: "colorize",
     globeCost: 0,

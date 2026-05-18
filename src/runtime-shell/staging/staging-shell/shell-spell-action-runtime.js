@@ -1,5 +1,7 @@
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
 import { resolveOrbGraceDefaultTtlMs, resolveOrbGracePayload } from "../../../game-runtime/orb/orb-grace.js";
+import { EVT_VOICE_SPELL_REJECTED } from "../../../contracts/events.js";
+import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
 
 export const FLOAT_GRACE_PROFILE = Object.freeze({
   source: "float",
@@ -27,6 +29,8 @@ export function createShellSpellActionRuntime({
   ) {
     return null;
   }
+
+  let lastHealCastAtMs = 0;
 
   const shellSpellActionHandlers = createSpellActionHandlersImported({
     eventBus,
@@ -139,6 +143,88 @@ export function createShellSpellActionRuntime({
     executeTeleport: executors.executeTeleport,
     executeShockwave: executors.executeShockwave,
     executeBubbleShield: executors.executeBubbleShield,
+    executeHeal: (payload = {}) => {
+      const receiverRuntime = typeof shellActions.resolveReceiverRuntime === "function"
+        ? shellActions.resolveReceiverRuntime(runtime)
+        : null;
+      const orbSystem = receiverRuntime && receiverRuntime.orbSystem;
+      const resourcesSystem = receiverRuntime && receiverRuntime.resourcesSystem;
+      const gameStateOrb = receiverRuntime && receiverRuntime.gameState ? receiverRuntime.gameState.orb : null;
+      const preset = HEAL_PRESET_DEFAULT;
+      const atMs = Number(payload && payload.atMs) || performance.now();
+      const globeCost = Math.max(0, Math.round(Number(preset.globeCost) || 0));
+      const healAmountHp = Math.max(1, Math.round(Number(preset.healAmountHp) || 1));
+      const cooldownMs = Math.max(0, Math.round(Number(preset.cooldownMs) || 0));
+      const castDurationMs = Math.max(0, Math.round(Number(preset.castDurationMs) || 0));
+      const lockoutMs = Math.max(cooldownMs, castDurationMs);
+      const wordId = String(payload && (payload.wordId || payload.sourceWordId || payload.spellId) || "salubrium");
+
+      function reject(reason, extra = {}) {
+        if (eventBus && typeof eventBus.emit === "function") {
+          eventBus.emit(EVT_VOICE_SPELL_REJECTED, {
+            reason,
+            wordId,
+            spellId: "heal",
+            castActionId: "heal",
+            atMs,
+            ...extra,
+          });
+        }
+        return false;
+      }
+
+      if (!orbSystem || typeof orbSystem.applyHeal !== "function") {
+        return reject("heal_unavailable");
+      }
+      const maxHealth = Math.max(1, Number(gameStateOrb && (gameStateOrb.maxHealth ?? gameStateOrb.max)) || 1000);
+      const health = Math.max(0, Math.min(maxHealth, Number(gameStateOrb && gameStateOrb.health) || 0));
+      const alive = gameStateOrb ? gameStateOrb.alive !== false : true;
+      if (!alive) return reject("orb_dead");
+      if (preset.requireDamagedOrb !== false && health >= maxHealth) {
+        return reject("orb_full");
+      }
+      if (lockoutMs > 0 && lastHealCastAtMs > 0 && atMs - lastHealCastAtMs < lockoutMs) {
+        return reject("cooldown", {
+          cooldownMs: lockoutMs,
+          remainingMs: Math.max(0, Math.ceil(lockoutMs - (atMs - lastHealCastAtMs))),
+        });
+      }
+      if (globeCost > 0) {
+        if (!resourcesSystem || typeof resourcesSystem.getStoredGlobeCount !== "function" || typeof resourcesSystem.consumeStoredGlobe !== "function") {
+          return reject("resources_unavailable", { requiredGlobes: globeCost, storedGlobes: 0 });
+        }
+        const stored = Math.max(0, Number(resourcesSystem.getStoredGlobeCount()) || 0);
+        if (stored < globeCost) {
+          return reject("insufficient_globes", { requiredGlobes: globeCost, storedGlobes: stored });
+        }
+        for (let i = 0; i < globeCost; i += 1) {
+          const spendResult = resourcesSystem.consumeStoredGlobe({
+            ...payload,
+            reason: "heal_cast",
+            wordId,
+            spellId: "heal",
+            atMs,
+          });
+          if (!spendResult || spendResult.ok !== true) {
+            return reject("insufficient_globes", {
+              requiredGlobes: globeCost,
+              storedGlobes: Math.max(0, Number(spendResult && spendResult.stored) || 0),
+            });
+          }
+        }
+      }
+      const healResult = orbSystem.applyHeal({
+        amount: healAmountHp,
+        source: "salubrium",
+        sourceEntityId: "spell.heal",
+        atMs,
+      });
+      if (healResult && healResult.applied) {
+        lastHealCastAtMs = atMs;
+        return true;
+      }
+      return preset.consumeOnFailedCast === true;
+    },
     executeColorize: executors.executeColorize,
     triggerShockwave: () => (
       getRuntimeVfx() && typeof getRuntimeVfx().triggerShockwave === "function"

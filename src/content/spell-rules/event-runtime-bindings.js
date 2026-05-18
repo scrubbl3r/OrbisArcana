@@ -59,6 +59,13 @@ export const EVENT_RUNTIME_BINDINGS = Object.freeze([
     }),
   }),
   Object.freeze({
+    id: "heal",
+    runtime: Object.freeze({
+      kind: "cast_action",
+      castActionId: "heal",
+    }),
+  }),
+  Object.freeze({
     id: "colorize",
     runtime: Object.freeze({
       kind: "cast_action",

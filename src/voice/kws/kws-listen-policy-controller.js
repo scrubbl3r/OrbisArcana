@@ -1,4 +1,4 @@
-import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260516c";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260517a";
 import {
   DEFAULT_KWS_LISTEN_POLICY_MODE,
   KWS_LISTEN_POLICY_MODES,

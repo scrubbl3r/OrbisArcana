@@ -1,4 +1,4 @@
-import { ACTIVE_WORDS } from "../wordbook.js?v=20260516c";
+import { ACTIVE_WORDS } from "../wordbook.js?v=20260517a";
 import { normalizeTranscript } from "../normalizer.js";
 
 /**

@@ -1,7 +1,7 @@
 import {
   OPENWAKEWORD_BROWSER_CONFIG_DEFAULT,
   OPENWAKEWORD_BROWSER_SIM_TOKENS,
-} from "./openwakeword-browser-config.js?v=20260516c";
+} from "./openwakeword-browser-config.js?v=20260517a";
 
 function nowMs() {
   return (typeof performance !== "undefined" && typeof performance.now === "function")
