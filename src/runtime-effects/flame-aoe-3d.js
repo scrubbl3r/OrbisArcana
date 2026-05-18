@@ -54,6 +54,8 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeLiftBo: clampNumber(source.wakeLiftBo, 0, 4, fallback.wakeLiftBo ?? 0.6),
     wakeLiftCoreRadiusBo: clampNumber(source.wakeLiftCoreRadiusBo, 0.02, 2, fallback.wakeLiftCoreRadiusBo ?? 0.25),
     wakeStretchStrength: clampNumber(source.wakeStretchStrength, 0, 4, fallback.wakeStretchStrength ?? 1),
+    wakeOrbHugRadiusBo: clampNumber(source.wakeOrbHugRadiusBo, 0.2, 2, fallback.wakeOrbHugRadiusBo ?? 0.56),
+    wakeEnvelopeBlendBo: clampNumber(source.wakeEnvelopeBlendBo, 0.01, 2, fallback.wakeEnvelopeBlendBo ?? 0.34),
     wakeDisplaceBo: clampNumber(source.wakeDisplaceBo, 0, 0.5, fallback.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(source.wakeDisplaceScale, 0.2, 8, fallback.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(source.wakeDisplaceSpeed, 0, 4, fallback.wakeDisplaceSpeed),
@@ -288,6 +290,8 @@ function createWakeMaterial(config) {
       uWakeMotionOffset: { value: new THREE.Vector3() },
       uWakeCoreOffset: { value: new THREE.Vector3(0, 1, 0) },
       uWakeCoreRadius: { value: config.wakeLiftCoreRadiusPx },
+      uWakeOrbRadius: { value: config.wakeOrbHugRadiusPx },
+      uWakeEnvelopeBlend: { value: config.wakeEnvelopeBlendPx },
       uWakeStretchDirection: { value: new THREE.Vector3(0, 1, 0) },
       uWakeStretchStrength: { value: config.wakeStretchStrength },
     },
@@ -303,6 +307,8 @@ function createWakeMaterial(config) {
       uniform vec3 uWakeMotionOffset;
       uniform vec3 uWakeCoreOffset;
       uniform float uWakeCoreRadius;
+      uniform float uWakeOrbRadius;
+      uniform float uWakeEnvelopeBlend;
       uniform vec3 uWakeStretchDirection;
       uniform float uWakeStretchStrength;
       varying vec3 vLocalPos;
@@ -318,27 +324,30 @@ function createWakeMaterial(config) {
         for (int i = 0; i < 3; i += 1) { value += noise(p * freq) * amp; freq *= 1.82; amp *= 0.42; p += vec3(7.3, -11.9, 5.1); }
         return clamp(value, 0.0, 1.0);
       }
+      float sphereRayDistance(vec3 rayDir, vec3 center, float radius) {
+        float along = dot(rayDir, center);
+        float disc = radius * radius - dot(center, center) + along * along;
+        if (disc <= 0.0) return 0.0;
+        return max(0.0, along + sqrt(disc));
+      }
+      float smoothMax(float a, float b, float radius) {
+        float k = max(0.0001, radius);
+        float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+        return mix(a, b, h) + k * h * (1.0 - h);
+      }
       void main() {
         vec3 shellNormal = normalize(position + vec3(0.0, 0.0001, 0.0));
         vec3 stretchDirection = normalize(uWakeStretchDirection + vec3(0.0, 0.0001, 0.0));
         float stretchDot = dot(shellNormal, stretchDirection);
         float tail = clamp(stretchDot * 0.5 + 0.5, 0.0, 1.0);
-        vec3 radialVec = position - stretchDirection * dot(position, stretchDirection);
-        float axisCoord = dot(position, stretchDirection);
-        float coreStretch = length(uWakeCoreOffset);
-        float coreRadius = max(0.0001, uWakeCoreRadius);
-        float coreWidth = clamp(coreRadius / max(coreRadius + coreStretch, 0.0001), 0.08, 0.68);
-        float stretchAmount = coreStretch * uWakeStretchStrength;
-        float shellPull = smoothstep(1.0 - coreWidth * 3.2, 0.98, stretchDot);
-        float equatorGrip = sin(tail * 3.14159265359);
-        float plumeRise = pow(tail, 1.28) * 1.18 + shellPull * 0.42 + equatorGrip * 0.14;
-        float undersideLift = (1.0 - tail) * 0.18;
-        axisCoord += stretchAmount * (plumeRise + undersideLift);
-        float stretchRatio = clamp(stretchAmount / max(coreRadius + coreStretch, 0.0001), 0.0, 1.0);
-        float upperTaper = smoothstep(0.40, 1.0, tail) * stretchRatio;
-        float lowerHug = (1.0 - smoothstep(0.0, 0.34, tail)) * stretchRatio;
-        float radialScale = clamp(1.0 - upperTaper * 0.34 - lowerHug * 0.16, 0.42, 1.08);
-        vec3 local = radialVec * radialScale + stretchDirection * axisCoord;
+        vec3 coreCenter = uWakeCoreOffset * max(0.0, uWakeStretchStrength);
+        float orbDistance = max(0.0001, uWakeOrbRadius);
+        float coreDistance = sphereRayDistance(shellNormal, coreCenter, max(0.0001, uWakeCoreRadius));
+        float envelopeDistance = smoothMax(orbDistance, coreDistance, uWakeEnvelopeBlend);
+        float flameLift = max(0.0, dot(coreCenter, stretchDirection));
+        float topBias = pow(tail, 1.7) * flameLift * 0.18;
+        float bottomHug = (1.0 - smoothstep(0.0, 0.28, tail)) * flameLift * 0.08;
+        vec3 local = shellNormal * envelopeDistance + stretchDirection * (topBias + bottomHug);
         vec2 radialPlane = local.xz;
         float radius = length(radialPlane);
         vec2 radialDir = radius > 0.0001 ? radialPlane / radius : vec2(1.0, 0.0);
@@ -589,6 +598,12 @@ export function createFlameAoe3dRuntime({
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeCoreRadius) {
       wakeMaterial.uniforms.uWakeCoreRadius.value = bo * clampNumber(activeConfig && activeConfig.wakeLiftCoreRadiusBo, 0.02, 2, 0.25);
     }
+    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeOrbRadius) {
+      wakeMaterial.uniforms.uWakeOrbRadius.value = bo * clampNumber(activeConfig && activeConfig.wakeOrbHugRadiusBo, 0.2, 2, 0.56);
+    }
+    if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeEnvelopeBlend) {
+      wakeMaterial.uniforms.uWakeEnvelopeBlend.value = bo * clampNumber(activeConfig && activeConfig.wakeEnvelopeBlendBo, 0.01, 2, 0.34);
+    }
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeStretchDirection) {
       wakeMaterial.uniforms.uWakeStretchDirection.value.copy(stretchDirection);
     }
@@ -670,6 +685,8 @@ export function createFlameAoe3dRuntime({
         ...config,
         wakeDisplacePx: bo * config.wakeDisplaceBo,
         wakeLiftCoreRadiusPx: bo * config.wakeLiftCoreRadiusBo,
+        wakeOrbHugRadiusPx: bo * config.wakeOrbHugRadiusBo,
+        wakeEnvelopeBlendPx: bo * config.wakeEnvelopeBlendBo,
       });
       const wake = new THREE.Mesh(
         createWakeElasticShellGeometry(

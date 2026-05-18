@@ -44,6 +44,8 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeLiftBo: 1.1,
   wakeLiftCoreRadiusBo: 0.25,
   wakeStretchStrength: 1.35,
+  wakeOrbHugRadiusBo: 0.56,
+  wakeEnvelopeBlendBo: 0.34,
   wakeDisplaceBo: 0.12,
   wakeDisplaceScale: 1.8,
   wakeDisplaceSpeed: 0.35,
@@ -180,6 +182,8 @@ function readFlameWakeConfig(els = {}) {
     wakeLiftBo: clampNumber(els.flameAoe3dWakeLiftBo && els.flameAoe3dWakeLiftBo.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLiftBo),
     wakeLiftCoreRadiusBo: clampNumber(els.flameAoe3dWakeLiftCoreRadiusBo && els.flameAoe3dWakeLiftCoreRadiusBo.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLiftCoreRadiusBo),
     wakeStretchStrength: clampNumber(els.flameAoe3dWakeStretchStrength && els.flameAoe3dWakeStretchStrength.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeStretchStrength),
+    wakeOrbHugRadiusBo: clampNumber(els.flameAoe3dWakeOrbHugRadiusBo && els.flameAoe3dWakeOrbHugRadiusBo.value, 0.2, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeOrbHugRadiusBo),
+    wakeEnvelopeBlendBo: clampNumber(els.flameAoe3dWakeEnvelopeBlendBo && els.flameAoe3dWakeEnvelopeBlendBo.value, 0.01, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeEnvelopeBlendBo),
     wakeDisplaceBo: clampNumber(els.flameAoe3dWakeDisplaceBo && els.flameAoe3dWakeDisplaceBo.value, 0, 0.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(els.flameAoe3dWakeDisplaceScale && els.flameAoe3dWakeDisplaceScale.value, 0.2, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceScale),
     wakeDisplaceSpeed: clampNumber(els.flameAoe3dWakeDisplaceSpeed && els.flameAoe3dWakeDisplaceSpeed.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceSpeed),
@@ -228,6 +232,8 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeLiftBo) els.flameAoe3dWakeLiftBo.value = String(Number(cfg.wakeLiftBo).toFixed(2));
   if (els.flameAoe3dWakeLiftCoreRadiusBo) els.flameAoe3dWakeLiftCoreRadiusBo.value = String(Number(cfg.wakeLiftCoreRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeStretchStrength) els.flameAoe3dWakeStretchStrength.value = String(Number(cfg.wakeStretchStrength).toFixed(2));
+  if (els.flameAoe3dWakeOrbHugRadiusBo) els.flameAoe3dWakeOrbHugRadiusBo.value = String(Number(cfg.wakeOrbHugRadiusBo).toFixed(2));
+  if (els.flameAoe3dWakeEnvelopeBlendBo) els.flameAoe3dWakeEnvelopeBlendBo.value = String(Number(cfg.wakeEnvelopeBlendBo).toFixed(2));
   if (els.flameAoe3dWakeDisplaceBo) els.flameAoe3dWakeDisplaceBo.value = String(Number(cfg.wakeDisplaceBo).toFixed(3));
   if (els.flameAoe3dWakeDisplaceScale) els.flameAoe3dWakeDisplaceScale.value = String(Number(cfg.wakeDisplaceScale).toFixed(2));
   if (els.flameAoe3dWakeDisplaceSpeed) els.flameAoe3dWakeDisplaceSpeed.value = String(Number(cfg.wakeDisplaceSpeed).toFixed(2));
@@ -491,6 +497,8 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeDisplaceInfluenceTop: { value: config.wakeDisplaceInfluenceTop },
       uWakeCoreOffset: { value: new THREE.Vector3(0, Number(config.wakeLiftPx) || 1, 0) },
       uWakeCoreRadius: { value: Number(config.wakeLiftCoreRadiusPx) || 1 },
+      uWakeOrbRadius: { value: Number(config.wakeOrbHugRadiusPx) || 1 },
+      uWakeEnvelopeBlend: { value: Number(config.wakeEnvelopeBlendPx) || 1 },
       uWakeStretchDirection: { value: new THREE.Vector3(0, 1, 0) },
       uWakeStretchStrength: { value: config.wakeStretchStrength },
       uWakeNoiseScale: { value: config.wakeNoiseScale },
@@ -530,6 +538,8 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeDisplaceInfluenceTop;
       uniform vec3 uWakeCoreOffset;
       uniform float uWakeCoreRadius;
+      uniform float uWakeOrbRadius;
+      uniform float uWakeEnvelopeBlend;
       uniform vec3 uWakeStretchDirection;
       uniform float uWakeStretchStrength;
 
@@ -575,28 +585,31 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         }
         return clamp(value, 0.0, 1.0);
       }
+      float sphereRayDistance(vec3 rayDir, vec3 center, float radius) {
+        float along = dot(rayDir, center);
+        float disc = radius * radius - dot(center, center) + along * along;
+        if (disc <= 0.0) return 0.0;
+        return max(0.0, along + sqrt(disc));
+      }
+      float smoothMax(float a, float b, float radius) {
+        float k = max(0.0001, radius);
+        float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+        return mix(a, b, h) + k * h * (1.0 - h);
+      }
 
       void main() {
         vec3 shellNormal = normalize(position + vec3(0.0, 0.0001, 0.0));
         vec3 stretchDirection = normalize(uWakeStretchDirection + vec3(0.0, 0.0001, 0.0));
         float stretchDot = dot(shellNormal, stretchDirection);
         float tail = clamp(stretchDot * 0.5 + 0.5, 0.0, 1.0);
-        vec3 radialVec = position - stretchDirection * dot(position, stretchDirection);
-        float axisCoord = dot(position, stretchDirection);
-        float coreStretch = length(uWakeCoreOffset);
-        float coreRadius = max(0.0001, uWakeCoreRadius);
-        float coreWidth = clamp(coreRadius / max(coreRadius + coreStretch, 0.0001), 0.08, 0.68);
-        float stretchAmount = coreStretch * uWakeStretchStrength;
-        float shellPull = smoothstep(1.0 - coreWidth * 3.2, 0.98, stretchDot);
-        float equatorGrip = sin(tail * 3.14159265359);
-        float plumeRise = pow(tail, 1.28) * 1.18 + shellPull * 0.42 + equatorGrip * 0.14;
-        float undersideLift = (1.0 - tail) * 0.18;
-        axisCoord += stretchAmount * (plumeRise + undersideLift);
-        float stretchRatio = clamp(stretchAmount / max(coreRadius + coreStretch, 0.0001), 0.0, 1.0);
-        float upperTaper = smoothstep(0.40, 1.0, tail) * stretchRatio;
-        float lowerHug = (1.0 - smoothstep(0.0, 0.34, tail)) * stretchRatio;
-        float radialScale = clamp(1.0 - upperTaper * 0.34 - lowerHug * 0.16, 0.42, 1.08);
-        vec3 local = radialVec * radialScale + stretchDirection * axisCoord;
+        vec3 coreCenter = uWakeCoreOffset * max(0.0, uWakeStretchStrength);
+        float orbDistance = max(0.0001, uWakeOrbRadius);
+        float coreDistance = sphereRayDistance(shellNormal, coreCenter, max(0.0001, uWakeCoreRadius));
+        float envelopeDistance = smoothMax(orbDistance, coreDistance, uWakeEnvelopeBlend);
+        float flameLift = max(0.0, dot(coreCenter, stretchDirection));
+        float topBias = pow(tail, 1.7) * flameLift * 0.18;
+        float bottomHug = (1.0 - smoothstep(0.0, 0.28, tail)) * flameLift * 0.08;
+        vec3 local = shellNormal * envelopeDistance + stretchDirection * (topBias + bottomHug);
 
         vec2 radialPlane = local.xz;
         float radius = length(radialPlane);
@@ -972,6 +985,8 @@ export function createFlameAoe3dPreview({
       wakeDisplacePx: bo * wakeConfig.wakeDisplaceBo,
       wakeLiftPx: bo * wakeConfig.wakeLiftBo,
       wakeLiftCoreRadiusPx: bo * wakeConfig.wakeLiftCoreRadiusBo,
+      wakeOrbHugRadiusPx: bo * wakeConfig.wakeOrbHugRadiusBo,
+      wakeEnvelopeBlendPx: bo * wakeConfig.wakeEnvelopeBlendBo,
     });
     wakeMesh = new THREE.Mesh(
       createWakeElasticShellGeometry(
@@ -1065,6 +1080,8 @@ export function createFlameAoe3dPreview({
       els.flameAoe3dApplyWakeLiftBtn,
       els.flameAoe3dApplyWakeLiftCoreRadiusBtn,
       els.flameAoe3dApplyWakeStretchStrengthBtn,
+      els.flameAoe3dApplyWakeOrbHugRadiusBtn,
+      els.flameAoe3dApplyWakeEnvelopeBlendBtn,
       els.flameAoe3dApplyWakeDisplaceBtn,
       els.flameAoe3dApplyWakeDisplaceScaleBtn,
       els.flameAoe3dApplyWakeDisplaceSpeedBtn,
