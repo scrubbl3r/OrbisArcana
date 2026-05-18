@@ -1,12 +1,12 @@
 import { disposeThreeObject } from "../rendering/three/three-object-utils.js";
 import { ORB_3D_VISUAL_DEFAULTS } from "./orb-3d-default.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517f";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517g";
 import {
   createOrbLifecycle3dErosionPatch,
   createOrbLifecycle3dDissolveBurst,
   updateOrbLifecycle3dDissolveBurst,
 } from "./orb-lifecycle-3d-vfx-runtime.js?v=20260517e";
-import { resolveOrbLifecycle3dShaderLayer } from "./orb-shader-lifecycle-layer.js?v=20260517b";
+import { resolveOrbLifecycle3dShaderLayer } from "./orb-shader-lifecycle-layer.js?v=20260517c";
 
 function readSeed(payload = {}, fallback = ORB_LIFECYCLE_3D_DEFAULTS.erosionSeed) {
   return Number(payload.fractureSeed || payload.seed || payload.erosionSeed || fallback) || 1;

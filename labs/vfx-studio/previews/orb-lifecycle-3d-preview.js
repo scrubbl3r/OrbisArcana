@@ -9,7 +9,7 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260516a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260428a";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517f";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../src/game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517g";
 import {
   createOrbLifecycle3dCracks,
   createOrbLifecycle3dErosionPatch,
@@ -27,10 +27,10 @@ const ORB_LIFECYCLE_SHADER_RANGE_FIELDS = Object.freeze([
   "orbLifecycle3dLuminanceBoostMaxPct",
   "orbLifecycle3dCenterAlphaMinPct",
   "orbLifecycle3dCenterAlphaMaxPct",
-  "orbLifecycle3dSpotIntensityMinPct",
-  "orbLifecycle3dSpotIntensityMaxPct",
-  "orbLifecycle3dSpotDistanceMinPct",
-  "orbLifecycle3dSpotDistanceMaxPct",
+  "orbLifecycle3dPointLightIntensityMinPct",
+  "orbLifecycle3dPointLightIntensityMaxPct",
+  "orbLifecycle3dPointLightDistanceMinPct",
+  "orbLifecycle3dPointLightDistanceMaxPct",
   "orbLifecycle3dGoldMixMinPct",
   "orbLifecycle3dGoldMixMaxPct",
 ]);
@@ -66,10 +66,10 @@ function readLifecycle3dConfig(els = {}) {
     shellLuminanceBoostMaxPct: roundedNumber(els.orbLifecycle3dLuminanceBoostMaxPct && els.orbLifecycle3dLuminanceBoostMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.shellLuminanceBoostMaxPct),
     shellCenterAlphaMinPct: roundedNumber(els.orbLifecycle3dCenterAlphaMinPct && els.orbLifecycle3dCenterAlphaMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.shellCenterAlphaMinPct),
     shellCenterAlphaMaxPct: roundedNumber(els.orbLifecycle3dCenterAlphaMaxPct && els.orbLifecycle3dCenterAlphaMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.shellCenterAlphaMaxPct),
-    spotIntensityMinPct: roundedNumber(els.orbLifecycle3dSpotIntensityMinPct && els.orbLifecycle3dSpotIntensityMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.spotIntensityMinPct),
-    spotIntensityMaxPct: roundedNumber(els.orbLifecycle3dSpotIntensityMaxPct && els.orbLifecycle3dSpotIntensityMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.spotIntensityMaxPct),
-    spotDistanceMinPct: roundedNumber(els.orbLifecycle3dSpotDistanceMinPct && els.orbLifecycle3dSpotDistanceMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMinPct),
-    spotDistanceMaxPct: roundedNumber(els.orbLifecycle3dSpotDistanceMaxPct && els.orbLifecycle3dSpotDistanceMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMaxPct),
+    pointLightIntensityMinPct: roundedNumber(els.orbLifecycle3dPointLightIntensityMinPct && els.orbLifecycle3dPointLightIntensityMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.pointLightIntensityMinPct),
+    pointLightIntensityMaxPct: roundedNumber(els.orbLifecycle3dPointLightIntensityMaxPct && els.orbLifecycle3dPointLightIntensityMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.pointLightIntensityMaxPct),
+    pointLightDistanceMinPct: roundedNumber(els.orbLifecycle3dPointLightDistanceMinPct && els.orbLifecycle3dPointLightDistanceMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.pointLightDistanceMinPct),
+    pointLightDistanceMaxPct: roundedNumber(els.orbLifecycle3dPointLightDistanceMaxPct && els.orbLifecycle3dPointLightDistanceMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.pointLightDistanceMaxPct),
     goldMixMinPct: roundedNumber(els.orbLifecycle3dGoldMixMinPct && els.orbLifecycle3dGoldMixMinPct.value, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMinPct),
     goldMixMaxPct: roundedNumber(els.orbLifecycle3dGoldMixMaxPct && els.orbLifecycle3dGoldMixMaxPct.value, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMaxPct),
     crackColor: ORB_LIFECYCLE_3D_DEFAULTS.crackColor,
@@ -220,10 +220,8 @@ export function createOrbLifecycle3dPreview({
       hpRatio,
       shellLuminanceBoost: resolvePctLerp(baseConfig.shellLuminanceBoost, config.shellLuminanceBoostMinPct, config.shellLuminanceBoostMaxPct, hpRatio, 0, 12),
       shellCenterAlpha: resolvePctLerp(baseConfig.shellCenterAlpha, config.shellCenterAlphaMinPct, config.shellCenterAlphaMaxPct, hpRatio, 0, 1),
-      pointLightIntensity: resolvePctLerp(baseConfig.lightIntensity, config.spotIntensityMinPct, config.spotIntensityMaxPct, hpRatio, 0, 10000),
-      pointLightDistanceBO: resolvePctLerp(baseConfig.lightDistanceBO, config.spotDistanceMinPct, config.spotDistanceMaxPct, hpRatio, 0, 1000),
-      shadowSpotIntensity: resolvePctLerp(baseConfig.shadowSpotIntensity, config.spotIntensityMinPct, config.spotIntensityMaxPct, hpRatio, 0, 10000),
-      shadowSpotDistanceBO: resolvePctLerp(baseConfig.shadowSpotDistanceBO, config.spotDistanceMinPct, config.spotDistanceMaxPct, hpRatio, 0, 1000),
+      pointLightIntensity: resolvePctLerp(baseConfig.lightIntensity, config.pointLightIntensityMinPct, config.pointLightIntensityMaxPct, hpRatio, 0, 10000),
+      pointLightDistanceBO: resolvePctLerp(baseConfig.lightDistanceBO, config.pointLightDistanceMinPct, config.pointLightDistanceMaxPct, hpRatio, 0, 1000),
       goldMix: resolvePctLerp(baseConfig.goldMix, config.goldMixMinPct, config.goldMixMaxPct, hpRatio, 0, 2),
     });
   }
@@ -241,8 +239,8 @@ export function createOrbLifecycle3dPreview({
     }
     if (shadowSpot) {
       const bo = readBo();
-      shadowSpot.intensity = shaderState.shadowSpotIntensity;
-      shadowSpot.distance = shaderState.shadowSpotDistanceBO * bo;
+      shadowSpot.intensity = shaderState.pointLightIntensity;
+      shadowSpot.distance = shaderState.pointLightDistanceBO * bo;
       if (shadowSpot.shadow && shadowSpot.shadow.camera) {
         shadowSpot.shadow.camera.far = Math.max(1, shadowSpot.distance);
         shadowSpot.shadow.camera.updateProjectionMatrix();

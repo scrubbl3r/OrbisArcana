@@ -1,5 +1,5 @@
 import { ORB_3D_VISUAL_DEFAULTS } from "./orb-3d-default.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517f";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517g";
 
 function lerp(a, b, t) {
   return a + ((b - a) * t);
@@ -24,10 +24,12 @@ export function resolveOrbLifecycle3dShaderLayer({
   const hpRatio = Math.max(0, Math.min(1, resolvedHealth / resolvedMaxHealth));
   const lifecycle = lifecycleConfig && typeof lifecycleConfig === "object" ? lifecycleConfig : ORB_LIFECYCLE_3D_DEFAULTS;
   const orb = orbConfig && typeof orbConfig === "object" ? orbConfig : ORB_3D_VISUAL_DEFAULTS;
-  const spotIntensity = resolvePctLerp(orb.shadowSpotIntensity, lifecycle.spotIntensityMinPct, lifecycle.spotIntensityMaxPct, hpRatio, 0, 10000);
-  const spotDistanceBO = resolvePctLerp(orb.shadowSpotDistanceBO, lifecycle.spotDistanceMinPct, lifecycle.spotDistanceMaxPct, hpRatio, 0, 1000);
-  const pointLightIntensity = resolvePctLerp(orb.lightIntensity, lifecycle.spotIntensityMinPct, lifecycle.spotIntensityMaxPct, hpRatio, 0, 10000);
-  const pointLightDistanceBO = resolvePctLerp(orb.lightDistanceBO, lifecycle.spotDistanceMinPct, lifecycle.spotDistanceMaxPct, hpRatio, 0, 1000);
+  const pointLightIntensityMinPct = lifecycle.pointLightIntensityMinPct ?? lifecycle.spotIntensityMinPct;
+  const pointLightIntensityMaxPct = lifecycle.pointLightIntensityMaxPct ?? lifecycle.spotIntensityMaxPct;
+  const pointLightDistanceMinPct = lifecycle.pointLightDistanceMinPct ?? lifecycle.spotDistanceMinPct;
+  const pointLightDistanceMaxPct = lifecycle.pointLightDistanceMaxPct ?? lifecycle.spotDistanceMaxPct;
+  const pointLightIntensity = resolvePctLerp(orb.lightIntensity, pointLightIntensityMinPct, pointLightIntensityMaxPct, hpRatio, 0, 10000);
+  const pointLightDistanceBO = resolvePctLerp(orb.lightDistanceBO, pointLightDistanceMinPct, pointLightDistanceMaxPct, hpRatio, 0, 1000);
   return Object.freeze({
     id: "lifecycleDamage",
     health: resolvedHealth,
@@ -38,8 +40,6 @@ export function resolveOrbLifecycle3dShaderLayer({
       shellCenterAlpha: resolvePctLerp(orb.shellCenterAlpha, lifecycle.shellCenterAlphaMinPct, lifecycle.shellCenterAlphaMaxPct, hpRatio, 0, 1),
       pointLightIntensity,
       pointLightDistanceBO,
-      shadowSpotIntensity: spotIntensity,
-      shadowSpotDistanceBO: spotDistanceBO,
       goldMix: resolvePctLerp(orb.goldMix, lifecycle.goldMixMinPct, lifecycle.goldMixMaxPct, hpRatio, 0, 2),
     }),
   });

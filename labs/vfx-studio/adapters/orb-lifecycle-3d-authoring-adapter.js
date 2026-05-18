@@ -5,10 +5,10 @@ const ORB_LIFECYCLE_3D_FIELDS = Object.freeze([
   "orbLifecycle3dLuminanceBoostMaxPct",
   "orbLifecycle3dCenterAlphaMinPct",
   "orbLifecycle3dCenterAlphaMaxPct",
-  "orbLifecycle3dSpotIntensityMinPct",
-  "orbLifecycle3dSpotIntensityMaxPct",
-  "orbLifecycle3dSpotDistanceMinPct",
-  "orbLifecycle3dSpotDistanceMaxPct",
+  "orbLifecycle3dPointLightIntensityMinPct",
+  "orbLifecycle3dPointLightIntensityMaxPct",
+  "orbLifecycle3dPointLightDistanceMinPct",
+  "orbLifecycle3dPointLightDistanceMaxPct",
   "orbLifecycle3dGoldMixMinPct",
   "orbLifecycle3dGoldMixMaxPct",
   "orbLifecycle3dCrackAlpha",
@@ -72,10 +72,10 @@ function settingsFromDefaults(defaults = {}) {
     orbLifecycle3dLuminanceBoostMaxPct: fixedNumber(defaults.shellLuminanceBoostMaxPct, 0, 120),
     orbLifecycle3dCenterAlphaMinPct: fixedNumber(defaults.shellCenterAlphaMinPct, 0, 87),
     orbLifecycle3dCenterAlphaMaxPct: fixedNumber(defaults.shellCenterAlphaMaxPct, 0, 120),
-    orbLifecycle3dSpotIntensityMinPct: fixedNumber(defaults.spotIntensityMinPct, 0, 100),
-    orbLifecycle3dSpotIntensityMaxPct: fixedNumber(defaults.spotIntensityMaxPct, 0, 121),
-    orbLifecycle3dSpotDistanceMinPct: fixedNumber(defaults.spotDistanceMinPct, 0, 93),
-    orbLifecycle3dSpotDistanceMaxPct: fixedNumber(defaults.spotDistanceMaxPct, 0, 109),
+    orbLifecycle3dPointLightIntensityMinPct: fixedNumber(defaults.pointLightIntensityMinPct ?? defaults.spotIntensityMinPct, 0, 0),
+    orbLifecycle3dPointLightIntensityMaxPct: fixedNumber(defaults.pointLightIntensityMaxPct ?? defaults.spotIntensityMaxPct, 0, 121),
+    orbLifecycle3dPointLightDistanceMinPct: fixedNumber(defaults.pointLightDistanceMinPct ?? defaults.spotDistanceMinPct, 0, 93),
+    orbLifecycle3dPointLightDistanceMaxPct: fixedNumber(defaults.pointLightDistanceMaxPct ?? defaults.spotDistanceMaxPct, 0, 109),
     orbLifecycle3dGoldMixMinPct: fixedNumber(defaults.goldMixMinPct, 0, 100),
     orbLifecycle3dGoldMixMaxPct: fixedNumber(defaults.goldMixMaxPct, 0, 100),
     orbLifecycle3dCrackAlpha: fixedNumber(defaults.crackAlpha, 2, 0.92),
@@ -136,6 +136,15 @@ export function createOrbLifecycle3dAuthoringAdapter({
     ORB_LIFECYCLE_3D_FIELDS.forEach((id) => {
       const el = field(id);
       if (el && settings[id] != null) el.value = String(settings[id]);
+    });
+    [
+      ["orbLifecycle3dPointLightIntensityMinPct", "orbLifecycle3dSpotIntensityMinPct"],
+      ["orbLifecycle3dPointLightIntensityMaxPct", "orbLifecycle3dSpotIntensityMaxPct"],
+      ["orbLifecycle3dPointLightDistanceMinPct", "orbLifecycle3dSpotDistanceMinPct"],
+      ["orbLifecycle3dPointLightDistanceMaxPct", "orbLifecycle3dSpotDistanceMaxPct"],
+    ].forEach(([nextId, legacyId]) => {
+      const el = field(nextId);
+      if (el && settings[nextId] == null && settings[legacyId] != null) el.value = String(settings[legacyId]);
     });
     ORB_LIFECYCLE_3D_COLOR_FIELDS.forEach(([, prefix]) => {
       ["R", "G", "B"].forEach((suffix) => {

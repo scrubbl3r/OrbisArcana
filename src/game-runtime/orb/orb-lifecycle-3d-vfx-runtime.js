@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createRng } from "./orb-lifecycle-vfx-runtime.js";
-import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517f";
+import { ORB_LIFECYCLE_3D_DEFAULTS } from "./orb-lifecycle-3d-default.js?v=20260517g";
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -21,10 +21,10 @@ export function resolveOrbLifecycle3dConfig(config = ORB_LIFECYCLE_3D_DEFAULTS) 
     shellLuminanceBoostMaxPct: clampNumber(source.shellLuminanceBoostMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.shellLuminanceBoostMaxPct),
     shellCenterAlphaMinPct: clampNumber(source.shellCenterAlphaMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.shellCenterAlphaMinPct),
     shellCenterAlphaMaxPct: clampNumber(source.shellCenterAlphaMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.shellCenterAlphaMaxPct),
-    spotIntensityMinPct: clampNumber(source.spotIntensityMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.spotIntensityMinPct),
-    spotIntensityMaxPct: clampNumber(source.spotIntensityMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.spotIntensityMaxPct),
-    spotDistanceMinPct: clampNumber(source.spotDistanceMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMinPct),
-    spotDistanceMaxPct: clampNumber(source.spotDistanceMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.spotDistanceMaxPct),
+    pointLightIntensityMinPct: clampNumber(source.pointLightIntensityMinPct ?? source.spotIntensityMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.pointLightIntensityMinPct),
+    pointLightIntensityMaxPct: clampNumber(source.pointLightIntensityMaxPct ?? source.spotIntensityMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.pointLightIntensityMaxPct),
+    pointLightDistanceMinPct: clampNumber(source.pointLightDistanceMinPct ?? source.spotDistanceMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.pointLightDistanceMinPct),
+    pointLightDistanceMaxPct: clampNumber(source.pointLightDistanceMaxPct ?? source.spotDistanceMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.pointLightDistanceMaxPct),
     goldMixMinPct: clampNumber(source.goldMixMinPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMinPct),
     goldMixMaxPct: clampNumber(source.goldMixMaxPct, 0, 300, ORB_LIFECYCLE_3D_DEFAULTS.goldMixMaxPct),
     crackColor: Number(source.crackColor) >>> 0 || ORB_LIFECYCLE_3D_DEFAULTS.crackColor,

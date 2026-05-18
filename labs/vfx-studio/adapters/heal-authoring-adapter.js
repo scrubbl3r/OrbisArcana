@@ -7,8 +7,8 @@ const HEAL_FIELDS = Object.freeze([
   "healConsumeOnFailedCast",
   "healShaderLuminanceBoostPct",
   "healShaderCenterAlphaPct",
-  "healShaderSpotIntensityPct",
-  "healShaderSpotDistancePct",
+  "healShaderPointLightIntensityPct",
+  "healShaderPointLightDistancePct",
   "healShaderGoldMixPct",
   "healShaderPulseDurationMs",
   "healShaderPulseEasing",
@@ -29,8 +29,8 @@ function defaultSettings(defaults = {}) {
     healConsumeOnFailedCast: defaults.consumeOnFailedCast === true,
     healShaderLuminanceBoostPct: Math.max(0, Math.round(Number(defaults.shaderPulseLuminanceBoostPct) || 25)),
     healShaderCenterAlphaPct: Math.max(0, Math.round(Number(defaults.shaderPulseCenterAlphaPct) || 10)),
-    healShaderSpotIntensityPct: Math.max(0, Math.round(Number(defaults.shaderPulseSpotIntensityPct) || 25)),
-    healShaderSpotDistancePct: Math.max(0, Math.round(Number(defaults.shaderPulseSpotDistancePct) || 10)),
+    healShaderPointLightIntensityPct: Math.max(0, Math.round(Number(defaults.shaderPulsePointLightIntensityPct ?? defaults.shaderPulseSpotIntensityPct) || 25)),
+    healShaderPointLightDistancePct: Math.max(0, Math.round(Number(defaults.shaderPulsePointLightDistancePct ?? defaults.shaderPulseSpotDistancePct) || 10)),
     healShaderGoldMixPct: Math.max(0, Math.round(Number(defaults.shaderPulseGoldMixPct) || 25)),
     healShaderPulseDurationMs: Math.max(80, Math.round(Number(defaults.shaderPulseDurationMs) || 150)),
     healShaderPulseEasing: String(defaults.shaderPulseEasing || "easeInOutQuad"),
@@ -50,8 +50,8 @@ export function createHealAuthoringAdapter({
       healConsumeOnFailedCast: !!(els.healConsumeOnFailedCast && els.healConsumeOnFailedCast.checked),
       healShaderLuminanceBoostPct: Math.max(0, Math.round(readNumber(els.healShaderLuminanceBoostPct, healPresetDefault.shaderPulseLuminanceBoostPct || 25))),
       healShaderCenterAlphaPct: Math.max(0, Math.round(readNumber(els.healShaderCenterAlphaPct, healPresetDefault.shaderPulseCenterAlphaPct || 10))),
-      healShaderSpotIntensityPct: Math.max(0, Math.round(readNumber(els.healShaderSpotIntensityPct, healPresetDefault.shaderPulseSpotIntensityPct || 25))),
-      healShaderSpotDistancePct: Math.max(0, Math.round(readNumber(els.healShaderSpotDistancePct, healPresetDefault.shaderPulseSpotDistancePct || 10))),
+      healShaderPointLightIntensityPct: Math.max(0, Math.round(readNumber(els.healShaderPointLightIntensityPct, healPresetDefault.shaderPulsePointLightIntensityPct ?? healPresetDefault.shaderPulseSpotIntensityPct ?? 25))),
+      healShaderPointLightDistancePct: Math.max(0, Math.round(readNumber(els.healShaderPointLightDistancePct, healPresetDefault.shaderPulsePointLightDistancePct ?? healPresetDefault.shaderPulseSpotDistancePct ?? 10))),
       healShaderGoldMixPct: Math.max(0, Math.round(readNumber(els.healShaderGoldMixPct, healPresetDefault.shaderPulseGoldMixPct || 25))),
       healShaderPulseDurationMs: Math.max(80, Math.round(readNumber(els.healShaderPulseDurationMs, healPresetDefault.shaderPulseDurationMs || 150))),
       healShaderPulseEasing: String(els.healShaderPulseEasing && els.healShaderPulseEasing.value || healPresetDefault.shaderPulseEasing || "easeInOutQuad"),
@@ -67,6 +67,14 @@ export function createHealAuthoringAdapter({
       } else {
         field.value = String(settings[id]);
       }
+    });
+    [
+      ["healShaderPointLightIntensityPct", "healShaderSpotIntensityPct"],
+      ["healShaderPointLightDistancePct", "healShaderSpotDistancePct"],
+    ].forEach(([nextId, legacyId]) => {
+      const field = els[nextId];
+      if (!field || settings[nextId] != null || settings[legacyId] == null) return;
+      field.value = String(settings[legacyId]);
     });
     if (typeof applyPreview === "function") applyPreview();
     return true;

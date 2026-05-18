@@ -3,7 +3,7 @@ import { createBubbleShield3dPreview } from "./previews/bubble-shield-3d-preview
 import { createShockwavePreview } from "./previews/shockwave-preview.js?v=20260425d";
 import { createShockwave3dPreview } from "./previews/shockwave-3d-preview.js?v=20260506a";
 import { createFlameAoePreview } from "./previews/flame-aoe-preview.js?v=20260425d";
-import { createHealPreview } from "./previews/heal-preview.js?v=20260517a";
+import { createHealPreview } from "./previews/heal-preview.js?v=20260517b";
 import { createElectricAoePreview } from "./previews/electric-aoe-preview.js?v=20260425d";
 import { createOrbBasePreview } from "./previews/orb-base-preview.js?v=20260425d";
 import { createOrbTemplatePreview } from "./previews/orb-template-preview.js?v=20260425d";
@@ -14,7 +14,7 @@ import {
 import { createOrbSpawnPreview } from "./previews/orb-spawn-preview.js?v=20260501a";
 import { createOrbNod3dPreview } from "./previews/orb-nod3d-preview.js?v=20260428b";
 import { createOrbLifecyclePreview } from "./previews/orb-lifecycle-preview.js?v=20260425d";
-import { createOrbLifecycle3dPreview } from "./previews/orb-lifecycle-3d-preview.js?v=20260517e";
+import { createOrbLifecycle3dPreview } from "./previews/orb-lifecycle-3d-preview.js?v=20260517f";
 import { createOrbGlobe3dPreview } from "./previews/orb-globe-3d-preview.js?v=20260504g";
 import { createOrbGlobePreview } from "./previews/orb-globe-preview.js?v=20260425d";
 import { createWorldGlobe3dPreview } from "./previews/world-globe-3d-preview.js?v=20260502b";
