@@ -1708,13 +1708,20 @@ export function createGnatSwarm3dRuntime({
     });
   }
 
+  function getTrace(camera = null) {
+    return Object.freeze({
+      ...alertTrace,
+      fireCardTrace: fireCards.getTrace(camera),
+    });
+  }
+
   return Object.freeze({
     load,
     update,
     releaseOrbTargets,
     applyCombatEffect,
     hasActiveVisuals: () => states.length > 0,
-    getTrace: () => alertTrace,
+    getTrace,
     clear: disposeMesh,
     dispose() {
       disposeMesh();

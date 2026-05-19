@@ -28,6 +28,9 @@ export function createFireCardSystem({
   const quat = new THREE.Quaternion();
   const scale = new THREE.Vector3();
   const position = new THREE.Vector3();
+  const sampleLocalPosition = new THREE.Vector3();
+  const sampleWorldPosition = new THREE.Vector3();
+  const sampleClipPosition = new THREE.Vector3();
   const color = new THREE.Color();
   let writeIndex = 0;
   let lastSample = null;
@@ -76,6 +79,7 @@ export function createFireCardSystem({
       mesh.setMatrixAt(writeIndex, matrix);
       mesh.setColorAt(writeIndex, color.setHex(Number(tintHex) || 0xff7a18).multiplyScalar(0.75 + alpha * 0.35));
       if (!lastSample) {
+        sampleLocalPosition.copy(position);
         lastSample = {
           x: Math.round(position.x * 10) / 10,
           y: Math.round(position.y * 10) / 10,
@@ -110,11 +114,46 @@ export function createFireCardSystem({
     addTeardrop,
     endFrame,
     dispose,
-    getTrace() {
+    getTrace(camera = null) {
       return Object.freeze({
         activeCount: writeIndex,
         visible: !!mesh.visible,
+        mesh: {
+          name: mesh.name,
+          parentName: mesh.parent && mesh.parent.name ? mesh.parent.name : "",
+          renderOrder: mesh.renderOrder,
+          frustumCulled: !!mesh.frustumCulled,
+          materialTransparent: !!(mesh.material && mesh.material.transparent),
+          materialDepthTest: !!(mesh.material && mesh.material.depthTest),
+          materialDepthWrite: !!(mesh.material && mesh.material.depthWrite),
+          materialBlending: mesh.material ? mesh.material.blending : null,
+          hasInstanceColor: !!mesh.instanceColor,
+          instanceColorCount: mesh.instanceColor && mesh.instanceColor.count || 0,
+          matrixWorldNeedsUpdate: !!mesh.matrixWorldNeedsUpdate,
+        },
         sample: lastSample,
+        sampleCamera: camera && lastSample ? (() => {
+          mesh.updateWorldMatrix(true, false);
+          if (typeof camera.updateMatrixWorld === "function") camera.updateMatrixWorld();
+          sampleWorldPosition.copy(sampleLocalPosition);
+          mesh.localToWorld(sampleWorldPosition);
+          sampleClipPosition.copy(sampleWorldPosition).project(camera);
+          return {
+            world: {
+              x: Math.round(sampleWorldPosition.x * 10) / 10,
+              y: Math.round(sampleWorldPosition.y * 10) / 10,
+              z: Math.round(sampleWorldPosition.z * 10) / 10,
+            },
+            clip: {
+              x: Math.round(sampleClipPosition.x * 1000) / 1000,
+              y: Math.round(sampleClipPosition.y * 1000) / 1000,
+              z: Math.round(sampleClipPosition.z * 1000) / 1000,
+            },
+            inClip: sampleClipPosition.x >= -1 && sampleClipPosition.x <= 1
+              && sampleClipPosition.y >= -1 && sampleClipPosition.y <= 1
+              && sampleClipPosition.z >= -1 && sampleClipPosition.z <= 1,
+          };
+        })() : null,
       });
     },
     get activeCount() {

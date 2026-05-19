@@ -571,7 +571,7 @@ export function createGameStageDepth3dLayer({
       orbCombat: shieldCombat,
     });
     const shouldPublishEnemyTelemetry = nowMs - lastEnemyTelemetryAtMs >= 200;
-    const enemyTrace = shouldPublishEnemyTelemetry && typeof gnatSwarm3dRuntime.getTrace === "function" ? gnatSwarm3dRuntime.getTrace() : null;
+    const enemyTrace = shouldPublishEnemyTelemetry && typeof gnatSwarm3dRuntime.getTrace === "function" ? gnatSwarm3dRuntime.getTrace(camera) : null;
     if (enemyTrace) {
       lastEnemyTelemetryAtMs = nowMs;
       root.dataset.enemy3dAlertDirect = String(enemyTrace.direct || 0);
