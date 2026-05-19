@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260518c";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260519a";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -22,6 +22,7 @@ export function createStudioBootstrap({
   applyOrbLaneSsot,
   buildCurrentLabOrbBaseVisualState,
   updateTeleportBehaviorReadout,
+  updateFlameAoe3dBehaviorReadout,
   applyGeometryVars,
   previewApplyMap,
   previewRootsByEffect,
@@ -207,6 +208,7 @@ export function createStudioBootstrap({
     },
     previewRootsByEffect,
     updateTeleportBehaviorReadout,
+    updateFlameAoe3dBehaviorReadout,
   });
 
   const studioAuthoringAdapters = createStudioAuthoringAdapters({
@@ -341,6 +343,9 @@ export function createStudioBootstrap({
     refreshBindingPanel,
     updateBehaviorReadout: (effect) => {
       if (effect === "teleport") updateTeleportBehaviorReadout();
+      if (effect === "flame-aoe-3d" && typeof updateFlameAoe3dBehaviorReadout === "function") {
+        updateFlameAoe3dBehaviorReadout();
+      }
       if (effect === "teleport-3d" && typeof defaults.updateTeleport3dBehaviorReadout === "function") {
         defaults.updateTeleport3dBehaviorReadout();
       }

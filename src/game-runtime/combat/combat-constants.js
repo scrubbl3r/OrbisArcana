@@ -11,3 +11,4 @@ export const COMBAT_TEAM_WORLD = "world";
 export const DAMAGE_TYPE_GENERIC = "generic";
 export const DAMAGE_TYPE_IMPACT = "impact";
 export const DAMAGE_TYPE_LEECH = "leech";
+export const DAMAGE_TYPE_FIRE = "fire";

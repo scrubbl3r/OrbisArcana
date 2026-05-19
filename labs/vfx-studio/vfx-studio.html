@@ -2521,6 +2521,52 @@
           </div>
         </div>
 
+        <div class="behaviorSection" data-behavior-effect="flame-aoe-3d" hidden>
+          <h3 class="behaviorTitle">Flame AOE 3D Behavior</h3>
+          <div class="row">
+            <button id="applyFlameAoe3dBehaviorBtn" class="toolBtn" type="button">Apply Behavior</button>
+            <button id="previewFlameAoe3dBehaviorBtn" class="toolBtn" type="button">Preview Behavior</button>
+          </div>
+          <div id="flameAoe3dBehaviorReadout" class="behaviorReadout" aria-live="polite"></div>
+          <div class="paramFieldRows">
+            <div class="paramFieldRow">
+              <label for="flameAoe3dHitRadiusBo">Hit radius BO</label>
+              <input id="flameAoe3dHitRadiusBo" class="paramFieldInput" type="number" min="0.05" max="8" value="0.95" step="0.05" />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeReachScale">Wake reach scale</label>
+              <input id="flameAoe3dWakeReachScale" class="paramFieldInput" type="number" min="0" max="4" value="1" step="0.05" />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dIgniteDamage">Ignite damage</label>
+              <input id="flameAoe3dIgniteDamage" class="paramFieldInput" type="number" min="0" max="100" value="0.1" step="0.05" />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dIgniteBurnDps">Ignite burn DPS</label>
+              <input id="flameAoe3dIgniteBurnDps" class="paramFieldInput" type="number" min="0" max="100" value="0.35" step="0.05" />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dIgniteDurationMs">Ignite duration (ms)</label>
+              <input id="flameAoe3dIgniteDurationMs" class="paramFieldInput" type="number" min="0" max="60000" value="3200" step="50" />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dRoastDps">Roast DPS</label>
+              <input id="flameAoe3dRoastDps" class="paramFieldInput" type="number" min="0" max="100" value="1.25" step="0.05" />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dRoastTickMs">Roast tick (ms)</label>
+              <input id="flameAoe3dRoastTickMs" class="paramFieldInput" type="number" min="50" max="5000" value="250" step="10" />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+          </div>
+        </div>
+
         <div class="behaviorSection" data-behavior-effect="default">
           <h3 class="behaviorTitle">No Behavior Surface</h3>
         </div>
@@ -2622,6 +2668,7 @@
       },
       {
         applyLabThemeDefaults,
+        buildFlameAoe3dBehaviorModule,
         buildTeleportBehaviorModule,
         buildLivePresetModuleForBaseEffect,
         connectProjectFolder: connectProjectFolderHelper,
@@ -2635,14 +2682,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260518c"),
+      import("./vfx-studio-bootstrap.js?v=20260519a"),
       import("./vfx-studio-state.js?v=20260428a"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260518a"),
-      import("./vfx-studio-surfaces.js?v=20260517a"),
-      import("./vfx-studio-theme-publish.js?v=20260518b"),
+      import("./vfx-studio-surfaces.js?v=20260519a"),
+      import("./vfx-studio-theme-publish.js?v=20260519a"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2651,7 +2698,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260518d";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260519a";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260517a";
@@ -2683,6 +2730,7 @@
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260518215430i";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
+    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260519a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
@@ -2706,6 +2754,7 @@
     let runtimeEffectBindingsState = Array.isArray(RUNTIME_EFFECT_BINDINGS) ? RUNTIME_EFFECT_BINDINGS.map((entry) => ({ ...entry })) : [];
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
+      buildFlameAoe3dBehaviorModule,
       buildTeleportBehaviorModule,
       createBankOrb3dAuthoringAdapter,
       createBubbleShield3dAuthoringAdapter,
@@ -3167,6 +3216,16 @@
       orbTeleport3dApplyCameraTravelBtn: $("orbTeleport3dApplyCameraTravelBtn"),
       orbTeleport3dFadeInMs: $("orbTeleport3dFadeInMs"),
       orbTeleport3dApplyFadeInBtn: $("orbTeleport3dApplyFadeInBtn"),
+      applyFlameAoe3dBehaviorBtn: $("applyFlameAoe3dBehaviorBtn"),
+      previewFlameAoe3dBehaviorBtn: $("previewFlameAoe3dBehaviorBtn"),
+      flameAoe3dBehaviorReadout: $("flameAoe3dBehaviorReadout"),
+      flameAoe3dHitRadiusBo: $("flameAoe3dHitRadiusBo"),
+      flameAoe3dWakeReachScale: $("flameAoe3dWakeReachScale"),
+      flameAoe3dIgniteDamage: $("flameAoe3dIgniteDamage"),
+      flameAoe3dIgniteBurnDps: $("flameAoe3dIgniteBurnDps"),
+      flameAoe3dIgniteDurationMs: $("flameAoe3dIgniteDurationMs"),
+      flameAoe3dRoastDps: $("flameAoe3dRoastDps"),
+      flameAoe3dRoastTickMs: $("flameAoe3dRoastTickMs"),
       previewFlameAoe3d: $("previewFlameAoe3d"),
       flameAoe3dAuraAlpha: $("flameAoe3dAuraAlpha"),
       flameAoe3dApplyAuraAlphaBtn: $("flameAoe3dApplyAuraAlphaBtn"),
@@ -3313,6 +3372,7 @@
       electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
       flameAoePresetDefault: FLAME_AOE_PRESET_DEFAULT,
       flameAoe3dPresetDefault: FLAME_AOE_3D_PRESET_DEFAULT,
+      flameAoe3dBehaviorDefault: FLAME_AOE_BEHAVIOR_DEFAULT,
       healPresetDefault: HEAL_PRESET_DEFAULT,
       shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
       orbBaseVisualDefaults: ORB_BASE_VISUAL_DEFAULTS,
@@ -3539,6 +3599,7 @@
           path: ["src", "runtime-shell", "staging", "game-stage", "game-stage-depth3d.js"],
           replacements: [
             { pattern: /(flame-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+            { pattern: /(flame-aoe-behavior-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
             { pattern: /(runtime-effects\/flame-aoe-3d\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
           ],
         },
@@ -3605,6 +3666,7 @@
           path: ["labs", "vfx-studio", "vfx-studio.html"],
           replacements: [
             { pattern: /(flame-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+            { pattern: /(flame-aoe-behavior-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
             { pattern: /(src\/vfx\/presets\/index\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${indexToken}` },
           ],
         },
@@ -4036,6 +4098,11 @@
     function updateTeleport3dBehaviorReadout(){
       authoringAdapterForBaseEffect("teleport-3d").updateBehaviorReadout(els);
     }
+
+    function updateFlameAoe3dBehaviorReadout(){
+      authoringAdapterForBaseEffect("flame-aoe-3d").updateBehaviorReadout(els);
+    }
+
     const studioBootstrap = createStudioBootstrap({
       els,
       getElementById: $,
@@ -4056,6 +4123,7 @@
       applyOrbLaneSsot,
       buildCurrentLabOrbBaseVisualState,
       updateTeleportBehaviorReadout,
+      updateFlameAoe3dBehaviorReadout,
       applyGeometryVars,
       previewApplyMap: Object.freeze({
         "electric-aoe": () => applyElectricControls(),
@@ -4087,6 +4155,7 @@
         orbNodPresetDefault: ORB_NOD_PRESET_DEFAULT,
         shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
         flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
+        flameAoe3dBehaviorDefault: FLAME_AOE_BEHAVIOR_DEFAULT,
         electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
         orbNod3dPresetDefault: ORB_NOD_3D_PRESET_DEFAULT,
         orbSpawnPresetDefault: ORB_SPAWN_PRESET_DEFAULT,

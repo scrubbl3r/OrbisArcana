@@ -38,6 +38,7 @@ export function createStudioPreviewRegistry({
   onOrbBaseVisualStateApplied,
   previewRootsByEffect,
   updateTeleportBehaviorReadout = null,
+  updateFlameAoe3dBehaviorReadout = null,
 } = {}) {
   const actions = {};
 
@@ -333,6 +334,32 @@ export function createStudioPreviewRegistry({
         actions.playOrbTeleport3d();
       });
     }
+  }
+
+  if (typeof updateFlameAoe3dBehaviorReadout === "function") {
+    if (els.applyFlameAoe3dBehaviorBtn) {
+      els.applyFlameAoe3dBehaviorBtn.addEventListener("click", () => {
+        updateFlameAoe3dBehaviorReadout();
+        if (typeof actions.applyFlameAoe3d === "function") actions.applyFlameAoe3d();
+      });
+    }
+    if (els.previewFlameAoe3dBehaviorBtn) {
+      els.previewFlameAoe3dBehaviorBtn.addEventListener("click", () => {
+        updateFlameAoe3dBehaviorReadout();
+        if (typeof actions.playFlameAoe3d === "function") actions.playFlameAoe3d();
+      });
+    }
+    [
+      els.flameAoe3dHitRadiusBo,
+      els.flameAoe3dWakeReachScale,
+      els.flameAoe3dIgniteDamage,
+      els.flameAoe3dIgniteBurnDps,
+      els.flameAoe3dIgniteDurationMs,
+      els.flameAoe3dRoastDps,
+      els.flameAoe3dRoastTickMs,
+    ].forEach((field) => {
+      if (field) field.addEventListener("input", updateFlameAoe3dBehaviorReadout);
+    });
   }
 
   return Object.freeze({

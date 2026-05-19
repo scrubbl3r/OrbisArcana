@@ -147,6 +147,17 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
   wakeGraphEnabled: 1,
 });
 
+const FLAME_AOE_3D_BEHAVIOR_DEFAULTS = Object.freeze({
+  enabled: true,
+  hitRadiusBo: 0.95,
+  wakeReachScale: 1,
+  igniteDamage: 0.1,
+  igniteBurnDps: 0.35,
+  igniteDurationMs: 3200,
+  roastDps: 1.25,
+  roastTickMs: 250,
+});
+
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   const f = Number.isFinite(Number(fallback)) ? Number(fallback) : min;
@@ -168,9 +179,11 @@ function optionalNumber(value, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
-export function createFlameAoe3dAuthoringAdapter() {
+export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {} } = {}) {
+  const behaviorDefaults = Object.freeze({ ...FLAME_AOE_3D_BEHAVIOR_DEFAULTS, ...flameAoe3dBehaviorDefault });
+
   function defaultSettings() {
-    return { ...FLAME_AOE_3D_DEFAULTS };
+    return { ...FLAME_AOE_3D_DEFAULTS, ...behaviorDefaults };
   }
 
   function capture(els) {
@@ -247,6 +260,13 @@ export function createFlameAoe3dAuthoringAdapter() {
       wakeAlphaGradient3Pct: optionalNumber(els && els.flameAoe3dWakeAlphaGradient3Pct && els.flameAoe3dWakeAlphaGradient3Pct.value, 0, 100),
       wakeAlphaGradient3A: optionalNumber(els && els.flameAoe3dWakeAlphaGradient3A && els.flameAoe3dWakeAlphaGradient3A.value, 0, 1),
       wakeGraphEnabled: (els && els.flameAoe3dWakeGraphEnabled && String(els.flameAoe3dWakeGraphEnabled.value) === "0") ? 0 : 1,
+      hitRadiusBo: fixedNumber(els && els.flameAoe3dHitRadiusBo && els.flameAoe3dHitRadiusBo.value, 2, behaviorDefaults.hitRadiusBo),
+      wakeReachScale: fixedNumber(els && els.flameAoe3dWakeReachScale && els.flameAoe3dWakeReachScale.value, 2, behaviorDefaults.wakeReachScale),
+      igniteDamage: fixedNumber(els && els.flameAoe3dIgniteDamage && els.flameAoe3dIgniteDamage.value, 2, behaviorDefaults.igniteDamage),
+      igniteBurnDps: fixedNumber(els && els.flameAoe3dIgniteBurnDps && els.flameAoe3dIgniteBurnDps.value, 2, behaviorDefaults.igniteBurnDps),
+      igniteDurationMs: Math.round(clampNumber(els && els.flameAoe3dIgniteDurationMs && els.flameAoe3dIgniteDurationMs.value, 0, 60000, behaviorDefaults.igniteDurationMs)),
+      roastDps: fixedNumber(els && els.flameAoe3dRoastDps && els.flameAoe3dRoastDps.value, 2, behaviorDefaults.roastDps),
+      roastTickMs: Math.round(clampNumber(els && els.flameAoe3dRoastTickMs && els.flameAoe3dRoastTickMs.value, 50, 5000, behaviorDefaults.roastTickMs)),
     });
   }
 
@@ -262,13 +282,44 @@ export function createFlameAoe3dAuthoringAdapter() {
     if (els.flameAoe3dWakeDisplaceVisibleBtn && settings.wakeDisplaceEnabled != null) {
       els.flameAoe3dWakeDisplaceVisibleBtn.setAttribute("aria-pressed", String(settings.wakeDisplaceEnabled) === "0" ? "false" : "true");
     }
+    [
+      ["flameAoe3dHitRadiusBo", "hitRadiusBo"],
+      ["flameAoe3dWakeReachScale", "wakeReachScale"],
+      ["flameAoe3dIgniteDamage", "igniteDamage"],
+      ["flameAoe3dIgniteBurnDps", "igniteBurnDps"],
+      ["flameAoe3dIgniteDurationMs", "igniteDurationMs"],
+      ["flameAoe3dRoastDps", "roastDps"],
+      ["flameAoe3dRoastTickMs", "roastTickMs"],
+    ].forEach(([fieldKey, settingsKey]) => {
+      if (els[fieldKey] && settings[settingsKey] != null) els[fieldKey].value = String(settings[settingsKey]);
+    });
     if (typeof applyPreview === "function") applyPreview();
     return true;
+  }
+
+  function readBehaviorPreviewConfig(els) {
+    return Object.freeze({
+      hitRadiusBo: fixedNumber(els && els.flameAoe3dHitRadiusBo && els.flameAoe3dHitRadiusBo.value, 2, behaviorDefaults.hitRadiusBo),
+      wakeReachScale: fixedNumber(els && els.flameAoe3dWakeReachScale && els.flameAoe3dWakeReachScale.value, 2, behaviorDefaults.wakeReachScale),
+      igniteDamage: fixedNumber(els && els.flameAoe3dIgniteDamage && els.flameAoe3dIgniteDamage.value, 2, behaviorDefaults.igniteDamage),
+      igniteBurnDps: fixedNumber(els && els.flameAoe3dIgniteBurnDps && els.flameAoe3dIgniteBurnDps.value, 2, behaviorDefaults.igniteBurnDps),
+      igniteDurationMs: Math.round(clampNumber(els && els.flameAoe3dIgniteDurationMs && els.flameAoe3dIgniteDurationMs.value, 0, 60000, behaviorDefaults.igniteDurationMs)),
+      roastDps: fixedNumber(els && els.flameAoe3dRoastDps && els.flameAoe3dRoastDps.value, 2, behaviorDefaults.roastDps),
+      roastTickMs: Math.round(clampNumber(els && els.flameAoe3dRoastTickMs && els.flameAoe3dRoastTickMs.value, 50, 5000, behaviorDefaults.roastTickMs)),
+    });
+  }
+
+  function updateBehaviorReadout(els) {
+    if (!els || !els.flameAoe3dBehaviorReadout) return;
+    const cfg = readBehaviorPreviewConfig(els);
+    els.flameAoe3dBehaviorReadout.textContent = `Hit radius ${cfg.hitRadiusBo} BO, wake reach x${cfg.wakeReachScale}. Ignite ${cfg.igniteDamage} damage, burn ${cfg.igniteBurnDps}/s for ${cfg.igniteDurationMs}ms. Roast ${cfg.roastDps}/s while inside.`;
   }
 
   return Object.freeze({
     defaultSettings,
     capture,
     apply,
+    readBehaviorPreviewConfig,
+    updateBehaviorReadout,
   });
 }

@@ -4,6 +4,7 @@ import {
   COMBAT_EFFECT_MOTION_MODIFIER,
   COMBAT_EFFECT_STUN,
   COMBAT_ENTITY_ORB,
+  DAMAGE_TYPE_FIRE,
   DAMAGE_TYPE_LEECH,
 } from "../combat/combat-constants.js";
 import { normalizeStunEffect, resolveStunApplication } from "../combat/stun-model.js";
@@ -17,6 +18,8 @@ const GNAT_STUN_BOUNCE_ANGLE_RAD = THREE.MathUtils.degToRad(10);
 const GNAT_COLOR_NEUTRAL = new THREE.Color(0x9dff8a);
 const GNAT_COLOR_ALERTED = new THREE.Color(0xff4b4b);
 const GNAT_COLOR_SIGNAL = new THREE.Color(0xffe45e);
+const GNAT_COLOR_BURNING = new THREE.Color(0xff7a18);
+const ZERO_SCALE_VEC = new THREE.Vector3(0, 0, 0);
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
   const numeric = Number(value);
@@ -529,6 +532,80 @@ export function createGnatSwarm3dRuntime({
     return true;
   }
 
+  function normalizeDamageEffect(effect = {}) {
+    const atMs = Number.isFinite(Number(effect.atMs))
+      ? Number(effect.atMs)
+      : (typeof performance !== "undefined" && performance.now ? performance.now() : 0);
+    return Object.freeze({
+      amount: Math.max(0, Number(effect.amount) || 0),
+      damageType: String(effect.damageType || DAMAGE_TYPE_FIRE),
+      atMs,
+      burnDps: Math.max(0, Number(effect.burnDps) || 0),
+      burnDurationMs: Math.max(0, Number(effect.burnDurationMs ?? effect.igniteDurationMs) || 0),
+      roastDps: Math.max(0, Number(effect.roastDps) || 0),
+      roastDurationMs: Math.max(0, Number(effect.roastDurationMs ?? effect.durationMs) || 0),
+      tickMs: Math.max(50, Number(effect.tickMs) || 250),
+    });
+  }
+
+  function pointInDamageVolume(position, center, effect = {}, bo = 42) {
+    const radiusPx = Math.max(0, Number(effect.radiusBo) || 0) * bo;
+    const forwardRadiusPx = Math.max(radiusPx, Number(effect.forwardRadiusBo || effect.wakeRadiusBo || 0) * bo);
+    if (!position || !center || radiusPx <= 0) return false;
+    if (forwardRadiusPx <= radiusPx + 0.001) return distance(position, center) <= radiusPx;
+    const axis = effect.axisWorld && typeof effect.axisWorld === "object" ? effect.axisWorld : { xW: 0, yW: -1 };
+    const axisX = Number(axis.xW) || 0;
+    const axisY = Number(axis.yW) || -1;
+    const axisLen = Math.hypot(axisX, axisY) || 1;
+    const ux = axisX / axisLen;
+    const uy = axisY / axisLen;
+    const dx = (Number(position.xW) || 0) - (Number(center.xW) || 0);
+    const dy = (Number(position.yW) || 0) - (Number(center.yW) || 0);
+    const along = dx * ux + dy * uy;
+    const side = Math.abs(dx * -uy + dy * ux);
+    const alongRadius = along >= 0 ? forwardRadiusPx : radiusPx;
+    const alongN = Math.abs(along) / Math.max(1, alongRadius);
+    const sideN = side / Math.max(1, radiusPx);
+    return alongN * alongN + sideN * sideN <= 1;
+  }
+
+  function applyDamageToState(state, damage = {}, nowSec = 0) {
+    if (!state || state.hp <= 0) return false;
+    const amount = Math.max(0, Number(damage.amount) || 0);
+    if (amount > 0) state.hp = Math.max(0, Number(state.hp) - amount);
+    if (damage.damageType === DAMAGE_TYPE_FIRE) {
+      if (damage.burnDps > 0 && damage.burnDurationMs > 0) {
+        state.burnDps = Math.max(Number(state.burnDps) || 0, damage.burnDps);
+        state.burnUntilSec = Math.max(Number(state.burnUntilSec) || 0, nowSec + damage.burnDurationMs / 1000);
+        state.nextBurnTickSec = Math.min(Number(state.nextBurnTickSec) || Infinity, nowSec + damage.tickMs / 1000);
+      }
+      if (damage.roastDps > 0 && damage.roastDurationMs > 0) {
+        state.roastDps = Math.max(Number(state.roastDps) || 0, damage.roastDps);
+        state.roastUntilSec = Math.max(Number(state.roastUntilSec) || 0, nowSec + damage.roastDurationMs / 1000);
+        state.nextRoastTickSec = Math.min(Number(state.nextRoastTickSec) || Infinity, nowSec + damage.tickMs / 1000);
+      }
+    }
+    return true;
+  }
+
+  function applyPeriodicFireDamage(state, nowSec = 0, dtSec = 0) {
+    if (!state || state.hp <= 0) return 0;
+    let totalDamage = 0;
+    if ((Number(state.burnUntilSec) || 0) > nowSec) {
+      totalDamage += Math.max(0, Number(state.burnDps) || 0) * dtSec;
+    } else {
+      state.burnDps = 0;
+    }
+    if ((Number(state.roastUntilSec) || 0) > nowSec) {
+      totalDamage += Math.max(0, Number(state.roastDps) || 0) * dtSec;
+    } else {
+      state.roastDps = 0;
+    }
+    if (totalDamage <= 0) return 0;
+    state.hp = Math.max(0, Number(state.hp) - totalDamage);
+    return totalDamage;
+  }
+
   function releaseOrbTargets({ atMs = null } = {}) {
     const now = Number(atMs);
     const nowSec = Number.isFinite(now)
@@ -549,13 +626,37 @@ export function createGnatSwarm3dRuntime({
 
   function applyCombatEffect(effect = {}) {
     const kind = String(effect && effect.kind || "");
-    if (kind !== COMBAT_EFFECT_STUN) return Object.freeze({ handled: false, affected: 0, reason: "unsupported_effect" });
-    const stun = normalizeStunEffect(effect);
     const center = effect.centerWorld || effect.center || null;
     if (!center || !Number.isFinite(Number(center.xW)) || !Number.isFinite(Number(center.yW))) {
       return Object.freeze({ handled: false, affected: 0, reason: "missing_center" });
     }
     const bo = Math.max(1, Number(getBo()) || 42);
+    if (kind === COMBAT_EFFECT_DAMAGE) {
+      const damage = normalizeDamageEffect(effect);
+      const nowSec = damage.atMs / 1000;
+      let affected = 0;
+      let totalDamage = 0;
+      for (const state of states) {
+        if (!state || state.hp <= 0) continue;
+        if (!pointInDamageVolume(state.position, center, effect, bo)) continue;
+        const beforeHp = Number(state.hp) || 0;
+        if (!applyDamageToState(state, damage, nowSec)) continue;
+        affected += 1;
+        totalDamage += Math.max(0, beforeHp - (Number(state.hp) || 0));
+        if (typeof onCombatEvent === "function") {
+          onCombatEvent("combat.damage_applied", {
+            ...damage,
+            targetEntityId: `enemy:gnat-swarm:${state.index}`,
+            hp: state.hp,
+            maxHp: state.maxHp,
+          });
+        }
+      }
+      if (affected > 0 && typeof onNeedsFrame === "function") onNeedsFrame();
+      return Object.freeze({ handled: true, affected, totalDamage });
+    }
+    if (kind !== COMBAT_EFFECT_STUN) return Object.freeze({ handled: false, affected: 0, reason: "unsupported_effect" });
+    const stun = normalizeStunEffect(effect);
     const radiusPx = Math.max(0, Number(effect.radiusBo) || 0) * bo;
     const nowSec = stun.atMs / 1000;
     let affected = 0;
@@ -1049,6 +1150,14 @@ export function createGnatSwarm3dRuntime({
     let activeLifeLeachPerSec = 0;
     for (let i = 0; i < states.length; i += 1) {
       const state = states[i];
+      applyPeriodicFireDamage(state, nowSec, dtSec);
+      if (!state || state.hp <= 0) {
+        positionVec.set(0, 0, -100000);
+        quat.identity();
+        matrix.compose(positionVec, quat, ZERO_SCALE_VEC);
+        mesh.setMatrixAt(i, matrix);
+        continue;
+      }
       if (state.mode === "stunned") {
         if (nowSec >= state.stunUntilSec) {
           if (typeof onCombatEvent === "function") {
@@ -1275,7 +1384,9 @@ export function createGnatSwarm3dRuntime({
       scaleVec.set(state.scale, state.scale * 0.55, state.scale);
 	      matrix.compose(positionVec, quat, scaleVec);
 	      mesh.setMatrixAt(i, matrix);
-	      if (shouldShowSignalBlink(state, nowSec)) {
+	      if ((Number(state.burnUntilSec) || 0) > nowSec || (Number(state.roastUntilSec) || 0) > nowSec) {
+	        mesh.setColorAt(i, GNAT_COLOR_BURNING);
+	      } else if (shouldShowSignalBlink(state, nowSec)) {
 	        mesh.setColorAt(i, GNAT_COLOR_SIGNAL);
 	      } else if (state.mode === "alerted" || state.mode === "feeding") {
 	        mesh.setColorAt(i, GNAT_COLOR_ALERTED);
