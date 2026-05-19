@@ -499,6 +499,31 @@ export function createGameStageDepth3dLayer({
     });
   }
 
+  function summarizeFlameDamageTrace(trace = null) {
+    if (!trace || typeof trace !== "object") return null;
+    return {
+      alive: trace.alive || 0,
+      tested: trace.tested || 0,
+      inRange: trace.inRange || 0,
+      affected: trace.affected || 0,
+      totalDamage: trace.totalDamage || 0,
+      nearestBo: trace.nearestBo == null ? null : trace.nearestBo,
+      nearestInside: !!(trace.nearest && trace.nearest.inside),
+    };
+  }
+
+  function summarizeFireCardTrace(trace = null) {
+    if (!trace || typeof trace !== "object") return null;
+    const sampleCamera = trace.sampleCamera || null;
+    return {
+      activeCount: trace.activeCount || 0,
+      visible: !!trace.visible,
+      sample: trace.sample || null,
+      sampleInClip: sampleCamera ? !!sampleCamera.inClip : null,
+      sampleClip: sampleCamera ? sampleCamera.clip || null : null,
+    };
+  }
+
   function applyActiveFlameAoeHazard(nowMs = performance.now(), { force = false } = {}) {
     const hazard = activeFlameAoeHazard;
     if (!hazard || !hazard.enabled) return null;
@@ -537,6 +562,7 @@ export function createGameStageDepth3dLayer({
     root.dataset.enemy3dLastFlameAoeRadiusBo = String(hazard.radiusBo.toFixed(2));
     root.dataset.enemy3dLastFlameAoeForwardRadiusBo = String(hazard.forwardRadiusBo.toFixed(2));
     const damageTrace = damageResult && damageResult.trace ? damageResult.trace : null;
+    const damageTraceSummary = summarizeFlameDamageTrace(damageTrace);
     if (damageTrace) {
       root.dataset.enemy3dLastFlameAoeAlive = String(damageTrace.alive || 0);
       root.dataset.enemy3dLastFlameAoeTested = String(damageTrace.tested || 0);
@@ -550,7 +576,7 @@ export function createGameStageDepth3dLayer({
         radiusBo: Number(hazard.radiusBo.toFixed(2)),
         forwardRadiusBo: Number(hazard.forwardRadiusBo.toFixed(2)),
         amount: Number((hazard.roastDps * dtSec).toFixed(3)),
-        trace: damageTrace,
+        trace: damageTraceSummary,
       });
     }
     return damageResult;
@@ -581,7 +607,7 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dBurningCount = String(enemyTrace.burning || 0);
       root.dataset.enemy3dDeadBurningCount = String(enemyTrace.deadBurning || 0);
       root.dataset.enemy3dFireCardCount = String(enemyTrace.fireCards || 0);
-      root.dataset.enemy3dFireCardTrace = JSON.stringify(enemyTrace.fireCardTrace || null);
+      root.dataset.enemy3dFireCardTrace = JSON.stringify(summarizeFireCardTrace(enemyTrace.fireCardTrace));
       root.dataset.enemy3dLiftLeach = String(enemyTrace.liftLeach || 0);
       root.dataset.enemy3dLifeLeachPerSec = String(enemyTrace.lifeLeachPerSec || 0);
       root.dataset.enemy3dShieldImmune = enemyTrace.shieldImmune ? "true" : "false";
@@ -604,6 +630,8 @@ export function createGameStageDepth3dLayer({
       const shouldTraceBurn = activeFlameAoeHazard || enemyTrace.burning || enemyTrace.deadBurning || enemyTrace.fireCards || enemyTrace.flameDamage;
       if (shouldTraceBurn && perfTrace && typeof perfTrace.mark === "function" && nowMs - lastEnemyBurnTraceAtMs >= 500) {
         lastEnemyBurnTraceAtMs = nowMs;
+        const fireCardTraceSummary = summarizeFireCardTrace(enemyTrace.fireCardTrace);
+        const flameDamageSummary = summarizeFlameDamageTrace(enemyTrace.flameDamage);
         perfTrace.mark("flameAoe.gnatBurn.trace", {
           hazard: activeFlameAoeHazard ? {
             ageMs: Math.round(nowMs - activeFlameAoeHazard.startedAtMs),
@@ -616,8 +644,8 @@ export function createGameStageDepth3dLayer({
           burning: enemyTrace.burning || 0,
           deadBurning: enemyTrace.deadBurning || 0,
           fireCards: enemyTrace.fireCards || 0,
-          fireCardTrace: enemyTrace.fireCardTrace || null,
-          flameDamage: enemyTrace.flameDamage || null,
+          fireCardTrace: fireCardTraceSummary,
+          flameDamage: flameDamageSummary,
         });
       }
     }

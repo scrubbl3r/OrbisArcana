@@ -1,5 +1,9 @@
 const DEFAULT_MAX_EVENTS = 180;
 const DEFAULT_REPORT_INTERVAL_MS = 500;
+const DEFAULT_MAX_EVENT_DEPTH = 4;
+const DEFAULT_MAX_EVENT_ARRAY = 12;
+const DEFAULT_MAX_EVENT_KEYS = 24;
+const DEFAULT_MAX_EVENT_STRING = 240;
 
 function nowMs() {
   return performance.now();
@@ -47,6 +51,42 @@ function sortedMetricRows(metrics) {
     .sort((a, b) => b.maxMs - a.maxMs);
 }
 
+function sanitizeTraceValue(value, depth = 0, seen = new WeakSet()) {
+  if (value == null) return value;
+  const valueType = typeof value;
+  if (valueType === "number") return Number.isFinite(value) ? value : String(value);
+  if (valueType === "boolean") return value;
+  if (valueType === "string") {
+    return value.length > DEFAULT_MAX_EVENT_STRING
+      ? `${value.slice(0, DEFAULT_MAX_EVENT_STRING)}...`
+      : value;
+  }
+  if (valueType !== "object") return String(value);
+  if (seen.has(value)) return "[Circular]";
+  if (depth >= DEFAULT_MAX_EVENT_DEPTH) return Array.isArray(value) ? `[Array(${value.length})]` : "[Object]";
+  seen.add(value);
+  if (Array.isArray(value)) {
+    const limit = Math.min(value.length, DEFAULT_MAX_EVENT_ARRAY);
+    const result = [];
+    for (let i = 0; i < limit; i += 1) {
+      result.push(sanitizeTraceValue(value[i], depth + 1, seen));
+    }
+    if (value.length > limit) result.push(`... ${value.length - limit} more`);
+    seen.delete(value);
+    return result;
+  }
+  const result = {};
+  const keys = Object.keys(value);
+  const limit = Math.min(keys.length, DEFAULT_MAX_EVENT_KEYS);
+  for (let i = 0; i < limit; i += 1) {
+    const key = keys[i];
+    result[key] = sanitizeTraceValue(value[key], depth + 1, seen);
+  }
+  if (keys.length > limit) result.__truncatedKeys = keys.length - limit;
+  seen.delete(value);
+  return result;
+}
+
 export function createPerfTrace({
   maxEvents = DEFAULT_MAX_EVENTS,
   reportIntervalMs = DEFAULT_REPORT_INTERVAL_MS,
@@ -67,7 +107,7 @@ export function createPerfTrace({
     events.push({
       atMs: round(nowMs(), 1),
       frame: frameIndex,
-      ...event,
+      ...sanitizeTraceValue(event),
     });
     while (events.length > maxEvents) events.shift();
   }
