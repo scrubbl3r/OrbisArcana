@@ -6,6 +6,9 @@ import {
 import {
   COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
 } from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260518a";
+import {
+  WAKE_ARM_WORD_IDS,
+} from "../../content/spells/spell-runtime-routing.js?v=20260518a";
 
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 const EVT_RULE_ENGINE_PREVIEW_MATCHED = "rule_engine.preview_matched";
@@ -36,6 +39,12 @@ function resolveActiveWords(wordIds = []) {
     .map((wordId) => ACTIVE_WORDS_BY_ID[wordId])
     .filter(Boolean)
     .map((word) => Object.freeze({ ...word }));
+}
+
+function resolveWakeArmTokens() {
+  return normalizeWordIds(WAKE_ARM_WORD_IDS)
+    .map((wordId) => resolveWordPhrase(wordId))
+    .filter(Boolean);
 }
 
 function normalizeWordIds(rawWordIds = []) {
@@ -131,7 +140,7 @@ export function createKwsListenPolicyController({
         ...(mode === KWS_LISTEN_POLICY_MODES.STRICT_A
           ? {
             words: resolveActiveWords(snapshot.listenableWordIds),
-            wakeTokens: snapshot.rootWordIds.map((wordId) => resolveWordPhrase(wordId)).filter(Boolean),
+            wakeTokens: resolveWakeArmTokens(),
             requireWakeForWordIds: [],
           }
           : {}),

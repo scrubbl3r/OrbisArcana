@@ -34,6 +34,13 @@ function assertHasAll(haystack, expected, label) {
   }
 }
 
+function assertHasNone(haystack, unexpected, label) {
+  const set = new Set(Array.isArray(haystack) ? haystack : []);
+  for (const item of unexpected) {
+    assertCheck(!set.has(item), `[${CHECK_TAG}] ${label} should not include: ${item}`);
+  }
+}
+
 async function main() {
   const eventBus = createEventBus();
   const backendConfigs = [];
@@ -79,7 +86,8 @@ async function main() {
   assertHasAll(status.listenableWordIds, EXPECTED_IDLE_ROOT_WORDS, "A idle listenableWordIds");
   assertHasAll(backendConfigs.at(-1)?.activeTokens || [], EXPECTED_IDLE_ROOT_TOKENS, "A idle backend tokens");
   assertHasAll(parserConfigs.at(-1)?.words || [], EXPECTED_IDLE_ROOT_WORDS, "A idle parser words");
-  assertHasAll(parserConfigs.at(-1)?.wakeTokens || [], EXPECTED_IDLE_ROOT_TOKENS, "A idle parser wakeTokens");
+  assertHasAll(parserConfigs.at(-1)?.wakeTokens || [], ["orbis", "are kay nah"], "A idle parser wakeTokens");
+  assertHasNone(parserConfigs.at(-1)?.wakeTokens || [], ["echovar", "sanctum", "modulon", "salubrium", "leviton"], "A idle parser wakeTokens");
 
   eventBus.emit("rule_engine.wake_win_opened", {
     windowId: "wake.main",
