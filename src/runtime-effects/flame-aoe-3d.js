@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260519094707";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260519095106";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 
