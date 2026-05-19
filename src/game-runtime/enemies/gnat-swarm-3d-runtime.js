@@ -15,6 +15,7 @@ import {
   STATUS_EFFECT_BURNING,
   tickBurningStatusOnEntity,
 } from "../status/fire/burning-status-model.js";
+import { createFireCardSystem } from "../vfx/fire/fire-card-system.js";
 
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
@@ -385,6 +386,7 @@ export function createGnatSwarm3dRuntime({
 	  });
 	  tintEmissiveWithInstanceColor(material);
   const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const fireCards = createFireCardSystem({ root, maxCards: 256 });
   let mesh = null;
   let states = [];
   let bounds = Object.freeze({ loops: [], box: null });
@@ -408,6 +410,8 @@ export function createGnatSwarm3dRuntime({
     lastMotionEmitAtMs = 0;
     lastLiftPenalty = 0;
     lastFeedingCount = 0;
+    fireCards.beginFrame(0);
+    fireCards.endFrame();
     Object.assign(alertTrace, { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null, flameDamage: null });
   }
 
@@ -1299,6 +1303,25 @@ export function createGnatSwarm3dRuntime({
     mesh.setColorAt(i, GNAT_COLOR_TMP);
   }
 
+  function addBurnCardForState(state = null, runtimePosition = null, nowSec = 0, { dead = false } = {}) {
+    if (!state || !runtimePosition) return;
+    const burning = resolveBurningRuntimeState(state, nowSec);
+    if (!burning.active) return;
+    const profile = burning.profile || {};
+    const deathFade = dead && state.burnAfterDeathUntilSec
+      ? Math.max(0, Math.min(1, (state.burnAfterDeathUntilSec - nowSec) / Math.max(0.1, state.burnAfterDeathUntilSec - (state.burnGroundedSec || nowSec))))
+      : 1;
+    fireCards.addTeardrop({
+      x: Number(runtimePosition.x) || 0,
+      y: Number(runtimePosition.y) || 0,
+      z: (Number(runtimePosition.z) || 0) + 6,
+      scalePx: Math.max(6, Number(state.scale) || 8) * (dead ? 1.32 : 1.18),
+      intensity: Math.max(0.18, Math.min(1.4, burning.intensity * deathFade)),
+      tintHex: Number(profile.tintHex) || 0xff7a18,
+      seed: Number(state.burnVisualSeed) || Number(state.phaseX) || 0,
+    });
+  }
+
   function startBurnAfterGround(state = null, nowSec = 0) {
     if (!state || !state.burnDeathActive || state.burnGroundedSec) return;
     const afterburnSec = randomInRange(GNAT_BURN_AFTER_GROUND_RANGE_SEC, 2.2);
@@ -1370,6 +1393,7 @@ export function createGnatSwarm3dRuntime({
     const fadeT = Math.max(0, Math.min(1, (nowSec - state.deathStartedSec) / GNAT_DEATH_FADE_SEC));
     GNAT_COLOR_BURNING.copy(GNAT_COLOR_NEUTRAL).lerp(GNAT_COLOR_DEAD, fadeT);
     setGnatInstanceColor(i, GNAT_COLOR_BURNING, state, nowSec, { dead: true });
+    addBurnCardForState(state, runtimePosition, nowSec, { dead: true });
   }
 
   function update(nowMs = performance.now(), dtSec = 0.016, {
@@ -1411,6 +1435,7 @@ export function createGnatSwarm3dRuntime({
     let deadBurningCount = 0;
     let activeLiftLeach = 0;
     let activeLifeLeachPerSec = 0;
+    fireCards.beginFrame(nowSec);
     for (let i = 0; i < states.length; i += 1) {
       const state = states[i];
       applyPeriodicFireDamage(state, nowSec, dtSec);
@@ -1650,16 +1675,18 @@ export function createGnatSwarm3dRuntime({
       scaleVec.set(state.scale, state.scale * 0.55, state.scale);
 	      matrix.compose(positionVec, quat, scaleVec);
 	      mesh.setMatrixAt(i, matrix);
-	      if (shouldShowSignalBlink(state, nowSec)) {
-	        setGnatInstanceColor(i, GNAT_COLOR_SIGNAL, state, nowSec);
-	      } else if (state.mode === "alerted" || state.mode === "feeding") {
-	        setGnatInstanceColor(i, GNAT_COLOR_ALERTED, state, nowSec);
-	      } else {
-	        setGnatInstanceColor(i, GNAT_COLOR_NEUTRAL, state, nowSec);
-	      }
+      if (shouldShowSignalBlink(state, nowSec)) {
+        setGnatInstanceColor(i, GNAT_COLOR_SIGNAL, state, nowSec);
+      } else if (state.mode === "alerted" || state.mode === "feeding") {
+        setGnatInstanceColor(i, GNAT_COLOR_ALERTED, state, nowSec);
+      } else {
+        setGnatInstanceColor(i, GNAT_COLOR_NEUTRAL, state, nowSec);
+      }
+      addBurnCardForState(state, runtimePosition, nowSec);
 	    }
 	    mesh.instanceMatrix.needsUpdate = true;
 	    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    fireCards.endFrame();
     emitFeedingCombat({ nowMs, dtSec, feedingCount, activeLiftLeach, activeLifeLeachPerSec });
     Object.assign(alertTrace, {
       direct: directAlerts,
@@ -1668,6 +1695,7 @@ export function createGnatSwarm3dRuntime({
       stunned: stunnedCount,
       burning: burningCount,
       deadBurning: deadBurningCount,
+      fireCards: fireCards.activeCount,
       liftLeach: activeLiftLeach,
       lifeLeachPerSec: activeLifeLeachPerSec,
       shieldImmune: orbImmune,
@@ -1689,6 +1717,7 @@ export function createGnatSwarm3dRuntime({
     clear: disposeMesh,
     dispose() {
       disposeMesh();
+      fireCards.dispose();
       geometry.dispose();
       material.dispose();
     },
