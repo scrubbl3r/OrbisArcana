@@ -507,6 +507,15 @@
       gap:8px;
       align-items:center;
     }
+    .section[data-effect="flame-aoe-3d"] .paramFieldRow,
+    .behaviorSection[data-behavior-effect="flame-aoe-3d"] .paramFieldRow{
+      grid-template-columns: minmax(150px, auto) 1fr;
+    }
+    .section[data-effect="flame-aoe-3d"] .toolBtn[id^="flameAoe3dApply"],
+    .behaviorSection[data-behavior-effect="flame-aoe-3d"] .paramFieldRow .toolBtn,
+    #applyFlameAoe3dBehaviorBtn{
+      display:none;
+    }
     .paramFieldRow label,
     .paramField label{
       font-size:12px;
@@ -577,11 +586,20 @@
       gap:8px;
       align-items:center;
     }
+    .section[data-effect="flame-aoe-3d"] .rgbaParamRow{
+      grid-template-columns: auto repeat(4, auto minmax(54px, 1fr));
+    }
     .rgbaParamRow.rgbParamRow{
       grid-template-columns: auto repeat(3, auto minmax(54px, 1fr)) auto;
     }
+    .section[data-effect="flame-aoe-3d"] .rgbaParamRow.rgbParamRow{
+      grid-template-columns: auto repeat(3, auto minmax(54px, 1fr));
+    }
     .rgbaParamRow.densityRangeRow{
       grid-template-columns: auto auto minmax(86px, 1fr) auto minmax(86px, 1fr) auto;
+    }
+    .section[data-effect="flame-aoe-3d"] .rgbaParamRow.densityRangeRow{
+      grid-template-columns: auto auto minmax(86px, 1fr) auto minmax(86px, 1fr);
     }
     .rgbaParamRow.wakeGraphRow{
       grid-template-columns: auto minmax(64px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto;

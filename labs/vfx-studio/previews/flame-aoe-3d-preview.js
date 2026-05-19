@@ -282,6 +282,19 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeGraphVisibleBtn) els.flameAoe3dWakeGraphVisibleBtn.setAttribute("aria-pressed", graphEnabled ? "true" : "false");
 }
 
+function bindInputCommits(root, apply) {
+  if (!root || typeof apply !== "function") return;
+  root.querySelectorAll("input.paramFieldInput").forEach((field) => {
+    field.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      apply();
+    });
+    field.addEventListener("change", apply);
+    field.addEventListener("blur", apply);
+  });
+}
+
 function layerVisible(button) {
   return !button || button.getAttribute("aria-pressed") !== "false";
 }
@@ -1132,53 +1145,12 @@ export function createFlameAoe3dPreview({
   function wire() {
     apply();
     if (els.previewFlameAoe3d) els.previewFlameAoe3d.addEventListener("click", apply);
+    bindInputCommits(document.querySelector('.section[data-effect="flame-aoe-3d"]'), apply);
     if (els.flameAoe3dOrbVisibleBtn) els.flameAoe3dOrbVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dOrbVisibleBtn));
     if (els.flameAoe3dAuraVisibleBtn) els.flameAoe3dAuraVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dAuraVisibleBtn));
     if (els.flameAoe3dWakeVisibleBtn) els.flameAoe3dWakeVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dWakeVisibleBtn));
     if (els.flameAoe3dWakeDisplaceVisibleBtn) els.flameAoe3dWakeDisplaceVisibleBtn.addEventListener("click", () => toggleDisplace(els.flameAoe3dWakeDisplaceVisibleBtn));
     if (els.flameAoe3dWakeGraphVisibleBtn) els.flameAoe3dWakeGraphVisibleBtn.addEventListener("click", () => toggleGraph(els.flameAoe3dWakeGraphVisibleBtn));
-    [
-      els.flameAoe3dApplyAuraAlphaBtn,
-      els.flameAoe3dApplyAuraScaleBtn,
-      els.flameAoe3dApplyAuraPulseBtn,
-      els.flameAoe3dApplyAuraNoiseScaleBtn,
-      els.flameAoe3dApplyAuraNoiseSpeedBtn,
-      els.flameAoe3dApplyAuraFresnelPowerBtn,
-      els.flameAoe3dApplyAuraColorBtn,
-      els.flameAoe3dApplyWakeLengthBtn,
-      els.flameAoe3dApplyWakeRadiusBtn,
-      els.flameAoe3dApplyWakeSubdivisionsBtn,
-      els.flameAoe3dApplyWakeLeanAmountBtn,
-      els.flameAoe3dApplyWakeLeanLagBtn,
-      els.flameAoe3dApplyWakeLiftBtn,
-      els.flameAoe3dApplyWakeLiftCoreRadiusBtn,
-      els.flameAoe3dApplyWakeStretchStrengthBtn,
-      els.flameAoe3dApplyWakeOrbHugRadiusBtn,
-      els.flameAoe3dApplyWakeEnvelopeBlendBtn,
-      els.flameAoe3dApplyWakeDisplaceBtn,
-      els.flameAoe3dApplyWakeDisplaceScaleBtn,
-      els.flameAoe3dApplyWakeDisplaceSpeedBtn,
-      els.flameAoe3dApplyWakeDisplaceSoftnessBtn,
-      els.flameAoe3dApplyWakeDisplaceInfluenceBtn,
-      els.flameAoe3dApplyWakeNoiseScaleBtn,
-      els.flameAoe3dApplyWakeNoiseSpeedBtn,
-      els.flameAoe3dApplyWakeNoiseDensityBtn,
-      els.flameAoe3dApplyWakeNoiseContrastBtn,
-      els.flameAoe3dApplyWakeNoiseOctavesBtn,
-      els.flameAoe3dApplyWakeNoiseLacunarityBtn,
-      els.flameAoe3dApplyWakeNoiseGainBtn,
-      els.flameAoe3dApplyWakeSimplexScaleBtn,
-      els.flameAoe3dApplyWakeSimplexSpeedBtn,
-      els.flameAoe3dApplyWakeSimplexDensityBtn,
-      els.flameAoe3dApplyWakeSimplexContrastBtn,
-      els.flameAoe3dApplyWakeSimplexOctavesBtn,
-      els.flameAoe3dApplyWakeSimplexLacunarityBtn,
-      els.flameAoe3dApplyWakeSimplexGainBtn,
-      els.flameAoe3dApplyWakeNoiseMixBtn,
-      els.flameAoe3dApplyWakeGraphBtn,
-    ].forEach((btn) => {
-      if (btn) btn.addEventListener("click", apply);
-    });
   }
 
   return Object.freeze({
