@@ -630,7 +630,7 @@ export function createFlameAoe3dRuntime({
   let motionInitialized = false;
   const lastPosition = new THREE.Vector3();
   const currentPosition = new THREE.Vector3();
-  const rawMotionOffset = new THREE.Vector3();
+  const orbFrameDelta = new THREE.Vector3();
   const liftCoreOffset = new THREE.Vector3(0, 1, 0);
   const targetLiftCoreOffset = new THREE.Vector3(0, 1, 0);
   const liftCoreVelocity = new THREE.Vector3();
@@ -670,23 +670,18 @@ export function createFlameAoe3dRuntime({
     const authoredSlack = bo * clampNumber(activeConfig && activeConfig.wakeLengthBo, 0, 4, 0);
     const motionSlack = Math.max(bo * 0.5, restLift * 0.35, authoredSlack);
     const maxStretch = Math.min(bo * 8, restLift + motionSlack);
+    targetLiftCoreOffset.set(0, restLift, 0);
     const position = readOrbPosition();
     if (!position) {
-      targetLiftCoreOffset.set(0, baseLift + buoyLift, 0);
+      // No world-space orb position is available, so fall back to pure spring lift.
     } else if (!motionInitialized) {
       lastPosition.copy(position);
-      targetLiftCoreOffset.set(0, baseLift + buoyLift, 0);
       motionInitialized = true;
     } else {
-      const vx = (position.x - lastPosition.x) / safeDt;
-      const vy = (position.y - lastPosition.y) / safeDt;
-      const vz = (position.z - lastPosition.z) / safeDt;
+      orbFrameDelta.copy(position).sub(lastPosition).clampLength(0, motionSlack);
       lastPosition.copy(position);
-      rawMotionOffset.set(-vx * 0.085, -vy * 0.085, -vz * 0.055);
-      rawMotionOffset.clampLength(0, motionSlack);
-      targetLiftCoreOffset.set(0, baseLift + buoyLift, 0).add(rawMotionOffset);
+      liftCoreOffset.sub(orbFrameDelta);
     }
-    targetLiftCoreOffset.clampLength(bo * 0.08, maxStretch);
     const springForce = targetLiftCoreOffset.clone().sub(liftCoreOffset).multiplyScalar(spring);
     const dampingForce = liftCoreVelocity.clone().multiplyScalar(damping);
     liftCoreVelocity.addScaledVector(springForce.sub(dampingForce), safeDt);
@@ -747,7 +742,7 @@ export function createFlameAoe3dRuntime({
     motionInitialized = false;
     lastPosition.set(0, 0, 0);
     currentPosition.set(0, 0, 0);
-    rawMotionOffset.set(0, 0, 0);
+    orbFrameDelta.set(0, 0, 0);
     liftCoreOffset.set(0, 1, 0);
     targetLiftCoreOffset.set(0, 1, 0);
     liftCoreVelocity.set(0, 0, 0);
