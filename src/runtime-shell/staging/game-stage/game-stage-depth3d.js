@@ -177,6 +177,7 @@ export function createGameStageDepth3dLayer({
   let lastGlobe3dTickMs = 0;
   let lastEnemy3dTickMs = 0;
   let lastEnemyTelemetryAtMs = 0;
+  let lastEnemyBurnTraceAtMs = 0;
   let activeFlameAoeHazard = null;
   let boundGlobe3dSpawns = Object.freeze([]);
   const telemetry = createGameStageDepth3dTelemetry({
@@ -577,6 +578,10 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dAlertRelayed = String(enemyTrace.relayed || 0);
       root.dataset.enemy3dFeedingCount = String(enemyTrace.feeding || 0);
       root.dataset.enemy3dStunnedCount = String(enemyTrace.stunned || 0);
+      root.dataset.enemy3dBurningCount = String(enemyTrace.burning || 0);
+      root.dataset.enemy3dDeadBurningCount = String(enemyTrace.deadBurning || 0);
+      root.dataset.enemy3dFireCardCount = String(enemyTrace.fireCards || 0);
+      root.dataset.enemy3dFireCardTrace = JSON.stringify(enemyTrace.fireCardTrace || null);
       root.dataset.enemy3dLiftLeach = String(enemyTrace.liftLeach || 0);
       root.dataset.enemy3dLifeLeachPerSec = String(enemyTrace.lifeLeachPerSec || 0);
       root.dataset.enemy3dShieldImmune = enemyTrace.shieldImmune ? "true" : "false";
@@ -595,6 +600,25 @@ export function createGameStageDepth3dLayer({
       const orbPosition = orb3dActorRuntime.getPosition();
       if (orbPosition) {
         root.dataset.enemy3dOrbRuntime = `${Math.round((Number(orbPosition.x) || 0) * 100) / 100},${Math.round((Number(orbPosition.y) || 0) * 100) / 100},${Math.round((Number(orbPosition.z) || 0) * 100) / 100}`;
+      }
+      const shouldTraceBurn = activeFlameAoeHazard || enemyTrace.burning || enemyTrace.deadBurning || enemyTrace.fireCards || enemyTrace.flameDamage;
+      if (shouldTraceBurn && perfTrace && typeof perfTrace.mark === "function" && nowMs - lastEnemyBurnTraceAtMs >= 500) {
+        lastEnemyBurnTraceAtMs = nowMs;
+        perfTrace.mark("flameAoe.gnatBurn.trace", {
+          hazard: activeFlameAoeHazard ? {
+            ageMs: Math.round(nowMs - activeFlameAoeHazard.startedAtMs),
+            remainingMs: Math.round(activeFlameAoeHazard.untilMs - nowMs),
+            radiusBo: Number(activeFlameAoeHazard.radiusBo.toFixed(2)),
+            forwardRadiusBo: Number(activeFlameAoeHazard.forwardRadiusBo.toFixed(2)),
+            burnDps: activeFlameAoeHazard.burnDps,
+            roastDps: activeFlameAoeHazard.roastDps,
+          } : null,
+          burning: enemyTrace.burning || 0,
+          deadBurning: enemyTrace.deadBurning || 0,
+          fireCards: enemyTrace.fireCards || 0,
+          fireCardTrace: enemyTrace.fireCardTrace || null,
+          flameDamage: enemyTrace.flameDamage || null,
+        });
       }
     }
   }
