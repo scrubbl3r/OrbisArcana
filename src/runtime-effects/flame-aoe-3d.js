@@ -26,10 +26,6 @@ function rgbHex({ r = 255, g = 106, b = 24 } = {}) {
     + clampInt(b, 0, 255, 24);
 }
 
-function expLerpAlpha(dtSec, hz) {
-  return 1 - Math.exp(-Math.max(0, Number(dtSec) || 0) * Math.max(0.01, Number(hz) || 1));
-}
-
 export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fallback = FLAME_AOE_3D_PRESET_DEFAULT;
@@ -49,8 +45,8 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeLengthBo: clampNumber(source.wakeLengthBo, 0.05, 4, fallback.wakeLengthBo),
     wakeRadiusBo: clampNumber(source.wakeRadiusBo, 0.5, 2, fallback.wakeRadiusBo),
     wakeSubdivisions: clampInt(source.wakeSubdivisions, 12, 192, fallback.wakeSubdivisions),
-    wakeLeanAmount: clampNumber(source.wakeLeanAmount, 0, 10, fallback.wakeLeanAmount),
-    wakeLeanLag: clampNumber(source.wakeLeanLag, 0.1, 30, fallback.wakeLeanLag),
+    wakeLeanAmount: clampNumber(source.wakeLeanAmount, 0, 80, fallback.wakeLeanAmount),
+    wakeLeanLag: clampNumber(source.wakeLeanLag, 0, 40, fallback.wakeLeanLag),
     wakeLiftBo: clampNumber(source.wakeLiftBo, 0, 4, fallback.wakeLiftBo ?? 0.6),
     wakeLiftCoreRadiusBo: clampNumber(source.wakeLiftCoreRadiusBo, 0.02, 2, fallback.wakeLiftCoreRadiusBo ?? 0.25),
     wakeStretchStrength: clampNumber(source.wakeStretchStrength, 0, 4, fallback.wakeStretchStrength ?? 1),
@@ -159,9 +155,55 @@ function createWakeElasticShellGeometry({
   geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
   geometry.setAttribute("aWakeTail", new THREE.Float32BufferAttribute(wakeTail, 1));
   geometry.setIndex(indices);
+  geometry.userData.wakeShell = Object.freeze({ radialSegments: segments, heightSegments: rings });
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   return geometry;
+}
+
+function updateWakeElasticShellGeometry(geometry, {
+  baseRadius,
+  liftOffset,
+  liftRadius,
+  padding,
+  blendSoftness,
+} = {}) {
+  const meta = geometry && geometry.userData && geometry.userData.wakeShell;
+  const position = geometry && geometry.getAttribute && geometry.getAttribute("position");
+  const tailAttr = geometry && geometry.getAttribute && geometry.getAttribute("aWakeTail");
+  if (!meta || !position || !tailAttr) return;
+  const baseR = Math.max(1, Number(baseRadius) || 1);
+  const liftY = Math.max(0, Number(liftOffset) || 0);
+  const liftR = Math.max(1, Number(liftRadius) || 1);
+  const shellPadding = Math.max(0, Number(padding) || 0);
+  const blend = Math.max(0.001, Number(blendSoftness) || 0.001);
+  const rings = Math.max(4, Math.round(meta.heightSegments));
+  const segments = Math.max(8, Math.round(meta.radialSegments));
+  const minY = Math.min(-baseR, liftY - liftR) - shellPadding;
+  const maxY = Math.max(baseR, liftY + liftR) + shellPadding;
+  for (let iy = 0; iy <= rings; iy += 1) {
+    const v = iy / rings;
+    const y = minY + ((maxY - minY) * v);
+    const baseCross = circleRadiusAtY(y, 0, baseR);
+    const liftCross = circleRadiusAtY(y, liftY, liftR);
+    const bridgeT = liftY > 0.0001 ? Math.max(0, Math.min(1, y / liftY)) : 1;
+    const bridge = y > 0 && y < liftY ? ((baseR * (1 - bridgeT)) + (liftR * bridgeT)) : 0;
+    const sphereEnvelope = baseCross <= 0 && liftCross <= 0 ? 0 : smoothMaxNumber(baseCross, liftCross, blend);
+    const envelope = bridge > 0 ? smoothMaxNumber(sphereEnvelope, bridge, blend) : sphereEnvelope;
+    const edgeFade = Math.sin(v * Math.PI);
+    const r = Math.max(0, envelope + (shellPadding * edgeFade));
+    for (let ix = 0; ix <= segments; ix += 1) {
+      const index = iy * (segments + 1) + ix;
+      const u = ix / segments;
+      const theta = u * Math.PI * 2;
+      position.setXYZ(index, Math.cos(theta) * r, y, Math.sin(theta) * r);
+      tailAttr.setX(index, v);
+    }
+  }
+  position.needsUpdate = true;
+  tailAttr.needsUpdate = true;
+  geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
 }
 
 function getWakeGraphStops(config) {
@@ -589,8 +631,11 @@ export function createFlameAoe3dRuntime({
   const rawMotionOffset = new THREE.Vector3();
   const liftCoreOffset = new THREE.Vector3(0, 1, 0);
   const targetLiftCoreOffset = new THREE.Vector3(0, 1, 0);
+  const liftCoreVelocity = new THREE.Vector3();
   const stretchDirection = new THREE.Vector3(0, 1, 0);
   const shaderMotion = new THREE.Vector3();
+  const wakeUp = new THREE.Vector3(0, 1, 0);
+  const wakeAlignment = new THREE.Quaternion();
 
   function measureTrace(name, fn) {
     if (typeof traceMeasure === "function") return traceMeasure(name, fn);
@@ -614,37 +659,54 @@ export function createFlameAoe3dRuntime({
   function updateWakeMotion(dtSec) {
     if (!wakeMesh) return;
     const bo = Math.max(1, Number(runtimeBo) || 72);
+    const safeDt = Math.max(1 / 240, Math.min(0.12, Number(dtSec) || (1 / 60)));
+    const baseLift = bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6);
+    const buoyLift = bo * clampNumber(activeConfig && activeConfig.wakeStretchStrength, 0, 4, 0);
+    const spring = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 80, 18);
+    const damping = clampNumber(activeConfig && activeConfig.wakeLeanLag, 0, 40, 8);
+    const maxStretch = bo * Math.max(0.5, Math.min(5, (clampNumber(activeConfig && activeConfig.wakeLengthBo, 0.05, 4, 1) + clampNumber(activeConfig && activeConfig.wakeStretchStrength, 0, 4, 0))));
     const position = readOrbPosition();
     if (!position) {
-      targetLiftCoreOffset.set(0, bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6), 0);
+      targetLiftCoreOffset.set(0, baseLift + buoyLift, 0);
     } else if (!motionInitialized) {
       lastPosition.copy(position);
-      targetLiftCoreOffset.set(0, bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6), 0);
+      targetLiftCoreOffset.set(0, baseLift + buoyLift, 0);
       motionInitialized = true;
     } else {
-      const safeDt = Math.max(1 / 240, Math.min(0.12, Number(dtSec) || (1 / 60)));
       const vx = (position.x - lastPosition.x) / safeDt;
       const vy = (position.y - lastPosition.y) / safeDt;
       const vz = (position.z - lastPosition.z) / safeDt;
       lastPosition.copy(position);
-      const leanAmount = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 10, 0.35);
-      const buoyancy = bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6);
-      const maxStretch = bo * Math.min(1.7, clampNumber(activeConfig && activeConfig.wakeLengthBo, 0.05, 4, 1));
       rawMotionOffset.set(-vx * 0.085, -vy * 0.085, -vz * 0.055);
       rawMotionOffset.clampLength(0, maxStretch * 0.72);
-      targetLiftCoreOffset.set(0, buoyancy, 0).addScaledVector(rawMotionOffset, leanAmount * 0.22);
-      targetLiftCoreOffset.clampLength(bo * 0.08, maxStretch);
+      targetLiftCoreOffset.set(0, baseLift + buoyLift, 0).add(rawMotionOffset);
     }
-    const alpha = expLerpAlpha(dtSec, activeConfig && activeConfig.wakeLeanLag);
-    liftCoreOffset.lerp(targetLiftCoreOffset, alpha);
+    targetLiftCoreOffset.clampLength(bo * 0.08, maxStretch);
+    const springForce = targetLiftCoreOffset.clone().sub(liftCoreOffset).multiplyScalar(spring);
+    const dampingForce = liftCoreVelocity.clone().multiplyScalar(damping);
+    liftCoreVelocity.addScaledVector(springForce.sub(dampingForce), safeDt);
+    liftCoreOffset.addScaledVector(liftCoreVelocity, safeDt);
+    liftCoreOffset.clampLength(bo * 0.08, maxStretch);
     if (wakePivot) {
       wakePivot.position.x = 0;
       wakePivot.position.z = 0;
-      wakePivot.rotation.set(0, 0, 0);
     }
     stretchDirection.copy(liftCoreOffset);
     if (stretchDirection.lengthSq() < 0.0001) stretchDirection.set(0, 1, 0);
     stretchDirection.normalize();
+    if (wakePivot) {
+      wakeAlignment.setFromUnitVectors(wakeUp, stretchDirection);
+      wakePivot.quaternion.copy(wakeAlignment);
+    }
+    if (wakeMesh && wakeMesh.geometry) {
+      updateWakeElasticShellGeometry(wakeMesh.geometry, {
+        baseRadius: bo * Math.max(0.5, clampNumber(activeConfig && activeConfig.wakeRadiusBo, 0.5, 2, 0.5)),
+        liftOffset: liftCoreOffset.length(),
+        liftRadius: bo * clampNumber(activeConfig && activeConfig.wakeLiftCoreRadiusBo, 0.02, 2, 0.25),
+        padding: bo * clampNumber(activeConfig && activeConfig.wakeEnvelopeBlendBo, 0, 1, 0.06),
+        blendSoftness: bo * clampNumber(activeConfig && activeConfig.wakeOrbHugRadiusBo, 0.01, 2, 0.22),
+      });
+    }
     shaderMotion.copy(liftCoreOffset).multiplyScalar(1 / bo);
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeMotionOffset) {
       wakeMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
@@ -683,6 +745,7 @@ export function createFlameAoe3dRuntime({
     rawMotionOffset.set(0, 0, 0);
     liftCoreOffset.set(0, 1, 0);
     targetLiftCoreOffset.set(0, 1, 0);
+    liftCoreVelocity.set(0, 0, 0);
     stretchDirection.set(0, 1, 0);
     shaderMotion.set(0, 0, 0);
     if (group && group.parent) group.parent.remove(group);
@@ -726,8 +789,9 @@ export function createFlameAoe3dRuntime({
         lastPosition.copy(initialPosition);
         motionInitialized = true;
       }
-      liftCoreOffset.set(0, bo * config.wakeLiftBo, 0);
+      liftCoreOffset.set(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0);
       targetLiftCoreOffset.copy(liftCoreOffset);
+      liftCoreVelocity.set(0, 0, 0);
       stretchDirection.set(0, 1, 0);
       group = new THREE.Group();
       group.name = "flame_aoe3d:runtime";
@@ -748,7 +812,7 @@ export function createFlameAoe3dRuntime({
       const wake = new THREE.Mesh(
         createWakeElasticShellGeometry({
           baseRadius: bo * Math.max(0.5, config.wakeRadiusBo),
-          liftOffset: bo * config.wakeLiftBo,
+          liftOffset: bo * (config.wakeLiftBo + config.wakeStretchStrength),
           liftRadius: bo * config.wakeLiftCoreRadiusBo,
           padding: bo * config.wakeEnvelopeBlendBo,
           blendSoftness: bo * config.wakeOrbHugRadiusBo,

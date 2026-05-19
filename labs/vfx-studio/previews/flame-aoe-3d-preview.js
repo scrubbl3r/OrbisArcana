@@ -39,8 +39,8 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeLengthBo: 0.95,
   wakeRadiusBo: 0.5,
   wakeSubdivisions: 64,
-  wakeLeanAmount: 0.35,
-  wakeLeanLag: 8.5,
+  wakeLeanAmount: 18,
+  wakeLeanLag: 8,
   wakeLiftBo: 1.1,
   wakeLiftCoreRadiusBo: 0.25,
   wakeStretchStrength: 1.35,
@@ -178,8 +178,8 @@ function readFlameWakeConfig(els = {}) {
     wakeLengthBo: clampNumber(els.flameAoe3dWakeLengthBo && els.flameAoe3dWakeLengthBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLengthBo),
     wakeRadiusBo: clampNumber(els.flameAoe3dWakeRadiusBo && els.flameAoe3dWakeRadiusBo.value, 0.5, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeRadiusBo),
     wakeSubdivisions: Math.round(clampNumber(els.flameAoe3dWakeSubdivisions && els.flameAoe3dWakeSubdivisions.value, 12, 192, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSubdivisions)),
-    wakeLeanAmount: clampNumber(els.flameAoe3dWakeLeanAmount && els.flameAoe3dWakeLeanAmount.value, 0, 10, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanAmount),
-    wakeLeanLag: clampNumber(els.flameAoe3dWakeLeanLag && els.flameAoe3dWakeLeanLag.value, 0.1, 30, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanLag),
+    wakeLeanAmount: clampNumber(els.flameAoe3dWakeLeanAmount && els.flameAoe3dWakeLeanAmount.value, 0, 80, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanAmount),
+    wakeLeanLag: clampNumber(els.flameAoe3dWakeLeanLag && els.flameAoe3dWakeLeanLag.value, 0, 40, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanLag),
     wakeLiftBo: clampNumber(els.flameAoe3dWakeLiftBo && els.flameAoe3dWakeLiftBo.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLiftBo),
     wakeLiftCoreRadiusBo: clampNumber(els.flameAoe3dWakeLiftCoreRadiusBo && els.flameAoe3dWakeLiftCoreRadiusBo.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLiftCoreRadiusBo),
     wakeStretchStrength: clampNumber(els.flameAoe3dWakeStretchStrength && els.flameAoe3dWakeStretchStrength.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeStretchStrength),
@@ -351,6 +351,7 @@ function createWakeElasticShellGeometry({
   geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
   geometry.setAttribute("aWakeTail", new THREE.Float32BufferAttribute(wakeTail, 1));
   geometry.setIndex(indices);
+  geometry.userData.wakeShell = Object.freeze({ radialSegments: segments, heightSegments: rings });
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   return geometry;
@@ -1051,7 +1052,7 @@ export function createFlameAoe3dPreview({
     wakeMesh = new THREE.Mesh(
       createWakeElasticShellGeometry({
         baseRadius: bo * Math.max(0.5, wakeConfig.wakeRadiusBo),
-        liftOffset: bo * wakeConfig.wakeLiftBo,
+        liftOffset: bo * (wakeConfig.wakeLiftBo + wakeConfig.wakeStretchStrength),
         liftRadius: bo * wakeConfig.wakeLiftCoreRadiusBo,
         padding: bo * wakeConfig.wakeEnvelopeBlendBo,
         blendSoftness: bo * wakeConfig.wakeOrbHugRadiusBo,
