@@ -3527,11 +3527,37 @@
       }
       const presetToken = buildCacheBustToken();
       const indexToken = `${presetToken}i`;
+      const stageToken = `${presetToken}s`;
       const targets = [
+        {
+          path: ["src", "runtime-effects", "flame-aoe-3d.js"],
+          replacements: [
+            { pattern: /(flame-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+          ],
+        },
         {
           path: ["src", "runtime-shell", "staging", "game-stage", "game-stage-depth3d.js"],
           replacements: [
             { pattern: /(flame-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+            { pattern: /(runtime-effects\/flame-aoe-3d\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "authored-three-stage-surface.js"],
+          replacements: [
+            { pattern: /(game-stage-depth3d\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "game-stage", "game-stage.js"],
+          replacements: [
+            { pattern: /(authored-three-stage-surface\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "orb-stage", "orb-stage.js"],
+          replacements: [
+            { pattern: /(authored-three-stage-surface\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
           ],
         },
         {
@@ -3550,6 +3576,29 @@
           path: ["src", "runtime", "receiver-bootstrap.js"],
           replacements: [
             { pattern: /(vfx\/presets\/index\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${indexToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "staging-shell", "create-staging-shell-runtime.js"],
+          replacements: [
+            { pattern: /(orb-stage\/orb-stage\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+            { pattern: /(orb-stage\/orb-stage-vfx-runtime\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+            { pattern: /(game-stage\/game-stage\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+            { pattern: /(moduleCacheBustV = ")[^"]+(")/g, value: `$1${stageToken}$2` },
+            { pattern: /(__orbisStagingShellRuntimeVersion = ")[^"]+(")/g, value: `$1${stageToken}$2` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "staging-shell", "staging-shell.js"],
+          replacements: [
+            { pattern: /(create-staging-shell-runtime\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+            { pattern: /(__orbisStagingShellEntryVersion = ")[^"]+(")/g, value: `$1${stageToken}$2` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "staging-shell", "staging-shell.html"],
+          replacements: [
+            { pattern: /(staging-shell\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
           ],
         },
         {
