@@ -1,4 +1,4 @@
-import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260518211000s";
+import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260518204109s";
 import { createGameStageRuntimeAdapter } from "./game-stage-runtime-adapter.js?v=20260517a";
 
 export function renderGameStage(root, {
