@@ -18,7 +18,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260519095516s";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260519113000s";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260517a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -1977,7 +1977,7 @@ function initShellReceiverVfxRuntime(shellContext) {
     playOrbTeleport3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playOrbTeleport3d", payload, "active_stage_orb_teleport3d_missing"),
     playBubbleShield3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playBubbleShield3d", payload, "active_stage_bubble_shield3d_missing"),
     playShockwave3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playShockwave3d", payload, "active_stage_shockwave3d_missing"),
-    playFlameAoe3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playFlameAoe3d", payload, "active_stage_flame_aoe3d_missing"),
+    playFlameAoe3dRuntime: (payload = {}) => callShellStageMethodOnAdapters(shellContext, "playFlameAoe3d", payload, "stage_flame_aoe3d_missing"),
     requestCameraTravel: (payload = {}) => {
       const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
       return cameraRuntime && typeof cameraRuntime.requestTravel === "function"
@@ -2272,6 +2272,30 @@ function callActiveShellStageMethod(shellContext, methodName, payload = {}, skip
   const target = getActiveShellStageMethod(shellContext, methodName);
   return target
     ? target.method.call(target.activeAdapter, payload)
+    : { handled: false, skipped };
+}
+
+function callShellStageMethodOnAdapters(shellContext, methodName, payload = {}, skipped = "stage_method_missing") {
+  const adapters = getShellStageAdapters(shellContext);
+  const results = [];
+  const seen = new Set();
+  for (const adapter of adapters) {
+    if (!adapter || seen.has(adapter)) continue;
+    seen.add(adapter);
+    const method = methodName ? adapter[methodName] : null;
+    if (typeof method !== "function") continue;
+    results.push(method.call(adapter, payload));
+  }
+  const handledResults = results.filter((result) => result && result.handled);
+  if (handledResults.length > 0) {
+    return {
+      ...handledResults[0],
+      handled: true,
+      stageResults: results,
+    };
+  }
+  return results.length
+    ? { ...(results[0] || {}), handled: false, stageResults: results }
     : { handled: false, skipped };
 }
 

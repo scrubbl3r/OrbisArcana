@@ -163,13 +163,14 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function playOrbStageFlameAoeFallback() {
+  function playOrbStageFlameAoeFallback(payload = {}) {
     if (typeof playFlameAoe3dRuntime === "function") {
-      const result = playFlameAoe3dRuntime(
-        (vfxDefaults && vfxDefaults.flame3d && typeof vfxDefaults.flame3d === "object")
+      const result = playFlameAoe3dRuntime({
+        ...(vfxDefaults && vfxDefaults.flame3d && typeof vfxDefaults.flame3d === "object"
           ? vfxDefaults.flame3d
-          : Object.create(null)
-      );
+          : Object.create(null)),
+        ...(payload && typeof payload === "object" ? payload : {}),
+      });
       if (result && result.handled) return result;
     }
     return { handled: false };
@@ -256,12 +257,12 @@ export function initOrbStageReceiverVfxRuntime({
       if (dispatched && dispatched.handled) return dispatched;
       return playOrbStageElectricAoeFallback();
     },
-    playFlameAoe() {
+    playFlameAoe(payload = {}) {
       const dispatched = dispatchRuntimeEffect({
         targetKind: "spell",
         targetId: "aoe_flame",
         runtime: {
-          playFlameAoe: () => playOrbStageFlameAoeFallback(),
+          playFlameAoe: (nextPayload = {}) => playOrbStageFlameAoeFallback(nextPayload),
           playElectricAoe: () => playOrbStageElectricAoeFallback(),
           playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
           triggerShockwave: () => triggerOrbStageShockwaveFallback(),
@@ -269,7 +270,7 @@ export function initOrbStageReceiverVfxRuntime({
         },
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return playOrbStageFlameAoeFallback();
+      return playOrbStageFlameAoeFallback(payload);
     },
     activateBubbleShield({ durationMs } = {}) {
       const dispatched = dispatchRuntimeEffect({
