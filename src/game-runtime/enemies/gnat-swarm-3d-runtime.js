@@ -25,6 +25,9 @@ const GNAT_COLOR_NEUTRAL = new THREE.Color(0x9dff8a);
 const GNAT_COLOR_ALERTED = new THREE.Color(0xff4b4b);
 const GNAT_COLOR_SIGNAL = new THREE.Color(0xffe45e);
 const GNAT_COLOR_BURNING = new THREE.Color(0xff7a18);
+const GNAT_COLOR_DEAD = new THREE.Color(0x777777);
+const GNAT_DEATH_FADE_SEC = 0.25;
+const GNAT_DEATH_LINGER_SEC = 0.85;
 const ZERO_SCALE_VEC = new THREE.Vector3(0, 0, 0);
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
@@ -538,6 +541,24 @@ export function createGnatSwarm3dRuntime({
     return true;
   }
 
+  function startDeath(state, nowSec = 0) {
+    if (!state || state.deathStartedSec) return false;
+    state.mode = "dead";
+    state.orbTarget = null;
+    state.alertStrength = 0;
+    state.signalFlashUntil = 0;
+    state.route = [];
+    state.routeIndex = 0;
+    state.isDwelling = false;
+    state.target = state.position;
+    state.deathStartedSec = nowSec;
+    state.deathHideSec = nowSec + GNAT_DEATH_LINGER_SEC;
+    state.stunBounceRemaining = 1;
+    state.velocity.xW *= 0.42;
+    state.velocity.yW = Math.max(state.velocity.yW * 0.16, state.stunGravityPxPerSec2 * 0.035);
+    return true;
+  }
+
   function normalizeDamageEffect(effect = {}) {
     const atMs = Number.isFinite(Number(effect.atMs))
       ? Number(effect.atMs)
@@ -585,12 +606,15 @@ export function createGnatSwarm3dRuntime({
     if (damage.damageType === DAMAGE_TYPE_FIRE && damage.burning) {
       applyBurningStatusToEntity(state, damage.burning, nowSec);
     }
+    if (state.hp <= 0) startDeath(state, nowSec);
     return true;
   }
 
   function applyPeriodicFireDamage(state, nowSec = 0, dtSec = 0) {
     if (!state || state.hp <= 0) return 0;
-    return tickBurningStatusOnEntity(state, nowSec, dtSec);
+    const damage = tickBurningStatusOnEntity(state, nowSec, dtSec);
+    if (state.hp <= 0) startDeath(state, nowSec);
+    return damage;
   }
 
   function releaseOrbTargets({ atMs = null } = {}) {
@@ -1098,6 +1122,69 @@ export function createGnatSwarm3dRuntime({
   const positionVec = new THREE.Vector3();
   const pathDistanceCache = new Map();
 
+  function hideStateInstance(i = 0) {
+    positionVec.set(0, 0, -100000);
+    quat.identity();
+    matrix.compose(positionVec, quat, ZERO_SCALE_VEC);
+    mesh.setMatrixAt(i, matrix);
+  }
+
+  function updateDeathInstance(state, i = 0, nowSec = 0, dtSec = 0) {
+    if (!state || !mesh) return;
+    if (!state.deathStartedSec) startDeath(state, nowSec);
+    if (nowSec >= (Number(state.deathHideSec) || 0)) {
+      hideStateInstance(i);
+      return;
+    }
+    state.velocity.xW *= Math.max(0, 1 - (dtSec * 1.8));
+    state.velocity.yW += state.stunGravityPxPerSec2 * dtSec;
+    state.velocity.yW *= Math.max(0, 1 - (dtSec * 0.18));
+    const speed = Math.hypot(state.velocity.xW, state.velocity.yW);
+    const maxSpeed = Math.max(state.speedPx * 0.35, state.stunGravityPxPerSec2 * 0.75);
+    if (speed > maxSpeed) {
+      state.velocity.xW *= maxSpeed / speed;
+      state.velocity.yW *= maxSpeed / speed;
+    }
+    const next = {
+      xW: state.position.xW + state.velocity.xW * dtSec,
+      yW: state.position.yW + state.velocity.yW * dtSec,
+    };
+    if (physicsPointInBounds(next, bounds)) {
+      state.position = clampToBox(next, bounds.box);
+      state.lastValidPosition = copyPoint(state.position);
+    } else {
+      state.position = state.lastValidPosition
+        ? copyPoint(state.lastValidPosition)
+        : clampToBox(state.position, bounds.box);
+      state.velocity.xW *= 0.18;
+      if (state.stunBounceRemaining > 0) {
+        const bounceSpeed = Math.abs(state.velocity.yW) * 0.16;
+        const bounceAngle = randomUnit() * GNAT_STUN_BOUNCE_ANGLE_RAD;
+        state.velocity.xW += Math.sin(bounceAngle) * bounceSpeed;
+        state.velocity.yW = -Math.cos(bounceAngle) * bounceSpeed;
+        state.stunBounceRemaining -= 1;
+      } else {
+        state.velocity.yW = 0;
+      }
+    }
+    state.spin.x += state.spinSpeed.x * dtSec;
+    state.spin.y += state.spinSpeed.y * dtSec;
+    state.spin.z += state.spinSpeed.z * dtSec;
+    const runtimePosition = toRuntimePosition({
+      xW: state.position.xW,
+      yW: state.position.yW,
+      z: state.zDepthPx,
+    });
+    positionVec.set(runtimePosition.x, runtimePosition.y, runtimePosition.z);
+    quat.setFromEuler(state.spin);
+    scaleVec.set(state.scale, state.scale * 0.55, state.scale);
+    matrix.compose(positionVec, quat, scaleVec);
+    mesh.setMatrixAt(i, matrix);
+    const fadeT = Math.max(0, Math.min(1, (nowSec - state.deathStartedSec) / GNAT_DEATH_FADE_SEC));
+    GNAT_COLOR_BURNING.copy(GNAT_COLOR_NEUTRAL).lerp(GNAT_COLOR_DEAD, fadeT);
+    mesh.setColorAt(i, GNAT_COLOR_BURNING);
+  }
+
   function update(nowMs = performance.now(), dtSec = 0.016, {
     orbWorldPosition = null,
     orbRuntimePosition = null,
@@ -1138,11 +1225,12 @@ export function createGnatSwarm3dRuntime({
     for (let i = 0; i < states.length; i += 1) {
       const state = states[i];
       applyPeriodicFireDamage(state, nowSec, dtSec);
-      if (!state || state.hp <= 0) {
-        positionVec.set(0, 0, -100000);
-        quat.identity();
-        matrix.compose(positionVec, quat, ZERO_SCALE_VEC);
-        mesh.setMatrixAt(i, matrix);
+      if (!state) {
+        hideStateInstance(i);
+        continue;
+      }
+      if (state.hp <= 0) {
+        updateDeathInstance(state, i, nowSec, dtSec);
         continue;
       }
       if (state.mode === "stunned") {

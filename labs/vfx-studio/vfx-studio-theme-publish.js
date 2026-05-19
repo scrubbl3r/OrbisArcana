@@ -605,7 +605,7 @@ export function buildFlameAoe3dBehaviorModule(params) {
     `  visualProfile: ${JSON.stringify(String(p.visualProfile || "spellfire"))},`,
     `  hitRadiusBo: ${toNum(p.hitRadiusBo, 0.95).toFixed(2)},`,
     `  wakeReachScale: ${toNum(p.wakeReachScale, 1).toFixed(2)},`,
-    `  igniteDamage: ${toNum(p.igniteDamage, 0.1).toFixed(2)},`,
+    `  igniteDamage: ${toNum(p.igniteDamage, 1).toFixed(2)},`,
     `  igniteBurnDps: ${toNum(p.igniteBurnDps, 0.35).toFixed(2)},`,
     `  igniteDurationMs: ${Math.round(toNum(p.igniteDurationMs, 3200))},`,
     `  roastDps: ${toNum(p.roastDps, 1.25).toFixed(2)},`,
