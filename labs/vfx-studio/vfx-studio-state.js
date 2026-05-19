@@ -19,6 +19,22 @@ export function createDraftStore() {
   return createLabProfileStore();
 }
 
+const FLAME_AOE_3D_LEGACY_HIT_RADIUS_BO_MAX = 1.5;
+const FLAME_AOE_3D_DEFAULT_HIT_RADIUS_BO = 4.5;
+
+function migrateFlameAoe3dBuiltinSettings({ resolvedValue, resolvedBaseEffect, settingsByBaseEffect }) {
+  if (String(resolvedBaseEffect || "") !== "flame-aoe-3d") return;
+  if (String(resolvedValue || "").startsWith("custom:")) return;
+  const settings = settingsByBaseEffect && (
+    settingsByBaseEffect["flame-aoe-3d"]
+    || settingsByBaseEffect[resolvedBaseEffect]
+  );
+  if (!settings || typeof settings !== "object") return;
+  const hitRadiusBo = Number(settings.hitRadiusBo);
+  if (!Number.isFinite(hitRadiusBo) || hitRadiusBo >= FLAME_AOE_3D_LEGACY_HIT_RADIUS_BO_MAX) return;
+  settings.hitRadiusBo = FLAME_AOE_3D_DEFAULT_HIT_RADIUS_BO;
+}
+
 export function selectedEffectOption(effectSelect) {
   return selectedSelectOption(effectSelect);
 }
@@ -56,6 +72,11 @@ export function loadDraftStore(storageKey, draftStore) {
       const settingsByBaseEffect = profile.settingsByBaseEffect && typeof profile.settingsByBaseEffect === "object"
         ? { ...profile.settingsByBaseEffect }
         : {};
+      migrateFlameAoe3dBuiltinSettings({
+        resolvedValue,
+        resolvedBaseEffect,
+        settingsByBaseEffect,
+      });
       if (lifecycleLike && settingsByBaseEffect["orb-template"] && !settingsByBaseEffect["orb-lifecycle"]) {
         const prev = settingsByBaseEffect["orb-template"];
         settingsByBaseEffect["orb-lifecycle"] = {
