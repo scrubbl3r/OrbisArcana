@@ -2531,7 +2531,7 @@
           <div class="paramFieldRows">
             <div class="paramFieldRow">
               <label for="flameAoe3dHitRadiusBo">Hit radius BO</label>
-              <input id="flameAoe3dHitRadiusBo" class="paramFieldInput" type="number" min="0.05" max="8" value="0.95" step="0.05" />
+              <input id="flameAoe3dHitRadiusBo" class="paramFieldInput" type="number" min="0.05" max="8" value="1.5" step="0.05" />
               <button class="toolBtn" type="button" disabled>Apply</button>
             </div>
             <div class="paramFieldRow">
@@ -2689,7 +2689,7 @@
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260518a"),
       import("./vfx-studio-surfaces.js?v=20260519102000"),
-      import("./vfx-studio-theme-publish.js?v=20260519110500"),
+      import("./vfx-studio-theme-publish.js?v=20260519120500"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2698,7 +2698,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260519110500";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260519120500";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260517a";
@@ -2730,7 +2730,7 @@
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260519095516i";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
-    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260519110500";
+    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260519120500";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";

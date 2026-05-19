@@ -59,7 +59,7 @@ import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.j
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260519095516";
-import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260519110500";
+import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260519120500";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
 import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517p";
@@ -905,46 +905,55 @@ export function createGameStageDepth3dLayer({
       return result || { handled: false };
     },
     playFlameAoe3d(payload = {}) {
-      if (disposed || !orb3dActorRuntime.hasModel()) {
+      if (disposed) {
         return { handled: false, skipped: "flame_aoe3d_runtime_missing" };
       }
       const flamePayload = payload && typeof payload === "object" ? payload : {};
-      const result = flameAoe3dRuntime.play(flamePayload);
-      if (result && result.handled) {
-        const visualConfig = { ...FLAME_AOE_3D_PRESET_DEFAULT, ...flamePayload };
-        const behaviorConfig = {
-          ...FLAME_AOE_BEHAVIOR_DEFAULT,
-          ...(flamePayload.behavior && typeof flamePayload.behavior === "object" ? flamePayload.behavior : {}),
-        };
-        if (behaviorConfig.enabled !== false && currentOrbWorldPosition) {
-          const hitRadiusBo = Math.max(0.05, Number(behaviorConfig.hitRadiusBo) || Number(FLAME_AOE_BEHAVIOR_DEFAULT.hitRadiusBo) || 0.95);
-          const wakeHeightBo = Math.max(
-            hitRadiusBo,
-            (Number(visualConfig.wakeLiftBo) || 0)
-              + (Number(visualConfig.wakeLiftCoreRadiusBo) || 0)
-              + (Number(visualConfig.wakeStretchStrength) || 0)
-          ) * Math.max(0, Number(behaviorConfig.wakeReachScale) || 0);
-          const damageResult = gnatSwarm3dRuntime.applyCombatEffect({
-            kind: COMBAT_EFFECT_DAMAGE,
-            sourceEntityId: COMBAT_ENTITY_ORB,
-            targetEntityId: "enemy:gnat-swarm",
-            centerWorld: currentOrbWorldPosition,
-            radiusBo: hitRadiusBo,
-            forwardRadiusBo: Math.max(hitRadiusBo, wakeHeightBo),
-            axisWorld: { xW: 0, yW: -1 },
-            amount: Math.max(0, Number(behaviorConfig.igniteDamage) || 0),
-            damageType: DAMAGE_TYPE_FIRE,
-            visualProfile: String(behaviorConfig.visualProfile || "spellfire"),
-            burnDps: Math.max(0, Number(behaviorConfig.igniteBurnDps) || 0),
-            burnDurationMs: Math.max(0, Number(behaviorConfig.igniteDurationMs) || 0),
-            roastDps: Math.max(0, Number(behaviorConfig.roastDps) || 0),
-            roastDurationMs: Math.max(50, Number(flamePayload.durationMs || visualConfig.durationMs) || 1000),
-            tickMs: Math.max(50, Number(behaviorConfig.roastTickMs) || 250),
-            atMs: performance.now(),
-            tags: ["spell", "flame-aoe"],
-          });
-          root.dataset.enemy3dLastFlameAoeDamageCount = String(damageResult && damageResult.affected || 0);
-        }
+      const hasOrbModel = orb3dActorRuntime.hasModel();
+      const result = hasOrbModel
+        ? flameAoe3dRuntime.play(flamePayload)
+        : { handled: false, skipped: "flame_aoe3d_model_missing" };
+      root.dataset.enemy3dLastFlameAoeStageCallAt = String(Math.round(performance.now()));
+      const visualConfig = { ...FLAME_AOE_3D_PRESET_DEFAULT, ...flamePayload };
+      const behaviorConfig = {
+        ...FLAME_AOE_BEHAVIOR_DEFAULT,
+        ...(flamePayload.behavior && typeof flamePayload.behavior === "object" ? flamePayload.behavior : {}),
+      };
+      if (behaviorConfig.enabled !== false && currentOrbWorldPosition) {
+        const hitRadiusBo = Math.max(0.05, Number(behaviorConfig.hitRadiusBo) || Number(FLAME_AOE_BEHAVIOR_DEFAULT.hitRadiusBo) || 1.5);
+        const wakeHeightBo = Math.max(
+          hitRadiusBo,
+          (Number(visualConfig.wakeLiftBo) || 0)
+            + (Number(visualConfig.wakeLiftCoreRadiusBo) || 0)
+            + (Number(visualConfig.wakeStretchStrength) || 0)
+        ) * Math.max(0, Number(behaviorConfig.wakeReachScale) || 0);
+        const damageResult = gnatSwarm3dRuntime.applyCombatEffect({
+          kind: COMBAT_EFFECT_DAMAGE,
+          sourceEntityId: COMBAT_ENTITY_ORB,
+          targetEntityId: "enemy:gnat-swarm",
+          centerWorld: currentOrbWorldPosition,
+          radiusBo: hitRadiusBo,
+          forwardRadiusBo: Math.max(hitRadiusBo, wakeHeightBo),
+          axisWorld: { xW: 0, yW: -1 },
+          amount: Math.max(0, Number(behaviorConfig.igniteDamage) || 0),
+          damageType: DAMAGE_TYPE_FIRE,
+          visualProfile: String(behaviorConfig.visualProfile || "spellfire"),
+          burnDps: Math.max(0, Number(behaviorConfig.igniteBurnDps) || 0),
+          burnDurationMs: Math.max(0, Number(behaviorConfig.igniteDurationMs) || 0),
+          roastDps: Math.max(0, Number(behaviorConfig.roastDps) || 0),
+          roastDurationMs: Math.max(50, Number(flamePayload.durationMs || visualConfig.durationMs) || 1000),
+          tickMs: Math.max(50, Number(behaviorConfig.roastTickMs) || 250),
+          atMs: performance.now(),
+          tags: ["spell", "flame-aoe"],
+        });
+        root.dataset.enemy3dLastFlameAoeDamageCount = String(damageResult && damageResult.affected || 0);
+        root.dataset.enemy3dLastFlameAoeRadiusBo = String(hitRadiusBo.toFixed(2));
+        root.dataset.enemy3dLastFlameAoeForwardRadiusBo = String(Math.max(hitRadiusBo, wakeHeightBo).toFixed(2));
+      } else {
+        root.dataset.enemy3dLastFlameAoeDamageCount = "0";
+        root.dataset.enemy3dLastFlameAoeSkipped = currentOrbWorldPosition ? "disabled" : "missing_orb_world_position";
+      }
+      if ((result && result.handled) || currentOrbWorldPosition) {
         renderLoop.scheduleAnimation();
         renderLoop.renderFrame(renderLoop.getLastFrame() || {});
       }
