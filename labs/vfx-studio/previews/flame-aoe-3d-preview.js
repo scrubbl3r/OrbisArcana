@@ -44,8 +44,8 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeLiftBo: 1.1,
   wakeLiftCoreRadiusBo: 0.25,
   wakeStretchStrength: 1.35,
-  wakeOrbHugRadiusBo: 0.56,
-  wakeEnvelopeBlendBo: 0.34,
+  wakeOrbHugRadiusBo: 0.22,
+  wakeEnvelopeBlendBo: 0.06,
   wakeDisplaceEnabled: 1,
   wakeDisplaceBo: 0.12,
   wakeDisplaceScale: 1.8,
@@ -176,15 +176,15 @@ function readFlameAuraConfig(els = {}) {
 function readFlameWakeConfig(els = {}) {
   return Object.freeze({
     wakeLengthBo: clampNumber(els.flameAoe3dWakeLengthBo && els.flameAoe3dWakeLengthBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLengthBo),
-    wakeRadiusBo: clampNumber(els.flameAoe3dWakeRadiusBo && els.flameAoe3dWakeRadiusBo.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeRadiusBo),
+    wakeRadiusBo: clampNumber(els.flameAoe3dWakeRadiusBo && els.flameAoe3dWakeRadiusBo.value, 0.5, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeRadiusBo),
     wakeSubdivisions: Math.round(clampNumber(els.flameAoe3dWakeSubdivisions && els.flameAoe3dWakeSubdivisions.value, 12, 192, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSubdivisions)),
     wakeLeanAmount: clampNumber(els.flameAoe3dWakeLeanAmount && els.flameAoe3dWakeLeanAmount.value, 0, 10, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanAmount),
     wakeLeanLag: clampNumber(els.flameAoe3dWakeLeanLag && els.flameAoe3dWakeLeanLag.value, 0.1, 30, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLeanLag),
     wakeLiftBo: clampNumber(els.flameAoe3dWakeLiftBo && els.flameAoe3dWakeLiftBo.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLiftBo),
     wakeLiftCoreRadiusBo: clampNumber(els.flameAoe3dWakeLiftCoreRadiusBo && els.flameAoe3dWakeLiftCoreRadiusBo.value, 0.02, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLiftCoreRadiusBo),
     wakeStretchStrength: clampNumber(els.flameAoe3dWakeStretchStrength && els.flameAoe3dWakeStretchStrength.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeStretchStrength),
-    wakeOrbHugRadiusBo: clampNumber(els.flameAoe3dWakeOrbHugRadiusBo && els.flameAoe3dWakeOrbHugRadiusBo.value, 0.2, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeOrbHugRadiusBo),
-    wakeEnvelopeBlendBo: clampNumber(els.flameAoe3dWakeEnvelopeBlendBo && els.flameAoe3dWakeEnvelopeBlendBo.value, 0.01, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeEnvelopeBlendBo),
+    wakeOrbHugRadiusBo: clampNumber(els.flameAoe3dWakeOrbHugRadiusBo && els.flameAoe3dWakeOrbHugRadiusBo.value, 0.01, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeOrbHugRadiusBo),
+    wakeEnvelopeBlendBo: clampNumber(els.flameAoe3dWakeEnvelopeBlendBo && els.flameAoe3dWakeEnvelopeBlendBo.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeEnvelopeBlendBo),
     wakeDisplaceEnabled: layerVisible(els.flameAoe3dWakeDisplaceVisibleBtn) ? 1 : 0,
     wakeDisplaceBo: clampNumber(els.flameAoe3dWakeDisplaceBo && els.flameAoe3dWakeDisplaceBo.value, 0, 0.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceBo),
     wakeDisplaceScale: clampNumber(els.flameAoe3dWakeDisplaceScale && els.flameAoe3dWakeDisplaceScale.value, 0.2, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeDisplaceScale),
@@ -286,8 +286,72 @@ function layerVisible(button) {
   return !button || button.getAttribute("aria-pressed") !== "false";
 }
 
-function createWakeElasticShellGeometry(radius, _length, radialSegments = 64, heightSegments = 32) {
-  const geometry = new THREE.SphereGeometry(radius, radialSegments, heightSegments);
+function smoothMaxNumber(a, b, radius) {
+  const k = Math.max(0.0001, Number(radius) || 0);
+  const h = Math.max(0, Math.min(1, 0.5 + (0.5 * (b - a)) / k));
+  return (a * (1 - h)) + (b * h) + (k * h * (1 - h));
+}
+
+function circleRadiusAtY(y, centerY, radius) {
+  const dy = y - centerY;
+  const disc = (radius * radius) - (dy * dy);
+  return disc > 0 ? Math.sqrt(disc) : 0;
+}
+
+function createWakeElasticShellGeometry({
+  baseRadius,
+  liftOffset,
+  liftRadius,
+  padding,
+  blendSoftness,
+  radialSegments = 64,
+  heightSegments = 32,
+} = {}) {
+  const baseR = Math.max(1, Number(baseRadius) || 1);
+  const liftY = Math.max(0, Number(liftOffset) || 0);
+  const liftR = Math.max(1, Number(liftRadius) || 1);
+  const shellPadding = Math.max(0, Number(padding) || 0);
+  const blend = Math.max(0.001, Number(blendSoftness) || 0.001);
+  const rings = Math.max(4, Math.round(heightSegments));
+  const segments = Math.max(8, Math.round(radialSegments));
+  const minY = Math.min(-baseR, liftY - liftR) - shellPadding;
+  const maxY = Math.max(baseR, liftY + liftR) + shellPadding;
+  const positions = [];
+  const uvs = [];
+  const wakeTail = [];
+  const indices = [];
+  for (let iy = 0; iy <= rings; iy += 1) {
+    const v = iy / rings;
+    const y = minY + ((maxY - minY) * v);
+    const baseCross = circleRadiusAtY(y, 0, baseR);
+    const liftCross = circleRadiusAtY(y, liftY, liftR);
+    const bridgeT = liftY > 0.0001 ? Math.max(0, Math.min(1, y / liftY)) : 1;
+    const bridge = y > 0 && y < liftY ? ((baseR * (1 - bridgeT)) + (liftR * bridgeT)) : 0;
+    const sphereEnvelope = baseCross <= 0 && liftCross <= 0 ? 0 : smoothMaxNumber(baseCross, liftCross, blend);
+    const envelope = bridge > 0 ? smoothMaxNumber(sphereEnvelope, bridge, blend) : sphereEnvelope;
+    const edgeFade = Math.sin(v * Math.PI);
+    const r = Math.max(0, envelope + (shellPadding * edgeFade));
+    for (let ix = 0; ix <= segments; ix += 1) {
+      const u = ix / segments;
+      const theta = u * Math.PI * 2;
+      positions.push(Math.cos(theta) * r, y, Math.sin(theta) * r);
+      uvs.push(u, v);
+      wakeTail.push(v);
+    }
+  }
+  for (let iy = 0; iy < rings; iy += 1) {
+    for (let ix = 0; ix < segments; ix += 1) {
+      const a = iy * (segments + 1) + ix;
+      const b = a + segments + 1;
+      indices.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setAttribute("aWakeTail", new THREE.Float32BufferAttribute(wakeTail, 1));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   return geometry;
 }
@@ -546,6 +610,7 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeEnvelopeBlend;
       uniform vec3 uWakeStretchDirection;
       uniform float uWakeStretchStrength;
+      attribute float aWakeTail;
 
       varying vec3 vWorldPos;
       varying vec3 vLocalPos;
@@ -602,18 +667,9 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       }
 
       void main() {
-        vec3 shellNormal = normalize(position + vec3(0.0, 0.0001, 0.0));
         vec3 stretchDirection = normalize(uWakeStretchDirection + vec3(0.0, 0.0001, 0.0));
-        float stretchDot = dot(shellNormal, stretchDirection);
-        float tail = clamp(stretchDot * 0.5 + 0.5, 0.0, 1.0);
-        vec3 coreCenter = uWakeCoreOffset * max(0.0, uWakeStretchStrength);
-        float orbDistance = max(0.0001, uWakeOrbRadius);
-        float coreDistance = sphereRayDistance(shellNormal, coreCenter, max(0.0001, uWakeCoreRadius));
-        float envelopeDistance = smoothMax(orbDistance, coreDistance, uWakeEnvelopeBlend);
-        float flameLift = max(0.0, dot(coreCenter, stretchDirection));
-        float topBias = pow(tail, 1.7) * flameLift * 0.18;
-        float bottomHug = (1.0 - smoothstep(0.0, 0.28, tail)) * flameLift * 0.08;
-        vec3 local = shellNormal * envelopeDistance + stretchDirection * (topBias + bottomHug);
+        float tail = clamp(aWakeTail, 0.0, 1.0);
+        vec3 local = position;
 
         vec2 radialPlane = local.xz;
         float radius = length(radialPlane);
@@ -993,12 +1049,15 @@ export function createFlameAoe3dPreview({
       wakeEnvelopeBlendPx: bo * wakeConfig.wakeEnvelopeBlendBo,
     });
     wakeMesh = new THREE.Mesh(
-      createWakeElasticShellGeometry(
-        bo * wakeConfig.wakeRadiusBo,
-        bo * wakeConfig.wakeLengthBo,
-        wakeConfig.wakeSubdivisions,
-        Math.max(8, Math.round(wakeConfig.wakeSubdivisions * 0.5))
-      ),
+      createWakeElasticShellGeometry({
+        baseRadius: bo * Math.max(0.5, wakeConfig.wakeRadiusBo),
+        liftOffset: bo * wakeConfig.wakeLiftBo,
+        liftRadius: bo * wakeConfig.wakeLiftCoreRadiusBo,
+        padding: bo * wakeConfig.wakeEnvelopeBlendBo,
+        blendSoftness: bo * wakeConfig.wakeOrbHugRadiusBo,
+        radialSegments: wakeConfig.wakeSubdivisions,
+        heightSegments: Math.max(8, Math.round(wakeConfig.wakeSubdivisions * 0.5)),
+      }),
       wakeMaterial
     );
     wakeMesh.position.set(0, 0, 0);
