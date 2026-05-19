@@ -12,8 +12,9 @@ export function createFireCardMaterial({
     transparent: true,
     depthWrite: false,
     depthTest: false,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
     side: THREE.DoubleSide,
+    toneMapped: false,
     uniforms: {
       uTime: { value: 0 },
       uNoiseScale: { value: Number(noiseScale) || 4.2 },
@@ -93,12 +94,13 @@ export function createFireCardMaterial({
         float noise = fbm(noiseUv * uNoiseScale);
         float tongues = smoothstep(0.28, 0.78, noise + y * 0.24);
         float core = smoothstep(0.52, 0.94, noise + (1.0 - abs(centered.x)) * 0.34 - y * 0.1);
-        float alpha = shapeAlpha * mix(0.34, 1.0, tongues);
+        float alpha = shapeAlpha * mix(0.48, 1.0, tongues);
         if (alpha <= 0.01) discard;
 
-        vec3 hot = vec3(1.0, 0.93, 0.42);
-        vec3 color = mix(vColor, hot, core * 0.72);
-        gl_FragColor = vec4(color * (0.78 + core * 0.95), alpha);
+        vec3 ember = vec3(1.0, 0.24, 0.04);
+        vec3 hot = vec3(1.0, 0.93, 0.35);
+        vec3 color = mix(mix(ember, vColor, 0.55), hot, core * 0.82);
+        gl_FragColor = vec4(color * (1.12 + core * 1.18), clamp(alpha * 1.28, 0.0, 0.94));
       }
     `,
   });

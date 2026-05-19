@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createFireCardMaterial } from "./fire-card-material.js";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260519a";
 import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
@@ -127,6 +127,7 @@ export function createFireCardSystem({
           materialDepthTest: !!(mesh.material && mesh.material.depthTest),
           materialDepthWrite: !!(mesh.material && mesh.material.depthWrite),
           materialBlending: mesh.material ? mesh.material.blending : null,
+          materialToneMapped: !!(mesh.material && mesh.material.toneMapped),
           hasInstanceColor: !!mesh.instanceColor,
           instanceColorCount: mesh.instanceColor && mesh.instanceColor.count || 0,
           matrixWorldNeedsUpdate: !!mesh.matrixWorldNeedsUpdate,
