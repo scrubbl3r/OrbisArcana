@@ -125,6 +125,7 @@ function runAuthoredFbBindScenario() {
   const eventBus = createCheckEventBus();
   const casts = captureCheckEvents(eventBus, EVT_VOICE_SPELL_CAST);
   const loaded = captureCheckEvents(eventBus, EVT_VOICE_SPELL_LOADED);
+  const actions = captureCheckEvents(eventBus, "rule_engine.action_executed");
   const resources = createStoredGlobeResources(1);
   const { nowRef, nowMs, advance } = createMutableNow(CHECK_MUTABLE_TIME_STARTS_V2.shakeDetonation);
   const dispatchSystem = createCheckDispatchSystem({
@@ -151,23 +152,16 @@ function runAuthoredFbBindScenario() {
     eventBus.emit("spell_window.spin_opened", { axis: "y", atMs: nowRef.value });
     advance(100);
     emitDetectedWord(eventBus, "pyro", nowRef.value);
-    advance(100);
-    emitDetectedWord(eventBus, "azerith", nowRef.value);
-
-    assertCheck(loaded.length === 1, `[${CHECK_TAG}] expected authored pyro chain to load FB once, got ${loaded.length}`);
-    assertCheck(String(loaded[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored pyro chain to load slot FB`);
-    assertCheck(String(loaded[0]?.castActionId || "") === "bubble_shield", `[${CHECK_TAG}] expected authored pyro chain to load bubble_shield into FB`);
-
-    // Let the spin-seeded windows expire; the later FB shake must still cast the loaded spell.
-    advance(2600);
-    eventBus.emit(EVT_INPUT_SHAKE_TRIGGERED, { code: "F", group: "FB", atMs: nowRef.value });
   });
   previewSystem.stop();
 
-  assertCheck(casts.length === 1, `[${CHECK_TAG}] expected one cast from authored FB shake, got ${casts.length}`);
-  assertCheck(String(casts[0]?.castActionId || "") === "bubble_shield", `[${CHECK_TAG}] expected authored FB shake to cast bubble_shield`);
-  assertCheck(String(casts[0]?.trigger || "") === "rule_engine_loaded_slot", `[${CHECK_TAG}] expected authored FB shake trigger to route via slot cast action`);
-  assertCheck(String(casts[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored FB shake cast to use FB slot`);
+  const flameActions = actions.filter((evt) =>
+    String(evt?.actionType || "").toLowerCase() === "event"
+    && String(evt?.actionId || "").toLowerCase() === "aoe_flame"
+  );
+  assertCheck(loaded.length === 0, `[${CHECK_TAG}] expected simplified pyro chain not to load FB, got ${loaded.length}`);
+  assertCheck(flameActions.length === 1, `[${CHECK_TAG}] expected one authored flame AOE action, got ${flameActions.length}`);
+  assertCheck(casts.length === 0, `[${CHECK_TAG}] expected simplified pyro chain not to wait for FB shake, got ${casts.length}`);
 }
 
 function main() {

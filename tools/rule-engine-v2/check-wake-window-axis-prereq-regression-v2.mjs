@@ -10,12 +10,25 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 import { createMutableNow } from "./check-time-v2.mjs";
-import { emitDetectedWord, emitSpinOpened } from "./check-wake-sequence-v2.mjs";
 import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.wakeWindowAxisPrereq;
-const PASS_MESSAGE = "spin-y pyro bind chain requires its authored intermediate window";
+const PASS_MESSAGE = "spin-y pyro flame chain requires its authored spin window";
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
+
+function emitDetectedWord(eventBus, wordId, atMs) {
+  eventBus.emit("voice.word_detected", {
+    word: { id: String(wordId || "").trim().toLowerCase() },
+    atMs: Number(atMs),
+  });
+}
+
+function emitSpinOpened(eventBus, { axis = CHECK_AXES_V2.y, atMs } = {}) {
+  eventBus.emit("spell_window.spin_opened", {
+    axis: String(axis || "").trim().toLowerCase(),
+    atMs: Number(atMs),
+  });
+}
 
 function main() {
   const eventBus = createCheckEventBus();
@@ -37,19 +50,14 @@ function main() {
   try {
     emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: nowRef.value });
 
-    // Missing authored intermediate word (`pyro`) means `azerith` must not bind.
-    advance(10);
-    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.azerith, nowRef.value);
-    const bindCountBefore = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind").length;
-    assertCheck(bindCountBefore === 0, `[${CHECK_TAG}] unexpected bind without pyro intermediate window`);
+    const triggerCountBefore = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "event").length;
+    assertCheck(triggerCountBefore === 0, `[${CHECK_TAG}] unexpected trigger before pyro`);
 
-    // With authored intermediate window opened, `azerith` should bind.
-    advance(10);
+    // With the authored spin window opened, `pyro` should cast flame AOE directly.
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, nowRef.value);
-    advance(10);
-    emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.azerith, nowRef.value);
-    const bindActions = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind");
-    assertCheck(bindActions.length === 1, `[${CHECK_TAG}] expected one bind after pyro -> azerith, got ${bindActions.length}`);
+    const triggerActions = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "event");
+    assertCheck(triggerActions.length === 1, `[${CHECK_TAG}] expected one trigger after spin -> pyro, got ${triggerActions.length}`);
+    assertCheck(String(triggerActions[0]?.actionId || "") === "aoe_flame", `[${CHECK_TAG}] expected flame AOE trigger`);
   } finally {
     system.stop();
   }

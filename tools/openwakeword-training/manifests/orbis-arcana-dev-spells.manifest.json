@@ -41,9 +41,9 @@
       "token": "leviton"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/modulon.onnx",
-      "label": "modulon",
-      "token": "modulon"
+      "path": "../../../assets/kws/openwakeword-models/modula.onnx",
+      "label": "modula",
+      "token": "modula"
     },
     {
       "path": "../../../assets/kws/openwakeword-models/electrum.onnx",

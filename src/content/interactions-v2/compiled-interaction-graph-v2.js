@@ -1,6 +1,6 @@
-import { INTERACTION_GRAPH_V2 } from "./interaction-graph-v2.js?v=20260518a";
-import { compileInteractionGraphV2ToCompiledInteractionGraphV2 } from "./compile-interaction-graph-v2.js?v=20260518a";
-import { validateInteractionGraphV2 } from "./validate-interaction-graph-v2.js?v=20260518a";
+import { INTERACTION_GRAPH_V2 } from "./interaction-graph-v2.js?v=20260519pyromodula";
+import { compileInteractionGraphV2ToCompiledInteractionGraphV2 } from "./compile-interaction-graph-v2.js?v=20260519pyromodula";
+import { validateInteractionGraphV2 } from "./validate-interaction-graph-v2.js?v=20260519pyromodula";
 
 const INTERACTION_GRAPH_V2_ERROR_PREFIX = "INTERACTION_GRAPH_V2 validation failed: ";
 const ERROR_DELIMITER = " | ";

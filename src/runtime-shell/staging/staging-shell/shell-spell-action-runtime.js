@@ -141,7 +141,7 @@ export function createShellSpellActionRuntime({
         atMs: Number(payload && payload.atMs) || performance.now(),
         durationMs: Number.isFinite(durationMs) ? durationMs : 1500,
         transitionMs: Number.isFinite(transitionMs) ? transitionMs : 0,
-        source: "modulon",
+        source: "modula",
       });
     },
     playFrostAoe: null,

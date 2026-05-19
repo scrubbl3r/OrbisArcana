@@ -349,8 +349,7 @@ export function bindStagingRuntimeEvents({
       ruleId === "shake_lr_cast" ||
       ruleId === "shake_fb_cast" ||
       ruleId === "spin_y_opens_pyro" ||
-      ruleId === "spin_y_pyro_opens_azerith" ||
-      ruleId === "spin_y_pyro_azerith_bind_fb"
+      ruleId === "spin_y_pyro_cast_flame_aoe"
     ) {
       kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
     }
@@ -364,10 +363,6 @@ export function bindStagingRuntimeEvents({
     }
     if (ruleId === "spin_y_opens_pyro") {
       const windowId = String(p.windowId || "").trim().toLowerCase() || "chain.spin_y_seed";
-      kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
-    }
-    if (ruleId === "spin_y_pyro_opens_azerith") {
-      const windowId = String(p.windowId || "").trim().toLowerCase() || "chain.spin_y_loaded";
       kwsBridge.pushLogLine(`TRACE wake_open:${windowId}`, "ok");
     }
   });

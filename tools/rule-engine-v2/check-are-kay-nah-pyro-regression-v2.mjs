@@ -10,7 +10,7 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 
 const CHECK_TAG = "are-kay-nah-pyro-regression:v2";
-const PASS_MESSAGE = "are kay nah opens azerith through authored SSOT rules for detectability smoke";
+const PASS_MESSAGE = "are kay nah no longer opens the simplified pyro flame chain";
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 
 function emitDetectedToken(eventBus, token, atMs) {
@@ -40,14 +40,12 @@ function main() {
   previewSystem.stop();
 
   const matchingWakeOpen = wakeWindows.filter((evt) =>
-    String(evt?.ruleId || "") === "wake_are_kay_nah"
-    && String(evt?.windowId || "") === "wake.are_kay_nah"
-    && Array.isArray(evt?.words)
-    && evt.words.includes(CHECK_SPELL_IDS_V2.azerith)
+    Array.isArray(evt?.words)
+    && (evt.words.includes(CHECK_SPELL_IDS_V2.pyro) || evt.words.includes(CHECK_SPELL_IDS_V2.azerith))
   );
   assertCheck(
-    matchingWakeOpen.length === 1,
-    `[${CHECK_TAG}] expected wake_are_kay_nah to open azerith once, got ${matchingWakeOpen.length}`
+    matchingWakeOpen.length === 0,
+    `[${CHECK_TAG}] expected are_kay_nah not to open pyro/azerith windows, got ${matchingWakeOpen.length}`
   );
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }

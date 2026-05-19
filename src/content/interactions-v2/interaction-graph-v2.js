@@ -11,7 +11,7 @@ export const INTERACTION_GRAPH_V2 = {
       { id: "root.are_kay_nah", words: ["are_kay_nah"], ttlMs: 1500 },
       { id: "root.echovar", words: ["echovar"], ttlMs: 1500 },
       { id: "root.sanctum", words: ["sanctum"], ttlMs: 1500 },
-      { id: "root.modulon", words: ["modulon"], ttlMs: 1500 },
+      { id: "root.modula", words: ["modula"], ttlMs: 1500 },
       { id: "root.salubrium", words: ["salubrium"], ttlMs: 1500 },
       { id: "root.leviton", words: ["leviton"], ttlMs: 1500 },
     ],
@@ -19,7 +19,6 @@ export const INTERACTION_GRAPH_V2 = {
   groups: {
     wake_main_words: ["electrum"],
     electrum_chain_words: ["rota"],
-    wake_are_kay_nah_words: ["pyro"],
   },
   rules: [
     {
@@ -51,8 +50,8 @@ export const INTERACTION_GRAPH_V2 = {
     },
     // ORB SPIN ABILITY WINDOW
     {
-      id: "orbis_modulon_orb_spin",
-      on: { word: "modulon" },
+      id: "orbis_modula_orb_spin",
+      on: { word: "modula" },
       trigger: { spell: "orb_spin" },
       grace: {},
     },
@@ -76,12 +75,6 @@ export const INTERACTION_GRAPH_V2 = {
       trigger: { spell: "aoe_electric" },
       grace: {},
     },
-    // ARE KAY NAH DETECTION WAKE
-    {
-      id: "wake_are_kay_nah",
-      on: { word: "are_kay_nah" },
-      open: { id: "wake.are_kay_nah", words: ["pyro"], ttlMs: 1500 },
-    },
     // PYRO AOE CHAIN
     {
       id: "spin_y_opens_pyro",
@@ -89,16 +82,11 @@ export const INTERACTION_GRAPH_V2 = {
       open: { id: "chain.spin_y_seed", words: ["pyro"], ttlMs: 1500 },
     },
     {
-      id: "spin_y_pyro_opens_azerith",
+      id: "spin_y_pyro_cast_flame_aoe",
       on: { word: "pyro" },
       requires: "chain.spin_y_seed",
-      open: { id: "chain.spin_y_loaded", words: ["azerith"], ttlMs: 1500 },
-    },
-    {
-      id: "spin_y_pyro_azerith_bind_fb",
-      on: { word: "azerith" },
-      requires: "chain.spin_y_loaded",
-      bind: { spell: "aoe_flame", slot: "FB" },
+      trigger: { spell: "aoe_flame" },
+      grace: {},
     },
     // SHOCKWAVE
     {

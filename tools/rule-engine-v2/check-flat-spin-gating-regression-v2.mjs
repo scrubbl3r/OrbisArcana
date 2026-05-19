@@ -12,11 +12,25 @@ import { CHECK_SPELL_IDS_V2 } from "./check-spell-constants-v2.mjs";
 import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
-import { emitDetectedWord, emitSpinOpened } from "./check-wake-sequence-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.flatSpinGating;
-const PASS_MESSAGE = "spin-gated pyro chain opens only after spin input";
+const PASS_MESSAGE = "spin-gated pyro chain casts flame AOE only after spin input";
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
+const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
+
+function emitDetectedWord(eventBus, wordId, atMs) {
+  eventBus.emit("voice.word_detected", {
+    word: { id: String(wordId || "").trim().toLowerCase() },
+    atMs: Number(atMs),
+  });
+}
+
+function emitSpinOpened(eventBus, { axis = CHECK_AXES_V2.y, atMs } = {}) {
+  eventBus.emit("spell_window.spin_opened", {
+    axis: String(axis || "").trim().toLowerCase(),
+    atMs: Number(atMs),
+  });
+}
 
 function openWindowIds(events) {
   return events.map((evt) => String(evt?.windowId || "").trim().toLowerCase()).filter(Boolean);
@@ -25,6 +39,7 @@ function openWindowIds(events) {
 function main() {
   const eventBus = createCheckEventBus();
   const wakeOpened = captureCheckEvents(eventBus, EVT_RULE_ENGINE_WAKE_WIN_OPENED);
+  const actions = captureCheckEvents(eventBus, EVT_RULE_ENGINE_ACTION_EXECUTED);
   const system = createRuleEnginePreviewSystem({
     eventBus,
     schema: {
@@ -40,15 +55,22 @@ function main() {
   try {
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, CHECK_FIXED_TIMES_V2.flatSpinOutside);
     assertCheck(
-      !openWindowIds(wakeOpened).includes("chain.spin_y_loaded"),
-      `[${CHECK_TAG}] unexpected pyro window open without spin gate`
+      !actions.some((evt) => String(evt?.actionType || "").toLowerCase() === "event"),
+      `[${CHECK_TAG}] unexpected pyro trigger without spin gate`
     );
 
     emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: CHECK_FIXED_TIMES_V2.flatSpinInside + 10 });
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, CHECK_FIXED_TIMES_V2.flatSpinInside + 20);
     assertCheck(
-      openWindowIds(wakeOpened).includes("chain.spin_y_loaded"),
-      `[${CHECK_TAG}] expected chain.spin_y_loaded to open after spin + pyro`
+      openWindowIds(wakeOpened).includes("chain.spin_y_seed"),
+      `[${CHECK_TAG}] expected chain.spin_y_seed to open after spin`
+    );
+    assertCheck(
+      actions.some((evt) =>
+        String(evt?.actionType || "").toLowerCase() === "event"
+        && String(evt?.actionId || "").toLowerCase() === "aoe_flame"
+      ),
+      `[${CHECK_TAG}] expected flame AOE trigger after spin + pyro`
     );
   } finally {
     system.stop();
