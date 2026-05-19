@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260518210752";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260518211500";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 
@@ -104,6 +104,39 @@ function circleRadiusAtY(y, centerY, radius) {
   return disc > 0 ? Math.sqrt(disc) : 0;
 }
 
+function resolveWakeLiftVector(liftOffset) {
+  if (liftOffset && typeof liftOffset === "object") {
+    const x = Number(liftOffset.x);
+    const y = Number(liftOffset.y);
+    const z = Number(liftOffset.z);
+    if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z)) {
+      return new THREE.Vector3(x, y, z);
+    }
+  }
+  return new THREE.Vector3(0, Math.max(0, Number(liftOffset) || 0), 0);
+}
+
+function resolveWakeAxisBasis(liftVector) {
+  const axis = liftVector && liftVector.lengthSq() > 0.0001
+    ? liftVector.clone().normalize()
+    : new THREE.Vector3(0, 1, 0);
+  const helper = Math.abs(axis.y) > 0.92
+    ? new THREE.Vector3(1, 0, 0)
+    : new THREE.Vector3(0, 1, 0);
+  const normal = new THREE.Vector3().crossVectors(helper, axis).normalize();
+  const binormal = new THREE.Vector3().crossVectors(axis, normal).normalize();
+  return { axis, normal, binormal };
+}
+
+function setWakeShellVertex(position, index, axis, normal, binormal, y, theta, radius) {
+  position.setXYZ(
+    index,
+    (axis.x * y) + (normal.x * Math.cos(theta) * radius) + (binormal.x * Math.sin(theta) * radius),
+    (axis.y * y) + (normal.y * Math.cos(theta) * radius) + (binormal.y * Math.sin(theta) * radius),
+    (axis.z * y) + (normal.z * Math.cos(theta) * radius) + (binormal.z * Math.sin(theta) * radius)
+  );
+}
+
 function createWakeElasticShellGeometry({
   baseRadius,
   liftOffset,
@@ -114,7 +147,9 @@ function createWakeElasticShellGeometry({
   heightSegments = 32,
 } = {}) {
   const baseR = Math.max(1, Number(baseRadius) || 1);
-  const liftY = Math.max(0, Number(liftOffset) || 0);
+  const liftVector = resolveWakeLiftVector(liftOffset);
+  const { axis, normal, binormal } = resolveWakeAxisBasis(liftVector);
+  const liftY = Math.max(0, liftVector.length());
   const liftR = Math.max(1, Number(liftRadius) || 1);
   const shellPadding = Math.max(0, Number(padding) || 0);
   const blend = Math.max(0.001, Number(blendSoftness) || 0.001);
@@ -140,7 +175,11 @@ function createWakeElasticShellGeometry({
     for (let ix = 0; ix <= segments; ix += 1) {
       const u = ix / segments;
       const theta = u * Math.PI * 2;
-      positions.push(Math.cos(theta) * r, y, Math.sin(theta) * r);
+      positions.push(
+        (axis.x * y) + (normal.x * Math.cos(theta) * r) + (binormal.x * Math.sin(theta) * r),
+        (axis.y * y) + (normal.y * Math.cos(theta) * r) + (binormal.y * Math.sin(theta) * r),
+        (axis.z * y) + (normal.z * Math.cos(theta) * r) + (binormal.z * Math.sin(theta) * r)
+      );
       uvs.push(u, v);
       wakeTail.push(v);
     }
@@ -175,7 +214,9 @@ function updateWakeElasticShellGeometry(geometry, {
   const tailAttr = geometry && geometry.getAttribute && geometry.getAttribute("aWakeTail");
   if (!meta || !position || !tailAttr) return;
   const baseR = Math.max(1, Number(baseRadius) || 1);
-  const liftY = Math.max(0, Number(liftOffset) || 0);
+  const liftVector = resolveWakeLiftVector(liftOffset);
+  const { axis, normal, binormal } = resolveWakeAxisBasis(liftVector);
+  const liftY = Math.max(0, liftVector.length());
   const liftR = Math.max(1, Number(liftRadius) || 1);
   const shellPadding = Math.max(0, Number(padding) || 0);
   const blend = Math.max(0.001, Number(blendSoftness) || 0.001);
@@ -198,7 +239,7 @@ function updateWakeElasticShellGeometry(geometry, {
       const index = iy * (segments + 1) + ix;
       const u = ix / segments;
       const theta = u * Math.PI * 2;
-      position.setXYZ(index, Math.cos(theta) * r, y, Math.sin(theta) * r);
+      setWakeShellVertex(position, index, axis, normal, binormal, y, theta, r);
       tailAttr.setX(index, v);
     }
   }
@@ -635,8 +676,6 @@ export function createFlameAoe3dRuntime({
   const liftCoreVelocity = new THREE.Vector3();
   const stretchDirection = new THREE.Vector3(0, 1, 0);
   const shaderMotion = new THREE.Vector3();
-  const wakeUp = new THREE.Vector3(0, 1, 0);
-  const wakeAlignment = new THREE.Quaternion();
 
   function measureTrace(name, fn) {
     if (typeof traceMeasure === "function") return traceMeasure(name, fn);
@@ -701,13 +740,12 @@ export function createFlameAoe3dRuntime({
     if (stretchDirection.lengthSq() < 0.0001) stretchDirection.set(0, 1, 0);
     stretchDirection.normalize();
     if (wakePivot) {
-      wakeAlignment.setFromUnitVectors(wakeUp, stretchDirection);
-      wakePivot.quaternion.copy(wakeAlignment);
+      wakePivot.quaternion.identity();
     }
     if (wakeMesh && wakeMesh.geometry) {
       updateWakeElasticShellGeometry(wakeMesh.geometry, {
         baseRadius: bo * Math.max(0.5, clampNumber(activeConfig && activeConfig.wakeRadiusBo, 0.5, 2, 0.5)),
-        liftOffset: liftCoreOffset.length(),
+        liftOffset: liftCoreOffset,
         liftRadius: bo * clampNumber(activeConfig && activeConfig.wakeLiftCoreRadiusBo, 0.02, 2, 0.25),
         padding: bo * clampNumber(activeConfig && activeConfig.wakeEnvelopeBlendBo, 0, 1, 0.06),
         blendSoftness: bo * clampNumber(activeConfig && activeConfig.wakeOrbHugRadiusBo, 0.01, 2, 0.22),
@@ -818,7 +856,7 @@ export function createFlameAoe3dRuntime({
       const wake = new THREE.Mesh(
         createWakeElasticShellGeometry({
           baseRadius: bo * Math.max(0.5, config.wakeRadiusBo),
-          liftOffset: bo * (config.wakeLiftBo + config.wakeStretchStrength),
+          liftOffset: new THREE.Vector3(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0),
           liftRadius: bo * config.wakeLiftCoreRadiusBo,
           padding: bo * config.wakeEnvelopeBlendBo,
           blendSoftness: bo * config.wakeOrbHugRadiusBo,
