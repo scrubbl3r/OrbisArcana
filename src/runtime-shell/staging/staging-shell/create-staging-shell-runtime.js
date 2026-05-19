@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260519193000";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260519200500";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
@@ -70,7 +70,7 @@ import {
   resolveStageCameraFollowMode,
   resolveStageCameraZoom,
 } from "../../../game-runtime/level/authored-level-camera.js?v=20260506a";
-import { createPerfTrace } from "../perf-trace.js?v=20260519193000";
+import { createPerfTrace } from "../perf-trace.js?v=20260519200500";
 import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
@@ -1548,6 +1548,33 @@ function startShellStageLoop(shellContext) {
       ? perfTrace.measure(name, fn)
       : (typeof fn === "function" ? fn() : undefined)
   );
+  function summarizeDepth3dBloomTrace(trace = null) {
+    if (!trace || typeof trace !== "object") return null;
+    const sceneObjectNames = Array.isArray(trace.sceneObjectNames) ? trace.sceneObjectNames : [];
+    return {
+      config: trace.config ? {
+        enabled: trace.config.enabled !== false,
+        strength: trace.config.strength,
+        radius: trace.config.radius,
+        threshold: trace.config.threshold,
+        pixelRatio: trace.config.pixelRatio,
+      } : null,
+      renderCalls: trace.renderCalls || 0,
+      resizeCalls: trace.resizeCalls || 0,
+      lastSize: trace.lastSize || null,
+      sceneChildren: trace.sceneChildren || 0,
+      sceneObjectCount: sceneObjectNames.length,
+      sceneObjectNames: sceneObjectNames.slice(0, 8),
+      artPlaneCount: trace.artPlane && Array.isArray(trace.artPlane.shapes) ? trace.artPlane.shapes.length : 0,
+      camera: trace.camera ? {
+        fov: trace.camera.fov,
+        near: trace.camera.near,
+        far: trace.camera.far,
+        aspect: trace.camera.aspect,
+        position: trace.camera.position || null,
+      } : null,
+    };
+  }
   const stageLoopTrace = {
     frameCount: 0,
     startedAtMs: performance.now(),
@@ -1665,16 +1692,7 @@ function startShellStageLoop(shellContext) {
           zoom: Number(metrics.zoom) || 1,
           camera: cameraTrace,
           depth3dModuleVersion: rootWindow && rootWindow.__orbisDepth3dModuleVersion || "",
-          depth3dBloom: bloomTrace ? {
-            config: bloomTrace.config,
-            renderCalls: bloomTrace.renderCalls,
-            resizeCalls: bloomTrace.resizeCalls,
-            lastSize: bloomTrace.lastSize,
-            sceneChildren: bloomTrace.sceneChildren,
-            sceneObjectNames: bloomTrace.sceneObjectNames,
-            artPlane: bloomTrace.artPlane || null,
-            camera: bloomTrace.camera,
-          } : null,
+          depth3dBloom: summarizeDepth3dBloomTrace(bloomTrace),
         });
       }
     },

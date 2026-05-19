@@ -1,4 +1,4 @@
-export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260517-orb-shader-mixer-trace-b";
+export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260519-trace-hygiene-c";
 
 export function publishDepth3dModuleVersion(version = GAME_STAGE_DEPTH3D_TRACE_VERSION) {
   globalThis.__orbisDepth3dModuleVersion = String(version || "");
@@ -84,7 +84,7 @@ export function updateDepth3dBloomTraceScene(trace, scene = null, camera = null)
   const names = [];
   if (scene && typeof scene.traverse === "function") {
     scene.traverse((child) => {
-      if (names.length >= 96) return;
+      if (names.length >= 16) return;
       const name = String(child && child.name || "").trim();
       if (name) names.push(name);
     });

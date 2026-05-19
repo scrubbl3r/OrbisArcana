@@ -162,11 +162,11 @@ export function createPerfTrace({
     if (!enabled || !latestFrame) return;
     const duration = nowMs() - latestFrame.startedAtMs;
     recordMetric(metrics, "frame.total", duration, slowFrameMs);
-    latestFrame = {
+    latestFrame = sanitizeTraceValue({
       ...latestFrame,
-      ...extra,
+      ...(extra && typeof extra === "object" ? extra : {}),
       totalMs: round(duration),
-    };
+    });
     if (duration >= slowFrameMs) {
       pushEvent({
         kind: "slow-frame",
