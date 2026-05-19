@@ -58,7 +58,7 @@ import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shi
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260518b";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260518c";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260518d";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
 import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517p";

@@ -70,6 +70,19 @@ export async function saveTextToConnectedProjectPath({ projectRootDirHandle, pat
   return true;
 }
 
+export async function readTextFromConnectedProjectPath({ projectRootDirHandle, pathParts }) {
+  if (!projectRootDirHandle || !Array.isArray(pathParts) || !pathParts.length) return "";
+  let dir = projectRootDirHandle;
+  for (let i = 0; i < pathParts.length - 1; i += 1) {
+    dir = await dir.getDirectoryHandle(String(pathParts[i] || ""));
+  }
+  const fileName = String(pathParts[pathParts.length - 1] || "");
+  if (!fileName) return "";
+  const fileHandle = await dir.getFileHandle(fileName);
+  const file = await fileHandle.getFile();
+  return file.text();
+}
+
 export async function saveTextToProjectFile(filename, text) {
   if (!window.showSaveFilePicker) {
     return false;

@@ -16,6 +16,7 @@ export async function publishLabPreset({
   downloadTextFile,
   draftPathParts,
   describePublishSuccess,
+  afterLivePublish,
 } = {}) {
   return publishLabProfile({
     built,
@@ -30,6 +31,7 @@ export async function publishLabPreset({
     downloadTextFile,
     draftPathParts,
     describeLivePublishSuccess: describePublishSuccess,
+    afterLivePublish,
     draftLabel: "draft",
     fileWriteMessage: "Preset written.",
   });

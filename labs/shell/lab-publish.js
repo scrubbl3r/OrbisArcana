@@ -11,6 +11,7 @@ export async function publishLabProfile({
   downloadTextFile,
   draftPathParts,
   describeLivePublishSuccess,
+  afterLivePublish,
   draftLabel = "draft",
   fileWriteMessage = "Profile written.",
 } = {}) {
@@ -41,6 +42,14 @@ export async function publishLabProfile({
             if (ok) publishedPaths.push(secondaryTarget.path);
           }
           if (ok) {
+            if (typeof afterLivePublish === "function") {
+              const afterResult = await afterLivePublish({ built, contract, publishedPaths });
+              if (afterResult && Array.isArray(afterResult.publishedPaths)) {
+                afterResult.publishedPaths.forEach((path) => {
+                  if (path) publishedPaths.push(path);
+                });
+              }
+            }
             return {
               ok: true,
               kind: "live",

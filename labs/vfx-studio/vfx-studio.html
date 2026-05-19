@@ -2626,6 +2626,7 @@
         buildLivePresetModuleForBaseEffect,
         connectProjectFolder: connectProjectFolderHelper,
         downloadTextFile,
+        readTextFromConnectedProjectPath: readTextFromConnectedProjectPathHelper,
         refreshProjectConnectUi: refreshProjectConnectUiHelper,
         saveTextToConnectedProjectDrafts: saveTextToConnectedProjectDraftsHelper,
         saveTextToConnectedProjectPath: saveTextToConnectedProjectPathHelper,
@@ -2639,9 +2640,9 @@
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
-      import("./vfx-studio-publish-orchestrator.js?v=20260425d"),
+      import("./vfx-studio-publish-orchestrator.js?v=20260518a"),
       import("./vfx-studio-surfaces.js?v=20260517a"),
-      import("./vfx-studio-theme-publish.js?v=20260518a"),
+      import("./vfx-studio-theme-publish.js?v=20260518b"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2669,7 +2670,7 @@
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
-    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260518c";
+    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260518d";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ELECTRIC_AOE_PRESET_DEFAULT,
@@ -2680,7 +2681,7 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260518a";
+    } from "../../src/vfx/presets/index.js?v=20260518b";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
@@ -3511,6 +3512,69 @@
       });
     }
 
+    function buildCacheBustToken(){
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    }
+
+    async function updateFlameAoe3dPublishCacheBusts({ built } = {}){
+      if (String(built && built.payload && built.payload.baseEffect || "") !== "flame-aoe-3d") {
+        return null;
+      }
+      if (!studioProjectIo || typeof studioProjectIo.readPath !== "function" || typeof studioProjectIo.savePath !== "function") {
+        return null;
+      }
+      const presetToken = buildCacheBustToken();
+      const indexToken = `${presetToken}i`;
+      const targets = [
+        {
+          path: ["src", "runtime-shell", "staging", "game-stage", "game-stage-depth3d.js"],
+          replacements: [
+            { pattern: /(flame-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "orb-stage", "orb-stage-vfx-runtime.js"],
+          replacements: [
+            { pattern: /(flame-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+          ],
+        },
+        {
+          path: ["src", "vfx", "presets", "index.js"],
+          replacements: [
+            { pattern: /(flame-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime", "receiver-bootstrap.js"],
+          replacements: [
+            { pattern: /(vfx\/presets\/index\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${indexToken}` },
+          ],
+        },
+        {
+          path: ["labs", "vfx-studio", "vfx-studio.html"],
+          replacements: [
+            { pattern: /(flame-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+            { pattern: /(src\/vfx\/presets\/index\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${indexToken}` },
+          ],
+        },
+      ];
+      const publishedPaths = [];
+      for (const target of targets) {
+        const currentText = await studioProjectIo.readPath(target.path);
+        let nextText = String(currentText || "");
+        for (const replacement of target.replacements) {
+          nextText = nextText.replace(replacement.pattern, replacement.value);
+        }
+        if (nextText !== currentText) {
+          const ok = await studioProjectIo.savePath(target.path, nextText);
+          if (ok) publishedPaths.push(target.path);
+        }
+      }
+      return { publishedPaths };
+    }
+
     function publishPreset(){
       const selectedBase = String(selectedBaseEffect() || "");
       const publishContract = publishContractForBaseEffect(selectedBase);
@@ -3540,6 +3604,7 @@
           downloadTextFile,
           draftPathParts: VFX_PRESET_DRAFTS_PATH,
           describePublishSuccess: describePublishSuccessHelper,
+          afterLivePublish: updateFlameAoe3dPublishCacheBusts,
         });
         if (result && result.message) window.alert(result.message);
       })();
@@ -3817,11 +3882,16 @@
       pathParts,
       text,
     });
+    const readTextFromConnectedProjectPathImported = (pathParts) => readTextFromConnectedProjectPathHelper({
+      projectRootDirHandle,
+      pathParts,
+    });
     const studioProjectIo = Object.freeze({
       refreshUi: refreshProjectConnectUiImported,
       connect: connectProjectFolderImported,
       saveDraft: saveTextToConnectedProjectDraftsImported,
       savePath: saveTextToConnectedProjectPathImported,
+      readPath: readTextFromConnectedProjectPathImported,
     });
 
     // =========================================================================
