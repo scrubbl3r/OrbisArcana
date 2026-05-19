@@ -20,6 +20,7 @@ export function createFireCardSystem({
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, Math.floor(maxCards)));
   mesh.name = "vfx:fire-cards";
   mesh.frustumCulled = false;
+  mesh.renderOrder = 1200;
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   parent.add(mesh);
 
@@ -29,6 +30,7 @@ export function createFireCardSystem({
   const position = new THREE.Vector3();
   const color = new THREE.Color();
   let writeIndex = 0;
+  let lastSample = null;
 
   function hideInstance(index = 0) {
     quat.identity();
@@ -39,6 +41,7 @@ export function createFireCardSystem({
 
   function beginFrame(nowSec = 0) {
     writeIndex = 0;
+    lastSample = null;
     if (material.uniforms && material.uniforms.uTime) material.uniforms.uTime.value = Number(nowSec) || 0;
   }
 
@@ -72,6 +75,16 @@ export function createFireCardSystem({
       matrix.compose(position, quat, scale);
       mesh.setMatrixAt(writeIndex, matrix);
       mesh.setColorAt(writeIndex, color.setHex(Number(tintHex) || 0xff7a18).multiplyScalar(0.75 + alpha * 0.35));
+      if (!lastSample) {
+        lastSample = {
+          x: Math.round(position.x * 10) / 10,
+          y: Math.round(position.y * 10) / 10,
+          z: Math.round(position.z * 10) / 10,
+          width: Math.round(width * 10) / 10,
+          height: Math.round(height * 10) / 10,
+          intensity: Math.round(alpha * 100) / 100,
+        };
+      }
       writeIndex += 1;
     }
   }
@@ -97,6 +110,13 @@ export function createFireCardSystem({
     addTeardrop,
     endFrame,
     dispose,
+    getTrace() {
+      return Object.freeze({
+        activeCount: writeIndex,
+        visible: !!mesh.visible,
+        sample: lastSample,
+      });
+    },
     get activeCount() {
       return writeIndex;
     },

@@ -11,7 +11,7 @@ export function createFireCardMaterial({
   return new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
-    depthTest: true,
+    depthTest: false,
     blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide,
     uniforms: {
