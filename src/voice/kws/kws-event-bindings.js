@@ -1,12 +1,12 @@
-import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260519pyromodula";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260519pyromodulafb";
 import {
   KWS_FLASH_TOKEN_WORD_IDS,
   WAKE_ARM_WORD_IDS,
   WAKE_WINDOW_WORD_IDS as KWS_WAKE_WINDOW_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing.js?v=20260519pyromodula";
+} from "../../content/spells/spell-runtime-routing.js?v=20260519pyromodulafb";
 import {
   COMPILED_INTERACTION_GRAPH_V2_WAKE_TTL_MS,
-} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260519pyromodula";
+} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260519pyromodulafb";
 
 export function bindKwsEventHandlers({
   eventBus,

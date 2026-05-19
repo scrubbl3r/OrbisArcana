@@ -25,7 +25,7 @@ import { CHECK_MUTABLE_TIME_STARTS_V2 } from "./check-time-constants-v2.mjs";
 import { createMutableNow } from "./check-time-v2.mjs";
 // Regression guard for shake detonation across fallback and grouped trigger modes.
 const CHECK_TAG = CHECK_TAGS_V2.shakeRegression;
-const PASS_MESSAGE = "shake detonation works for direct slot loads, grouped shakes, and authored FB-loaded shield casts after spin setup";
+const PASS_MESSAGE = "shake detonation works for direct slot loads, grouped shakes, and authored FB-loaded flame casts after spin setup";
 
 function runScenario({ wordId, slot, expectedWordId, shakeGroup = "" }) {
   const eventBus = createCheckEventBus();
@@ -152,16 +152,26 @@ function runAuthoredFbBindScenario() {
     eventBus.emit("spell_window.spin_opened", { axis: "y", atMs: nowRef.value });
     advance(100);
     emitDetectedWord(eventBus, "pyro", nowRef.value);
+    // Let the spin-seeded windows expire; the later FB shake must still cast the loaded flame.
+    advance(2600);
+    eventBus.emit(EVT_INPUT_SHAKE_TRIGGERED, { code: "F", group: "FB", atMs: nowRef.value });
   });
   previewSystem.stop();
 
-  const flameActions = actions.filter((evt) =>
-    String(evt?.actionType || "").toLowerCase() === "event"
-    && String(evt?.actionId || "").toLowerCase() === "aoe_flame"
+  const flameBinds = actions.filter((evt) =>
+    String(evt?.actionType || "").toLowerCase() === "bind"
+    && String(evt?.actionId || "").toLowerCase() === "fb"
+    && String(evt?.args?.spell || "").toLowerCase() === "aoe_flame"
   );
-  assertCheck(loaded.length === 0, `[${CHECK_TAG}] expected simplified pyro chain not to load FB, got ${loaded.length}`);
-  assertCheck(flameActions.length === 1, `[${CHECK_TAG}] expected one authored flame AOE action, got ${flameActions.length}`);
-  assertCheck(casts.length === 0, `[${CHECK_TAG}] expected simplified pyro chain not to wait for FB shake, got ${casts.length}`);
+  assertCheck(flameBinds.length === 1, `[${CHECK_TAG}] expected one authored flame AOE FB bind, got ${flameBinds.length}`);
+  assertCheck(loaded.length === 1, `[${CHECK_TAG}] expected authored pyro chain to load FB once, got ${loaded.length}`);
+  assertCheck(String(loaded[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored pyro chain to load slot FB`);
+  assertCheck(String(loaded[0]?.castActionId || "") === "aoe_flame", `[${CHECK_TAG}] expected authored pyro chain to load flame AOE into FB`);
+
+  assertCheck(casts.length === 1, `[${CHECK_TAG}] expected one cast from authored FB shake, got ${casts.length}`);
+  assertCheck(String(casts[0]?.castActionId || "") === "aoe_flame", `[${CHECK_TAG}] expected authored FB shake to cast flame AOE`);
+  assertCheck(String(casts[0]?.trigger || "") === "rule_engine_loaded_slot", `[${CHECK_TAG}] expected authored FB shake trigger to route via slot cast action`);
+  assertCheck(String(casts[0]?.slot || "") === "FB", `[${CHECK_TAG}] expected authored FB shake cast to use FB slot`);
 }
 
 function main() {

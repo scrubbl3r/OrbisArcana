@@ -14,7 +14,7 @@ import { CHECK_FIXED_TIMES_V2 } from "./check-time-constants-v2.mjs";
 import { createFixedNowMs } from "./check-time-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.flatSpinGating;
-const PASS_MESSAGE = "spin-gated pyro chain casts flame AOE only after spin input";
+const PASS_MESSAGE = "spin-gated pyro chain binds flame AOE to FB only after spin input";
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 
@@ -55,8 +55,8 @@ function main() {
   try {
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, CHECK_FIXED_TIMES_V2.flatSpinOutside);
     assertCheck(
-      !actions.some((evt) => String(evt?.actionType || "").toLowerCase() === "event"),
-      `[${CHECK_TAG}] unexpected pyro trigger without spin gate`
+      !actions.some((evt) => String(evt?.actionType || "").toLowerCase() === "bind"),
+      `[${CHECK_TAG}] unexpected pyro bind without spin gate`
     );
 
     emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: CHECK_FIXED_TIMES_V2.flatSpinInside + 10 });
@@ -67,10 +67,11 @@ function main() {
     );
     assertCheck(
       actions.some((evt) =>
-        String(evt?.actionType || "").toLowerCase() === "event"
-        && String(evt?.actionId || "").toLowerCase() === "aoe_flame"
+        String(evt?.actionType || "").toLowerCase() === "bind"
+        && String(evt?.actionId || "").toLowerCase() === "fb"
+        && String(evt?.args?.spell || "").toLowerCase() === "aoe_flame"
       ),
-      `[${CHECK_TAG}] expected flame AOE trigger after spin + pyro`
+      `[${CHECK_TAG}] expected flame AOE FB bind after spin + pyro`
     );
   } finally {
     system.stop();

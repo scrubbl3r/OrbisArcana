@@ -349,7 +349,7 @@ export function bindStagingRuntimeEvents({
       ruleId === "shake_lr_cast" ||
       ruleId === "shake_fb_cast" ||
       ruleId === "spin_y_opens_pyro" ||
-      ruleId === "spin_y_pyro_cast_flame_aoe"
+      ruleId === "spin_y_pyro_bind_flame_aoe_fb"
     ) {
       kwsBridge.pushLogLine(`TRACE matched:${ruleId}`, "ok");
     }

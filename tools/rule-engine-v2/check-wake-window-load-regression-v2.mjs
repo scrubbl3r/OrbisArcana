@@ -18,7 +18,7 @@ import { createMutableNow } from "./check-time-v2.mjs";
 
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 const CHECK_TAG = CHECK_TAGS_V2.wakeLoadRegression;
-const PASS_MESSAGE = "pyro spin chain casts flame AOE directly";
+const PASS_MESSAGE = "pyro spin chain binds flame AOE to FB";
 
 function emitDetectedWord(eventBus, wordId, atMs) {
   eventBus.emit("voice.word_detected", {
@@ -66,9 +66,10 @@ function main() {
     preview.stop();
   });
 
-  const triggerActions = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "event");
-  assertCheck(triggerActions.length === 1, `[${CHECK_TAG}] expected one trigger action, got ${triggerActions.length}`);
-  assertCheck(String(triggerActions[0]?.actionId || "") === "aoe_flame", `[${CHECK_TAG}] expected flame AOE trigger`);
+  const bindActions = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind");
+  assertCheck(bindActions.length === 1, `[${CHECK_TAG}] expected one bind action, got ${bindActions.length}`);
+  assertCheck(String(bindActions[0]?.actionId || "") === "fb", `[${CHECK_TAG}] expected FB bind action`);
+  assertCheck(String(bindActions[0]?.args?.spell || "") === "aoe_flame", `[${CHECK_TAG}] expected flame AOE bind`);
 
   reportCheckPass(CHECK_TAG, PASS_MESSAGE);
 }

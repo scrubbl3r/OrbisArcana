@@ -4,7 +4,7 @@ import {
   WORD_RUNTIME_ROUTING_BY_WORD_ID,
   WORD_WINDOW_BYPASS_WORD_IDS,
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing.js?v=20260519pyromodula";
+} from "../../content/spells/spell-runtime-routing.js?v=20260519pyromodulafb";
 import { getCastActionMeta } from "../../content/spells/cast-action-registry.js";
 import {
   EVT_SPELL_WINDOW_SPIN_OPENED,

@@ -82,11 +82,10 @@ export const INTERACTION_GRAPH_V2 = {
       open: { id: "chain.spin_y_seed", words: ["pyro"], ttlMs: 1500 },
     },
     {
-      id: "spin_y_pyro_cast_flame_aoe",
+      id: "spin_y_pyro_bind_flame_aoe_fb",
       on: { word: "pyro" },
       requires: "chain.spin_y_seed",
-      trigger: { spell: "aoe_flame" },
-      grace: {},
+      bind: { spell: "aoe_flame", slot: "FB" },
     },
     // SHOCKWAVE
     {

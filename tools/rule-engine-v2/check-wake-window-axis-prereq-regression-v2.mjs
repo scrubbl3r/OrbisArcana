@@ -13,7 +13,7 @@ import { createMutableNow } from "./check-time-v2.mjs";
 import { CHECK_AXES_V2 } from "./check-gesture-constants-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.wakeWindowAxisPrereq;
-const PASS_MESSAGE = "spin-y pyro flame chain requires its authored spin window";
+const PASS_MESSAGE = "spin-y pyro flame bind chain requires its authored spin window";
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 
 function emitDetectedWord(eventBus, wordId, atMs) {
@@ -50,14 +50,15 @@ function main() {
   try {
     emitSpinOpened(eventBus, { axis: CHECK_AXES_V2.y, atMs: nowRef.value });
 
-    const triggerCountBefore = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "event").length;
-    assertCheck(triggerCountBefore === 0, `[${CHECK_TAG}] unexpected trigger before pyro`);
+    const bindCountBefore = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind").length;
+    assertCheck(bindCountBefore === 0, `[${CHECK_TAG}] unexpected bind before pyro`);
 
-    // With the authored spin window opened, `pyro` should cast flame AOE directly.
+    // With the authored spin window opened, `pyro` should bind flame AOE to FB.
     emitDetectedWord(eventBus, CHECK_SPELL_IDS_V2.pyro, nowRef.value);
-    const triggerActions = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "event");
-    assertCheck(triggerActions.length === 1, `[${CHECK_TAG}] expected one trigger after spin -> pyro, got ${triggerActions.length}`);
-    assertCheck(String(triggerActions[0]?.actionId || "") === "aoe_flame", `[${CHECK_TAG}] expected flame AOE trigger`);
+    const bindActions = actions.filter((evt) => String(evt?.actionType || "").toLowerCase() === "bind");
+    assertCheck(bindActions.length === 1, `[${CHECK_TAG}] expected one bind after spin -> pyro, got ${bindActions.length}`);
+    assertCheck(String(bindActions[0]?.actionId || "") === "fb", `[${CHECK_TAG}] expected FB bind action`);
+    assertCheck(String(bindActions[0]?.args?.spell || "") === "aoe_flame", `[${CHECK_TAG}] expected flame AOE bind`);
   } finally {
     system.stop();
   }
