@@ -30,7 +30,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260519110500";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260519124500";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -495,6 +495,13 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dNav = enemyTrace.nav ? "grid" : "fallback";
       root.dataset.enemy3dNavCells = String(enemyTrace.navCells || 0);
       root.dataset.enemy3dNavResolutionBo = enemyTrace.navResolutionBo == null ? "" : String(enemyTrace.navResolutionBo);
+      const flameTrace = enemyTrace.flameDamage || null;
+      if (flameTrace) {
+        root.dataset.enemy3dLastFlameAoeAlive = String(flameTrace.alive || 0);
+        root.dataset.enemy3dLastFlameAoeTested = String(flameTrace.tested || 0);
+        root.dataset.enemy3dLastFlameAoeInRange = String(flameTrace.inRange || 0);
+        root.dataset.enemy3dLastFlameAoeNearestBo = flameTrace.nearestBo == null ? "" : String(flameTrace.nearestBo);
+      }
       const orbPosition = orb3dActorRuntime.getPosition();
       if (orbPosition) {
         root.dataset.enemy3dOrbRuntime = `${Math.round((Number(orbPosition.x) || 0) * 100) / 100},${Math.round((Number(orbPosition.y) || 0) * 100) / 100},${Math.round((Number(orbPosition.z) || 0) * 100) / 100}`;
@@ -905,6 +912,14 @@ export function createGameStageDepth3dLayer({
       return result || { handled: false };
     },
     playFlameAoe3d(payload = {}) {
+      const callAtMs = performance.now();
+      if (perfTrace && typeof perfTrace.mark === "function") {
+        perfTrace.mark("flameAoe.gameStage.called", {
+          disposed: !!disposed,
+          hasOrbModel: !!(orb3dActorRuntime && orb3dActorRuntime.hasModel && orb3dActorRuntime.hasModel()),
+          hasOrbWorld: !!currentOrbWorldPosition,
+        });
+      }
       if (disposed) {
         return { handled: false, skipped: "flame_aoe3d_runtime_missing" };
       }
@@ -913,7 +928,7 @@ export function createGameStageDepth3dLayer({
       const result = hasOrbModel
         ? flameAoe3dRuntime.play(flamePayload)
         : { handled: false, skipped: "flame_aoe3d_model_missing" };
-      root.dataset.enemy3dLastFlameAoeStageCallAt = String(Math.round(performance.now()));
+      root.dataset.enemy3dLastFlameAoeStageCallAt = String(Math.round(callAtMs));
       const visualConfig = { ...FLAME_AOE_3D_PRESET_DEFAULT, ...flamePayload };
       const behaviorConfig = {
         ...FLAME_AOE_BEHAVIOR_DEFAULT,
@@ -949,15 +964,41 @@ export function createGameStageDepth3dLayer({
         root.dataset.enemy3dLastFlameAoeDamageCount = String(damageResult && damageResult.affected || 0);
         root.dataset.enemy3dLastFlameAoeRadiusBo = String(hitRadiusBo.toFixed(2));
         root.dataset.enemy3dLastFlameAoeForwardRadiusBo = String(Math.max(hitRadiusBo, wakeHeightBo).toFixed(2));
+        const damageTrace = damageResult && damageResult.trace ? damageResult.trace : null;
+        if (damageTrace) {
+          root.dataset.enemy3dLastFlameAoeAlive = String(damageTrace.alive || 0);
+          root.dataset.enemy3dLastFlameAoeTested = String(damageTrace.tested || 0);
+          root.dataset.enemy3dLastFlameAoeInRange = String(damageTrace.inRange || 0);
+          root.dataset.enemy3dLastFlameAoeNearestBo = damageTrace.nearestBo == null ? "" : String(damageTrace.nearestBo);
+        }
+        if (perfTrace && typeof perfTrace.mark === "function") {
+          perfTrace.mark("flameAoe.gameStage.damage", {
+            handled: !!(damageResult && damageResult.handled),
+            affected: damageResult && damageResult.affected || 0,
+            radiusBo: Number(hitRadiusBo.toFixed(2)),
+            forwardRadiusBo: Number(Math.max(hitRadiusBo, wakeHeightBo).toFixed(2)),
+            trace: damageTrace,
+          });
+        }
       } else {
         root.dataset.enemy3dLastFlameAoeDamageCount = "0";
         root.dataset.enemy3dLastFlameAoeSkipped = currentOrbWorldPosition ? "disabled" : "missing_orb_world_position";
+        if (perfTrace && typeof perfTrace.mark === "function") {
+          perfTrace.mark("flameAoe.gameStage.skipped", {
+            reason: root.dataset.enemy3dLastFlameAoeSkipped,
+            behaviorEnabled: behaviorConfig.enabled !== false,
+            hasOrbWorld: !!currentOrbWorldPosition,
+          });
+        }
       }
       if ((result && result.handled) || currentOrbWorldPosition) {
         renderLoop.scheduleAnimation();
         renderLoop.renderFrame(renderLoop.getLastFrame() || {});
       }
-      return result || { handled: false };
+      return {
+        ...(result || { handled: false }),
+        damageAffected: Number(root.dataset.enemy3dLastFlameAoeDamageCount) || 0,
+      };
     },
     playShockwave3d(payload = {}) {
       if (disposed || !orb3dActorRuntime.hasModel()) {

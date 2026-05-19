@@ -39,11 +39,19 @@ export function createShellSpellActionRuntime({
         ? getRuntimeVfx().playElectricAoe()
         : { handled: false }
     ),
-    playFlameAoe: (payload = {}) => (
-      getRuntimeVfx() && typeof getRuntimeVfx().playFlameAoe === "function"
-        ? getRuntimeVfx().playFlameAoe(payload)
-        : { handled: false }
-    ),
+    playFlameAoe: (payload = {}) => {
+      const runtimeVfx = getRuntimeVfx();
+      const perfTrace = runtime && runtime.perfTrace ? runtime.perfTrace : null;
+      if (perfTrace && typeof perfTrace.mark === "function") {
+        perfTrace.mark("flameAoe.spellHandler.called", {
+          hasRuntimeVfx: !!runtimeVfx,
+          hasPlayFlameAoe: !!(runtimeVfx && typeof runtimeVfx.playFlameAoe === "function"),
+        });
+      }
+      return runtimeVfx && typeof runtimeVfx.playFlameAoe === "function"
+        ? runtimeVfx.playFlameAoe(payload)
+        : { handled: false };
+    },
     playTeleport: (payload = {}) => (
       getRuntimeVfx() && typeof getRuntimeVfx().playTeleport === "function"
         ? getRuntimeVfx().playTeleport(payload)

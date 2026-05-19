@@ -164,12 +164,27 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function playOrbStageFlameAoeFallback(payload = {}) {
+    markTrace("flameAoe.orbStageFallback.called", {
+      has3dRuntime: typeof playFlameAoe3dRuntime === "function",
+      payloadKeys: payload && typeof payload === "object" ? Object.keys(payload).slice(0, 12) : [],
+    });
     if (typeof playFlameAoe3dRuntime === "function") {
       const result = playFlameAoe3dRuntime({
         ...(vfxDefaults && vfxDefaults.flame3d && typeof vfxDefaults.flame3d === "object"
           ? vfxDefaults.flame3d
           : Object.create(null)),
         ...(payload && typeof payload === "object" ? payload : {}),
+      });
+      markTrace("flameAoe.orbStageFallback.result", {
+        handled: !!(result && result.handled),
+        skipped: String(result && result.skipped || ""),
+        stageResults: Array.isArray(result && result.stageResults)
+          ? result.stageResults.map((stageResult) => ({
+              handled: !!(stageResult && stageResult.handled),
+              skipped: String(stageResult && stageResult.skipped || ""),
+              affected: Number(stageResult && stageResult.damageAffected) || 0,
+            }))
+          : [],
       });
       if (result && result.handled) return result;
     }
@@ -258,6 +273,9 @@ export function initOrbStageReceiverVfxRuntime({
       return playOrbStageElectricAoeFallback();
     },
     playFlameAoe(payload = {}) {
+      markTrace("flameAoe.shellVfx.called", {
+        payloadKeys: payload && typeof payload === "object" ? Object.keys(payload).slice(0, 12) : [],
+      });
       const dispatched = dispatchRuntimeEffect({
         targetKind: "spell",
         targetId: "aoe_flame",

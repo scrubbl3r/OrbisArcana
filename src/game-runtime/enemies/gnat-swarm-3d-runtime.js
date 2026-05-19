@@ -360,7 +360,7 @@ export function createGnatSwarm3dRuntime({
   let states = [];
   let bounds = Object.freeze({ loops: [], box: null });
   let activeSignals = [];
-  const alertTrace = { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null };
+  const alertTrace = { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null, flameDamage: null };
   let pendingLifeLeachDamage = 0;
   let lastDamageEmitAtMs = 0;
   let lastMotionEmitAtMs = 0;
@@ -379,7 +379,7 @@ export function createGnatSwarm3dRuntime({
     lastMotionEmitAtMs = 0;
     lastLiftPenalty = 0;
     lastFeedingCount = 0;
-    Object.assign(alertTrace, { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null });
+    Object.assign(alertTrace, { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null, flameDamage: null });
   }
 
   function compactActiveSignals(nowSec = 0) {
@@ -579,10 +579,24 @@ export function createGnatSwarm3dRuntime({
   }
 
   function pointInDamageVolume(position, center, effect = {}, bo = 42) {
+    return resolveDamageVolumeHit(position, center, effect, bo).inside;
+  }
+
+  function resolveDamageVolumeHit(position, center, effect = {}, bo = 42) {
     const radiusPx = Math.max(0, Number(effect.radiusBo) || 0) * bo;
     const forwardRadiusPx = Math.max(radiusPx, Number(effect.forwardRadiusBo || effect.wakeRadiusBo || 0) * bo);
-    if (!position || !center || radiusPx <= 0) return false;
-    if (forwardRadiusPx <= radiusPx + 0.001) return distance(position, center) <= radiusPx;
+    const empty = {
+      inside: false,
+      distancePx: Infinity,
+      distanceBo: Infinity,
+      alongPx: 0,
+      sidePx: 0,
+      radiusPx,
+      forwardRadiusPx,
+      alongN: Infinity,
+      sideN: Infinity,
+    };
+    if (!position || !center || radiusPx <= 0) return empty;
     const axis = effect.axisWorld && typeof effect.axisWorld === "object" ? effect.axisWorld : { xW: 0, yW: -1 };
     const axisX = Number(axis.xW) || 0;
     const axisY = Number(axis.yW) || -1;
@@ -591,12 +605,34 @@ export function createGnatSwarm3dRuntime({
     const uy = axisY / axisLen;
     const dx = (Number(position.xW) || 0) - (Number(center.xW) || 0);
     const dy = (Number(position.yW) || 0) - (Number(center.yW) || 0);
+    const distancePx = Math.hypot(dx, dy);
+    if (forwardRadiusPx <= radiusPx + 0.001) {
+      return {
+        ...empty,
+        inside: distancePx <= radiusPx,
+        distancePx,
+        distanceBo: distancePx / Math.max(1, bo),
+        alongPx: 0,
+        sidePx: distancePx,
+        alongN: 0,
+        sideN: distancePx / Math.max(1, radiusPx),
+      };
+    }
     const along = dx * ux + dy * uy;
     const side = Math.abs(dx * -uy + dy * ux);
     const alongRadius = along >= 0 ? forwardRadiusPx : radiusPx;
     const alongN = Math.abs(along) / Math.max(1, alongRadius);
     const sideN = side / Math.max(1, radiusPx);
-    return alongN * alongN + sideN * sideN <= 1;
+    return {
+      ...empty,
+      inside: alongN * alongN + sideN * sideN <= 1,
+      distancePx,
+      distanceBo: distancePx / Math.max(1, bo),
+      alongPx: along,
+      sidePx: side,
+      alongN,
+      sideN,
+    };
   }
 
   function applyDamageToState(state, damage = {}, nowSec = 0) {
@@ -647,9 +683,57 @@ export function createGnatSwarm3dRuntime({
       const nowSec = damage.atMs / 1000;
       let affected = 0;
       let totalDamage = 0;
+      const damageTrace = {
+        kind,
+        damageType: damage.damageType,
+        atMs: Math.round(damage.atMs),
+        bo,
+        center: { xW: Number(center.xW) || 0, yW: Number(center.yW) || 0 },
+        radiusBo: Math.max(0, Number(effect.radiusBo) || 0),
+        forwardRadiusBo: Math.max(0, Number(effect.forwardRadiusBo || effect.wakeRadiusBo || 0)),
+        amount: damage.amount,
+        totalStates: states.length,
+        alive: 0,
+        tested: 0,
+        inRange: 0,
+        affected: 0,
+        totalDamage: 0,
+        nearestBo: null,
+        nearest: null,
+        candidates: [],
+      };
       for (const state of states) {
         if (!state || state.hp <= 0) continue;
-        if (!pointInDamageVolume(state.position, center, effect, bo)) continue;
+        damageTrace.alive += 1;
+        damageTrace.tested += 1;
+        const hit = resolveDamageVolumeHit(state.position, center, effect, bo);
+        if (Number.isFinite(hit.distanceBo) && (damageTrace.nearestBo == null || hit.distanceBo < damageTrace.nearestBo)) {
+          damageTrace.nearestBo = Number(hit.distanceBo.toFixed(3));
+          damageTrace.nearest = {
+            index: state.index,
+            hp: Number(state.hp) || 0,
+            mode: String(state.mode || ""),
+            distanceBo: Number(hit.distanceBo.toFixed(3)),
+            alongBo: Number((hit.alongPx / Math.max(1, bo)).toFixed(3)),
+            sideBo: Number((hit.sidePx / Math.max(1, bo)).toFixed(3)),
+            alongN: Number(hit.alongN.toFixed(3)),
+            sideN: Number(hit.sideN.toFixed(3)),
+            inside: !!hit.inside,
+          };
+        }
+        if (damageTrace.candidates.length < 6) {
+          damageTrace.candidates.push({
+            index: state.index,
+            hp: Number(state.hp) || 0,
+            mode: String(state.mode || ""),
+            distanceBo: Number((hit.distanceBo || 0).toFixed(3)),
+            alongBo: Number((hit.alongPx / Math.max(1, bo)).toFixed(3)),
+            sideBo: Number((hit.sidePx / Math.max(1, bo)).toFixed(3)),
+            inside: !!hit.inside,
+          });
+        }
+        if (!hit.inside) continue;
+        damageTrace.inRange += 1;
         const beforeHp = Number(state.hp) || 0;
         if (!applyDamageToState(state, damage, nowSec)) continue;
         affected += 1;
@@ -663,8 +747,11 @@ export function createGnatSwarm3dRuntime({
           });
         }
       }
+      damageTrace.affected = affected;
+      damageTrace.totalDamage = Number(totalDamage.toFixed(3));
+      alertTrace.flameDamage = damageTrace;
       if (affected > 0 && typeof onNeedsFrame === "function") onNeedsFrame();
-      return Object.freeze({ handled: true, affected, totalDamage });
+      return Object.freeze({ handled: true, affected, totalDamage, trace: damageTrace });
     }
     if (kind !== COMBAT_EFFECT_STUN) return Object.freeze({ handled: false, affected: 0, reason: "unsupported_effect" });
     const stun = normalizeStunEffect(effect);

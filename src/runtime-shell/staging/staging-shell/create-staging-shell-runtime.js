@@ -18,7 +18,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260519113000s";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260519124500s";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260517a";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -35,7 +35,7 @@ import {
   executeShellWordCastAction,
   handleShellVoiceSpellCast,
 } from "./shell-voice-spell-runtime.js";
-import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260519114500";
+import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260519124500";
 import { bindShellKwsEventRuntime } from "./shell-kws-event-runtime.js";
 import { bindShellKwsTraceRuntime } from "./shell-kws-trace-runtime.js";
 import {
@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260519120500s";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260519124500s";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
@@ -2279,14 +2279,35 @@ function callShellStageMethodOnAdapters(shellContext, methodName, payload = {}, 
   const adapters = getShellStageAdapters(shellContext);
   const results = [];
   const seen = new Set();
+  const perfTrace = shellContext && shellContext.runtime ? shellContext.runtime.perfTrace : null;
+  if (perfTrace && typeof perfTrace.mark === "function") {
+    perfTrace.mark("flameAoe.stageFanout.start", {
+      methodName,
+      adapterCount: adapters.length,
+    });
+  }
   for (const adapter of adapters) {
     if (!adapter || seen.has(adapter)) continue;
     seen.add(adapter);
     const method = methodName ? adapter[methodName] : null;
-    if (typeof method !== "function") continue;
+    if (typeof method !== "function") {
+      results.push({ handled: false, skipped: "method_missing" });
+      continue;
+    }
     results.push(method.call(adapter, payload));
   }
   const handledResults = results.filter((result) => result && result.handled);
+  if (perfTrace && typeof perfTrace.mark === "function") {
+    perfTrace.mark("flameAoe.stageFanout.result", {
+      methodName,
+      handledCount: handledResults.length,
+      results: results.map((result) => ({
+        handled: !!(result && result.handled),
+        skipped: String(result && result.skipped || ""),
+        affected: Number(result && result.damageAffected) || 0,
+      })),
+    });
+  }
   if (handledResults.length > 0) {
     return {
       ...handledResults[0],
