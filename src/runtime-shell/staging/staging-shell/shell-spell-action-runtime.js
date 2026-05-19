@@ -40,8 +40,8 @@ export function createShellSpellActionRuntime({
         : { handled: false }
     ),
     playFlameAoe: (payload = {}) => (
-      typeof shellActions.playFlameAoe === "function"
-        ? shellActions.playFlameAoe(payload)
+      getRuntimeVfx() && typeof getRuntimeVfx().playFlameAoe === "function"
+        ? getRuntimeVfx().playFlameAoe(payload)
         : { handled: false }
     ),
     playTeleport: (payload = {}) => (

@@ -35,7 +35,7 @@ import {
   executeShellWordCastAction,
   handleShellVoiceSpellCast,
 } from "./shell-voice-spell-runtime.js";
-import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260517a";
+import { createShellSpellActionRuntime } from "./shell-spell-action-runtime.js?v=20260519114500";
 import { bindShellKwsEventRuntime } from "./shell-kws-event-runtime.js";
 import { bindShellKwsTraceRuntime } from "./shell-kws-trace-runtime.js";
 import {
