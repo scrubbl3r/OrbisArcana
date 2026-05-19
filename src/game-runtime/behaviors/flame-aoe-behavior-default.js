@@ -4,7 +4,7 @@ export const FLAME_AOE_BEHAVIOR_DEFAULT = Object.freeze({
   wakeReachScale: 1.00,
   igniteDamage: 0.10,
   igniteBurnDps: 0.35,
-  igniteDurationMs: 3200,
+  igniteDurationMs: 5000,
   roastDps: 1.25,
   roastTickMs: 250,
 });
