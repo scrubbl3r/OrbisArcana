@@ -15,7 +15,10 @@ import {
   STATUS_EFFECT_BURNING,
   tickBurningStatusOnEntity,
 } from "../status/fire/burning-status-model.js";
-import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260519b";
+import {
+  createBurnDebugCardSystem,
+  createFireCardSystem,
+} from "../vfx/fire/fire-card-system.js?v=20260519c";
 
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
@@ -387,11 +390,12 @@ export function createGnatSwarm3dRuntime({
 	  tintEmissiveWithInstanceColor(material);
   const geometry = new THREE.BoxGeometry(1, 1, 1);
   const fireCards = createFireCardSystem({ root, maxCards: 256 });
+  const burnDebugCards = createBurnDebugCardSystem({ root, maxCards: 128 });
   let mesh = null;
   let states = [];
   let bounds = Object.freeze({ loops: [], box: null });
   let activeSignals = [];
-  const alertTrace = { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null, flameDamage: null };
+  const alertTrace = { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null, flameDamage: null, burnDebugCards: 0, burnDebugCardTrace: null };
   let pendingLifeLeachDamage = 0;
   let lastDamageEmitAtMs = 0;
   let lastMotionEmitAtMs = 0;
@@ -412,7 +416,9 @@ export function createGnatSwarm3dRuntime({
     lastFeedingCount = 0;
     fireCards.beginFrame(0);
     fireCards.endFrame();
-    Object.assign(alertTrace, { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null, flameDamage: null });
+    burnDebugCards.beginFrame();
+    burnDebugCards.endFrame();
+    Object.assign(alertTrace, { direct: 0, relayed: 0, feeding: 0, stunned: 0, liftLeach: 0, lifeLeachPerSec: 0, shieldImmune: false, shieldContactRadiusPx: 0, signals: 0, nav: false, navCells: 0, navResolutionBo: null, flameDamage: null, burnDebugCards: 0, burnDebugCardTrace: null });
   }
 
   function compactActiveSignals(nowSec = 0) {
@@ -1311,14 +1317,23 @@ export function createGnatSwarm3dRuntime({
     const deathFade = dead && state.burnAfterDeathUntilSec
       ? Math.max(0, Math.min(1, (state.burnAfterDeathUntilSec - nowSec) / Math.max(0.1, state.burnAfterDeathUntilSec - (state.burnGroundedSec || nowSec))))
       : 1;
+    const x = Number(runtimePosition.x) || 0;
+    const y = Number(runtimePosition.y) || 0;
+    const z = (Number(runtimePosition.z) || 0) + 6;
     fireCards.addTeardrop({
-      x: Number(runtimePosition.x) || 0,
-      y: Number(runtimePosition.y) || 0,
-      z: (Number(runtimePosition.z) || 0) + 6,
+      x,
+      y,
+      z,
       scalePx: Math.max(48, Number(state.scale) || 8) * (dead ? 1.32 : 1.18),
       intensity: Math.max(0.18, Math.min(1.4, burning.intensity * deathFade)),
       tintHex: Number(profile.tintHex) || 0xff7a18,
       seed: Number(state.burnVisualSeed) || Number(state.phaseX) || 0,
+    });
+    burnDebugCards.addCard({
+      x,
+      y,
+      z: z + 18,
+      diameterPx: Math.max(1, getBo() * 0.25),
     });
   }
 
@@ -1436,6 +1451,7 @@ export function createGnatSwarm3dRuntime({
     let activeLiftLeach = 0;
     let activeLifeLeachPerSec = 0;
     fireCards.beginFrame(nowSec);
+    burnDebugCards.beginFrame();
     for (let i = 0; i < states.length; i += 1) {
       const state = states[i];
       applyPeriodicFireDamage(state, nowSec, dtSec);
@@ -1687,6 +1703,7 @@ export function createGnatSwarm3dRuntime({
 	    mesh.instanceMatrix.needsUpdate = true;
 	    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     fireCards.endFrame();
+    burnDebugCards.endFrame();
     emitFeedingCombat({ nowMs, dtSec, feedingCount, activeLiftLeach, activeLifeLeachPerSec });
     Object.assign(alertTrace, {
       direct: directAlerts,
@@ -1697,6 +1714,8 @@ export function createGnatSwarm3dRuntime({
       deadBurning: deadBurningCount,
       fireCards: fireCards.activeCount,
       fireCardTrace: fireCards.getTrace(),
+      burnDebugCards: burnDebugCards.activeCount,
+      burnDebugCardTrace: burnDebugCards.getTrace(),
       liftLeach: activeLiftLeach,
       lifeLeachPerSec: activeLifeLeachPerSec,
       shieldImmune: orbImmune,
@@ -1712,6 +1731,7 @@ export function createGnatSwarm3dRuntime({
     return Object.freeze({
       ...alertTrace,
       fireCardTrace: fireCards.getTrace(camera),
+      burnDebugCardTrace: burnDebugCards.getTrace(camera),
     });
   }
 
@@ -1726,6 +1746,7 @@ export function createGnatSwarm3dRuntime({
     dispose() {
       disposeMesh();
       fireCards.dispose();
+      burnDebugCards.dispose();
       geometry.dispose();
       material.dispose();
     },

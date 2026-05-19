@@ -162,3 +162,135 @@ export function createFireCardSystem({
     },
   });
 }
+
+export function createBurnDebugCardSystem({
+  root = null,
+  maxCards = 128,
+} = {}) {
+  const parent = root || new THREE.Group();
+  const geometry = new THREE.CircleGeometry(0.5, 24);
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: false,
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    toneMapped: false,
+  });
+  const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, Math.floor(maxCards)));
+  mesh.name = "vfx:burn-debug-cards";
+  mesh.frustumCulled = false;
+  mesh.renderOrder = 1250;
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  parent.add(mesh);
+
+  const matrix = new THREE.Matrix4();
+  const quat = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+  const position = new THREE.Vector3();
+  const sampleLocalPosition = new THREE.Vector3();
+  const sampleWorldPosition = new THREE.Vector3();
+  const sampleClipPosition = new THREE.Vector3();
+  let writeIndex = 0;
+  let lastSample = null;
+
+  function hideInstance(index = 0) {
+    quat.identity();
+    matrix.compose(OFFSCREEN_POSITION, quat, ZERO_SCALE);
+    mesh.setMatrixAt(index, matrix);
+  }
+
+  function beginFrame() {
+    writeIndex = 0;
+    lastSample = null;
+  }
+
+  function addCard({
+    x = 0,
+    y = 0,
+    z = 0,
+    diameterPx = 12,
+  } = {}) {
+    if (writeIndex >= mesh.count) return;
+    const diameter = Math.max(1, Number(diameterPx) || 1);
+    position.set(Number(x) || 0, Number(y) || 0, Number(z) || 0);
+    quat.identity();
+    scale.set(diameter, diameter, 1);
+    matrix.compose(position, quat, scale);
+    mesh.setMatrixAt(writeIndex, matrix);
+    if (!lastSample) {
+      sampleLocalPosition.copy(position);
+      lastSample = {
+        x: Math.round(position.x * 10) / 10,
+        y: Math.round(position.y * 10) / 10,
+        z: Math.round(position.z * 10) / 10,
+        diameterPx: Math.round(diameter * 10) / 10,
+      };
+    }
+    writeIndex += 1;
+  }
+
+  function endFrame() {
+    for (let i = writeIndex; i < mesh.count; i += 1) hideInstance(i);
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.visible = writeIndex > 0;
+  }
+
+  function dispose() {
+    parent.remove(mesh);
+    geometry.dispose();
+    material.dispose();
+  }
+
+  for (let i = 0; i < mesh.count; i += 1) hideInstance(i);
+  mesh.visible = false;
+
+  return Object.freeze({
+    beginFrame,
+    addCard,
+    endFrame,
+    dispose,
+    getTrace(camera = null) {
+      return Object.freeze({
+        activeCount: writeIndex,
+        visible: !!mesh.visible,
+        mesh: {
+          name: mesh.name,
+          parentName: mesh.parent && mesh.parent.name ? mesh.parent.name : "",
+          renderOrder: mesh.renderOrder,
+          frustumCulled: !!mesh.frustumCulled,
+          materialTransparent: !!(mesh.material && mesh.material.transparent),
+          materialDepthTest: !!(mesh.material && mesh.material.depthTest),
+          materialDepthWrite: !!(mesh.material && mesh.material.depthWrite),
+          materialToneMapped: !!(mesh.material && mesh.material.toneMapped),
+        },
+        sample: lastSample,
+        sampleCamera: camera && lastSample ? (() => {
+          mesh.updateWorldMatrix(true, false);
+          if (typeof camera.updateMatrixWorld === "function") camera.updateMatrixWorld();
+          sampleWorldPosition.copy(sampleLocalPosition);
+          mesh.localToWorld(sampleWorldPosition);
+          sampleClipPosition.copy(sampleWorldPosition).project(camera);
+          return {
+            world: {
+              x: Math.round(sampleWorldPosition.x * 10) / 10,
+              y: Math.round(sampleWorldPosition.y * 10) / 10,
+              z: Math.round(sampleWorldPosition.z * 10) / 10,
+            },
+            clip: {
+              x: Math.round(sampleClipPosition.x * 1000) / 1000,
+              y: Math.round(sampleClipPosition.y * 1000) / 1000,
+              z: Math.round(sampleClipPosition.z * 1000) / 1000,
+            },
+            inClip: sampleClipPosition.x >= -1 && sampleClipPosition.x <= 1
+              && sampleClipPosition.y >= -1 && sampleClipPosition.y <= 1
+              && sampleClipPosition.z >= -1 && sampleClipPosition.z <= 1,
+          };
+        })() : null,
+      });
+    },
+    get activeCount() {
+      return writeIndex;
+    },
+  });
+}
