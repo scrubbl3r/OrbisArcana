@@ -8,6 +8,12 @@ import {
   DAMAGE_TYPE_LEECH,
 } from "../combat/combat-constants.js";
 import { normalizeStunEffect, resolveStunApplication } from "../combat/stun-model.js";
+import {
+  applyBurningStatusToEntity,
+  getBurningVisualState,
+  normalizeBurningStatus,
+  tickBurningStatusOnEntity,
+} from "../status/fire/burning-status-model.js";
 
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
@@ -536,15 +542,18 @@ export function createGnatSwarm3dRuntime({
     const atMs = Number.isFinite(Number(effect.atMs))
       ? Number(effect.atMs)
       : (typeof performance !== "undefined" && performance.now ? performance.now() : 0);
+    const damageType = String(effect.damageType || DAMAGE_TYPE_FIRE);
+    const burning = damageType === DAMAGE_TYPE_FIRE
+      ? normalizeBurningStatus({
+          ...effect,
+          igniteDamage: effect.amount,
+        }, { atMs })
+      : null;
     return Object.freeze({
       amount: Math.max(0, Number(effect.amount) || 0),
-      damageType: String(effect.damageType || DAMAGE_TYPE_FIRE),
+      damageType,
       atMs,
-      burnDps: Math.max(0, Number(effect.burnDps) || 0),
-      burnDurationMs: Math.max(0, Number(effect.burnDurationMs ?? effect.igniteDurationMs) || 0),
-      roastDps: Math.max(0, Number(effect.roastDps) || 0),
-      roastDurationMs: Math.max(0, Number(effect.roastDurationMs ?? effect.durationMs) || 0),
-      tickMs: Math.max(50, Number(effect.tickMs) || 250),
+      burning,
     });
   }
 
@@ -573,37 +582,15 @@ export function createGnatSwarm3dRuntime({
     if (!state || state.hp <= 0) return false;
     const amount = Math.max(0, Number(damage.amount) || 0);
     if (amount > 0) state.hp = Math.max(0, Number(state.hp) - amount);
-    if (damage.damageType === DAMAGE_TYPE_FIRE) {
-      if (damage.burnDps > 0 && damage.burnDurationMs > 0) {
-        state.burnDps = Math.max(Number(state.burnDps) || 0, damage.burnDps);
-        state.burnUntilSec = Math.max(Number(state.burnUntilSec) || 0, nowSec + damage.burnDurationMs / 1000);
-        state.nextBurnTickSec = Math.min(Number(state.nextBurnTickSec) || Infinity, nowSec + damage.tickMs / 1000);
-      }
-      if (damage.roastDps > 0 && damage.roastDurationMs > 0) {
-        state.roastDps = Math.max(Number(state.roastDps) || 0, damage.roastDps);
-        state.roastUntilSec = Math.max(Number(state.roastUntilSec) || 0, nowSec + damage.roastDurationMs / 1000);
-        state.nextRoastTickSec = Math.min(Number(state.nextRoastTickSec) || Infinity, nowSec + damage.tickMs / 1000);
-      }
+    if (damage.damageType === DAMAGE_TYPE_FIRE && damage.burning) {
+      applyBurningStatusToEntity(state, damage.burning, nowSec);
     }
     return true;
   }
 
   function applyPeriodicFireDamage(state, nowSec = 0, dtSec = 0) {
     if (!state || state.hp <= 0) return 0;
-    let totalDamage = 0;
-    if ((Number(state.burnUntilSec) || 0) > nowSec) {
-      totalDamage += Math.max(0, Number(state.burnDps) || 0) * dtSec;
-    } else {
-      state.burnDps = 0;
-    }
-    if ((Number(state.roastUntilSec) || 0) > nowSec) {
-      totalDamage += Math.max(0, Number(state.roastDps) || 0) * dtSec;
-    } else {
-      state.roastDps = 0;
-    }
-    if (totalDamage <= 0) return 0;
-    state.hp = Math.max(0, Number(state.hp) - totalDamage);
-    return totalDamage;
+    return tickBurningStatusOnEntity(state, nowSec, dtSec);
   }
 
   function releaseOrbTargets({ atMs = null } = {}) {
@@ -1384,7 +1371,9 @@ export function createGnatSwarm3dRuntime({
       scaleVec.set(state.scale, state.scale * 0.55, state.scale);
 	      matrix.compose(positionVec, quat, scaleVec);
 	      mesh.setMatrixAt(i, matrix);
-	      if ((Number(state.burnUntilSec) || 0) > nowSec || (Number(state.roastUntilSec) || 0) > nowSec) {
+	      const burningVisual = getBurningVisualState(state, nowSec);
+	      if (burningVisual.active) {
+	        GNAT_COLOR_BURNING.setHex(burningVisual.profile.tintHex);
 	        mesh.setColorAt(i, GNAT_COLOR_BURNING);
 	      } else if (shouldShowSignalBlink(state, nowSec)) {
 	        mesh.setColorAt(i, GNAT_COLOR_SIGNAL);

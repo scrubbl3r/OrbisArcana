@@ -149,6 +149,7 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
 
 const FLAME_AOE_3D_BEHAVIOR_DEFAULTS = Object.freeze({
   enabled: true,
+  visualProfile: "spellfire",
   hitRadiusBo: 0.95,
   wakeReachScale: 1,
   igniteDamage: 0.1,
@@ -260,6 +261,7 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
       wakeAlphaGradient3Pct: optionalNumber(els && els.flameAoe3dWakeAlphaGradient3Pct && els.flameAoe3dWakeAlphaGradient3Pct.value, 0, 100),
       wakeAlphaGradient3A: optionalNumber(els && els.flameAoe3dWakeAlphaGradient3A && els.flameAoe3dWakeAlphaGradient3A.value, 0, 1),
       wakeGraphEnabled: (els && els.flameAoe3dWakeGraphEnabled && String(els.flameAoe3dWakeGraphEnabled.value) === "0") ? 0 : 1,
+      visualProfile: String(behaviorDefaults.visualProfile || "spellfire"),
       hitRadiusBo: fixedNumber(els && els.flameAoe3dHitRadiusBo && els.flameAoe3dHitRadiusBo.value, 2, behaviorDefaults.hitRadiusBo),
       wakeReachScale: fixedNumber(els && els.flameAoe3dWakeReachScale && els.flameAoe3dWakeReachScale.value, 2, behaviorDefaults.wakeReachScale),
       igniteDamage: fixedNumber(els && els.flameAoe3dIgniteDamage && els.flameAoe3dIgniteDamage.value, 2, behaviorDefaults.igniteDamage),

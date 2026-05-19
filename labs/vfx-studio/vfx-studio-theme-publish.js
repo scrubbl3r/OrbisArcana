@@ -602,6 +602,7 @@ export function buildFlameAoe3dBehaviorModule(params) {
   return [
     "export const FLAME_AOE_BEHAVIOR_DEFAULT = Object.freeze({",
     "  enabled: true,",
+    `  visualProfile: ${JSON.stringify(String(p.visualProfile || "spellfire"))},`,
     `  hitRadiusBo: ${toNum(p.hitRadiusBo, 0.95).toFixed(2)},`,
     `  wakeReachScale: ${toNum(p.wakeReachScale, 1).toFixed(2)},`,
     `  igniteDamage: ${toNum(p.igniteDamage, 0.1).toFixed(2)},`,
