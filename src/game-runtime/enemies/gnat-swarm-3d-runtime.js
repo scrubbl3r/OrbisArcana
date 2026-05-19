@@ -582,6 +582,27 @@ export function createGnatSwarm3dRuntime({
     return resolveDamageVolumeHit(position, center, effect, bo).inside;
   }
 
+  function resolveDamageTargetPaddingBo(state, bo = 42) {
+    if (!state) return 0;
+    const radiusPx = Math.max(0, Number(state.gnatRadiusPx) || 0);
+    return radiusPx / Math.max(1, bo);
+  }
+
+  function resolvePaddedDamageEffect(effect = {}, targetPaddingBo = 0) {
+    const paddingBo = Math.max(0, Number(targetPaddingBo) || 0);
+    if (paddingBo <= 0) return effect;
+    const radiusBo = Math.max(0, Number(effect.radiusBo) || 0) + paddingBo;
+    const forwardRadiusBo = Math.max(
+      radiusBo,
+      Math.max(0, Number(effect.forwardRadiusBo || effect.wakeRadiusBo || 0)) + paddingBo
+    );
+    return {
+      ...effect,
+      radiusBo,
+      forwardRadiusBo,
+    };
+  }
+
   function resolveDamageVolumeHit(position, center, effect = {}, bo = 42) {
     const radiusPx = Math.max(0, Number(effect.radiusBo) || 0) * bo;
     const forwardRadiusPx = Math.max(radiusPx, Number(effect.forwardRadiusBo || effect.wakeRadiusBo || 0) * bo);
@@ -706,7 +727,9 @@ export function createGnatSwarm3dRuntime({
         if (!state || state.hp <= 0) continue;
         damageTrace.alive += 1;
         damageTrace.tested += 1;
-        const hit = resolveDamageVolumeHit(state.position, center, effect, bo);
+        const targetPaddingBo = resolveDamageTargetPaddingBo(state, bo);
+        const paddedEffect = resolvePaddedDamageEffect(effect, targetPaddingBo);
+        const hit = resolveDamageVolumeHit(state.position, center, paddedEffect, bo);
         if (Number.isFinite(hit.distanceBo) && (damageTrace.nearestBo == null || hit.distanceBo < damageTrace.nearestBo)) {
           damageTrace.nearestBo = Number(hit.distanceBo.toFixed(3));
           damageTrace.nearest = {
@@ -714,6 +737,9 @@ export function createGnatSwarm3dRuntime({
             hp: Number(state.hp) || 0,
             mode: String(state.mode || ""),
             distanceBo: Number(hit.distanceBo.toFixed(3)),
+            targetPaddingBo: Number(targetPaddingBo.toFixed(3)),
+            effectiveRadiusBo: Number((hit.radiusPx / Math.max(1, bo)).toFixed(3)),
+            effectiveForwardRadiusBo: Number((hit.forwardRadiusPx / Math.max(1, bo)).toFixed(3)),
             alongBo: Number((hit.alongPx / Math.max(1, bo)).toFixed(3)),
             sideBo: Number((hit.sidePx / Math.max(1, bo)).toFixed(3)),
             alongN: Number(hit.alongN.toFixed(3)),
@@ -727,6 +753,8 @@ export function createGnatSwarm3dRuntime({
             hp: Number(state.hp) || 0,
             mode: String(state.mode || ""),
             distanceBo: Number((hit.distanceBo || 0).toFixed(3)),
+            targetPaddingBo: Number(targetPaddingBo.toFixed(3)),
+            effectiveRadiusBo: Number((hit.radiusPx / Math.max(1, bo)).toFixed(3)),
             alongBo: Number((hit.alongPx / Math.max(1, bo)).toFixed(3)),
             sideBo: Number((hit.sidePx / Math.max(1, bo)).toFixed(3)),
             inside: !!hit.inside,

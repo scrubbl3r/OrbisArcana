@@ -150,7 +150,7 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
 const FLAME_AOE_3D_BEHAVIOR_DEFAULTS = Object.freeze({
   enabled: true,
   visualProfile: "spellfire",
-  hitRadiusBo: 1.5,
+  hitRadiusBo: 4.5,
   wakeReachScale: 1,
   igniteDamage: 1,
   igniteBurnDps: 0.35,

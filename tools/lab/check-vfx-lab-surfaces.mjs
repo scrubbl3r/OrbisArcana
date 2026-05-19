@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { createLabEffectSurfaces } from "../../labs/vfx-studio/vfx-studio-surfaces.js";
 import {
+  buildFlameAoe3dBehaviorModule,
   buildLivePresetModuleForBaseEffect,
   buildTeleportBehaviorModule,
 } from "../../labs/vfx-studio/vfx-studio-theme-publish.js";
@@ -43,6 +44,7 @@ function createSentinelAdapter(name) {
 }
 
 const surfaces = createLabEffectSurfaces({
+  buildFlameAoe3dBehaviorModule,
   buildTeleportBehaviorModule,
   createBankOrb3dAuthoringAdapter: createSentinelAdapter("bank-orb-3d"),
   createBubbleShield3dAuthoringAdapter: createSentinelAdapter("bubble-shield-3d"),
