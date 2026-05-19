@@ -666,7 +666,10 @@ export function createFlameAoe3dRuntime({
     const buoyLift = bo * clampNumber(activeConfig && activeConfig.wakeStretchStrength, 0, 4, 0);
     const spring = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 80, 18);
     const damping = clampNumber(activeConfig && activeConfig.wakeLeanLag, 0, 40, 8);
-    const maxStretch = bo * Math.max(0.5, Math.min(5, (clampNumber(activeConfig && activeConfig.wakeLengthBo, 0.05, 4, 1) + clampNumber(activeConfig && activeConfig.wakeStretchStrength, 0, 4, 0))));
+    const restLift = Math.max(bo * 0.08, baseLift + buoyLift);
+    const authoredSlack = bo * clampNumber(activeConfig && activeConfig.wakeLengthBo, 0, 4, 0);
+    const motionSlack = Math.max(bo * 0.5, restLift * 0.35, authoredSlack);
+    const maxStretch = Math.min(bo * 8, restLift + motionSlack);
     const position = readOrbPosition();
     if (!position) {
       targetLiftCoreOffset.set(0, baseLift + buoyLift, 0);
@@ -680,7 +683,7 @@ export function createFlameAoe3dRuntime({
       const vz = (position.z - lastPosition.z) / safeDt;
       lastPosition.copy(position);
       rawMotionOffset.set(-vx * 0.085, -vy * 0.085, -vz * 0.055);
-      rawMotionOffset.clampLength(0, maxStretch * 0.72);
+      rawMotionOffset.clampLength(0, motionSlack);
       targetLiftCoreOffset.set(0, baseLift + buoyLift, 0).add(rawMotionOffset);
     }
     targetLiftCoreOffset.clampLength(bo * 0.08, maxStretch);
