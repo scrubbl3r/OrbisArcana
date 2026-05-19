@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260518d";
 
+const FLAME_AOE_RENDER_ORDER_BASE = 120;
+
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   const f = Number(fallback);
@@ -238,7 +240,7 @@ function createAuraShellMaterial(config) {
     name: "flame_aoe3d:aura_shell_material",
     transparent: true,
     depthWrite: false,
-    depthTest: true,
+    depthTest: false,
     blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide,
     uniforms: {
@@ -359,9 +361,9 @@ function createWakeMaterial(config) {
     name: "flame_aoe3d:directional_wake_material",
     transparent: true,
     depthWrite: false,
-    depthTest: true,
+    depthTest: false,
     blending: THREE.NormalBlending,
-    side: THREE.FrontSide,
+    side: THREE.DoubleSide,
     uniforms: {
       uTime: { value: 0 },
       uWakeDisplaceDepth: { value: config.wakeDisplacePx },
@@ -801,7 +803,7 @@ export function createFlameAoe3dRuntime({
         auraMaterial
       );
       aura.name = "flame_aoe3d:aura_shell";
-      aura.renderOrder = 8;
+      aura.renderOrder = FLAME_AOE_RENDER_ORDER_BASE;
       wakeMaterial = createWakeMaterial({
         ...config,
         wakeDisplacePx: config.wakeDisplaceEnabled ? bo * config.wakeDisplaceBo : 0,
@@ -822,7 +824,7 @@ export function createFlameAoe3dRuntime({
         wakeMaterial
       );
       wake.name = "flame_aoe3d:elastic_flame_shell";
-      wake.renderOrder = 10;
+      wake.renderOrder = FLAME_AOE_RENDER_ORDER_BASE + 1;
       wakeMesh = wake;
       wakePivot = new THREE.Group();
       wakePivot.name = "flame_aoe3d:elastic_flame_shell_pivot";
