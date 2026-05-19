@@ -1902,6 +1902,92 @@ function shellTeleportOrbToSpawnNeutralizePhysics(shellContext, aboveGroundPx = 
   });
 }
 
+const SHELL_BURN_CAPTURE_EVENTS = new Set([
+  "flameAoe.gnatBurn.trace",
+  "flameAoe.gameStage.damageTick",
+  "flameAoe.gameStage.called",
+  "flameAoe.gameStage.hazardStarted",
+  "flameAoe.gameStage.skipped",
+  "flameAoe.stageFanout.start",
+  "flameAoe.stageFanout.result",
+  "flameAoe.spellHandler.called",
+  "flameAoe3d.play",
+  "camera.hand_lost",
+  "camera.hand_reacquired",
+]);
+
+const SHELL_BURN_CAPTURE_METRICS = new Set([
+  "flameAoe3d.play",
+  "flameAoe3d.wakeMotion",
+  "depth3d.enemies",
+  "depth3d.renderer",
+  "frame.total",
+]);
+
+function compactShellCaptureCamera(camera = null) {
+  if (!camera || typeof camera !== "object") return null;
+  return {
+    status: camera.status,
+    trackingState: camera.trackingState,
+    handPresent: camera.handPresent,
+    fps: camera.fps,
+    detectMs: camera.detectMs,
+    inputFrameMs: camera.inputFrameMs,
+    inputAgeMs: camera.inputAgeMs,
+    detectorResultReason: camera.detectorResultReason,
+    detectorBestScore: camera.detectorBestScore,
+    detectorMissingBurstMs: camera.detectorMissingBurstMs,
+  };
+}
+
+function compactShellCaptureBloomTrace(trace = null) {
+  if (!trace || typeof trace !== "object") return null;
+  return {
+    renderCalls: trace.renderCalls || 0,
+    resizeCalls: trace.resizeCalls || 0,
+    lastSize: trace.lastSize || null,
+    sceneChildren: trace.sceneChildren || 0,
+    sceneObjectCount: trace.sceneObjectCount || 0,
+    artPlaneCount: trace.artPlaneCount || 0,
+    camera: trace.camera ? {
+      fov: trace.camera.fov,
+      aspect: trace.camera.aspect,
+      position: trace.camera.position || null,
+    } : null,
+  };
+}
+
+function buildShellBurnCaptureSnapshot(snapshot = {}) {
+  const latestFrame = snapshot && snapshot.latestFrame && typeof snapshot.latestFrame === "object"
+    ? snapshot.latestFrame
+    : {};
+  const metrics = Array.isArray(snapshot.metrics)
+    ? snapshot.metrics.filter((metric) => metric && SHELL_BURN_CAPTURE_METRICS.has(metric.name))
+    : [];
+  const events = Array.isArray(snapshot.events)
+    ? snapshot.events.filter((event) => event && SHELL_BURN_CAPTURE_EVENTS.has(event.name)).slice(-48)
+    : [];
+  return {
+    enabled: snapshot.enabled === true,
+    frameIndex: snapshot.frameIndex,
+    latestFrame: {
+      frame: latestFrame.frame,
+      dtMs: latestFrame.dtMs,
+      xW: latestFrame.xW,
+      yW: latestFrame.yW,
+      camLeft: latestFrame.camLeft,
+      camTop: latestFrame.camTop,
+      zoom: latestFrame.zoom,
+      camera: compactShellCaptureCamera(latestFrame.camera),
+      depth3dModuleVersion: latestFrame.depth3dModuleVersion,
+      depth3dBloom: compactShellCaptureBloomTrace(latestFrame.depth3dBloom),
+      totalMs: latestFrame.totalMs,
+    },
+    metrics,
+    events,
+  };
+}
+
 function bindShellPerfTraceControls(shellContext) {
   const rootDocument = shellContext && shellContext.rootDocument ? shellContext.rootDocument : null;
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
@@ -1919,9 +2005,11 @@ function bindShellPerfTraceControls(shellContext) {
     }, 900);
   };
 
-  async function copyTraceSnapshot() {
+  async function copyTraceSnapshot({ full = false } = {}) {
+    const snapshot = typeof perfTrace.snapshot === "function" ? perfTrace.snapshot() : {};
+    const capture = full ? snapshot : buildShellBurnCaptureSnapshot(snapshot);
     const text = JSON.stringify(
-      typeof perfTrace.snapshot === "function" ? perfTrace.snapshot() : {},
+      capture,
       null,
       2
     );
@@ -1955,10 +2043,11 @@ function bindShellPerfTraceControls(shellContext) {
   }
 
   if (captureBtn && typeof perfTrace.snapshot === "function") {
-    captureBtn.addEventListener("click", async () => {
+    captureBtn.addEventListener("click", async (event) => {
       try {
-        await copyTraceSnapshot();
-        setButtonText(captureBtn, "Copied", "Capture");
+        const full = event && event.shiftKey === true;
+        await copyTraceSnapshot({ full });
+        setButtonText(captureBtn, full ? "Copied Full" : "Copied Burn", "Capture");
       } catch (_) {
         setButtonText(captureBtn, "Failed", "Capture");
       }
