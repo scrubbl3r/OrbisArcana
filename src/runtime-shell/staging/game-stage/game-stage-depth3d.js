@@ -177,6 +177,7 @@ export function createGameStageDepth3dLayer({
   let lastGlobe3dTickMs = 0;
   let lastEnemy3dTickMs = 0;
   let lastEnemyTelemetryAtMs = 0;
+  let activeFlameAoeHazard = null;
   let boundGlobe3dSpawns = Object.freeze([]);
   const telemetry = createGameStageDepth3dTelemetry({
     root,
@@ -466,9 +467,98 @@ export function createGameStageDepth3dLayer({
     orbLifecycle3dRuntime.update(nowMs);
   }
 
+  function resolveFlameAoeHazardConfig(flamePayload = {}, callAtMs = performance.now()) {
+    const payload = flamePayload && typeof flamePayload === "object" ? flamePayload : {};
+    const visualConfig = { ...FLAME_AOE_3D_PRESET_DEFAULT, ...payload };
+    const behaviorConfig = {
+      ...FLAME_AOE_BEHAVIOR_DEFAULT,
+      ...(payload.behavior && typeof payload.behavior === "object" ? payload.behavior : {}),
+    };
+    const durationMs = Math.max(50, Number(payload.durationMs || visualConfig.durationMs) || 1000);
+    const hitRadiusBo = Math.max(0.05, Number(behaviorConfig.hitRadiusBo) || Number(FLAME_AOE_BEHAVIOR_DEFAULT.hitRadiusBo) || 4.5);
+    const wakeHeightBo = Math.max(
+      hitRadiusBo,
+      (Number(visualConfig.wakeLiftBo) || 0)
+        + (Number(visualConfig.wakeLiftCoreRadiusBo) || 0)
+        + (Number(visualConfig.wakeStretchStrength) || 0)
+    ) * Math.max(0, Number(behaviorConfig.wakeReachScale) || 0);
+    const tickMs = Math.max(50, Number(behaviorConfig.roastTickMs) || 250);
+    return Object.freeze({
+      enabled: behaviorConfig.enabled !== false,
+      startedAtMs: callAtMs,
+      untilMs: callAtMs + durationMs,
+      lastTickMs: callAtMs - tickMs,
+      tickMs,
+      radiusBo: hitRadiusBo,
+      forwardRadiusBo: Math.max(hitRadiusBo, wakeHeightBo),
+      visualProfile: String(behaviorConfig.visualProfile || "spellfire"),
+      burnDps: Math.max(0, Number(behaviorConfig.igniteBurnDps) || 0),
+      burnDurationMs: Math.max(0, Number(behaviorConfig.igniteDurationMs) || 0),
+      roastDps: Math.max(0, Number(behaviorConfig.roastDps) || 0),
+    });
+  }
+
+  function applyActiveFlameAoeHazard(nowMs = performance.now(), { force = false } = {}) {
+    const hazard = activeFlameAoeHazard;
+    if (!hazard || !hazard.enabled) return null;
+    if (nowMs > hazard.untilMs) {
+      activeFlameAoeHazard = null;
+      return null;
+    }
+    if (!currentOrbWorldPosition) return null;
+    const elapsedMs = Math.max(0, nowMs - (Number(hazard.lastTickMs) || hazard.startedAtMs));
+    if (!force && elapsedMs < hazard.tickMs) return null;
+    const dtSec = Math.max(0.001, Math.min(1, elapsedMs / 1000));
+    activeFlameAoeHazard = Object.freeze({
+      ...hazard,
+      lastTickMs: nowMs,
+    });
+    const damageResult = gnatSwarm3dRuntime.applyCombatEffect({
+      kind: COMBAT_EFFECT_DAMAGE,
+      sourceEntityId: COMBAT_ENTITY_ORB,
+      targetEntityId: "enemy:gnat-swarm",
+      centerWorld: currentOrbWorldPosition,
+      radiusBo: hazard.radiusBo,
+      forwardRadiusBo: hazard.forwardRadiusBo,
+      axisWorld: { xW: 0, yW: -1 },
+      amount: Math.max(0, hazard.roastDps * dtSec),
+      damageType: DAMAGE_TYPE_FIRE,
+      visualProfile: hazard.visualProfile,
+      burnDps: hazard.burnDps,
+      burnDurationMs: hazard.burnDurationMs,
+      roastDps: 0,
+      roastDurationMs: 0,
+      tickMs: hazard.tickMs,
+      atMs: nowMs,
+      tags: ["spell", "flame-aoe", "hazard"],
+    });
+    root.dataset.enemy3dLastFlameAoeDamageCount = String(damageResult && damageResult.affected || 0);
+    root.dataset.enemy3dLastFlameAoeRadiusBo = String(hazard.radiusBo.toFixed(2));
+    root.dataset.enemy3dLastFlameAoeForwardRadiusBo = String(hazard.forwardRadiusBo.toFixed(2));
+    const damageTrace = damageResult && damageResult.trace ? damageResult.trace : null;
+    if (damageTrace) {
+      root.dataset.enemy3dLastFlameAoeAlive = String(damageTrace.alive || 0);
+      root.dataset.enemy3dLastFlameAoeTested = String(damageTrace.tested || 0);
+      root.dataset.enemy3dLastFlameAoeInRange = String(damageTrace.inRange || 0);
+      root.dataset.enemy3dLastFlameAoeNearestBo = damageTrace.nearestBo == null ? "" : String(damageTrace.nearestBo);
+    }
+    if (perfTrace && typeof perfTrace.mark === "function") {
+      perfTrace.mark("flameAoe.gameStage.damageTick", {
+        handled: !!(damageResult && damageResult.handled),
+        affected: damageResult && damageResult.affected || 0,
+        radiusBo: Number(hazard.radiusBo.toFixed(2)),
+        forwardRadiusBo: Number(hazard.forwardRadiusBo.toFixed(2)),
+        amount: Number((hazard.roastDps * dtSec).toFixed(3)),
+        trace: damageTrace,
+      });
+    }
+    return damageResult;
+  }
+
   function tickEnemy3dRuntime(nowMs = performance.now()) {
     const dtSec = lastEnemy3dTickMs ? Math.max(0.001, Math.min(0.05, (nowMs - lastEnemy3dTickMs) / 1000)) : 0.016;
     lastEnemy3dTickMs = nowMs;
+    applyActiveFlameAoeHazard(nowMs);
     const orbRuntimePosition = currentOrbAlive ? orb3dActorRuntime.getPosition() : null;
     const shieldCombat = bubbleShield3dRuntime && typeof bubbleShield3dRuntime.getCombatState === "function"
       ? bubbleShield3dRuntime.getCombatState(nowMs)
@@ -735,6 +825,7 @@ export function createGameStageDepth3dLayer({
       clearPropsGroup();
       artPlane3dRuntime.clear();
       starField3dRuntime.clear();
+      activeFlameAoeHazard = null;
       gnatSwarm3dRuntime.clear();
       const sceneModel = resolveSceneModel(authoredScene);
       const summary = resolveSceneSummary(authoredScene);
@@ -929,64 +1020,28 @@ export function createGameStageDepth3dLayer({
         ? flameAoe3dRuntime.play(flamePayload)
         : { handled: false, skipped: "flame_aoe3d_model_missing" };
       root.dataset.enemy3dLastFlameAoeStageCallAt = String(Math.round(callAtMs));
-      const visualConfig = { ...FLAME_AOE_3D_PRESET_DEFAULT, ...flamePayload };
-      const behaviorConfig = {
-        ...FLAME_AOE_BEHAVIOR_DEFAULT,
-        ...(flamePayload.behavior && typeof flamePayload.behavior === "object" ? flamePayload.behavior : {}),
-      };
-      if (behaviorConfig.enabled !== false && currentOrbWorldPosition) {
-        const hitRadiusBo = Math.max(0.05, Number(behaviorConfig.hitRadiusBo) || Number(FLAME_AOE_BEHAVIOR_DEFAULT.hitRadiusBo) || 4.5);
-        const wakeHeightBo = Math.max(
-          hitRadiusBo,
-          (Number(visualConfig.wakeLiftBo) || 0)
-            + (Number(visualConfig.wakeLiftCoreRadiusBo) || 0)
-            + (Number(visualConfig.wakeStretchStrength) || 0)
-        ) * Math.max(0, Number(behaviorConfig.wakeReachScale) || 0);
-        const damageResult = gnatSwarm3dRuntime.applyCombatEffect({
-          kind: COMBAT_EFFECT_DAMAGE,
-          sourceEntityId: COMBAT_ENTITY_ORB,
-          targetEntityId: "enemy:gnat-swarm",
-          centerWorld: currentOrbWorldPosition,
-          radiusBo: hitRadiusBo,
-          forwardRadiusBo: Math.max(hitRadiusBo, wakeHeightBo),
-          axisWorld: { xW: 0, yW: -1 },
-          amount: Math.max(0, Number(behaviorConfig.igniteDamage) || 0),
-          damageType: DAMAGE_TYPE_FIRE,
-          visualProfile: String(behaviorConfig.visualProfile || "spellfire"),
-          burnDps: Math.max(0, Number(behaviorConfig.igniteBurnDps) || 0),
-          burnDurationMs: Math.max(0, Number(behaviorConfig.igniteDurationMs) || 0),
-          roastDps: Math.max(0, Number(behaviorConfig.roastDps) || 0),
-          roastDurationMs: Math.max(50, Number(flamePayload.durationMs || visualConfig.durationMs) || 1000),
-          tickMs: Math.max(50, Number(behaviorConfig.roastTickMs) || 250),
-          atMs: performance.now(),
-          tags: ["spell", "flame-aoe"],
-        });
-        root.dataset.enemy3dLastFlameAoeDamageCount = String(damageResult && damageResult.affected || 0);
-        root.dataset.enemy3dLastFlameAoeRadiusBo = String(hitRadiusBo.toFixed(2));
-        root.dataset.enemy3dLastFlameAoeForwardRadiusBo = String(Math.max(hitRadiusBo, wakeHeightBo).toFixed(2));
-        const damageTrace = damageResult && damageResult.trace ? damageResult.trace : null;
-        if (damageTrace) {
-          root.dataset.enemy3dLastFlameAoeAlive = String(damageTrace.alive || 0);
-          root.dataset.enemy3dLastFlameAoeTested = String(damageTrace.tested || 0);
-          root.dataset.enemy3dLastFlameAoeInRange = String(damageTrace.inRange || 0);
-          root.dataset.enemy3dLastFlameAoeNearestBo = damageTrace.nearestBo == null ? "" : String(damageTrace.nearestBo);
-        }
+      const hazard = resolveFlameAoeHazardConfig(flamePayload, callAtMs);
+      if (hazard.enabled && currentOrbWorldPosition) {
+        activeFlameAoeHazard = hazard;
+        const damageResult = applyActiveFlameAoeHazard(callAtMs, { force: true });
         if (perfTrace && typeof perfTrace.mark === "function") {
-          perfTrace.mark("flameAoe.gameStage.damage", {
+          perfTrace.mark("flameAoe.gameStage.hazardStarted", {
             handled: !!(damageResult && damageResult.handled),
             affected: damageResult && damageResult.affected || 0,
-            radiusBo: Number(hitRadiusBo.toFixed(2)),
-            forwardRadiusBo: Number(Math.max(hitRadiusBo, wakeHeightBo).toFixed(2)),
-            trace: damageTrace,
+            radiusBo: Number(hazard.radiusBo.toFixed(2)),
+            forwardRadiusBo: Number(hazard.forwardRadiusBo.toFixed(2)),
+            durationMs: Math.max(0, Math.round(hazard.untilMs - hazard.startedAtMs)),
+            tickMs: hazard.tickMs,
           });
         }
       } else {
+        activeFlameAoeHazard = null;
         root.dataset.enemy3dLastFlameAoeDamageCount = "0";
         root.dataset.enemy3dLastFlameAoeSkipped = currentOrbWorldPosition ? "disabled" : "missing_orb_world_position";
         if (perfTrace && typeof perfTrace.mark === "function") {
           perfTrace.mark("flameAoe.gameStage.skipped", {
             reason: root.dataset.enemy3dLastFlameAoeSkipped,
-            behaviorEnabled: behaviorConfig.enabled !== false,
+            behaviorEnabled: hazard.enabled,
             hasOrbWorld: !!currentOrbWorldPosition,
           });
         }
@@ -1076,6 +1131,7 @@ export function createGameStageDepth3dLayer({
     dispose() {
       disposed = true;
       cancelHealPulse({ clearLayer: false });
+      activeFlameAoeHazard = null;
       renderLoop.dispose();
       eventBindings.dispose();
       teleport3dRuntime.destroy();
