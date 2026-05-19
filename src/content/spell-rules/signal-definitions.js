@@ -1,6 +1,6 @@
 // Data-only signal catalog for rule-engine scaffolding.
 // Runtime cutover will consume these IDs in a later slice.
-import { ACTIVE_WORDS_BY_ID } from "../../voice/wordbook.js";
+import { ACTIVE_WORDS_BY_ID } from "../../voice/wordbook.js?v=20260518a";
 import {
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
   WAKE_ARM_WORD_IDS,
