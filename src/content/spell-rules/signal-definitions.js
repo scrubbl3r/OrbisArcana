@@ -3,10 +3,11 @@
 import { ACTIVE_WORDS_BY_ID } from "../../voice/wordbook.js";
 import {
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
+  WAKE_ARM_WORD_IDS,
   WAKE_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WINDOW_WORD_IDS,
-} from "../spells/spell-runtime-routing.js?v=20260517a";
+} from "../spells/spell-runtime-routing.js?v=20260518a";
 
 function buildWakeWindowWordSignals() {
   const wakeWordIds = new Set(
@@ -29,7 +30,7 @@ function buildWakeWindowWordSignals() {
 }
 
 function buildWakeWordSignals() {
-  return (Array.isArray(WAKE_WORD_IDS) ? WAKE_WORD_IDS : [])
+  return (Array.isArray(WAKE_ARM_WORD_IDS) ? WAKE_ARM_WORD_IDS : [])
     .map((wordIdRaw) => String(wordIdRaw || "").trim().toLowerCase())
     .filter(Boolean)
     .map((wordId) => {
@@ -59,7 +60,7 @@ function buildWakeRequiredWordSignals() {
 function buildRuleEngineOwnedImmediateWordSignals() {
   const excluded = new Set([
     ...(Array.isArray(WAKE_WINDOW_WORD_IDS) ? WAKE_WINDOW_WORD_IDS : []),
-    ...(Array.isArray(WAKE_WORD_IDS) ? WAKE_WORD_IDS : []),
+    ...(Array.isArray(WAKE_ARM_WORD_IDS) ? WAKE_ARM_WORD_IDS : []),
     ...(Array.isArray(WAKE_REQUIRED_WORD_IDS) ? WAKE_REQUIRED_WORD_IDS : []),
   ].map((wordIdRaw) => String(wordIdRaw || "").trim().toLowerCase()).filter(Boolean));
   return (Array.isArray(RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS) ? RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS : [])

@@ -8,6 +8,24 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 
 const CHECK_TAG = "kws-listen-policy-a-mode:v2";
 const PASS_MESSAGE = "strict A mode derives roots at idle and extends the backend listen set only through opened SSOT windows";
+const EXPECTED_IDLE_ROOT_WORDS = Object.freeze([
+  "orbis",
+  "are_kay_nah",
+  "echovar",
+  "sanctum",
+  "modulon",
+  "salubrium",
+  "leviton",
+]);
+const EXPECTED_IDLE_ROOT_TOKENS = Object.freeze([
+  "orbis",
+  "are kay nah",
+  "echovar",
+  "sanctum",
+  "modulon",
+  "salubrium",
+  "leviton",
+]);
 
 function assertHasAll(haystack, expected, label) {
   const set = new Set(Array.isArray(haystack) ? haystack : []);
@@ -46,8 +64,8 @@ async function main() {
       { id: "expired.window", wordIds: ["pyro"], expiresAtMs: 900 },
     ],
   });
-  assertHasAll(derived.rootWordIds, ["orbis", "are_kay_nah"], "derived roots");
-  assertHasAll(derived.listenableWordIds, ["orbis", "are_kay_nah", "domus", "electrum"], "derived listenableWordIds");
+  assertHasAll(derived.rootWordIds, EXPECTED_IDLE_ROOT_WORDS, "derived roots");
+  assertHasAll(derived.listenableWordIds, [...EXPECTED_IDLE_ROOT_WORDS, "domus", "electrum"], "derived listenableWordIds");
   assertCheck(!derived.listenableWordIds.includes("pyro"), `[${CHECK_TAG}] expired window word should not remain listenable`);
 
   controller.start();
@@ -58,10 +76,10 @@ async function main() {
   controller.setMode("A");
   status = controller.getStatus();
   assertCheck(status.mode === "A", `[${CHECK_TAG}] expected controller mode A after toggle`);
-  assertHasAll(status.listenableWordIds, ["orbis", "are_kay_nah"], "A idle listenableWordIds");
-  assertHasAll(backendConfigs.at(-1)?.activeTokens || [], ["orbis", "are kay nah"], "A idle backend tokens");
-  assertHasAll(parserConfigs.at(-1)?.words || [], ["orbis", "are_kay_nah"], "A idle parser words");
-  assertHasAll(parserConfigs.at(-1)?.wakeTokens || [], ["orbis", "are kay nah"], "A idle parser wakeTokens");
+  assertHasAll(status.listenableWordIds, EXPECTED_IDLE_ROOT_WORDS, "A idle listenableWordIds");
+  assertHasAll(backendConfigs.at(-1)?.activeTokens || [], EXPECTED_IDLE_ROOT_TOKENS, "A idle backend tokens");
+  assertHasAll(parserConfigs.at(-1)?.words || [], EXPECTED_IDLE_ROOT_WORDS, "A idle parser words");
+  assertHasAll(parserConfigs.at(-1)?.wakeTokens || [], EXPECTED_IDLE_ROOT_TOKENS, "A idle parser wakeTokens");
 
   eventBus.emit("rule_engine.wake_win_opened", {
     windowId: "wake.main",
@@ -70,9 +88,9 @@ async function main() {
     atMs: Date.now(),
   });
   status = controller.getStatus();
-  assertHasAll(status.listenableWordIds, ["orbis", "are_kay_nah", "domus", "electrum", "pyro"], "A opened listenableWordIds");
-  assertHasAll(backendConfigs.at(-1)?.activeTokens || [], ["orbis", "are kay nah", "domus", "electrum", "pyro"], "A opened backend tokens");
-  assertHasAll(parserConfigs.at(-1)?.words || [], ["orbis", "are_kay_nah", "domus", "electrum", "pyro"], "A opened parser words");
+  assertHasAll(status.listenableWordIds, [...EXPECTED_IDLE_ROOT_WORDS, "domus", "electrum", "pyro"], "A opened listenableWordIds");
+  assertHasAll(backendConfigs.at(-1)?.activeTokens || [], [...EXPECTED_IDLE_ROOT_TOKENS, "domus", "electrum", "pyro"], "A opened backend tokens");
+  assertHasAll(parserConfigs.at(-1)?.words || [], [...EXPECTED_IDLE_ROOT_WORDS, "domus", "electrum", "pyro"], "A opened parser words");
 
   await new Promise((resolve) => setTimeout(resolve, 5));
   eventBus.emit("rule_engine.preview_matched", {
@@ -83,15 +101,15 @@ async function main() {
 
   await new Promise((resolve) => setTimeout(resolve, 10));
   status = controller.getStatus();
-  assertHasAll(status.listenableWordIds, ["orbis", "are_kay_nah", "domus", "electrum", "pyro"], "A refreshed listenableWordIds");
+  assertHasAll(status.listenableWordIds, [...EXPECTED_IDLE_ROOT_WORDS, "domus", "electrum", "pyro"], "A refreshed listenableWordIds");
 
   await new Promise((resolve) => setTimeout(resolve, 45));
   status = controller.getStatus();
-  assertHasAll(status.listenableWordIds, ["orbis", "are_kay_nah"], "A expired listenableWordIds");
+  assertHasAll(status.listenableWordIds, EXPECTED_IDLE_ROOT_WORDS, "A expired listenableWordIds");
   assertCheck(!status.listenableWordIds.includes("pyro"), `[${CHECK_TAG}] expected pyro to expire from strict listen set`);
-  assertHasAll(backendConfigs.at(-1)?.activeTokens || [], ["orbis", "are kay nah"], "A expired backend tokens");
+  assertHasAll(backendConfigs.at(-1)?.activeTokens || [], EXPECTED_IDLE_ROOT_TOKENS, "A expired backend tokens");
   assertCheck(!(backendConfigs.at(-1)?.activeTokens || []).includes("pyro"), `[${CHECK_TAG}] expected pyro token to expire from backend`);
-  assertHasAll(parserConfigs.at(-1)?.words || [], ["orbis", "are_kay_nah"], "A expired parser words");
+  assertHasAll(parserConfigs.at(-1)?.words || [], EXPECTED_IDLE_ROOT_WORDS, "A expired parser words");
   assertCheck(!(parserConfigs.at(-1)?.words || []).includes("pyro"), `[${CHECK_TAG}] expected pyro to expire from parser words`);
 
   controller.stop();

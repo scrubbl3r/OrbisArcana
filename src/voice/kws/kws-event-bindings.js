@@ -1,12 +1,12 @@
 import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260517a";
 import {
   KWS_FLASH_TOKEN_WORD_IDS,
+  WAKE_ARM_WORD_IDS,
   WAKE_WINDOW_WORD_IDS as KWS_WAKE_WINDOW_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing.js?v=20260517a";
+} from "../../content/spells/spell-runtime-routing.js?v=20260518a";
 import {
-  COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
   COMPILED_INTERACTION_GRAPH_V2_WAKE_TTL_MS,
-} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
+} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260518a";
 
 export function bindKwsEventHandlers({
   eventBus,
@@ -41,7 +41,7 @@ export function bindKwsEventHandlers({
   const wakeTtlMs = Math.max(0, Number(COMPILED_INTERACTION_GRAPH_V2_WAKE_TTL_MS) || gateTimeoutMs);
   let wakeArmedUntilMs = 0;
   const wakeWordIds = new Set(
-    (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS) ? COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS : [])
+    (Array.isArray(WAKE_ARM_WORD_IDS) ? WAKE_ARM_WORD_IDS : [])
       .map((wordId) => String(wordId || "").trim().toLowerCase())
       .filter(Boolean)
   );

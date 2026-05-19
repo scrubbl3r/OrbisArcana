@@ -2,9 +2,9 @@
 // This file owns behavior-oriented word metadata during refactor slices.
 import {
   COMPILED_INTERACTION_GRAPH_V2,
-} from "../interactions-v2/compiled-interaction-graph-v2.js?v=20260517a";
-import { COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS } from "../interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260517a";
-import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../interactions-v2/wordbook-v2.js?v=20260517a";
+} from "../interactions-v2/compiled-interaction-graph-v2.js?v=20260518a";
+import { COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS } from "../interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260518a";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "../interactions-v2/wordbook-v2.js?v=20260518a";
 
 const PREFERRED_KWS_TOKEN_ORDER = Object.freeze([
   "orbis",
@@ -260,6 +260,13 @@ function collectRulesByPredicate(predicate) {
 
 function buildDerivedRuntimeProfileV2() {
   const wakeWordIds = uniqueWordIds(COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS);
+  const wakeArmWordIds = uniqueWordIds(
+    collectRulesByPredicate((rule) => {
+      const hasOpen = !!(rule && typeof rule.open === "object" && !Array.isArray(rule.open));
+      const hasRequires = asSelectorList(rule && rule.requires).length > 0;
+      return hasOpen && !hasRequires;
+    }).flatMap((rule) => collectRuleOnWordIds(rule))
+  );
   const wakeMainOpenRules = collectRulesByPredicate((rule) => {
     const open = (rule && typeof rule.open === "object" && !Array.isArray(rule.open)) ? rule.open : null;
     const openId = String(open && open.id || "").trim().toLowerCase();
@@ -318,7 +325,7 @@ function buildDerivedRuntimeProfileV2() {
   );
   const immediateTriggerWordIds = uniqueWordIds(
     immediateTriggerCandidates.filter((id) =>
-      !wakeWordIds.includes(id) &&
+      !wakeArmWordIds.includes(id) &&
       !wakeWindowWordIds.includes(id)
     )
   );
@@ -326,6 +333,7 @@ function buildDerivedRuntimeProfileV2() {
   return Object.freeze({
     authoredWordIds: Object.freeze(authoredWordIds),
     wakeWordIds: Object.freeze(wakeWordIds),
+    wakeArmWordIds: Object.freeze(wakeArmWordIds),
     standaloneWordIds: Object.freeze(standaloneWordIds),
     wakeRequiredWordIds: Object.freeze(wakeRequiredWordIds),
     wakeWindowWordIds: Object.freeze(wakeWindowWordIds),
@@ -351,8 +359,9 @@ function buildWordRuntimeRoutingV2(profile = COMPILED_INTERACTION_GRAPH_V2_RUNTI
     out.push(Object.freeze({ ...entry, id }));
   }
 
+  const wakeArmIds = new Set(Array.isArray(profile.wakeArmWordIds) ? profile.wakeArmWordIds : []);
   for (const id of (Array.isArray(profile.wakeWordIds) ? profile.wakeWordIds : [])) {
-    add({ id, intent: "spell.wake" });
+    add({ id, intent: wakeArmIds.has(id) ? "spell.wake" : `spell.${id}` });
   }
   const standaloneIds = uniqueWordIds([
     ...(Array.isArray(profile.standaloneWordIds) ? profile.standaloneWordIds : []),
@@ -520,6 +529,12 @@ export const WAKE_WORD_IDS = Object.freeze(
     : []).slice()
 );
 
+export const WAKE_ARM_WORD_IDS = Object.freeze(
+  (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.wakeArmWordIds)
+    ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.wakeArmWordIds
+    : WAKE_WORD_IDS).slice()
+);
+
 export const STANDALONE_WORD_IDS = Object.freeze(
   (Array.isArray(COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.standaloneWordIds)
     ? COMPILED_INTERACTION_GRAPH_V2_RUNTIME_PROFILE.standaloneWordIds
@@ -585,6 +600,7 @@ export const WAKE_WINDOW_RUNTIME_KEY_BY_WORD = Object.freeze({});
 const DEFAULT_KWS_TOP_WORD_IDS = Object.freeze([
   ...new Set([
     ...WAKE_WORD_IDS,
+    ...WAKE_ARM_WORD_IDS,
     ...WAKE_REQUIRED_WORD_IDS,
     ...STANDALONE_WORD_IDS,
   ]

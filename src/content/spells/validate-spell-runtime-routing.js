@@ -8,6 +8,7 @@ import {
   KWS_SIM_WORD_IDS,
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
   WORD_RUNTIME_ROUTING,
+  WAKE_ARM_WORD_IDS,
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WORD_IDS,
@@ -153,8 +154,8 @@ function collectWakeWinWordIdsFromOrchestratorV2(orchestratorV2) {
 
 function collectImmediateWordIdsFromOrchestratorV2(orchestratorV2) {
   const rules = Array.isArray(orchestratorV2 && orchestratorV2.rules) ? orchestratorV2.rules : [];
-  const wakeWordIds = new Set(
-    asSelectorList(orchestratorV2 && orchestratorV2.wake && orchestratorV2.wake.words)
+  const wakeArmWordIds = new Set(
+    (Array.isArray(WAKE_ARM_WORD_IDS) ? WAKE_ARM_WORD_IDS : [])
       .map((id) => asId(id).replace(/^(word|spell)\./, ""))
       .filter(Boolean)
   );
@@ -166,7 +167,7 @@ function collectImmediateWordIdsFromOrchestratorV2(orchestratorV2) {
     const hasTrigger = !!rule && Object.hasOwn(rule, "trigger");
     if (hasOpen || hasRequires || !hasTrigger) continue;
     for (const wordId of collectOnWordIdsFromOrchestratorRule(rule)) {
-      if (wakeWordIds.has(wordId)) continue;
+      if (wakeArmWordIds.has(wordId)) continue;
       if (wakeWindowWordIds.has(wordId)) continue;
       out.add(wordId);
     }
@@ -185,6 +186,7 @@ export function validateSpellRuntimeRouting(sourceConfig = null) {
   }
 
   checkSpellIdList(errors, "WAKE_WORD_IDS", WAKE_WORD_IDS);
+  checkSpellIdList(errors, "WAKE_ARM_WORD_IDS", WAKE_ARM_WORD_IDS);
   checkSpellIdList(errors, "WAKE_REQUIRED_WORD_IDS", WAKE_REQUIRED_WORD_IDS);
   checkSpellIdList(errors, "AXIS_WORD_IDS", AXIS_WORD_IDS);
   checkSpellIdList(errors, "WAKE_WINDOW_WORD_IDS", WAKE_WINDOW_WORD_IDS);

@@ -6,11 +6,11 @@ import {
   KWS_ROW_TOP_WORD_IDS,
   PATH_BOARD_TRAIL_ROWS,
   PATH_BOARD_WORDS,
+  WAKE_ARM_WORD_IDS,
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WORD_RUNTIME_ROUTING,
-} from "../../content/spells/spell-runtime-routing.js?v=20260517a";
-import { COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS } from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
+} from "../../content/spells/spell-runtime-routing.js?v=20260518a";
 
 function resolveActivePhrasesByIds(ids = []) {
   return (Array.isArray(ids) ? ids : [])
@@ -21,8 +21,8 @@ function resolveActivePhrasesByIds(ids = []) {
 }
 
 export function createKwsRuntimeConfig() {
-  const wakeWordIds = Array.isArray(COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS)
-    ? COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS
+  const wakeWordIds = Array.isArray(WAKE_ARM_WORD_IDS)
+    ? WAKE_ARM_WORD_IDS
     : [];
   const rowTop = resolveActivePhrasesByIds(KWS_ROW_TOP_WORD_IDS);
   const rowBottom = resolveActivePhrasesByIds(KWS_ROW_BOTTOM_WORD_IDS);

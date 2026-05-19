@@ -9,10 +9,15 @@ export const INTERACTION_GRAPH_V2 = {
     roots: [
       { id: "root.orbis", words: ["orbis"], ttlMs: 1500 },
       { id: "root.are_kay_nah", words: ["are_kay_nah"], ttlMs: 1500 },
+      { id: "root.echovar", words: ["echovar"], ttlMs: 1500 },
+      { id: "root.sanctum", words: ["sanctum"], ttlMs: 1500 },
+      { id: "root.modulon", words: ["modulon"], ttlMs: 1500 },
+      { id: "root.salubrium", words: ["salubrium"], ttlMs: 1500 },
+      { id: "root.leviton", words: ["leviton"], ttlMs: 1500 },
     ],
   },
   groups: {
-    wake_main_words: ["echovar", "electrum", "pyro", "sanctum", "leviton", "modulon", "salubrium"],
+    wake_main_words: ["electrum"],
     electrum_chain_words: ["rota"],
     wake_are_kay_nah_words: ["pyro"],
   },
@@ -20,14 +25,13 @@ export const INTERACTION_GRAPH_V2 = {
     {
       id: "wake_main",
       on: { word: "orbis" },
-      open: { id: "wake.main", words: ["echovar", "electrum", "pyro", "sanctum", "leviton", "modulon", "salubrium"], ttlMs: 1500 },
+      open: { id: "wake.main", words: ["electrum"], ttlMs: 1500 },
       //open: { id: "wake.main", words: "@wake_main_words", ttlMs: 1500 },
     },
     // BUBBLE SHIELD
     {
       id: "orbis_sanctum_cast",
       on: { word: "sanctum" },
-      requires: "wake.main",
       trigger: { spell: "bubble_shield" },
       grace: {},
     },
@@ -35,7 +39,6 @@ export const INTERACTION_GRAPH_V2 = {
     {
       id: "tele_home",
       on: { word: "echovar" },
-      requires: "wake.main",
       trigger: { spell: "teleport" },
       grace: { ttlMs: 5000 },
     },
@@ -43,7 +46,6 @@ export const INTERACTION_GRAPH_V2 = {
     {
       id: "orbis_leviton_cast",
       on: { word: "leviton" },
-      requires: "wake.main",
       trigger: { spell: "float" },
       grace: {},
     },
@@ -51,7 +53,6 @@ export const INTERACTION_GRAPH_V2 = {
     {
       id: "orbis_modulon_orb_spin",
       on: { word: "modulon" },
-      requires: "wake.main",
       trigger: { spell: "orb_spin" },
       grace: {},
     },
@@ -59,7 +60,6 @@ export const INTERACTION_GRAPH_V2 = {
     {
       id: "orbis_salubrium_heal_cast",
       on: { word: "salubrium" },
-      requires: "wake.main",
       trigger: { spell: "heal" },
     },
     // ELECTRIC AOE CHAIN

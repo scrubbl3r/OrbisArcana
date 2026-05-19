@@ -5,7 +5,7 @@ import {
 } from "../voice-config.js";
 import {
   COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
-} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
+} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260518a";
 
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 const EVT_RULE_ENGINE_PREVIEW_MATCHED = "rule_engine.preview_matched";

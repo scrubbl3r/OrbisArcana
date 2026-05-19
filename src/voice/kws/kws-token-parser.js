@@ -7,12 +7,10 @@ import {
 import { buildKwsWordAliasIndex } from "./build-kws-word-alias-index.js";
 import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260517a";
 import {
+  WAKE_ARM_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WORD_RUNTIME_ROUTING_BY_WORD_ID,
-} from "../../content/spells/spell-runtime-routing.js?v=20260517a";
-import {
-  COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
-} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js";
+} from "../../content/spells/spell-runtime-routing.js?v=20260518a";
 
 const DEFAULTS = Object.freeze({
   windowMs: 1200,
@@ -96,7 +94,7 @@ export function createKwsTokenParser(opts = {}) {
       : DEFAULTS.wakeArmedMinConfidence,
     clearBufferOnMatch: opts.clearBufferOnMatch == null ? DEFAULTS.clearBufferOnMatch : !!opts.clearBufferOnMatch,
   };
-  const defaultWakeTokens = COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS
+  const defaultWakeTokens = WAKE_ARM_WORD_IDS
     .map((wordId) => {
       const active = ACTIVE_WORDS_BY_ID[String(wordId || "").trim().toLowerCase()];
       if (!active) return "";

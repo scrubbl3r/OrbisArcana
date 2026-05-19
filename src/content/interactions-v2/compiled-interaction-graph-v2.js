@@ -1,6 +1,6 @@
-import { INTERACTION_GRAPH_V2 } from "./interaction-graph-v2.js?v=20260517a";
-import { compileInteractionGraphV2ToCompiledInteractionGraphV2 } from "./compile-interaction-graph-v2.js?v=20260517a";
-import { validateInteractionGraphV2 } from "./validate-interaction-graph-v2.js?v=20260517a";
+import { INTERACTION_GRAPH_V2 } from "./interaction-graph-v2.js?v=20260518a";
+import { compileInteractionGraphV2ToCompiledInteractionGraphV2 } from "./compile-interaction-graph-v2.js?v=20260518a";
+import { validateInteractionGraphV2 } from "./validate-interaction-graph-v2.js?v=20260518a";
 
 const INTERACTION_GRAPH_V2_ERROR_PREFIX = "INTERACTION_GRAPH_V2 validation failed: ";
 const ERROR_DELIMITER = " | ";
