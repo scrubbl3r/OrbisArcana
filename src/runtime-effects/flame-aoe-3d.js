@@ -47,8 +47,8 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeLengthBo: clampNumber(source.wakeLengthBo, 0.05, 4, fallback.wakeLengthBo),
     wakeRadiusBo: clampNumber(source.wakeRadiusBo, 0.5, 2, fallback.wakeRadiusBo),
     wakeSubdivisions: clampInt(source.wakeSubdivisions, 12, 192, fallback.wakeSubdivisions),
-    wakeLeanAmount: clampNumber(source.wakeLeanAmount, 0, 80, fallback.wakeLeanAmount),
-    wakeLeanLag: clampNumber(source.wakeLeanLag, 0, 40, fallback.wakeLeanLag),
+    wakeLeanAmount: clampNumber(source.wakeLeanAmount, 0, 100, fallback.wakeLeanAmount),
+    wakeLeanLag: clampNumber(source.wakeLeanLag, 0, 100, fallback.wakeLeanLag),
     wakeLiftBo: clampNumber(source.wakeLiftBo, 0, 4, fallback.wakeLiftBo ?? 0.6),
     wakeLiftCoreRadiusBo: clampNumber(source.wakeLiftCoreRadiusBo, 0.02, 2, fallback.wakeLiftCoreRadiusBo ?? 0.25),
     wakeStretchStrength: clampNumber(source.wakeStretchStrength, 0, 4, fallback.wakeStretchStrength ?? 1),
@@ -663,8 +663,11 @@ export function createFlameAoe3dRuntime({
     const safeDt = Math.max(1 / 240, Math.min(0.12, Number(dtSec) || (1 / 60)));
     const baseLift = bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6);
     const buoyLift = bo * clampNumber(activeConfig && activeConfig.wakeStretchStrength, 0, 4, 0);
-    const spring = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 80, 18);
-    const damping = clampNumber(activeConfig && activeConfig.wakeLeanLag, 0, 40, 8);
+    const stiffness01 = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 100, 50) / 100;
+    const damping01 = clampNumber(activeConfig && activeConfig.wakeLeanLag, 0, 100, 50) / 100;
+    const spring = stiffness01 * stiffness01 * 220;
+    const damping = damping01 * damping01 * 80;
+    const lagInfluence = (1 - stiffness01) * (1 - stiffness01);
     const restLift = Math.max(bo * 0.08, baseLift + buoyLift);
     const authoredSlack = bo * clampNumber(activeConfig && activeConfig.wakeLengthBo, 0, 4, 0);
     const motionSlack = Math.max(bo * 0.5, restLift * 0.35, authoredSlack);
@@ -679,7 +682,11 @@ export function createFlameAoe3dRuntime({
     } else {
       orbFrameDelta.copy(position).sub(lastPosition).clampLength(0, motionSlack);
       lastPosition.copy(position);
-      liftCoreOffset.sub(orbFrameDelta);
+      liftCoreOffset.addScaledVector(orbFrameDelta, -lagInfluence);
+    }
+    if (stiffness01 >= 0.999) {
+      liftCoreOffset.copy(targetLiftCoreOffset);
+      liftCoreVelocity.set(0, 0, 0);
     }
     const springForce = targetLiftCoreOffset.clone().sub(liftCoreOffset).multiplyScalar(spring);
     const dampingForce = liftCoreVelocity.clone().multiplyScalar(damping);
