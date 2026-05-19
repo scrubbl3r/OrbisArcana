@@ -337,10 +337,18 @@ export function createStudioPreviewRegistry({
   }
 
   if (typeof updateFlameAoe3dBehaviorReadout === "function") {
+    const commitFlameAoe3dBehaviorInput = (field = null) => {
+      if (field) {
+        const numeric = Number(field.value);
+        field.classList.toggle("isInvalid", !Number.isFinite(numeric));
+        if (!Number.isFinite(numeric)) return;
+      }
+      updateFlameAoe3dBehaviorReadout();
+      if (typeof actions.applyFlameAoe3d === "function") actions.applyFlameAoe3d();
+    };
     if (els.applyFlameAoe3dBehaviorBtn) {
       els.applyFlameAoe3dBehaviorBtn.addEventListener("click", () => {
-        updateFlameAoe3dBehaviorReadout();
-        if (typeof actions.applyFlameAoe3d === "function") actions.applyFlameAoe3d();
+        commitFlameAoe3dBehaviorInput();
       });
     }
     if (els.previewFlameAoe3dBehaviorBtn) {
@@ -358,7 +366,15 @@ export function createStudioPreviewRegistry({
       els.flameAoe3dRoastDps,
       els.flameAoe3dRoastTickMs,
     ].forEach((field) => {
-      if (field) field.addEventListener("input", updateFlameAoe3dBehaviorReadout);
+      if (!field) return;
+      field.addEventListener("input", updateFlameAoe3dBehaviorReadout);
+      field.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        commitFlameAoe3dBehaviorInput(field);
+      });
+      field.addEventListener("change", () => commitFlameAoe3dBehaviorInput(field));
+      field.addEventListener("blur", () => commitFlameAoe3dBehaviorInput(field));
     });
   }
 

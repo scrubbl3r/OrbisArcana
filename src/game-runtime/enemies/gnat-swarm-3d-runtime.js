@@ -27,7 +27,7 @@ const GNAT_COLOR_SIGNAL = new THREE.Color(0xffe45e);
 const GNAT_COLOR_BURNING = new THREE.Color(0xff7a18);
 const GNAT_COLOR_DEAD = new THREE.Color(0x777777);
 const GNAT_DEATH_FADE_SEC = 0.25;
-const GNAT_DEATH_LINGER_SEC = 0.85;
+const GNAT_DEATH_LINGER_RANGE_SEC = Object.freeze([5, 8]);
 const ZERO_SCALE_VEC = new THREE.Vector3(0, 0, 0);
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
@@ -552,7 +552,7 @@ export function createGnatSwarm3dRuntime({
     state.isDwelling = false;
     state.target = state.position;
     state.deathStartedSec = nowSec;
-    state.deathHideSec = nowSec + GNAT_DEATH_LINGER_SEC;
+    state.deathHideSec = nowSec + randomInRange(GNAT_DEATH_LINGER_RANGE_SEC, 6.5);
     state.stunBounceRemaining = 1;
     state.velocity.xW *= 0.42;
     state.velocity.yW = Math.max(state.velocity.yW * 0.16, state.stunGravityPxPerSec2 * 0.035);
