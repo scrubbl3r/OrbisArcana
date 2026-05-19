@@ -4,9 +4,9 @@ export const FIRE_CARD_PROFILES = Object.freeze({
   [FIRE_CARD_PROFILE_SMALL_TEARDROP]: Object.freeze({
     id: FIRE_CARD_PROFILE_SMALL_TEARDROP,
     cardCount: 2,
-    widthScale: 1.45,
-    heightScale: 2.35,
-    yOffsetScale: 0.38,
+    widthScale: 6.0,
+    heightScale: 9.5,
+    yOffsetScale: 0.48,
     zOffset: 18,
     crossAngleRad: 0.32,
     noiseScale: 4.2,
