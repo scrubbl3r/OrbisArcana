@@ -578,17 +578,16 @@ function createWakeMaterial(config) {
         return result;
       }
       void main() {
-        float radialDistance = length(vLocalPos.xz);
-        vec3 centeredSurface = vec3(radialDistance, vTail * 2.0 - 1.0, radialDistance * 0.37);
+        vec3 surface = normalize(vLocalPos + vec3(0.0, 0.001, 0.0));
         float perlinTime = uTime * uWakeNoiseSpeed;
         float perlinFrequency = 4.25 / max(0.1, uWakeNoiseScale);
-        float motionLift = length(uWakeMotionOffset) * 0.18;
-        vec3 perlinFlow = centeredSurface * perlinFrequency + vec3(0.0, (vTail * 1.35 - perlinTime * 0.42 + motionLift) * perlinFrequency, 0.0);
+        vec3 motionFlow = vec3(0.0, length(uWakeMotionOffset) * 0.18, 0.0);
+        vec3 perlinFlow = surface * perlinFrequency + vec3(0.0, (vTail * 1.35 - perlinTime * 0.42) * perlinFrequency, 0.0) + motionFlow;
         float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, clamp(vTail, 0.0, 1.0));
         float perlin = perlinMusgraveField(perlinFlow);
         float simplexTime = uTime * uWakeSimplexSpeed;
         float simplexFrequency = 4.25 / max(0.1, uWakeSimplexScale);
-        vec3 simplexFlow = centeredSurface * simplexFrequency + vec3(0.0, (vTail * 1.52 - simplexTime * 0.5 + motionLift * 1.2) * simplexFrequency, 0.0);
+        vec3 simplexFlow = surface * simplexFrequency + vec3(0.0, (vTail * 1.52 - simplexTime * 0.5) * simplexFrequency, 0.0) + motionFlow * 1.2;
         float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, clamp(vTail, 0.0, 1.0));
         float simplex = simplexGranularField(simplexFlow);
         float noiseMix = clamp(uWakeNoiseMix, 0.0, 1.0);
