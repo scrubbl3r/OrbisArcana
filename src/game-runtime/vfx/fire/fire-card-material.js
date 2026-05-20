@@ -180,17 +180,25 @@ export function createFireCardMaterial({
 
       void main() {
         float tail = clamp(vUv.y, 0.0, 1.0);
-        vec3 surface = normalize(vec3((vUv.x - 0.5) * 1.35, tail * 1.9 - 0.42, vLocalPos.y * 0.34 + 0.001));
         float seed = fract(vFireSeed);
         vec3 seedOffset = vec3(seed * 37.17 + 3.1, seed * -53.29 + 8.7, seed * 19.83 - 4.4);
+        vec2 cardUv = vec2((vUv.x - 0.5) * 1.15, tail);
         float perlinTime = uTime * uWakeNoiseSpeed;
         float perlinFrequency = 4.25 / max(0.1, uWakeNoiseScale);
-        vec3 perlinFlow = surface * perlinFrequency + vec3(0.0, (tail * 1.35 - perlinTime * 0.42) * perlinFrequency, 0.0) + seedOffset;
+        vec3 perlinFlow = vec3(
+          cardUv.x * perlinFrequency,
+          (cardUv.y * 1.35 - perlinTime * 0.42) * perlinFrequency,
+          0.0
+        ) + seedOffset;
         float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, tail);
         float perlin = perlinMusgraveField(perlinFlow);
         float simplexTime = uTime * uWakeSimplexSpeed;
         float simplexFrequency = 4.25 / max(0.1, uWakeSimplexScale);
-        vec3 simplexFlow = surface * simplexFrequency + vec3(0.0, (tail * 1.52 - simplexTime * 0.5) * simplexFrequency, 0.0) + seedOffset * 1.37;
+        vec3 simplexFlow = vec3(
+          cardUv.x * simplexFrequency,
+          (cardUv.y * 1.52 - simplexTime * 0.5) * simplexFrequency,
+          0.0
+        ) + seedOffset * 1.37;
         float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, tail);
         float simplex = simplexGranularField(simplexFlow);
         float noiseMix = clamp(uWakeNoiseMix, 0.0, 1.0);
