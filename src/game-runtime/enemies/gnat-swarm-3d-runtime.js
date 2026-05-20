@@ -18,6 +18,7 @@ import {
 import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520l";
 
 const FORCE_BURN_VISUAL_DIAGNOSTICS = false;
+const FORCE_HIDE_GNAT_BODY_FOR_BURN_SMOKE = true;
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
 const GNAT_SIGNAL_FLASH_SEC = 1;
@@ -1310,6 +1311,7 @@ export function createGnatSwarm3dRuntime({
     mesh = new THREE.InstancedMesh(geometry, material, states.length);
     mesh.name = "enemy:gnat-swarm";
     mesh.frustumCulled = false;
+    mesh.visible = !FORCE_HIDE_GNAT_BODY_FOR_BURN_SMOKE;
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     root.add(mesh);
     if (typeof onNeedsFrame === "function") onNeedsFrame();
