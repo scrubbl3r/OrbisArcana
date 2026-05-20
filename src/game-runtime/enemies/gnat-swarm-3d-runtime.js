@@ -15,11 +15,11 @@ import {
   STATUS_EFFECT_BURNING,
   tickBurningStatusOnEntity,
 } from "../status/fire/burning-status-model.js";
-import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520l";
+import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520m";
 
 const FORCE_BURN_VISUAL_DIAGNOSTICS = false;
 const FORCE_HIDE_GNAT_BODY_FOR_BURN_SMOKE = false;
-const HIDE_GNAT_BODY_WHILE_BURNING = true;
+const HIDE_GNAT_BODY_WHILE_BURNING = false;
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
 const GNAT_SIGNAL_FLASH_SEC = 1;
@@ -1357,7 +1357,7 @@ export function createGnatSwarm3dRuntime({
     if (burnVisualDiagnostics.hideCards) return;
     const x = Number(runtimePosition.x) || 0;
     const y = Number(runtimePosition.y) || 0;
-    const z = (Number(runtimePosition.z) || 0) + 6;
+    const z = Number(runtimePosition.z) || 0;
     const boPx = Math.max(1, Number(getBo()) || 1);
     fireCards.addTeardrop({
       x,

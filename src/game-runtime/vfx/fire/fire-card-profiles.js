@@ -7,7 +7,7 @@ export const FIRE_CARD_PROFILES = Object.freeze({
     widthScale: 2.8,
     heightScale: 4.4,
     yOffsetScale: 0,
-    zOffset: 18,
+    zOffset: 0,
     crossAngleRad: 0,
     noiseScale: 4.2,
     noiseSpeed: 1.45,
