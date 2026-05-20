@@ -1,4 +1,4 @@
-export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260519-camera-plumb-teardrop-a";
+export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260519-egg-card-flame-shader-a";
 
 export function publishDepth3dModuleVersion(version = GAME_STAGE_DEPTH3D_TRACE_VERSION) {
   globalThis.__orbisDepth3dModuleVersion = String(version || "");

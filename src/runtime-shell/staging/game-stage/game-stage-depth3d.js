@@ -30,7 +30,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260519225000";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260519234000";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -67,7 +67,7 @@ import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=202
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,
   publishDepth3dModuleVersion,
-} from "./game-stage-depth3d-debug.js?v=20260519225000";
+} from "./game-stage-depth3d-debug.js?v=20260519234000";
 import { createGameStageDepth3dRenderLoop } from "./game-stage-depth3d-render-loop.js?v=20260430b";
 import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260514a";
 import { createGameStageDepth3dTelemetry } from "./game-stage-depth3d-telemetry.js?v=20260430b";
@@ -515,9 +515,17 @@ export function createGameStageDepth3dLayer({
   function summarizeFireCardTrace(trace = null) {
     if (!trace || typeof trace !== "object") return null;
     const sampleCamera = trace.sampleCamera || null;
+    const mesh = trace.mesh || null;
     return {
       activeCount: trace.activeCount || 0,
       visible: !!trace.visible,
+      mesh: mesh ? {
+        shape: mesh.shape || "",
+        billboardMode: mesh.billboardMode || "",
+        materialName: mesh.materialName || "",
+        materialTransparent: !!mesh.materialTransparent,
+        materialBlending: mesh.materialBlending == null ? null : mesh.materialBlending,
+      } : null,
       sample: trace.sample || null,
       sampleInClip: sampleCamera ? !!sampleCamera.inClip : null,
       sampleClip: sampleCamera ? sampleCamera.clip || null : null,

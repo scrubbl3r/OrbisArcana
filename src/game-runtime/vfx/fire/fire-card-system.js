@@ -3,6 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260519b";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260519c";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
@@ -81,14 +82,7 @@ export function createFireCardSystem({
   const parent = root || new THREE.Group();
   const profile = resolveFireCardProfile(profileId);
   const geometry = createUnitTeardropGeometry();
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    transparent: false,
-    depthTest: false,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-    toneMapped: false,
-  });
+  const material = createFireCardMaterial(profile);
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, Math.floor(maxCards)));
   mesh.name = "vfx:fire-cards";
   mesh.frustumCulled = false;
@@ -119,6 +113,9 @@ export function createFireCardSystem({
   function beginFrame(_nowSec = 0, { camera = null } = {}) {
     writeIndex = 0;
     lastSample = null;
+    if (material.uniforms && material.uniforms.uTime) {
+      material.uniforms.uTime.value = Number(_nowSec) || 0;
+    }
     billboardMode = "local";
     cardQuat.identity();
     if (camera && typeof camera.getWorldQuaternion === "function") {
@@ -203,6 +200,7 @@ export function createFireCardSystem({
           materialDepthWrite: !!(mesh.material && mesh.material.depthWrite),
           materialBlending: mesh.material ? mesh.material.blending : null,
           materialToneMapped: !!(mesh.material && mesh.material.toneMapped),
+          materialName: mesh.material && mesh.material.name ? mesh.material.name : "",
           materialColor: mesh.material && mesh.material.color ? `#${mesh.material.color.getHexString()}` : "",
           matrixWorldNeedsUpdate: !!mesh.matrixWorldNeedsUpdate,
         },
