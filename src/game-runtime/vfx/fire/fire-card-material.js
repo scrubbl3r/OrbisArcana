@@ -232,7 +232,7 @@ export function createFireCardMaterial({
         vec2 cardUv = vec2(safeEggX * 0.575, safeTail);
 
         float perlinTime = uTime * uWakeNoiseSpeed;
-        float perlinFrequency = 1.4166667 / max(0.1, uWakeNoiseScale);
+        float perlinFrequency = 0.70833335 / max(0.1, uWakeNoiseScale);
         vec3 perlinFlow = vec3(
           cardUv.x * perlinFrequency,
           (cardUv.y * 1.35 - perlinTime * 0.42) * perlinFrequency,
@@ -242,7 +242,7 @@ export function createFireCardMaterial({
         float perlin = perlinMusgraveField(perlinFlow);
 
         float simplexTime = uTime * uWakeSimplexSpeed;
-        float simplexFrequency = 1.4166667 / max(0.1, uWakeSimplexScale);
+        float simplexFrequency = 0.70833335 / max(0.1, uWakeSimplexScale);
         vec3 simplexFlow = vec3(
           cardUv.x * simplexFrequency,
           (cardUv.y * 1.52 - simplexTime * 0.5) * simplexFrequency,
