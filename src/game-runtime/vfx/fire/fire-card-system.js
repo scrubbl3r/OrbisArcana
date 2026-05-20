@@ -3,7 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260519b";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520g";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520h";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
@@ -28,41 +28,65 @@ function normalizeSeed(value, fallback = 0) {
 }
 
 function createUnitTeardropGeometry({
-  rows = 18,
+  rows = 48,
   lowerCenterY = 0,
   lowerRadius = 0.5,
   upperCenterY = 0.56,
   upperRadius = 0.22,
   blendSoftness = 0.14,
-  padding = 0.02,
+  padding = 0,
 } = {}) {
   const rowCount = Math.max(4, Math.round(rows));
   const minY = lowerCenterY - lowerRadius - padding;
   const maxY = upperCenterY + upperRadius + padding;
   const height = Math.max(0.0001, maxY - minY);
+  const centerY = minY + height * 0.5;
   const positions = [];
   const uvs = [];
   const eggLocals = [];
   const indices = [];
-  for (let i = 0; i <= rowCount; i += 1) {
-    const v = i / rowCount;
-    const y = minY + height * v;
+
+  function halfWidthAtY(y) {
     const lower = circleRadiusAtY(y, lowerCenterY, lowerRadius);
     const upper = circleRadiusAtY(y, upperCenterY, upperRadius);
     const bridgeT = Math.max(0, Math.min(1, (y - lowerCenterY) / Math.max(0.0001, upperCenterY - lowerCenterY)));
     const bridge = y > lowerCenterY && y < upperCenterY
       ? (lowerRadius * (1 - bridgeT)) + (upperRadius * bridgeT)
       : 0;
-    const envelope = smoothMaxNumber(smoothMaxNumber(lower, upper, blendSoftness), bridge, blendSoftness * 0.75);
-    const r = Math.max(0.0001, envelope);
-    positions.push(-r, y, 0, r, y, 0);
-    uvs.push(0, v, 1, v);
-    eggLocals.push(-1, v, 1, v);
+    return smoothMaxNumber(smoothMaxNumber(lower, upper, blendSoftness), bridge, blendSoftness * 0.75);
   }
-  for (let i = 0; i < rowCount; i += 1) {
-    const a = i * 2;
-    const b = a + 2;
-    indices.push(a, b, a + 1, b, b + 1, a + 1);
+
+  function pushVertex(x, y) {
+    const v = Math.max(0, Math.min(1, (y - minY) / height));
+    const halfWidth = halfWidthAtY(y);
+    const localX = halfWidth > 0.000001 ? Math.max(-1, Math.min(1, x / halfWidth)) : 0;
+    positions.push(x, y, 0);
+    uvs.push((localX + 1) * 0.5, v);
+    eggLocals.push(localX, v);
+  }
+
+  pushVertex(0, centerY);
+  pushVertex(0, minY);
+  for (let i = 1; i < rowCount; i += 1) {
+    const v = i / rowCount;
+    const y = minY + height * v;
+    const r = halfWidthAtY(y);
+    if (r > 0.000001) pushVertex(r, y);
+  }
+  pushVertex(0, maxY);
+  for (let i = rowCount - 1; i >= 1; i -= 1) {
+    const v = i / rowCount;
+    const y = minY + height * v;
+    const r = halfWidthAtY(y);
+    if (r > 0.000001) pushVertex(-r, y);
+  }
+
+  const outlineStart = 1;
+  const outlineCount = (positions.length / 3) - outlineStart;
+  for (let i = 0; i < outlineCount; i += 1) {
+    const a = outlineStart + i;
+    const b = outlineStart + ((i + 1) % outlineCount);
+    indices.push(0, a, b);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -210,7 +234,7 @@ export function createFireCardSystem({
         mesh: {
           name: mesh.name,
           parentName: mesh.parent && mesh.parent.name ? mesh.parent.name : "",
-          shape: "two-circle-envelope",
+          shape: "two-circle-outline-fan",
           billboardMode,
           renderOrder: mesh.renderOrder,
           frustumCulled: !!mesh.frustumCulled,
