@@ -39,7 +39,7 @@ export function createFireCardMaterial({
     name: "fire_card:egg_flame_flat_wake_material",
     transparent: true,
     depthWrite: false,
-    depthTest: false,
+    depthTest: true,
     blending: THREE.NormalBlending,
     side: THREE.DoubleSide,
     toneMapped: false,
@@ -100,7 +100,11 @@ export function createFireCardMaterial({
         return disc > 0.0 ? sqrt(disc) : 0.0;
       }
       float cardHalfWidthAtY(float y) {
-        return circleRadiusAtY(y, 0.0, 0.5);
+        if (y <= 0.0) return circleRadiusAtY(y, 0.0, 0.5);
+        float t = clamp(y / 0.72, 0.0, 1.0);
+        float cap = max(0.0, 1.0 - t * t);
+        float taper = 1.0 - 0.42 * (t * t * (3.0 - 2.0 * t));
+        return 0.5 * pow(cap, 0.38) * taper;
       }
 
       float hash31(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
@@ -205,7 +209,7 @@ export function createFireCardMaterial({
         }
 
         float minY = -0.5;
-        float maxY = 0.5;
+        float maxY = 0.72;
         float rawTail = clamp((vLocalPos.y - minY) / max(0.0001, maxY - minY), 0.0, 1.0);
         float rawEggX = clamp(vLocalPos.x / max(0.0001, clipHalfWidth), -1.0, 1.0);
         float safeTail = edgeGuard(rawTail, 0.035, 0.965);

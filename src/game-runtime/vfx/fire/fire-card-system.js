@@ -3,7 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260520a";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520l";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520m";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
@@ -14,26 +14,33 @@ function circleRadiusAtY(y, centerY, radius) {
   return disc > 0 ? Math.sqrt(disc) : 0;
 }
 
+function eggHalfWidthAtY(y) {
+  if (y <= 0) return circleRadiusAtY(y, 0, 0.5);
+  const t = Math.max(0, Math.min(1, y / 0.72));
+  const cap = Math.max(0, 1 - t * t);
+  const taper = 1 - 0.42 * (t * t * (3 - 2 * t));
+  return 0.5 * Math.pow(cap, 0.38) * taper;
+}
+
 function normalizeSeed(value, fallback = 0) {
   const n = Number(value);
   if (!Number.isFinite(n)) return Math.abs(Math.sin(fallback * 12.9898) * 43758.5453) % 1;
   return Math.abs(Math.sin(n * 12.9898) * 43758.5453) % 1;
 }
 
-function createUnitCircleGeometry({
+function createUnitEggGeometry({
   rows = 48,
-  radius = 0.5,
 } = {}) {
   const rowCount = Math.max(4, Math.round(rows));
-  const minY = -radius;
-  const maxY = radius;
+  const minY = -0.5;
+  const maxY = 0.72;
   const height = Math.max(0.0001, maxY - minY);
   const positions = [];
   const uvs = [];
   const indices = [];
 
   function halfWidthAtY(y) {
-    return circleRadiusAtY(y, 0, radius);
+    return eggHalfWidthAtY(y);
   }
 
   function pushVertex(x, y) {
@@ -82,9 +89,9 @@ function createUnitCircleGeometry({
   geometry.computeBoundingSphere();
   geometry.userData.fireCardShape = Object.freeze({
     rows: rowCount,
-    radius,
     minY,
     maxY,
+    anchor: "bottom-bulb-center",
   });
   return geometry;
 }
@@ -97,7 +104,7 @@ export function createFireCardSystem({
 } = {}) {
   const parent = root || new THREE.Group();
   const profile = resolveFireCardProfile(profileId);
-  const geometry = createUnitCircleGeometry();
+  const geometry = createUnitEggGeometry();
   const material = createFireCardMaterial({ ...profile, debugSolid });
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, Math.floor(maxCards)));
   const seedAttribute = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count), 1);
@@ -215,7 +222,7 @@ export function createFireCardSystem({
         mesh: {
           name: mesh.name,
           parentName: mesh.parent && mesh.parent.name ? mesh.parent.name : "",
-          shape: "circle-cap-strip",
+          shape: "egg-bottom-anchor-cap-strip",
           billboardMode,
           renderOrder: mesh.renderOrder,
           frustumCulled: !!mesh.frustumCulled,
