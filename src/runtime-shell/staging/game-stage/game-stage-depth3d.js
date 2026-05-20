@@ -30,7 +30,9 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260520061000";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260520062000";
+import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js";
+import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260520062000";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -67,7 +69,7 @@ import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=202
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,
   publishDepth3dModuleVersion,
-} from "./game-stage-depth3d-debug.js?v=20260520061000";
+} from "./game-stage-depth3d-debug.js?v=20260520062000";
 import { createGameStageDepth3dRenderLoop } from "./game-stage-depth3d-render-loop.js?v=20260430b";
 import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260514a";
 import { createGameStageDepth3dTelemetry } from "./game-stage-depth3d-telemetry.js?v=20260430b";
@@ -254,6 +256,16 @@ export function createGameStageDepth3dLayer({
     getOrbModel: () => orb3dActorRuntime.getModel(),
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => SHOCKWAVE_3D_PRESET_DEFAULT,
+    onNeedsFrame: () => renderLoop.scheduleAnimation(),
+  });
+  const surfaceFireCardSystem = createSurfaceFireCardSystem({
+    root: actorGroup,
+    getBo: () => baseOrbWorldUnits,
+    toRuntimePosition: ({ x = 0, y = 0, z = 0 } = {}) => ({
+      x: toDepthThreeX(x, worldWidthPx),
+      y: toDepthThreeY(y, worldHeightPx),
+      z,
+    }),
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
   });
   const worldGlobe3dRuntime = createWorldGlobe3dRuntime({
@@ -742,6 +754,7 @@ export function createGameStageDepth3dLayer({
       || bubbleShield3dRuntime.isActive()
       || flameAoe3dRuntime.isActive()
       || shockwave3dRuntime.isActive()
+      || surfaceFireCardSystem.hasActiveVisuals()
       || gnatSwarm3dRuntime.hasActiveVisuals()
       || !!healPulseFrame
     );
@@ -773,6 +786,7 @@ export function createGameStageDepth3dLayer({
       `px:${trace.config && trace.config.pixelRatio}`,
     ].join(",");
     trace.artPlane = typeof artPlane3dRuntime.getTrace === "function" ? artPlane3dRuntime.getTrace() : null;
+    trace.surfaceFire = surfaceFireCardSystem.getTrace();
     if (!bloomMarkedReady && perfTrace && typeof perfTrace.mark === "function") {
       bloomMarkedReady = true;
       perfTrace.mark("depth3d.bloom.ready", {
@@ -793,6 +807,13 @@ export function createGameStageDepth3dLayer({
         camera: trace.camera,
       });
     }
+  }
+
+  function syncSurfaceFireTelemetry() {
+    const trace = surfaceFireCardSystem.getTrace();
+    root.dataset.surfaceFireCards = String(trace.activeCount || 0);
+    root.dataset.surfaceFireContacts = String(trace.contacts || 0);
+    root.dataset.surfaceFireNearestBo = trace.nearestBo == null ? "" : String(trace.nearestBo);
   }
 
   function doRenderFrame({
@@ -859,6 +880,12 @@ export function createGameStageDepth3dLayer({
       : null;
     if (measure) {
       measure("depth3d.orbUpdate", () => orb3dActorRuntime.update(frameNowMs / 1000));
+      measure("depth3d.surfaceBurn", () => surfaceFireCardSystem.update({
+        nowSec: frameNowMs / 1000,
+        camera,
+        orbWorldPosition: currentOrbWorldPosition,
+        orbRuntimePosition: orb3dActorRuntime.getPosition(),
+      }));
       measure("depth3d.globes", () => tickGlobe3dRuntime(frameNowMs));
       measure("depth3d.enemies", () => tickEnemy3dRuntime(frameNowMs));
       measure("depth3d.renderer", () => {
@@ -867,11 +894,18 @@ export function createGameStageDepth3dLayer({
       });
     } else {
       orb3dActorRuntime.update(frameNowMs / 1000);
+      surfaceFireCardSystem.update({
+        nowSec: frameNowMs / 1000,
+        camera,
+        orbWorldPosition: currentOrbWorldPosition,
+        orbRuntimePosition: orb3dActorRuntime.getPosition(),
+      });
       tickGlobe3dRuntime(frameNowMs);
       tickEnemy3dRuntime(frameNowMs);
       if (bloom) bloom.render();
       else renderer.render(scene, camera);
     }
+    syncSurfaceFireTelemetry();
     syncBloomTelemetry();
   }
 
@@ -888,6 +922,7 @@ export function createGameStageDepth3dLayer({
       starField3dRuntime.clear();
       activeFlameAoeHazard = null;
       gnatSwarm3dRuntime.clear();
+      surfaceFireCardSystem.clear();
       const sceneModel = resolveSceneModel(authoredScene);
       const summary = resolveSceneSummary(authoredScene);
       const layers = resolveSceneDepthLayers(authoredScene);
@@ -899,6 +934,7 @@ export function createGameStageDepth3dLayer({
       const starField = levelGraphicsModel && (levelGraphicsModel.starField || levelGraphicsModel.starsField);
       const boundaryLoops = sceneModel && Array.isArray(sceneModel.loops) ? sceneModel.loops : [];
       const boundaryBox = sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null;
+      const boundarySegments = buildBoundarySegmentsFromLoops(boundaryLoops);
       currentOrbWorldPosition = null;
       currentOrbAlive = true;
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
@@ -943,6 +979,7 @@ export function createGameStageDepth3dLayer({
         boundaryBox,
         navGrid: levelNavGrid,
       });
+      surfaceFireCardSystem.load(boundarySegments);
       root.dataset.enemy3dSpawnCount = String(enemySpawns.length);
       root.dataset.enemy3dObjectCount = String(enemyGroup.children.length);
       if (boundGlobe3dSpawns.length) {
@@ -1199,6 +1236,7 @@ export function createGameStageDepth3dLayer({
       bubbleShield3dRuntime.destroy();
       flameAoe3dRuntime.destroy();
       shockwave3dRuntime.destroy();
+      surfaceFireCardSystem.dispose();
       orbLifecycle3dRuntime.dispose();
       artPlane3dRuntime.dispose();
       starField3dRuntime.dispose();

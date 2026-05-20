@@ -101,6 +101,7 @@ export function createFireCardSystem({
   maxCards = 128,
   profileId = FIRE_CARD_PROFILE_SMALL_TEARDROP,
   debugSolid = false,
+  billboardToCamera = true,
 } = {}) {
   const parent = root || new THREE.Group();
   const profile = resolveFireCardProfile(profileId);
@@ -144,7 +145,7 @@ export function createFireCardSystem({
     }
     billboardMode = "local";
     cardQuat.identity();
-    if (camera && typeof camera.getWorldQuaternion === "function") {
+    if (billboardToCamera && camera && typeof camera.getWorldQuaternion === "function") {
       if (typeof parent.updateWorldMatrix === "function") parent.updateWorldMatrix(true, false);
       if (typeof camera.updateMatrixWorld === "function") camera.updateMatrixWorld();
       camera.getWorldQuaternion(cameraWorldQuat);
@@ -162,6 +163,7 @@ export function createFireCardSystem({
     widthPx = null,
     heightPx = null,
     seed = null,
+    quaternion = null,
   } = {}) {
     const cardCount = Math.max(1, Math.floor(profile.cardCount || 1));
     const width = Math.max(1, Number(widthPx) || scalePx * Math.max(0.1, Number(profile.widthScale) || 1));
@@ -174,7 +176,7 @@ export function createFireCardSystem({
         z + (Number(profile.zOffset) || 0) + card * 0.2
       );
       scale.set(width, height, 1);
-      matrix.compose(position, cardQuat, scale);
+      matrix.compose(position, quaternion || cardQuat, scale);
       mesh.setMatrixAt(writeIndex, matrix);
       const resolvedSeed = normalizeSeed(seed, (x * 0.013) + (y * 0.017) + card);
       seedAttribute.setX(writeIndex, resolvedSeed);

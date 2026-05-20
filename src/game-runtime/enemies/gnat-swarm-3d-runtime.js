@@ -15,7 +15,7 @@ import {
   STATUS_EFFECT_BURNING,
   tickBurningStatusOnEntity,
 } from "../status/fire/burning-status-model.js";
-import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520s";
+import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520t";
 
 const FORCE_BURN_VISUAL_DIAGNOSTICS = false;
 const FORCE_HIDE_GNAT_BODY_FOR_BURN_SMOKE = false;
