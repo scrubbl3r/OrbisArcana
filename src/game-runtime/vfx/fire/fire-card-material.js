@@ -216,6 +216,9 @@ export function createFireCardMaterial({
         }
         return result;
       }
+      float edgeGuard(float value, float minValue, float maxValue) {
+        return clamp(value, minValue, maxValue);
+      }
 
       void main() {
         float clipHalfWidth = eggHalfWidthAtY(vLocalPos.y);
@@ -225,11 +228,17 @@ export function createFireCardMaterial({
           return;
         }
 
-        float tail = clamp(vEggLocal.y, 0.0, 1.0);
-        float eggX = clamp(vEggLocal.x, -1.0, 1.0);
+        float rawTail = clamp(vEggLocal.y, 0.0, 1.0);
+        float rawEggX = clamp(vEggLocal.x, -1.0, 1.0);
+        float safeTail = edgeGuard(rawTail, 0.035, 0.965);
+        float capGuard = smoothstep(0.0, 0.11, rawTail) * (1.0 - smoothstep(0.89, 1.0, rawTail));
+        float sideGuard = 1.0 - smoothstep(0.88, 1.0, abs(rawEggX));
+        float domainGuard = capGuard * sideGuard;
+        if (domainGuard <= 0.001) discard;
+        float safeEggX = clamp(rawEggX, -0.94, 0.94);
         float seed = fract(vFireSeed);
         vec3 seedOffset = vec3(seed * 37.17 + 3.1, seed * -53.29 + 8.7, seed * 19.83 - 4.4);
-        vec2 cardUv = vec2(eggX * 0.575, tail);
+        vec2 cardUv = vec2(safeEggX * 0.575, safeTail);
 
         float perlinTime = uTime * uWakeNoiseSpeed;
         float perlinFrequency = 4.25 / max(0.1, uWakeNoiseScale);
@@ -238,7 +247,7 @@ export function createFireCardMaterial({
           (cardUv.y * 1.35 - perlinTime * 0.42) * perlinFrequency,
           0.0
         ) + seedOffset;
-        float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, tail);
+        float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, safeTail);
         float perlin = perlinMusgraveField(perlinFlow);
 
         float simplexTime = uTime * uWakeSimplexSpeed;
@@ -248,7 +257,7 @@ export function createFireCardMaterial({
           (cardUv.y * 1.52 - simplexTime * 0.5) * simplexFrequency,
           0.0
         ) + seedOffset * 1.37;
-        float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, tail);
+        float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, safeTail);
         float simplex = simplexGranularField(simplexFlow);
 
         float noiseMix = clamp(uWakeNoiseMix, 0.0, 1.0);
@@ -257,7 +266,7 @@ export function createFireCardMaterial({
         float contrast = mix(uWakeNoiseContrast, uWakeSimplexContrast, noiseMix);
         float blobs = colorRampMask(field, density, contrast);
         vec4 mapped = sampleWakeGraph(blobs);
-        float verticalAlpha = sampleWakeAlphaGradient(tail);
+        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * domainGuard;
         mapped.rgb *= verticalAlpha;
         mapped.a *= verticalAlpha;
         if (mapped.a <= 0.004) discard;

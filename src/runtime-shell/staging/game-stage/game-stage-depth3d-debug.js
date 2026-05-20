@@ -1,4 +1,4 @@
-export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260520-outline-fan-grey-diagnostic-b";
+export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260520-egg-shader-domain-guard-a";
 
 export function publishDepth3dModuleVersion(version = GAME_STAGE_DEPTH3D_TRACE_VERSION) {
   globalThis.__orbisDepth3dModuleVersion = String(version || "");
