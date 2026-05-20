@@ -104,6 +104,7 @@ export function createFireCardMaterial({
         return disc > 0.0 ? sqrt(disc) : 0.0;
       }
       float smoothMax(float a, float b, float radius) {
+        if (max(abs(a), abs(b)) <= 0.000001) return 0.0;
         float k = max(0.0001, radius);
         float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
         return mix(a, b, h) + k * h * (1.0 - h);

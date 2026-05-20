@@ -3,12 +3,13 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260519b";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520d";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520e";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
 
 function smoothMaxNumber(a, b, radius) {
+  if (Math.max(Math.abs(a), Math.abs(b)) <= 0.000001) return 0;
   const k = Math.max(0.0001, Number(radius) || 0);
   const h = Math.max(0, Math.min(1, 0.5 + (0.5 * (b - a)) / k));
   return (a * (1 - h)) + (b * h) + (k * h * (1 - h));
