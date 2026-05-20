@@ -1,4 +1,4 @@
-export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260519-burn-debug-card-a";
+export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260519-white-teardrop-cards-a";
 
 export function publishDepth3dModuleVersion(version = GAME_STAGE_DEPTH3D_TRACE_VERSION) {
   globalThis.__orbisDepth3dModuleVersion = String(version || "");

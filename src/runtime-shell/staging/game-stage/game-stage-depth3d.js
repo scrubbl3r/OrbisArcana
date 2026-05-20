@@ -30,7 +30,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260519213000";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260519215500";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -67,7 +67,7 @@ import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=202
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,
   publishDepth3dModuleVersion,
-} from "./game-stage-depth3d-debug.js?v=20260519213000";
+} from "./game-stage-depth3d-debug.js?v=20260519215500";
 import { createGameStageDepth3dRenderLoop } from "./game-stage-depth3d-render-loop.js?v=20260430b";
 import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260514a";
 import { createGameStageDepth3dTelemetry } from "./game-stage-depth3d-telemetry.js?v=20260430b";
@@ -608,8 +608,6 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dDeadBurningCount = String(enemyTrace.deadBurning || 0);
       root.dataset.enemy3dFireCardCount = String(enemyTrace.fireCards || 0);
       root.dataset.enemy3dFireCardTrace = JSON.stringify(summarizeFireCardTrace(enemyTrace.fireCardTrace));
-      root.dataset.enemy3dBurnDebugCardCount = String(enemyTrace.burnDebugCards || 0);
-      root.dataset.enemy3dBurnDebugCardTrace = JSON.stringify(summarizeFireCardTrace(enemyTrace.burnDebugCardTrace));
       root.dataset.enemy3dLiftLeach = String(enemyTrace.liftLeach || 0);
       root.dataset.enemy3dLifeLeachPerSec = String(enemyTrace.lifeLeachPerSec || 0);
       root.dataset.enemy3dShieldImmune = enemyTrace.shieldImmune ? "true" : "false";
@@ -629,11 +627,10 @@ export function createGameStageDepth3dLayer({
       if (orbPosition) {
         root.dataset.enemy3dOrbRuntime = `${Math.round((Number(orbPosition.x) || 0) * 100) / 100},${Math.round((Number(orbPosition.y) || 0) * 100) / 100},${Math.round((Number(orbPosition.z) || 0) * 100) / 100}`;
       }
-      const shouldTraceBurn = activeFlameAoeHazard || enemyTrace.burning || enemyTrace.deadBurning || enemyTrace.fireCards || enemyTrace.burnDebugCards || enemyTrace.flameDamage;
+      const shouldTraceBurn = activeFlameAoeHazard || enemyTrace.burning || enemyTrace.deadBurning || enemyTrace.fireCards || enemyTrace.flameDamage;
       if (shouldTraceBurn && perfTrace && typeof perfTrace.mark === "function" && nowMs - lastEnemyBurnTraceAtMs >= 500) {
         lastEnemyBurnTraceAtMs = nowMs;
         const fireCardTraceSummary = summarizeFireCardTrace(enemyTrace.fireCardTrace);
-        const burnDebugCardTraceSummary = summarizeFireCardTrace(enemyTrace.burnDebugCardTrace);
         const flameDamageSummary = summarizeFlameDamageTrace(enemyTrace.flameDamage);
         perfTrace.mark("flameAoe.gnatBurn.trace", {
           hazard: activeFlameAoeHazard ? {
@@ -648,8 +645,6 @@ export function createGameStageDepth3dLayer({
           deadBurning: enemyTrace.deadBurning || 0,
           fireCards: enemyTrace.fireCards || 0,
           fireCardTrace: fireCardTraceSummary,
-          burnDebugCards: enemyTrace.burnDebugCards || 0,
-          burnDebugCardTrace: burnDebugCardTraceSummary,
           flameDamage: flameDamageSummary,
         });
       }

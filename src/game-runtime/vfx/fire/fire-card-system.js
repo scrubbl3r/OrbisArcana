@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260519a";
 import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
@@ -8,6 +7,14 @@ import {
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
 
+function createUnitTeardropGeometry() {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0.5);
+  shape.bezierCurveTo(-0.48, 0.1, -0.34, -0.34, 0, -0.5);
+  shape.bezierCurveTo(0.34, -0.34, 0.48, 0.1, 0, 0.5);
+  return new THREE.ShapeGeometry(shape, 24);
+}
+
 export function createFireCardSystem({
   root = null,
   maxCards = 128,
@@ -15,8 +22,15 @@ export function createFireCardSystem({
 } = {}) {
   const parent = root || new THREE.Group();
   const profile = resolveFireCardProfile(profileId);
-  const geometry = new THREE.PlaneGeometry(1, 1, 1, 1);
-  const material = createFireCardMaterial(profile);
+  const geometry = createUnitTeardropGeometry();
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: false,
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    toneMapped: false,
+  });
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, Math.floor(maxCards)));
   mesh.name = "vfx:fire-cards";
   mesh.frustumCulled = false;
@@ -31,7 +45,6 @@ export function createFireCardSystem({
   const sampleLocalPosition = new THREE.Vector3();
   const sampleWorldPosition = new THREE.Vector3();
   const sampleClipPosition = new THREE.Vector3();
-  const color = new THREE.Color();
   let writeIndex = 0;
   let lastSample = null;
 
@@ -39,13 +52,11 @@ export function createFireCardSystem({
     quat.identity();
     matrix.compose(OFFSCREEN_POSITION, quat, ZERO_SCALE);
     mesh.setMatrixAt(index, matrix);
-    mesh.setColorAt(index, color.setHex(0x000000));
   }
 
-  function beginFrame(nowSec = 0) {
+  function beginFrame() {
     writeIndex = 0;
     lastSample = null;
-    if (material.uniforms && material.uniforms.uTime) material.uniforms.uTime.value = Number(nowSec) || 0;
   }
 
   function addTeardrop({
@@ -53,14 +64,13 @@ export function createFireCardSystem({
     y = 0,
     z = 0,
     scalePx = 12,
-    intensity = 1,
-    tintHex = 0xff7a18,
+    widthPx = null,
+    heightPx = null,
     seed = 0,
   } = {}) {
     const cardCount = Math.max(1, Math.floor(profile.cardCount || 1));
-    const width = Math.max(1, scalePx * Math.max(0.1, Number(profile.widthScale) || 1));
-    const height = Math.max(1, scalePx * Math.max(0.1, Number(profile.heightScale) || 1));
-    const alpha = Math.max(0, Math.min(1.5, Number(intensity) || 0));
+    const width = Math.max(1, Number(widthPx) || scalePx * Math.max(0.1, Number(profile.widthScale) || 1));
+    const height = Math.max(1, Number(heightPx) || scalePx * Math.max(0.1, Number(profile.heightScale) || 1));
     const baseAngle = Math.sin((Number(seed) || 0) * 12.9898) * 0.18;
     const crossAngle = Number(profile.crossAngleRad) || 0.32;
     for (let card = 0; card < cardCount; card += 1) {
@@ -77,7 +87,6 @@ export function createFireCardSystem({
       scale.set(width, height, 1);
       matrix.compose(position, quat, scale);
       mesh.setMatrixAt(writeIndex, matrix);
-      mesh.setColorAt(writeIndex, color.setHex(Number(tintHex) || 0xff7a18).multiplyScalar(0.75 + alpha * 0.35));
       if (!lastSample) {
         sampleLocalPosition.copy(position);
         lastSample = {
@@ -86,7 +95,7 @@ export function createFireCardSystem({
           z: Math.round(position.z * 10) / 10,
           width: Math.round(width * 10) / 10,
           height: Math.round(height * 10) / 10,
-          intensity: Math.round(alpha * 100) / 100,
+          color: "#ffffff",
         };
       }
       writeIndex += 1;
@@ -96,7 +105,6 @@ export function createFireCardSystem({
   function endFrame() {
     for (let i = writeIndex; i < mesh.count; i += 1) hideInstance(i);
     mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.visible = writeIndex > 0;
   }
 
@@ -128,141 +136,8 @@ export function createFireCardSystem({
           materialDepthWrite: !!(mesh.material && mesh.material.depthWrite),
           materialBlending: mesh.material ? mesh.material.blending : null,
           materialToneMapped: !!(mesh.material && mesh.material.toneMapped),
-          hasInstanceColor: !!mesh.instanceColor,
-          instanceColorCount: mesh.instanceColor && mesh.instanceColor.count || 0,
+          materialColor: mesh.material && mesh.material.color ? `#${mesh.material.color.getHexString()}` : "",
           matrixWorldNeedsUpdate: !!mesh.matrixWorldNeedsUpdate,
-        },
-        sample: lastSample,
-        sampleCamera: camera && lastSample ? (() => {
-          mesh.updateWorldMatrix(true, false);
-          if (typeof camera.updateMatrixWorld === "function") camera.updateMatrixWorld();
-          sampleWorldPosition.copy(sampleLocalPosition);
-          mesh.localToWorld(sampleWorldPosition);
-          sampleClipPosition.copy(sampleWorldPosition).project(camera);
-          return {
-            world: {
-              x: Math.round(sampleWorldPosition.x * 10) / 10,
-              y: Math.round(sampleWorldPosition.y * 10) / 10,
-              z: Math.round(sampleWorldPosition.z * 10) / 10,
-            },
-            clip: {
-              x: Math.round(sampleClipPosition.x * 1000) / 1000,
-              y: Math.round(sampleClipPosition.y * 1000) / 1000,
-              z: Math.round(sampleClipPosition.z * 1000) / 1000,
-            },
-            inClip: sampleClipPosition.x >= -1 && sampleClipPosition.x <= 1
-              && sampleClipPosition.y >= -1 && sampleClipPosition.y <= 1
-              && sampleClipPosition.z >= -1 && sampleClipPosition.z <= 1,
-          };
-        })() : null,
-      });
-    },
-    get activeCount() {
-      return writeIndex;
-    },
-  });
-}
-
-export function createBurnDebugCardSystem({
-  root = null,
-  maxCards = 128,
-} = {}) {
-  const parent = root || new THREE.Group();
-  const geometry = new THREE.CircleGeometry(0.5, 24);
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    transparent: false,
-    depthTest: false,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-    toneMapped: false,
-  });
-  const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, Math.floor(maxCards)));
-  mesh.name = "vfx:burn-debug-cards";
-  mesh.frustumCulled = false;
-  mesh.renderOrder = 1250;
-  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  parent.add(mesh);
-
-  const matrix = new THREE.Matrix4();
-  const quat = new THREE.Quaternion();
-  const scale = new THREE.Vector3();
-  const position = new THREE.Vector3();
-  const sampleLocalPosition = new THREE.Vector3();
-  const sampleWorldPosition = new THREE.Vector3();
-  const sampleClipPosition = new THREE.Vector3();
-  let writeIndex = 0;
-  let lastSample = null;
-
-  function hideInstance(index = 0) {
-    quat.identity();
-    matrix.compose(OFFSCREEN_POSITION, quat, ZERO_SCALE);
-    mesh.setMatrixAt(index, matrix);
-  }
-
-  function beginFrame() {
-    writeIndex = 0;
-    lastSample = null;
-  }
-
-  function addCard({
-    x = 0,
-    y = 0,
-    z = 0,
-    diameterPx = 12,
-  } = {}) {
-    if (writeIndex >= mesh.count) return;
-    const diameter = Math.max(1, Number(diameterPx) || 1);
-    position.set(Number(x) || 0, Number(y) || 0, Number(z) || 0);
-    quat.identity();
-    scale.set(diameter, diameter, 1);
-    matrix.compose(position, quat, scale);
-    mesh.setMatrixAt(writeIndex, matrix);
-    if (!lastSample) {
-      sampleLocalPosition.copy(position);
-      lastSample = {
-        x: Math.round(position.x * 10) / 10,
-        y: Math.round(position.y * 10) / 10,
-        z: Math.round(position.z * 10) / 10,
-        diameterPx: Math.round(diameter * 10) / 10,
-      };
-    }
-    writeIndex += 1;
-  }
-
-  function endFrame() {
-    for (let i = writeIndex; i < mesh.count; i += 1) hideInstance(i);
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.visible = writeIndex > 0;
-  }
-
-  function dispose() {
-    parent.remove(mesh);
-    geometry.dispose();
-    material.dispose();
-  }
-
-  for (let i = 0; i < mesh.count; i += 1) hideInstance(i);
-  mesh.visible = false;
-
-  return Object.freeze({
-    beginFrame,
-    addCard,
-    endFrame,
-    dispose,
-    getTrace(camera = null) {
-      return Object.freeze({
-        activeCount: writeIndex,
-        visible: !!mesh.visible,
-        mesh: {
-          name: mesh.name,
-          parentName: mesh.parent && mesh.parent.name ? mesh.parent.name : "",
-          renderOrder: mesh.renderOrder,
-          frustumCulled: !!mesh.frustumCulled,
-          materialTransparent: !!(mesh.material && mesh.material.transparent),
-          materialDepthTest: !!(mesh.material && mesh.material.depthTest),
-          materialDepthWrite: !!(mesh.material && mesh.material.depthWrite),
-          materialToneMapped: !!(mesh.material && mesh.material.toneMapped),
         },
         sample: lastSample,
         sampleCamera: camera && lastSample ? (() => {
