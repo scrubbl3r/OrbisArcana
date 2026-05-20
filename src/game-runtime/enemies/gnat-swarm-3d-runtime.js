@@ -1360,8 +1360,8 @@ export function createGnatSwarm3dRuntime({
       x,
       y,
       z,
-      widthPx: boPx * 0.15,
-      heightPx: boPx * 0.15,
+      widthPx: boPx * 0.5,
+      heightPx: boPx * 0.5,
       seed: Number(state.burnVisualSeed) || Number(state.phaseX) || 0,
     });
   }
