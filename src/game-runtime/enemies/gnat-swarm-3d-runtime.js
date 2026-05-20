@@ -17,6 +17,7 @@ import {
 } from "../status/fire/burning-status-model.js";
 import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520g";
 
+const FORCE_BURN_VISUAL_DIAGNOSTICS = true;
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
 const GNAT_SIGNAL_FLASH_SEC = 1;
@@ -152,7 +153,18 @@ function readSearchParam(name) {
 function readBurnVisualDiagnostics() {
   const cardMode = readSearchParam("gnatBurnCardMode") || "";
   const bodyMode = readSearchParam("gnatBurnBody") || "";
+  if (FORCE_BURN_VISUAL_DIAGNOSTICS) {
+    return Object.freeze({
+      forced: true,
+      cardMode: "solid",
+      bodyMode: "off",
+      solidCards: true,
+      hideCards: false,
+      disableBody: true,
+    });
+  }
   return Object.freeze({
+    forced: false,
     cardMode,
     bodyMode,
     solidCards: cardMode === "solid" || cardMode === "white",
