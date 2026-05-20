@@ -3,7 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260520a";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520r";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520s";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
@@ -102,11 +102,12 @@ export function createFireCardSystem({
   profileId = FIRE_CARD_PROFILE_SMALL_TEARDROP,
   debugSolid = false,
   billboardToCamera = true,
+  endCapFeatherPx = 0,
 } = {}) {
   const parent = root || new THREE.Group();
   const profile = resolveFireCardProfile(profileId);
   const geometry = createUnitEggGeometry();
-  const material = createFireCardMaterial({ ...profile, debugSolid });
+  const material = createFireCardMaterial({ ...profile, debugSolid, endCapFeatherPx });
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, Math.floor(maxCards)));
   const seedAttribute = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count), 1);
   seedAttribute.setUsage(THREE.DynamicDrawUsage);
@@ -236,6 +237,7 @@ export function createFireCardSystem({
           materialName: mesh.material && mesh.material.name ? mesh.material.name : "",
           materialColor: mesh.material && mesh.material.color ? `#${mesh.material.color.getHexString()}` : "",
           debugSolid: !!debugSolid,
+          endCapFeatherPx,
           matrixWorldNeedsUpdate: !!mesh.matrixWorldNeedsUpdate,
         },
         sample: lastSample,

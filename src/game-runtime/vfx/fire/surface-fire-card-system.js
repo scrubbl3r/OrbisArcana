@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { closestPointOnSegment } from "../../collision/circle-boundary-collision.js";
-import { createFireCardSystem } from "./fire-card-system.js?v=20260520u";
+import { createFireCardSystem } from "./fire-card-system.js?v=20260520v";
 
 const WORLD_UP = Object.freeze({ x: 0, y: 1 });
 const SURFACE_FIRE_TTL_MS = 3000;
@@ -47,6 +47,7 @@ export function createSurfaceFireCardSystem({
     root,
     maxCards,
     billboardToCamera: false,
+    endCapFeatherPx: 6,
   });
   const cardQuat = new THREE.Quaternion();
   const basisMatrix = new THREE.Matrix4();
@@ -110,8 +111,8 @@ export function createSurfaceFireCardSystem({
     basisMatrix.makeBasis(basisX, basisY, basisZ);
     cardQuat.setFromRotationMatrix(basisMatrix);
     return {
-      x: contactRuntime.x + (tangent.x * offsetPx) + (normal.x * bo * 0.015),
-      y: contactRuntime.y + (tangent.y * offsetPx) + (normal.y * bo * 0.015),
+      x: contactRuntime.x + (tangent.x * offsetPx),
+      y: contactRuntime.y + (tangent.y * offsetPx),
       z,
       widthPx: profile.widthPx,
       heightPx: profile.heightPx,
@@ -205,7 +206,7 @@ export function createSurfaceFireCardSystem({
           steepness,
           offsetPx: (card - half) * profile.spacingPx,
           bo,
-          z: (orbRuntimePosition.z || 0) + 3 + (index * 0.3),
+          z: orbRuntimePosition.z || 0,
           seed: (index * 17.17) + (card * 3.31) + (point.xW * 0.011) + (point.yW * 0.017),
         });
         if (surfaceCard) {

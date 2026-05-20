@@ -35,6 +35,7 @@ export function createFireCardMaterial({
   wakeSimplexGain = 0.3,
   wakeNoiseMix = 0.25,
   edgeFeatherPx = 3,
+  endCapFeatherPx = 0,
 } = {}) {
   return new THREE.ShaderMaterial({
     name: "fire_card:egg_flame_flat_wake_material",
@@ -50,6 +51,7 @@ export function createFireCardMaterial({
     uniforms: {
       uTime: { value: 0 },
       uEdgeFeatherPx: { value: Math.max(0, finiteNumber(edgeFeatherPx, 3)) },
+      uEndCapFeatherPx: { value: Math.max(0, finiteNumber(endCapFeatherPx, 0)) },
       uWakeNoiseScale: { value: Math.max(0.1, finiteNumber(wakeNoiseScale, 2)) },
       uWakeNoiseSpeed: { value: Math.max(0, finiteNumber(wakeNoiseSpeed, 7)) },
       uWakeNoiseDensityBottom: { value: Math.max(0, Math.min(1, finiteNumber(wakeNoiseDensityBottom, 0.9))) },
@@ -93,6 +95,7 @@ export function createFireCardMaterial({
       uniform float uTime;
       uniform int uDebugSolid;
       uniform float uEdgeFeatherPx;
+      uniform float uEndCapFeatherPx;
       uniform float uWakeNoiseScale; uniform float uWakeNoiseSpeed; uniform float uWakeNoiseDensityBottom; uniform float uWakeNoiseDensityTop; uniform float uWakeNoiseContrast; uniform float uWakeNoiseOctaves; uniform float uWakeNoiseLacunarity; uniform float uWakeNoiseGain;
       uniform float uWakeSimplexScale; uniform float uWakeSimplexSpeed; uniform float uWakeSimplexDensityBottom; uniform float uWakeSimplexDensityTop; uniform float uWakeSimplexContrast; uniform float uWakeSimplexOctaves; uniform float uWakeSimplexLacunarity; uniform float uWakeSimplexGain; uniform float uWakeNoiseMix;
       uniform float uWakeGraphStops[4]; uniform vec4 uWakeGraphColors[4];
@@ -224,6 +227,8 @@ export function createFireCardMaterial({
         float sideDistance = clipHalfWidth - abs(vLocalPos.x);
         float verticalDistance = min(vLocalPos.y - minY, maxY - vLocalPos.y);
         float edgeAlpha = smoothstep(0.0, featherLocal, min(sideDistance, verticalDistance));
+        float endCapFeatherLocal = max(0.00001, uEndCapFeatherPx * max(localPxX, localPxY));
+        float endCapAlpha = uEndCapFeatherPx > 0.0 ? smoothstep(0.0, endCapFeatherLocal, sideDistance) : 1.0;
         float safeTail = edgeGuard(rawTail, 0.035, 0.965);
         if (edgeAlpha <= 0.001) discard;
         float safeEggX = clamp(rawEggX, -0.94, 0.94);
@@ -257,7 +262,7 @@ export function createFireCardMaterial({
         float contrast = mix(uWakeNoiseContrast, uWakeSimplexContrast, noiseMix);
         float blobs = colorRampMask(field, density, contrast);
         vec4 mapped = sampleWakeGraph(blobs);
-        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * edgeAlpha;
+        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * edgeAlpha * endCapAlpha;
         mapped.rgb *= verticalAlpha;
         mapped.a *= verticalAlpha;
         if (mapped.a <= 0.004) discard;
