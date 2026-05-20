@@ -34,8 +34,10 @@ export function createFireCardMaterial({
   wakeSimplexLacunarity = 1.1,
   wakeSimplexGain = 0.3,
   wakeNoiseMix = 0.25,
+  wakeCarveStrength = 0,
   edgeFeatherPx = 3,
   endCapFeatherPx = 0,
+  bottomFeatherPx = 0,
 } = {}) {
   return new THREE.ShaderMaterial({
     name: "fire_card:egg_flame_flat_wake_material",
@@ -69,11 +71,13 @@ export function createFireCardMaterial({
       uWakeSimplexLacunarity: { value: Math.max(1.1, finiteNumber(wakeSimplexLacunarity, 1.1)) },
       uWakeSimplexGain: { value: Math.max(0.1, Math.min(0.9, finiteNumber(wakeSimplexGain, 0.3))) },
       uWakeNoiseMix: { value: Math.max(0, Math.min(1, finiteNumber(wakeNoiseMix, 0.25))) },
+      uWakeCarveStrength: { value: Math.max(0, Math.min(1, finiteNumber(wakeCarveStrength, 0))) },
       uWakeGraphStops: { value: GRAPH_STOP_VALUES },
       uWakeGraphColors: { value: GRAPH_COLORS },
       uWakeAlphaGradientStops: { value: ALPHA_STOP_VALUES },
       uWakeAlphaGradientValues: { value: ALPHA_VALUES },
       uDebugSolid: { value: debugSolid ? 1 : 0 },
+      uBottomFeatherPx: { value: Math.max(0, finiteNumber(bottomFeatherPx, 0)) },
     },
     vertexShader: `
       precision highp float;
@@ -96,8 +100,10 @@ export function createFireCardMaterial({
       uniform int uDebugSolid;
       uniform float uEdgeFeatherPx;
       uniform float uEndCapFeatherPx;
+      uniform float uBottomFeatherPx;
       uniform float uWakeNoiseScale; uniform float uWakeNoiseSpeed; uniform float uWakeNoiseDensityBottom; uniform float uWakeNoiseDensityTop; uniform float uWakeNoiseContrast; uniform float uWakeNoiseOctaves; uniform float uWakeNoiseLacunarity; uniform float uWakeNoiseGain;
       uniform float uWakeSimplexScale; uniform float uWakeSimplexSpeed; uniform float uWakeSimplexDensityBottom; uniform float uWakeSimplexDensityTop; uniform float uWakeSimplexContrast; uniform float uWakeSimplexOctaves; uniform float uWakeSimplexLacunarity; uniform float uWakeSimplexGain; uniform float uWakeNoiseMix;
+      uniform float uWakeCarveStrength;
       uniform float uWakeGraphStops[4]; uniform vec4 uWakeGraphColors[4];
       uniform float uWakeAlphaGradientStops[4]; uniform float uWakeAlphaGradientValues[4];
       varying vec3 vLocalPos;
@@ -229,6 +235,8 @@ export function createFireCardMaterial({
         float edgeAlpha = smoothstep(0.0, featherLocal, min(sideDistance, verticalDistance));
         float endCapFeatherLocal = max(0.00001, uEndCapFeatherPx * max(localPxX, localPxY));
         float endCapAlpha = uEndCapFeatherPx > 0.0 ? smoothstep(0.0, endCapFeatherLocal, sideDistance) : 1.0;
+        float bottomFeatherLocal = max(0.00001, uBottomFeatherPx * max(localPxX, localPxY));
+        float bottomAlpha = uBottomFeatherPx > 0.0 ? smoothstep(0.0, bottomFeatherLocal, vLocalPos.y - minY) : 1.0;
         float safeTail = edgeGuard(rawTail, 0.035, 0.965);
         if (edgeAlpha <= 0.001) discard;
         float safeEggX = clamp(rawEggX, -0.94, 0.94);
@@ -260,9 +268,13 @@ export function createFireCardMaterial({
         float field = mix(perlin, simplex, noiseMix);
         float density = mix(perlinDensity, simplexDensity, noiseMix);
         float contrast = mix(uWakeNoiseContrast, uWakeSimplexContrast, noiseMix);
-        float blobs = colorRampMask(field, density, contrast);
+        float broadBlobs = colorRampMask(perlin, perlinDensity, uWakeNoiseContrast);
+        float detailBlobs = colorRampMask(simplex, simplexDensity, uWakeSimplexContrast);
+        float mixedBlobs = colorRampMask(field, density, contrast);
+        float carvedBlobs = broadBlobs * mix(1.0, detailBlobs, clamp(uWakeCarveStrength, 0.0, 1.0));
+        float blobs = mix(mixedBlobs, carvedBlobs, clamp(uWakeCarveStrength, 0.0, 1.0));
         vec4 mapped = sampleWakeGraph(blobs);
-        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * edgeAlpha * endCapAlpha;
+        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * edgeAlpha * endCapAlpha * bottomAlpha;
         mapped.rgb *= verticalAlpha;
         mapped.a *= verticalAlpha;
         if (mapped.a <= 0.004) discard;
