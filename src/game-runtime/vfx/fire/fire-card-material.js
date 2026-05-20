@@ -99,25 +99,8 @@ export function createFireCardMaterial({
         float disc = radius * radius - dy * dy;
         return disc > 0.0 ? sqrt(disc) : 0.0;
       }
-      float smoothMax(float a, float b, float radius) {
-        if (max(abs(a), abs(b)) <= 0.000001) return 0.0;
-        float k = max(0.0001, radius);
-        float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
-        return mix(a, b, h) + k * h * (1.0 - h);
-      }
-      float eggHalfWidthAtY(float y) {
-        float lowerCenterY = 0.0;
-        float lowerRadius = 0.5;
-        float upperCenterY = 0.56;
-        float upperRadius = 0.22;
-        float blendSoftness = 0.14;
-        float lower = circleRadiusAtY(y, lowerCenterY, lowerRadius);
-        float upper = circleRadiusAtY(y, upperCenterY, upperRadius);
-        float bridgeT = clamp((y - lowerCenterY) / max(0.0001, upperCenterY - lowerCenterY), 0.0, 1.0);
-        float bridge = (y > lowerCenterY && y < upperCenterY)
-          ? mix(lowerRadius, upperRadius, bridgeT)
-          : 0.0;
-        return smoothMax(smoothMax(lower, upper, blendSoftness), bridge, blendSoftness * 0.75);
+      float cardHalfWidthAtY(float y) {
+        return circleRadiusAtY(y, 0.0, 0.5);
       }
 
       float hash31(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
@@ -214,7 +197,7 @@ export function createFireCardMaterial({
       }
 
       void main() {
-        float clipHalfWidth = eggHalfWidthAtY(vLocalPos.y);
+        float clipHalfWidth = cardHalfWidthAtY(vLocalPos.y);
         if (clipHalfWidth <= 0.0 || abs(vLocalPos.x) > clipHalfWidth) discard;
         if (uDebugSolid == 1) {
           gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
@@ -222,7 +205,7 @@ export function createFireCardMaterial({
         }
 
         float minY = -0.5;
-        float maxY = 0.78;
+        float maxY = 0.5;
         float rawTail = clamp((vLocalPos.y - minY) / max(0.0001, maxY - minY), 0.0, 1.0);
         float rawEggX = clamp(vLocalPos.x / max(0.0001, clipHalfWidth), -1.0, 1.0);
         float safeTail = edgeGuard(rawTail, 0.035, 0.965);

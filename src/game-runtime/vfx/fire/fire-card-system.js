@@ -3,17 +3,10 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260519b";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520k";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520l";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
-
-function smoothMaxNumber(a, b, radius) {
-  if (Math.max(Math.abs(a), Math.abs(b)) <= 0.000001) return 0;
-  const k = Math.max(0.0001, Number(radius) || 0);
-  const h = Math.max(0, Math.min(1, 0.5 + (0.5 * (b - a)) / k));
-  return (a * (1 - h)) + (b * h) + (k * h * (1 - h));
-}
 
 function circleRadiusAtY(y, centerY, radius) {
   const dy = y - centerY;
@@ -27,31 +20,20 @@ function normalizeSeed(value, fallback = 0) {
   return Math.abs(Math.sin(n * 12.9898) * 43758.5453) % 1;
 }
 
-function createUnitTeardropGeometry({
+function createUnitCircleGeometry({
   rows = 48,
-  lowerCenterY = 0,
-  lowerRadius = 0.5,
-  upperCenterY = 0.56,
-  upperRadius = 0.22,
-  blendSoftness = 0.14,
-  padding = 0,
+  radius = 0.5,
 } = {}) {
   const rowCount = Math.max(4, Math.round(rows));
-  const minY = lowerCenterY - lowerRadius - padding;
-  const maxY = upperCenterY + upperRadius + padding;
+  const minY = -radius;
+  const maxY = radius;
   const height = Math.max(0.0001, maxY - minY);
   const positions = [];
   const uvs = [];
   const indices = [];
 
   function halfWidthAtY(y) {
-    const lower = circleRadiusAtY(y, lowerCenterY, lowerRadius);
-    const upper = circleRadiusAtY(y, upperCenterY, upperRadius);
-    const bridgeT = Math.max(0, Math.min(1, (y - lowerCenterY) / Math.max(0.0001, upperCenterY - lowerCenterY)));
-    const bridge = y > lowerCenterY && y < upperCenterY
-      ? (lowerRadius * (1 - bridgeT)) + (upperRadius * bridgeT)
-      : 0;
-    return smoothMaxNumber(smoothMaxNumber(lower, upper, blendSoftness), bridge, blendSoftness * 0.75);
+    return circleRadiusAtY(y, 0, radius);
   }
 
   function pushVertex(x, y) {
@@ -100,11 +82,7 @@ function createUnitTeardropGeometry({
   geometry.computeBoundingSphere();
   geometry.userData.fireCardShape = Object.freeze({
     rows: rowCount,
-    lowerCenterY,
-    lowerRadius,
-    upperCenterY,
-    upperRadius,
-    blendSoftness,
+    radius,
     minY,
     maxY,
   });
@@ -119,7 +97,7 @@ export function createFireCardSystem({
 } = {}) {
   const parent = root || new THREE.Group();
   const profile = resolveFireCardProfile(profileId);
-  const geometry = createUnitTeardropGeometry();
+  const geometry = createUnitCircleGeometry();
   const material = createFireCardMaterial({ ...profile, debugSolid });
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, Math.floor(maxCards)));
   const seedAttribute = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count), 1);
@@ -237,7 +215,7 @@ export function createFireCardSystem({
         mesh: {
           name: mesh.name,
           parentName: mesh.parent && mesh.parent.name ? mesh.parent.name : "",
-          shape: "two-circle-cap-strip",
+          shape: "circle-cap-strip",
           billboardMode,
           renderOrder: mesh.renderOrder,
           frustumCulled: !!mesh.frustumCulled,

@@ -15,7 +15,7 @@ import {
   STATUS_EFFECT_BURNING,
   tickBurningStatusOnEntity,
 } from "../status/fire/burning-status-model.js";
-import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520k";
+import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520l";
 
 const FORCE_BURN_VISUAL_DIAGNOSTICS = false;
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
@@ -1360,8 +1360,8 @@ export function createGnatSwarm3dRuntime({
       x,
       y,
       z,
-      widthPx: boPx * 0.05,
-      heightPx: boPx * 0.20,
+      widthPx: boPx * 0.15,
+      heightPx: boPx * 0.15,
       seed: Number(state.burnVisualSeed) || Number(state.phaseX) || 0,
     });
   }
