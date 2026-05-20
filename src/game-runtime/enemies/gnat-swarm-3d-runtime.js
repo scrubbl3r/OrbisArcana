@@ -15,7 +15,7 @@ import {
   STATUS_EFFECT_BURNING,
   tickBurningStatusOnEntity,
 } from "../status/fire/burning-status-model.js";
-import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520e";
+import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520f";
 
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
@@ -136,6 +136,29 @@ function syncBurnVisualFromStatus(state = null, nowSec = 0) {
   if (untilSec > nowSec) state.burnVisualUntilSec = Math.max(Number(state.burnVisualUntilSec) || 0, untilSec);
   state.burnVisualIntensity = Math.max(Number(state.burnVisualIntensity) || 0, Number(burning.intensity) || 1);
   return untilSec > nowSec;
+}
+
+function readSearchParam(name) {
+  try {
+    const params = new URLSearchParams(globalThis.location && globalThis.location.search || "");
+    if (!params.has(name)) return null;
+    const value = params.get(name);
+    return String(value == null ? "" : value).trim().toLowerCase();
+  } catch (_) {
+    return null;
+  }
+}
+
+function readBurnVisualDiagnostics() {
+  const cardMode = readSearchParam("gnatBurnCardMode") || "";
+  const bodyMode = readSearchParam("gnatBurnBody") || "";
+  return Object.freeze({
+    cardMode,
+    bodyMode,
+    solidCards: cardMode === "solid" || cardMode === "white",
+    hideCards: cardMode === "off" || cardMode === "hide",
+    disableBody: bodyMode === "off" || bodyMode === "hide" || bodyMode === "0",
+  });
 }
 
 function shapedProximityChance({ distancePx = 0, radiusPx = 1, baseChance = 0, awareness = 1, strength = 1 } = {}) {
@@ -383,10 +406,15 @@ export function createGnatSwarm3dRuntime({
 	    emissiveIntensity: 1.4,
 	    roughness: 0.48,
 	    metalness: 0.08,
-	  });
+  });
 	  tintEmissiveWithInstanceColor(material);
   const geometry = new THREE.BoxGeometry(1, 1, 1);
-  const fireCards = createFireCardSystem({ root, maxCards: 256 });
+  const burnVisualDiagnostics = readBurnVisualDiagnostics();
+  const fireCards = createFireCardSystem({
+    root,
+    maxCards: 256,
+    debugSolid: burnVisualDiagnostics.solidCards,
+  });
   let mesh = null;
   let states = [];
   let bounds = Object.freeze({ loops: [], box: null });
@@ -1287,6 +1315,10 @@ export function createGnatSwarm3dRuntime({
       mesh.setColorAt(i, baseColor);
       return;
     }
+    if (burnVisualDiagnostics.disableBody) {
+      mesh.setColorAt(i, baseColor);
+      return;
+    }
     const profile = burning.profile || {};
     const flickerHz = Math.max(1, Number(profile.flickerHz) || 9);
     const seed = Number(state && state.burnVisualSeed) || Number(state && state.phaseX) || 0;
@@ -1307,6 +1339,7 @@ export function createGnatSwarm3dRuntime({
     if (!state || !runtimePosition) return;
     const burning = resolveBurningRuntimeState(state, nowSec);
     if (!burning.active) return;
+    if (burnVisualDiagnostics.hideCards) return;
     const x = Number(runtimePosition.x) || 0;
     const y = Number(runtimePosition.y) || 0;
     const z = (Number(runtimePosition.z) || 0) + 6;
@@ -1695,6 +1728,7 @@ export function createGnatSwarm3dRuntime({
       stunned: stunnedCount,
       burning: burningCount,
       deadBurning: deadBurningCount,
+      burnVisualDiagnostics,
       fireCards: fireCards.activeCount,
       fireCardTrace: fireCards.getTrace(),
       liftLeach: activeLiftLeach,

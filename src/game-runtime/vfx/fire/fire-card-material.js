@@ -16,6 +16,7 @@ function finiteNumber(value, fallback) {
 }
 
 export function createFireCardMaterial({
+  debugSolid = false,
   wakeNoiseScale = 2,
   wakeNoiseSpeed = 7,
   wakeNoiseDensityBottom = 0.9,
@@ -65,6 +66,7 @@ export function createFireCardMaterial({
       uWakeGraphColors: { value: GRAPH_COLORS },
       uWakeAlphaGradientStops: { value: ALPHA_STOP_VALUES },
       uWakeAlphaGradientValues: { value: ALPHA_VALUES },
+      uDebugSolid: { value: debugSolid ? 1 : 0 },
     },
     vertexShader: `
       precision highp float;
@@ -89,6 +91,7 @@ export function createFireCardMaterial({
     fragmentShader: `
       precision highp float;
       uniform float uTime;
+      uniform int uDebugSolid;
       uniform float uWakeNoiseScale; uniform float uWakeNoiseSpeed; uniform float uWakeNoiseDensityBottom; uniform float uWakeNoiseDensityTop; uniform float uWakeNoiseContrast; uniform float uWakeNoiseOctaves; uniform float uWakeNoiseLacunarity; uniform float uWakeNoiseGain;
       uniform float uWakeSimplexScale; uniform float uWakeSimplexSpeed; uniform float uWakeSimplexDensityBottom; uniform float uWakeSimplexDensityTop; uniform float uWakeSimplexContrast; uniform float uWakeSimplexOctaves; uniform float uWakeSimplexLacunarity; uniform float uWakeSimplexGain; uniform float uWakeNoiseMix;
       uniform float uWakeGraphStops[4]; uniform vec4 uWakeGraphColors[4];
@@ -217,6 +220,10 @@ export function createFireCardMaterial({
       void main() {
         float clipHalfWidth = eggHalfWidthAtY(vLocalPos.y);
         if (clipHalfWidth <= 0.0 || abs(vLocalPos.x) > clipHalfWidth) discard;
+        if (uDebugSolid == 1) {
+          gl_FragColor = vec4(1.0);
+          return;
+        }
 
         float tail = clamp(vEggLocal.y, 0.0, 1.0);
         float eggX = clamp(vEggLocal.x, -1.0, 1.0);
