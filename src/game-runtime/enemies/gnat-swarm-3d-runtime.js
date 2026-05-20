@@ -17,7 +17,7 @@ import {
 } from "../status/fire/burning-status-model.js";
 import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260520h";
 
-const FORCE_BURN_VISUAL_DIAGNOSTICS = false;
+const FORCE_BURN_VISUAL_DIAGNOSTICS = true;
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
 const GNAT_SIGNAL_FLASH_SEC = 1;
