@@ -1,4 +1,4 @@
-export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260520-hide-gnat-body-burn-smoke-a";
+export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260520-hide-burning-gnat-body-a";
 
 export function publishDepth3dModuleVersion(version = GAME_STAGE_DEPTH3D_TRACE_VERSION) {
   globalThis.__orbisDepth3dModuleVersion = String(version || "");
