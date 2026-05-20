@@ -3,7 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260519b";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520j";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520k";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
@@ -40,10 +40,8 @@ function createUnitTeardropGeometry({
   const minY = lowerCenterY - lowerRadius - padding;
   const maxY = upperCenterY + upperRadius + padding;
   const height = Math.max(0.0001, maxY - minY);
-  const centerY = minY + height * 0.5;
   const positions = [];
   const uvs = [];
-  const eggLocals = [];
   const indices = [];
 
   function halfWidthAtY(y) {
@@ -62,36 +60,41 @@ function createUnitTeardropGeometry({
     const localX = halfWidth > 0.000001 ? Math.max(-1, Math.min(1, x / halfWidth)) : 0;
     positions.push(x, y, 0);
     uvs.push((localX + 1) * 0.5, v);
-    eggLocals.push(localX, v);
   }
 
-  pushVertex(0, centerY);
   pushVertex(0, minY);
+  const rowVertexIndices = [];
   for (let i = 1; i < rowCount; i += 1) {
     const v = i / rowCount;
     const y = minY + height * v;
     const r = halfWidthAtY(y);
-    if (r > 0.000001) pushVertex(r, y);
+    if (r <= 0.000001) continue;
+    const left = positions.length / 3;
+    pushVertex(-r, y);
+    const right = positions.length / 3;
+    pushVertex(r, y);
+    rowVertexIndices.push({ left, right });
   }
+  const topIndex = positions.length / 3;
   pushVertex(0, maxY);
-  for (let i = rowCount - 1; i >= 1; i -= 1) {
-    const v = i / rowCount;
-    const y = minY + height * v;
-    const r = halfWidthAtY(y);
-    if (r > 0.000001) pushVertex(-r, y);
-  }
 
-  const outlineStart = 1;
-  const outlineCount = (positions.length / 3) - outlineStart;
-  for (let i = 0; i < outlineCount; i += 1) {
-    const a = outlineStart + i;
-    const b = outlineStart + ((i + 1) % outlineCount);
-    indices.push(0, a, b);
+  if (rowVertexIndices.length > 0) {
+    const first = rowVertexIndices[0];
+    indices.push(0, first.right, first.left);
+    for (let i = 0; i < rowVertexIndices.length - 1; i += 1) {
+      const current = rowVertexIndices[i];
+      const next = rowVertexIndices[i + 1];
+      indices.push(
+        current.left, current.right, next.left,
+        current.right, next.right, next.left
+      );
+    }
+    const last = rowVertexIndices[rowVertexIndices.length - 1];
+    indices.push(last.left, last.right, topIndex);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-  geometry.setAttribute("aEggLocal", new THREE.Float32BufferAttribute(eggLocals, 2));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
@@ -234,7 +237,7 @@ export function createFireCardSystem({
         mesh: {
           name: mesh.name,
           parentName: mesh.parent && mesh.parent.name ? mesh.parent.name : "",
-          shape: "two-circle-outline-fan",
+          shape: "two-circle-cap-strip",
           billboardMode,
           renderOrder: mesh.renderOrder,
           frustumCulled: !!mesh.frustumCulled,
