@@ -107,7 +107,7 @@ export function createFireCardMaterial({
       }
       float cardHalfWidthAtY(float y) {
         if (y <= 0.0) return circleRadiusAtY(y, 0.0, 0.5);
-        float t = clamp(y / 1.25, 0.0, 1.0);
+        float t = clamp(y / 1.5625, 0.0, 1.0);
         float cap = max(0.0, 1.0 - t * t);
         float taper = 1.0 - 0.16 * (t * t * (3.0 - 2.0 * t));
         return 0.5 * pow(cap, 0.32) * taper;
@@ -215,7 +215,7 @@ export function createFireCardMaterial({
         }
 
         float minY = -0.5;
-        float maxY = 1.25;
+        float maxY = 1.5625;
         float rawTail = clamp((vLocalPos.y - minY) / max(0.0001, maxY - minY), 0.0, 1.0);
         float rawEggX = clamp(vLocalPos.x / max(0.0001, clipHalfWidth), -1.0, 1.0);
         float localPxX = length(vec2(dFdx(vLocalPos.x), dFdy(vLocalPos.x)));
