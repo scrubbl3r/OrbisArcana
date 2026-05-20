@@ -70,9 +70,11 @@ export function createFireCardMaterial({
       precision highp float;
       attribute float aFireSeed;
       varying vec2 vUv;
+      varying vec3 vLocalPos;
       varying float vFireSeed;
       void main() {
         vUv = uv;
+        vLocalPos = position;
         vFireSeed = aFireSeed;
         vec4 worldPosition = vec4(position, 1.0);
         #ifdef USE_INSTANCING
@@ -89,7 +91,33 @@ export function createFireCardMaterial({
       uniform float uWakeGraphStops[4]; uniform vec4 uWakeGraphColors[4];
       uniform float uWakeAlphaGradientStops[4]; uniform float uWakeAlphaGradientValues[4];
       varying vec2 vUv;
+      varying vec3 vLocalPos;
       varying float vFireSeed;
+
+      float circleRadiusAtY(float y, float centerY, float radius) {
+        float dy = y - centerY;
+        float disc = radius * radius - dy * dy;
+        return disc > 0.0 ? sqrt(disc) : 0.0;
+      }
+      float smoothMax(float a, float b, float radius) {
+        float k = max(0.0001, radius);
+        float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+        return mix(a, b, h) + k * h * (1.0 - h);
+      }
+      float eggHalfWidthAtY(float y) {
+        float lowerCenterY = 0.0;
+        float lowerRadius = 0.5;
+        float upperCenterY = 0.56;
+        float upperRadius = 0.22;
+        float blendSoftness = 0.14;
+        float lower = circleRadiusAtY(y, lowerCenterY, lowerRadius);
+        float upper = circleRadiusAtY(y, upperCenterY, upperRadius);
+        float bridgeT = clamp((y - lowerCenterY) / max(0.0001, upperCenterY - lowerCenterY), 0.0, 1.0);
+        float bridge = (y > lowerCenterY && y < upperCenterY)
+          ? mix(lowerRadius, upperRadius, bridgeT)
+          : 0.0;
+        return smoothMax(smoothMax(lower, upper, blendSoftness), bridge, blendSoftness * 0.75);
+      }
 
       float hash31(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
       float noise(vec3 p) {
@@ -182,6 +210,9 @@ export function createFireCardMaterial({
       }
 
       void main() {
+        float clipHalfWidth = eggHalfWidthAtY(vLocalPos.y);
+        if (clipHalfWidth <= 0.0 || abs(vLocalPos.x) > clipHalfWidth) discard;
+
         float tail = clamp(vUv.y, 0.0, 1.0);
         float seed = fract(vFireSeed);
         vec3 seedOffset = vec3(seed * 37.17 + 3.1, seed * -53.29 + 8.7, seed * 19.83 - 4.4);
