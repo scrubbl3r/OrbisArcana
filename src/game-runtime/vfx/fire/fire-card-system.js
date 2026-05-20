@@ -3,7 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260519b";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520i";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520j";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);

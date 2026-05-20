@@ -71,14 +71,9 @@ export function createFireCardMaterial({
     vertexShader: `
       precision highp float;
       attribute float aFireSeed;
-      attribute vec2 aEggLocal;
-      varying vec2 vUv;
-      varying vec2 vEggLocal;
       varying vec3 vLocalPos;
       varying float vFireSeed;
       void main() {
-        vUv = uv;
-        vEggLocal = aEggLocal;
         vLocalPos = position;
         vFireSeed = aFireSeed;
         vec4 worldPosition = vec4(position, 1.0);
@@ -96,8 +91,6 @@ export function createFireCardMaterial({
       uniform float uWakeSimplexScale; uniform float uWakeSimplexSpeed; uniform float uWakeSimplexDensityBottom; uniform float uWakeSimplexDensityTop; uniform float uWakeSimplexContrast; uniform float uWakeSimplexOctaves; uniform float uWakeSimplexLacunarity; uniform float uWakeSimplexGain; uniform float uWakeNoiseMix;
       uniform float uWakeGraphStops[4]; uniform vec4 uWakeGraphColors[4];
       uniform float uWakeAlphaGradientStops[4]; uniform float uWakeAlphaGradientValues[4];
-      varying vec2 vUv;
-      varying vec2 vEggLocal;
       varying vec3 vLocalPos;
       varying float vFireSeed;
 
@@ -228,8 +221,10 @@ export function createFireCardMaterial({
           return;
         }
 
-        float rawTail = clamp(vEggLocal.y, 0.0, 1.0);
-        float rawEggX = clamp(vEggLocal.x, -1.0, 1.0);
+        float minY = -0.5;
+        float maxY = 0.78;
+        float rawTail = clamp((vLocalPos.y - minY) / max(0.0001, maxY - minY), 0.0, 1.0);
+        float rawEggX = clamp(vLocalPos.x / max(0.0001, clipHalfWidth), -1.0, 1.0);
         float safeTail = edgeGuard(rawTail, 0.035, 0.965);
         float capGuard = smoothstep(0.0, 0.11, rawTail) * (1.0 - smoothstep(0.89, 1.0, rawTail));
         float sideGuard = 1.0 - smoothstep(0.88, 1.0, abs(rawEggX));
