@@ -27,7 +27,7 @@ export function createFireCardMaterial({
   wakeSimplexOctaves = 3,
   wakeSimplexLacunarity = 1.1,
   wakeSimplexGain = 0.3,
-  wakeNoiseMix = 0.25,
+  wakeNoiseMix = 0,
 } = {}) {
   return new THREE.ShaderMaterial({
     name: "fire_card:egg_flame_wake_graph_material",
@@ -55,7 +55,7 @@ export function createFireCardMaterial({
       uWakeSimplexOctaves: { value: Number(wakeSimplexOctaves) || 3 },
       uWakeSimplexLacunarity: { value: Number(wakeSimplexLacunarity) || 1.1 },
       uWakeSimplexGain: { value: Number(wakeSimplexGain) || 0.3 },
-      uWakeNoiseMix: { value: Number(wakeNoiseMix) || 0.25 },
+      uWakeNoiseMix: { value: Number(wakeNoiseMix) || 0 },
       uWakeGraphStops: { value: GRAPH_STOP_VALUES },
       uWakeGraphColors: { value: GRAPH_COLORS },
       uWakeAlphaGradientStops: { value: ALPHA_STOP_VALUES },
@@ -191,7 +191,12 @@ export function createFireCardMaterial({
           0.0
         ) + seedOffset;
         float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, tail);
-        float perlin = perlinMusgraveField(perlinFlow);
+        float perlin = clamp(
+          fbm(perlinFlow, uWakeNoiseOctaves, uWakeNoiseLacunarity, uWakeNoiseGain) * 0.68
+          + fbm(perlinFlow * 0.42 + seedOffset * 0.21, uWakeNoiseOctaves, uWakeNoiseLacunarity, uWakeNoiseGain) * 0.32,
+          0.0,
+          1.0
+        );
         float simplexTime = uTime * uWakeSimplexSpeed;
         float simplexFrequency = 4.25 / max(0.1, uWakeSimplexScale);
         vec3 simplexFlow = vec3(
