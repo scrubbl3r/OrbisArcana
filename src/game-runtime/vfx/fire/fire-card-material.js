@@ -69,11 +69,14 @@ export function createFireCardMaterial({
     vertexShader: `
       precision highp float;
       attribute float aFireSeed;
+      attribute vec2 aEggLocal;
       varying vec2 vUv;
+      varying vec2 vEggLocal;
       varying vec3 vLocalPos;
       varying float vFireSeed;
       void main() {
         vUv = uv;
+        vEggLocal = aEggLocal;
         vLocalPos = position;
         vFireSeed = aFireSeed;
         vec4 worldPosition = vec4(position, 1.0);
@@ -91,6 +94,7 @@ export function createFireCardMaterial({
       uniform float uWakeGraphStops[4]; uniform vec4 uWakeGraphColors[4];
       uniform float uWakeAlphaGradientStops[4]; uniform float uWakeAlphaGradientValues[4];
       varying vec2 vUv;
+      varying vec2 vEggLocal;
       varying vec3 vLocalPos;
       varying float vFireSeed;
 
@@ -213,10 +217,11 @@ export function createFireCardMaterial({
         float clipHalfWidth = eggHalfWidthAtY(vLocalPos.y);
         if (clipHalfWidth <= 0.0 || abs(vLocalPos.x) > clipHalfWidth) discard;
 
-        float tail = clamp(vUv.y, 0.0, 1.0);
+        float tail = clamp(vEggLocal.y, 0.0, 1.0);
+        float eggX = clamp(vEggLocal.x, -1.0, 1.0);
         float seed = fract(vFireSeed);
         vec3 seedOffset = vec3(seed * 37.17 + 3.1, seed * -53.29 + 8.7, seed * 19.83 - 4.4);
-        vec2 cardUv = vec2((vUv.x - 0.5) * 1.15, tail);
+        vec2 cardUv = vec2(eggX * 0.575, tail);
 
         float perlinTime = uTime * uWakeNoiseSpeed;
         float perlinFrequency = 4.25 / max(0.1, uWakeNoiseScale);

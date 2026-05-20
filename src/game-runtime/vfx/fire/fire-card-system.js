@@ -3,7 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260519b";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520c";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520d";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
@@ -41,6 +41,7 @@ function createUnitTeardropGeometry({
   const height = Math.max(0.0001, maxY - minY);
   const positions = [];
   const uvs = [];
+  const eggLocals = [];
   const indices = [];
   for (let i = 0; i <= rowCount; i += 1) {
     const v = i / rowCount;
@@ -55,6 +56,7 @@ function createUnitTeardropGeometry({
     const r = Math.max(0.0001, envelope);
     positions.push(-r, y, 0, r, y, 0);
     uvs.push(0, v, 1, v);
+    eggLocals.push(-1, v, 1, v);
   }
   for (let i = 0; i < rowCount; i += 1) {
     const a = i * 2;
@@ -64,6 +66,7 @@ function createUnitTeardropGeometry({
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setAttribute("aEggLocal", new THREE.Float32BufferAttribute(eggLocals, 2));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
