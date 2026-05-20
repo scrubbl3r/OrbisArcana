@@ -124,24 +124,18 @@ export function createFireCardSystem({
     scalePx = 12,
     widthPx = null,
     heightPx = null,
-    seed = 0,
   } = {}) {
     const cardCount = Math.max(1, Math.floor(profile.cardCount || 1));
     const width = Math.max(1, Number(widthPx) || scalePx * Math.max(0.1, Number(profile.widthScale) || 1));
     const height = Math.max(1, Number(heightPx) || scalePx * Math.max(0.1, Number(profile.heightScale) || 1));
-    const baseAngle = Math.sin((Number(seed) || 0) * 12.9898) * 0.18;
-    const crossAngle = Number(profile.crossAngleRad) || 0.32;
     for (let card = 0; card < cardCount; card += 1) {
       if (writeIndex >= mesh.count) return;
-      const side = card % 2 === 0 ? -1 : 1;
-      const angle = baseAngle + side * crossAngle;
-      const offset = side * width * 0.08;
       position.set(
-        x + Math.sin(angle) * offset,
+        x,
         y,
         z + (Number(profile.zOffset) || 0) + card * 0.2
       );
-      quat.setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle);
+      quat.identity();
       scale.set(width, height, 1);
       matrix.compose(position, quat, scale);
       mesh.setMatrixAt(writeIndex, matrix);
