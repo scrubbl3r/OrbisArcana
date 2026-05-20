@@ -8,7 +8,7 @@ const GRAPH_COLORS = [
   new THREE.Vector4(1, 0.941, 0.784, 1),
 ];
 const ALPHA_STOP_VALUES = [0, 0.6, 0.85, 1];
-const ALPHA_VALUES = [1, 0.5, 0, 0];
+const ALPHA_VALUES = [1, 0.78, 0.28, 0];
 
 function finiteNumber(value, fallback) {
   const n = Number(value);
@@ -101,10 +101,10 @@ export function createFireCardMaterial({
       }
       float cardHalfWidthAtY(float y) {
         if (y <= 0.0) return circleRadiusAtY(y, 0.0, 0.5);
-        float t = clamp(y / 0.72, 0.0, 1.0);
+        float t = clamp(y / 1.25, 0.0, 1.0);
         float cap = max(0.0, 1.0 - t * t);
-        float taper = 1.0 - 0.42 * (t * t * (3.0 - 2.0 * t));
-        return 0.5 * pow(cap, 0.38) * taper;
+        float taper = 1.0 - 0.16 * (t * t * (3.0 - 2.0 * t));
+        return 0.5 * pow(cap, 0.32) * taper;
       }
 
       float hash31(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
@@ -209,7 +209,7 @@ export function createFireCardMaterial({
         }
 
         float minY = -0.5;
-        float maxY = 0.72;
+        float maxY = 1.25;
         float rawTail = clamp((vLocalPos.y - minY) / max(0.0001, maxY - minY), 0.0, 1.0);
         float rawEggX = clamp(vLocalPos.x / max(0.0001, clipHalfWidth), -1.0, 1.0);
         float safeTail = edgeGuard(rawTail, 0.035, 0.965);

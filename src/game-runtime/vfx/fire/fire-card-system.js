@@ -3,7 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260520a";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520m";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520n";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
@@ -16,10 +16,10 @@ function circleRadiusAtY(y, centerY, radius) {
 
 function eggHalfWidthAtY(y) {
   if (y <= 0) return circleRadiusAtY(y, 0, 0.5);
-  const t = Math.max(0, Math.min(1, y / 0.72));
+  const t = Math.max(0, Math.min(1, y / 1.25));
   const cap = Math.max(0, 1 - t * t);
-  const taper = 1 - 0.42 * (t * t * (3 - 2 * t));
-  return 0.5 * Math.pow(cap, 0.38) * taper;
+  const taper = 1 - 0.16 * (t * t * (3 - 2 * t));
+  return 0.5 * Math.pow(cap, 0.32) * taper;
 }
 
 function normalizeSeed(value, fallback = 0) {
@@ -33,7 +33,7 @@ function createUnitEggGeometry({
 } = {}) {
   const rowCount = Math.max(4, Math.round(rows));
   const minY = -0.5;
-  const maxY = 0.72;
+  const maxY = 1.25;
   const height = Math.max(0.0001, maxY - minY);
   const positions = [];
   const uvs = [];
