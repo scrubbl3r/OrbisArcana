@@ -3,7 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260519b";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260519c";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260519d";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
@@ -18,6 +18,12 @@ function circleRadiusAtY(y, centerY, radius) {
   const dy = y - centerY;
   const disc = (radius * radius) - (dy * dy);
   return disc > 0 ? Math.sqrt(disc) : 0;
+}
+
+function normalizeSeed(value, fallback = 0) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return Math.abs(Math.sin(fallback * 12.9898) * 43758.5453) % 1;
+  return Math.abs(Math.sin(n * 12.9898) * 43758.5453) % 1;
 }
 
 function createUnitTeardropGeometry({
@@ -84,6 +90,9 @@ export function createFireCardSystem({
   const geometry = createUnitTeardropGeometry();
   const material = createFireCardMaterial(profile);
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, Math.floor(maxCards)));
+  const seedAttribute = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count), 1);
+  seedAttribute.setUsage(THREE.DynamicDrawUsage);
+  geometry.setAttribute("aFireSeed", seedAttribute);
   mesh.name = "vfx:fire-cards";
   mesh.frustumCulled = false;
   mesh.renderOrder = 1200;
@@ -135,6 +144,7 @@ export function createFireCardSystem({
     scalePx = 12,
     widthPx = null,
     heightPx = null,
+    seed = null,
   } = {}) {
     const cardCount = Math.max(1, Math.floor(profile.cardCount || 1));
     const width = Math.max(1, Number(widthPx) || scalePx * Math.max(0.1, Number(profile.widthScale) || 1));
@@ -149,6 +159,8 @@ export function createFireCardSystem({
       scale.set(width, height, 1);
       matrix.compose(position, cardQuat, scale);
       mesh.setMatrixAt(writeIndex, matrix);
+      const resolvedSeed = normalizeSeed(seed, (x * 0.013) + (y * 0.017) + card);
+      seedAttribute.setX(writeIndex, resolvedSeed);
       if (!lastSample) {
         sampleLocalPosition.copy(position);
         lastSample = {
@@ -158,6 +170,7 @@ export function createFireCardSystem({
           width: Math.round(width * 10) / 10,
           height: Math.round(height * 10) / 10,
           color: "#ffffff",
+          seed: Math.round(resolvedSeed * 1000) / 1000,
         };
       }
       writeIndex += 1;
@@ -167,6 +180,7 @@ export function createFireCardSystem({
   function endFrame() {
     for (let i = writeIndex; i < mesh.count; i += 1) hideInstance(i);
     mesh.instanceMatrix.needsUpdate = true;
+    seedAttribute.needsUpdate = true;
     mesh.visible = writeIndex > 0;
   }
 

@@ -63,11 +63,14 @@ export function createFireCardMaterial({
     },
     vertexShader: `
       precision highp float;
+      attribute float aFireSeed;
       varying vec2 vUv;
       varying vec3 vLocalPos;
+      varying float vFireSeed;
       void main() {
         vUv = uv;
         vLocalPos = position;
+        vFireSeed = aFireSeed;
         vec4 worldPosition = vec4(position, 1.0);
         #ifdef USE_INSTANCING
           worldPosition = instanceMatrix * worldPosition;
@@ -84,6 +87,7 @@ export function createFireCardMaterial({
       uniform float uWakeAlphaGradientStops[4]; uniform float uWakeAlphaGradientValues[4];
       varying vec2 vUv;
       varying vec3 vLocalPos;
+      varying float vFireSeed;
       float hash31(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
       float noise(vec3 p) {
         vec3 i = floor(p); vec3 f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -177,14 +181,16 @@ export function createFireCardMaterial({
       void main() {
         float tail = clamp(vUv.y, 0.0, 1.0);
         vec3 surface = normalize(vec3((vUv.x - 0.5) * 1.35, tail * 1.9 - 0.42, vLocalPos.y * 0.34 + 0.001));
+        float seed = fract(vFireSeed);
+        vec3 seedOffset = vec3(seed * 37.17 + 3.1, seed * -53.29 + 8.7, seed * 19.83 - 4.4);
         float perlinTime = uTime * uWakeNoiseSpeed;
         float perlinFrequency = 4.25 / max(0.1, uWakeNoiseScale);
-        vec3 perlinFlow = surface * perlinFrequency + vec3(0.0, (tail * 1.35 - perlinTime * 0.42) * perlinFrequency, 0.0);
+        vec3 perlinFlow = surface * perlinFrequency + vec3(0.0, (tail * 1.35 - perlinTime * 0.42) * perlinFrequency, 0.0) + seedOffset;
         float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, tail);
         float perlin = perlinMusgraveField(perlinFlow);
         float simplexTime = uTime * uWakeSimplexSpeed;
         float simplexFrequency = 4.25 / max(0.1, uWakeSimplexScale);
-        vec3 simplexFlow = surface * simplexFrequency + vec3(0.0, (tail * 1.52 - simplexTime * 0.5) * simplexFrequency, 0.0);
+        vec3 simplexFlow = surface * simplexFrequency + vec3(0.0, (tail * 1.52 - simplexTime * 0.5) * simplexFrequency, 0.0) + seedOffset * 1.37;
         float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, tail);
         float simplex = simplexGranularField(simplexFlow);
         float noiseMix = clamp(uWakeNoiseMix, 0.0, 1.0);
