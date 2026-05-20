@@ -98,6 +98,9 @@ export function createFireCardSystem({
 
   const matrix = new THREE.Matrix4();
   const quat = new THREE.Quaternion();
+  const cardQuat = new THREE.Quaternion();
+  const cameraWorldQuat = new THREE.Quaternion();
+  const parentWorldQuat = new THREE.Quaternion();
   const scale = new THREE.Vector3();
   const position = new THREE.Vector3();
   const sampleLocalPosition = new THREE.Vector3();
@@ -105,6 +108,7 @@ export function createFireCardSystem({
   const sampleClipPosition = new THREE.Vector3();
   let writeIndex = 0;
   let lastSample = null;
+  let billboardMode = "local";
 
   function hideInstance(index = 0) {
     quat.identity();
@@ -112,9 +116,19 @@ export function createFireCardSystem({
     mesh.setMatrixAt(index, matrix);
   }
 
-  function beginFrame() {
+  function beginFrame(_nowSec = 0, { camera = null } = {}) {
     writeIndex = 0;
     lastSample = null;
+    billboardMode = "local";
+    cardQuat.identity();
+    if (camera && typeof camera.getWorldQuaternion === "function") {
+      if (typeof parent.updateWorldMatrix === "function") parent.updateWorldMatrix(true, false);
+      if (typeof camera.updateMatrixWorld === "function") camera.updateMatrixWorld();
+      camera.getWorldQuaternion(cameraWorldQuat);
+      parent.getWorldQuaternion(parentWorldQuat).invert();
+      cardQuat.copy(parentWorldQuat).multiply(cameraWorldQuat);
+      billboardMode = "camera";
+    }
   }
 
   function addTeardrop({
@@ -135,9 +149,8 @@ export function createFireCardSystem({
         y,
         z + (Number(profile.zOffset) || 0) + card * 0.2
       );
-      quat.identity();
       scale.set(width, height, 1);
-      matrix.compose(position, quat, scale);
+      matrix.compose(position, cardQuat, scale);
       mesh.setMatrixAt(writeIndex, matrix);
       if (!lastSample) {
         sampleLocalPosition.copy(position);
@@ -182,6 +195,7 @@ export function createFireCardSystem({
           name: mesh.name,
           parentName: mesh.parent && mesh.parent.name ? mesh.parent.name : "",
           shape: "two-circle-envelope",
+          billboardMode,
           renderOrder: mesh.renderOrder,
           frustumCulled: !!mesh.frustumCulled,
           materialTransparent: !!(mesh.material && mesh.material.transparent),

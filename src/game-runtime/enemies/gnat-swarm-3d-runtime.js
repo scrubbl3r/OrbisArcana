@@ -15,7 +15,7 @@ import {
   STATUS_EFFECT_BURNING,
   tickBurningStatusOnEntity,
 } from "../status/fire/burning-status-model.js";
-import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260519f";
+import { createFireCardSystem } from "../vfx/fire/fire-card-system.js?v=20260519g";
 
 const GNAT_COMBAT_EMIT_INTERVAL_MS = 100;
 const GNAT_LIFT_MODIFIER_DURATION_MS = 180;
@@ -1399,6 +1399,7 @@ export function createGnatSwarm3dRuntime({
     orbRuntimePosition = null,
     orbAlive = true,
     orbCombat = null,
+    camera = null,
   } = {}) {
     if (!mesh || !states.length) return;
     const nowSec = nowMs / 1000;
@@ -1433,7 +1434,7 @@ export function createGnatSwarm3dRuntime({
     let deadBurningCount = 0;
     let activeLiftLeach = 0;
     let activeLifeLeachPerSec = 0;
-    fireCards.beginFrame(nowSec);
+    fireCards.beginFrame(nowSec, { camera });
     for (let i = 0; i < states.length; i += 1) {
       const state = states[i];
       applyPeriodicFireDamage(state, nowSec, dtSec);
