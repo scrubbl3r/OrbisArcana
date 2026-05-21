@@ -65,40 +65,56 @@ function buildHaloPath({ angle, bo, config, from, seed, time }) {
   const originYW = Number(from && from.yW) || 0;
   const rangeBreath = 0.5 + 0.5 * Math.sin(seed * 1.91 + time * randomBetween(seed, 31, 0.9, 1.9));
   const rangeBo = config.minRangeBo + (config.maxRangeBo - config.minRangeBo) * smoothstep(rangeBreath);
-  const radial = { x: Math.cos(angle), y: Math.sin(angle) };
-  const tangent = { x: -radial.y, y: radial.x };
-  const points = [Object.freeze({
-    xW: originXW + radial.x * ORIGIN_RADIUS_BO * bo,
-    yW: originYW + radial.y * ORIGIN_RADIUS_BO * bo,
+  const destinationAngle = angle
+    + Math.sin(seed * 2.9 + time * randomBetween(seed, 33, 0.55, 1.35)) * 0.12
+    + Math.sin(seed * 7.1 + time * randomBetween(seed, 34, 1.4, 2.6)) * 0.035;
+  const originRadial = { x: Math.cos(angle), y: Math.sin(angle) };
+  const destinationRadial = { x: Math.cos(destinationAngle), y: Math.sin(destinationAngle) };
+  const start = Object.freeze({
+    xW: originXW + originRadial.x * ORIGIN_RADIUS_BO * bo,
+    yW: originYW + originRadial.y * ORIGIN_RADIUS_BO * bo,
     zBo: config.zBo,
-  })];
+  });
+  const end = Object.freeze({
+    xW: originXW + destinationRadial.x * (ORIGIN_RADIUS_BO + rangeBo) * bo,
+    yW: originYW + destinationRadial.y * (ORIGIN_RADIUS_BO + rangeBo) * bo,
+    zBo: config.zBo,
+  });
+  const points = [start];
+  const targetDistanceBo = Math.max(0.001, Math.hypot(end.xW - start.xW, end.yW - start.yW) / bo);
+  const targetDirection = normalizeVector(end.xW - start.xW, end.yW - start.yW, originRadial);
+  const tangent = { x: -targetDirection.y, y: targetDirection.x };
   const maxNodes = 28;
   let distanceBo = 0;
-  let heading = radial;
-  for (let pointIndex = 1; pointIndex < maxNodes && distanceBo < rangeBo; pointIndex += 1) {
-    const remainingBo = Math.max(0, rangeBo - distanceBo);
+  let current = start;
+  let heading = targetDirection;
+  for (let pointIndex = 1; pointIndex < maxNodes && distanceBo < targetDistanceBo; pointIndex += 1) {
+    const remainingBo = Math.max(0, Math.hypot(end.xW - current.xW, end.yW - current.yW) / bo);
+    if (remainingBo <= config.maxStepBo) break;
     const stepWave = 0.5 + 0.5 * Math.sin(seed * 2.71 + pointIndex * 3.37 + time * randomBetween(seed, pointIndex + 41, 7.5, 14.5));
     const twitchWave = Math.sin(seed * 9.19 + pointIndex * 5.11 + time * randomBetween(seed, pointIndex + 61, 18, 34));
     const stepBo = Math.min(
       remainingBo,
       config.minStepBo + (config.maxStepBo - config.minStepBo) * smoothstep(stepWave)
     );
-    const t = Math.min(1, (distanceBo + stepBo) / Math.max(0.001, rangeBo));
+    const t = Math.min(1, (distanceBo + stepBo) / targetDistanceBo);
+    const seek = normalizeVector(end.xW - current.xW, end.yW - current.yW, targetDirection);
     const wander = twitchWave * config.pathJitterBo * Math.sin(t * Math.PI);
-    const seekWeight = 0.78 + 0.12 * Math.sin(seed * 4.7 + time * 3.1);
+    const seekWeight = 0.92 + 0.14 * Math.sin(seed * 4.7 + time * 3.1);
     heading = normalizeVector(
-      heading.x * 0.58 + radial.x * seekWeight + tangent.x * wander,
-      heading.y * 0.58 + radial.y * seekWeight + tangent.y * wander,
-      radial
+      heading.x * 0.5 + seek.x * seekWeight + tangent.x * wander,
+      heading.y * 0.5 + seek.y * seekWeight + tangent.y * wander,
+      seek
     );
-    const previous = points[points.length - 1];
-    points.push(Object.freeze({
-      xW: previous.xW + heading.x * stepBo * bo,
-      yW: previous.yW + heading.y * stepBo * bo,
+    current = Object.freeze({
+      xW: current.xW + heading.x * stepBo * bo,
+      yW: current.yW + heading.y * stepBo * bo,
       zBo: config.zBo,
-    }));
+    });
+    points.push(current);
     distanceBo += stepBo;
   }
+  points.push(end);
   return points;
 }
 

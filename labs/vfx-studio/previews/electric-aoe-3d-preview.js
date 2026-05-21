@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloBoltPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521a";
+import { createElectricAoeHaloBoltPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521b";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
