@@ -2,10 +2,15 @@ export const ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS = Object.freeze({
   controlPointDiameterBo: 0.05,
   detourRatioMax: 1.4,
   maxRangeBo: 8,
+  maxStepBo: 0.9,
   minRangeBo: 2,
+  minStepBo: 0.35,
   originRadiusBo: 0.5,
   pointSpacingBo: 0.75,
+  seekStrength: 0.42,
+  headingMemory: 0.72,
   pathJitterBo: 0.18,
+  wanderStrength: 0.9,
   rangeBo: 8,
   targetRadiusBo: 4.5,
   zBo: 0,
@@ -19,6 +24,12 @@ function clampNumber(value, min, max, fallback) {
 
 function distance(from = {}, to = {}) {
   return Math.hypot((Number(from.xW) || 0) - (Number(to.xW) || 0), (Number(from.yW) || 0) - (Number(to.yW) || 0));
+}
+
+function normalizeVector(x = 0, y = 0, fallback = { x: 1, y: 0 }) {
+  const length = Math.hypot(Number(x) || 0, Number(y) || 0);
+  if (length <= 0.000001) return fallback;
+  return { x: (Number(x) || 0) / length, y: (Number(y) || 0) / length };
 }
 
 function lerp(a, b, t) {
@@ -39,15 +50,22 @@ function normalizeConfig(raw = {}) {
   const minRangeBo = clampNumber(source.minRangeBo, 0, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.minRangeBo);
   const maxRangeFallback = source.maxRangeBo ?? source.rangeBo;
   const maxRangeBo = clampNumber(maxRangeFallback, minRangeBo, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.maxRangeBo);
+  const minStepBo = clampNumber(source.minStepBo, 0.05, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.minStepBo);
+  const maxStepBo = clampNumber(source.maxStepBo, minStepBo, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.maxStepBo);
   return Object.freeze({
     controlPointDiameterBo: clampNumber(source.controlPointDiameterBo, 0.01, 0.5, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.controlPointDiameterBo),
     detourRatioMax: clampNumber(source.detourRatioMax, 1, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.detourRatioMax),
+    headingMemory: clampNumber(source.headingMemory, 0, 1, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.headingMemory),
+    maxStepBo,
     maxRangeBo,
+    minStepBo,
     minRangeBo,
     pointSpacingBo: clampNumber(source.pointSpacingBo, 0.05, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.pointSpacingBo),
     pathJitterBo: clampNumber(source.pathJitterBo, 0, 2, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.pathJitterBo),
     rangeBo: maxRangeBo,
+    seekStrength: clampNumber(source.seekStrength, 0, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.seekStrength),
     targetRadiusBo: clampNumber(source.targetRadiusBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.targetRadiusBo),
+    wanderStrength: clampNumber(source.wanderStrength, 0, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.wanderStrength),
     zBo: clampNumber(source.zBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
   });
 }
@@ -119,31 +137,35 @@ function pathIsEligible({ from, to, nav, bo, config }) {
 }
 
 function routePoints({ from, to, nav, bo, config }) {
-  const spacingWorld = bo * config.pointSpacingBo;
-  const jitterWorld = bo * config.pathJitterBo;
-  let segments = nav && typeof nav.buildRouteSegments === "function"
-    ? nav.buildRouteSegments({ from, to, spacingWorld, jitterWorld })
-    : null;
-  if (!Array.isArray(segments) || !segments.length) {
-    const total = Math.max(0.001, distance(from, to));
-    const count = Math.max(1, Math.ceil(total / Math.max(1, spacingWorld)));
-    const dx = (to.xW || 0) - (from.xW || 0);
-    const dy = (to.yW || 0) - (from.yW || 0);
-    const invLength = 1 / Math.max(0.001, Math.hypot(dx, dy));
-    const nx = -dy * invLength;
-    const ny = dx * invLength;
-    segments = [];
-    for (let i = 1; i <= count; i += 1) {
-      const t = i / count;
-      const centerBias = Math.sin(t * Math.PI);
-      const jitter = i === count ? 0 : (Math.random() * 2 - 1) * jitterWorld * centerBias;
-      segments.push({
-        xW: (from.xW || 0) + dx * t + nx * jitter,
-        yW: (from.yW || 0) + dy * t + ny * jitter,
-      });
-    }
+  void nav;
+  const minStepWorld = bo * config.minStepBo;
+  const maxStepWorld = bo * config.maxStepBo;
+  const baseJitterWorld = bo * config.pathJitterBo * config.wanderStrength;
+  const points = [normalizePoint(from)];
+  let current = normalizePoint(from);
+  let heading = normalizeVector((to.xW || 0) - current.xW, (to.yW || 0) - current.yW);
+  const maxIterations = 96;
+  for (let i = 0; i < maxIterations; i += 1) {
+    const remaining = distance(current, to);
+    if (remaining <= maxStepWorld) break;
+    const seek = normalizeVector((to.xW || 0) - current.xW, (to.yW || 0) - current.yW, heading);
+    const perpendicular = { x: -heading.y, y: heading.x };
+    const wander = (Math.random() * 2 - 1) * baseJitterWorld / Math.max(1, maxStepWorld);
+    heading = normalizeVector(
+      heading.x * config.headingMemory + seek.x * config.seekStrength + perpendicular.x * wander,
+      heading.y * config.headingMemory + seek.y * config.seekStrength + perpendicular.y * wander,
+      seek
+    );
+    const stepRange = Math.max(0, maxStepWorld - minStepWorld);
+    const stepLength = Math.min(remaining, minStepWorld + Math.random() * stepRange);
+    current = {
+      xW: current.xW + heading.x * stepLength,
+      yW: current.yW + heading.y * stepLength,
+    };
+    points.push(current);
   }
-  return [from, ...segments.map((point) => normalizePoint(point, to))];
+  points.push(normalizePoint(to));
+  return points;
 }
 
 export function buildElectricAoeDominantBoltControlPath({
@@ -168,24 +190,18 @@ export function buildElectricAoeDominantBoltControlPath({
       target: Object.freeze({ ...end, zBo: config.zBo }),
     });
   }
-  const points = routePoints({ from: start, to: end, nav, bo: safeBo, config })
+  const originPoint = pointOnRadiusToward(start, end, safeBo * ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.originRadiusBo);
+  const points = routePoints({ from: originPoint, to: end, nav, bo: safeBo, config })
     .map((point) => Object.freeze({
       xW: point.xW,
       yW: point.yW,
       zBo: config.zBo,
     }));
-  const originPoint = pointOnRadiusToward(start, end, safeBo * ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.originRadiusBo);
-  const resolvedPoints = points.length
-    ? [
-      Object.freeze({ ...points[0], xW: originPoint.xW, yW: originPoint.yW }),
-      ...points.slice(1),
-    ]
-    : [Object.freeze({ ...originPoint, zBo: config.zBo })];
   return Object.freeze({
     controlPointDiameterBo: config.controlPointDiameterBo,
     eligible: true,
     originRadiusBo: ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.originRadiusBo,
-    points: Object.freeze(resolvedPoints),
+    points: Object.freeze(points),
     target: Object.freeze({ ...end, zBo: config.zBo }),
   });
 }

@@ -187,6 +187,12 @@ export function createStudioBootstrap({
       electricAoe3dControlPointsVisibleBtn: els.electricAoe3dControlPointsVisibleBtn,
       electricAoe3dDominantBoltMinRangeBo: els.electricAoe3dDominantBoltMinRangeBo,
       electricAoe3dDominantBoltMaxRangeBo: els.electricAoe3dDominantBoltMaxRangeBo,
+      electricAoe3dDominantBoltMinStepBo: els.electricAoe3dDominantBoltMinStepBo,
+      electricAoe3dDominantBoltMaxStepBo: els.electricAoe3dDominantBoltMaxStepBo,
+      electricAoe3dDominantBoltSeekStrength: els.electricAoe3dDominantBoltSeekStrength,
+      electricAoe3dDominantBoltHeadingMemory: els.electricAoe3dDominantBoltHeadingMemory,
+      electricAoe3dDominantBoltWanderStrength: els.electricAoe3dDominantBoltWanderStrength,
+      electricAoe3dDominantBoltPathJitterBo: els.electricAoe3dDominantBoltPathJitterBo,
     }),
     bankOrb3d: Object.freeze({
       ...els,

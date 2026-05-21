@@ -24,6 +24,8 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     64,
     ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.maxRangeBo
   );
+  const dominantBoltMinStepBo = clampNumber(source.dominantBoltMinStepBo, 0.05, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.minStepBo);
+  const dominantBoltMaxStepBo = clampNumber(source.dominantBoltMaxStepBo, dominantBoltMinStepBo, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.maxStepBo);
   return Object.freeze({
     durationMs: Math.round(clampNumber(source.durationMs, 200, 60000, ELECTRIC_AOE_3D_PRESET_DEFAULT.durationMs)),
     dominantBoltControlPointDiameterBo: clampNumber(
@@ -33,12 +35,17 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
       ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.controlPointDiameterBo
     ),
     dominantBoltDetourRatioMax: clampNumber(source.dominantBoltDetourRatioMax, 1, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.detourRatioMax),
+    dominantBoltHeadingMemory: clampNumber(source.dominantBoltHeadingMemory, 0, 1, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.headingMemory),
     dominantBoltMaxRangeBo,
+    dominantBoltMaxStepBo,
     dominantBoltMinRangeBo,
+    dominantBoltMinStepBo,
     dominantBoltPathJitterBo: clampNumber(source.dominantBoltPathJitterBo, 0, 2, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.pathJitterBo),
     dominantBoltPointSpacingBo: clampNumber(source.dominantBoltPointSpacingBo, 0.05, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.pointSpacingBo),
     dominantBoltRangeBo: dominantBoltMaxRangeBo,
+    dominantBoltSeekStrength: clampNumber(source.dominantBoltSeekStrength, 0, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.seekStrength),
     dominantBoltTargetRadiusBo: clampNumber(source.dominantBoltTargetRadiusBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.targetRadiusBo),
+    dominantBoltWanderStrength: clampNumber(source.dominantBoltWanderStrength, 0, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.wanderStrength),
     dominantBoltZBo: clampNumber(source.dominantBoltZBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
   });
 }
@@ -88,12 +95,17 @@ export function createElectricAoe3dRuntime(options = {}) {
       config: {
         controlPointDiameterBo: config.dominantBoltControlPointDiameterBo,
         detourRatioMax: config.dominantBoltDetourRatioMax,
+        headingMemory: config.dominantBoltHeadingMemory,
         maxRangeBo: config.dominantBoltMaxRangeBo,
+        maxStepBo: config.dominantBoltMaxStepBo,
         minRangeBo: config.dominantBoltMinRangeBo,
+        minStepBo: config.dominantBoltMinStepBo,
         pathJitterBo: config.dominantBoltPathJitterBo,
         pointSpacingBo: config.dominantBoltPointSpacingBo,
         rangeBo: config.dominantBoltRangeBo,
+        seekStrength: config.dominantBoltSeekStrength,
         targetRadiusBo: config.dominantBoltTargetRadiusBo,
+        wanderStrength: config.dominantBoltWanderStrength,
         zBo: config.dominantBoltZBo,
       },
       environmentSegments: typeof getEnvironmentSegments === "function" ? getEnvironmentSegments() : [],

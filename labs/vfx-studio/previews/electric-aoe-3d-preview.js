@@ -69,9 +69,17 @@ export function createElectricAoe3dPreview({
       || els.electricAoe3dControlPointsVisibleBtn.getAttribute("aria-pressed") !== "false";
   }
 
+  function readInputNumber(el, fallback, min = -Infinity, max = Infinity) {
+    const numeric = Number(el && el.value);
+    const safe = Number.isFinite(numeric) ? numeric : Number(fallback);
+    return Math.max(min, Math.min(max, Number.isFinite(safe) ? safe : min));
+  }
+
   function buildPreviewControlPath(bo, time = 0) {
-    const minRangeBo = Math.max(0, Number(els.electricAoe3dDominantBoltMinRangeBo && els.electricAoe3dDominantBoltMinRangeBo.value) || 2);
-    const maxRangeBo = Math.max(minRangeBo + 0.25, Number(els.electricAoe3dDominantBoltMaxRangeBo && els.electricAoe3dDominantBoltMaxRangeBo.value) || 8);
+    const minRangeBo = readInputNumber(els.electricAoe3dDominantBoltMinRangeBo, 2, 0, 64);
+    const maxRangeBo = readInputNumber(els.electricAoe3dDominantBoltMaxRangeBo, 8, minRangeBo + 0.25, 64);
+    const minStepBo = readInputNumber(els.electricAoe3dDominantBoltMinStepBo, 0.35, 0.05, 8);
+    const maxStepBo = readInputNumber(els.electricAoe3dDominantBoltMaxStepBo, 0.9, minStepBo, 8);
     const rangeSpan = Math.max(0.25, maxRangeBo - minRangeBo);
     const targetRadiusBo = minRangeBo + rangeSpan * (0.5 + Math.sin(time * 0.9) * 0.28);
     const phase = Math.PI * 0.14 + time * 0.34;
@@ -79,12 +87,17 @@ export function createElectricAoe3dPreview({
       bo,
       config: {
         controlPointDiameterBo: 0.05,
+        headingMemory: readInputNumber(els.electricAoe3dDominantBoltHeadingMemory, 0.72, 0, 1),
         maxRangeBo,
+        maxStepBo,
         minRangeBo,
-        pathJitterBo: 0.22,
+        minStepBo,
+        pathJitterBo: readInputNumber(els.electricAoe3dDominantBoltPathJitterBo, 0.18, 0, 2),
         pointSpacingBo: 0.62,
         rangeBo: maxRangeBo,
+        seekStrength: readInputNumber(els.electricAoe3dDominantBoltSeekStrength, 0.42, 0, 4),
         targetRadiusBo,
+        wanderStrength: readInputNumber(els.electricAoe3dDominantBoltWanderStrength, 0.9, 0, 4),
         zBo: 0,
       },
       from: { xW: 0, yW: 0 },
@@ -227,7 +240,16 @@ export function createElectricAoe3dPreview({
     if (els.previewElectricAoe3d) els.previewElectricAoe3d.addEventListener("click", apply);
     if (els.electricAoe3dOrbVisibleBtn) els.electricAoe3dOrbVisibleBtn.addEventListener("click", toggleOrb);
     if (els.electricAoe3dControlPointsVisibleBtn) els.electricAoe3dControlPointsVisibleBtn.addEventListener("click", toggleControlPoints);
-    [els.electricAoe3dDominantBoltMinRangeBo, els.electricAoe3dDominantBoltMaxRangeBo].forEach((input) => {
+    [
+      els.electricAoe3dDominantBoltMinRangeBo,
+      els.electricAoe3dDominantBoltMaxRangeBo,
+      els.electricAoe3dDominantBoltMinStepBo,
+      els.electricAoe3dDominantBoltMaxStepBo,
+      els.electricAoe3dDominantBoltSeekStrength,
+      els.electricAoe3dDominantBoltHeadingMemory,
+      els.electricAoe3dDominantBoltWanderStrength,
+      els.electricAoe3dDominantBoltPathJitterBo,
+    ].forEach((input) => {
       if (!input) return;
       input.addEventListener("blur", refreshOnCommit);
       input.addEventListener("change", refreshOnCommit);

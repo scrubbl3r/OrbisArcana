@@ -2052,6 +2052,15 @@
               <label for="electricAoe3dDominantBoltMinRangeBo">min</label><input id="electricAoe3dDominantBoltMinRangeBo" class="paramFieldInput" type="number" min="0" max="64" step="0.1" value="2" />
               <label for="electricAoe3dDominantBoltMaxRangeBo">max</label><input id="electricAoe3dDominantBoltMaxRangeBo" class="paramFieldInput" type="number" min="0.25" max="64" step="0.1" value="8" />
             </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">STEP LENGTH BO</span>
+              <label for="electricAoe3dDominantBoltMinStepBo">min</label><input id="electricAoe3dDominantBoltMinStepBo" class="paramFieldInput" type="number" min="0.05" max="8" step="0.05" value="0.35" />
+              <label for="electricAoe3dDominantBoltMaxStepBo">max</label><input id="electricAoe3dDominantBoltMaxStepBo" class="paramFieldInput" type="number" min="0.05" max="8" step="0.05" value="0.9" />
+            </div>
+            <div class="paramFieldRow"><label for="electricAoe3dDominantBoltSeekStrength">Seek strength</label><input id="electricAoe3dDominantBoltSeekStrength" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="0.42" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dDominantBoltHeadingMemory">Heading memory</label><input id="electricAoe3dDominantBoltHeadingMemory" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.72" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dDominantBoltWanderStrength">Wander strength</label><input id="electricAoe3dDominantBoltWanderStrength" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="0.9" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dDominantBoltPathJitterBo">Path jitter BO</label><input id="electricAoe3dDominantBoltPathJitterBo" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.18" /></div>
           </div>
         </div>
       </div>
@@ -3313,6 +3322,12 @@
       electricAoe3dControlPointsVisibleBtn: $("electricAoe3dControlPointsVisibleBtn"),
       electricAoe3dDominantBoltMinRangeBo: $("electricAoe3dDominantBoltMinRangeBo"),
       electricAoe3dDominantBoltMaxRangeBo: $("electricAoe3dDominantBoltMaxRangeBo"),
+      electricAoe3dDominantBoltMinStepBo: $("electricAoe3dDominantBoltMinStepBo"),
+      electricAoe3dDominantBoltMaxStepBo: $("electricAoe3dDominantBoltMaxStepBo"),
+      electricAoe3dDominantBoltSeekStrength: $("electricAoe3dDominantBoltSeekStrength"),
+      electricAoe3dDominantBoltHeadingMemory: $("electricAoe3dDominantBoltHeadingMemory"),
+      electricAoe3dDominantBoltWanderStrength: $("electricAoe3dDominantBoltWanderStrength"),
+      electricAoe3dDominantBoltPathJitterBo: $("electricAoe3dDominantBoltPathJitterBo"),
       flameAoe3dAoeAuraDiameterBo: $("flameAoe3dAoeAuraDiameterBo"),
       flameAoe3dApplyAoeAuraDiameterBtn: $("flameAoe3dApplyAoeAuraDiameterBtn"),
       flameAoe3dAoeAuraSoftness: $("flameAoe3dAoeAuraSoftness"),

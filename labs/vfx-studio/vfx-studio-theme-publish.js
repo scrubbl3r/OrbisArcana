@@ -230,7 +230,9 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
       const keys = [
         "durationMs",
         "dominantBoltControlPointDiameterBo", "dominantBoltDetourRatioMax", "dominantBoltMaxRangeBo", "dominantBoltMinRangeBo",
-        "dominantBoltPathJitterBo", "dominantBoltPointSpacingBo", "dominantBoltRangeBo", "dominantBoltTargetRadiusBo", "dominantBoltZBo",
+        "dominantBoltHeadingMemory", "dominantBoltMaxStepBo", "dominantBoltMinStepBo", "dominantBoltPathJitterBo",
+        "dominantBoltPointSpacingBo", "dominantBoltRangeBo", "dominantBoltSeekStrength", "dominantBoltTargetRadiusBo",
+        "dominantBoltWanderStrength", "dominantBoltZBo",
         "aoeAuraDiameterBo", "aoeAuraSoftness", "aoeAuraR", "aoeAuraG", "aoeAuraB", "aoeAuraA",
         "auraAlpha", "auraScale", "auraPulse", "auraNoiseScale", "auraNoiseSpeed", "auraFresnelPower", "auraR", "auraG", "auraB",
         "wakeLengthBo", "wakeRadiusBo", "wakeSubdivisions",
