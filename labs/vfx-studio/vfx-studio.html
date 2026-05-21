@@ -2030,7 +2030,18 @@
         </div>
       </div>
 
-      <div class="section" data-effect="electric-aoe-3d" hidden></div>
+      <div class="section" data-effect="electric-aoe-3d" hidden>
+        <div class="row">
+          <button id="previewElectricAoe3d" class="toolBtn" type="button">Preview</button>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dOrbControls">Orb</button>
+            <button id="electricAoe3dOrbVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Orb visibility" title="Toggle Orb visibility"></button>
+          </div>
+          <div id="electricAoe3dOrbControls" class="controlGroupBody paramFieldRows" hidden></div>
+        </div>
+      </div>
 
       <div class="section" data-effect="bank-orb-3d" hidden>
         <div class="row">
@@ -2614,7 +2625,9 @@
           </div>
         </div>
 
-        <div class="behaviorSection" data-behavior-effect="electric-aoe-3d" hidden></div>
+        <div class="behaviorSection" data-behavior-effect="electric-aoe-3d" hidden>
+          <h3 class="behaviorTitle">Electric AOE 3D Behavior</h3>
+        </div>
 
         <div class="behaviorSection" data-behavior-effect="default">
           <h3 class="behaviorTitle">No Behavior Surface</h3>
@@ -3282,6 +3295,8 @@
       flameAoe3dRoastDps: $("flameAoe3dRoastDps"),
       flameAoe3dRoastTickMs: $("flameAoe3dRoastTickMs"),
       previewFlameAoe3d: $("previewFlameAoe3d"),
+      previewElectricAoe3d: $("previewElectricAoe3d"),
+      electricAoe3dOrbVisibleBtn: $("electricAoe3dOrbVisibleBtn"),
       flameAoe3dAoeAuraDiameterBo: $("flameAoe3dAoeAuraDiameterBo"),
       flameAoe3dApplyAoeAuraDiameterBtn: $("flameAoe3dApplyAoeAuraDiameterBtn"),
       flameAoe3dAoeAuraSoftness: $("flameAoe3dAoeAuraSoftness"),
@@ -4167,7 +4182,6 @@
 
     function updateFlameAoe3dBehaviorReadout(){
       authoringAdapterForBaseEffect("flame-aoe-3d").updateBehaviorReadout(els);
-      authoringAdapterForBaseEffect("electric-aoe-3d").updateBehaviorReadout(els);
     }
 
     const studioBootstrap = createStudioBootstrap({

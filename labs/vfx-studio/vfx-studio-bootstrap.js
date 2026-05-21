@@ -182,7 +182,8 @@ export function createStudioBootstrap({
     electricAoe3d: Object.freeze({
       ...els,
       previewRoot: els.flameAoe3dPreviewRoot,
-      previewFlameAoe3d: els.previewFlameAoe3d,
+      previewElectricAoe3d: els.previewElectricAoe3d,
+      electricAoe3dOrbVisibleBtn: els.electricAoe3dOrbVisibleBtn,
     }),
     bankOrb3d: Object.freeze({
       ...els,
@@ -350,9 +351,6 @@ export function createStudioBootstrap({
     updateBehaviorReadout: (effect) => {
       if (effect === "teleport") updateTeleportBehaviorReadout();
       if (effect === "flame-aoe-3d" && typeof updateFlameAoe3dBehaviorReadout === "function") {
-        updateFlameAoe3dBehaviorReadout();
-      }
-      if (effect === "electric-aoe-3d" && typeof updateFlameAoe3dBehaviorReadout === "function") {
         updateFlameAoe3dBehaviorReadout();
       }
       if (effect === "teleport-3d" && typeof defaults.updateTeleport3dBehaviorReadout === "function") {

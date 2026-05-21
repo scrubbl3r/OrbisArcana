@@ -8,9 +8,4 @@ export const ELECTRIC_AOE_BEHAVIOR_DEFAULT = Object.freeze({
   shockDurationMs: 10000,
   arcDps: 1,
   arcTickMs: 50,
-  igniteDamage: 0.1,
-  igniteBurnDps: 1,
-  igniteDurationMs: 10000,
-  roastDps: 1,
-  roastTickMs: 50,
 });

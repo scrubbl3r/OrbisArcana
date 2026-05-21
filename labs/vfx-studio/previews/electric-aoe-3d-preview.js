@@ -91,6 +91,9 @@ export function createElectricAoe3dPreview({
     });
     model = created.model;
     model.position.set(0, 0, 0);
+    if (els.electricAoe3dOrbVisibleBtn) {
+      model.visible = els.electricAoe3dOrbVisibleBtn.getAttribute("aria-pressed") !== "false";
+    }
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
     model.add(orbLight);
@@ -100,9 +103,18 @@ export function createElectricAoe3dPreview({
     return activeConfig;
   }
 
+  function toggleOrb() {
+    if (!els.electricAoe3dOrbVisibleBtn) return;
+    const visible = els.electricAoe3dOrbVisibleBtn.getAttribute("aria-pressed") !== "false";
+    els.electricAoe3dOrbVisibleBtn.setAttribute("aria-pressed", visible ? "false" : "true");
+    if (model) model.visible = !visible;
+    if (inspector && typeof inspector.render === "function") inspector.render();
+  }
+
   function wire() {
     apply();
-    if (els.previewFlameAoe3d) els.previewFlameAoe3d.addEventListener("click", apply);
+    if (els.previewElectricAoe3d) els.previewElectricAoe3d.addEventListener("click", apply);
+    if (els.electricAoe3dOrbVisibleBtn) els.electricAoe3dOrbVisibleBtn.addEventListener("click", toggleOrb);
   }
 
   return Object.freeze({

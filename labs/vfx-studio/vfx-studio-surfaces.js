@@ -52,7 +52,6 @@ export function createLabEffectSurfaces({
       previewRootKey: "flameAoe3dPreviewRoot",
       previewFile: "electric-aoe-3d-preview.js",
       autoPreviewKey: "applyElectricAoe3d",
-      authoringSectionEffect: "flame-aoe-3d",
       defaultBindTarget: "spell.aoe_electric",
       livePreset: Object.freeze({ buildKey: "electric-aoe-3d", path: ["src", "vfx", "presets", "electric-aoe-3d-default.js"], exportName: "ELECTRIC_AOE_3D_PRESET_DEFAULT" }),
       behavior: Object.freeze({
@@ -60,7 +59,6 @@ export function createLabEffectSurfaces({
         path: ["src", "game-runtime", "behaviors", "electric-aoe-behavior-default.js"],
         exportName: "ELECTRIC_AOE_BEHAVIOR_DEFAULT",
         buildModule: buildElectricAoe3dBehaviorModule,
-        authoringSectionEffect: "flame-aoe-3d",
       }),
       adapterFile: "electric-aoe-3d-authoring-adapter.js",
       authoringAdapter: createElectricAoe3dAuthoringAdapter,
