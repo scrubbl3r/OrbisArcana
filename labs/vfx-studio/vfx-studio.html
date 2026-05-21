@@ -2722,14 +2722,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260519142000"),
+      import("./vfx-studio-bootstrap.js?v=20260520aeo-aura-b"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260518a"),
       import("./vfx-studio-surfaces.js?v=20260519102000"),
-      import("./vfx-studio-theme-publish.js?v=20260519131500"),
+      import("./vfx-studio-theme-publish.js?v=20260520aeo-aura-b"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
