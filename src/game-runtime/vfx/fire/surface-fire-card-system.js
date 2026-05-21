@@ -1,10 +1,10 @@
-import * as THREE from "three";
 import { closestPointOnSegment } from "../../collision/circle-boundary-collision.js";
-import { createSurfaceFireRibbonSystem } from "./surface-fire-ribbon-system.js?v=20260520b";
+import { createFireCardSystem } from "./fire-card-system.js?v=20260520u";
 
 const WORLD_UP = Object.freeze({ x: 0, y: 1 });
 const SURFACE_FIRE_TTL_MS = 3000;
 const SURFACE_FIRE_EMIT_INTERVAL_MS = 90;
+const EGG_LOCAL_HEIGHT = 2.0625;
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -29,7 +29,7 @@ function resolveSurfaceCardProfile(steepness = 0, bo = 150) {
   const t = clamp01(steepness);
   return {
     widthPx: bo * lerp(0.14, 0.11, t),
-    heightPx: bo * 0.75,
+    heightPx: (bo * 0.75) / EGG_LOCAL_HEIGHT,
     spacingPx: bo * lerp(0.09, 0.08, t),
     count: Math.round(lerp(4, 3, t)),
   };
@@ -42,15 +42,27 @@ export function createSurfaceFireCardSystem({
   toRuntimePosition = null,
   onNeedsFrame = null,
 } = {}) {
-  const fireCards = createSurfaceFireRibbonSystem({
+  const fireCards = createFireCardSystem({
     root,
     maxCards,
+    billboardToCamera: true,
+    materialOverrides: {
+      wakeNoiseScale: 1.45,
+      wakeNoiseDensityBottom: 0.7,
+      wakeNoiseDensityTop: 0.08,
+      wakeNoiseContrast: 0.22,
+      wakeNoiseOctaves: 5,
+      wakeNoiseGain: 0.32,
+      wakeSimplexScale: 0.9,
+      wakeSimplexDensityBottom: 0.1,
+      wakeSimplexDensityTop: 0.42,
+      wakeSimplexContrast: 0.34,
+      wakeSimplexOctaves: 4,
+      wakeSimplexGain: 0.36,
+      wakeNoiseMix: 0.48,
+      wakeCarveStrength: 0.56,
+    },
   });
-  const cardQuat = new THREE.Quaternion();
-  const basisMatrix = new THREE.Matrix4();
-  const basisX = new THREE.Vector3();
-  const basisY = new THREE.Vector3();
-  const basisZ = new THREE.Vector3(0, 0, 1);
   const liveCards = [];
   let segments = Object.freeze([]);
   let lastEmitMs = -Infinity;
@@ -96,15 +108,6 @@ export function createSurfaceFireCardSystem({
   } = {}) {
     if (!contactRuntime || !tangent || !normal) return null;
     const profile = resolveSurfaceCardProfile(steepness, bo);
-    const up = normalize2(normal.x, normal.y, WORLD_UP);
-    const xAxis = normalize2(tangent.x, tangent.y, { x: up.y, y: -up.x });
-    const tangentSign = ((xAxis.x * tangent.x) + (xAxis.y * tangent.y)) >= 0 ? 1 : -1;
-    basisX.set(xAxis.x * tangentSign, xAxis.y * tangentSign, 0);
-    basisY.set(up.x, up.y, 0);
-    basisMatrix.makeBasis(basisX, basisY, basisZ);
-    cardQuat.setFromRotationMatrix(basisMatrix);
-    const upLocalX = (WORLD_UP.x * basisX.x) + (WORLD_UP.y * basisX.y);
-    const upLocalY = (WORLD_UP.x * basisY.x) + (WORLD_UP.y * basisY.y);
     return {
       x: contactRuntime.x + (tangent.x * offsetPx),
       y: contactRuntime.y + (tangent.y * offsetPx),
@@ -112,26 +115,18 @@ export function createSurfaceFireCardSystem({
       widthPx: profile.widthPx,
       heightPx: profile.heightPx,
       seed,
-      quaternion: cardQuat.clone(),
-      bendStrength: Math.min(0.82, Math.max(0, steepness * 0.82)),
-      upLocalX,
-      upLocalY,
     };
   }
 
   function drawSurfaceCard(card = null) {
     if (!card) return;
-    fireCards.addRibbon({
+    fireCards.addTeardrop({
       x: card.x,
       y: card.y,
       z: card.z,
       widthPx: card.widthPx,
       heightPx: card.heightPx,
       seed: card.seed,
-      quaternion: card.quaternion,
-      bendStrength: card.bendStrength,
-      upLocalX: card.upLocalX,
-      upLocalY: card.upLocalY,
     });
   }
 
