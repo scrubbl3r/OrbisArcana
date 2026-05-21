@@ -2047,8 +2047,11 @@
             <button id="electricAoe3dControlPointsVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Control Points visibility" title="Toggle Control Points visibility"></button>
           </div>
           <div id="electricAoe3dControlPointControls" class="controlGroupBody paramFieldRows" hidden>
-            <div class="paramFieldRow"><label for="electricAoe3dDominantBoltMinRangeBo">Bolt range min BO</label><input id="electricAoe3dDominantBoltMinRangeBo" class="paramFieldInput" type="number" min="0" max="64" step="0.1" value="2" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dDominantBoltMaxRangeBo">Bolt range max BO</label><input id="electricAoe3dDominantBoltMaxRangeBo" class="paramFieldInput" type="number" min="0.25" max="64" step="0.1" value="8" /></div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BOLT RANGE BO</span>
+              <label for="electricAoe3dDominantBoltMinRangeBo">min</label><input id="electricAoe3dDominantBoltMinRangeBo" class="paramFieldInput" type="number" min="0" max="64" step="0.1" value="2" />
+              <label for="electricAoe3dDominantBoltMaxRangeBo">max</label><input id="electricAoe3dDominantBoltMaxRangeBo" class="paramFieldInput" type="number" min="0.25" max="64" step="0.1" value="8" />
+            </div>
           </div>
         </div>
       </div>
