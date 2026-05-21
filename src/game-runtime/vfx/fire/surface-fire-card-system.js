@@ -25,12 +25,17 @@ function lerp(a = 0, b = 0, t = 0) {
   return a + (b - a) * t;
 }
 
+function resolveSurfaceWidthT(steepness = 0) {
+  return clamp01(steepness);
+}
+
 function resolveSurfaceCardProfile(steepness = 0, bo = 150) {
   const t = clamp01(steepness);
+  const widthT = resolveSurfaceWidthT(steepness);
   return {
-    widthPx: bo * lerp(0.14, 0.11, t),
+    widthPx: bo * lerp(0.14, 0.24, widthT),
     heightPx: (bo * 0.75) / EGG_LOCAL_HEIGHT,
-    spacingPx: bo * lerp(0.09, 0.08, t),
+    spacingPx: bo * lerp(0.09, 0.12, widthT),
     count: Math.round(lerp(4, 3, t)),
   };
 }
