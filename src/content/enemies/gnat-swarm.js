@@ -28,16 +28,16 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     },
     "personalityRanges": {
       "aggression": [
-        0.8,
-        1.8
+        1.5,
+        3
       ],
       "arrivalRadiusBo": [
         1,
         4
       ],
       "awareness": [
-        0.1,
-        0.3
+        0.2,
+        0.5
       ],
       "hp": [
         20,
@@ -141,7 +141,7 @@ export const GNAT_SWARM_ENEMY_DEFAULT = Object.freeze(
     "signalDecay": 0.25,
     "signalHops": 5,
     "signalMemorySec": 1.6,
-    "signalRadiusBo": 20,
+    "signalRadiusBo": 35,
     "spawnCurves": {
       "wanderChancePerMinute": {
         "amount": 0,
