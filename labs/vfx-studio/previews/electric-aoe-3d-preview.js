@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloWalkController } from "../../../src/game-runtime/spells/electric-aoe-halo-walk-controller.js?v=20260521a";
+import { createElectricAoeHaloBoltPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521a";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -49,7 +49,7 @@ export function createElectricAoe3dPreview({
   let haloControlPointLayer = null;
   let haloControlPointLineMaterial = null;
   let haloControlPointMaterial = null;
-  let haloWalkController = null;
+  let haloBoltPlanner = null;
   let controlPointLastRefreshMs = 0;
   let haloControlPointLastRefreshMs = 0;
   let createdAt = 0;
@@ -74,8 +74,8 @@ export function createElectricAoe3dPreview({
     haloControlPointLayer = null;
     haloControlPointLineMaterial = null;
     haloControlPointMaterial = null;
-    if (haloWalkController && typeof haloWalkController.reset === "function") haloWalkController.reset();
-    haloWalkController = null;
+    if (haloBoltPlanner && typeof haloBoltPlanner.reset === "function") haloBoltPlanner.reset();
+    haloBoltPlanner = null;
     controlPointLastRefreshMs = 0;
     haloControlPointLastRefreshMs = 0;
   }
@@ -140,7 +140,6 @@ export function createElectricAoe3dPreview({
   }
 
   function buildHaloBoltPaths(bo, time = 0) {
-    const startRadiusBo = 0.5;
     const minRangeBo = readInputNumber(els.electricAoe3dHaloBoltMinRangeBo, 0.55, 0, 16);
     const maxRangeBo = readInputNumber(els.electricAoe3dHaloBoltMaxRangeBo, 1.65, Math.max(0.05, minRangeBo), 16);
     const minTotal = Math.round(readInputNumber(els.electricAoe3dHaloBoltMinTotal, 4, 0, 64));
@@ -154,53 +153,27 @@ export function createElectricAoe3dPreview({
     const forksMax = Math.round(readInputNumber(els.electricAoe3dHaloBoltForksMax, 2, forksMin, 12));
     const forkLengthMinBo = readInputNumber(els.electricAoe3dHaloBoltForkLengthMinBo, 0.2, 0, 8);
     const forkLengthMaxBo = readInputNumber(els.electricAoe3dHaloBoltForkLengthMaxBo, 0.7, forkLengthMinBo, 8);
-    const total = Math.max(0, Math.round((minTotal + maxTotal) * 0.5));
-    if (!haloWalkController) haloWalkController = createElectricAoeHaloWalkController();
-    const walkSamples = haloWalkController.sample({
-      maxWalkSpeed,
-      minWalkSpeed,
+    if (!haloBoltPlanner) haloBoltPlanner = createElectricAoeHaloBoltPlanner();
+    return haloBoltPlanner.buildPaths({
+      bo,
+      config: {
+        dominantBoltZBo: 0,
+        haloBoltForkLengthMaxBo: forkLengthMaxBo,
+        haloBoltForkLengthMinBo: forkLengthMinBo,
+        haloBoltForksMax: forksMax,
+        haloBoltForksMin: forksMin,
+        haloBoltMaxRangeBo: maxRangeBo,
+        haloBoltMaxStepBo: maxStepBo,
+        haloBoltMaxTotal: maxTotal,
+        haloBoltMaxWalkSpeed: maxWalkSpeed,
+        haloBoltMinRangeBo: minRangeBo,
+        haloBoltMinStepBo: minStepBo,
+        haloBoltMinTotal: minTotal,
+        haloBoltMinWalkSpeed: minWalkSpeed,
+        haloBoltPathJitterBo: pathJitterBo,
+      },
       time,
-      total,
     });
-    const paths = [];
-    for (let boltIndex = 0; boltIndex < total; boltIndex += 1) {
-      const seed = boltIndex + 1;
-      const angle = (walkSamples[boltIndex] && walkSamples[boltIndex].angle || 0) + Math.sin(time * 0.7 + seed) * 0.08;
-      const rangeBo = minRangeBo + (maxRangeBo - minRangeBo) * (0.5 + 0.5 * Math.sin(seed * 1.91 + time * 0.45));
-      const stepBo = minStepBo + (maxStepBo - minStepBo) * (0.5 + 0.5 * Math.sin(seed * 2.71));
-      const segmentCount = Math.max(2, Math.ceil(Math.max(0.01, rangeBo) / Math.max(0.01, stepBo)));
-      const radial = { x: Math.cos(angle), y: Math.sin(angle) };
-      const tangent = { x: -radial.y, y: radial.x };
-      const points = [];
-      for (let pointIndex = 0; pointIndex <= segmentCount; pointIndex += 1) {
-        const t = pointIndex / segmentCount;
-        const jitter = Math.sin(seed * 12.989 + pointIndex * 4.141 + time * 7.2) * pathJitterBo * Math.sin(t * Math.PI);
-        const radiusBo = startRadiusBo + rangeBo * t;
-        points.push(Object.freeze({
-          xW: (radial.x * radiusBo + tangent.x * jitter) * bo,
-          yW: (radial.y * radiusBo + tangent.y * jitter) * bo,
-          zBo: 0,
-        }));
-      }
-      const forkCount = Math.max(0, Math.round(forksMin + (forksMax - forksMin) * (0.5 + 0.5 * Math.sin(seed * 1.37 + time * 0.8))));
-      const forks = [];
-      for (let forkIndex = 0; forkIndex < forkCount; forkIndex += 1) {
-        const basePointIndex = Math.min(points.length - 2, Math.max(1, 1 + ((forkIndex * 2 + seed) % Math.max(1, points.length - 2))));
-        const base = points[basePointIndex];
-        const side = (forkIndex + seed) % 2 === 0 ? 1 : -1;
-        const forkLengthBo = forkLengthMinBo + (forkLengthMaxBo - forkLengthMinBo) * (0.5 + 0.5 * Math.sin(seed * 3.31 + forkIndex));
-        forks.push(Object.freeze([
-          base,
-          Object.freeze({
-            xW: base.xW + (tangent.x * side + radial.x * 0.25) * forkLengthBo * bo,
-            yW: base.yW + (tangent.y * side + radial.y * 0.25) * forkLengthBo * bo,
-            zBo: 0,
-          }),
-        ]));
-      }
-      paths.push(Object.freeze({ forks: Object.freeze(forks), points: Object.freeze(points) }));
-    }
-    return Object.freeze(paths);
   }
 
   function syncHaloControlPointLayer(bo, time = 0, force = false) {

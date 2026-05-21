@@ -1,0 +1,179 @@
+import { createElectricAoeHaloWalkController } from "./electric-aoe-halo-walk-controller.js?v=20260521a";
+
+const ORIGIN_RADIUS_BO = 0.5;
+
+function clampNumber(value, min, max, fallback) {
+  const numeric = Number(value);
+  const safe = Number.isFinite(numeric) ? numeric : Number(fallback);
+  return Math.max(min, Math.min(max, Number.isFinite(safe) ? safe : min));
+}
+
+function random01(seed, salt = 0) {
+  const value = Math.sin((Number(seed) || 0) * 12.9898 + salt * 78.233) * 43758.5453123;
+  return value - Math.floor(value);
+}
+
+function randomBetween(seed, salt, min, max) {
+  return min + (max - min) * random01(seed, salt);
+}
+
+function normalizeVector(x = 0, y = 0, fallback = { x: 1, y: 0 }) {
+  const length = Math.hypot(Number(x) || 0, Number(y) || 0);
+  if (length <= 0.000001) return fallback;
+  return { x: (Number(x) || 0) / length, y: (Number(y) || 0) / length };
+}
+
+function smoothstep(t) {
+  const x = Math.max(0, Math.min(1, Number(t) || 0));
+  return x * x * (3 - 2 * x);
+}
+
+function normalizeConfig(raw = {}) {
+  const source = raw && typeof raw === "object" ? raw : {};
+  const minRangeBo = clampNumber(source.haloBoltMinRangeBo, 0, 16, 0.55);
+  const maxRangeBo = clampNumber(source.haloBoltMaxRangeBo, Math.max(0.05, minRangeBo), 16, 1.65);
+  const minTotal = Math.round(clampNumber(source.haloBoltMinTotal, 0, 64, 4));
+  const maxTotal = Math.round(clampNumber(source.haloBoltMaxTotal, minTotal, 64, 10));
+  const minWalkSpeed = clampNumber(source.haloBoltMinWalkSpeed, 0, 24, 0.35);
+  const maxWalkSpeed = clampNumber(source.haloBoltMaxWalkSpeed, minWalkSpeed, 24, 1.2);
+  const minStepBo = clampNumber(source.haloBoltMinStepBo, 0.01, 4, 0.08);
+  const maxStepBo = clampNumber(source.haloBoltMaxStepBo, minStepBo, 4, 0.28);
+  const forksMin = Math.round(clampNumber(source.haloBoltForksMin, 0, 12, 0));
+  const forksMax = Math.round(clampNumber(source.haloBoltForksMax, forksMin, 12, 2));
+  const forkLengthMinBo = clampNumber(source.haloBoltForkLengthMinBo, 0, 8, 0.2);
+  const forkLengthMaxBo = clampNumber(source.haloBoltForkLengthMaxBo, forkLengthMinBo, 8, 0.7);
+  return Object.freeze({
+    forkLengthMaxBo,
+    forkLengthMinBo,
+    forksMax,
+    forksMin,
+    maxRangeBo,
+    maxStepBo,
+    maxTotal,
+    maxWalkSpeed,
+    minRangeBo,
+    minStepBo,
+    minTotal,
+    minWalkSpeed,
+    pathJitterBo: clampNumber(source.haloBoltPathJitterBo, 0, 2, 0.16),
+    zBo: clampNumber(source.zBo ?? source.dominantBoltZBo, -64, 64, 0),
+  });
+}
+
+function buildHaloPath({ angle, bo, config, from, seed, time }) {
+  const originXW = Number(from && from.xW) || 0;
+  const originYW = Number(from && from.yW) || 0;
+  const rangeBreath = 0.5 + 0.5 * Math.sin(seed * 1.91 + time * randomBetween(seed, 31, 0.9, 1.9));
+  const rangeBo = config.minRangeBo + (config.maxRangeBo - config.minRangeBo) * smoothstep(rangeBreath);
+  const radial = { x: Math.cos(angle), y: Math.sin(angle) };
+  const tangent = { x: -radial.y, y: radial.x };
+  const points = [Object.freeze({
+    xW: originXW + radial.x * ORIGIN_RADIUS_BO * bo,
+    yW: originYW + radial.y * ORIGIN_RADIUS_BO * bo,
+    zBo: config.zBo,
+  })];
+  const maxNodes = 28;
+  let distanceBo = 0;
+  let heading = radial;
+  for (let pointIndex = 1; pointIndex < maxNodes && distanceBo < rangeBo; pointIndex += 1) {
+    const remainingBo = Math.max(0, rangeBo - distanceBo);
+    const stepWave = 0.5 + 0.5 * Math.sin(seed * 2.71 + pointIndex * 3.37 + time * randomBetween(seed, pointIndex + 41, 7.5, 14.5));
+    const twitchWave = Math.sin(seed * 9.19 + pointIndex * 5.11 + time * randomBetween(seed, pointIndex + 61, 18, 34));
+    const stepBo = Math.min(
+      remainingBo,
+      config.minStepBo + (config.maxStepBo - config.minStepBo) * smoothstep(stepWave)
+    );
+    const t = Math.min(1, (distanceBo + stepBo) / Math.max(0.001, rangeBo));
+    const wander = twitchWave * config.pathJitterBo * Math.sin(t * Math.PI);
+    const seekWeight = 0.78 + 0.12 * Math.sin(seed * 4.7 + time * 3.1);
+    heading = normalizeVector(
+      heading.x * 0.58 + radial.x * seekWeight + tangent.x * wander,
+      heading.y * 0.58 + radial.y * seekWeight + tangent.y * wander,
+      radial
+    );
+    const previous = points[points.length - 1];
+    points.push(Object.freeze({
+      xW: previous.xW + heading.x * stepBo * bo,
+      yW: previous.yW + heading.y * stepBo * bo,
+      zBo: config.zBo,
+    }));
+    distanceBo += stepBo;
+  }
+  return points;
+}
+
+function buildForks({ bo, config, pathIndex, points, seed, time }) {
+  const forkSpan = config.forksMax - config.forksMin;
+  const forkPulse = 0.5 + 0.5 * Math.sin(seed * 1.37 + time * randomBetween(seed, 81, 3.6, 8.2));
+  const forkCount = Math.max(0, Math.round(config.forksMin + forkSpan * smoothstep(forkPulse)));
+  const forks = [];
+  for (let forkIndex = 0; forkIndex < forkCount; forkIndex += 1) {
+    if (points.length < 3) break;
+    const basePointIndex = Math.min(points.length - 2, Math.max(1, 1 + ((forkIndex * 2 + pathIndex + seed) % Math.max(1, points.length - 2))));
+    const base = points[basePointIndex];
+    const prev = points[Math.max(0, basePointIndex - 1)];
+    const next = points[Math.min(points.length - 1, basePointIndex + 1)];
+    const heading = normalizeVector(next.xW - prev.xW, next.yW - prev.yW);
+    const tangent = { x: -heading.y, y: heading.x };
+    const side = random01(seed + forkIndex, 91) >= 0.5 ? 1 : -1;
+    const forkLengthBo = config.forkLengthMinBo + (config.forkLengthMaxBo - config.forkLengthMinBo)
+      * smoothstep(0.5 + 0.5 * Math.sin(seed * 3.31 + forkIndex * 2.1 + time * 11.5));
+    const forkJitter = Math.sin(seed * 13.7 + forkIndex * 4.2 + time * 21.0) * config.pathJitterBo * 0.55;
+    forks.push(Object.freeze([
+      base,
+      Object.freeze({
+        xW: base.xW + (tangent.x * side + heading.x * (0.16 + forkJitter)) * forkLengthBo * bo,
+        yW: base.yW + (tangent.y * side + heading.y * (0.16 + forkJitter)) * forkLengthBo * bo,
+        zBo: config.zBo,
+      }),
+    ]));
+  }
+  return Object.freeze(forks);
+}
+
+export function createElectricAoeHaloBoltPlanner() {
+  const walkController = createElectricAoeHaloWalkController();
+
+  function buildPaths({
+    bo = 42,
+    config: rawConfig = {},
+    from = {},
+    time = 0,
+  } = {}) {
+    const safeBo = Math.max(1, Number(bo) || 42);
+    const safeTime = Math.max(0, Number(time) || 0);
+    const config = normalizeConfig(rawConfig);
+    const total = Math.max(0, Math.round((config.minTotal + config.maxTotal) * 0.5));
+    const walkSamples = walkController.sample({
+      maxWalkSpeed: config.maxWalkSpeed,
+      minWalkSpeed: config.minWalkSpeed,
+      time: safeTime,
+      total,
+    });
+    const paths = [];
+    for (let pathIndex = 0; pathIndex < total; pathIndex += 1) {
+      const seed = pathIndex + 1;
+      const angle = (walkSamples[pathIndex] && walkSamples[pathIndex].angle || 0)
+        + Math.sin(safeTime * randomBetween(seed, 11, 0.4, 1.2) + seed) * 0.08;
+      const points = Object.freeze(buildHaloPath({
+        angle,
+        bo: safeBo,
+        config,
+        from,
+        seed,
+        time: safeTime,
+      }));
+      paths.push(Object.freeze({
+        forks: buildForks({ bo: safeBo, config, pathIndex, points, seed, time: safeTime }),
+        points,
+      }));
+    }
+    return Object.freeze(paths);
+  }
+
+  function reset() {
+    walkController.reset();
+  }
+
+  return Object.freeze({ buildPaths, reset });
+}
