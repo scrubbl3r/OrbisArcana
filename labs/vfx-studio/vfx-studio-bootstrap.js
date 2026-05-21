@@ -186,6 +186,7 @@ export function createStudioBootstrap({
       previewElectricAoe3d: els.previewElectricAoe3d,
       electricAoe3dOrbVisibleBtn: els.electricAoe3dOrbVisibleBtn,
       electricAoe3dControlPointsVisibleBtn: els.electricAoe3dControlPointsVisibleBtn,
+      electricAoe3dHaloControlPointsVisibleBtn: els.electricAoe3dHaloControlPointsVisibleBtn,
       electricAoe3dSpellDurationMs: els.electricAoe3dSpellDurationMs,
       electricAoe3dDominantBoltMinRangeBo: els.electricAoe3dDominantBoltMinRangeBo,
       electricAoe3dDominantBoltMaxRangeBo: els.electricAoe3dDominantBoltMaxRangeBo,

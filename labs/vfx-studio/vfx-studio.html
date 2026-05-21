@@ -2059,7 +2059,10 @@
           </div>
         </div>
         <div class="controlGroup" data-control-group>
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dHaloControlPointControls">Halo Control Points</button>
+          <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dHaloControlPointControls">Halo Control Points</button>
+            <button id="electricAoe3dHaloControlPointsVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Halo Control Points visibility" title="Toggle Halo Control Points visibility"></button>
+          </div>
           <div id="electricAoe3dHaloControlPointControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">BOLTS RANGE BO</span>
@@ -3390,6 +3393,7 @@
       electricAoe3dBehaviorReadout: $("electricAoe3dBehaviorReadout"),
       electricAoe3dOrbVisibleBtn: $("electricAoe3dOrbVisibleBtn"),
       electricAoe3dControlPointsVisibleBtn: $("electricAoe3dControlPointsVisibleBtn"),
+      electricAoe3dHaloControlPointsVisibleBtn: $("electricAoe3dHaloControlPointsVisibleBtn"),
       electricAoe3dSpellDurationMs: $("electricAoe3dSpellDurationMs"),
       electricAoe3dDominantBoltMinRangeBo: $("electricAoe3dDominantBoltMinRangeBo"),
       electricAoe3dDominantBoltMaxRangeBo: $("electricAoe3dDominantBoltMaxRangeBo"),

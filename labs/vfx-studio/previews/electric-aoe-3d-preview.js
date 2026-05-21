@@ -42,6 +42,10 @@ export function createElectricAoe3dPreview({
   let controlPointLine = null;
   let controlPointLineMaterial = null;
   let controlPointMaterial = null;
+  let haloControlPointGeometry = null;
+  let haloControlPointLayer = null;
+  let haloControlPointLineMaterial = null;
+  let haloControlPointMaterial = null;
   let controlPointLastRefreshMs = 0;
   let createdAt = 0;
 
@@ -61,12 +65,21 @@ export function createElectricAoe3dPreview({
     controlPointLine = null;
     controlPointLineMaterial = null;
     controlPointMaterial = null;
+    haloControlPointGeometry = null;
+    haloControlPointLayer = null;
+    haloControlPointLineMaterial = null;
+    haloControlPointMaterial = null;
     controlPointLastRefreshMs = 0;
   }
 
   function controlPointsVisible() {
     return !els.electricAoe3dControlPointsVisibleBtn
       || els.electricAoe3dControlPointsVisibleBtn.getAttribute("aria-pressed") !== "false";
+  }
+
+  function haloControlPointsVisible() {
+    return !els.electricAoe3dHaloControlPointsVisibleBtn
+      || els.electricAoe3dHaloControlPointsVisibleBtn.getAttribute("aria-pressed") !== "false";
   }
 
   function readInputNumber(el, fallback, min = -Infinity, max = Infinity) {
@@ -103,6 +116,124 @@ export function createElectricAoe3dPreview({
       },
       from: { xW: 0, yW: 0 },
       phase,
+    });
+  }
+
+  function clearLayerChildren(layer) {
+    if (!layer) return;
+    while (layer.children.length) {
+      const child = layer.children[0];
+      layer.remove(child);
+      if (child.geometry && child.geometry !== haloControlPointGeometry && typeof child.geometry.dispose === "function") child.geometry.dispose();
+      if (child.material && child.material !== haloControlPointLineMaterial && child.material !== haloControlPointMaterial && typeof child.material.dispose === "function") {
+        child.material.dispose();
+      }
+    }
+  }
+
+  function buildHaloBoltPaths(bo, time = 0) {
+    const startRadiusBo = 0.5;
+    const minRangeBo = readInputNumber(els.electricAoe3dHaloBoltMinRangeBo, 0.55, 0, 16);
+    const maxRangeBo = readInputNumber(els.electricAoe3dHaloBoltMaxRangeBo, 1.65, Math.max(0.05, minRangeBo), 16);
+    const minTotal = Math.round(readInputNumber(els.electricAoe3dHaloBoltMinTotal, 4, 0, 64));
+    const maxTotal = Math.round(readInputNumber(els.electricAoe3dHaloBoltMaxTotal, 10, minTotal, 64));
+    const minWalkSpeed = readInputNumber(els.electricAoe3dHaloBoltMinWalkSpeed, 0.35, 0, 12);
+    const maxWalkSpeed = readInputNumber(els.electricAoe3dHaloBoltMaxWalkSpeed, 1.2, minWalkSpeed, 12);
+    const minStepBo = readInputNumber(els.electricAoe3dHaloBoltMinStepBo, 0.08, 0.01, 4);
+    const maxStepBo = readInputNumber(els.electricAoe3dHaloBoltMaxStepBo, 0.28, minStepBo, 4);
+    const pathJitterBo = readInputNumber(els.electricAoe3dHaloBoltPathJitterBo, 0.16, 0, 2);
+    const forksMin = Math.round(readInputNumber(els.electricAoe3dHaloBoltForksMin, 0, 0, 12));
+    const forksMax = Math.round(readInputNumber(els.electricAoe3dHaloBoltForksMax, 2, forksMin, 12));
+    const forkLengthMinBo = readInputNumber(els.electricAoe3dHaloBoltForkLengthMinBo, 0.2, 0, 8);
+    const forkLengthMaxBo = readInputNumber(els.electricAoe3dHaloBoltForkLengthMaxBo, 0.7, forkLengthMinBo, 8);
+    const total = Math.max(0, Math.round((minTotal + maxTotal) * 0.5));
+    const paths = [];
+    for (let boltIndex = 0; boltIndex < total; boltIndex += 1) {
+      const seed = boltIndex + 1;
+      const unit = total <= 0 ? 0 : boltIndex / Math.max(1, total);
+      const speed = minWalkSpeed + (maxWalkSpeed - minWalkSpeed) * (0.5 + 0.5 * Math.sin(seed * 2.17));
+      const angle = unit * Math.PI * 2 + time * speed + Math.sin(time * 0.7 + seed) * 0.08;
+      const rangeBo = minRangeBo + (maxRangeBo - minRangeBo) * (0.5 + 0.5 * Math.sin(seed * 1.91 + time * 0.45));
+      const stepBo = minStepBo + (maxStepBo - minStepBo) * (0.5 + 0.5 * Math.sin(seed * 2.71));
+      const segmentCount = Math.max(2, Math.ceil(Math.max(0.01, rangeBo) / Math.max(0.01, stepBo)));
+      const radial = { x: Math.cos(angle), y: Math.sin(angle) };
+      const tangent = { x: -radial.y, y: radial.x };
+      const points = [];
+      for (let pointIndex = 0; pointIndex <= segmentCount; pointIndex += 1) {
+        const t = pointIndex / segmentCount;
+        const jitter = Math.sin(seed * 12.989 + pointIndex * 4.141 + time * 7.2) * pathJitterBo * Math.sin(t * Math.PI);
+        const radiusBo = startRadiusBo + rangeBo * t;
+        points.push(Object.freeze({
+          xW: (radial.x * radiusBo + tangent.x * jitter) * bo,
+          yW: (radial.y * radiusBo + tangent.y * jitter) * bo,
+          zBo: 0,
+        }));
+      }
+      const forkCount = Math.max(0, Math.round(forksMin + (forksMax - forksMin) * (0.5 + 0.5 * Math.sin(seed * 1.37 + time * 0.8))));
+      const forks = [];
+      for (let forkIndex = 0; forkIndex < forkCount; forkIndex += 1) {
+        const basePointIndex = Math.min(points.length - 2, Math.max(1, 1 + ((forkIndex * 2 + seed) % Math.max(1, points.length - 2))));
+        const base = points[basePointIndex];
+        const side = (forkIndex + seed) % 2 === 0 ? 1 : -1;
+        const forkLengthBo = forkLengthMinBo + (forkLengthMaxBo - forkLengthMinBo) * (0.5 + 0.5 * Math.sin(seed * 3.31 + forkIndex));
+        forks.push(Object.freeze([
+          base,
+          Object.freeze({
+            xW: base.xW + (tangent.x * side + radial.x * 0.25) * forkLengthBo * bo,
+            yW: base.yW + (tangent.y * side + radial.y * 0.25) * forkLengthBo * bo,
+            zBo: 0,
+          }),
+        ]));
+      }
+      paths.push(Object.freeze({ forks: Object.freeze(forks), points: Object.freeze(points) }));
+    }
+    return Object.freeze(paths);
+  }
+
+  function syncHaloControlPointLayer(bo, time = 0) {
+    if (!haloControlPointLayer) return;
+    clearLayerChildren(haloControlPointLayer);
+    if (!haloControlPointLayer.visible) return;
+    const paths = buildHaloBoltPaths(bo, time);
+    if (!haloControlPointLineMaterial) {
+      haloControlPointLineMaterial = new THREE.LineBasicMaterial({
+        color: 0xd8f7ff,
+        transparent: true,
+        opacity: 0.56,
+        toneMapped: false,
+      });
+    }
+    if (!haloControlPointMaterial) {
+      haloControlPointMaterial = new THREE.MeshBasicMaterial({
+        color: 0x9eeeff,
+        transparent: true,
+        opacity: 0.72,
+        toneMapped: false,
+      });
+    }
+    if (!haloControlPointGeometry) haloControlPointGeometry = new THREE.SphereGeometry(bo * 0.028 * 0.5, 10, 6);
+    paths.forEach((path, pathIndex) => {
+      const linePoints = path.points.map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(linePoints), haloControlPointLineMaterial);
+      line.name = `electric_aoe3d:halo_control_line_${pathIndex}`;
+      line.renderOrder = 214;
+      haloControlPointLayer.add(line);
+      path.forks.forEach((fork, forkIndex) => {
+        const forkLine = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(fork.map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo))),
+          haloControlPointLineMaterial
+        );
+        forkLine.name = `electric_aoe3d:halo_control_fork_${pathIndex}_${forkIndex}`;
+        forkLine.renderOrder = 215;
+        haloControlPointLayer.add(forkLine);
+      });
+      path.points.forEach((point, pointIndex) => {
+        const marker = new THREE.Mesh(haloControlPointGeometry, haloControlPointMaterial);
+        marker.name = `electric_aoe3d:halo_control_point_${pathIndex}_${pointIndex}`;
+        marker.renderOrder = 216;
+        marker.position.set(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo);
+        haloControlPointLayer.add(marker);
+      });
     });
   }
 
@@ -161,6 +292,15 @@ export function createElectricAoe3dPreview({
     return layer;
   }
 
+  function createHaloControlPointLayer(bo) {
+    const layer = new THREE.Group();
+    layer.name = "electric_aoe3d:halo_bolt_control_points";
+    layer.visible = haloControlPointsVisible();
+    haloControlPointLayer = layer;
+    syncHaloControlPointLayer(bo, 0);
+    return layer;
+  }
+
   function apply() {
     if (!els.previewRoot) return null;
     destroyInspector();
@@ -183,6 +323,7 @@ export function createElectricAoe3dPreview({
         }
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
         syncControlPointLayer(bo, time);
+        syncHaloControlPointLayer(bo, time);
       },
     });
     if (!inspector) return activeConfig;
@@ -209,9 +350,11 @@ export function createElectricAoe3dPreview({
     updateOrbPointLight(orbLight, 0, activeConfig);
     model.add(orbLight);
     controlPointLayer = createControlPointLayer(bo);
+    haloControlPointLayer = createHaloControlPointLayer(bo);
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.035));
     inspector.scene.add(model);
     inspector.scene.add(controlPointLayer);
+    inspector.scene.add(haloControlPointLayer);
     inspector.render();
     return activeConfig;
   }
@@ -232,6 +375,17 @@ export function createElectricAoe3dPreview({
     if (inspector && typeof inspector.render === "function") inspector.render();
   }
 
+  function toggleHaloControlPoints() {
+    if (!els.electricAoe3dHaloControlPointsVisibleBtn) return;
+    const visible = els.electricAoe3dHaloControlPointsVisibleBtn.getAttribute("aria-pressed") !== "false";
+    els.electricAoe3dHaloControlPointsVisibleBtn.setAttribute("aria-pressed", visible ? "false" : "true");
+    if (haloControlPointLayer) {
+      haloControlPointLayer.visible = !visible;
+      if (!visible) syncHaloControlPointLayer(readBo(), (performance.now() - createdAt) / 1000);
+    }
+    if (inspector && typeof inspector.render === "function") inspector.render();
+  }
+
   function wire() {
     apply();
     const refreshOnCommit = (event) => {
@@ -241,6 +395,7 @@ export function createElectricAoe3dPreview({
     if (els.previewElectricAoe3d) els.previewElectricAoe3d.addEventListener("click", apply);
     if (els.electricAoe3dOrbVisibleBtn) els.electricAoe3dOrbVisibleBtn.addEventListener("click", toggleOrb);
     if (els.electricAoe3dControlPointsVisibleBtn) els.electricAoe3dControlPointsVisibleBtn.addEventListener("click", toggleControlPoints);
+    if (els.electricAoe3dHaloControlPointsVisibleBtn) els.electricAoe3dHaloControlPointsVisibleBtn.addEventListener("click", toggleHaloControlPoints);
     [
       els.electricAoe3dDominantBoltMinRangeBo,
       els.electricAoe3dDominantBoltMaxRangeBo,
