@@ -4024,7 +4024,10 @@
       }
       void (async () => {
         const built = buildPublishedPresetPayload();
-        if (!built) return;
+        if (!built) {
+          window.alert("Could not build the selected preset payload for publish.");
+          return;
+        }
         const contract = publishContractForBaseEffect(String(built.payload.baseEffect || ""));
         const result = await publishLabPreset({
           built,
@@ -4032,7 +4035,8 @@
           buildLivePresetModule: LIVE_PRESET_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
           buildBehaviorModule: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
           ensureProjectConnected: async () => {
-            if (projectRootDirHandle || !window.showDirectoryPicker) return !!projectRootDirHandle;
+            if (projectRootDirHandle) return true;
+            if (!window.showDirectoryPicker) return true;
             return studioProjectIo.connect();
           },
           hasProjectConnection: !!projectRootDirHandle,
@@ -4044,6 +4048,10 @@
           describePublishSuccess: describePublishSuccessHelper,
           afterLivePublish: updateSpell3dPublishCacheBusts,
         });
+        if (result && result.aborted) {
+          window.alert("Publish was canceled before any files were written.");
+          return;
+        }
         if (result && result.message) window.alert(result.message);
       })();
     }
