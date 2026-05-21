@@ -1,4 +1,9 @@
 const FLAME_AOE_3D_FIELDS = Object.freeze([
+  ["flameAoe3dAoeAuraSoftness", "aoeAuraSoftness"],
+  ["flameAoe3dAoeAuraR", "aoeAuraR"],
+  ["flameAoe3dAoeAuraG", "aoeAuraG"],
+  ["flameAoe3dAoeAuraB", "aoeAuraB"],
+  ["flameAoe3dAoeAuraA", "aoeAuraA"],
   ["flameAoe3dAuraAlpha", "auraAlpha"],
   ["flameAoe3dAuraScale", "auraScale"],
   ["flameAoe3dAuraPulse", "auraPulse"],
@@ -73,6 +78,11 @@ const FLAME_AOE_3D_FIELDS = Object.freeze([
 ]);
 
 const FLAME_AOE_3D_DEFAULTS = Object.freeze({
+  aoeAuraSoftness: 0.18,
+  aoeAuraR: 255,
+  aoeAuraG: 108,
+  aoeAuraB: 24,
+  aoeAuraA: 0.22,
   auraAlpha: 0.34,
   auraScale: 1.34,
   auraPulse: 0.08,
@@ -189,6 +199,11 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
 
   function capture(els) {
     return Object.freeze({
+      aoeAuraSoftness: fixedNumber(els && els.flameAoe3dAoeAuraSoftness && els.flameAoe3dAoeAuraSoftness.value, 3, FLAME_AOE_3D_DEFAULTS.aoeAuraSoftness),
+      aoeAuraR: roundedByte(els && els.flameAoe3dAoeAuraR && els.flameAoe3dAoeAuraR.value, FLAME_AOE_3D_DEFAULTS.aoeAuraR),
+      aoeAuraG: roundedByte(els && els.flameAoe3dAoeAuraG && els.flameAoe3dAoeAuraG.value, FLAME_AOE_3D_DEFAULTS.aoeAuraG),
+      aoeAuraB: roundedByte(els && els.flameAoe3dAoeAuraB && els.flameAoe3dAoeAuraB.value, FLAME_AOE_3D_DEFAULTS.aoeAuraB),
+      aoeAuraA: fixedNumber(els && els.flameAoe3dAoeAuraA && els.flameAoe3dAoeAuraA.value, 2, FLAME_AOE_3D_DEFAULTS.aoeAuraA),
       auraAlpha: fixedNumber(els && els.flameAoe3dAuraAlpha && els.flameAoe3dAuraAlpha.value, 2, FLAME_AOE_3D_DEFAULTS.auraAlpha),
       auraScale: fixedNumber(els && els.flameAoe3dAuraScale && els.flameAoe3dAuraScale.value, 2, FLAME_AOE_3D_DEFAULTS.auraScale),
       auraPulse: fixedNumber(els && els.flameAoe3dAuraPulse && els.flameAoe3dAuraPulse.value, 3, FLAME_AOE_3D_DEFAULTS.auraPulse),

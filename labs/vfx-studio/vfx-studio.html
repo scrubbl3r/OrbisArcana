@@ -1711,6 +1711,28 @@
           <button id="previewFlameAoe3d" class="toolBtn" type="button">Preview</button>
         </div>
         <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dAoeAuraControls">AEO Aura</button>
+          <div id="flameAoe3dAoeAuraControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dAoeAuraSoftness">Softness</label>
+              <input id="flameAoe3dAoeAuraSoftness" class="paramFieldInput" type="number" min="0.001" max="0.6" step="0.005" value="0.18" />
+              <button id="flameAoe3dApplyAoeAuraSoftnessBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="rgbaParamRow">
+              <span class="rgbaLabel">AEO Aura RGBA</span>
+              <label for="flameAoe3dAoeAuraR">r</label>
+              <input id="flameAoe3dAoeAuraR" class="paramFieldInput" type="number" min="0" max="255" value="255" step="1" />
+              <label for="flameAoe3dAoeAuraG">g</label>
+              <input id="flameAoe3dAoeAuraG" class="paramFieldInput" type="number" min="0" max="255" value="108" step="1" />
+              <label for="flameAoe3dAoeAuraB">b</label>
+              <input id="flameAoe3dAoeAuraB" class="paramFieldInput" type="number" min="0" max="255" value="24" step="1" />
+              <label for="flameAoe3dAoeAuraA">a</label>
+              <input id="flameAoe3dAoeAuraA" class="paramFieldInput" type="number" min="0" max="1" value="0.22" step="0.01" />
+              <button id="flameAoe3dApplyAoeAuraColorBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dOrbControls">Orb</button>
             <button id="flameAoe3dOrbVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Orb visibility" title="Toggle Orb visibility"></button>
@@ -3245,6 +3267,13 @@
       flameAoe3dRoastDps: $("flameAoe3dRoastDps"),
       flameAoe3dRoastTickMs: $("flameAoe3dRoastTickMs"),
       previewFlameAoe3d: $("previewFlameAoe3d"),
+      flameAoe3dAoeAuraSoftness: $("flameAoe3dAoeAuraSoftness"),
+      flameAoe3dApplyAoeAuraSoftnessBtn: $("flameAoe3dApplyAoeAuraSoftnessBtn"),
+      flameAoe3dAoeAuraR: $("flameAoe3dAoeAuraR"),
+      flameAoe3dAoeAuraG: $("flameAoe3dAoeAuraG"),
+      flameAoe3dAoeAuraB: $("flameAoe3dAoeAuraB"),
+      flameAoe3dAoeAuraA: $("flameAoe3dAoeAuraA"),
+      flameAoe3dApplyAoeAuraColorBtn: $("flameAoe3dApplyAoeAuraColorBtn"),
       flameAoe3dAuraAlpha: $("flameAoe3dAuraAlpha"),
       flameAoe3dApplyAuraAlphaBtn: $("flameAoe3dApplyAuraAlphaBtn"),
       flameAoe3dAuraScale: $("flameAoe3dAuraScale"),

@@ -29,6 +29,9 @@ function frameCameraToSsotOrbSize(inspector, root, bo) {
 }
 
 const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
+  aoeAuraSoftness: 0.18,
+  aoeAuraColor: 0xff6c18,
+  aoeAuraA: 0.22,
   auraAlpha: 0.34,
   auraScale: 1.34,
   auraPulse: 0.08,
@@ -163,6 +166,9 @@ function readWakeGraphConfig(els = {}) {
 
 function readFlameAuraConfig(els = {}) {
   return Object.freeze({
+    aoeAuraSoftness: clampNumber(els.flameAoe3dAoeAuraSoftness && els.flameAoe3dAoeAuraSoftness.value, 0.001, 0.6, FLAME_AOE_3D_PREVIEW_DEFAULTS.aoeAuraSoftness),
+    aoeAuraColor: rgbFromFields(els, "flameAoe3dAoeAura", FLAME_AOE_3D_PREVIEW_DEFAULTS.aoeAuraColor),
+    aoeAuraA: clampNumber(els.flameAoe3dAoeAuraA && els.flameAoe3dAoeAuraA.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.aoeAuraA),
     auraAlpha: clampNumber(els.flameAoe3dAuraAlpha && els.flameAoe3dAuraAlpha.value, 0, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.auraAlpha),
     auraScale: clampNumber(els.flameAoe3dAuraScale && els.flameAoe3dAuraScale.value, 0.5, 3, FLAME_AOE_3D_PREVIEW_DEFAULTS.auraScale),
     auraPulse: clampNumber(els.flameAoe3dAuraPulse && els.flameAoe3dAuraPulse.value, 0, 0.4, FLAME_AOE_3D_PREVIEW_DEFAULTS.auraPulse),
@@ -214,6 +220,11 @@ function readFlameWakeConfig(els = {}) {
 }
 
 function hydrateFlameAuraFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  if (els.flameAoe3dAoeAuraSoftness) els.flameAoe3dAoeAuraSoftness.value = String(Number(cfg.aoeAuraSoftness).toFixed(3));
+  if (els.flameAoe3dAoeAuraR) els.flameAoe3dAoeAuraR.value = String((cfg.aoeAuraColor >> 16) & 255);
+  if (els.flameAoe3dAoeAuraG) els.flameAoe3dAoeAuraG.value = String((cfg.aoeAuraColor >> 8) & 255);
+  if (els.flameAoe3dAoeAuraB) els.flameAoe3dAoeAuraB.value = String(cfg.aoeAuraColor & 255);
+  if (els.flameAoe3dAoeAuraA) els.flameAoe3dAoeAuraA.value = String(Number(cfg.aoeAuraA).toFixed(2));
   if (els.flameAoe3dAuraAlpha) els.flameAoe3dAuraAlpha.value = String(Number(cfg.auraAlpha).toFixed(2));
   if (els.flameAoe3dAuraScale) els.flameAoe3dAuraScale.value = String(Number(cfg.auraScale).toFixed(2));
   if (els.flameAoe3dAuraPulse) els.flameAoe3dAuraPulse.value = String(Number(cfg.auraPulse).toFixed(3));
@@ -309,6 +320,54 @@ function circleRadiusAtY(y, centerY, radius) {
   const dy = y - centerY;
   const disc = (radius * radius) - (dy * dy);
   return disc > 0 ? Math.sqrt(disc) : 0;
+}
+
+function readHitRadiusBo(els = {}) {
+  return clampNumber(els.flameAoe3dHitRadiusBo && els.flameAoe3dHitRadiusBo.value, 0.05, 8, 4.5);
+}
+
+function createAoeAuraDiscMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  return new THREE.ShaderMaterial({
+    name: "flame_aoe3d:aeo_aura_disc_material",
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+    blending: THREE.NormalBlending,
+    side: THREE.DoubleSide,
+    uniforms: {
+      uColor: { value: new THREE.Color(config.aoeAuraColor) },
+      uAlpha: { value: config.aoeAuraA },
+      uSoftness: { value: config.aoeAuraSoftness },
+    },
+    vertexShader: `
+      precision highp float;
+
+      varying vec2 vUv;
+
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+
+      uniform vec3 uColor;
+      uniform float uAlpha;
+      uniform float uSoftness;
+
+      varying vec2 vUv;
+
+      void main() {
+        float d = distance(vUv, vec2(0.5)) * 2.0;
+        float softness = clamp(uSoftness, 0.001, 0.95);
+        float edge = 1.0 - smoothstep(1.0 - softness, 1.0, d);
+        float alpha = edge * clamp(uAlpha, 0.0, 1.0);
+        if (d > 1.0 || alpha <= 0.001) discard;
+        gl_FragColor = vec4(uColor, alpha);
+      }
+    `,
+  });
 }
 
 function createWakeElasticShellGeometry({
@@ -973,9 +1032,11 @@ export function createFlameAoe3dPreview({
 } = {}) {
   let inspector = null;
   let shellMaterial = null;
+  let aoeAuraDiscMaterial = null;
   let auraShellMaterial = null;
   let wakeMaterial = null;
   let orbShellMesh = null;
+  let aoeAuraDiscMesh = null;
   let auraShellMesh = null;
   let wakeMesh = null;
   let orbLight = null;
@@ -994,9 +1055,11 @@ export function createFlameAoe3dPreview({
     if (inspector && typeof inspector.cleanup === "function") inspector.cleanup();
     inspector = null;
     shellMaterial = null;
+    aoeAuraDiscMaterial = null;
     auraShellMaterial = null;
     wakeMaterial = null;
     orbShellMesh = null;
+    aoeAuraDiscMesh = null;
     auraShellMesh = null;
     wakeMesh = null;
     orbLight = null;
@@ -1045,6 +1108,16 @@ export function createFlameAoe3dPreview({
     model.position.set(0, 0, 0);
     orbShellMesh = model.getObjectByName("orb3d:shell") || null;
     if (orbShellMesh) orbShellMesh.visible = layerVisible(els.flameAoe3dOrbVisibleBtn);
+    aoeAuraDiscMaterial = createAoeAuraDiscMaterial(auraConfig);
+    const aoeAuraDiameter = bo * readHitRadiusBo(els) * 2;
+    aoeAuraDiscMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(aoeAuraDiameter, aoeAuraDiameter, 64, 64),
+      aoeAuraDiscMaterial
+    );
+    aoeAuraDiscMesh.name = "flame_aoe3d:aeo_aura_disc";
+    aoeAuraDiscMesh.position.set(0, 0, -bo * 0.08);
+    aoeAuraDiscMesh.renderOrder = 4;
+    model.add(aoeAuraDiscMesh);
     auraShellMaterial = createAuraShellMaterial(auraConfig);
     auraShellMesh = new THREE.Mesh(
       new THREE.SphereGeometry(bo * 0.5 * auraConfig.auraScale, 96, 48),
@@ -1145,7 +1218,11 @@ export function createFlameAoe3dPreview({
   function wire() {
     apply();
     if (els.previewFlameAoe3d) els.previewFlameAoe3d.addEventListener("click", apply);
+    document.querySelectorAll('[id^="flameAoe3dApply"]').forEach((btn) => {
+      if (btn) btn.addEventListener("click", apply);
+    });
     bindInputCommits(document.querySelector('.section[data-effect="flame-aoe-3d"]'), apply);
+    if (els.flameAoe3dHitRadiusBo) els.flameAoe3dHitRadiusBo.addEventListener("change", apply);
     if (els.flameAoe3dOrbVisibleBtn) els.flameAoe3dOrbVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dOrbVisibleBtn));
     if (els.flameAoe3dAuraVisibleBtn) els.flameAoe3dAuraVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dAuraVisibleBtn));
     if (els.flameAoe3dWakeVisibleBtn) els.flameAoe3dWakeVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dWakeVisibleBtn));

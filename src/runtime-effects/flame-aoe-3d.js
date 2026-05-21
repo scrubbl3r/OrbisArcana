@@ -33,6 +33,14 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
   const fallback = FLAME_AOE_3D_PRESET_DEFAULT;
   const out = {
     durationMs: Math.round(clampNumber(source.durationMs, 200, 60000, fallback.durationMs)),
+    hitRadiusBo: clampNumber(source.hitRadiusBo, 0.05, 8, fallback.hitRadiusBo ?? 4.5),
+    aoeAuraSoftness: clampNumber(source.aoeAuraSoftness, 0.001, 0.6, fallback.aoeAuraSoftness),
+    aoeAuraA: clampNumber(source.aoeAuraA, 0, 1, fallback.aoeAuraA),
+    aoeAuraColor: rgbHex({
+      r: source.aoeAuraR ?? fallback.aoeAuraR,
+      g: source.aoeAuraG ?? fallback.aoeAuraG,
+      b: source.aoeAuraB ?? fallback.aoeAuraB,
+    }),
     auraAlpha: clampNumber(source.auraAlpha, 0, 2, fallback.auraAlpha),
     auraScale: clampNumber(source.auraScale, 0.5, 3, fallback.auraScale),
     auraPulse: clampNumber(source.auraPulse, 0, 0.4, fallback.auraPulse),
@@ -274,6 +282,45 @@ function getWakeAlphaGradientStops(config) {
   }
   stops.sort((a, b) => a.pct - b.pct);
   return stops;
+}
+
+function createAoeAuraDiscMaterial(config) {
+  return new THREE.ShaderMaterial({
+    name: "flame_aoe3d:aeo_aura_disc_material",
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+    blending: THREE.NormalBlending,
+    side: THREE.DoubleSide,
+    uniforms: {
+      uColor: { value: new THREE.Color(config.aoeAuraColor) },
+      uAlpha: { value: config.aoeAuraA },
+      uSoftness: { value: config.aoeAuraSoftness },
+    },
+    vertexShader: `
+      precision highp float;
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform vec3 uColor;
+      uniform float uAlpha;
+      uniform float uSoftness;
+      varying vec2 vUv;
+      void main() {
+        float d = distance(vUv, vec2(0.5)) * 2.0;
+        float softness = clamp(uSoftness, 0.001, 0.95);
+        float edge = 1.0 - smoothstep(1.0 - softness, 1.0, d);
+        float alpha = edge * clamp(uAlpha, 0.0, 1.0);
+        if (d > 1.0 || alpha <= 0.001) discard;
+        gl_FragColor = vec4(uColor, alpha);
+      }
+    `,
+  });
 }
 
 function createAuraShellMaterial(config) {
@@ -659,6 +706,7 @@ export function createFlameAoe3dRuntime({
   let raf = 0;
   let timer = 0;
   let group = null;
+  let aoeAuraDiscMaterial = null;
   let auraMaterial = null;
   let wakeMaterial = null;
   let wakeMesh = null;
@@ -777,6 +825,7 @@ export function createFlameAoe3dRuntime({
     if (timer) clearTimeout(timer);
     raf = 0;
     timer = 0;
+    aoeAuraDiscMaterial = null;
     auraMaterial = null;
     wakeMaterial = null;
     wakeMesh = null;
@@ -839,6 +888,15 @@ export function createFlameAoe3dRuntime({
       stretchDirection.set(0, 1, 0);
       group = new THREE.Group();
       group.name = "flame_aoe3d:runtime";
+      aoeAuraDiscMaterial = createAoeAuraDiscMaterial(config);
+      const aoeAuraDiameter = bo * config.hitRadiusBo * 2;
+      const aoeAuraDisc = new THREE.Mesh(
+        new THREE.PlaneGeometry(aoeAuraDiameter, aoeAuraDiameter, 64, 64),
+        aoeAuraDiscMaterial
+      );
+      aoeAuraDisc.name = "flame_aoe3d:aeo_aura_disc";
+      aoeAuraDisc.position.set(0, 0, -bo * 0.08);
+      aoeAuraDisc.renderOrder = FLAME_AOE_RENDER_ORDER_BASE - 4;
       auraMaterial = createAuraShellMaterial(config);
       const aura = new THREE.Mesh(
         new THREE.SphereGeometry(bo * 0.5 * config.auraScale, 96, 48),
@@ -872,6 +930,7 @@ export function createFlameAoe3dRuntime({
       wakePivot.name = "flame_aoe3d:elastic_flame_shell_pivot";
       wakePivot.position.set(0, 0, 0);
       wake.position.set(0, 0, 0);
+      group.add(aoeAuraDisc);
       group.add(aura);
       wakePivot.add(wake);
       group.add(wakePivot);
