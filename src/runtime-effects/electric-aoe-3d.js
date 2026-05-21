@@ -52,6 +52,7 @@ export function createElectricAoe3dRuntime(options = {}) {
     getParent = () => null,
     getOrbModel = () => null,
     getOrbWorldPosition = () => ({ xW: 0, yW: 0 }),
+    getRuntimeZ = null,
     now = () => performance.now(),
     requestFrame = () => {},
     toRuntimePosition = ({ xW = 0, yW = 0, z = 0 } = {}) => ({ x: xW, y: yW, z }),
@@ -105,12 +106,13 @@ export function createElectricAoe3dRuntime(options = {}) {
 
   function syncControlPoints(path, bo) {
     if (!group || !path || !Array.isArray(path.points)) return;
+    const sharedRuntimeZ = typeof getRuntimeZ === "function" ? getRuntimeZ({ bo, path }) : null;
     const runtimePoints = path.points.map((point) => {
       const runtimePoint = typeof toRuntimePosition === "function"
         ? toRuntimePosition({
           xW: point.xW,
           yW: point.yW,
-          z: (Number(point.zBo) || 0) * bo,
+          z: Number.isFinite(Number(sharedRuntimeZ)) ? Number(sharedRuntimeZ) : (Number(point.zBo) || 0) * bo,
           bo,
         })
         : point;

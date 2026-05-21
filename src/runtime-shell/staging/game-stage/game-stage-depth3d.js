@@ -267,6 +267,7 @@ export function createGameStageDepth3dLayer({
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => ELECTRIC_AOE_3D_PRESET_DEFAULT,
     getEnvironmentSegments: () => currentBoundarySegments,
+    getRuntimeZ: ({ bo = baseOrbWorldUnits } = {}) => -Math.max(0, currentOrbZBO) * Math.max(1, Number(bo) || baseOrbWorldUnits),
     toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
       x: toDepthThreeX(xW, worldWidthPx),
       y: toDepthThreeY(yW, worldHeightPx),
