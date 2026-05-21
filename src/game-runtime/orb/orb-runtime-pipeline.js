@@ -25,6 +25,7 @@ const SPHERE_COLLISION_SCRATCH = {
   },
 };
 const CONTACT_NORMAL_SCRATCH = { x: 0, y: 0 };
+const CONTACT_VELOCITY_NORMAL_SCRATCH = { x: 0, y: 0 };
 
 function aggregateContactNormal(contacts = [], target = CONTACT_NORMAL_SCRATCH) {
   const safeContacts = Array.isArray(contacts) ? contacts : [];
@@ -52,6 +53,19 @@ function aggregateContactNormal(contacts = [], target = CONTACT_NORMAL_SCRATCH) 
     return target;
   }
   return null;
+}
+
+function resolveVelocityContactNormal(contactNormal, segmentCollision) {
+  if (!contactNormal) return null;
+  const nx = Number(contactNormal.x) || 0;
+  const ny = Number(contactNormal.y) || 0;
+  const wallLike = !segmentCollision?.grounded
+    && Math.abs(nx) >= 0.72
+    && Math.abs(ny) <= 0.46;
+  if (!wallLike) return contactNormal;
+  CONTACT_VELOCITY_NORMAL_SCRATCH.x = nx < 0 ? -1 : 1;
+  CONTACT_VELOCITY_NORMAL_SCRATCH.y = 0;
+  return CONTACT_VELOCITY_NORMAL_SCRATCH;
 }
 
 const FLOOR_CONTACT_EPSILON_PX = 0.25;
@@ -392,11 +406,12 @@ export function runOrbRuntimePipeline({
     state.xW = Number(segmentCollision.xW) || state.xW;
     state.yW = Number(segmentCollision.yW) || state.yW;
     const contactNormal = aggregateContactNormal(segmentCollision.contacts);
-    if (contactNormal) {
-      const inwardVelocity = (Number(state.vx) || 0) * contactNormal.x + (Number(state.v) || 0) * contactNormal.y;
+    const velocityNormal = resolveVelocityContactNormal(contactNormal, segmentCollision);
+    if (velocityNormal) {
+      const inwardVelocity = (Number(state.vx) || 0) * velocityNormal.x + (Number(state.v) || 0) * velocityNormal.y;
       if (inwardVelocity < 0) {
-        state.vx -= inwardVelocity * contactNormal.x;
-        state.v -= inwardVelocity * contactNormal.y;
+        state.vx -= inwardVelocity * velocityNormal.x;
+        state.v -= inwardVelocity * velocityNormal.y;
       }
     }
     if (segmentCollision.grounded) {
