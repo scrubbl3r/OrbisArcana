@@ -179,6 +179,11 @@ export function createStudioBootstrap({
       previewRoot: els.flameAoe3dPreviewRoot,
       previewFlameAoe3d: els.previewFlameAoe3d,
     }),
+    electricAoe3d: Object.freeze({
+      ...els,
+      previewRoot: els.flameAoe3dPreviewRoot,
+      previewFlameAoe3d: els.previewFlameAoe3d,
+    }),
     bankOrb3d: Object.freeze({
       ...els,
       previewRoot: els.bankOrb3dPreviewRoot,
@@ -328,6 +333,7 @@ export function createStudioBootstrap({
       applyOrbTeleport: () => studioPreviewRegistry.actions.applyOrbTeleport(),
       applyOrbTeleport3d: () => studioPreviewRegistry.actions.applyOrbTeleport3d(),
       applyFlameAoe3d: () => studioPreviewRegistry.actions.applyFlameAoe3d(),
+      applyElectricAoe3d: () => studioPreviewRegistry.actions.applyElectricAoe3d(),
       applyBankOrb3d: () => studioPreviewRegistry.actions.applyBankOrb3d(),
     }),
     selectedEffectOption,

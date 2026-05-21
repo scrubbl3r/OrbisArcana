@@ -25,8 +25,6 @@ import { createFlameAoe3dPreview } from "./previews/flame-aoe-3d-preview.js?v=20
 import { createElectricAoe3dPreview } from "./previews/electric-aoe-3d-preview.js?v=20260521a";
 import { createBankOrb3dPreview } from "./previews/bank-orb-3d-preview.js?v=20260502a";
 
-void createElectricAoe3dPreview;
-
 export function createStudioPreviewRegistry({
   els,
   GEOM,
@@ -254,6 +252,15 @@ export function createStudioPreviewRegistry({
   actions.playFlameAoe3d = flameAoe3dPreview.play;
   flameAoe3dPreview.wire();
 
+  const electricAoe3dPreview = createElectricAoe3dPreview({
+    els: previewEls.electricAoe3d,
+    getOrbBaseVisualState,
+  });
+  actions.applyElectricAoe3d = electricAoe3dPreview.apply;
+  actions.clearElectricAoe3d = electricAoe3dPreview.clear;
+  actions.playElectricAoe3d = electricAoe3dPreview.play;
+  electricAoe3dPreview.wire();
+
   const bankOrb3dPreview = createBankOrb3dPreview({
     els: previewEls.bankOrb3d,
     getOrbBaseVisualState,
@@ -284,6 +291,7 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearOrbTeleport === "function") actions.clearOrbTeleport();
     if (typeof actions.clearOrbTeleport3d === "function") actions.clearOrbTeleport3d();
     if (typeof actions.clearFlameAoe3d === "function") actions.clearFlameAoe3d();
+    if (typeof actions.clearElectricAoe3d === "function") actions.clearElectricAoe3d();
     if (typeof actions.clearBankOrb3d === "function") actions.clearBankOrb3d();
     Object.values(previewRootsByEffect || {}).forEach((root) => {
       if (!root || typeof root.setAttribute !== "function") return;

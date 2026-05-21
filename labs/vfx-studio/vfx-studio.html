@@ -4200,7 +4200,7 @@
         "shockwave-3d": () => applyShockwave3d(),
         "flame-aoe": () => applyFlameControls(),
         "flame-aoe-3d": () => applyFlameAoe3d(),
-        "electric-aoe-3d": () => applyFlameAoe3d(),
+        "electric-aoe-3d": () => applyElectricAoe3d(),
         "bank-orb-3d": () => applyBankOrb3d(),
         "orb-base": () => applyOrbBase(),
         "orb-3d": () => applyOrb3d(),
@@ -4299,6 +4299,9 @@
       applyFlameAoe3d,
       clearFlameAoe3d,
       playFlameAoe3d,
+      applyElectricAoe3d,
+      clearElectricAoe3d,
+      playElectricAoe3d,
       applyBankOrb3d,
       clearBankOrb3d,
       playBankOrb3d,
@@ -4327,6 +4330,7 @@
       if (typeof applyWorldGlobe === "function") applyWorldGlobe();
       if (typeof applyOrbTeleport3d === "function") applyOrbTeleport3d();
       if (typeof applyFlameAoe3d === "function") applyFlameAoe3d();
+      if (typeof applyElectricAoe3d === "function") applyElectricAoe3d();
       if (typeof applyBankOrb3d === "function") applyBankOrb3d();
     });
     updateTeleportBehaviorReadout();

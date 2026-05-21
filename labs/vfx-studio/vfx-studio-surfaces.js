@@ -51,7 +51,7 @@ export function createLabEffectSurfaces({
       registryIds: Object.freeze(["spell.aoe_electric"]),
       previewRootKey: "flameAoe3dPreviewRoot",
       previewFile: "electric-aoe-3d-preview.js",
-      autoPreviewKey: "applyFlameAoe3d",
+      autoPreviewKey: "applyElectricAoe3d",
       authoringSectionEffect: "flame-aoe-3d",
       defaultBindTarget: "spell.aoe_electric",
       livePreset: Object.freeze({ buildKey: "electric-aoe-3d", path: ["src", "vfx", "presets", "electric-aoe-3d-default.js"], exportName: "ELECTRIC_AOE_3D_PRESET_DEFAULT" }),
