@@ -47,6 +47,7 @@ export function createElectricAoe3dPreview({
   let haloControlPointLineMaterial = null;
   let haloControlPointMaterial = null;
   let controlPointLastRefreshMs = 0;
+  let haloControlPointLastRefreshMs = 0;
   let createdAt = 0;
 
   function readBo() {
@@ -70,6 +71,7 @@ export function createElectricAoe3dPreview({
     haloControlPointLineMaterial = null;
     haloControlPointMaterial = null;
     controlPointLastRefreshMs = 0;
+    haloControlPointLastRefreshMs = 0;
   }
 
   function controlPointsVisible() {
@@ -190,8 +192,11 @@ export function createElectricAoe3dPreview({
     return Object.freeze(paths);
   }
 
-  function syncHaloControlPointLayer(bo, time = 0) {
+  function syncHaloControlPointLayer(bo, time = 0, force = false) {
     if (!haloControlPointLayer) return;
+    const nowMs = performance.now();
+    if (!force && nowMs - haloControlPointLastRefreshMs < 90) return;
+    haloControlPointLastRefreshMs = nowMs;
     clearLayerChildren(haloControlPointLayer);
     if (!haloControlPointLayer.visible) return;
     const paths = buildHaloBoltPaths(bo, time);
@@ -201,17 +206,21 @@ export function createElectricAoe3dPreview({
         transparent: true,
         opacity: 0.56,
         toneMapped: false,
+        depthTest: false,
+        depthWrite: false,
       });
     }
     if (!haloControlPointMaterial) {
       haloControlPointMaterial = new THREE.MeshBasicMaterial({
-        color: 0x9eeeff,
+        color: 0xffff00,
         transparent: true,
-        opacity: 0.72,
+        opacity: 0.92,
         toneMapped: false,
+        depthTest: false,
+        depthWrite: false,
       });
     }
-    if (!haloControlPointGeometry) haloControlPointGeometry = new THREE.SphereGeometry(bo * 0.028 * 0.5, 10, 6);
+    if (!haloControlPointGeometry) haloControlPointGeometry = new THREE.SphereGeometry(bo * 0.05 * 0.5, 14, 8);
     paths.forEach((path, pathIndex) => {
       const linePoints = path.points.map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
       const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(linePoints), haloControlPointLineMaterial);
@@ -249,6 +258,8 @@ export function createElectricAoe3dPreview({
       controlPointLineMaterial = new THREE.LineBasicMaterial({
         color: 0xffffff,
         toneMapped: false,
+        depthTest: false,
+        depthWrite: false,
       });
     }
     if (!controlPointLine) {
@@ -265,6 +276,8 @@ export function createElectricAoe3dPreview({
       controlPointMaterial = new THREE.MeshBasicMaterial({
         color: 0xffff00,
         toneMapped: false,
+        depthTest: false,
+        depthWrite: false,
       });
     }
     points.forEach((point, index) => {
@@ -297,7 +310,7 @@ export function createElectricAoe3dPreview({
     layer.name = "electric_aoe3d:halo_bolt_control_points";
     layer.visible = haloControlPointsVisible();
     haloControlPointLayer = layer;
-    syncHaloControlPointLayer(bo, 0);
+    syncHaloControlPointLayer(bo, 0, true);
     return layer;
   }
 
@@ -381,7 +394,7 @@ export function createElectricAoe3dPreview({
     els.electricAoe3dHaloControlPointsVisibleBtn.setAttribute("aria-pressed", visible ? "false" : "true");
     if (haloControlPointLayer) {
       haloControlPointLayer.visible = !visible;
-      if (!visible) syncHaloControlPointLayer(readBo(), (performance.now() - createdAt) / 1000);
+      if (!visible) syncHaloControlPointLayer(readBo(), (performance.now() - createdAt) / 1000, true);
     }
     if (inspector && typeof inspector.render === "function") inspector.render();
   }
