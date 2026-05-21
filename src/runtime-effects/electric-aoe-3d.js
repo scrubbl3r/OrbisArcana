@@ -150,6 +150,7 @@ export function createElectricAoe3dRuntime(options = {}) {
       index: Number.isFinite(Number(target.index)) ? Number(target.index) : null,
       position: Object.freeze({ xW, yW }),
       radiusBo: Math.max(0.05, Number(target.radiusBo) || 0.25),
+      targetEntityId: target.targetEntityId == null ? String(target.id || "") : String(target.targetEntityId),
     });
   }
 

@@ -789,6 +789,12 @@ export function createGnatSwarm3dRuntime({
     if (kind === COMBAT_EFFECT_DAMAGE) {
       const damage = normalizeDamageEffect(effect);
       const nowSec = damage.atMs / 1000;
+      const directTargetIndex = Number.isFinite(Number(effect.targetIndex))
+        ? Number(effect.targetIndex)
+        : (() => {
+          const match = String(effect.targetEntityId || "").match(/:(\d+)$/);
+          return match ? Number(match[1]) : NaN;
+        })();
       let affected = 0;
       let totalDamage = 0;
       const damageTrace = {
@@ -809,7 +815,64 @@ export function createGnatSwarm3dRuntime({
         nearestBo: null,
         nearest: null,
         candidates: [],
+        directTargetIndex: Number.isFinite(directTargetIndex) ? directTargetIndex : null,
       };
+      if (Number.isFinite(directTargetIndex)) {
+        const state = states.find((candidate) => candidate && candidate.index === directTargetIndex) || null;
+        if (!state || state.hp <= 0) {
+          return Object.freeze({ handled: true, affected: 0, totalDamage: 0, trace: Object.freeze({
+            ...damageTrace,
+            reason: state ? "target_dead" : "target_missing",
+          }) });
+        }
+        damageTrace.alive = states.filter((candidate) => candidate && candidate.hp > 0).length;
+        damageTrace.tested = 1;
+        damageTrace.inRange = 1;
+        damageTrace.nearestBo = 0;
+        damageTrace.nearest = {
+          index: state.index,
+          hp: Number(state.hp) || 0,
+          mode: String(state.mode || ""),
+          distanceBo: 0,
+          targetPaddingBo: Number(resolveDamageTargetPaddingBo(state, bo).toFixed(3)),
+          effectiveRadiusBo: Math.max(0, Number(effect.radiusBo) || 0),
+          effectiveForwardRadiusBo: Math.max(0, Number(effect.forwardRadiusBo || effect.wakeRadiusBo || effect.radiusBo || 0)),
+          alongBo: 0,
+          sideBo: 0,
+          alongN: 0,
+          sideN: 0,
+          inside: true,
+        };
+        damageTrace.candidates.push({
+          index: state.index,
+          hp: Number(state.hp) || 0,
+          mode: String(state.mode || ""),
+          distanceBo: 0,
+          targetPaddingBo: Number(resolveDamageTargetPaddingBo(state, bo).toFixed(3)),
+          effectiveRadiusBo: Math.max(0, Number(effect.radiusBo) || 0),
+          alongBo: 0,
+          sideBo: 0,
+          inside: true,
+        });
+        const beforeHp = Number(state.hp) || 0;
+        if (applyDamageToState(state, damage, nowSec)) {
+          affected = 1;
+          totalDamage = Math.max(0, beforeHp - (Number(state.hp) || 0));
+          if (typeof onCombatEvent === "function") {
+            onCombatEvent("combat.damage_applied", {
+              ...damage,
+              targetEntityId: `enemy:gnat-swarm:${state.index}`,
+              hp: state.hp,
+              maxHp: state.maxHp,
+            });
+          }
+        }
+        damageTrace.affected = affected;
+        damageTrace.totalDamage = Number(totalDamage.toFixed(3));
+        alertTrace.flameDamage = damageTrace;
+        if (affected > 0 && typeof onNeedsFrame === "function") onNeedsFrame();
+        return Object.freeze({ handled: true, affected, totalDamage, trace: damageTrace });
+      }
       for (const state of states) {
         if (!state || state.hp <= 0) continue;
         damageTrace.alive += 1;

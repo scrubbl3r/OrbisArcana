@@ -277,6 +277,7 @@ export function createGameStageDepth3dLayer({
         kind: COMBAT_EFFECT_DAMAGE,
         sourceEntityId: COMBAT_ENTITY_ORB,
         targetEntityId: target.targetEntityId || target.id || "enemy:gnat-swarm",
+        targetIndex: target.index,
         centerWorld: position,
         radiusBo: Math.max(0.05, Number(target.radiusBo) || 0.25),
         amount: Math.max(0, Number(damage) || 0),
