@@ -2844,7 +2844,7 @@
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
-      import("./vfx-studio-publish-orchestrator.js?v=20260518a"),
+      import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
       import("./vfx-studio-surfaces.js?v=20260519102000"),
       import("./vfx-studio-theme-publish.js?v=20260520aeo-diameter-a"),
     ]).catch((err) => {
@@ -4023,17 +4023,6 @@
         return;
       }
       void (async () => {
-        if (!projectRootDirHandle) {
-          if (!window.showDirectoryPicker) {
-            window.alert("Connect Project is required for live publish, but this browser does not support project-folder access. Open the VFX lab in Chrome or another File System Access capable browser.");
-            return;
-          }
-          const connected = await studioProjectIo.connect();
-          if (!connected || !projectRootDirHandle) {
-            window.alert("Publish canceled. Connect Project first so the lab can write to the local repo.");
-            return;
-          }
-        }
         const built = buildPublishedPresetPayload();
         if (!built) {
           window.alert("Could not build the selected preset payload for publish.");
@@ -4046,7 +4035,9 @@
           buildLivePresetModule: LIVE_PRESET_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
           buildBehaviorModule: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
           ensureProjectConnected: async () => {
-            return !!projectRootDirHandle;
+            if (projectRootDirHandle) return true;
+            if (!window.showDirectoryPicker) return true;
+            return studioProjectIo.connect();
           },
           hasProjectConnection: !!projectRootDirHandle,
           saveConnectedPath: studioProjectIo.savePath,

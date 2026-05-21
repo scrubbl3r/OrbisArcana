@@ -1,7 +1,7 @@
 import {
   publishLabProfile,
   writeConnectedProjectModule,
-} from "../shell/lab-publish.js";
+} from "../shell/lab-publish.js?v=20260521-electric-publish-a";
 
 export async function publishLabPreset({
   built,

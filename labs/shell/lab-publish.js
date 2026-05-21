@@ -78,8 +78,20 @@ export async function publishLabProfile({
     return { ok: true, kind: "download", message: null };
   } catch (err) {
     if (err && err.name === "AbortError") return { ok: false, aborted: true };
+    if (projectConnected) {
+      return {
+        ok: false,
+        error: err,
+        message: `Publish failed. ${err && err.message ? err.message : "Reconnect the project and try again."}`,
+      };
+    }
     downloadTextFile(built.filename, JSON.stringify(built.payload, null, 2));
-    return { ok: false, downloadedFallback: true, error: err };
+    return {
+      ok: false,
+      downloadedFallback: true,
+      error: err,
+      message: "Publish failed, so a fallback preset download was created.",
+    };
   }
 }
 
