@@ -30,7 +30,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260520075000";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260521-electric-damage-a";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260520-inward-normals-a";
 import { closestPointOnSegment } from "../../../game-runtime/collision/circle-boundary-collision.js?v=20260518b";
 import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260520-flame-aoe-gate-a";
@@ -60,13 +60,13 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createElectricAoe3dRuntime } from "../../../runtime-effects/electric-aoe-3d.js?v=20260521a";
+import { createElectricAoe3dRuntime } from "../../../runtime-effects/electric-aoe-3d.js?v=20260521-electric-damage-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
 import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/electric-aoe-3d-default.js?v=20260521a";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
-import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521a";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521b";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
 import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517p";
@@ -287,7 +287,10 @@ export function createGameStageDepth3dLayer({
         tags: ["spell", "electric-aoe", "dominant-bolt"],
       });
       root.dataset.enemy3dLastElectricAoeDamageCount = String(damageResult && damageResult.affected || 0);
+      root.dataset.enemy3dLastElectricAoeDamageAmount = String(Math.max(0, Number(damage) || 0));
+      root.dataset.enemy3dLastElectricAoeDamageTotal = String(damageResult && Number.isFinite(Number(damageResult.totalDamage)) ? Number(damageResult.totalDamage) : 0);
       root.dataset.enemy3dLastElectricAoeTarget = String(target.id || target.targetEntityId || "");
+      root.dataset.enemy3dLastElectricAoeDamageReason = String(damageResult && damageResult.trace && damageResult.trace.reason || "");
       return damageResult;
     },
     toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
