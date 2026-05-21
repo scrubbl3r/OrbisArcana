@@ -118,17 +118,26 @@ function createSurfaceFireRibbonMaterial({
       void main() {
         vec3 local = position;
         float rise01 = clamp(local.y, 0.0, 1.0);
-        vec2 upLocal = normalize(aUpLocal + vec2(0.0, 0.0001));
-        vec2 normalLocal = vec2(0.0, 1.0);
-        float bendCurve = pow(rise01, 1.35) * clamp(aBendStrength, 0.0, 0.86);
-        local.xy += (upLocal - normalLocal) * rise01 * bendCurve;
-        vUv = uv;
-        vFireSeed = aFireSeed;
-        vBentLocalPos = local;
         vec4 worldPosition = vec4(local, 1.0);
         #ifdef USE_INSTANCING
           worldPosition = instanceMatrix * worldPosition;
         #endif
+
+        vec2 basisX = vec2(instanceMatrix[0][0], instanceMatrix[0][1]);
+        vec2 basisY = vec2(instanceMatrix[1][0], instanceMatrix[1][1]);
+        float widthPx = max(1.0, length(basisX));
+        float heightPx = max(1.0, length(basisY));
+        vec2 upLocal = normalize(aUpLocal + vec2(0.0, 0.0001));
+        vec2 normalLocal = vec2(0.0, 1.0);
+        float steepBend = smoothstep(0.42, 0.86, clamp(aBendStrength, 0.0, 0.86));
+        float bendCurve = mix(rise01, smoothstep(0.06, 0.92, rise01), steepBend);
+        vec2 localDelta = (upLocal - normalLocal) * heightPx * bendCurve * clamp(aBendStrength, 0.0, 0.86);
+        vec2 worldDelta = (normalize(basisX) * localDelta.x) + (normalize(basisY) * localDelta.y);
+        worldPosition.xy += worldDelta;
+
+        vUv = uv;
+        vFireSeed = aFireSeed;
+        vBentLocalPos = vec3((local.x * widthPx) + localDelta.x, (local.y * heightPx) + localDelta.y, local.z);
         gl_Position = projectionMatrix * modelViewMatrix * worldPosition;
       }
     `,

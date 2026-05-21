@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { closestPointOnSegment } from "../../collision/circle-boundary-collision.js";
-import { createSurfaceFireRibbonSystem } from "./surface-fire-ribbon-system.js?v=20260520a";
+import { createSurfaceFireRibbonSystem } from "./surface-fire-ribbon-system.js?v=20260520b";
 
 const WORLD_UP = Object.freeze({ x: 0, y: 1 });
 const SURFACE_FIRE_TTL_MS = 3000;
