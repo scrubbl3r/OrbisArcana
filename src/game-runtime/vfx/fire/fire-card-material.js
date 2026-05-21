@@ -308,7 +308,10 @@ export function createFireCardMaterial({
           (cardUv.y * 1.35 - perlinTime * 0.42) * perlinFrequency,
           0.0
         ) + seedOffset;
-        float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, safeTail);
+        float life = clamp(vFireLife, 0.0, 1.0);
+        float lifeFuel = 1.0 - smoothstep(0.10, 0.98, life);
+        float lifeDensityMul = mix(0.04, 1.0, lifeFuel);
+        float perlinDensity = mix(uWakeNoiseDensityBottom, uWakeNoiseDensityTop, safeTail) * lifeDensityMul;
         float perlin = perlinMusgraveField(perlinFlow);
 
         float simplexTime = uTime * uWakeSimplexSpeed;
@@ -318,7 +321,7 @@ export function createFireCardMaterial({
           (cardUv.y * 1.52 - simplexTime * 0.5) * simplexFrequency,
           0.0
         ) + seedOffset * 1.37;
-        float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, safeTail);
+        float simplexDensity = mix(uWakeSimplexDensityBottom, uWakeSimplexDensityTop, safeTail) * lifeDensityMul;
         float simplex = simplexGranularField(simplexFlow);
 
         float noiseMix = clamp(uWakeNoiseMix, 0.0, 1.0);
@@ -331,12 +334,8 @@ export function createFireCardMaterial({
         float carvedBlobs = broadBlobs * mix(1.0, detailBlobs, clamp(uWakeCarveStrength, 0.0, 1.0));
         float blobs = mix(mixedBlobs, carvedBlobs, clamp(uWakeCarveStrength, 0.0, 1.0));
         vec4 mapped = sampleWakeGraph(blobs);
-        float life = clamp(vFireLife, 0.0, 1.0);
-        float dying = smoothstep(0.18, 1.0, life);
-        float flameTop = mix(1.08, 0.10, dying);
-        float lifeVerticalAlpha = 1.0 - smoothstep(flameTop - 0.16, flameTop, safeTail);
-        float finalLifeFade = 1.0 - smoothstep(0.84, 1.0, life);
-        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * edgeAlpha * endCapAlpha * bottomAlpha * contactAlpha * lifeVerticalAlpha * finalLifeFade;
+        float finalLifeFade = 1.0 - smoothstep(0.90, 1.0, life);
+        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * edgeAlpha * endCapAlpha * bottomAlpha * contactAlpha * finalLifeFade;
         mapped.rgb *= verticalAlpha;
         mapped.a *= verticalAlpha;
         if (mapped.a <= 0.004) discard;
