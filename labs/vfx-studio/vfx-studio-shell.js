@@ -79,6 +79,7 @@ export function updateEffectSections({
   persistDraftStore,
   refreshEffectMeta,
   previewRootsByEffect = {},
+  surfaces = {},
 }) {
   const opt = selectedEffectOption();
   const selectedValue = String((opt && opt.value) || "");
@@ -88,9 +89,11 @@ export function updateEffectSections({
   lastSelectedEffectValueRef.value = selectedValue;
 
   const effect = selectedBaseEffect();
+  const surface = surfaces && surfaces[effect];
+  const authoringEffect = String((surface && surface.authoringSectionEffect) || effect);
   const sections = document.querySelectorAll(".section[data-effect]");
   sections.forEach((section) => {
-    section.hidden = section.getAttribute("data-effect") !== effect;
+    section.hidden = section.getAttribute("data-effect") !== authoringEffect;
   });
 
   const activeRoot = previewRootsByEffect[effect] || null;

@@ -84,9 +84,11 @@ export function createStudioSurfaceActivation({
     }
     const effect = selectedBehaviorEffect();
     const hasBehaviorSurface = !!effect;
+    const behaviorSurface = effect && surfaces && surfaces[effect] && surfaces[effect].behavior;
+    const authoringEffect = String((behaviorSurface && behaviorSurface.authoringSectionEffect) || effect);
     document.querySelectorAll(behaviorSectionSelector).forEach((section) => {
       const target = section.getAttribute("data-behavior-effect");
-      section.hidden = hasBehaviorSurface ? target !== effect : target !== "default";
+      section.hidden = hasBehaviorSurface ? target !== authoringEffect : target !== "default";
     });
     if (effect && typeof updateBehaviorReadout === "function") updateBehaviorReadout(effect);
   }
@@ -112,6 +114,7 @@ export function createStudioSurfaceActivation({
       persistDraftStore,
       refreshEffectMeta,
       previewRootsByEffect,
+      surfaces,
     });
     if (typeof alignBindingTargetToSelectedEffect === "function") alignBindingTargetToSelectedEffect();
     if (typeof refreshBindingPanel === "function") refreshBindingPanel();

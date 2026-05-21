@@ -346,6 +346,9 @@ export function createStudioBootstrap({
       if (effect === "flame-aoe-3d" && typeof updateFlameAoe3dBehaviorReadout === "function") {
         updateFlameAoe3dBehaviorReadout();
       }
+      if (effect === "electric-aoe-3d" && typeof updateFlameAoe3dBehaviorReadout === "function") {
+        updateFlameAoe3dBehaviorReadout();
+      }
       if (effect === "teleport-3d" && typeof defaults.updateTeleport3dBehaviorReadout === "function") {
         defaults.updateTeleport3dBehaviorReadout();
       }

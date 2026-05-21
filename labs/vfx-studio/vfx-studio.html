@@ -2030,6 +2030,8 @@
         </div>
       </div>
 
+      <div class="section" data-effect="electric-aoe-3d" hidden></div>
+
       <div class="section" data-effect="bank-orb-3d" hidden>
         <div class="row">
           <button id="previewBankOrb3d" class="toolBtn" type="button">Preview</button>
@@ -2612,6 +2614,8 @@
           </div>
         </div>
 
+        <div class="behaviorSection" data-behavior-effect="electric-aoe-3d" hidden></div>
+
         <div class="behaviorSection" data-behavior-effect="default">
           <h3 class="behaviorTitle">No Behavior Surface</h3>
         </div>
@@ -2713,6 +2717,7 @@
       },
       {
         applyLabThemeDefaults,
+        buildElectricAoe3dBehaviorModule,
         buildFlameAoe3dBehaviorModule,
         buildTeleportBehaviorModule,
         buildLivePresetModuleForBaseEffect,
@@ -2743,6 +2748,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
+    import { createElectricAoe3dAuthoringAdapter } from "./adapters/electric-aoe-3d-authoring-adapter.js?v=20260521a";
     import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260520aeo-diameter-a";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
@@ -2774,8 +2780,10 @@
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260520235547i";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
+    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
@@ -2799,12 +2807,14 @@
     let runtimeEffectBindingsState = Array.isArray(RUNTIME_EFFECT_BINDINGS) ? RUNTIME_EFFECT_BINDINGS.map((entry) => ({ ...entry })) : [];
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
+      buildElectricAoe3dBehaviorModule,
       buildFlameAoe3dBehaviorModule,
       buildTeleportBehaviorModule,
       createBankOrb3dAuthoringAdapter,
       createBubbleShield3dAuthoringAdapter,
       createBubbleShieldAuthoringAdapter,
       createElectricAoeAuthoringAdapter,
+      createElectricAoe3dAuthoringAdapter,
       createFlameAoe3dAuthoringAdapter,
       createFlameAoeAuthoringAdapter,
       createHealAuthoringAdapter,
@@ -3424,6 +3434,8 @@
       bubbleShieldPresetDefault: BUBBLE_SHIELD_PRESET_DEFAULT,
       bubbleShield3dPresetDefault: BUBBLE_SHIELD_3D_PRESET_DEFAULT,
       electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
+      electricAoe3dPresetDefault: ELECTRIC_AOE_3D_PRESET_DEFAULT,
+      electricAoe3dBehaviorDefault: ELECTRIC_AOE_BEHAVIOR_DEFAULT,
       flameAoePresetDefault: FLAME_AOE_PRESET_DEFAULT,
       flameAoe3dPresetDefault: FLAME_AOE_3D_PRESET_DEFAULT,
       flameAoe3dBehaviorDefault: FLAME_AOE_BEHAVIOR_DEFAULT,
@@ -4155,6 +4167,7 @@
 
     function updateFlameAoe3dBehaviorReadout(){
       authoringAdapterForBaseEffect("flame-aoe-3d").updateBehaviorReadout(els);
+      authoringAdapterForBaseEffect("electric-aoe-3d").updateBehaviorReadout(els);
     }
 
     const studioBootstrap = createStudioBootstrap({
@@ -4187,6 +4200,7 @@
         "shockwave-3d": () => applyShockwave3d(),
         "flame-aoe": () => applyFlameControls(),
         "flame-aoe-3d": () => applyFlameAoe3d(),
+        "electric-aoe-3d": () => applyFlameAoe3d(),
         "bank-orb-3d": () => applyBankOrb3d(),
         "orb-base": () => applyOrbBase(),
         "orb-3d": () => applyOrb3d(),
@@ -4210,6 +4224,8 @@
         shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
         flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
         flameAoe3dBehaviorDefault: FLAME_AOE_BEHAVIOR_DEFAULT,
+        electricAoe3dPresetDefault: ELECTRIC_AOE_3D_PRESET_DEFAULT,
+        electricAoe3dBehaviorDefault: ELECTRIC_AOE_BEHAVIOR_DEFAULT,
         electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
         orbNod3dPresetDefault: ORB_NOD_3D_PRESET_DEFAULT,
         orbSpawnPresetDefault: ORB_SPAWN_PRESET_DEFAULT,

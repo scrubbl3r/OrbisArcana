@@ -224,7 +224,9 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "});",
         "",
       ].join("\n");
-    case "flame-aoe-3d": {
+    case "flame-aoe-3d":
+    case "electric-aoe-3d": {
+      const isElectric3d = String(baseEffect || "") === "electric-aoe-3d";
       const keys = [
         "durationMs",
         "aoeAuraDiameterBo", "aoeAuraSoftness", "aoeAuraR", "aoeAuraG", "aoeAuraB", "aoeAuraA",
@@ -261,7 +263,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         const value = Number(p[key]);
         settings[key] = Number.isFinite(value) ? value : p[key];
       });
-      return `export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze(${JSON.stringify(settings, null, 2)});\n`;
+      const exportName = isElectric3d ? "ELECTRIC_AOE_3D_PRESET_DEFAULT" : "FLAME_AOE_3D_PRESET_DEFAULT";
+      return `export const ${exportName} = Object.freeze(${JSON.stringify(settings, null, 2)});\n`;
     }
     case "electric-aoe":
       return [
@@ -611,6 +614,24 @@ export function buildFlameAoe3dBehaviorModule(params) {
     `  igniteDurationMs: ${Math.round(toNum(p.igniteDurationMs, 3200))},`,
     `  roastDps: ${toNum(p.roastDps, 1.25).toFixed(2)},`,
     `  roastTickMs: ${Math.round(toNum(p.roastTickMs, 250))},`,
+    "});",
+    "",
+  ].join("\n");
+}
+
+export function buildElectricAoe3dBehaviorModule(params) {
+  const p = params && typeof params === "object" ? params : {};
+  return [
+    "export const ELECTRIC_AOE_BEHAVIOR_DEFAULT = Object.freeze({",
+    "  enabled: true,",
+    `  visualProfile: ${JSON.stringify(String(p.visualProfile || "spellstorm"))},`,
+    `  hitRadiusBo: ${toNum(p.hitRadiusBo, 2.5).toFixed(2)},`,
+    `  wakeReachScale: ${toNum(p.wakeReachScale, 1).toFixed(2)},`,
+    `  shockDamage: ${toNum(p.shockDamage ?? p.igniteDamage, 0.1).toFixed(2)},`,
+    `  shockDps: ${toNum(p.shockDps ?? p.igniteBurnDps, 1).toFixed(2)},`,
+    `  shockDurationMs: ${Math.round(toNum(p.shockDurationMs ?? p.igniteDurationMs, 10000))},`,
+    `  arcDps: ${toNum(p.arcDps ?? p.roastDps, 1).toFixed(2)},`,
+    `  arcTickMs: ${Math.round(toNum(p.arcTickMs ?? p.roastTickMs, 50))},`,
     "});",
     "",
   ].join("\n");

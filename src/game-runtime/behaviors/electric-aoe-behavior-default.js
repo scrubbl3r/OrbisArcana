@@ -1,0 +1,16 @@
+export const ELECTRIC_AOE_BEHAVIOR_DEFAULT = Object.freeze({
+  enabled: true,
+  visualProfile: "spellstorm",
+  hitRadiusBo: 2.5,
+  wakeReachScale: 1,
+  shockDamage: 0.1,
+  shockDps: 1,
+  shockDurationMs: 10000,
+  arcDps: 1,
+  arcTickMs: 50,
+  igniteDamage: 0.1,
+  igniteBurnDps: 1,
+  igniteDurationMs: 10000,
+  roastDps: 1,
+  roastTickMs: 50,
+});
