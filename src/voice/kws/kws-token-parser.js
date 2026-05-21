@@ -5,12 +5,12 @@ import {
   EVT_VOICE_TOKEN_DETECTED,
 } from "../../contracts/events.js";
 import { buildKwsWordAliasIndex } from "./build-kws-word-alias-index.js";
-import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260520salubrumww";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260519pyromodulafb";
 import {
   WAKE_ARM_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WORD_RUNTIME_ROUTING_BY_WORD_ID,
-} from "../../content/spells/spell-runtime-routing.js?v=20260520salubrumww";
+} from "../../content/spells/spell-runtime-routing.js?v=20260519pyromodulafb";
 
 const DEFAULTS = Object.freeze({
   windowMs: 1200,

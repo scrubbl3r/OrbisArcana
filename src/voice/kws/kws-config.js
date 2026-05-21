@@ -1,4 +1,4 @@
-import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260520salubrumww";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260519pyromodulafb";
 import { DEFAULT_KWS_LISTEN_POLICY_MODE } from "../voice-config.js";
 import {
   AXIS_WORD_IDS,
@@ -10,7 +10,7 @@ import {
   WAKE_WINDOW_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WORD_RUNTIME_ROUTING,
-} from "../../content/spells/spell-runtime-routing.js?v=20260520salubrumww";
+} from "../../content/spells/spell-runtime-routing.js?v=20260519pyromodulafb";
 
 function resolveActivePhrasesByIds(ids = []) {
   return (Array.isArray(ids) ? ids : [])

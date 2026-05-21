@@ -1,14 +1,14 @@
-import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260520salubrumww";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260519pyromodulafb";
 import {
   DEFAULT_KWS_LISTEN_POLICY_MODE,
   KWS_LISTEN_POLICY_MODES,
 } from "../voice-config.js";
 import {
   COMPILED_INTERACTION_GRAPH_V2_WAKE_WORD_IDS,
-} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260520salubrumww";
+} from "../../content/interactions-v2/compiled-interaction-graph-v2-wake-profile.js?v=20260519pyromodulafb";
 import {
   WAKE_ARM_WORD_IDS,
-} from "../../content/spells/spell-runtime-routing.js?v=20260520salubrumww";
+} from "../../content/spells/spell-runtime-routing.js?v=20260519pyromodulafb";
 
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 const EVT_RULE_ENGINE_PREVIEW_MATCHED = "rule_engine.preview_matched";

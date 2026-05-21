@@ -12,7 +12,7 @@ export const INTERACTION_GRAPH_V2 = {
       { id: "root.echovar", words: ["echovar"], ttlMs: 1500 },
       { id: "root.sanctum", words: ["sanctum"], ttlMs: 1500 },
       { id: "root.modula", words: ["modula"], ttlMs: 1500 },
-      { id: "root.salubrum", words: ["salubrum"], ttlMs: 1500 },
+      { id: "root.salubrium", words: ["salubrium"], ttlMs: 1500 },
       { id: "root.leviton", words: ["leviton"], ttlMs: 1500 },
     ],
   },
@@ -57,8 +57,8 @@ export const INTERACTION_GRAPH_V2 = {
     },
     // HEAL
     {
-      id: "orbis_salubrum_heal_cast",
-      on: { word: "salubrum" },
+      id: "orbis_salubrium_heal_cast",
+      on: { word: "salubrium" },
       trigger: { spell: "heal" },
     },
     // ELECTRIC AOE CHAIN

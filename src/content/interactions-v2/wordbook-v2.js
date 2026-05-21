@@ -47,7 +47,7 @@ const WORDBOOK_V2_WORD_ROWS = Object.freeze([
   makeWord({ id: "electrum" }),
   makeWord({ id: "sanctum" }),
   makeWord({ id: "rota" }),
-  makeWord({ id: "salubrum", label: "Salubrum" }),
+  makeWord({ id: "salubrium", label: "Salubrium" }),
 ]);
 
 export const WORDBOOK_V2 = Object.freeze({
