@@ -28,6 +28,17 @@ function smoothstep(t) {
   return x * x * (3 - 2 * x);
 }
 
+function chooseEndpointOffsetTarget(state, seed, time) {
+  state.retargetCount += 1;
+  const retargetSeed = seed + state.retargetCount * 29.73;
+  const previousSign = state.targetOffset < 0 ? -1 : 1;
+  const sign = random01(retargetSeed, 11) < 0.32 ? -previousSign : (random01(retargetSeed, 12) < 0.5 ? -1 : 1);
+  const magnitude = randomBetween(retargetSeed, 13, 0.035, 0.28);
+  state.targetOffset = sign * magnitude;
+  state.easeRate = randomBetween(retargetSeed, 14, 0.85, 2.8);
+  state.nextRetargetAt = time + randomBetween(retargetSeed, 15, 0.55, 2.4);
+}
+
 function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const minRangeBo = clampNumber(source.haloBoltMinRangeBo, 0, 16, 0.55);
@@ -60,14 +71,11 @@ function normalizeConfig(raw = {}) {
   });
 }
 
-function buildHaloPath({ angle, bo, config, from, seed, time }) {
+function buildHaloPath({ angle, bo, config, destinationAngle, from, seed, time }) {
   const originXW = Number(from && from.xW) || 0;
   const originYW = Number(from && from.yW) || 0;
   const rangeBreath = 0.5 + 0.5 * Math.sin(seed * 1.91 + time * randomBetween(seed, 31, 0.9, 1.9));
   const rangeBo = config.minRangeBo + (config.maxRangeBo - config.minRangeBo) * smoothstep(rangeBreath);
-  const destinationAngle = angle
-    + Math.sin(seed * 2.9 + time * randomBetween(seed, 33, 0.55, 1.35)) * 0.12
-    + Math.sin(seed * 7.1 + time * randomBetween(seed, 34, 1.4, 2.6)) * 0.035;
   const originRadial = { x: Math.cos(angle), y: Math.sin(angle) };
   const destinationRadial = { x: Math.cos(destinationAngle), y: Math.sin(destinationAngle) };
   const start = Object.freeze({
@@ -149,6 +157,33 @@ function buildForks({ bo, config, pathIndex, points, seed, time }) {
 
 export function createElectricAoeHaloBoltPlanner() {
   const walkController = createElectricAoeHaloWalkController();
+  const endpointStates = [];
+  let lastEndpointTime = null;
+
+  function ensureEndpointState(index, seed, time) {
+    if (endpointStates[index]) return endpointStates[index];
+    const sign = random01(seed, 101) < 0.5 ? -1 : 1;
+    const state = {
+      easeRate: randomBetween(seed, 102, 1.1, 2.6),
+      nextRetargetAt: time + randomBetween(seed, 103, 0.45, 1.9),
+      offset: sign * randomBetween(seed, 104, 0.04, 0.18),
+      retargetCount: 0,
+      targetOffset: sign * randomBetween(seed, 105, 0.06, 0.22),
+    };
+    endpointStates[index] = state;
+    return state;
+  }
+
+  function sampleDestinationAngle({ index, originAngle, seed, time, total }) {
+    endpointStates.length = Math.max(0, Number(total) || 0);
+    const dt = lastEndpointTime == null ? 0 : Math.max(0, Math.min(0.12, time - lastEndpointTime));
+    const state = ensureEndpointState(index, seed, time);
+    if (time >= state.nextRetargetAt) chooseEndpointOffsetTarget(state, seed, time);
+    const blend = 1 - Math.exp(-dt * state.easeRate);
+    state.offset += (state.targetOffset - state.offset) * blend;
+    const flutter = Math.sin(seed * 7.1 + time * randomBetween(seed, 34, 1.4, 2.6)) * 0.025;
+    return originAngle + state.offset + flutter;
+  }
 
   function buildPaths({
     bo = 42,
@@ -166,15 +201,24 @@ export function createElectricAoeHaloBoltPlanner() {
       time: safeTime,
       total,
     });
+    lastEndpointTime = lastEndpointTime == null ? safeTime : lastEndpointTime;
     const paths = [];
     for (let pathIndex = 0; pathIndex < total; pathIndex += 1) {
       const seed = pathIndex + 1;
       const angle = (walkSamples[pathIndex] && walkSamples[pathIndex].angle || 0)
         + Math.sin(safeTime * randomBetween(seed, 11, 0.4, 1.2) + seed) * 0.08;
+      const destinationAngle = sampleDestinationAngle({
+        index: pathIndex,
+        originAngle: angle,
+        seed,
+        time: safeTime,
+        total,
+      });
       const points = Object.freeze(buildHaloPath({
         angle,
         bo: safeBo,
         config,
+        destinationAngle,
         from,
         seed,
         time: safeTime,
@@ -184,11 +228,14 @@ export function createElectricAoeHaloBoltPlanner() {
         points,
       }));
     }
+    lastEndpointTime = safeTime;
     return Object.freeze(paths);
   }
 
   function reset() {
     walkController.reset();
+    endpointStates.length = 0;
+    lastEndpointTime = null;
   }
 
   return Object.freeze({ buildPaths, reset });
