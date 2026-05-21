@@ -3,7 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260520a";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520u";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520v";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
@@ -30,8 +30,10 @@ function normalizeSeed(value, fallback = 0) {
 
 function createUnitEggGeometry({
   rows = 48,
+  columns = 16,
 } = {}) {
   const rowCount = Math.max(4, Math.round(rows));
+  const columnCount = Math.max(2, Math.round(columns));
   const minY = -0.5;
   const maxY = 1.5625;
   const height = Math.max(0.0001, maxY - minY);
@@ -51,35 +53,30 @@ function createUnitEggGeometry({
     uvs.push((localX + 1) * 0.5, v);
   }
 
-  pushVertex(0, minY);
-  const rowVertexIndices = [];
-  for (let i = 1; i < rowCount; i += 1) {
-    const v = i / rowCount;
+  const grid = [];
+  for (let row = 0; row <= rowCount; row += 1) {
+    const v = row / rowCount;
     const y = minY + height * v;
     const r = halfWidthAtY(y);
-    if (r <= 0.000001) continue;
-    const left = positions.length / 3;
-    pushVertex(-r, y);
-    const right = positions.length / 3;
-    pushVertex(r, y);
-    rowVertexIndices.push({ left, right });
+    const rowIndices = [];
+    for (let column = 0; column <= columnCount; column += 1) {
+      const u = column / columnCount;
+      const x = r * ((u * 2) - 1);
+      rowIndices.push(positions.length / 3);
+      pushVertex(x, y);
+    }
+    grid.push(rowIndices);
   }
-  const topIndex = positions.length / 3;
-  pushVertex(0, maxY);
 
-  if (rowVertexIndices.length > 0) {
-    const first = rowVertexIndices[0];
-    indices.push(0, first.right, first.left);
-    for (let i = 0; i < rowVertexIndices.length - 1; i += 1) {
-      const current = rowVertexIndices[i];
-      const next = rowVertexIndices[i + 1];
+  for (let row = 0; row < rowCount; row += 1) {
+    for (let column = 0; column < columnCount; column += 1) {
+      const current = grid[row];
+      const next = grid[row + 1];
       indices.push(
-        current.left, current.right, next.left,
-        current.right, next.right, next.left
+        current[column], current[column + 1], next[column],
+        current[column + 1], next[column + 1], next[column]
       );
     }
-    const last = rowVertexIndices[rowVertexIndices.length - 1];
-    indices.push(last.left, last.right, topIndex);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -89,6 +86,7 @@ function createUnitEggGeometry({
   geometry.computeBoundingSphere();
   geometry.userData.fireCardShape = Object.freeze({
     rows: rowCount,
+    columns: columnCount,
     minY,
     maxY,
     anchor: "bottom-bulb-center",

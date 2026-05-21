@@ -1,10 +1,12 @@
 import { closestPointOnSegment } from "../../collision/circle-boundary-collision.js";
-import { createFireCardSystem } from "./fire-card-system.js?v=20260520w";
+import { createFireCardSystem } from "./fire-card-system.js?v=20260520x";
 
 const WORLD_UP = Object.freeze({ x: 0, y: 1 });
 const SURFACE_FIRE_TTL_MS = 3000;
 const SURFACE_FIRE_EMIT_INTERVAL_MS = 90;
 const EGG_LOCAL_HEIGHT = 2.0625;
+const SURFACE_FIRE_SCALE_MIN = 0.85;
+const SURFACE_FIRE_SCALE_MAX = 1.6;
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -23,6 +25,10 @@ function normalize2(x = 0, y = 0, fallback = WORLD_UP) {
 
 function lerp(a = 0, b = 0, t = 0) {
   return a + (b - a) * t;
+}
+
+function randomRange(min = 0, max = 1) {
+  return lerp(min, max, Math.random());
 }
 
 function resolveSurfaceWidthT(steepness = 0) {
@@ -66,8 +72,11 @@ export function createSurfaceFireCardSystem({
       wakeSimplexGain: 0.36,
       wakeNoiseMix: 0.48,
       wakeCarveStrength: 0.56,
-      contactFeatherPx: 10,
+      contactFeatherPx: 2,
       edgeFeatherPx: 3,
+      displacementPx: 5,
+      displacementScale: 1.15,
+      displacementSpeed: 3.8,
     },
   });
   const liveCards = [];
@@ -111,18 +120,21 @@ export function createSurfaceFireCardSystem({
     offsetPx = 0,
     bo = 150,
     z = 0,
+    scaleMul = 1,
     seed = 0,
   } = {}) {
     if (!contactRuntime || !tangent || !normal) return null;
     const profile = resolveSurfaceCardProfile(steepness, bo);
+    const resolvedScaleMul = Math.max(0.01, clampNumber(scaleMul, 1));
     return {
       x: contactRuntime.x + (tangent.x * offsetPx),
       y: contactRuntime.y + (tangent.y * offsetPx),
       z,
-      widthPx: profile.widthPx,
-      heightPx: profile.heightPx,
+      widthPx: profile.widthPx * resolvedScaleMul,
+      heightPx: profile.heightPx * resolvedScaleMul,
       contactNormal: { x: normal.x, y: normal.y },
       seed,
+      scaleMul: resolvedScaleMul,
     };
   }
 
@@ -212,7 +224,8 @@ export function createSurfaceFireCardSystem({
           offsetPx: (card - half) * profile.spacingPx,
           bo,
           z: orbRuntimePosition.z || 0,
-          seed: (index * 17.17) + (card * 3.31) + (point.xW * 0.011) + (point.yW * 0.017),
+          scaleMul: randomRange(SURFACE_FIRE_SCALE_MIN, SURFACE_FIRE_SCALE_MAX),
+          seed: Math.random() * 100000,
         });
         if (surfaceCard) {
           surfaceCard.createdAtMs = nowMs;

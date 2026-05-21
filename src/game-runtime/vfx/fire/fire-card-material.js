@@ -37,6 +37,9 @@ export function createFireCardMaterial({
   wakeCarveStrength = 0,
   edgeFeatherPx = 3,
   contactFeatherPx = 0,
+  displacementPx = 0,
+  displacementScale = 1.25,
+  displacementSpeed = 4.5,
   endCapFeatherPx = 0,
   bottomFeatherPx = 0,
 } = {}) {
@@ -55,6 +58,9 @@ export function createFireCardMaterial({
       uTime: { value: 0 },
       uEdgeFeatherPx: { value: Math.max(0, finiteNumber(edgeFeatherPx, 3)) },
       uContactFeatherPx: { value: Math.max(0, finiteNumber(contactFeatherPx, 0)) },
+      uDisplacementPx: { value: Math.max(0, finiteNumber(displacementPx, 0)) },
+      uDisplacementScale: { value: Math.max(0.1, finiteNumber(displacementScale, 1.25)) },
+      uDisplacementSpeed: { value: Math.max(0, finiteNumber(displacementSpeed, 4.5)) },
       uEndCapFeatherPx: { value: Math.max(0, finiteNumber(endCapFeatherPx, 0)) },
       uWakeNoiseScale: { value: Math.max(0.1, finiteNumber(wakeNoiseScale, 2)) },
       uWakeNoiseSpeed: { value: Math.max(0, finiteNumber(wakeNoiseSpeed, 7)) },
@@ -83,16 +89,52 @@ export function createFireCardMaterial({
     },
     vertexShader: `
       precision highp float;
+      uniform float uTime;
+      uniform float uDisplacementPx;
+      uniform float uDisplacementScale;
+      uniform float uDisplacementSpeed;
       attribute float aFireSeed;
       attribute vec2 aFireContactNormal;
       varying vec3 vLocalPos;
       varying float vFireSeed;
       varying vec2 vFireContactNormal;
+      float vertexHash31(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
+      float vertexNoise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(mix(vertexHash31(i), vertexHash31(i + vec3(1.0, 0.0, 0.0)), f.x), mix(vertexHash31(i + vec3(0.0, 1.0, 0.0)), vertexHash31(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),
+          mix(mix(vertexHash31(i + vec3(0.0, 0.0, 1.0)), vertexHash31(i + vec3(1.0, 0.0, 1.0)), f.x), mix(vertexHash31(i + vec3(0.0, 1.0, 1.0)), vertexHash31(i + vec3(1.0, 1.0, 1.0)), f.x), f.y),
+          f.z
+        );
+      }
       void main() {
         vLocalPos = position;
         vFireSeed = aFireSeed;
         vFireContactNormal = aFireContactNormal;
-        vec4 worldPosition = vec4(position, 1.0);
+        vec3 displacedPosition = position;
+        #ifdef USE_INSTANCING
+          if (uDisplacementPx > 0.0) {
+            float seed = fract(aFireSeed);
+            float widthPx = max(1.0, length(instanceMatrix[0].xyz));
+            float heightPx = max(1.0, length(instanceMatrix[1].xyz));
+            float tail = clamp((position.y + 0.5) / 2.0625, 0.0, 1.0);
+            float anchorFade = smoothstep(0.0, 0.18, position.y);
+            float topFade = 1.0 - smoothstep(0.92, 1.0, tail);
+            vec3 flow = vec3(
+              position.x * uDisplacementScale * 4.2 + seed * 19.7,
+              position.y * uDisplacementScale * 3.1 - uTime * uDisplacementSpeed + seed * -31.3,
+              seed * 11.9
+            );
+            float broad = vertexNoise(flow) * 2.0 - 1.0;
+            float detail = vertexNoise(flow * 2.7 + vec3(8.1, -3.4, 5.6)) * 2.0 - 1.0;
+            float wobblePx = (broad * 0.72 + detail * 0.28) * uDisplacementPx * anchorFade * topFade;
+            displacedPosition.x += wobblePx / widthPx;
+            displacedPosition.y += (detail * uDisplacementPx * 0.18 * anchorFade * topFade) / heightPx;
+          }
+        #endif
+        vec4 worldPosition = vec4(displacedPosition, 1.0);
         #ifdef USE_INSTANCING
           worldPosition = instanceMatrix * worldPosition;
         #endif
