@@ -2839,7 +2839,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260521-electric-halo-c"),
+      import("./vfx-studio-bootstrap.js?v=20260521-electric-halo-d"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -4023,6 +4023,17 @@
         return;
       }
       void (async () => {
+        if (!projectRootDirHandle) {
+          if (!window.showDirectoryPicker) {
+            window.alert("Connect Project is required for live publish, but this browser does not support project-folder access. Open the VFX lab in Chrome or another File System Access capable browser.");
+            return;
+          }
+          const connected = await studioProjectIo.connect();
+          if (!connected || !projectRootDirHandle) {
+            window.alert("Publish canceled. Connect Project first so the lab can write to the local repo.");
+            return;
+          }
+        }
         const built = buildPublishedPresetPayload();
         if (!built) {
           window.alert("Could not build the selected preset payload for publish.");
@@ -4035,9 +4046,7 @@
           buildLivePresetModule: LIVE_PRESET_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
           buildBehaviorModule: LIVE_BEHAVIOR_BUILDERS_BY_BASE_EFFECT[String(built.payload.baseEffect || "")] || null,
           ensureProjectConnected: async () => {
-            if (projectRootDirHandle) return true;
-            if (!window.showDirectoryPicker) return true;
-            return studioProjectIo.connect();
+            return !!projectRootDirHandle;
           },
           hasProjectConnection: !!projectRootDirHandle,
           saveConnectedPath: studioProjectIo.savePath,

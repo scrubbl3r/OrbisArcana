@@ -243,7 +243,8 @@ export function createElectricAoe3dRuntime(options = {}) {
       const seed = boltIndex + 1;
       const unit = boltIndex / Math.max(1, total);
       const speed = config.haloBoltMinWalkSpeed + (config.haloBoltMaxWalkSpeed - config.haloBoltMinWalkSpeed) * (0.5 + 0.5 * Math.sin(seed * 2.17));
-      const walkDirection = Math.sin(seed * 12.9898) >= 0 ? 1 : -1;
+      const walkDirectionSeed = Math.sin(seed * 12.9898) * 43758.5453123;
+      const walkDirection = (walkDirectionSeed - Math.floor(walkDirectionSeed)) >= 0.5 ? 1 : -1;
       const angle = unit * Math.PI * 2 + time * speed * walkDirection + Math.sin(time * 0.7 + seed) * 0.08;
       const rangeBo = config.haloBoltMinRangeBo + (config.haloBoltMaxRangeBo - config.haloBoltMinRangeBo) * (0.5 + 0.5 * Math.sin(seed * 1.91 + time * 0.45));
       const stepBo = config.haloBoltMinStepBo + (config.haloBoltMaxStepBo - config.haloBoltMinStepBo) * (0.5 + 0.5 * Math.sin(seed * 2.71));
