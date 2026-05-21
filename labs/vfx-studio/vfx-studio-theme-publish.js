@@ -229,6 +229,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
       const isElectric3d = String(baseEffect || "") === "electric-aoe-3d";
       const keys = [
         "durationMs",
+        "dominantBoltControlPointDiameterBo", "dominantBoltDetourRatioMax", "dominantBoltMaxRangeBo", "dominantBoltMinRangeBo",
+        "dominantBoltPathJitterBo", "dominantBoltPointSpacingBo", "dominantBoltRangeBo", "dominantBoltTargetRadiusBo", "dominantBoltZBo",
         "aoeAuraDiameterBo", "aoeAuraSoftness", "aoeAuraR", "aoeAuraG", "aoeAuraB", "aoeAuraA",
         "auraAlpha", "auraScale", "auraPulse", "auraNoiseScale", "auraNoiseSpeed", "auraFresnelPower", "auraR", "auraG", "auraB",
         "wakeLengthBo", "wakeRadiusBo", "wakeSubdivisions",

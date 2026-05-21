@@ -39,6 +39,8 @@ export function createElectricAoe3dPreview({
   let model = null;
   let controlPointLayer = null;
   let controlPointGeometry = null;
+  let controlPointLine = null;
+  let controlPointLineMaterial = null;
   let controlPointMaterial = null;
   let controlPointLastRefreshMs = 0;
   let createdAt = 0;
@@ -56,6 +58,8 @@ export function createElectricAoe3dPreview({
     model = null;
     controlPointLayer = null;
     controlPointGeometry = null;
+    controlPointLine = null;
+    controlPointLineMaterial = null;
     controlPointMaterial = null;
     controlPointLastRefreshMs = 0;
   }
@@ -66,15 +70,20 @@ export function createElectricAoe3dPreview({
   }
 
   function buildPreviewControlPath(bo, time = 0) {
-    const targetRadiusBo = 3.75 + Math.sin(time * 0.9) * 0.45;
+    const minRangeBo = Math.max(0, Number(els.electricAoe3dDominantBoltMinRangeBo && els.electricAoe3dDominantBoltMinRangeBo.value) || 2);
+    const maxRangeBo = Math.max(minRangeBo + 0.25, Number(els.electricAoe3dDominantBoltMaxRangeBo && els.electricAoe3dDominantBoltMaxRangeBo.value) || 8);
+    const rangeSpan = Math.max(0.25, maxRangeBo - minRangeBo);
+    const targetRadiusBo = minRangeBo + rangeSpan * (0.5 + Math.sin(time * 0.9) * 0.28);
     const phase = Math.PI * 0.14 + time * 0.34;
     return buildElectricAoeDominantBoltControlPath({
       bo,
       config: {
         controlPointDiameterBo: 0.05,
+        maxRangeBo,
+        minRangeBo,
         pathJitterBo: 0.22,
         pointSpacingBo: 0.62,
-        rangeBo: 8,
+        rangeBo: maxRangeBo,
         targetRadiusBo,
         zBo: 0,
       },
@@ -90,6 +99,22 @@ export function createElectricAoe3dPreview({
     controlPointLastRefreshMs = nowMs;
     const path = buildPreviewControlPath(bo, time);
     const points = Array.isArray(path && path.points) ? path.points : [];
+    const linePoints = points.map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
+    if (!controlPointLineMaterial) {
+      controlPointLineMaterial = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        toneMapped: false,
+      });
+    }
+    if (!controlPointLine) {
+      controlPointLine = new THREE.Line(new THREE.BufferGeometry(), controlPointLineMaterial);
+      controlPointLine.name = "electric_aoe3d:dominant_control_line";
+      controlPointLine.renderOrder = 219;
+      controlPointLayer.add(controlPointLine);
+    }
+    controlPointLine.geometry.dispose();
+    controlPointLine.geometry = new THREE.BufferGeometry().setFromPoints(linePoints);
+    controlPointLine.visible = linePoints.length > 1;
     if (!controlPointGeometry) controlPointGeometry = new THREE.SphereGeometry(bo * 0.05 * 0.5, 18, 10);
     if (!controlPointMaterial) {
       controlPointMaterial = new THREE.MeshBasicMaterial({
@@ -98,7 +123,7 @@ export function createElectricAoe3dPreview({
       });
     }
     points.forEach((point, index) => {
-      let marker = controlPointLayer.children[index];
+      let marker = controlPointLayer.children[index + 1];
       if (!marker) {
         marker = new THREE.Mesh(controlPointGeometry, controlPointMaterial);
         marker.name = `electric_aoe3d:dominant_control_point_${index}`;
@@ -108,7 +133,7 @@ export function createElectricAoe3dPreview({
       marker.visible = true;
       marker.position.set(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo);
     });
-    for (let index = points.length; index < controlPointLayer.children.length; index += 1) {
+    for (let index = points.length + 1; index < controlPointLayer.children.length; index += 1) {
       controlPointLayer.children[index].visible = false;
     }
   }
@@ -195,9 +220,19 @@ export function createElectricAoe3dPreview({
 
   function wire() {
     apply();
+    const refreshOnCommit = (event) => {
+      if (event && event.type === "keydown" && event.key !== "Enter") return;
+      apply();
+    };
     if (els.previewElectricAoe3d) els.previewElectricAoe3d.addEventListener("click", apply);
     if (els.electricAoe3dOrbVisibleBtn) els.electricAoe3dOrbVisibleBtn.addEventListener("click", toggleOrb);
     if (els.electricAoe3dControlPointsVisibleBtn) els.electricAoe3dControlPointsVisibleBtn.addEventListener("click", toggleControlPoints);
+    [els.electricAoe3dDominantBoltMinRangeBo, els.electricAoe3dDominantBoltMaxRangeBo].forEach((input) => {
+      if (!input) return;
+      input.addEventListener("blur", refreshOnCommit);
+      input.addEventListener("change", refreshOnCommit);
+      input.addEventListener("keydown", refreshOnCommit);
+    });
   }
 
   return Object.freeze({

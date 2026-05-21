@@ -2046,7 +2046,10 @@
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dControlPointControls">Control Points</button>
             <button id="electricAoe3dControlPointsVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Control Points visibility" title="Toggle Control Points visibility"></button>
           </div>
-          <div id="electricAoe3dControlPointControls" class="controlGroupBody paramFieldRows" hidden></div>
+          <div id="electricAoe3dControlPointControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow"><label for="electricAoe3dDominantBoltMinRangeBo">Bolt range min BO</label><input id="electricAoe3dDominantBoltMinRangeBo" class="paramFieldInput" type="number" min="0" max="64" step="0.1" value="2" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dDominantBoltMaxRangeBo">Bolt range max BO</label><input id="electricAoe3dDominantBoltMaxRangeBo" class="paramFieldInput" type="number" min="0.25" max="64" step="0.1" value="8" /></div>
+          </div>
         </div>
       </div>
 
@@ -3305,6 +3308,8 @@
       previewElectricAoe3d: $("previewElectricAoe3d"),
       electricAoe3dOrbVisibleBtn: $("electricAoe3dOrbVisibleBtn"),
       electricAoe3dControlPointsVisibleBtn: $("electricAoe3dControlPointsVisibleBtn"),
+      electricAoe3dDominantBoltMinRangeBo: $("electricAoe3dDominantBoltMinRangeBo"),
+      electricAoe3dDominantBoltMaxRangeBo: $("electricAoe3dDominantBoltMaxRangeBo"),
       flameAoe3dAoeAuraDiameterBo: $("flameAoe3dAoeAuraDiameterBo"),
       flameAoe3dApplyAoeAuraDiameterBtn: $("flameAoe3dApplyAoeAuraDiameterBtn"),
       flameAoe3dAoeAuraSoftness: $("flameAoe3dAoeAuraSoftness"),

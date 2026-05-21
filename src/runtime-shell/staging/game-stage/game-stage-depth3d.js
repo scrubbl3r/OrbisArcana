@@ -266,6 +266,7 @@ export function createGameStageDepth3dLayer({
     getLevelNav: () => currentLevelNavContext,
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => ELECTRIC_AOE_3D_PRESET_DEFAULT,
+    getEnvironmentSegments: () => currentBoundarySegments,
     toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
       x: toDepthThreeX(xW, worldWidthPx),
       y: toDepthThreeY(yW, worldHeightPx),

@@ -1,6 +1,8 @@
 export const ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS = Object.freeze({
   controlPointDiameterBo: 0.05,
   detourRatioMax: 1.4,
+  maxRangeBo: 8,
+  minRangeBo: 2,
   pointSpacingBo: 0.75,
   pathJitterBo: 0.18,
   rangeBo: 8,
@@ -18,6 +20,10 @@ function distance(from = {}, to = {}) {
   return Math.hypot((Number(from.xW) || 0) - (Number(to.xW) || 0), (Number(from.yW) || 0) - (Number(to.yW) || 0));
 }
 
+function lerp(a, b, t) {
+  return (Number(a) || 0) + ((Number(b) || 0) - (Number(a) || 0)) * t;
+}
+
 function pointAtRadius(radiusWorld = 1, phase = 0) {
   const r = Math.max(0, Number(radiusWorld) || 0);
   const angle = Number(phase) || 0;
@@ -29,12 +35,17 @@ function pointAtRadius(radiusWorld = 1, phase = 0) {
 
 function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
+  const minRangeBo = clampNumber(source.minRangeBo, 0, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.minRangeBo);
+  const maxRangeFallback = source.maxRangeBo ?? source.rangeBo;
+  const maxRangeBo = clampNumber(maxRangeFallback, minRangeBo, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.maxRangeBo);
   return Object.freeze({
     controlPointDiameterBo: clampNumber(source.controlPointDiameterBo, 0.01, 0.5, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.controlPointDiameterBo),
     detourRatioMax: clampNumber(source.detourRatioMax, 1, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.detourRatioMax),
+    maxRangeBo,
+    minRangeBo,
     pointSpacingBo: clampNumber(source.pointSpacingBo, 0.05, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.pointSpacingBo),
     pathJitterBo: clampNumber(source.pathJitterBo, 0, 2, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.pathJitterBo),
-    rangeBo: clampNumber(source.rangeBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.rangeBo),
+    rangeBo: maxRangeBo,
     targetRadiusBo: clampNumber(source.targetRadiusBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.targetRadiusBo),
     zBo: clampNumber(source.zBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
   });
@@ -47,14 +58,37 @@ function normalizePoint(point = {}, fallback = {}) {
   };
 }
 
-function resolveTarget({ from, target, bo, config, phase, nav }) {
-  const fallback = nav && typeof nav.randomPointAround === "function"
-    ? nav.randomPointAround(from, bo * config.targetRadiusBo, {
-      minRadius: bo * Math.min(config.targetRadiusBo, config.targetRadiusBo * 0.55),
+function chooseEnvironmentSurfaceTarget({ from, segments = [], bo, config }) {
+  const minWorld = bo * config.minRangeBo;
+  const maxWorld = bo * config.maxRangeBo;
+  const candidates = [];
+  for (const segment of Array.isArray(segments) ? segments : []) {
+    const a = segment && segment.a;
+    const b = segment && segment.b;
+    if (!a || !b) continue;
+    for (let step = 0; step <= 12; step += 1) {
+      const t = step / 12;
+      const point = {
+        xW: lerp(a.xW, b.xW, t),
+        yW: lerp(a.yW, b.yW, t),
+      };
+      const d = distance(from, point);
+      if (d >= minWorld && d <= maxWorld) candidates.push(point);
+    }
+  }
+  if (!candidates.length) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)] || null;
+}
+
+function resolveTarget({ environmentSegments, from, target, bo, config, phase, nav }) {
+  const surfaceTarget = chooseEnvironmentSurfaceTarget({ from, segments: environmentSegments, bo, config });
+  const fallback = surfaceTarget || (nav && typeof nav.randomPointAround === "function"
+    ? nav.randomPointAround(from, bo * config.maxRangeBo, {
+      minRadius: bo * config.minRangeBo,
     })
-    : pointAtRadius(bo * config.targetRadiusBo, phase);
+    : pointAtRadius(bo * Math.max(config.minRangeBo, Math.min(config.targetRadiusBo, config.maxRangeBo)), phase));
   const rawTarget = target && typeof target === "object" ? target : fallback;
-  const resolved = nav && typeof nav.resolvePoint === "function"
+  const resolved = !surfaceTarget && nav && typeof nav.resolvePoint === "function"
     ? nav.resolvePoint(rawTarget, { fallback })
     : rawTarget;
   return normalizePoint(resolved, fallback);
@@ -62,10 +96,10 @@ function resolveTarget({ from, target, bo, config, phase, nav }) {
 
 function pathIsEligible({ from, to, nav, bo, config }) {
   const straight = Math.max(0.001, distance(from, to));
-  if (straight > bo * config.rangeBo) return false;
+  if (straight < bo * config.minRangeBo || straight > bo * config.maxRangeBo) return false;
   if (!nav || typeof nav.distanceThroughLevel !== "function") return true;
   const routed = Math.max(0.001, nav.distanceThroughLevel(from, to));
-  if (routed > bo * config.rangeBo) return false;
+  if (routed < bo * config.minRangeBo || routed > bo * config.maxRangeBo) return false;
   return routed / straight <= config.detourRatioMax;
 }
 
@@ -100,6 +134,7 @@ function routePoints({ from, to, nav, bo, config }) {
 export function buildElectricAoeDominantBoltControlPath({
   bo = 42,
   config: rawConfig = {},
+  environmentSegments = [],
   from = {},
   nav = null,
   phase = 0,
@@ -110,7 +145,7 @@ export function buildElectricAoeDominantBoltControlPath({
   const start = nav && typeof nav.resolvePoint === "function"
     ? nav.resolvePoint(normalizePoint(from), { fallback: normalizePoint(from) })
     : normalizePoint(from);
-  const end = resolveTarget({ from: start, target, bo: safeBo, config, phase, nav });
+  const end = resolveTarget({ environmentSegments, from: start, target, bo: safeBo, config, phase, nav });
   if (!pathIsEligible({ from: start, to: end, nav, bo: safeBo, config })) {
     return Object.freeze({
       eligible: false,

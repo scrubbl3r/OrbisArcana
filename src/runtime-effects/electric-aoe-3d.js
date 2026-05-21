@@ -17,6 +17,13 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     ...ELECTRIC_AOE_3D_PRESET_DEFAULT,
     ...(raw && typeof raw === "object" ? raw : {}),
   };
+  const dominantBoltMinRangeBo = clampNumber(source.dominantBoltMinRangeBo, 0, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.minRangeBo);
+  const dominantBoltMaxRangeBo = clampNumber(
+    source.dominantBoltMaxRangeBo ?? source.dominantBoltRangeBo,
+    Math.max(0.25, dominantBoltMinRangeBo),
+    64,
+    ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.maxRangeBo
+  );
   return Object.freeze({
     durationMs: Math.round(clampNumber(source.durationMs, 200, 60000, ELECTRIC_AOE_3D_PRESET_DEFAULT.durationMs)),
     dominantBoltControlPointDiameterBo: clampNumber(
@@ -26,9 +33,11 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
       ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.controlPointDiameterBo
     ),
     dominantBoltDetourRatioMax: clampNumber(source.dominantBoltDetourRatioMax, 1, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.detourRatioMax),
+    dominantBoltMaxRangeBo,
+    dominantBoltMinRangeBo,
     dominantBoltPathJitterBo: clampNumber(source.dominantBoltPathJitterBo, 0, 2, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.pathJitterBo),
     dominantBoltPointSpacingBo: clampNumber(source.dominantBoltPointSpacingBo, 0.05, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.pointSpacingBo),
-    dominantBoltRangeBo: clampNumber(source.dominantBoltRangeBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.rangeBo),
+    dominantBoltRangeBo: dominantBoltMaxRangeBo,
     dominantBoltTargetRadiusBo: clampNumber(source.dominantBoltTargetRadiusBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.targetRadiusBo),
     dominantBoltZBo: clampNumber(source.dominantBoltZBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
   });
@@ -38,6 +47,7 @@ export function createElectricAoe3dRuntime(options = {}) {
   const {
     getBo = () => 42,
     getConfig = () => ELECTRIC_AOE_3D_PRESET_DEFAULT,
+    getEnvironmentSegments = () => [],
     getLevelNav = () => null,
     getParent = () => null,
     getOrbModel = () => null,
@@ -48,6 +58,8 @@ export function createElectricAoe3dRuntime(options = {}) {
   } = options;
   let group = null;
   let timer = 0;
+  let line = null;
+  let lineMaterial = null;
   let pointGeometry = null;
   let pointMaterial = null;
 
@@ -57,6 +69,8 @@ export function createElectricAoe3dRuntime(options = {}) {
     if (group && group.parent) group.parent.remove(group);
     if (group) disposeThreeObject(group);
     group = null;
+    line = null;
+    lineMaterial = null;
     pointGeometry = null;
     pointMaterial = null;
     requestFrame();
@@ -73,14 +87,17 @@ export function createElectricAoe3dRuntime(options = {}) {
       config: {
         controlPointDiameterBo: config.dominantBoltControlPointDiameterBo,
         detourRatioMax: config.dominantBoltDetourRatioMax,
+        maxRangeBo: config.dominantBoltMaxRangeBo,
+        minRangeBo: config.dominantBoltMinRangeBo,
         pathJitterBo: config.dominantBoltPathJitterBo,
         pointSpacingBo: config.dominantBoltPointSpacingBo,
         rangeBo: config.dominantBoltRangeBo,
         targetRadiusBo: config.dominantBoltTargetRadiusBo,
         zBo: config.dominantBoltZBo,
       },
+      environmentSegments: typeof getEnvironmentSegments === "function" ? getEnvironmentSegments() : [],
       from: typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : {},
-      nav: typeof getLevelNav === "function" ? getLevelNav() : null,
+      nav: null,
       phase: Number(payload && payload.phase) || 0,
       target: payload && payload.target ? payload.target : null,
     });
@@ -88,6 +105,36 @@ export function createElectricAoe3dRuntime(options = {}) {
 
   function syncControlPoints(path, bo) {
     if (!group || !path || !Array.isArray(path.points)) return;
+    const runtimePoints = path.points.map((point) => {
+      const runtimePoint = typeof toRuntimePosition === "function"
+        ? toRuntimePosition({
+          xW: point.xW,
+          yW: point.yW,
+          z: (Number(point.zBo) || 0) * bo,
+          bo,
+        })
+        : point;
+      return new THREE.Vector3(
+        Number(runtimePoint && runtimePoint.x) || 0,
+        Number(runtimePoint && runtimePoint.y) || 0,
+        Number(runtimePoint && runtimePoint.z) || 0
+      );
+    });
+    if (!lineMaterial) {
+      lineMaterial = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        toneMapped: false,
+      });
+    }
+    if (!line) {
+      line = new THREE.Line(new THREE.BufferGeometry(), lineMaterial);
+      line.name = "electric_aoe3d:stage_dominant_control_line";
+      line.renderOrder = 239;
+      group.add(line);
+    }
+    line.geometry.dispose();
+    line.geometry = new THREE.BufferGeometry().setFromPoints(runtimePoints);
+    line.visible = runtimePoints.length > 1;
     const pointDiameterBo = Math.max(0.01, Number(path.controlPointDiameterBo) || ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.controlPointDiameterBo);
     if (!pointGeometry) pointGeometry = new THREE.SphereGeometry(bo * pointDiameterBo * 0.5, 18, 10);
     if (!pointMaterial) {
@@ -97,29 +144,17 @@ export function createElectricAoe3dRuntime(options = {}) {
       });
     }
     path.points.forEach((point, index) => {
-      let marker = group.children[index];
+      let marker = group.children[index + 1];
       if (!marker) {
         marker = new THREE.Mesh(pointGeometry, pointMaterial);
         marker.name = `electric_aoe3d:stage_dominant_control_point_${index}`;
         marker.renderOrder = 240;
         group.add(marker);
       }
-      const runtimePoint = typeof toRuntimePosition === "function"
-        ? toRuntimePosition({
-          xW: point.xW,
-          yW: point.yW,
-          z: (Number(point.zBo) || 0) * bo,
-          bo,
-        })
-        : point;
       marker.visible = true;
-      marker.position.set(
-        Number(runtimePoint && runtimePoint.x) || 0,
-        Number(runtimePoint && runtimePoint.y) || 0,
-        Number(runtimePoint && runtimePoint.z) || 0
-      );
+      marker.position.copy(runtimePoints[index]);
     });
-    for (let index = path.points.length; index < group.children.length; index += 1) {
+    for (let index = path.points.length + 1; index < group.children.length; index += 1) {
       group.children[index].visible = false;
     }
   }
