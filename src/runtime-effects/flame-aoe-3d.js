@@ -698,6 +698,7 @@ function createWakeMaterial(config) {
 export function createFlameAoe3dRuntime({
   getOrbModel = () => null,
   getOrbPosition = () => null,
+  getGroundContactY = () => null,
   getBo = () => 72,
   getConfig = () => FLAME_AOE_3D_PRESET_DEFAULT,
   now = () => performance.now(),
@@ -725,6 +726,7 @@ export function createFlameAoe3dRuntime({
   const liftCoreVelocity = new THREE.Vector3();
   const stretchDirection = new THREE.Vector3(0, 1, 0);
   const shaderMotion = new THREE.Vector3();
+  let wakeGroundLift = 0;
 
   function measureTrace(name, fn) {
     if (typeof traceMeasure === "function") return traceMeasure(name, fn);
@@ -743,6 +745,21 @@ export function createFlameAoe3dRuntime({
     const z = Number(source.z);
     if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return null;
     return currentPosition.set(x, y, z);
+  }
+
+  function readGroundContactY() {
+    const raw = typeof getGroundContactY === "function" ? getGroundContactY() : null;
+    const y = Number(raw);
+    return Number.isFinite(y) ? y : null;
+  }
+
+  function resolveWakeGroundLiftTarget(position, bo) {
+    if (!position) return 0;
+    const groundY = readGroundContactY();
+    if (!Number.isFinite(groundY)) return 0;
+    const wakeRadius = bo * Math.max(0.5, clampNumber(activeConfig && activeConfig.wakeRadiusBo, 0.5, 2, 0.5));
+    const wakeBottomY = position.y - wakeRadius;
+    return Math.max(0, Math.min(bo * 0.22, groundY - wakeBottomY));
   }
 
   function updateWakeMotion(dtSec) {
@@ -781,8 +798,13 @@ export function createFlameAoe3dRuntime({
     liftCoreVelocity.addScaledVector(springForce.sub(dampingForce), safeDt);
     liftCoreOffset.addScaledVector(liftCoreVelocity, safeDt);
     liftCoreOffset.clampLength(bo * 0.08, maxStretch);
+    const groundLiftTarget = resolveWakeGroundLiftTarget(position, bo);
+    const liftEaseRate = groundLiftTarget > wakeGroundLift ? 18 : 6;
+    wakeGroundLift += (groundLiftTarget - wakeGroundLift) * (1 - Math.exp(-safeDt * liftEaseRate));
+    if (wakeGroundLift < 0.001) wakeGroundLift = 0;
     if (wakePivot) {
       wakePivot.position.x = 0;
+      wakePivot.position.y = wakeGroundLift;
       wakePivot.position.z = 0;
     }
     stretchDirection.copy(liftCoreOffset);
@@ -842,6 +864,7 @@ export function createFlameAoe3dRuntime({
     liftCoreVelocity.set(0, 0, 0);
     stretchDirection.set(0, 1, 0);
     shaderMotion.set(0, 0, 0);
+    wakeGroundLift = 0;
     if (group && group.parent) group.parent.remove(group);
     if (group) disposeThreeObject(group);
     group = null;
@@ -886,6 +909,7 @@ export function createFlameAoe3dRuntime({
       liftCoreOffset.set(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0);
       targetLiftCoreOffset.copy(liftCoreOffset);
       liftCoreVelocity.set(0, 0, 0);
+      wakeGroundLift = 0;
       stretchDirection.set(0, 1, 0);
       group = new THREE.Group();
       group.name = "flame_aoe3d:runtime";

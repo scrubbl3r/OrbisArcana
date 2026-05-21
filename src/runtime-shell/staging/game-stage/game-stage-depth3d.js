@@ -57,7 +57,7 @@ import {
 } from "../../../game-runtime/orb/orb-shader-heal-pulse-layer.js?v=20260517b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
-import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520225915s";
+import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520-wake-ground-shock-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520225915";
@@ -175,6 +175,7 @@ export function createGameStageDepth3dLayer({
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let currentOrbWorldPosition = null;
   let currentOrbAlive = true;
+  let currentBoundarySegments = Object.freeze([]);
   let combatEventBus = null;
   let lastGlobe3dTickMs = 0;
   let lastEnemy3dTickMs = 0;
@@ -247,6 +248,7 @@ export function createGameStageDepth3dLayer({
   const flameAoe3dRuntime = createFlameAoe3dRuntime({
     getOrbModel: () => orb3dActorRuntime.getModel(),
     getOrbPosition: () => orb3dActorRuntime.getPosition(),
+    getGroundContactY: () => resolveOrbGroundContactRuntimeY(),
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => FLAME_AOE_3D_PRESET_DEFAULT,
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
@@ -602,6 +604,49 @@ export function createGameStageDepth3dLayer({
     return damageResult;
   }
 
+  function resolveOrbGroundContactRuntimeY() {
+    if (!currentOrbWorldPosition || !currentBoundarySegments.length) return null;
+    const orbRuntimePosition = orb3dActorRuntime.getPosition();
+    if (!orbRuntimePosition) return null;
+    const bo = Math.max(1, Number(orb3dActorRuntime.getBo()) || baseOrbWorldUnits);
+    const rangePx = bo * 0.74;
+    let nearest = null;
+    for (const segment of currentBoundarySegments) {
+      if (!segment) continue;
+      if (currentOrbWorldPosition.xW < segment.minXW - rangePx || currentOrbWorldPosition.xW > segment.maxXW + rangePx) continue;
+      if (currentOrbWorldPosition.yW < segment.minYW - rangePx || currentOrbWorldPosition.yW > segment.maxYW + rangePx) continue;
+      const point = closestPointOnSegment({
+        pointXW: currentOrbWorldPosition.xW,
+        pointYW: currentOrbWorldPosition.yW,
+        segment,
+      });
+      if (!point) continue;
+      const contactRuntime = {
+        x: toDepthThreeX(point.xW, worldWidthPx),
+        y: toDepthThreeY(point.yW, worldHeightPx),
+      };
+      const aRuntime = {
+        x: toDepthThreeX(segment.a.xW, worldWidthPx),
+        y: toDepthThreeY(segment.a.yW, worldHeightPx),
+      };
+      const bRuntime = {
+        x: toDepthThreeX(segment.b.xW, worldWidthPx),
+        y: toDepthThreeY(segment.b.yW, worldHeightPx),
+      };
+      const tangentX = bRuntime.x - aRuntime.x;
+      const tangentY = bRuntime.y - aRuntime.y;
+      const tangentLength = Math.hypot(tangentX, tangentY);
+      if (tangentLength <= 0.000001) continue;
+      if (Math.abs(tangentY / tangentLength) > 0.35) continue;
+      const dx = orbRuntimePosition.x - contactRuntime.x;
+      const dy = orbRuntimePosition.y - contactRuntime.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance > rangePx || dy <= 0) continue;
+      if (!nearest || distance < nearest.distance) nearest = { distance, y: contactRuntime.y };
+    }
+    return nearest ? nearest.y : null;
+  }
+
   function tickEnemy3dRuntime(nowMs = performance.now()) {
     const dtSec = lastEnemy3dTickMs ? Math.max(0.001, Math.min(0.05, (nowMs - lastEnemy3dTickMs) / 1000)) : 0.016;
     lastEnemy3dTickMs = nowMs;
@@ -940,6 +985,7 @@ export function createGameStageDepth3dLayer({
       const boundaryLoops = sceneModel && Array.isArray(sceneModel.loops) ? sceneModel.loops : [];
       const boundaryBox = sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null;
       const boundarySegments = buildBoundarySegmentsFromLoops(boundaryLoops);
+      currentBoundarySegments = boundarySegments;
       currentOrbWorldPosition = null;
       currentOrbAlive = true;
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
