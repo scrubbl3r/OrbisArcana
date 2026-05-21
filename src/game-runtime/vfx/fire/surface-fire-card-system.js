@@ -3,10 +3,10 @@ import { createFireCardSystem } from "./fire-card-system.js?v=20260520za";
 
 const WORLD_UP = Object.freeze({ x: 0, y: 1 });
 const SURFACE_FIRE_TTL_MS = 3000;
-const SURFACE_FIRE_EMIT_INTERVAL_MS = 90;
+const SURFACE_FIRE_EMIT_INTERVAL_MS = 72;
 const EGG_LOCAL_HEIGHT = 2.0625;
-const SURFACE_FIRE_SCALE_MIN = 0.85;
-const SURFACE_FIRE_SCALE_MAX = 1.6;
+const SURFACE_FIRE_SCALE_MIN = 0.75;
+const SURFACE_FIRE_SCALE_MAX = 1.8;
 const SURFACE_FIRE_Z_DISPERSION_BO = 0.75;
 
 function clampNumber(value, fallback = 0) {
