@@ -1,5 +1,5 @@
 import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260517e";
-import { COMBAT_EFFECT_DAMAGE, COMBAT_EFFECT_IMMUNITY, COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN, DAMAGE_TYPE_FIRE } from "../../../game-runtime/combat/combat-constants.js";
+import { COMBAT_EFFECT_DAMAGE, COMBAT_EFFECT_IMMUNITY, COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN, DAMAGE_TYPE_ELECTRIC, DAMAGE_TYPE_FIRE } from "../../../game-runtime/combat/combat-constants.js";
 import { EVT_COMBAT_IMMUNITY_CHANGED, EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
 import {
   LEVEL_DEPTH_CAMERA_FOV_DEG,
@@ -66,6 +66,7 @@ import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shi
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
 import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/electric-aoe-3d-default.js?v=20260521a";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521a";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
 import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517p";
@@ -263,11 +264,31 @@ export function createGameStageDepth3dLayer({
     getParent: () => actorGroup,
     getOrbModel: () => orb3dActorRuntime.getModel(),
     getOrbWorldPosition: () => currentOrbWorldPosition || { xW: 0, yW: 0 },
+    getEnemyTargets: () => gnatSwarm3dRuntime.getCombatTargets(),
     getLevelNav: () => currentLevelNavContext,
     getBo: () => orb3dActorRuntime.getBo(),
-    getConfig: () => ELECTRIC_AOE_3D_PRESET_DEFAULT,
+    getConfig: () => ({ ...ELECTRIC_AOE_3D_PRESET_DEFAULT, ...ELECTRIC_AOE_BEHAVIOR_DEFAULT }),
     getEnvironmentSegments: () => currentBoundarySegments,
     getRuntimeZ: ({ bo = baseOrbWorldUnits } = {}) => -Math.max(0, currentOrbZBO) * Math.max(1, Number(bo) || baseOrbWorldUnits),
+    onEnemyStrike: ({ target = null, damage = 0, config = {}, atMs = performance.now() } = {}) => {
+      const position = target && target.position ? target.position : null;
+      if (!position || !currentOrbWorldPosition) return Object.freeze({ handled: false, affected: 0, reason: "missing_target" });
+      const damageResult = gnatSwarm3dRuntime.applyCombatEffect({
+        kind: COMBAT_EFFECT_DAMAGE,
+        sourceEntityId: COMBAT_ENTITY_ORB,
+        targetEntityId: target.targetEntityId || target.id || "enemy:gnat-swarm",
+        centerWorld: position,
+        radiusBo: Math.max(0.05, Number(target.radiusBo) || 0.25),
+        amount: Math.max(0, Number(damage) || 0),
+        damageType: DAMAGE_TYPE_ELECTRIC,
+        visualProfile: String(config.visualProfile || "spellstorm"),
+        atMs,
+        tags: ["spell", "electric-aoe", "dominant-bolt"],
+      });
+      root.dataset.enemy3dLastElectricAoeDamageCount = String(damageResult && damageResult.affected || 0);
+      root.dataset.enemy3dLastElectricAoeTarget = String(target.id || target.targetEntityId || "");
+      return damageResult;
+    },
     toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
       x: toDepthThreeX(xW, worldWidthPx),
       y: toDepthThreeY(yW, worldHeightPx),

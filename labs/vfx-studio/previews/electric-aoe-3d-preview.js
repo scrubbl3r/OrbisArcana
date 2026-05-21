@@ -87,6 +87,7 @@ export function createElectricAoe3dPreview({
       bo,
       config: {
         controlPointDiameterBo: 0.05,
+        detourRatioMax: readInputNumber(els.electricAoe3dDominantBoltDetourRatioMax, 1.4, 1, 8),
         headingMemory: readInputNumber(els.electricAoe3dDominantBoltHeadingMemory, 0.72, 0, 1),
         maxRangeBo,
         maxStepBo,
@@ -243,6 +244,7 @@ export function createElectricAoe3dPreview({
     [
       els.electricAoe3dDominantBoltMinRangeBo,
       els.electricAoe3dDominantBoltMaxRangeBo,
+      els.electricAoe3dDominantBoltDetourRatioMax,
       els.electricAoe3dDominantBoltMinStepBo,
       els.electricAoe3dDominantBoltMaxStepBo,
       els.electricAoe3dDominantBoltSeekStrength,

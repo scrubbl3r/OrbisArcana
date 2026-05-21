@@ -1784,11 +1784,31 @@ export function createGnatSwarm3dRuntime({
     });
   }
 
+  function getCombatTargets() {
+    const bo = Math.max(1, Number(getBo()) || 42);
+    return Object.freeze(states
+      .filter((state) => state && state.hp > 0 && state.position)
+      .map((state) => Object.freeze({
+        id: `enemy:gnat-swarm:${state.index}`,
+        index: state.index,
+        hp: Number(state.hp) || 0,
+        maxHp: Number(state.maxHp) || 0,
+        mode: String(state.mode || ""),
+        position: Object.freeze({
+          xW: Number(state.position.xW) || 0,
+          yW: Number(state.position.yW) || 0,
+        }),
+        radiusBo: Math.max(0.05, resolveDamageTargetPaddingBo(state, bo)),
+        targetEntityId: `enemy:gnat-swarm:${state.index}`,
+      })));
+  }
+
   return Object.freeze({
     load,
     update,
     releaseOrbTargets,
     applyCombatEffect,
+    getCombatTargets,
     hasActiveVisuals: () => states.length > 0,
     getTrace,
     clear: disposeMesh,

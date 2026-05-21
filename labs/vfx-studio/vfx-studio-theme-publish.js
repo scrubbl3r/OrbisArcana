@@ -229,9 +229,9 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
       const isElectric3d = String(baseEffect || "") === "electric-aoe-3d";
       const keys = [
         "durationMs",
-        "dominantBoltControlPointDiameterBo", "dominantBoltDetourRatioMax", "dominantBoltMaxRangeBo", "dominantBoltMinRangeBo",
+        "dominantBoltControlPointDiameterBo",
         "dominantBoltHeadingMemory", "dominantBoltMaxStepBo", "dominantBoltMinStepBo", "dominantBoltPathJitterBo",
-        "dominantBoltPointSpacingBo", "dominantBoltRangeBo", "dominantBoltSeekStrength", "dominantBoltTargetRadiusBo",
+        "dominantBoltPointSpacingBo", "dominantBoltSeekStrength", "dominantBoltTargetRadiusBo",
         "dominantBoltWanderStrength", "dominantBoltZBo",
         "aoeAuraDiameterBo", "aoeAuraSoftness", "aoeAuraR", "aoeAuraG", "aoeAuraB", "aoeAuraA",
         "auraAlpha", "auraScale", "auraPulse", "auraNoiseScale", "auraNoiseSpeed", "auraFresnelPower", "auraR", "auraG", "auraB",
@@ -627,7 +627,19 @@ export function buildElectricAoe3dBehaviorModule(params) {
   const p = params && typeof params === "object" ? params : {};
   return [
     "export const ELECTRIC_AOE_BEHAVIOR_DEFAULT = Object.freeze({",
+    `  dominantBoltDamageMax: ${toNum(p.dominantBoltDamageMax, 0.3).toFixed(2)},`,
+    `  dominantBoltDamageMin: ${toNum(p.dominantBoltDamageMin, 0.1).toFixed(2)},`,
+    `  dominantBoltDetourRatioMax: ${toNum(p.dominantBoltDetourRatioMax, 1.4).toFixed(2)},`,
+    `  dominantBoltEnemyFrequencyMaxMs: ${Math.round(toNum(p.dominantBoltEnemyFrequencyMaxMs, 1200))},`,
+    `  dominantBoltEnemyFrequencyMinMs: ${Math.round(toNum(p.dominantBoltEnemyFrequencyMinMs, 450))},`,
+    `  dominantBoltEnemyMaxRangeBo: ${toNum(p.dominantBoltEnemyMaxRangeBo, 9).toFixed(2)},`,
+    `  dominantBoltEnemyMinRangeBo: ${toNum(p.dominantBoltEnemyMinRangeBo, 1).toFixed(2)},`,
+    `  dominantBoltEnvironmentFrequencyMaxMs: ${Math.round(toNum(p.dominantBoltEnvironmentFrequencyMaxMs, 1800))},`,
+    `  dominantBoltEnvironmentFrequencyMinMs: ${Math.round(toNum(p.dominantBoltEnvironmentFrequencyMinMs, 700))},`,
+    `  dominantBoltMaxRangeBo: ${toNum(p.dominantBoltMaxRangeBo ?? p.dominantBoltRangeBo, 7).toFixed(2)},`,
+    `  dominantBoltMinRangeBo: ${toNum(p.dominantBoltMinRangeBo, 4).toFixed(2)},`,
     "  enabled: true,",
+    `  spellDurationMs: ${Math.round(toNum(p.spellDurationMs ?? p.durationMs, 10000))},`,
     `  visualProfile: ${JSON.stringify(String(p.visualProfile || "spellstorm"))},`,
     `  hitRadiusBo: ${toNum(p.hitRadiusBo, 2.5).toFixed(2)},`,
     `  wakeReachScale: ${toNum(p.wakeReachScale, 1).toFixed(2)},`,

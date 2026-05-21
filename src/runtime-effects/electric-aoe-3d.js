@@ -4,6 +4,7 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521a";
 import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521a";
 
 function clampNumber(value, min, max, fallback) {
@@ -13,9 +14,12 @@ function clampNumber(value, min, max, fallback) {
 }
 
 export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
+  const rawSource = raw && typeof raw === "object" ? raw : {};
   const source = {
     ...ELECTRIC_AOE_3D_PRESET_DEFAULT,
-    ...(raw && typeof raw === "object" ? raw : {}),
+    ...ELECTRIC_AOE_BEHAVIOR_DEFAULT,
+    ...rawSource,
+    ...(rawSource.behavior && typeof rawSource.behavior === "object" ? rawSource.behavior : {}),
   };
   const dominantBoltMinRangeBo = clampNumber(source.dominantBoltMinRangeBo, 0, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.minRangeBo);
   const dominantBoltMaxRangeBo = clampNumber(
@@ -24,10 +28,45 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     64,
     ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.maxRangeBo
   );
+  const dominantBoltEnemyMinRangeBo = clampNumber(source.dominantBoltEnemyMinRangeBo, 0, 64, ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltEnemyMinRangeBo);
+  const dominantBoltEnemyMaxRangeBo = clampNumber(
+    source.dominantBoltEnemyMaxRangeBo,
+    Math.max(0.25, dominantBoltEnemyMinRangeBo),
+    64,
+    ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltEnemyMaxRangeBo
+  );
   const dominantBoltMinStepBo = clampNumber(source.dominantBoltMinStepBo, 0.05, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.minStepBo);
   const dominantBoltMaxStepBo = clampNumber(source.dominantBoltMaxStepBo, dominantBoltMinStepBo, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.maxStepBo);
+  const dominantBoltDamageMin = clampNumber(source.dominantBoltDamageMin, 0, 10000, ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltDamageMin);
+  const dominantBoltDamageMax = clampNumber(source.dominantBoltDamageMax, dominantBoltDamageMin, 10000, ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltDamageMax);
+  const dominantBoltEnvironmentFrequencyMinMs = Math.round(clampNumber(
+    source.dominantBoltEnvironmentFrequencyMinMs,
+    16,
+    60000,
+    ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltEnvironmentFrequencyMinMs
+  ));
+  const dominantBoltEnvironmentFrequencyMaxMs = Math.round(clampNumber(
+    source.dominantBoltEnvironmentFrequencyMaxMs,
+    dominantBoltEnvironmentFrequencyMinMs,
+    60000,
+    ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltEnvironmentFrequencyMaxMs
+  ));
+  const dominantBoltEnemyFrequencyMinMs = Math.round(clampNumber(
+    source.dominantBoltEnemyFrequencyMinMs,
+    16,
+    60000,
+    ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltEnemyFrequencyMinMs
+  ));
+  const dominantBoltEnemyFrequencyMaxMs = Math.round(clampNumber(
+    source.dominantBoltEnemyFrequencyMaxMs,
+    dominantBoltEnemyFrequencyMinMs,
+    60000,
+    ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltEnemyFrequencyMaxMs
+  ));
   return Object.freeze({
-    durationMs: Math.round(clampNumber(source.durationMs, 200, 60000, ELECTRIC_AOE_3D_PRESET_DEFAULT.durationMs)),
+    durationMs: Math.round(clampNumber(source.spellDurationMs ?? source.durationMs, 200, 60000, ELECTRIC_AOE_BEHAVIOR_DEFAULT.spellDurationMs)),
+    dominantBoltDamageMax,
+    dominantBoltDamageMin,
     dominantBoltControlPointDiameterBo: clampNumber(
       source.dominantBoltControlPointDiameterBo,
       0.01,
@@ -35,6 +74,12 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
       ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.controlPointDiameterBo
     ),
     dominantBoltDetourRatioMax: clampNumber(source.dominantBoltDetourRatioMax, 1, 8, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.detourRatioMax),
+    dominantBoltEnemyFrequencyMaxMs,
+    dominantBoltEnemyFrequencyMinMs,
+    dominantBoltEnemyMaxRangeBo,
+    dominantBoltEnemyMinRangeBo,
+    dominantBoltEnvironmentFrequencyMaxMs,
+    dominantBoltEnvironmentFrequencyMinMs,
     dominantBoltHeadingMemory: clampNumber(source.dominantBoltHeadingMemory, 0, 1, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.headingMemory),
     dominantBoltMaxRangeBo,
     dominantBoltMaxStepBo,
@@ -55,17 +100,20 @@ export function createElectricAoe3dRuntime(options = {}) {
     getBo = () => 42,
     getConfig = () => ELECTRIC_AOE_3D_PRESET_DEFAULT,
     getEnvironmentSegments = () => [],
+    getEnemyTargets = () => [],
     getLevelNav = () => null,
     getParent = () => null,
     getOrbModel = () => null,
     getOrbWorldPosition = () => ({ xW: 0, yW: 0 }),
     getRuntimeZ = null,
     now = () => performance.now(),
+    onEnemyStrike = null,
     requestFrame = () => {},
     toRuntimePosition = ({ xW = 0, yW = 0, z = 0 } = {}) => ({ x: xW, y: yW, z }),
   } = options;
   let group = null;
   let timer = 0;
+  let strikeTimer = 0;
   let line = null;
   let lineMaterial = null;
   let pointGeometry = null;
@@ -73,7 +121,9 @@ export function createElectricAoe3dRuntime(options = {}) {
 
   function clear() {
     if (timer) clearTimeout(timer);
+    if (strikeTimer) clearTimeout(strikeTimer);
     timer = 0;
+    strikeTimer = 0;
     if (group && group.parent) group.parent.remove(group);
     if (group) disposeThreeObject(group);
     group = null;
@@ -84,21 +134,77 @@ export function createElectricAoe3dRuntime(options = {}) {
     requestFrame();
   }
 
+  function distanceBo(from = {}, to = {}, bo = 42) {
+    return Math.hypot((Number(from.xW) || 0) - (Number(to.xW) || 0), (Number(from.yW) || 0) - (Number(to.yW) || 0)) / Math.max(1, bo);
+  }
+
+  function normalizeEnemyTarget(target = null) {
+    if (!target || typeof target !== "object") return null;
+    const position = target.position && typeof target.position === "object" ? target.position : target;
+    const xW = Number(position.xW);
+    const yW = Number(position.yW);
+    if (!Number.isFinite(xW) || !Number.isFinite(yW)) return null;
+    return Object.freeze({
+      ...target,
+      id: target.id == null ? "" : String(target.id),
+      index: Number.isFinite(Number(target.index)) ? Number(target.index) : null,
+      position: Object.freeze({ xW, yW }),
+      radiusBo: Math.max(0.05, Number(target.radiusBo) || 0.25),
+    });
+  }
+
+  function resolveNearestEnemyTarget({ from, bo, config, nav }) {
+    const rawTargets = typeof getEnemyTargets === "function" ? getEnemyTargets({
+      bo,
+      fromWorld: from,
+      maxRangeBo: config.dominantBoltEnemyMaxRangeBo,
+      minRangeBo: config.dominantBoltEnemyMinRangeBo,
+    }) : [];
+    let nearest = null;
+    for (const rawTarget of Array.isArray(rawTargets) ? rawTargets : []) {
+      const target = normalizeEnemyTarget(rawTarget);
+      if (!target) continue;
+      const straightBo = distanceBo(from, target.position, bo);
+      if (straightBo < config.dominantBoltEnemyMinRangeBo || straightBo > config.dominantBoltEnemyMaxRangeBo) continue;
+      if (nav && typeof nav.distanceThroughLevel === "function") {
+        const routedBo = Math.max(0, Number(nav.distanceThroughLevel(from, target.position)) || 0) / Math.max(1, bo);
+        if (routedBo < config.dominantBoltEnemyMinRangeBo || routedBo > config.dominantBoltEnemyMaxRangeBo) continue;
+        if (routedBo / Math.max(0.001, straightBo) > config.dominantBoltDetourRatioMax) continue;
+      }
+      if (!nearest || straightBo < nearest.distanceBo) nearest = Object.freeze({ ...target, distanceBo: straightBo });
+    }
+    return nearest;
+  }
+
+  function randomBetween(min = 0, max = 0) {
+    const lo = Math.max(0, Number(min) || 0);
+    const hi = Math.max(lo, Number(max) || lo);
+    return lo + Math.random() * (hi - lo);
+  }
+
+  function resolveStrikeDamage(config) {
+    return randomBetween(config.dominantBoltDamageMin, config.dominantBoltDamageMax);
+  }
+
   function planDominantBolt(payload = {}) {
     const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 42);
     const config = normalizeElectricAoe3dRuntimeConfig({
       ...(typeof getConfig === "function" ? getConfig() : {}),
       ...(payload && typeof payload === "object" ? payload : {}),
     });
-    return buildElectricAoeDominantBoltControlPath({
+    const from = typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : {};
+    const nav = typeof getLevelNav === "function" ? getLevelNav() : null;
+    const enemyTarget = payload && payload.target ? null : resolveNearestEnemyTarget({ from, bo, config, nav });
+    const strikeTarget = enemyTarget ? enemyTarget.position : (payload && payload.target ? payload.target : null);
+    const path = buildElectricAoeDominantBoltControlPath({
       bo,
       config: {
         controlPointDiameterBo: config.dominantBoltControlPointDiameterBo,
         detourRatioMax: config.dominantBoltDetourRatioMax,
         headingMemory: config.dominantBoltHeadingMemory,
-        maxRangeBo: config.dominantBoltMaxRangeBo,
+        maxRangeBo: enemyTarget ? config.dominantBoltEnemyMaxRangeBo : config.dominantBoltMaxRangeBo,
         maxStepBo: config.dominantBoltMaxStepBo,
-        minRangeBo: config.dominantBoltMinRangeBo,
+        minRangeBo: enemyTarget ? config.dominantBoltEnemyMinRangeBo : config.dominantBoltMinRangeBo,
         minStepBo: config.dominantBoltMinStepBo,
         pathJitterBo: config.dominantBoltPathJitterBo,
         pointSpacingBo: config.dominantBoltPointSpacingBo,
@@ -109,10 +215,15 @@ export function createElectricAoe3dRuntime(options = {}) {
         zBo: config.dominantBoltZBo,
       },
       environmentSegments: typeof getEnvironmentSegments === "function" ? getEnvironmentSegments() : [],
-      from: typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : {},
+      from,
       nav: null,
       phase: Number(payload && payload.phase) || 0,
-      target: payload && payload.target ? payload.target : null,
+      target: strikeTarget,
+    });
+    return Object.freeze({
+      ...path,
+      strikeKind: enemyTarget ? "enemy" : "environment",
+      targetEnemy: enemyTarget,
     });
   }
 
@@ -173,10 +284,60 @@ export function createElectricAoe3dRuntime(options = {}) {
     }
   }
 
+  function applyEnemyStrike(path, config, bo, payload = {}) {
+    if (!path || path.strikeKind !== "enemy" || !path.targetEnemy || typeof onEnemyStrike !== "function") return null;
+    return onEnemyStrike({
+      atMs: typeof now === "function" ? now() : performance.now(),
+      bo,
+      config,
+      damage: resolveStrikeDamage(config),
+      path,
+      payload,
+      target: path.targetEnemy,
+    });
+  }
+
+  function syncStrike(payload = {}) {
+    if (!group) return null;
+    const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 42);
+    const config = normalizeElectricAoe3dRuntimeConfig({
+      ...(typeof getConfig === "function" ? getConfig() : {}),
+      ...(payload && typeof payload === "object" ? payload : {}),
+    });
+    const path = planDominantBolt(payload);
+    syncControlPoints(path, bo);
+    const enemyResult = applyEnemyStrike(path, config, bo, payload);
+    requestFrame();
+    return { config, enemyResult, path };
+  }
+
+  function scheduleNextStrike(payload = {}, untilMs = 0, previousPath = null, config = null) {
+    if (!group) return;
+    const safeConfig = config || normalizeElectricAoe3dRuntimeConfig({
+      ...(typeof getConfig === "function" ? getConfig() : {}),
+      ...(payload && typeof payload === "object" ? payload : {}),
+    });
+    const isEnemyStrike = previousPath && previousPath.strikeKind === "enemy";
+    const delayMs = Math.round(isEnemyStrike
+      ? randomBetween(safeConfig.dominantBoltEnemyFrequencyMinMs, safeConfig.dominantBoltEnemyFrequencyMaxMs)
+      : randomBetween(safeConfig.dominantBoltEnvironmentFrequencyMinMs, safeConfig.dominantBoltEnvironmentFrequencyMaxMs));
+    const nowMs = typeof now === "function" ? now() : performance.now();
+    if (nowMs + delayMs > untilMs) return;
+    strikeTimer = setTimeout(() => {
+      strikeTimer = 0;
+      const result = syncStrike(payload);
+      scheduleNextStrike(payload, untilMs, result && result.path, result && result.config);
+    }, delayMs);
+  }
+
   function play(payload = {}) {
     clear();
     const parent = typeof getParent === "function" ? getParent() : null;
     const orbModel = typeof getOrbModel === "function" ? getOrbModel() : null;
+    const config = normalizeElectricAoe3dRuntimeConfig({
+      ...(typeof getConfig === "function" ? getConfig() : {}),
+      ...(payload && typeof payload === "object" ? payload : {}),
+    });
     const path = planDominantBolt(payload);
     if ((!parent && !orbModel) || !path || !path.points || !path.points.length) {
       return { handled: false, skipped: "electric_aoe3d_control_path_only", path };
@@ -186,14 +347,12 @@ export function createElectricAoe3dRuntime(options = {}) {
     group.name = "electric_aoe3d:dominant_bolt_runtime";
     (parent || orbModel).add(group);
     syncControlPoints(path, bo);
-    const config = normalizeElectricAoe3dRuntimeConfig({
-      ...(typeof getConfig === "function" ? getConfig() : {}),
-      ...(payload && typeof payload === "object" ? payload : {}),
-    });
+    const enemyResult = applyEnemyStrike(path, config, bo, payload);
+    const startedAtMs = typeof now === "function" ? now() : performance.now();
+    scheduleNextStrike(payload, startedAtMs + config.durationMs, path, config);
     timer = setTimeout(clear, config.durationMs);
-    if (typeof now === "function") void now();
     requestFrame();
-    return { handled: true, path };
+    return { handled: true, enemyResult, path };
   }
 
   return Object.freeze({

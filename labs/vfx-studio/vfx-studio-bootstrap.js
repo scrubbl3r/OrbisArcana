@@ -23,6 +23,7 @@ export function createStudioBootstrap({
   buildCurrentLabOrbBaseVisualState,
   updateTeleportBehaviorReadout,
   updateFlameAoe3dBehaviorReadout,
+  updateElectricAoe3dBehaviorReadout,
   applyGeometryVars,
   previewApplyMap,
   previewRootsByEffect,
@@ -185,8 +186,18 @@ export function createStudioBootstrap({
       previewElectricAoe3d: els.previewElectricAoe3d,
       electricAoe3dOrbVisibleBtn: els.electricAoe3dOrbVisibleBtn,
       electricAoe3dControlPointsVisibleBtn: els.electricAoe3dControlPointsVisibleBtn,
+      electricAoe3dSpellDurationMs: els.electricAoe3dSpellDurationMs,
       electricAoe3dDominantBoltMinRangeBo: els.electricAoe3dDominantBoltMinRangeBo,
       electricAoe3dDominantBoltMaxRangeBo: els.electricAoe3dDominantBoltMaxRangeBo,
+      electricAoe3dDominantBoltEnemyMinRangeBo: els.electricAoe3dDominantBoltEnemyMinRangeBo,
+      electricAoe3dDominantBoltEnemyMaxRangeBo: els.electricAoe3dDominantBoltEnemyMaxRangeBo,
+      electricAoe3dDominantBoltEnvironmentFrequencyMinMs: els.electricAoe3dDominantBoltEnvironmentFrequencyMinMs,
+      electricAoe3dDominantBoltEnvironmentFrequencyMaxMs: els.electricAoe3dDominantBoltEnvironmentFrequencyMaxMs,
+      electricAoe3dDominantBoltEnemyFrequencyMinMs: els.electricAoe3dDominantBoltEnemyFrequencyMinMs,
+      electricAoe3dDominantBoltEnemyFrequencyMaxMs: els.electricAoe3dDominantBoltEnemyFrequencyMaxMs,
+      electricAoe3dDominantBoltDamageMin: els.electricAoe3dDominantBoltDamageMin,
+      electricAoe3dDominantBoltDamageMax: els.electricAoe3dDominantBoltDamageMax,
+      electricAoe3dDominantBoltDetourRatioMax: els.electricAoe3dDominantBoltDetourRatioMax,
       electricAoe3dDominantBoltMinStepBo: els.electricAoe3dDominantBoltMinStepBo,
       electricAoe3dDominantBoltMaxStepBo: els.electricAoe3dDominantBoltMaxStepBo,
       electricAoe3dDominantBoltSeekStrength: els.electricAoe3dDominantBoltSeekStrength,
@@ -224,6 +235,7 @@ export function createStudioBootstrap({
     previewRootsByEffect,
     updateTeleportBehaviorReadout,
     updateFlameAoe3dBehaviorReadout,
+    updateElectricAoe3dBehaviorReadout,
   });
 
   const studioAuthoringAdapters = createStudioAuthoringAdapters({
@@ -361,6 +373,9 @@ export function createStudioBootstrap({
       if (effect === "teleport") updateTeleportBehaviorReadout();
       if (effect === "flame-aoe-3d" && typeof updateFlameAoe3dBehaviorReadout === "function") {
         updateFlameAoe3dBehaviorReadout();
+      }
+      if (effect === "electric-aoe-3d" && typeof updateElectricAoe3dBehaviorReadout === "function") {
+        updateElectricAoe3dBehaviorReadout();
       }
       if (effect === "teleport-3d" && typeof defaults.updateTeleport3dBehaviorReadout === "function") {
         defaults.updateTeleport3dBehaviorReadout();
