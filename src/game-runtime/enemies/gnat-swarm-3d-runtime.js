@@ -181,6 +181,13 @@ function shapedProximityChance({ distancePx = 0, radiusPx = 1, baseChance = 0, a
   return normalizeUnit(baseChance * awareness * strength * proximity * proximity, 0);
 }
 
+function linearOrbDetectionChance({ distancePx = 0, radiusPx = 1, innerRadiusPx = 0, awareness = 1, strength = 1 } = {}) {
+  if (radiusPx <= 0 || distancePx > radiusPx) return 0;
+  if (innerRadiusPx > 0 && distancePx <= innerRadiusPx) return normalizeUnit(awareness * strength, 0);
+  const proximity = 1 - distancePx / radiusPx;
+  return normalizeUnit(proximity * awareness * strength, 0);
+}
+
 function normalFromPoints(from = {}, to = {}, fallbackAngle = 0) {
   const dx = (to.xW || 0) - (from.xW || 0);
   const dy = (to.yW || 0) - (from.yW || 0);
@@ -1126,7 +1133,7 @@ export function createGnatSwarm3dRuntime({
       : Math.max(0, clampNumber(getOrbZBO(), 4, 0, 500));
     const zDepthPx = -resolvedZDepthBo * bo;
     const detectionRadiusPx = Math.max(0, clampNumber(swarm.detectionRadiusBo, 10, 0, 240) * bo);
-    const detectionBaseChance = normalizeUnit(swarm.detectionBaseChance, 0.35);
+    const detectionInnerRadiusPx = Math.min(detectionRadiusPx, bo * 0.5);
     const detectionCheckSec = Math.max(0.1, clampNumber(swarm.detectionCheckSec, 1, 0.1, 60));
     const signalRadiusBo = Number.isFinite(Number(swarm.signalRadiusBo)) ? swarm.signalRadiusBo : swarm.telegraphRadiusBo;
     const signalBaseChanceValue = Number.isFinite(Number(swarm.signalBaseChance)) ? swarm.signalBaseChance : swarm.telegraphBaseChance;
@@ -1246,7 +1253,7 @@ export function createGnatSwarm3dRuntime({
           aggression,
           alertSpeedMultiplier: Math.max(0.1, 1 + aggression),
           detectionRadiusPx,
-          detectionBaseChance,
+          detectionInnerRadiusPx,
           detectionCheckSec,
           signalRadiusPx,
           signalBaseChance,
@@ -1522,10 +1529,10 @@ export function createGnatSwarm3dRuntime({
       if (orbPosition && state.mode !== "alerted" && state.mode !== "feeding" && state.mode !== "stunned" && nowSec >= state.nextDetectAt) {
         state.nextDetectAt = nowSec + state.detectionCheckSec;
         const detectionDistance = distance(state.position, orbPosition);
-        const chance = shapedProximityChance({
+        const chance = linearOrbDetectionChance({
           distancePx: detectionDistance,
           radiusPx: state.detectionRadiusPx,
-          baseChance: state.detectionBaseChance,
+          innerRadiusPx: state.detectionInnerRadiusPx,
           awareness: state.awareness,
           strength: 1,
         });
