@@ -4,6 +4,7 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
+import { createElectricAoeHaloWalkController } from "../game-runtime/spells/electric-aoe-halo-walk-controller.js?v=20260521a";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521155647b";
 import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521155647";
 
@@ -151,6 +152,7 @@ export function createElectricAoe3dRuntime(options = {}) {
   let haloLineMaterial = null;
   let haloPointGeometry = null;
   let haloPointMaterial = null;
+  let haloWalkController = null;
 
   function clear() {
     if (timer) clearTimeout(timer);
@@ -171,6 +173,8 @@ export function createElectricAoe3dRuntime(options = {}) {
     haloLineMaterial = null;
     haloPointGeometry = null;
     haloPointMaterial = null;
+    if (haloWalkController && typeof haloWalkController.reset === "function") haloWalkController.reset();
+    haloWalkController = null;
     requestFrame();
   }
 
@@ -240,14 +244,17 @@ export function createElectricAoe3dRuntime(options = {}) {
     const originXW = Number(from && from.xW) || 0;
     const originYW = Number(from && from.yW) || 0;
     const total = Math.max(0, Math.round((config.haloBoltMinTotal + config.haloBoltMaxTotal) * 0.5));
+    if (!haloWalkController) haloWalkController = createElectricAoeHaloWalkController();
+    const walkSamples = haloWalkController.sample({
+      maxWalkSpeed: config.haloBoltMaxWalkSpeed,
+      minWalkSpeed: config.haloBoltMinWalkSpeed,
+      time,
+      total,
+    });
     const paths = [];
     for (let boltIndex = 0; boltIndex < total; boltIndex += 1) {
       const seed = boltIndex + 1;
-      const unit = boltIndex / Math.max(1, total);
-      const speed = config.haloBoltMinWalkSpeed + (config.haloBoltMaxWalkSpeed - config.haloBoltMinWalkSpeed) * (0.5 + 0.5 * Math.sin(seed * 2.17));
-      const walkDirectionSeed = Math.sin(seed * 12.9898) * 43758.5453123;
-      const walkDirection = (walkDirectionSeed - Math.floor(walkDirectionSeed)) >= 0.5 ? 1 : -1;
-      const angle = unit * Math.PI * 2 + time * speed * walkDirection + Math.sin(time * 0.7 + seed) * 0.08;
+      const angle = (walkSamples[boltIndex] && walkSamples[boltIndex].angle || 0) + Math.sin(time * 0.7 + seed) * 0.08;
       const rangeBo = config.haloBoltMinRangeBo + (config.haloBoltMaxRangeBo - config.haloBoltMinRangeBo) * (0.5 + 0.5 * Math.sin(seed * 1.91 + time * 0.45));
       const stepBo = config.haloBoltMinStepBo + (config.haloBoltMaxStepBo - config.haloBoltMinStepBo) * (0.5 + 0.5 * Math.sin(seed * 2.71));
       const segmentCount = Math.max(2, Math.ceil(Math.max(0.01, rangeBo) / Math.max(0.01, stepBo)));

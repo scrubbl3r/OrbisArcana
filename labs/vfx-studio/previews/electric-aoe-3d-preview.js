@@ -9,6 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
+import { createElectricAoeHaloWalkController } from "../../../src/game-runtime/spells/electric-aoe-halo-walk-controller.js?v=20260521a";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -48,6 +49,7 @@ export function createElectricAoe3dPreview({
   let haloControlPointLayer = null;
   let haloControlPointLineMaterial = null;
   let haloControlPointMaterial = null;
+  let haloWalkController = null;
   let controlPointLastRefreshMs = 0;
   let haloControlPointLastRefreshMs = 0;
   let createdAt = 0;
@@ -72,6 +74,8 @@ export function createElectricAoe3dPreview({
     haloControlPointLayer = null;
     haloControlPointLineMaterial = null;
     haloControlPointMaterial = null;
+    if (haloWalkController && typeof haloWalkController.reset === "function") haloWalkController.reset();
+    haloWalkController = null;
     controlPointLastRefreshMs = 0;
     haloControlPointLastRefreshMs = 0;
   }
@@ -151,14 +155,17 @@ export function createElectricAoe3dPreview({
     const forkLengthMinBo = readInputNumber(els.electricAoe3dHaloBoltForkLengthMinBo, 0.2, 0, 8);
     const forkLengthMaxBo = readInputNumber(els.electricAoe3dHaloBoltForkLengthMaxBo, 0.7, forkLengthMinBo, 8);
     const total = Math.max(0, Math.round((minTotal + maxTotal) * 0.5));
+    if (!haloWalkController) haloWalkController = createElectricAoeHaloWalkController();
+    const walkSamples = haloWalkController.sample({
+      maxWalkSpeed,
+      minWalkSpeed,
+      time,
+      total,
+    });
     const paths = [];
     for (let boltIndex = 0; boltIndex < total; boltIndex += 1) {
       const seed = boltIndex + 1;
-      const unit = total <= 0 ? 0 : boltIndex / Math.max(1, total);
-      const speed = minWalkSpeed + (maxWalkSpeed - minWalkSpeed) * (0.5 + 0.5 * Math.sin(seed * 2.17));
-      const walkDirectionSeed = Math.sin(seed * 12.9898) * 43758.5453123;
-      const walkDirection = (walkDirectionSeed - Math.floor(walkDirectionSeed)) >= 0.5 ? 1 : -1;
-      const angle = unit * Math.PI * 2 + time * speed * walkDirection + Math.sin(time * 0.7 + seed) * 0.08;
+      const angle = (walkSamples[boltIndex] && walkSamples[boltIndex].angle || 0) + Math.sin(time * 0.7 + seed) * 0.08;
       const rangeBo = minRangeBo + (maxRangeBo - minRangeBo) * (0.5 + 0.5 * Math.sin(seed * 1.91 + time * 0.45));
       const stepBo = minStepBo + (maxStepBo - minStepBo) * (0.5 + 0.5 * Math.sin(seed * 2.71));
       const segmentCount = Math.max(2, Math.ceil(Math.max(0.01, rangeBo) / Math.max(0.01, stepBo)));
