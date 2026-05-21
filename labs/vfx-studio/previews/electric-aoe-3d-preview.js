@@ -83,7 +83,9 @@ export function createElectricAoe3dPreview({
       shellMaterial,
       edgeMaterials: inspector.edgeMaterials,
       includeCore: false,
-      includeRibs: false,
+      includeRibs: true,
+      edgeColor: 0xffffff,
+      edgeWidth: 2,
       shellSegments: 96,
       ringSegments: 192,
     });
