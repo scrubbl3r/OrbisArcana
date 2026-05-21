@@ -94,9 +94,11 @@ export function createFireCardMaterial({
       uniform float uDisplacementScale;
       uniform float uDisplacementSpeed;
       attribute float aFireSeed;
+      attribute float aFireLife;
       attribute vec2 aFireContactNormal;
       varying vec3 vLocalPos;
       varying float vFireSeed;
+      varying float vFireLife;
       varying vec2 vFireContactNormal;
       float vertexHash31(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
       float vertexNoise(vec3 p) {
@@ -112,6 +114,7 @@ export function createFireCardMaterial({
       void main() {
         vLocalPos = position;
         vFireSeed = aFireSeed;
+        vFireLife = aFireLife;
         vFireContactNormal = aFireContactNormal;
         vec3 displacedPosition = position;
         #ifdef USE_INSTANCING
@@ -156,6 +159,7 @@ export function createFireCardMaterial({
       uniform float uWakeAlphaGradientStops[4]; uniform float uWakeAlphaGradientValues[4];
       varying vec3 vLocalPos;
       varying float vFireSeed;
+      varying float vFireLife;
       varying vec2 vFireContactNormal;
 
       float circleRadiusAtY(float y, float centerY, float radius) {
@@ -327,7 +331,12 @@ export function createFireCardMaterial({
         float carvedBlobs = broadBlobs * mix(1.0, detailBlobs, clamp(uWakeCarveStrength, 0.0, 1.0));
         float blobs = mix(mixedBlobs, carvedBlobs, clamp(uWakeCarveStrength, 0.0, 1.0));
         vec4 mapped = sampleWakeGraph(blobs);
-        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * edgeAlpha * endCapAlpha * bottomAlpha * contactAlpha;
+        float life = clamp(vFireLife, 0.0, 1.0);
+        float dying = smoothstep(0.18, 1.0, life);
+        float flameTop = mix(1.08, 0.10, dying);
+        float lifeVerticalAlpha = 1.0 - smoothstep(flameTop - 0.16, flameTop, safeTail);
+        float finalLifeFade = 1.0 - smoothstep(0.84, 1.0, life);
+        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * edgeAlpha * endCapAlpha * bottomAlpha * contactAlpha * lifeVerticalAlpha * finalLifeFade;
         mapped.rgb *= verticalAlpha;
         mapped.a *= verticalAlpha;
         if (mapped.a <= 0.004) discard;

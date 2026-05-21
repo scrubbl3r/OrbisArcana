@@ -1,5 +1,5 @@
 import { closestPointOnSegment } from "../../collision/circle-boundary-collision.js";
-import { createFireCardSystem } from "./fire-card-system.js?v=20260520x";
+import { createFireCardSystem } from "./fire-card-system.js?v=20260520y";
 
 const WORLD_UP = Object.freeze({ x: 0, y: 1 });
 const SURFACE_FIRE_TTL_MS = 3000;
@@ -74,9 +74,9 @@ export function createSurfaceFireCardSystem({
       wakeCarveStrength: 0.56,
       contactFeatherPx: 2,
       edgeFeatherPx: 3,
-      displacementPx: 5,
-      displacementScale: 1.15,
-      displacementSpeed: 3.8,
+      displacementPx: 9,
+      displacementScale: 1.28,
+      displacementSpeed: 4.6,
     },
   });
   const liveCards = [];
@@ -138,8 +138,10 @@ export function createSurfaceFireCardSystem({
     };
   }
 
-  function drawSurfaceCard(card = null) {
+  function drawSurfaceCard(card = null, nowMs = 0) {
     if (!card) return;
+    const ageMs = Math.max(0, (Number(nowMs) || 0) - (Number(card.createdAtMs) || 0));
+    const ttlMs = Math.max(1, (Number(card.expiresAtMs) || 0) - (Number(card.createdAtMs) || 0));
     fireCards.addTeardrop({
       x: card.x,
       y: card.y,
@@ -147,6 +149,7 @@ export function createSurfaceFireCardSystem({
       widthPx: card.widthPx,
       heightPx: card.heightPx,
       contactNormal: card.contactNormal,
+      lifeRatio: Math.max(0, Math.min(1, ageMs / ttlMs)),
       seed: card.seed,
     });
   }
@@ -164,7 +167,7 @@ export function createSurfaceFireCardSystem({
     }
     fireCards.beginFrame(nowSec, { camera });
     if (!orbWorldPosition || !orbRuntimePosition || !segments.length || typeof toRuntimePosition !== "function") {
-      for (const card of liveCards) drawSurfaceCard(card);
+      for (const card of liveCards) drawSurfaceCard(card, nowMs);
       fireCards.endFrame();
       lastTrace = Object.freeze({
         enabled: true,
@@ -236,7 +239,7 @@ export function createSurfaceFireCardSystem({
     }
     if (shouldEmit && contacts.length > 0) lastEmitMs = nowMs;
     while (liveCards.length > maxCards) liveCards.shift();
-    for (const card of liveCards) drawSurfaceCard(card);
+    for (const card of liveCards) drawSurfaceCard(card, nowMs);
 
     fireCards.endFrame();
     lastTrace = Object.freeze({
