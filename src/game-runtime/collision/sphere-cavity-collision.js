@@ -36,6 +36,17 @@ function normalizeVector3(x = 0, y = 0, z = 0, fallback = { x: 0, y: -1, z: 0 },
     : Object.freeze({ x: xOut, y: yOut, z: zOut });
 }
 
+function resolveAuthoredSegmentNormal(segment = null, target = null) {
+  if (!segment) return null;
+  const nx = Number(segment.normalX);
+  const ny = Number(segment.normalY);
+  const length = Math.hypot(nx, ny);
+  if (!Number.isFinite(nx) || !Number.isFinite(ny) || length <= 0.000001) return null;
+  return target
+    ? setVector3(target, nx / length, ny / length, 0)
+    : Object.freeze({ x: nx / length, y: ny / length, z: 0 });
+}
+
 function closestPointOnSegment2D({
   pointXW = 0,
   pointYW = 0,
@@ -224,7 +235,10 @@ export function resolveSphereVsExtrudedBoundarySegment({
 
   let normal = null;
   const distance = Math.sqrt(Math.max(0, distSq));
-  if (distance > 0.000001) {
+  const authoredNormal = resolveAuthoredSegmentNormal(segment, target ? MODULE_SCRATCH.normal : null);
+  if (authoredNormal) {
+    normal = authoredNormal;
+  } else if (distance > 0.000001) {
     normal = normalizeVector3(dx, dy, dz, MODULE_SCRATCH.defaultNormal, target ? MODULE_SCRATCH.normal : null);
   } else {
     const a = segment.a || {};

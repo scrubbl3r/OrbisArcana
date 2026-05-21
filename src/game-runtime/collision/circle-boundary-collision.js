@@ -28,6 +28,15 @@ function dot(ax = 0, ay = 0, bx = 0, by = 0) {
   return (clampNumber(ax, 0) * clampNumber(bx, 0)) + (clampNumber(ay, 0) * clampNumber(by, 0));
 }
 
+function resolveAuthoredSegmentNormal(segment = null) {
+  if (!segment) return null;
+  const nx = Number(segment.normalX);
+  const ny = Number(segment.normalY);
+  const length = Math.hypot(nx, ny);
+  if (!Number.isFinite(nx) || !Number.isFinite(ny) || length <= 0.000001) return null;
+  return Object.freeze({ x: nx / length, y: ny / length });
+}
+
 function buildAggregateContactResponse(hits = []) {
   const safeHits = Array.isArray(hits) ? hits : [];
   if (!safeHits.length) return null;
@@ -134,7 +143,10 @@ export function resolveCircleVsSegmentPenetration({
 
   let normal = null;
   let distance = Math.sqrt(Math.max(0, distSq));
-  if (distance > 0.000001) {
+  const authoredNormal = resolveAuthoredSegmentNormal(segment);
+  if (authoredNormal) {
+    normal = authoredNormal;
+  } else if (distance > 0.000001) {
     normal = normalizeVector(dx, dy);
   } else {
     const a = segment.a || {};

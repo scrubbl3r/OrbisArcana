@@ -1,6 +1,6 @@
 import { stepOrbLateralMotion } from "./orb-lateral-motion.js?v=20260420t";
-import { resolveCircleVsBoundarySegments } from "../collision/circle-boundary-collision.js?v=20260423g";
-import { resolveSphereVsExtrudedBoundarySegments } from "../collision/sphere-cavity-collision.js?v=20260428c";
+import { resolveCircleVsBoundarySegments } from "../collision/circle-boundary-collision.js?v=20260520-inward-normals-a";
+import { resolveSphereVsExtrudedBoundarySegments } from "../collision/sphere-cavity-collision.js?v=20260520-inward-normals-a";
 
 const SPAWN_DRIFT_START_PHASE_RAD = Math.PI;
 

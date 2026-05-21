@@ -52,7 +52,7 @@ import {
   resolveLevelCameraAnchor,
   resolveLevelSpawnPoint,
 } from "../../../game-runtime/level/resolve-level-spawn-point.js";
-import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260423g";
+import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260520-inward-normals-a";
 import { loadAuthoredLevelScene } from "../../../game-runtime/level/load-authored-level-scene.js?v=20260514a";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_BOUNDARY_BOX,
@@ -3071,7 +3071,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260520-surface-fire-flame-aoe-gate-a",
+  moduleCacheBustV = "20260520-inward-boundary-normals-a",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

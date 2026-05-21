@@ -31,7 +31,7 @@ import {
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
 import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260520075000";
-import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js";
+import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260520-inward-normals-a";
 import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260520-flame-aoe-gate-a";
 import {
   buildLevelNavGrid,
