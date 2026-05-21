@@ -227,7 +227,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
     case "flame-aoe-3d": {
       const keys = [
         "durationMs",
-        "aoeAuraSoftness", "aoeAuraR", "aoeAuraG", "aoeAuraB", "aoeAuraA",
+        "aoeAuraDiameterBo", "aoeAuraSoftness", "aoeAuraR", "aoeAuraG", "aoeAuraB", "aoeAuraA",
         "auraAlpha", "auraScale", "auraPulse", "auraNoiseScale", "auraNoiseSpeed", "auraFresnelPower", "auraR", "auraG", "auraB",
         "wakeLengthBo", "wakeRadiusBo", "wakeSubdivisions",
         "wakeLeanAmount", "wakeLeanLag",

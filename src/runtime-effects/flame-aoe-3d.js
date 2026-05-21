@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260520224726";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260520aeo-diameter-a";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 
@@ -34,6 +34,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
   const out = {
     durationMs: Math.round(clampNumber(source.durationMs, 200, 60000, fallback.durationMs)),
     hitRadiusBo: clampNumber(source.hitRadiusBo, 0.05, 8, fallback.hitRadiusBo ?? 4.5),
+    aoeAuraDiameterBo: clampNumber(source.aoeAuraDiameterBo, 0.05, 20, fallback.aoeAuraDiameterBo ?? 9),
     aoeAuraSoftness: clampNumber(source.aoeAuraSoftness, 0.001, 0.6, fallback.aoeAuraSoftness),
     aoeAuraA: clampNumber(source.aoeAuraA, 0, 1, fallback.aoeAuraA),
     aoeAuraColor: rgbHex({
@@ -889,7 +890,7 @@ export function createFlameAoe3dRuntime({
       group = new THREE.Group();
       group.name = "flame_aoe3d:runtime";
       aoeAuraDiscMaterial = createAoeAuraDiscMaterial(config);
-      const aoeAuraDiameter = bo * config.hitRadiusBo * 2;
+      const aoeAuraDiameter = bo * config.aoeAuraDiameterBo;
       const aoeAuraDisc = new THREE.Mesh(
         new THREE.PlaneGeometry(aoeAuraDiameter, aoeAuraDiameter, 64, 64),
         aoeAuraDiscMaterial

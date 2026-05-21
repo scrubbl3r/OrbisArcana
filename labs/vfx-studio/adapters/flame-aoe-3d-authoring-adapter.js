@@ -1,4 +1,5 @@
 const FLAME_AOE_3D_FIELDS = Object.freeze([
+  ["flameAoe3dAoeAuraDiameterBo", "aoeAuraDiameterBo"],
   ["flameAoe3dAoeAuraSoftness", "aoeAuraSoftness"],
   ["flameAoe3dAoeAuraR", "aoeAuraR"],
   ["flameAoe3dAoeAuraG", "aoeAuraG"],
@@ -78,6 +79,7 @@ const FLAME_AOE_3D_FIELDS = Object.freeze([
 ]);
 
 const FLAME_AOE_3D_DEFAULTS = Object.freeze({
+  aoeAuraDiameterBo: 9,
   aoeAuraSoftness: 0.18,
   aoeAuraR: 255,
   aoeAuraG: 108,
@@ -199,6 +201,7 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
 
   function capture(els) {
     return Object.freeze({
+      aoeAuraDiameterBo: fixedNumber(els && els.flameAoe3dAoeAuraDiameterBo && els.flameAoe3dAoeAuraDiameterBo.value, 2, FLAME_AOE_3D_DEFAULTS.aoeAuraDiameterBo),
       aoeAuraSoftness: fixedNumber(els && els.flameAoe3dAoeAuraSoftness && els.flameAoe3dAoeAuraSoftness.value, 3, FLAME_AOE_3D_DEFAULTS.aoeAuraSoftness),
       aoeAuraR: roundedByte(els && els.flameAoe3dAoeAuraR && els.flameAoe3dAoeAuraR.value, FLAME_AOE_3D_DEFAULTS.aoeAuraR),
       aoeAuraG: roundedByte(els && els.flameAoe3dAoeAuraG && els.flameAoe3dAoeAuraG.value, FLAME_AOE_3D_DEFAULTS.aoeAuraG),

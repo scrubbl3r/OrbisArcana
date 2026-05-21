@@ -29,6 +29,7 @@ function frameCameraToSsotOrbSize(inspector, root, bo) {
 }
 
 const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
+  aoeAuraDiameterBo: 9,
   aoeAuraSoftness: 0.18,
   aoeAuraColor: 0xff6c18,
   aoeAuraA: 0.22,
@@ -166,6 +167,7 @@ function readWakeGraphConfig(els = {}) {
 
 function readFlameAuraConfig(els = {}) {
   return Object.freeze({
+    aoeAuraDiameterBo: clampNumber(els.flameAoe3dAoeAuraDiameterBo && els.flameAoe3dAoeAuraDiameterBo.value, 0.05, 20, FLAME_AOE_3D_PREVIEW_DEFAULTS.aoeAuraDiameterBo),
     aoeAuraSoftness: clampNumber(els.flameAoe3dAoeAuraSoftness && els.flameAoe3dAoeAuraSoftness.value, 0.001, 0.6, FLAME_AOE_3D_PREVIEW_DEFAULTS.aoeAuraSoftness),
     aoeAuraColor: rgbFromFields(els, "flameAoe3dAoeAura", FLAME_AOE_3D_PREVIEW_DEFAULTS.aoeAuraColor),
     aoeAuraA: clampNumber(els.flameAoe3dAoeAuraA && els.flameAoe3dAoeAuraA.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.aoeAuraA),
@@ -220,6 +222,7 @@ function readFlameWakeConfig(els = {}) {
 }
 
 function hydrateFlameAuraFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  if (els.flameAoe3dAoeAuraDiameterBo) els.flameAoe3dAoeAuraDiameterBo.value = String(Number(cfg.aoeAuraDiameterBo).toFixed(2));
   if (els.flameAoe3dAoeAuraSoftness) els.flameAoe3dAoeAuraSoftness.value = String(Number(cfg.aoeAuraSoftness).toFixed(3));
   if (els.flameAoe3dAoeAuraR) els.flameAoe3dAoeAuraR.value = String((cfg.aoeAuraColor >> 16) & 255);
   if (els.flameAoe3dAoeAuraG) els.flameAoe3dAoeAuraG.value = String((cfg.aoeAuraColor >> 8) & 255);
@@ -320,10 +323,6 @@ function circleRadiusAtY(y, centerY, radius) {
   const dy = y - centerY;
   const disc = (radius * radius) - (dy * dy);
   return disc > 0 ? Math.sqrt(disc) : 0;
-}
-
-function readHitRadiusBo(els = {}) {
-  return clampNumber(els.flameAoe3dHitRadiusBo && els.flameAoe3dHitRadiusBo.value, 0.05, 8, 4.5);
 }
 
 function createAoeAuraDiscMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
@@ -1109,7 +1108,7 @@ export function createFlameAoe3dPreview({
     orbShellMesh = model.getObjectByName("orb3d:shell") || null;
     if (orbShellMesh) orbShellMesh.visible = layerVisible(els.flameAoe3dOrbVisibleBtn);
     aoeAuraDiscMaterial = createAoeAuraDiscMaterial(auraConfig);
-    const aoeAuraDiameter = bo * readHitRadiusBo(els) * 2;
+    const aoeAuraDiameter = bo * auraConfig.aoeAuraDiameterBo;
     aoeAuraDiscMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(aoeAuraDiameter, aoeAuraDiameter, 64, 64),
       aoeAuraDiscMaterial
@@ -1222,7 +1221,6 @@ export function createFlameAoe3dPreview({
       if (btn) btn.addEventListener("click", apply);
     });
     bindInputCommits(document.querySelector('.section[data-effect="flame-aoe-3d"]'), apply);
-    if (els.flameAoe3dHitRadiusBo) els.flameAoe3dHitRadiusBo.addEventListener("change", apply);
     if (els.flameAoe3dOrbVisibleBtn) els.flameAoe3dOrbVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dOrbVisibleBtn));
     if (els.flameAoe3dAuraVisibleBtn) els.flameAoe3dAuraVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dAuraVisibleBtn));
     if (els.flameAoe3dWakeVisibleBtn) els.flameAoe3dWakeVisibleBtn.addEventListener("click", () => toggleLayer(els.flameAoe3dWakeVisibleBtn));
