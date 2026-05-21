@@ -10,7 +10,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260520225915s";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260520235547s";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -18,7 +18,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260520225915s";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260520235547s";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260519pyromodulafb";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260520225915s";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260520235547s";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
@@ -75,7 +75,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260520225915s";
+globalThis.__orbisStagingShellRuntimeVersion = "20260520235547s";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -3071,7 +3071,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260520225915s",
+  moduleCacheBustV = "20260520235547s",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
