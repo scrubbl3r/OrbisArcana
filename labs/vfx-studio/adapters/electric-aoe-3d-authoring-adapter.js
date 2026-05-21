@@ -93,6 +93,18 @@ export function createElectricAoe3dAuthoringAdapter({
       minStep,
       8
     );
+    const haloMinRange = readNumber(els.electricAoe3dHaloBoltMinRangeBo, defaults.haloBoltMinRangeBo, 0, 16);
+    const haloMaxRange = readNumber(els.electricAoe3dHaloBoltMaxRangeBo, defaults.haloBoltMaxRangeBo, Math.max(0.05, haloMinRange), 16);
+    const haloMinTotal = Math.round(readNumber(els.electricAoe3dHaloBoltMinTotal, defaults.haloBoltMinTotal, 0, 64));
+    const haloMaxTotal = Math.round(readNumber(els.electricAoe3dHaloBoltMaxTotal, defaults.haloBoltMaxTotal, haloMinTotal, 64));
+    const haloMinWalkSpeed = readNumber(els.electricAoe3dHaloBoltMinWalkSpeed, defaults.haloBoltMinWalkSpeed, 0, 12);
+    const haloMaxWalkSpeed = readNumber(els.electricAoe3dHaloBoltMaxWalkSpeed, defaults.haloBoltMaxWalkSpeed, haloMinWalkSpeed, 12);
+    const haloMinStep = readNumber(els.electricAoe3dHaloBoltMinStepBo, defaults.haloBoltMinStepBo, 0.01, 4);
+    const haloMaxStep = readNumber(els.electricAoe3dHaloBoltMaxStepBo, defaults.haloBoltMaxStepBo, haloMinStep, 4);
+    const haloForksMin = Math.round(readNumber(els.electricAoe3dHaloBoltForksMin, defaults.haloBoltForksMin, 0, 12));
+    const haloForksMax = Math.round(readNumber(els.electricAoe3dHaloBoltForksMax, defaults.haloBoltForksMax, haloForksMin, 12));
+    const haloForkLengthMin = readNumber(els.electricAoe3dHaloBoltForkLengthMinBo, defaults.haloBoltForkLengthMinBo, 0, 8);
+    const haloForkLengthMax = readNumber(els.electricAoe3dHaloBoltForkLengthMaxBo, defaults.haloBoltForkLengthMaxBo, haloForkLengthMin, 8);
     return Object.freeze({
       ...defaults,
       durationMs: spellDurationMs,
@@ -115,6 +127,19 @@ export function createElectricAoe3dAuthoringAdapter({
       dominantBoltRangeBo: maxRange,
       dominantBoltSeekStrength: readNumber(els.electricAoe3dDominantBoltSeekStrength, defaults.dominantBoltSeekStrength, 0, 4),
       dominantBoltWanderStrength: readNumber(els.electricAoe3dDominantBoltWanderStrength, defaults.dominantBoltWanderStrength, 0, 4),
+      haloBoltForkLengthMaxBo: haloForkLengthMax,
+      haloBoltForkLengthMinBo: haloForkLengthMin,
+      haloBoltForksMax: haloForksMax,
+      haloBoltForksMin,
+      haloBoltMaxRangeBo: haloMaxRange,
+      haloBoltMaxStepBo: haloMaxStep,
+      haloBoltMaxTotal: haloMaxTotal,
+      haloBoltMaxWalkSpeed: haloMaxWalkSpeed,
+      haloBoltMinRangeBo: haloMinRange,
+      haloBoltMinStepBo: haloMinStep,
+      haloBoltMinTotal,
+      haloBoltMinWalkSpeed: haloMinWalkSpeed,
+      haloBoltPathJitterBo: readNumber(els.electricAoe3dHaloBoltPathJitterBo, defaults.haloBoltPathJitterBo, 0, 2),
     });
   }
 
@@ -173,6 +198,45 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dDominantBoltPathJitterBo) {
       els.electricAoe3dDominantBoltPathJitterBo.value = String(source.dominantBoltPathJitterBo ?? 0.18);
+    }
+    if (els.electricAoe3dHaloBoltMinRangeBo) {
+      els.electricAoe3dHaloBoltMinRangeBo.value = String(source.haloBoltMinRangeBo ?? 0.55);
+    }
+    if (els.electricAoe3dHaloBoltMaxRangeBo) {
+      els.electricAoe3dHaloBoltMaxRangeBo.value = String(source.haloBoltMaxRangeBo ?? 1.65);
+    }
+    if (els.electricAoe3dHaloBoltMinTotal) {
+      els.electricAoe3dHaloBoltMinTotal.value = String(source.haloBoltMinTotal ?? 4);
+    }
+    if (els.electricAoe3dHaloBoltMaxTotal) {
+      els.electricAoe3dHaloBoltMaxTotal.value = String(source.haloBoltMaxTotal ?? 10);
+    }
+    if (els.electricAoe3dHaloBoltMinWalkSpeed) {
+      els.electricAoe3dHaloBoltMinWalkSpeed.value = String(source.haloBoltMinWalkSpeed ?? 0.35);
+    }
+    if (els.electricAoe3dHaloBoltMaxWalkSpeed) {
+      els.electricAoe3dHaloBoltMaxWalkSpeed.value = String(source.haloBoltMaxWalkSpeed ?? 1.2);
+    }
+    if (els.electricAoe3dHaloBoltMinStepBo) {
+      els.electricAoe3dHaloBoltMinStepBo.value = String(source.haloBoltMinStepBo ?? 0.08);
+    }
+    if (els.electricAoe3dHaloBoltMaxStepBo) {
+      els.electricAoe3dHaloBoltMaxStepBo.value = String(source.haloBoltMaxStepBo ?? 0.28);
+    }
+    if (els.electricAoe3dHaloBoltPathJitterBo) {
+      els.electricAoe3dHaloBoltPathJitterBo.value = String(source.haloBoltPathJitterBo ?? 0.16);
+    }
+    if (els.electricAoe3dHaloBoltForksMin) {
+      els.electricAoe3dHaloBoltForksMin.value = String(source.haloBoltForksMin ?? 0);
+    }
+    if (els.electricAoe3dHaloBoltForksMax) {
+      els.electricAoe3dHaloBoltForksMax.value = String(source.haloBoltForksMax ?? 2);
+    }
+    if (els.electricAoe3dHaloBoltForkLengthMinBo) {
+      els.electricAoe3dHaloBoltForkLengthMinBo.value = String(source.haloBoltForkLengthMinBo ?? 0.2);
+    }
+    if (els.electricAoe3dHaloBoltForkLengthMaxBo) {
+      els.electricAoe3dHaloBoltForkLengthMaxBo.value = String(source.haloBoltForkLengthMaxBo ?? 0.7);
     }
     if (typeof applyPreview === "function") applyPreview();
     return true;

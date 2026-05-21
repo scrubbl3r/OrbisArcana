@@ -2043,7 +2043,7 @@
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
-            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dControlPointControls">Control Points</button>
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dControlPointControls">Bolt Control Points</button>
             <button id="electricAoe3dControlPointsVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Control Points visibility" title="Toggle Control Points visibility"></button>
           </div>
           <div id="electricAoe3dControlPointControls" class="controlGroupBody paramFieldRows" hidden>
@@ -2056,6 +2056,42 @@
             <div class="paramFieldRow"><label for="electricAoe3dDominantBoltHeadingMemory">Heading memory</label><input id="electricAoe3dDominantBoltHeadingMemory" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.72" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dDominantBoltWanderStrength">Wander strength</label><input id="electricAoe3dDominantBoltWanderStrength" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="0.9" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dDominantBoltPathJitterBo">Path jitter BO</label><input id="electricAoe3dDominantBoltPathJitterBo" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.18" /></div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dHaloControlPointControls">Halo Control Points</button>
+          <div id="electricAoe3dHaloControlPointControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BOLTS RANGE BO</span>
+              <label for="electricAoe3dHaloBoltMinRangeBo">min</label><input id="electricAoe3dHaloBoltMinRangeBo" class="paramFieldInput" type="number" min="0" max="16" step="0.05" value="0.55" />
+              <label for="electricAoe3dHaloBoltMaxRangeBo">max</label><input id="electricAoe3dHaloBoltMaxRangeBo" class="paramFieldInput" type="number" min="0.05" max="16" step="0.05" value="1.65" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BOLTS TOTAL</span>
+              <label for="electricAoe3dHaloBoltMinTotal">min</label><input id="electricAoe3dHaloBoltMinTotal" class="paramFieldInput" type="number" min="0" max="64" step="1" value="4" />
+              <label for="electricAoe3dHaloBoltMaxTotal">max</label><input id="electricAoe3dHaloBoltMaxTotal" class="paramFieldInput" type="number" min="0" max="64" step="1" value="10" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">WALK SPEED</span>
+              <label for="electricAoe3dHaloBoltMinWalkSpeed">min</label><input id="electricAoe3dHaloBoltMinWalkSpeed" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="0.35" />
+              <label for="electricAoe3dHaloBoltMaxWalkSpeed">max</label><input id="electricAoe3dHaloBoltMaxWalkSpeed" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="1.2" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">STEP LENGTH BO</span>
+              <label for="electricAoe3dHaloBoltMinStepBo">min</label><input id="electricAoe3dHaloBoltMinStepBo" class="paramFieldInput" type="number" min="0.01" max="4" step="0.01" value="0.08" />
+              <label for="electricAoe3dHaloBoltMaxStepBo">max</label><input id="electricAoe3dHaloBoltMaxStepBo" class="paramFieldInput" type="number" min="0.01" max="4" step="0.01" value="0.28" />
+            </div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltPathJitterBo">Path jitter BO</label><input id="electricAoe3dHaloBoltPathJitterBo" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.16" /></div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">FORKS</span>
+              <label for="electricAoe3dHaloBoltForksMin">min</label><input id="electricAoe3dHaloBoltForksMin" class="paramFieldInput" type="number" min="0" max="12" step="1" value="0" />
+              <label for="electricAoe3dHaloBoltForksMax">max</label><input id="electricAoe3dHaloBoltForksMax" class="paramFieldInput" type="number" min="0" max="12" step="1" value="2" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">FORK LENGTH BO</span>
+              <label for="electricAoe3dHaloBoltForkLengthMinBo">min</label><input id="electricAoe3dHaloBoltForkLengthMinBo" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0.2" />
+              <label for="electricAoe3dHaloBoltForkLengthMaxBo">max</label><input id="electricAoe3dHaloBoltForkLengthMaxBo" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0.7" />
+            </div>
           </div>
         </div>
       </div>
@@ -3372,6 +3408,19 @@
       electricAoe3dDominantBoltHeadingMemory: $("electricAoe3dDominantBoltHeadingMemory"),
       electricAoe3dDominantBoltWanderStrength: $("electricAoe3dDominantBoltWanderStrength"),
       electricAoe3dDominantBoltPathJitterBo: $("electricAoe3dDominantBoltPathJitterBo"),
+      electricAoe3dHaloBoltMinRangeBo: $("electricAoe3dHaloBoltMinRangeBo"),
+      electricAoe3dHaloBoltMaxRangeBo: $("electricAoe3dHaloBoltMaxRangeBo"),
+      electricAoe3dHaloBoltMinTotal: $("electricAoe3dHaloBoltMinTotal"),
+      electricAoe3dHaloBoltMaxTotal: $("electricAoe3dHaloBoltMaxTotal"),
+      electricAoe3dHaloBoltMinWalkSpeed: $("electricAoe3dHaloBoltMinWalkSpeed"),
+      electricAoe3dHaloBoltMaxWalkSpeed: $("electricAoe3dHaloBoltMaxWalkSpeed"),
+      electricAoe3dHaloBoltMinStepBo: $("electricAoe3dHaloBoltMinStepBo"),
+      electricAoe3dHaloBoltMaxStepBo: $("electricAoe3dHaloBoltMaxStepBo"),
+      electricAoe3dHaloBoltPathJitterBo: $("electricAoe3dHaloBoltPathJitterBo"),
+      electricAoe3dHaloBoltForksMin: $("electricAoe3dHaloBoltForksMin"),
+      electricAoe3dHaloBoltForksMax: $("electricAoe3dHaloBoltForksMax"),
+      electricAoe3dHaloBoltForkLengthMinBo: $("electricAoe3dHaloBoltForkLengthMinBo"),
+      electricAoe3dHaloBoltForkLengthMaxBo: $("electricAoe3dHaloBoltForkLengthMaxBo"),
       flameAoe3dAoeAuraDiameterBo: $("flameAoe3dAoeAuraDiameterBo"),
       flameAoe3dApplyAoeAuraDiameterBtn: $("flameAoe3dApplyAoeAuraDiameterBtn"),
       flameAoe3dAoeAuraSoftness: $("flameAoe3dAoeAuraSoftness"),

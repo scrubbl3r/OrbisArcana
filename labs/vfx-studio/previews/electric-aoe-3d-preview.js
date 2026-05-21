@@ -251,6 +251,19 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dDominantBoltHeadingMemory,
       els.electricAoe3dDominantBoltWanderStrength,
       els.electricAoe3dDominantBoltPathJitterBo,
+      els.electricAoe3dHaloBoltMinRangeBo,
+      els.electricAoe3dHaloBoltMaxRangeBo,
+      els.electricAoe3dHaloBoltMinTotal,
+      els.electricAoe3dHaloBoltMaxTotal,
+      els.electricAoe3dHaloBoltMinWalkSpeed,
+      els.electricAoe3dHaloBoltMaxWalkSpeed,
+      els.electricAoe3dHaloBoltMinStepBo,
+      els.electricAoe3dHaloBoltMaxStepBo,
+      els.electricAoe3dHaloBoltPathJitterBo,
+      els.electricAoe3dHaloBoltForksMin,
+      els.electricAoe3dHaloBoltForksMax,
+      els.electricAoe3dHaloBoltForkLengthMinBo,
+      els.electricAoe3dHaloBoltForkLengthMaxBo,
     ].forEach((input) => {
       if (!input) return;
       input.addEventListener("blur", refreshOnCommit);
