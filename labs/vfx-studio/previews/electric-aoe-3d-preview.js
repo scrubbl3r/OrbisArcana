@@ -10,6 +10,8 @@ import {
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
 
+const CONTROL_POINT_REFRESH_MS = 1000 / 60;
+
 function frameCameraToSsotOrbSize(inspector, root, bo) {
   if (!inspector || !inspector.camera || !root) return;
   const bounds = root.getBoundingClientRect();
@@ -197,7 +199,7 @@ export function createElectricAoe3dPreview({
   function syncHaloControlPointLayer(bo, time = 0, force = false) {
     if (!haloControlPointLayer) return;
     const nowMs = performance.now();
-    if (!force && nowMs - haloControlPointLastRefreshMs < 90) return;
+    if (!force && nowMs - haloControlPointLastRefreshMs < CONTROL_POINT_REFRESH_MS) return;
     haloControlPointLastRefreshMs = nowMs;
     clearLayerChildren(haloControlPointLayer);
     if (!haloControlPointLayer.visible) return;
@@ -251,7 +253,7 @@ export function createElectricAoe3dPreview({
   function syncControlPointLayer(bo, time = 0, force = false) {
     if (!controlPointLayer) return;
     const nowMs = performance.now();
-    if (!force && nowMs - controlPointLastRefreshMs < 90) return;
+    if (!force && nowMs - controlPointLastRefreshMs < CONTROL_POINT_REFRESH_MS) return;
     controlPointLastRefreshMs = nowMs;
     const path = buildPreviewControlPath(bo, time);
     const points = Array.isArray(path && path.points) ? path.points : [];

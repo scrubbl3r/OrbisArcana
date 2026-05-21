@@ -7,6 +7,8 @@ import {
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521155647b";
 import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521155647";
 
+const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
+
 function clampNumber(value, min, max, fallback) {
   const numeric = Number(value);
   const safe = Number.isFinite(numeric) ? numeric : Number(fallback);
@@ -509,7 +511,7 @@ export function createElectricAoe3dRuntime(options = {}) {
     haloTimer = setInterval(() => {
       syncHaloBolts(config, bo);
       requestFrame();
-    }, 90);
+    }, HALO_CONTROL_POINT_REFRESH_MS);
     const enemyResult = applyEnemyStrike(path, config, bo, payload);
     const startedAtMs = typeof now === "function" ? now() : performance.now();
     scheduleNextStrike(payload, startedAtMs + config.durationMs, path, config);
