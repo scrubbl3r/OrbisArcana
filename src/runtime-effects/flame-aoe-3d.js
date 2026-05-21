@@ -759,7 +759,7 @@ export function createFlameAoe3dRuntime({
     if (!Number.isFinite(groundY)) return 0;
     const wakeRadius = bo * Math.max(0.5, clampNumber(activeConfig && activeConfig.wakeRadiusBo, 0.5, 2, 0.5));
     const wakeBottomY = position.y - wakeRadius;
-    return Math.max(0, Math.min(bo * 0.22, groundY - wakeBottomY));
+    return Math.max(0, Math.min(bo * 0.08, (groundY - wakeBottomY) * 0.5));
   }
 
   function updateWakeMotion(dtSec) {

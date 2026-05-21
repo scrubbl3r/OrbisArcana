@@ -32,6 +32,7 @@ import {
 } from "../../../game-runtime/level/authored-level-read-model.js";
 import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260520075000";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260520-inward-normals-a";
+import { closestPointOnSegment } from "../../../game-runtime/collision/circle-boundary-collision.js?v=20260518b";
 import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260520-flame-aoe-gate-a";
 import {
   buildLevelNavGrid,
@@ -609,7 +610,9 @@ export function createGameStageDepth3dLayer({
     const orbRuntimePosition = orb3dActorRuntime.getPosition();
     if (!orbRuntimePosition) return null;
     const bo = Math.max(1, Number(orb3dActorRuntime.getBo()) || baseOrbWorldUnits);
-    const rangePx = bo * 0.74;
+    const orbRadiusPx = bo * 0.5;
+    const contactSlopPx = bo * 0.08;
+    const rangePx = orbRadiusPx + contactSlopPx;
     let nearest = null;
     for (const segment of currentBoundarySegments) {
       if (!segment) continue;
@@ -641,7 +644,7 @@ export function createGameStageDepth3dLayer({
       const dx = orbRuntimePosition.x - contactRuntime.x;
       const dy = orbRuntimePosition.y - contactRuntime.y;
       const distance = Math.hypot(dx, dy);
-      if (distance > rangePx || dy <= 0) continue;
+      if (distance > rangePx || dy < orbRadiusPx * 0.32 || dy > orbRadiusPx + contactSlopPx) continue;
       if (!nearest || distance < nearest.distance) nearest = { distance, y: contactRuntime.y };
     }
     return nearest ? nearest.y : null;
