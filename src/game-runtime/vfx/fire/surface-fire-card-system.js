@@ -1,5 +1,5 @@
 import { closestPointOnSegment } from "../../collision/circle-boundary-collision.js";
-import { createFireCardSystem } from "./fire-card-system.js?v=20260520z";
+import { createFireCardSystem } from "./fire-card-system.js?v=20260520za";
 
 const WORLD_UP = Object.freeze({ x: 0, y: 1 });
 const SURFACE_FIRE_TTL_MS = 3000;
@@ -7,6 +7,7 @@ const SURFACE_FIRE_EMIT_INTERVAL_MS = 90;
 const EGG_LOCAL_HEIGHT = 2.0625;
 const SURFACE_FIRE_SCALE_MIN = 0.85;
 const SURFACE_FIRE_SCALE_MAX = 1.6;
+const SURFACE_FIRE_Z_DISPERSION_BO = 0.5;
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -29,6 +30,10 @@ function lerp(a = 0, b = 0, t = 0) {
 
 function randomRange(min = 0, max = 1) {
   return lerp(min, max, Math.random());
+}
+
+function randomZeroWeightedOffset(rangePx = 0) {
+  return (Math.random() - Math.random()) * Math.max(0, Number(rangePx) || 0) * 0.5;
 }
 
 function resolveSurfaceWidthT(steepness = 0) {
@@ -226,7 +231,7 @@ export function createSurfaceFireCardSystem({
           steepness,
           offsetPx: (card - half) * profile.spacingPx,
           bo,
-          z: orbRuntimePosition.z || 0,
+          z: (orbRuntimePosition.z || 0) + randomZeroWeightedOffset(bo * SURFACE_FIRE_Z_DISPERSION_BO),
           scaleMul: randomRange(SURFACE_FIRE_SCALE_MIN, SURFACE_FIRE_SCALE_MAX),
           seed: Math.random() * 100000,
         });

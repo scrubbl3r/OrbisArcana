@@ -1,4 +1,4 @@
-export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260520-surface-fire-density-life-a";
+export const GAME_STAGE_DEPTH3D_TRACE_VERSION = "20260520-surface-fire-z-dispersion-a";
 
 export function publishDepth3dModuleVersion(version = GAME_STAGE_DEPTH3D_TRACE_VERSION) {
   globalThis.__orbisDepth3dModuleVersion = String(version || "");

@@ -30,9 +30,9 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260520074000";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260520075000";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js";
-import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260520074000";
+import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260520075000";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -69,7 +69,7 @@ import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=202
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,
   publishDepth3dModuleVersion,
-} from "./game-stage-depth3d-debug.js?v=20260520074000";
+} from "./game-stage-depth3d-debug.js?v=20260520075000";
 import { createGameStageDepth3dRenderLoop } from "./game-stage-depth3d-render-loop.js?v=20260430b";
 import { createGameStageDepth3dScene } from "./game-stage-depth3d-scene.js?v=20260514a";
 import { createGameStageDepth3dTelemetry } from "./game-stage-depth3d-telemetry.js?v=20260430b";
