@@ -789,7 +789,10 @@ export function createGnatSwarm3dRuntime({
     if (kind === COMBAT_EFFECT_DAMAGE) {
       const damage = normalizeDamageEffect(effect);
       const nowSec = damage.atMs / 1000;
-      const directTargetIndex = Number.isFinite(Number(effect.targetIndex))
+      const hasExplicitTargetIndex = effect.targetIndex !== null
+        && effect.targetIndex !== undefined
+        && effect.targetIndex !== "";
+      const directTargetIndex = hasExplicitTargetIndex && Number.isFinite(Number(effect.targetIndex))
         ? Number(effect.targetIndex)
         : (() => {
           const match = String(effect.targetEntityId || "").match(/:(\d+)$/);
