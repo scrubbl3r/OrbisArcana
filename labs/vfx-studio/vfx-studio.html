@@ -3517,6 +3517,9 @@
     }
 
     initCollapsibleControlGroups(els.vfxAuthoringPanel || document);
+    if (els.behaviorAuthoringPanel && els.behaviorAuthoringPanel !== els.vfxAuthoringPanel) {
+      initCollapsibleControlGroups(els.behaviorAuthoringPanel);
+    }
 
     const AUTHORING_ADAPTER_CONTEXT = Object.freeze({
       teleportPresetDefault: TELEPORT_PRESET_DEFAULT,
