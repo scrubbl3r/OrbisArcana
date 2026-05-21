@@ -1,9 +1,9 @@
 export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
-  "aoeAuraSoftness": 0.18,
+  "aoeAuraSoftness": 0.6,
   "aoeAuraR": 255,
   "aoeAuraG": 108,
   "aoeAuraB": 24,
-  "aoeAuraA": 0.22,
+  "aoeAuraA": 0.02,
   "auraAlpha": 0.8,
   "auraScale": 1,
   "auraPulse": 0.08,
