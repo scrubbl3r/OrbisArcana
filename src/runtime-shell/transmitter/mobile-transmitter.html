@@ -4,8 +4,27 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Groove Dynamics</title>
+  <style>
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+    }
+
+    .app {
+      min-height: 100vh;
+      min-height: 100dvh;
+      height: calc(var(--vh, 1dvh) * 100);
+      display: grid;
+      place-items: center;
+    }
+
+    #startBtn {
+      visibility: hidden;
+    }
+  </style>
   <link rel="stylesheet" href="../ui/staging-ui.css">
-  <link rel="stylesheet" href="../../../mobile-transmitter.css">
+  <link rel="stylesheet" href="../../../mobile-transmitter.css?v=20260521a">
 </head>
 <body>
   <main class="app">
@@ -17,6 +36,6 @@
   </div>
 
   <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
-  <script type="module" src="./mobile-transmitter-entry.js?v=20260511a"></script>
+  <script type="module" src="./mobile-transmitter-entry.js?v=20260521a"></script>
 </body>
 </html>

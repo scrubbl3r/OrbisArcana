@@ -18,7 +18,9 @@
     }
 
     .app{
-      height: calc(var(--vh, 1vh) * 100);
+      min-height: 100vh;
+      min-height: 100dvh;
+      height: calc(var(--vh, 1dvh) * 100);
       display: grid;
       place-items: center;
     }
@@ -37,6 +39,7 @@
       box-shadow: 0 0 22px rgba(255,255,255,0.06);
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      visibility: hidden;
     }
     #startBtn:active { transform: scale(0.98); }
     #startBtn:disabled { opacity: 0.55; }

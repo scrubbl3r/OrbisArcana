@@ -1,4 +1,4 @@
-import { createTransmitterPageShell } from "./transmitter-page-shell.js";
+import { createTransmitterPageShell } from "./transmitter-page-shell.js?v=20260521a";
 import { createTransmitterLifecycle } from "./transmitter-lifecycle.js";
 import { createTransmitterSessionBootstrap } from "./transmitter-session-bootstrap.js";
 import { createTransmitterMotionInput } from "./transmitter-motion-input.js";

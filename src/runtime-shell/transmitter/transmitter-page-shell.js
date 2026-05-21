@@ -3,11 +3,36 @@ export function createTransmitterPageShell({
   versionTag = true,
   versionText = "vtag:shield-debug",
 } = {}) {
+  const rootWindow = rootDocument.defaultView || window;
   const refs = {
     app: rootDocument.getElementById("app") || rootDocument.querySelector(".app"),
     startBtn: rootDocument.getElementById("startBtn"),
     lanConnecting: rootDocument.getElementById("lanConnecting"),
   };
+  let startRevealToken = 0;
+
+  function syncViewportUnit() {
+    const viewportBoot = rootWindow.__orbisTransmitterViewportBoot || null;
+    if (viewportBoot && typeof viewportBoot.applyVhUnit === "function") {
+      viewportBoot.applyVhUnit();
+      return;
+    }
+    const vv = rootWindow.visualViewport;
+    const height = vv && vv.height ? vv.height : rootWindow.innerHeight;
+    rootDocument.documentElement.style.setProperty("--vh", `${height * 0.01}px`);
+  }
+
+  function revealStartButtonWhenStable(token) {
+    syncViewportUnit();
+    rootWindow.requestAnimationFrame(() => {
+      syncViewportUnit();
+      rootWindow.requestAnimationFrame(() => {
+        if (token !== startRevealToken || !refs.startBtn) return;
+        syncViewportUnit();
+        refs.startBtn.style.visibility = "visible";
+      });
+    });
+  }
 
   function setButtonLabel(label = "") {
     if (!refs.startBtn) return;
@@ -16,8 +41,11 @@ export function createTransmitterPageShell({
 
   function setStartReady(ready) {
     if (!refs.startBtn) return;
-    refs.startBtn.style.visibility = ready ? "visible" : "hidden";
+    startRevealToken += 1;
+    const token = startRevealToken;
     refs.startBtn.disabled = !ready;
+    refs.startBtn.style.visibility = "hidden";
+    if (ready) revealStartButtonWhenStable(token);
   }
 
   function setStartBusy(busy) {
