@@ -1,4 +1,4 @@
-import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260519pyromodulafb";
+import { ACTIVE_WORDS_BY_ID } from "../wordbook.js?v=20260520salubrumww";
 
 export function bootstrapKwsVoiceRuntime({
   eventBus,

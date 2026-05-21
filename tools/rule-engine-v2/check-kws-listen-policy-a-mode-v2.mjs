@@ -14,7 +14,7 @@ const EXPECTED_IDLE_ROOT_WORDS = Object.freeze([
   "echovar",
   "sanctum",
   "modula",
-  "salubrium",
+  "salubrum",
   "leviton",
 ]);
 const EXPECTED_IDLE_ROOT_TOKENS = Object.freeze([
@@ -23,7 +23,7 @@ const EXPECTED_IDLE_ROOT_TOKENS = Object.freeze([
   "echovar",
   "sanctum",
   "modula",
-  "salubrium",
+  "salubrum",
   "leviton",
 ]);
 
@@ -87,7 +87,7 @@ async function main() {
   assertHasAll(backendConfigs.at(-1)?.activeTokens || [], EXPECTED_IDLE_ROOT_TOKENS, "A idle backend tokens");
   assertHasAll(parserConfigs.at(-1)?.words || [], EXPECTED_IDLE_ROOT_WORDS, "A idle parser words");
   assertHasAll(parserConfigs.at(-1)?.wakeTokens || [], ["orbis"], "A idle parser wakeTokens");
-  assertHasNone(parserConfigs.at(-1)?.wakeTokens || [], ["echovar", "sanctum", "modula", "salubrium", "leviton"], "A idle parser wakeTokens");
+  assertHasNone(parserConfigs.at(-1)?.wakeTokens || [], ["echovar", "sanctum", "modula", "salubrum", "leviton"], "A idle parser wakeTokens");
 
   eventBus.emit("rule_engine.wake_win_opened", {
     windowId: "wake.main",

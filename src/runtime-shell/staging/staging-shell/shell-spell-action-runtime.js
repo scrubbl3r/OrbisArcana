@@ -165,7 +165,7 @@ export function createShellSpellActionRuntime({
       const cooldownMs = Math.max(0, Math.round(Number(preset.cooldownMs) || 0));
       const castDurationMs = Math.max(0, Math.round(Number(preset.castDurationMs) || 0));
       const lockoutMs = Math.max(cooldownMs, castDurationMs);
-      const wordId = String(payload && (payload.wordId || payload.sourceWordId || payload.spellId) || "salubrium");
+      const wordId = String(payload && (payload.wordId || payload.sourceWordId || payload.spellId) || "salubrum");
 
       function reject(reason, extra = {}) {
         if (eventBus && typeof eventBus.emit === "function") {
@@ -223,7 +223,7 @@ export function createShellSpellActionRuntime({
       }
       const healResult = orbSystem.applyHeal({
         amount: healAmountHp,
-        source: "salubrium",
+        source: "salubrum",
         sourceEntityId: "spell.heal",
         atMs,
       });

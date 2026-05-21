@@ -1,13 +1,13 @@
 // Data-only signal catalog for rule-engine scaffolding.
 // Runtime cutover will consume these IDs in a later slice.
-import { ACTIVE_WORDS_BY_ID } from "../../voice/wordbook.js?v=20260519pyromodulafb";
+import { ACTIVE_WORDS_BY_ID } from "../../voice/wordbook.js?v=20260520salubrumww";
 import {
   RULE_ENGINE_OWNED_IMMEDIATE_WORD_IDS,
   WAKE_ARM_WORD_IDS,
   WAKE_WORD_IDS,
   WAKE_REQUIRED_WORD_IDS,
   WAKE_WINDOW_WORD_IDS,
-} from "../spells/spell-runtime-routing.js?v=20260519pyromodulafb";
+} from "../spells/spell-runtime-routing.js?v=20260520salubrumww";
 
 function buildWakeWindowWordSignals() {
   const wakeWordIds = new Set(
