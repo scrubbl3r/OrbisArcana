@@ -3898,6 +3898,121 @@
       return { publishedPaths };
     }
 
+    async function updateElectricAoe3dPublishCacheBusts({ built } = {}){
+      if (String(built && built.payload && built.payload.baseEffect || "") !== "electric-aoe-3d") {
+        return null;
+      }
+      if (!studioProjectIo || typeof studioProjectIo.readPath !== "function" || typeof studioProjectIo.savePath !== "function") {
+        return null;
+      }
+      const presetToken = buildCacheBustToken();
+      const behaviorToken = `${presetToken}b`;
+      const indexToken = `${presetToken}i`;
+      const stageToken = `${presetToken}s`;
+      const targets = [
+        {
+          path: ["src", "runtime-effects", "electric-aoe-3d.js"],
+          replacements: [
+            { pattern: /(electric-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+            { pattern: /(electric-aoe-behavior-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${behaviorToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "game-stage", "game-stage-depth3d.js"],
+          replacements: [
+            { pattern: /(electric-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+            { pattern: /(electric-aoe-behavior-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${behaviorToken}` },
+            { pattern: /(runtime-effects\/electric-aoe-3d\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "authored-three-stage-surface.js"],
+          replacements: [
+            { pattern: /(game-stage-depth3d\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "game-stage", "game-stage.js"],
+          replacements: [
+            { pattern: /(authored-three-stage-surface\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "orb-stage", "orb-stage.js"],
+          replacements: [
+            { pattern: /(authored-three-stage-surface\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "orb-stage", "orb-stage-vfx-runtime.js"],
+          replacements: [
+            { pattern: /(electric-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+          ],
+        },
+        {
+          path: ["src", "vfx", "presets", "index.js"],
+          replacements: [
+            { pattern: /(electric-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime", "receiver-bootstrap.js"],
+          replacements: [
+            { pattern: /(vfx\/presets\/index\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${indexToken}` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "staging-shell", "create-staging-shell-runtime.js"],
+          replacements: [
+            { pattern: /(orb-stage\/orb-stage\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+            { pattern: /(orb-stage\/orb-stage-vfx-runtime\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+            { pattern: /(game-stage\/game-stage\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+            { pattern: /(moduleCacheBustV = ")[^"]+(")/g, value: `$1${stageToken}$2` },
+            { pattern: /(__orbisStagingShellRuntimeVersion = ")[^"]+(")/g, value: `$1${stageToken}$2` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "staging-shell", "staging-shell.js"],
+          replacements: [
+            { pattern: /(create-staging-shell-runtime\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+            { pattern: /(__orbisStagingShellEntryVersion = ")[^"]+(")/g, value: `$1${stageToken}$2` },
+          ],
+        },
+        {
+          path: ["src", "runtime-shell", "staging", "staging-shell", "staging-shell.html"],
+          replacements: [
+            { pattern: /(staging-shell\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${stageToken}` },
+          ],
+        },
+        {
+          path: ["labs", "vfx-studio", "vfx-studio.html"],
+          replacements: [
+            { pattern: /(electric-aoe-3d-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${presetToken}` },
+            { pattern: /(electric-aoe-behavior-default\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${behaviorToken}` },
+            { pattern: /(src\/vfx\/presets\/index\.js\?v=)[A-Za-z0-9_-]+/g, value: `$1${indexToken}` },
+          ],
+        },
+      ];
+      const publishedPaths = [];
+      for (const target of targets) {
+        const currentText = await studioProjectIo.readPath(target.path);
+        let nextText = String(currentText || "");
+        for (const replacement of target.replacements) {
+          nextText = nextText.replace(replacement.pattern, replacement.value);
+        }
+        if (nextText !== currentText) {
+          const ok = await studioProjectIo.savePath(target.path, nextText);
+          if (ok) publishedPaths.push(target.path);
+        }
+      }
+      return { publishedPaths };
+    }
+
+    async function updateSpell3dPublishCacheBusts(args = {}){
+      return await updateElectricAoe3dPublishCacheBusts(args)
+        || await updateFlameAoe3dPublishCacheBusts(args);
+    }
+
     function publishPreset(){
       const selectedBase = String(selectedBaseEffect() || "");
       const publishContract = publishContractForBaseEffect(selectedBase);
@@ -3927,7 +4042,7 @@
           downloadTextFile,
           draftPathParts: VFX_PRESET_DRAFTS_PATH,
           describePublishSuccess: describePublishSuccessHelper,
-          afterLivePublish: updateFlameAoe3dPublishCacheBusts,
+          afterLivePublish: updateSpell3dPublishCacheBusts,
         });
         if (result && result.message) window.alert(result.message);
       })();

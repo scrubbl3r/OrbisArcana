@@ -154,7 +154,8 @@ export function createElectricAoe3dPreview({
       const seed = boltIndex + 1;
       const unit = total <= 0 ? 0 : boltIndex / Math.max(1, total);
       const speed = minWalkSpeed + (maxWalkSpeed - minWalkSpeed) * (0.5 + 0.5 * Math.sin(seed * 2.17));
-      const angle = unit * Math.PI * 2 + time * speed + Math.sin(time * 0.7 + seed) * 0.08;
+      const walkDirection = Math.sin(seed * 12.9898) >= 0 ? 1 : -1;
+      const angle = unit * Math.PI * 2 + time * speed * walkDirection + Math.sin(time * 0.7 + seed) * 0.08;
       const rangeBo = minRangeBo + (maxRangeBo - minRangeBo) * (0.5 + 0.5 * Math.sin(seed * 1.91 + time * 0.45));
       const stepBo = minStepBo + (maxStepBo - minStepBo) * (0.5 + 0.5 * Math.sin(seed * 2.71));
       const segmentCount = Math.max(2, Math.ceil(Math.max(0.01, rangeBo) / Math.max(0.01, stepBo)));
