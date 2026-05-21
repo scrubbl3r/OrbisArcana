@@ -164,9 +164,25 @@ export function createSurfaceFireCardSystem({
     camera = null,
     orbWorldPosition = null,
     orbRuntimePosition = null,
+    enabled = false,
   } = {}) {
     const bo = Math.max(1, Number(getBo && getBo()) || 150);
     const nowMs = (Number(nowSec) || 0) * 1000;
+    if (!enabled) {
+      liveCards.length = 0;
+      lastEmitMs = -Infinity;
+      fireCards.beginFrame(nowSec, { camera });
+      fireCards.endFrame();
+      lastTrace = Object.freeze({
+        enabled: false,
+        activeCount: fireCards.activeCount,
+        liveCards: liveCards.length,
+        ttlMs: SURFACE_FIRE_TTL_MS,
+        contacts: 0,
+        nearestBo: null,
+      });
+      return;
+    }
     for (let i = liveCards.length - 1; i >= 0; i -= 1) {
       if (liveCards[i].expiresAtMs <= nowMs) liveCards.splice(i, 1);
     }

@@ -32,7 +32,7 @@ import {
 } from "../../../game-runtime/level/authored-level-read-model.js";
 import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260520075000";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js";
-import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260520075000";
+import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260520-flame-aoe-gate-a";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -811,6 +811,7 @@ export function createGameStageDepth3dLayer({
 
   function syncSurfaceFireTelemetry() {
     const trace = surfaceFireCardSystem.getTrace();
+    root.dataset.surfaceFireEnabled = trace.enabled === false ? "0" : "1";
     root.dataset.surfaceFireCards = String(trace.activeCount || 0);
     root.dataset.surfaceFireLiveCards = String(trace.liveCards || 0);
     root.dataset.surfaceFireContacts = String(trace.contacts || 0);
@@ -879,6 +880,7 @@ export function createGameStageDepth3dLayer({
     const measure = perfTrace && typeof perfTrace.measure === "function"
       ? perfTrace.measure
       : null;
+    const surfaceFireEnabled = flameAoe3dRuntime.isActive() || !!activeFlameAoeHazard;
     if (measure) {
       measure("depth3d.orbUpdate", () => orb3dActorRuntime.update(frameNowMs / 1000));
       measure("depth3d.surfaceBurn", () => surfaceFireCardSystem.update({
@@ -886,6 +888,7 @@ export function createGameStageDepth3dLayer({
         camera,
         orbWorldPosition: currentOrbWorldPosition,
         orbRuntimePosition: orb3dActorRuntime.getPosition(),
+        enabled: surfaceFireEnabled,
       }));
       measure("depth3d.globes", () => tickGlobe3dRuntime(frameNowMs));
       measure("depth3d.enemies", () => tickEnemy3dRuntime(frameNowMs));
@@ -900,6 +903,7 @@ export function createGameStageDepth3dLayer({
         camera,
         orbWorldPosition: currentOrbWorldPosition,
         orbRuntimePosition: orb3dActorRuntime.getPosition(),
+        enabled: surfaceFireEnabled,
       });
       tickGlobe3dRuntime(frameNowMs);
       tickEnemy3dRuntime(frameNowMs);
