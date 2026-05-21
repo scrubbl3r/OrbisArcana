@@ -1,6 +1,6 @@
 export const ELECTRIC_AOE_BEHAVIOR_DEFAULT = Object.freeze({
-  dominantBoltDamageMax: 0.30,
-  dominantBoltDamageMin: 0.10,
+  dominantBoltDamageMax: 0.60,
+  dominantBoltDamageMin: 0.50,
   dominantBoltDetourRatioMax: 1.40,
   dominantBoltEnemyFrequencyMaxMs: 1200,
   dominantBoltEnemyFrequencyMinMs: 450,
