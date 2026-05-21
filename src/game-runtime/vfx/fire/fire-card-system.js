@@ -3,7 +3,7 @@ import {
   FIRE_CARD_PROFILE_SMALL_TEARDROP,
   resolveFireCardProfile,
 } from "./fire-card-profiles.js?v=20260520a";
-import { createFireCardMaterial } from "./fire-card-material.js?v=20260520t";
+import { createFireCardMaterial } from "./fire-card-material.js?v=20260520u";
 
 const OFFSCREEN_POSITION = new THREE.Vector3(0, 0, -100000);
 const ZERO_SCALE = new THREE.Vector3(0, 0, 0);
@@ -118,8 +118,11 @@ export function createFireCardSystem({
   });
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, Math.floor(maxCards)));
   const seedAttribute = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count), 1);
+  const contactNormalAttribute = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count * 2), 2);
   seedAttribute.setUsage(THREE.DynamicDrawUsage);
+  contactNormalAttribute.setUsage(THREE.DynamicDrawUsage);
   geometry.setAttribute("aFireSeed", seedAttribute);
+  geometry.setAttribute("aFireContactNormal", contactNormalAttribute);
   mesh.name = "vfx:fire-cards";
   mesh.frustumCulled = false;
   mesh.renderOrder = 1200;
@@ -172,6 +175,7 @@ export function createFireCardSystem({
     widthPx = null,
     heightPx = null,
     seed = null,
+    contactNormal = null,
     quaternion = null,
   } = {}) {
     const cardCount = Math.max(1, Math.floor(profile.cardCount || 1));
@@ -188,7 +192,15 @@ export function createFireCardSystem({
       matrix.compose(position, quaternion || cardQuat, scale);
       mesh.setMatrixAt(writeIndex, matrix);
       const resolvedSeed = normalizeSeed(seed, (x * 0.013) + (y * 0.017) + card);
+      const normalX = Number(contactNormal && contactNormal.x);
+      const normalY = Number(contactNormal && contactNormal.y);
+      const normalLength = Math.hypot(normalX, normalY);
       seedAttribute.setX(writeIndex, resolvedSeed);
+      contactNormalAttribute.setXY(
+        writeIndex,
+        normalLength > 0.000001 ? normalX / normalLength : 0,
+        normalLength > 0.000001 ? normalY / normalLength : 1
+      );
       if (!lastSample) {
         sampleLocalPosition.copy(position);
         lastSample = {
@@ -209,6 +221,7 @@ export function createFireCardSystem({
     for (let i = writeIndex; i < mesh.count; i += 1) hideInstance(i);
     mesh.instanceMatrix.needsUpdate = true;
     seedAttribute.needsUpdate = true;
+    contactNormalAttribute.needsUpdate = true;
     mesh.visible = writeIndex > 0;
   }
 

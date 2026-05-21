@@ -1,5 +1,5 @@
 import { closestPointOnSegment } from "../../collision/circle-boundary-collision.js";
-import { createFireCardSystem } from "./fire-card-system.js?v=20260520u";
+import { createFireCardSystem } from "./fire-card-system.js?v=20260520v";
 
 const WORLD_UP = Object.freeze({ x: 0, y: 1 });
 const SURFACE_FIRE_TTL_MS = 3000;
@@ -66,6 +66,8 @@ export function createSurfaceFireCardSystem({
       wakeSimplexGain: 0.36,
       wakeNoiseMix: 0.48,
       wakeCarveStrength: 0.56,
+      contactFeatherPx: 5,
+      edgeFeatherPx: 3,
     },
   });
   const liveCards = [];
@@ -119,6 +121,7 @@ export function createSurfaceFireCardSystem({
       z,
       widthPx: profile.widthPx,
       heightPx: profile.heightPx,
+      contactNormal: { x: normal.x, y: normal.y },
       seed,
     };
   }
@@ -131,6 +134,7 @@ export function createSurfaceFireCardSystem({
       z: card.z,
       widthPx: card.widthPx,
       heightPx: card.heightPx,
+      contactNormal: card.contactNormal,
       seed: card.seed,
     });
   }

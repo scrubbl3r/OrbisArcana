@@ -36,6 +36,7 @@ export function createFireCardMaterial({
   wakeNoiseMix = 0.25,
   wakeCarveStrength = 0,
   edgeFeatherPx = 3,
+  contactFeatherPx = 0,
   endCapFeatherPx = 0,
   bottomFeatherPx = 0,
 } = {}) {
@@ -53,6 +54,7 @@ export function createFireCardMaterial({
     uniforms: {
       uTime: { value: 0 },
       uEdgeFeatherPx: { value: Math.max(0, finiteNumber(edgeFeatherPx, 3)) },
+      uContactFeatherPx: { value: Math.max(0, finiteNumber(contactFeatherPx, 0)) },
       uEndCapFeatherPx: { value: Math.max(0, finiteNumber(endCapFeatherPx, 0)) },
       uWakeNoiseScale: { value: Math.max(0.1, finiteNumber(wakeNoiseScale, 2)) },
       uWakeNoiseSpeed: { value: Math.max(0, finiteNumber(wakeNoiseSpeed, 7)) },
@@ -82,11 +84,14 @@ export function createFireCardMaterial({
     vertexShader: `
       precision highp float;
       attribute float aFireSeed;
+      attribute vec2 aFireContactNormal;
       varying vec3 vLocalPos;
       varying float vFireSeed;
+      varying vec2 vFireContactNormal;
       void main() {
         vLocalPos = position;
         vFireSeed = aFireSeed;
+        vFireContactNormal = aFireContactNormal;
         vec4 worldPosition = vec4(position, 1.0);
         #ifdef USE_INSTANCING
           worldPosition = instanceMatrix * worldPosition;
@@ -99,6 +104,7 @@ export function createFireCardMaterial({
       uniform float uTime;
       uniform int uDebugSolid;
       uniform float uEdgeFeatherPx;
+      uniform float uContactFeatherPx;
       uniform float uEndCapFeatherPx;
       uniform float uBottomFeatherPx;
       uniform float uWakeNoiseScale; uniform float uWakeNoiseSpeed; uniform float uWakeNoiseDensityBottom; uniform float uWakeNoiseDensityTop; uniform float uWakeNoiseContrast; uniform float uWakeNoiseOctaves; uniform float uWakeNoiseLacunarity; uniform float uWakeNoiseGain;
@@ -108,6 +114,7 @@ export function createFireCardMaterial({
       uniform float uWakeAlphaGradientStops[4]; uniform float uWakeAlphaGradientValues[4];
       varying vec3 vLocalPos;
       varying float vFireSeed;
+      varying vec2 vFireContactNormal;
 
       float circleRadiusAtY(float y, float centerY, float radius) {
         float dy = y - centerY;
@@ -237,6 +244,10 @@ export function createFireCardMaterial({
         float endCapAlpha = uEndCapFeatherPx > 0.0 ? smoothstep(0.0, endCapFeatherLocal, sideDistance) : 1.0;
         float bottomFeatherLocal = max(0.00001, uBottomFeatherPx * max(localPxX, localPxY));
         float bottomAlpha = uBottomFeatherPx > 0.0 ? smoothstep(0.0, bottomFeatherLocal, vLocalPos.y - minY) : 1.0;
+        vec2 contactNormal = normalize(length(vFireContactNormal) > 0.000001 ? vFireContactNormal : vec2(0.0, 1.0));
+        vec2 localPxFromAnchor = vec2(vLocalPos.x / max(0.00001, localPxX), vLocalPos.y / max(0.00001, localPxY));
+        float contactDistancePx = dot(localPxFromAnchor, contactNormal);
+        float contactAlpha = uContactFeatherPx > 0.0 ? smoothstep(0.0, uContactFeatherPx, contactDistancePx) : 1.0;
         float safeTail = edgeGuard(rawTail, 0.035, 0.965);
         if (edgeAlpha <= 0.001) discard;
         float safeEggX = clamp(rawEggX, -0.94, 0.94);
@@ -274,7 +285,7 @@ export function createFireCardMaterial({
         float carvedBlobs = broadBlobs * mix(1.0, detailBlobs, clamp(uWakeCarveStrength, 0.0, 1.0));
         float blobs = mix(mixedBlobs, carvedBlobs, clamp(uWakeCarveStrength, 0.0, 1.0));
         vec4 mapped = sampleWakeGraph(blobs);
-        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * edgeAlpha * endCapAlpha * bottomAlpha;
+        float verticalAlpha = sampleWakeAlphaGradient(safeTail) * edgeAlpha * endCapAlpha * bottomAlpha * contactAlpha;
         mapped.rgb *= verticalAlpha;
         mapped.a *= verticalAlpha;
         if (mapped.a <= 0.004) discard;
