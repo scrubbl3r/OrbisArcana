@@ -7,7 +7,7 @@ const SURFACE_FIRE_EMIT_INTERVAL_MS = 90;
 const EGG_LOCAL_HEIGHT = 2.0625;
 const SURFACE_FIRE_SCALE_MIN = 0.85;
 const SURFACE_FIRE_SCALE_MAX = 1.6;
-const SURFACE_FIRE_Z_DISPERSION_BO = 0.5;
+const SURFACE_FIRE_Z_DISPERSION_BO = 0.75;
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
