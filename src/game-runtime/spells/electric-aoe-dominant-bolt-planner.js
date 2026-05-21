@@ -48,7 +48,11 @@ function normalizePoint(point = {}, fallback = {}) {
 }
 
 function resolveTarget({ from, target, bo, config, phase, nav }) {
-  const fallback = pointAtRadius(bo * config.targetRadiusBo, phase);
+  const fallback = nav && typeof nav.randomPointAround === "function"
+    ? nav.randomPointAround(from, bo * config.targetRadiusBo, {
+      minRadius: bo * Math.min(config.targetRadiusBo, config.targetRadiusBo * 0.55),
+    })
+    : pointAtRadius(bo * config.targetRadiusBo, phase);
   const rawTarget = target && typeof target === "object" ? target : fallback;
   const resolved = nav && typeof nav.resolvePoint === "function"
     ? nav.resolvePoint(rawTarget, { fallback })

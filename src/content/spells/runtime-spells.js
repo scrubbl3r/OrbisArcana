@@ -34,6 +34,13 @@ export const RUNTIME_WORDS = Object.freeze([
     cooldownMs: 900,
     castActionId: "aoe_flame",
   },
+  {
+    id: "electrum",
+    slot: "FB",
+    intent: "spell.electrum",
+    cooldownMs: 900,
+    castActionId: "aoe_electric",
+  },
 ]);
 
 export const RUNTIME_WORDS_BY_ID = Object.freeze(

@@ -58,6 +58,11 @@ export function createGameStageRuntimeAdapter({
         ? depth3dRuntime.playFlameAoe3d(payload)
         : { handled: false, skipped: "depth3d_runtime_missing" };
     },
+    playElectricAoe3d(payload = {}) {
+      return depth3dRuntime && typeof depth3dRuntime.playElectricAoe3d === "function"
+        ? depth3dRuntime.playElectricAoe3d(payload)
+        : { handled: false, skipped: "depth3d_runtime_missing" };
+    },
     applyOrbSpinColor(color = {}) {
       if (depth3dRuntime && typeof depth3dRuntime.applyOrbSpinColor === "function") {
         depth3dRuntime.applyOrbSpinColor(color);

@@ -34,9 +34,9 @@ export function createShellSpellActionRuntime({
 
   const shellSpellActionHandlers = createSpellActionHandlersImported({
     eventBus,
-    playElectricAoe: () => (
+    playElectricAoe: (payload = {}) => (
       getRuntimeVfx() && typeof getRuntimeVfx().playElectricAoe === "function"
-        ? getRuntimeVfx().playElectricAoe()
+        ? getRuntimeVfx().playElectricAoe(payload)
         : { handled: false }
     ),
     playFlameAoe: (payload = {}) => {

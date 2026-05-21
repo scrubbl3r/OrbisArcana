@@ -39,16 +39,26 @@ export function createElectricAoe3dRuntime(options = {}) {
     getBo = () => 42,
     getConfig = () => ELECTRIC_AOE_3D_PRESET_DEFAULT,
     getLevelNav = () => null,
+    getParent = () => null,
     getOrbModel = () => null,
     getOrbWorldPosition = () => ({ xW: 0, yW: 0 }),
+    now = () => performance.now(),
     requestFrame = () => {},
+    toRuntimePosition = ({ xW = 0, yW = 0, z = 0 } = {}) => ({ x: xW, y: yW, z }),
   } = options;
   let group = null;
+  let timer = 0;
+  let pointGeometry = null;
+  let pointMaterial = null;
 
   function clear() {
+    if (timer) clearTimeout(timer);
+    timer = 0;
     if (group && group.parent) group.parent.remove(group);
     if (group) disposeThreeObject(group);
     group = null;
+    pointGeometry = null;
+    pointMaterial = null;
     requestFrame();
   }
 
@@ -76,16 +86,63 @@ export function createElectricAoe3dRuntime(options = {}) {
     });
   }
 
+  function syncControlPoints(path, bo) {
+    if (!group || !path || !Array.isArray(path.points)) return;
+    const pointDiameterBo = Math.max(0.01, Number(path.controlPointDiameterBo) || ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.controlPointDiameterBo);
+    if (!pointGeometry) pointGeometry = new THREE.SphereGeometry(bo * pointDiameterBo * 0.5, 18, 10);
+    if (!pointMaterial) {
+      pointMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffff00,
+        toneMapped: false,
+      });
+    }
+    path.points.forEach((point, index) => {
+      let marker = group.children[index];
+      if (!marker) {
+        marker = new THREE.Mesh(pointGeometry, pointMaterial);
+        marker.name = `electric_aoe3d:stage_dominant_control_point_${index}`;
+        marker.renderOrder = 240;
+        group.add(marker);
+      }
+      const runtimePoint = typeof toRuntimePosition === "function"
+        ? toRuntimePosition({
+          xW: point.xW,
+          yW: point.yW,
+          z: (Number(point.zBo) || 0) * bo,
+          bo,
+        })
+        : point;
+      marker.visible = true;
+      marker.position.set(
+        Number(runtimePoint && runtimePoint.x) || 0,
+        Number(runtimePoint && runtimePoint.y) || 0,
+        Number(runtimePoint && runtimePoint.z) || 0
+      );
+    });
+    for (let index = path.points.length; index < group.children.length; index += 1) {
+      group.children[index].visible = false;
+    }
+  }
+
   function play(payload = {}) {
     clear();
+    const parent = typeof getParent === "function" ? getParent() : null;
     const orbModel = typeof getOrbModel === "function" ? getOrbModel() : null;
     const path = planDominantBolt(payload);
-    if (!orbModel || !path || !path.points || !path.points.length) {
+    if ((!parent && !orbModel) || !path || !path.points || !path.points.length) {
       return { handled: false, skipped: "electric_aoe3d_control_path_only", path };
     }
+    const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 42);
     group = new THREE.Group();
     group.name = "electric_aoe3d:dominant_bolt_runtime";
-    orbModel.add(group);
+    (parent || orbModel).add(group);
+    syncControlPoints(path, bo);
+    const config = normalizeElectricAoe3dRuntimeConfig({
+      ...(typeof getConfig === "function" ? getConfig() : {}),
+      ...(payload && typeof payload === "object" ? payload : {}),
+    });
+    timer = setTimeout(clear, config.durationMs);
+    if (typeof now === "function") void now();
     requestFrame();
     return { handled: true, path };
   }

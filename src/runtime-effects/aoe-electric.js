@@ -3,10 +3,10 @@
  */
 export function executeAoeElectric({
   playElectricAoe,
+  payload = {},
 } = {}) {
   if (typeof playElectricAoe !== "function") {
     return { handled: false };
   }
-  playElectricAoe();
-  return { handled: true };
+  return playElectricAoe(payload) || { handled: true };
 }

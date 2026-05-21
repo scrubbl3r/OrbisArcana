@@ -14,11 +14,11 @@ export const INTERACTION_GRAPH_V2 = {
       { id: "root.modula", words: ["modula"], ttlMs: 1500 },
       { id: "root.salubrium", words: ["salubrium"], ttlMs: 1500 },
       { id: "root.leviton", words: ["leviton"], ttlMs: 1500 },
+      { id: "root.electrum", words: ["electrum"], ttlMs: 1500 },
     ],
   },
   groups: {
     wake_main_words: ["electrum"],
-    electrum_chain_words: ["rota"],
   },
   rules: [
     {
@@ -61,17 +61,10 @@ export const INTERACTION_GRAPH_V2 = {
       on: { word: "salubrium" },
       trigger: { spell: "heal" },
     },
-    // ELECTRIC AOE CHAIN
+    // ELECTRIC AOE
     {
-      id: "electric_aoe",
+      id: "electrum_cast_electric_aoe",
       on: { word: "electrum" },
-      requires: "wake.main",
-      open: { id: "chain.electrum", words: ["rota"], ttlMs: 1500 },
-    },
-    {
-      id: "electric_aoe_cast",
-      on: { word: "rota" },
-      requires: "chain.electrum",
       trigger: { spell: "aoe_electric" },
       grace: {},
     },

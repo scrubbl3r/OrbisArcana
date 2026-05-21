@@ -60,9 +60,11 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
+import { createElectricAoe3dRuntime } from "../../../runtime-effects/electric-aoe-3d.js?v=20260521a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/electric-aoe-3d-default.js?v=20260521a";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
@@ -177,6 +179,7 @@ export function createGameStageDepth3dLayer({
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let currentOrbWorldPosition = null;
   let currentOrbAlive = true;
+  let currentLevelNavContext = null;
   let currentBoundarySegments = Object.freeze([]);
   let combatEventBus = null;
   let lastGlobe3dTickMs = 0;
@@ -255,6 +258,20 @@ export function createGameStageDepth3dLayer({
     getConfig: () => FLAME_AOE_3D_PRESET_DEFAULT,
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
     traceMeasure: perfTrace && typeof perfTrace.measure === "function" ? perfTrace.measure : null,
+  });
+  const electricAoe3dRuntime = createElectricAoe3dRuntime({
+    getParent: () => actorGroup,
+    getOrbModel: () => orb3dActorRuntime.getModel(),
+    getOrbWorldPosition: () => currentOrbWorldPosition || { xW: 0, yW: 0 },
+    getLevelNav: () => currentLevelNavContext,
+    getBo: () => orb3dActorRuntime.getBo(),
+    getConfig: () => ELECTRIC_AOE_3D_PRESET_DEFAULT,
+    toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
+      x: toDepthThreeX(xW, worldWidthPx),
+      y: toDepthThreeY(yW, worldHeightPx),
+      z,
+    }),
+    requestFrame: () => renderLoop.scheduleAnimation(),
   });
   const shockwave3dRuntime = createShockwave3dRuntime({
     getOrbModel: () => orb3dActorRuntime.getModel(),
@@ -1003,6 +1020,7 @@ export function createGameStageDepth3dLayer({
         resolutionBo: LEVEL_NAV_GRID_RESOLUTION_BO,
       });
       const levelNavContext = createLevelNavContext({ navGrid: levelNavGrid });
+      currentLevelNavContext = levelNavContext;
       root.dataset.levelNavGridResolutionBo = String(LEVEL_NAV_GRID_RESOLUTION_BO);
       root.dataset.levelNavGridCells = levelNavGrid ? String(levelNavGrid.cols * levelNavGrid.rows) : "0";
       telemetry.setDepthLayerLabel(layers);
@@ -1210,6 +1228,28 @@ export function createGameStageDepth3dLayer({
         damageAffected: Number(root.dataset.enemy3dLastFlameAoeDamageCount) || 0,
       };
     },
+    playElectricAoe3d(payload = {}) {
+      const callAtMs = performance.now();
+      if (perfTrace && typeof perfTrace.mark === "function") {
+        perfTrace.mark("electricAoe.gameStage.called", {
+          disposed: !!disposed,
+          hasOrbModel: !!(orb3dActorRuntime && orb3dActorRuntime.hasModel && orb3dActorRuntime.hasModel()),
+          hasOrbWorld: !!currentOrbWorldPosition,
+          hasNav: !!currentLevelNavContext,
+        });
+      }
+      if (disposed || !orb3dActorRuntime.hasModel() || !currentOrbWorldPosition) {
+        return { handled: false, skipped: "electric_aoe3d_runtime_missing" };
+      }
+      const result = electricAoe3dRuntime.play(payload && typeof payload === "object" ? payload : {});
+      root.dataset.enemy3dLastElectricAoeStageCallAt = String(Math.round(callAtMs));
+      root.dataset.enemy3dLastElectricAoePointCount = String(result && result.path && result.path.points ? result.path.points.length : 0);
+      if (result && result.handled) {
+        renderLoop.scheduleAnimation();
+        renderLoop.renderFrame(renderLoop.getLastFrame() || {});
+      }
+      return result || { handled: false };
+    },
     playShockwave3d(payload = {}) {
       if (disposed || !orb3dActorRuntime.hasModel()) {
         return { handled: false, skipped: "shockwave3d_runtime_missing" };
@@ -1292,6 +1332,7 @@ export function createGameStageDepth3dLayer({
       teleport3dRuntime.destroy();
       bubbleShield3dRuntime.destroy();
       flameAoe3dRuntime.destroy();
+      electricAoe3dRuntime.destroy();
       shockwave3dRuntime.destroy();
       surfaceFireCardSystem.dispose();
       orbLifecycle3dRuntime.dispose();

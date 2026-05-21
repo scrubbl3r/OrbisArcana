@@ -157,13 +157,6 @@ export function bindStagingRuntimeEvents({
     }
     if (actionType !== "event") return;
     const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
-    if (actionId === "aoe_electric") {
-      playElectricAoe();
-      if (RULE_CHAIN_TRACE_ENABLED && kwsBridge && typeof kwsBridge.pushLogLine === "function") {
-        kwsBridge.pushLogLine("TRACE exec:aoe_electric:direct", "ok");
-      }
-      return;
-    }
     const bindings = (ruleSchema && ruleSchema.eventRuntimeBindings && typeof ruleSchema.eventRuntimeBindings === "object")
       ? ruleSchema.eventRuntimeBindings
       : Object.create(null);

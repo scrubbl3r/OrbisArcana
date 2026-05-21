@@ -267,9 +267,9 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
               : { handled: false }
           )
     ),
-    playElectricAoe: () => (
+    playElectricAoe: (payload = {}) => (
       shellHooks && typeof shellHooks.playElectricAoe === "function"
-        ? shellHooks.playElectricAoe()
+        ? shellHooks.playElectricAoe(payload)
         : { handled: false }
     ),
     playOrbNod: (payload = {}) => (

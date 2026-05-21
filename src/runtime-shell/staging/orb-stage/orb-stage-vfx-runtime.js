@@ -4,6 +4,7 @@ import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/tel
 import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501d";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/electric-aoe-3d-default.js?v=20260521a";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 
 export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => value } = {}) {
@@ -34,6 +35,7 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
       durationMs: 10000,
     },
     flame3d: { ...FLAME_AOE_3D_PRESET_DEFAULT },
+    electric3d: { ...ELECTRIC_AOE_3D_PRESET_DEFAULT },
     electric: {
       startRatio: 0.80,
       endRatio: 2.0,
@@ -93,6 +95,7 @@ export function initOrbStageReceiverVfxRuntime({
   playBubbleShield3dRuntime = null,
   playShockwave3dRuntime = null,
   playFlameAoe3dRuntime = null,
+  playElectricAoe3dRuntime = null,
   requestCameraTravel = null,
   cancelCameraTravel = null,
 } = {}) {
@@ -159,7 +162,25 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function playOrbStageElectricAoeFallback() {
+  function playOrbStageElectricAoeFallback(payload = {}) {
+    markTrace("electricAoe.orbStageFallback.called", {
+      has3dRuntime: typeof playElectricAoe3dRuntime === "function",
+      payloadKeys: payload && typeof payload === "object" ? Object.keys(payload).slice(0, 12) : [],
+    });
+    if (typeof playElectricAoe3dRuntime === "function") {
+      const result = playElectricAoe3dRuntime({
+        ...(vfxDefaults && vfxDefaults.electric3d && typeof vfxDefaults.electric3d === "object"
+          ? vfxDefaults.electric3d
+          : Object.create(null)),
+        ...(payload && typeof payload === "object" ? payload : {}),
+      });
+      markTrace("electricAoe.orbStageFallback.result", {
+        handled: !!(result && result.handled),
+        skipped: String(result && result.skipped || ""),
+        pointCount: Number(result && result.path && result.path.points && result.path.points.length) || 0,
+      });
+      if (result && result.handled) return result;
+    }
     return { handled: false };
   }
 
@@ -248,7 +269,7 @@ export function initOrbStageReceiverVfxRuntime({
         targetId: "shockwave",
         runtime: {
           playFlameAoe: () => playOrbStageFlameAoeFallback(),
-          playElectricAoe: () => playOrbStageElectricAoeFallback(),
+          playElectricAoe: (payload = {}) => playOrbStageElectricAoeFallback(payload),
           playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
           triggerShockwave: () => triggerOrbStageShockwaveFallback(),
           activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
@@ -263,7 +284,7 @@ export function initOrbStageReceiverVfxRuntime({
         targetId: "aoe_electric",
         runtime: {
           playFlameAoe: () => playOrbStageFlameAoeFallback(),
-          playElectricAoe: () => playOrbStageElectricAoeFallback(),
+          playElectricAoe: (payload = {}) => playOrbStageElectricAoeFallback(payload),
           playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
           triggerShockwave: () => triggerOrbStageShockwaveFallback(),
           activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
@@ -281,7 +302,7 @@ export function initOrbStageReceiverVfxRuntime({
         targetId: "aoe_flame",
         runtime: {
           playFlameAoe: (nextPayload = {}) => playOrbStageFlameAoeFallback(nextPayload),
-          playElectricAoe: () => playOrbStageElectricAoeFallback(),
+          playElectricAoe: (payload = {}) => playOrbStageElectricAoeFallback(payload),
           playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
           triggerShockwave: () => triggerOrbStageShockwaveFallback(),
           activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
@@ -296,7 +317,7 @@ export function initOrbStageReceiverVfxRuntime({
         targetId: "bubble_shield",
         runtime: {
           playFlameAoe: () => playOrbStageFlameAoeFallback(),
-          playElectricAoe: () => playOrbStageElectricAoeFallback(),
+          playElectricAoe: (payload = {}) => playOrbStageElectricAoeFallback(payload),
           playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
           triggerShockwave: () => triggerOrbStageShockwaveFallback(),
           activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
