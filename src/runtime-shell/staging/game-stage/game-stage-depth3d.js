@@ -38,6 +38,7 @@ import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
 } from "../../../game-runtime/level/nav/level-nav-grid.js?v=20260515a";
+import { createLevelNavContext } from "../../../game-runtime/level/nav/level-nav-context.js?v=20260521a";
 import {
   applyThreeMeshFlags,
   disposeThreeObject,
@@ -1001,6 +1002,7 @@ export function createGameStageDepth3dLayer({
         bo: baseOrbWorldUnits,
         resolutionBo: LEVEL_NAV_GRID_RESOLUTION_BO,
       });
+      const levelNavContext = createLevelNavContext({ navGrid: levelNavGrid });
       root.dataset.levelNavGridResolutionBo = String(LEVEL_NAV_GRID_RESOLUTION_BO);
       root.dataset.levelNavGridCells = levelNavGrid ? String(levelNavGrid.cols * levelNavGrid.rows) : "0";
       telemetry.setDepthLayerLabel(layers);
@@ -1031,6 +1033,7 @@ export function createGameStageDepth3dLayer({
       gnatSwarm3dRuntime.load(enemySpawns, {
         boundaryLoops,
         boundaryBox,
+        navContext: levelNavContext,
         navGrid: levelNavGrid,
       });
       surfaceFireCardSystem.load(boundarySegments);

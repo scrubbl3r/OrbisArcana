@@ -184,6 +184,7 @@ export function createStudioBootstrap({
       previewRoot: els.flameAoe3dPreviewRoot,
       previewElectricAoe3d: els.previewElectricAoe3d,
       electricAoe3dOrbVisibleBtn: els.electricAoe3dOrbVisibleBtn,
+      electricAoe3dControlPointsVisibleBtn: els.electricAoe3dControlPointsVisibleBtn,
     }),
     bankOrb3d: Object.freeze({
       ...els,

@@ -8,3 +8,8 @@ map independently.
 
 The first pass is a walkable grid generated from authored boundary loops. Tune
 grid density with `LEVEL_NAV_GRID_RESOLUTION_BO` in `level-nav-grid.js`.
+
+Consumers should depend on the generic context returned by
+`createLevelNavContext`, not on enemy-specific helpers. The context exposes the
+shared route, distance, walkability, and random-point queries used by enemies,
+spells, and future actor systems.

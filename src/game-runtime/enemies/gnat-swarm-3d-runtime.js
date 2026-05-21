@@ -1071,13 +1071,14 @@ export function createGnatSwarm3dRuntime({
   function load(spawns = [], {
     boundaryLoops = [],
     boundaryBox = null,
+    navContext = null,
     navGrid = null,
   } = {}) {
     disposeMesh();
     bounds = Object.freeze({
       loops: Array.isArray(boundaryLoops) ? boundaryLoops : [],
       box: boundaryBox || null,
-      nav: navGrid || null,
+      nav: navContext || navGrid || null,
     });
     Object.assign(alertTrace, {
       direct: 0,

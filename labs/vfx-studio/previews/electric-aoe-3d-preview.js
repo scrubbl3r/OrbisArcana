@@ -8,6 +8,7 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
+import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
 
 function frameCameraToSsotOrbSize(inspector, root, bo) {
   if (!inspector || !inspector.camera || !root) return;
@@ -36,6 +37,10 @@ export function createElectricAoe3dPreview({
   let shellMaterial = null;
   let orbLight = null;
   let model = null;
+  let controlPointLayer = null;
+  let controlPointGeometry = null;
+  let controlPointMaterial = null;
+  let controlPointLastRefreshMs = 0;
   let createdAt = 0;
 
   function readBo() {
@@ -49,6 +54,72 @@ export function createElectricAoe3dPreview({
     shellMaterial = null;
     orbLight = null;
     model = null;
+    controlPointLayer = null;
+    controlPointGeometry = null;
+    controlPointMaterial = null;
+    controlPointLastRefreshMs = 0;
+  }
+
+  function controlPointsVisible() {
+    return !els.electricAoe3dControlPointsVisibleBtn
+      || els.electricAoe3dControlPointsVisibleBtn.getAttribute("aria-pressed") !== "false";
+  }
+
+  function buildPreviewControlPath(bo, time = 0) {
+    const targetRadiusBo = 3.75 + Math.sin(time * 0.9) * 0.45;
+    const phase = Math.PI * 0.14 + time * 0.34;
+    return buildElectricAoeDominantBoltControlPath({
+      bo,
+      config: {
+        controlPointDiameterBo: 0.05,
+        pathJitterBo: 0.22,
+        pointSpacingBo: 0.62,
+        rangeBo: 8,
+        targetRadiusBo,
+        zBo: 0,
+      },
+      from: { xW: 0, yW: 0 },
+      phase,
+    });
+  }
+
+  function syncControlPointLayer(bo, time = 0, force = false) {
+    if (!controlPointLayer) return;
+    const nowMs = performance.now();
+    if (!force && nowMs - controlPointLastRefreshMs < 90) return;
+    controlPointLastRefreshMs = nowMs;
+    const path = buildPreviewControlPath(bo, time);
+    const points = Array.isArray(path && path.points) ? path.points : [];
+    if (!controlPointGeometry) controlPointGeometry = new THREE.SphereGeometry(bo * 0.05 * 0.5, 18, 10);
+    if (!controlPointMaterial) {
+      controlPointMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffff00,
+        toneMapped: false,
+      });
+    }
+    points.forEach((point, index) => {
+      let marker = controlPointLayer.children[index];
+      if (!marker) {
+        marker = new THREE.Mesh(controlPointGeometry, controlPointMaterial);
+        marker.name = `electric_aoe3d:dominant_control_point_${index}`;
+        marker.renderOrder = 220;
+        controlPointLayer.add(marker);
+      }
+      marker.visible = true;
+      marker.position.set(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo);
+    });
+    for (let index = points.length; index < controlPointLayer.children.length; index += 1) {
+      controlPointLayer.children[index].visible = false;
+    }
+  }
+
+  function createControlPointLayer(bo) {
+    const layer = new THREE.Group();
+    layer.name = "electric_aoe3d:dominant_bolt_control_points";
+    layer.visible = controlPointsVisible();
+    controlPointLayer = layer;
+    syncControlPointLayer(bo, 0, true);
+    return layer;
   }
 
   function apply() {
@@ -72,6 +143,7 @@ export function createElectricAoe3dPreview({
           shellMaterial.uniforms.uTime.value = time;
         }
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
+        syncControlPointLayer(bo, time);
       },
     });
     if (!inspector) return activeConfig;
@@ -97,8 +169,10 @@ export function createElectricAoe3dPreview({
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
     model.add(orbLight);
+    controlPointLayer = createControlPointLayer(bo);
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.035));
     inspector.scene.add(model);
+    inspector.scene.add(controlPointLayer);
     inspector.render();
     return activeConfig;
   }
@@ -111,10 +185,19 @@ export function createElectricAoe3dPreview({
     if (inspector && typeof inspector.render === "function") inspector.render();
   }
 
+  function toggleControlPoints() {
+    if (!els.electricAoe3dControlPointsVisibleBtn) return;
+    const visible = els.electricAoe3dControlPointsVisibleBtn.getAttribute("aria-pressed") !== "false";
+    els.electricAoe3dControlPointsVisibleBtn.setAttribute("aria-pressed", visible ? "false" : "true");
+    if (controlPointLayer) controlPointLayer.visible = !visible;
+    if (inspector && typeof inspector.render === "function") inspector.render();
+  }
+
   function wire() {
     apply();
     if (els.previewElectricAoe3d) els.previewElectricAoe3d.addEventListener("click", apply);
     if (els.electricAoe3dOrbVisibleBtn) els.electricAoe3dOrbVisibleBtn.addEventListener("click", toggleOrb);
+    if (els.electricAoe3dControlPointsVisibleBtn) els.electricAoe3dControlPointsVisibleBtn.addEventListener("click", toggleControlPoints);
   }
 
   return Object.freeze({
