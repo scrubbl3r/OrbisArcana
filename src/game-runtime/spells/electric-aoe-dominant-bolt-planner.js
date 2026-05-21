@@ -3,6 +3,7 @@ export const ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS = Object.freeze({
   detourRatioMax: 1.4,
   maxRangeBo: 8,
   minRangeBo: 2,
+  originRadiusBo: 0.5,
   pointSpacingBo: 0.75,
   pathJitterBo: 0.18,
   rangeBo: 8,
@@ -55,6 +56,20 @@ function normalizePoint(point = {}, fallback = {}) {
   return {
     xW: Number.isFinite(Number(point.xW)) ? Number(point.xW) : Number(fallback.xW) || 0,
     yW: Number.isFinite(Number(point.yW)) ? Number(point.yW) : Number(fallback.yW) || 0,
+  };
+}
+
+function pointOnRadiusToward(from = {}, to = {}, radiusWorld = 0) {
+  const start = normalizePoint(from);
+  const target = normalizePoint(to, start);
+  const dx = target.xW - start.xW;
+  const dy = target.yW - start.yW;
+  const length = Math.hypot(dx, dy);
+  if (length <= 0.000001 || radiusWorld <= 0) return start;
+  const scale = radiusWorld / length;
+  return {
+    xW: start.xW + dx * scale,
+    yW: start.yW + dy * scale,
   };
 }
 
@@ -159,10 +174,18 @@ export function buildElectricAoeDominantBoltControlPath({
       yW: point.yW,
       zBo: config.zBo,
     }));
+  const originPoint = pointOnRadiusToward(start, end, safeBo * ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.originRadiusBo);
+  const resolvedPoints = points.length
+    ? [
+      Object.freeze({ ...points[0], xW: originPoint.xW, yW: originPoint.yW }),
+      ...points.slice(1),
+    ]
+    : [Object.freeze({ ...originPoint, zBo: config.zBo })];
   return Object.freeze({
     controlPointDiameterBo: config.controlPointDiameterBo,
     eligible: true,
-    points: Object.freeze(points),
+    originRadiusBo: ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.originRadiusBo,
+    points: Object.freeze(resolvedPoints),
     target: Object.freeze({ ...end, zBo: config.zBo }),
   });
 }
