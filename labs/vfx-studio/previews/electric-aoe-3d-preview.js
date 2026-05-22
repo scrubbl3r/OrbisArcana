@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522f";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522g";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -151,6 +151,8 @@ export function createElectricAoe3dPreview({
   }
 
   function readHaloFieldConfig() {
+    const forkTtlMinMs = Math.round(readInputNumber(els.electricAoe3dHaloBoltForkTtlMinMs, 180, 16, 20000));
+    const forkTtlMaxMs = Math.round(readInputNumber(els.electricAoe3dHaloBoltForkTtlMaxMs, forkTtlMinMs, forkTtlMinMs, 20000));
     return Object.freeze({
       dominantBoltZBo: 0,
       haloBoltShapeMinStepBo: readInputNumber(els.electricAoe3dHaloBoltShapeMinStepBo, 0.05, 0.01, 8),
@@ -162,7 +164,8 @@ export function createElectricAoe3dPreview({
       haloBoltShapeSpeedHz: readInputNumber(els.electricAoe3dHaloBoltShapeSpeedHz, 18, 0, 120),
       haloBoltShapeSmoothing: readInputNumber(els.electricAoe3dHaloBoltShapeSmoothing, 0.18, 0, 1),
       haloBoltForkChance: readInputNumber(els.electricAoe3dHaloBoltForkChance, 0, 0, 1),
-      haloBoltForkTtlMs: Math.round(readInputNumber(els.electricAoe3dHaloBoltForkTtlMs, 180, 16, 20000)),
+      haloBoltForkTtlMinMs: forkTtlMinMs,
+      haloBoltForkTtlMaxMs: forkTtlMaxMs,
       haloBoltForkStartPct: readInputNumber(els.electricAoe3dHaloBoltForkStartPct, 0.33, 0, 1),
       haloBoltForkEndPct: readInputNumber(els.electricAoe3dHaloBoltForkEndPct, 0.75, 0, 1),
       haloBoltForkSpreadMinBo: readInputNumber(els.electricAoe3dHaloBoltForkSpreadMinBo, 0.22, 0, 8),
@@ -491,7 +494,8 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dHaloBoltShapeSpeedHz,
       els.electricAoe3dHaloBoltShapeSmoothing,
       els.electricAoe3dHaloBoltForkChance,
-      els.electricAoe3dHaloBoltForkTtlMs,
+      els.electricAoe3dHaloBoltForkTtlMinMs,
+      els.electricAoe3dHaloBoltForkTtlMaxMs,
       els.electricAoe3dHaloBoltForkStartPct,
       els.electricAoe3dHaloBoltForkEndPct,
       els.electricAoe3dHaloBoltForkSpreadMinBo,

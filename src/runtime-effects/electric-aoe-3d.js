@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522f";
-import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522haloLengthAb";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522haloLengthA";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522g";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522forkTtlRangeAb";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522forkTtlRangeA";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -66,6 +66,18 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     60000,
     ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltEnemyFrequencyMaxMs
   ));
+  const haloBoltForkTtlMinMs = Math.round(clampNumber(
+    source.haloBoltForkTtlMinMs ?? source.haloBoltForkTtlMs,
+    16,
+    20000,
+    ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkTtlMinMs
+  ));
+  const haloBoltForkTtlMaxMs = Math.round(clampNumber(
+    source.haloBoltForkTtlMaxMs ?? source.haloBoltForkTtlMs,
+    haloBoltForkTtlMinMs,
+    20000,
+    ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkTtlMaxMs
+  ));
   return Object.freeze({
     durationMs: Math.round(clampNumber(source.spellDurationMs ?? source.durationMs, 200, 60000, ELECTRIC_AOE_BEHAVIOR_DEFAULT.spellDurationMs)),
     dominantBoltDamageMax,
@@ -104,7 +116,8 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     haloBoltShapeSpeedHz: clampNumber(source.haloBoltShapeSpeedHz, 0, 120, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltShapeSpeedHz),
     haloBoltShapeSmoothing: clampNumber(source.haloBoltShapeSmoothing, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltShapeSmoothing),
     haloBoltForkChance: clampNumber(source.haloBoltForkChance, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkChance),
-    haloBoltForkTtlMs: Math.round(clampNumber(source.haloBoltForkTtlMs, 16, 20000, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkTtlMs)),
+    haloBoltForkTtlMaxMs,
+    haloBoltForkTtlMinMs,
     haloBoltForkStartPct: clampNumber(source.haloBoltForkStartPct, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkStartPct),
     haloBoltForkEndPct: clampNumber(source.haloBoltForkEndPct, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkEndPct),
     haloBoltForkSpreadMinBo: clampNumber(source.haloBoltForkSpreadMinBo ?? source.haloBoltForkSpreadBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkSpreadMinBo),

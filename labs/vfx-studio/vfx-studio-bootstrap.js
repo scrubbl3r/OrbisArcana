@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-halo-length-a";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-fork-ttl-range-a";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -231,7 +231,8 @@ export function createStudioBootstrap({
       electricAoe3dHaloBoltShapeSpeedHz: els.electricAoe3dHaloBoltShapeSpeedHz,
       electricAoe3dHaloBoltShapeSmoothing: els.electricAoe3dHaloBoltShapeSmoothing,
       electricAoe3dHaloBoltForkChance: els.electricAoe3dHaloBoltForkChance,
-      electricAoe3dHaloBoltForkTtlMs: els.electricAoe3dHaloBoltForkTtlMs,
+      electricAoe3dHaloBoltForkTtlMinMs: els.electricAoe3dHaloBoltForkTtlMinMs,
+      electricAoe3dHaloBoltForkTtlMaxMs: els.electricAoe3dHaloBoltForkTtlMaxMs,
       electricAoe3dHaloBoltForkStartPct: els.electricAoe3dHaloBoltForkStartPct,
       electricAoe3dHaloBoltForkEndPct: els.electricAoe3dHaloBoltForkEndPct,
       electricAoe3dHaloBoltForkSpreadMinBo: els.electricAoe3dHaloBoltForkSpreadMinBo,

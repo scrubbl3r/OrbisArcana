@@ -86,6 +86,8 @@ function normalizeConfig(raw = {}) {
   const forkSpreadMaxBo = clampNumber(source.haloBoltForkSpreadMaxBo ?? legacyForkSpreadBo, forkSpreadMinBo, 8, 0.46);
   const forkZTineMinBo = clampNumber(source.haloBoltForkZTineMinBo, 0, 8, 0);
   const forkZTineMaxBo = clampNumber(source.haloBoltForkZTineMaxBo, forkZTineMinBo, 8, 0.08);
+  const forkTtlMinMs = Math.round(clampNumber(source.haloBoltForkTtlMinMs ?? source.haloBoltForkTtlMs, 16, 20000, 180));
+  const forkTtlMaxMs = Math.round(clampNumber(source.haloBoltForkTtlMaxMs ?? source.haloBoltForkTtlMs, forkTtlMinMs, 20000, 180));
   return Object.freeze({
     boltHeadingMemory: clampNumber(source.haloBoltShapeHeadingMemory ?? source.haloBoltHeadingMemory, 0, 1, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.headingMemory),
     boltMaxStepBo,
@@ -139,7 +141,8 @@ function normalizeConfig(raw = {}) {
     forkSpreadMaxBo,
     forkSpreadMinBo,
     forkTargetOffsetBo: clampNumber(source.haloBoltForkTargetOffsetBo, 0, 8, 0.18),
-    forkTtlMs: Math.round(clampNumber(source.haloBoltForkTtlMs, 16, 20000, 180)),
+    forkTtlMaxMs,
+    forkTtlMinMs,
     forkZTineMaxBo,
     forkZTineMinBo,
     zBo: clampNumber(source.zBo ?? source.dominantBoltZBo, -64, 64, 0),
@@ -505,20 +508,22 @@ function buildHaloFork({ config, endpoint, forkPoint, originXW, originYW, safeBo
 function ensureForkState(states, { config, index, seed, time }) {
   let state = states[index];
   if (!state) {
-    state = { active: false, expiresAt: -1, roll: 0, ttlMs: config.forkTtlMs };
+    state = { active: false, expiresAt: -1, roll: 0, ttlMaxMs: config.forkTtlMaxMs, ttlMinMs: config.forkTtlMinMs };
     states[index] = state;
   }
   if (config.forkChance <= 0) {
     state.active = false;
-    state.expiresAt = time + config.forkTtlMs / 1000;
-    state.ttlMs = config.forkTtlMs;
+    state.expiresAt = time + config.forkTtlMaxMs / 1000;
+    state.ttlMaxMs = config.forkTtlMaxMs;
+    state.ttlMinMs = config.forkTtlMinMs;
     return state;
   }
-  if (time >= state.expiresAt || state.ttlMs !== config.forkTtlMs) {
+  if (time >= state.expiresAt || state.ttlMinMs !== config.forkTtlMinMs || state.ttlMaxMs !== config.forkTtlMaxMs) {
     state.roll += 1;
-    state.ttlMs = config.forkTtlMs;
+    state.ttlMaxMs = config.forkTtlMaxMs;
+    state.ttlMinMs = config.forkTtlMinMs;
     state.active = random01(seed + state.roll * 211.13, 173) <= config.forkChance;
-    state.expiresAt = time + config.forkTtlMs / 1000;
+    state.expiresAt = time + randomBetween(seed + state.roll * 211.13, 181, config.forkTtlMinMs, config.forkTtlMaxMs) / 1000;
   }
   return state;
 }
