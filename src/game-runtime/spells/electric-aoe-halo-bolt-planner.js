@@ -69,6 +69,11 @@ function normalizeConfig(raw = {}) {
   const zRange = normalizeZRange(source, fieldShellRadiusBo);
   const forkStartPct = clampNumber(source.haloBoltForkStartPct, 0, 1, 0.33);
   const forkEndPct = clampNumber(source.haloBoltForkEndPct, 0, 1, 0.75);
+  const legacyForkSpreadBo = source.haloBoltForkSpreadBo;
+  const forkSpreadMinBo = clampNumber(source.haloBoltForkSpreadMinBo ?? legacyForkSpreadBo, 0, 8, 0.22);
+  const forkSpreadMaxBo = clampNumber(source.haloBoltForkSpreadMaxBo ?? legacyForkSpreadBo, forkSpreadMinBo, 8, 0.46);
+  const forkZTineMinBo = clampNumber(source.haloBoltForkZTineMinBo, 0, 8, 0);
+  const forkZTineMaxBo = clampNumber(source.haloBoltForkZTineMaxBo, forkZTineMinBo, 8, 0.08);
   return Object.freeze({
     boltHeadingMemory: clampNumber(source.haloBoltShapeHeadingMemory ?? source.haloBoltHeadingMemory, 0, 1, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.headingMemory),
     boltMaxStepBo,
@@ -117,8 +122,11 @@ function normalizeConfig(raw = {}) {
     forkChance: clampNumber(source.haloBoltForkChance, 0, 1, 0),
     forkEndPctMax: Math.max(forkStartPct, forkEndPct),
     forkEndPctMin: Math.min(forkStartPct, forkEndPct),
-    forkSpreadBo: clampNumber(source.haloBoltForkSpreadBo, 0, 8, 0.34),
+    forkSpreadMaxBo,
+    forkSpreadMinBo,
     forkTargetOffsetBo: clampNumber(source.haloBoltForkTargetOffsetBo, 0, 8, 0.18),
+    forkZTineMaxBo,
+    forkZTineMinBo,
     zBo: clampNumber(source.zBo ?? source.dominantBoltZBo, -64, 64, 0),
   });
 }
@@ -443,9 +451,9 @@ function buildHaloFork({ config, endpoint, forkPoint, originXW, originYW, safeBo
   const perpendicular = planarLength > 0.000001
     ? Object.freeze({ x: -tangent.y / planarLength, y: tangent.x / planarLength, z: 0 })
     : Object.freeze({ x: 0, y: 1, z: 0 });
-  const spreadBo = config.forkSpreadBo * (0.65 + random01(seed, 153) * 0.7);
+  const spreadBo = randomBetween(seed, 153, config.forkSpreadMinBo, config.forkSpreadMaxBo);
   const offsetBo = config.forkTargetOffsetBo * (random01(seed, 157) * 2 - 1);
-  const zSpreadBo = config.forkSpreadBo * 0.18 * (random01(seed, 159) * 2 - 1);
+  const zSpreadBo = randomBetween(seed, 159, config.forkZTineMinBo, config.forkZTineMaxBo) * (random01(seed, 161) < 0.5 ? -1 : 1);
   const center = Object.freeze({
     xW: (Number(endpoint.xW) || 0) + tangent.x * offsetBo * safeBo,
     yW: (Number(endpoint.yW) || 0) + tangent.y * offsetBo * safeBo,

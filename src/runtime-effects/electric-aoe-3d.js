@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522c";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522d";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521214600b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-a";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-b";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -106,7 +106,10 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     haloBoltForkChance: clampNumber(source.haloBoltForkChance, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkChance),
     haloBoltForkStartPct: clampNumber(source.haloBoltForkStartPct, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkStartPct),
     haloBoltForkEndPct: clampNumber(source.haloBoltForkEndPct, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkEndPct),
-    haloBoltForkSpreadBo: clampNumber(source.haloBoltForkSpreadBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkSpreadBo),
+    haloBoltForkSpreadMinBo: clampNumber(source.haloBoltForkSpreadMinBo ?? source.haloBoltForkSpreadBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkSpreadMinBo),
+    haloBoltForkSpreadMaxBo: clampNumber(source.haloBoltForkSpreadMaxBo ?? source.haloBoltForkSpreadBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkSpreadMaxBo),
+    haloBoltForkZTineMinBo: clampNumber(source.haloBoltForkZTineMinBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkZTineMinBo),
+    haloBoltForkZTineMaxBo: clampNumber(source.haloBoltForkZTineMaxBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkZTineMaxBo),
     haloBoltForkTargetOffsetBo: clampNumber(source.haloBoltForkTargetOffsetBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkTargetOffsetBo),
     haloFieldLingerMinMs: Math.round(clampNumber(
       source.haloFieldLingerMinMs ?? source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,

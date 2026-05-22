@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522c";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522d";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -164,7 +164,10 @@ export function createElectricAoe3dPreview({
       haloBoltForkChance: readInputNumber(els.electricAoe3dHaloBoltForkChance, 0, 0, 1),
       haloBoltForkStartPct: readInputNumber(els.electricAoe3dHaloBoltForkStartPct, 0.33, 0, 1),
       haloBoltForkEndPct: readInputNumber(els.electricAoe3dHaloBoltForkEndPct, 0.75, 0, 1),
-      haloBoltForkSpreadBo: readInputNumber(els.electricAoe3dHaloBoltForkSpreadBo, 0.34, 0, 8),
+      haloBoltForkSpreadMinBo: readInputNumber(els.electricAoe3dHaloBoltForkSpreadMinBo, 0.22, 0, 8),
+      haloBoltForkSpreadMaxBo: readInputNumber(els.electricAoe3dHaloBoltForkSpreadMaxBo, 0.46, 0, 8),
+      haloBoltForkZTineMinBo: readInputNumber(els.electricAoe3dHaloBoltForkZTineMinBo, 0, 0, 8),
+      haloBoltForkZTineMaxBo: readInputNumber(els.electricAoe3dHaloBoltForkZTineMaxBo, 0.08, 0, 8),
       haloBoltForkTargetOffsetBo: readInputNumber(els.electricAoe3dHaloBoltForkTargetOffsetBo, 0.18, 0, 8),
       haloFieldLingerMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMinMs, 900, 50, 20000)),
       haloFieldLingerMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMaxMs, 2600, 50, 20000)),
@@ -485,7 +488,10 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dHaloBoltForkChance,
       els.electricAoe3dHaloBoltForkStartPct,
       els.electricAoe3dHaloBoltForkEndPct,
-      els.electricAoe3dHaloBoltForkSpreadBo,
+      els.electricAoe3dHaloBoltForkSpreadMinBo,
+      els.electricAoe3dHaloBoltForkSpreadMaxBo,
+      els.electricAoe3dHaloBoltForkZTineMinBo,
+      els.electricAoe3dHaloBoltForkZTineMaxBo,
       els.electricAoe3dHaloBoltForkTargetOffsetBo,
     ].forEach((input) => {
       if (!input) return;

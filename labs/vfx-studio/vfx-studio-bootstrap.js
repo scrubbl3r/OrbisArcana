@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-bolt-forks-a";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-bolt-forks-b";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -231,7 +231,10 @@ export function createStudioBootstrap({
       electricAoe3dHaloBoltForkChance: els.electricAoe3dHaloBoltForkChance,
       electricAoe3dHaloBoltForkStartPct: els.electricAoe3dHaloBoltForkStartPct,
       electricAoe3dHaloBoltForkEndPct: els.electricAoe3dHaloBoltForkEndPct,
-      electricAoe3dHaloBoltForkSpreadBo: els.electricAoe3dHaloBoltForkSpreadBo,
+      electricAoe3dHaloBoltForkSpreadMinBo: els.electricAoe3dHaloBoltForkSpreadMinBo,
+      electricAoe3dHaloBoltForkSpreadMaxBo: els.electricAoe3dHaloBoltForkSpreadMaxBo,
+      electricAoe3dHaloBoltForkZTineMinBo: els.electricAoe3dHaloBoltForkZTineMinBo,
+      electricAoe3dHaloBoltForkZTineMaxBo: els.electricAoe3dHaloBoltForkZTineMaxBo,
       electricAoe3dHaloBoltForkTargetOffsetBo: els.electricAoe3dHaloBoltForkTargetOffsetBo,
     }),
     bankOrb3d: Object.freeze({

@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-a";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-b";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -131,7 +131,10 @@ export function createElectricAoe3dAuthoringAdapter({
       haloBoltForkChance: readNumber(els.electricAoe3dHaloBoltForkChance, defaults.haloBoltForkChance, 0, 1),
       haloBoltForkStartPct: readNumber(els.electricAoe3dHaloBoltForkStartPct, defaults.haloBoltForkStartPct, 0, 1),
       haloBoltForkEndPct: readNumber(els.electricAoe3dHaloBoltForkEndPct, defaults.haloBoltForkEndPct, 0, 1),
-      haloBoltForkSpreadBo: readNumber(els.electricAoe3dHaloBoltForkSpreadBo, defaults.haloBoltForkSpreadBo, 0, 8),
+      haloBoltForkSpreadMinBo: readNumber(els.electricAoe3dHaloBoltForkSpreadMinBo, defaults.haloBoltForkSpreadMinBo, 0, 8),
+      haloBoltForkSpreadMaxBo: readNumber(els.electricAoe3dHaloBoltForkSpreadMaxBo, defaults.haloBoltForkSpreadMaxBo, 0, 8),
+      haloBoltForkZTineMinBo: readNumber(els.electricAoe3dHaloBoltForkZTineMinBo, defaults.haloBoltForkZTineMinBo, 0, 8),
+      haloBoltForkZTineMaxBo: readNumber(els.electricAoe3dHaloBoltForkZTineMaxBo, defaults.haloBoltForkZTineMaxBo, 0, 8),
       haloBoltForkTargetOffsetBo: readNumber(els.electricAoe3dHaloBoltForkTargetOffsetBo, defaults.haloBoltForkTargetOffsetBo, 0, 8),
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
       haloFieldLingerMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMinMs, defaults.haloFieldLingerMinMs ?? defaults.haloFieldReversalFrequencyMinMs, 50, 20000)),
@@ -286,8 +289,17 @@ export function createElectricAoe3dAuthoringAdapter({
     if (els.electricAoe3dHaloBoltForkEndPct) {
       els.electricAoe3dHaloBoltForkEndPct.value = String(source.haloBoltForkEndPct ?? 0.75);
     }
-    if (els.electricAoe3dHaloBoltForkSpreadBo) {
-      els.electricAoe3dHaloBoltForkSpreadBo.value = String(source.haloBoltForkSpreadBo ?? 0.34);
+    if (els.electricAoe3dHaloBoltForkSpreadMinBo) {
+      els.electricAoe3dHaloBoltForkSpreadMinBo.value = String(source.haloBoltForkSpreadMinBo ?? source.haloBoltForkSpreadBo ?? 0.22);
+    }
+    if (els.electricAoe3dHaloBoltForkSpreadMaxBo) {
+      els.electricAoe3dHaloBoltForkSpreadMaxBo.value = String(source.haloBoltForkSpreadMaxBo ?? source.haloBoltForkSpreadBo ?? 0.46);
+    }
+    if (els.electricAoe3dHaloBoltForkZTineMinBo) {
+      els.electricAoe3dHaloBoltForkZTineMinBo.value = String(source.haloBoltForkZTineMinBo ?? 0);
+    }
+    if (els.electricAoe3dHaloBoltForkZTineMaxBo) {
+      els.electricAoe3dHaloBoltForkZTineMaxBo.value = String(source.haloBoltForkZTineMaxBo ?? 0.08);
     }
     if (els.electricAoe3dHaloBoltForkTargetOffsetBo) {
       els.electricAoe3dHaloBoltForkTargetOffsetBo.value = String(source.haloBoltForkTargetOffsetBo ?? 0.18);

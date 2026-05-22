@@ -2118,7 +2118,16 @@
               <label for="electricAoe3dHaloBoltForkStartPct">min</label><input id="electricAoe3dHaloBoltForkStartPct" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.33" />
               <label for="electricAoe3dHaloBoltForkEndPct">max</label><input id="electricAoe3dHaloBoltForkEndPct" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.75" />
             </div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltForkSpreadBo">Fork spread BO</label><input id="electricAoe3dHaloBoltForkSpreadBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.34" /></div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">FORK SPREAD BO</span>
+              <label for="electricAoe3dHaloBoltForkSpreadMinBo">min</label><input id="electricAoe3dHaloBoltForkSpreadMinBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.22" />
+              <label for="electricAoe3dHaloBoltForkSpreadMaxBo">max</label><input id="electricAoe3dHaloBoltForkSpreadMaxBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.46" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">Z TINE BO</span>
+              <label for="electricAoe3dHaloBoltForkZTineMinBo">min</label><input id="electricAoe3dHaloBoltForkZTineMinBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0" />
+              <label for="electricAoe3dHaloBoltForkZTineMaxBo">max</label><input id="electricAoe3dHaloBoltForkZTineMaxBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.08" />
+            </div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloBoltForkTargetOffsetBo">Fork target offset BO</label><input id="electricAoe3dHaloBoltForkTargetOffsetBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.18" /></div>
           </div>
         </div>
@@ -2864,7 +2873,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260522-bolt-forks-a"),
+      import("./vfx-studio-bootstrap.js?v=20260522-bolt-forks-b"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2911,8 +2920,8 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260522-bolt-forks-a";
-    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-a";
+    } from "../../src/vfx/presets/index.js?v=20260522-bolt-forks-b";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-b";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521214600b";
@@ -3463,7 +3472,10 @@
       electricAoe3dHaloBoltForkChance: $("electricAoe3dHaloBoltForkChance"),
       electricAoe3dHaloBoltForkStartPct: $("electricAoe3dHaloBoltForkStartPct"),
       electricAoe3dHaloBoltForkEndPct: $("electricAoe3dHaloBoltForkEndPct"),
-      electricAoe3dHaloBoltForkSpreadBo: $("electricAoe3dHaloBoltForkSpreadBo"),
+      electricAoe3dHaloBoltForkSpreadMinBo: $("electricAoe3dHaloBoltForkSpreadMinBo"),
+      electricAoe3dHaloBoltForkSpreadMaxBo: $("electricAoe3dHaloBoltForkSpreadMaxBo"),
+      electricAoe3dHaloBoltForkZTineMinBo: $("electricAoe3dHaloBoltForkZTineMinBo"),
+      electricAoe3dHaloBoltForkZTineMaxBo: $("electricAoe3dHaloBoltForkZTineMaxBo"),
       electricAoe3dHaloBoltForkTargetOffsetBo: $("electricAoe3dHaloBoltForkTargetOffsetBo"),
       flameAoe3dAoeAuraDiameterBo: $("flameAoe3dAoeAuraDiameterBo"),
       flameAoe3dApplyAoeAuraDiameterBtn: $("flameAoe3dApplyAoeAuraDiameterBtn"),
