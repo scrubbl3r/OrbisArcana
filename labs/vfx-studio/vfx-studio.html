@@ -2042,6 +2042,10 @@
           <div id="electricAoe3dOrbControls" class="controlGroupBody paramFieldRows" hidden></div>
         </div>
         <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dBoltShaderControls">Bolt Shader</button>
+          <div id="electricAoe3dBoltShaderControls" class="controlGroupBody paramFieldRows" hidden></div>
+        </div>
+        <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dControlPointControls">Bolt Control Points</button>
             <button id="electricAoe3dControlPointsVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Control Points visibility" title="Toggle Control Points visibility"></button>
@@ -2970,11 +2974,11 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260522branchShapeAi";
-    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522branchShapeA";
+    } from "../../src/vfx/presets/index.js?v=20260522162654i";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522162654";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
-    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522branchShapeAb";
+    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522162654b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
@@ -3496,6 +3500,7 @@
       electricAoe3dDominantBoltHeadingMemory: $("electricAoe3dDominantBoltHeadingMemory"),
       electricAoe3dDominantBoltWanderStrength: $("electricAoe3dDominantBoltWanderStrength"),
       electricAoe3dDominantBoltPathJitterBo: $("electricAoe3dDominantBoltPathJitterBo"),
+      electricAoe3dBoltShaderControls: $("electricAoe3dBoltShaderControls"),
       electricAoe3dHaloFieldEnabled: $("electricAoe3dHaloFieldEnabled"),
       electricAoe3dHaloFieldShellRadiusBo: $("electricAoe3dHaloFieldShellRadiusBo"),
       electricAoe3dHaloFieldBoltStartMinBo: $("electricAoe3dHaloFieldBoltStartMinBo"),
