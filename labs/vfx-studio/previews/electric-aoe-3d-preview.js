@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloBoltPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521h";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521i";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -49,7 +49,8 @@ export function createElectricAoe3dPreview({
   let haloControlPointLayer = null;
   let haloControlPointLineMaterial = null;
   let haloControlPointMaterial = null;
-  let haloBoltPlanner = null;
+  let haloShellMaterial = null;
+  let haloFieldPlanner = null;
   let controlPointLastRefreshMs = 0;
   let haloControlPointLastRefreshMs = 0;
   let createdAt = 0;
@@ -74,8 +75,9 @@ export function createElectricAoe3dPreview({
     haloControlPointLayer = null;
     haloControlPointLineMaterial = null;
     haloControlPointMaterial = null;
-    if (haloBoltPlanner && typeof haloBoltPlanner.reset === "function") haloBoltPlanner.reset();
-    haloBoltPlanner = null;
+    haloShellMaterial = null;
+    if (haloFieldPlanner && typeof haloFieldPlanner.reset === "function") haloFieldPlanner.reset();
+    haloFieldPlanner = null;
     controlPointLastRefreshMs = 0;
     haloControlPointLastRefreshMs = 0;
   }
@@ -86,8 +88,8 @@ export function createElectricAoe3dPreview({
   }
 
   function haloControlPointsVisible() {
-    return !els.electricAoe3dHaloControlPointsVisibleBtn
-      || els.electricAoe3dHaloControlPointsVisibleBtn.getAttribute("aria-pressed") !== "false";
+    return !els.electricAoe3dHaloFieldVisibleBtn
+      || els.electricAoe3dHaloFieldVisibleBtn.getAttribute("aria-pressed") !== "false";
   }
 
   function readInputNumber(el, fallback, min = -Infinity, max = Infinity) {
@@ -138,60 +140,35 @@ export function createElectricAoe3dPreview({
       const child = layer.children[0];
       layer.remove(child);
       if (child.geometry && child.geometry !== haloControlPointGeometry && typeof child.geometry.dispose === "function") child.geometry.dispose();
-      if (child.material && child.material !== haloControlPointLineMaterial && child.material !== haloControlPointMaterial && typeof child.material.dispose === "function") {
+      if (child.material
+        && child.material !== haloControlPointLineMaterial
+        && child.material !== haloControlPointMaterial
+        && child.material !== haloShellMaterial
+        && typeof child.material.dispose === "function") {
         child.material.dispose();
       }
     }
   }
 
-  function buildHaloBoltPaths(bo, time = 0) {
-    const minRangeBo = readInputNumber(els.electricAoe3dHaloBoltMinRangeBo, 0.55, 0, 16);
-    const maxRangeBo = readInputNumber(els.electricAoe3dHaloBoltMaxRangeBo, 1.65, Math.max(0.05, minRangeBo), 16);
-    const minTotal = Math.round(readInputNumber(els.electricAoe3dHaloBoltMinTotal, 4, 0, 64));
-    const maxTotal = Math.round(readInputNumber(els.electricAoe3dHaloBoltMaxTotal, 10, minTotal, 64));
-    const minWalkSpeed = readInputNumber(els.electricAoe3dHaloBoltMinWalkSpeed, 0.35, 0, 12);
-    const maxWalkSpeed = readInputNumber(els.electricAoe3dHaloBoltMaxWalkSpeed, 1.2, minWalkSpeed, 12);
-    const minStepBo = readInputNumber(els.electricAoe3dHaloBoltMinStepBo, 0.08, 0.01, 4);
-    const maxStepBo = readInputNumber(els.electricAoe3dHaloBoltMaxStepBo, 0.28, minStepBo, 4);
-    const pathJitterBo = readInputNumber(els.electricAoe3dHaloBoltPathJitterBo, 0.16, 0, 2);
-    const forksMin = Math.round(readInputNumber(els.electricAoe3dHaloBoltForksMin, 0, 0, 12));
-    const forksMax = Math.round(readInputNumber(els.electricAoe3dHaloBoltForksMax, 2, forksMin, 12));
-    const forkLengthMinBo = readInputNumber(els.electricAoe3dHaloBoltForkLengthMinBo, 0.2, 0, 8);
-    const forkLengthMaxBo = readInputNumber(els.electricAoe3dHaloBoltForkLengthMaxBo, 0.7, forkLengthMinBo, 8);
-    const haloFieldFeaturePoints = Math.round(readInputNumber(els.electricAoe3dHaloFieldFeaturePoints, 12, 0, 64));
-    const haloFieldVectorMinSpeed = readInputNumber(els.electricAoe3dHaloFieldVectorMinSpeed, 0.35, 0, 12);
-    const haloFieldVectorMaxSpeed = readInputNumber(els.electricAoe3dHaloFieldVectorMaxSpeed, 1.2, haloFieldVectorMinSpeed, 12);
-    const haloFieldEndpointMinOffset = readInputNumber(els.electricAoe3dHaloFieldEndpointMinOffset, 0.18, 0, 1);
-    const haloFieldEndpointMaxOffset = readInputNumber(els.electricAoe3dHaloFieldEndpointMaxOffset, 0.46, haloFieldEndpointMinOffset, 1);
-    if (!haloBoltPlanner) haloBoltPlanner = createElectricAoeHaloBoltPlanner();
-    return haloBoltPlanner.buildPaths({
+  function readHaloFieldConfig() {
+    return Object.freeze({
+      dominantBoltZBo: 0,
+      haloFieldEnabled: readInputBoolean(els.electricAoe3dHaloFieldEnabled, true),
+      haloFieldPointCount: Math.round(readInputNumber(els.electricAoe3dHaloFieldPointCount, 24, 0, 256)),
+      haloFieldPointDiameterBo: readInputNumber(els.electricAoe3dHaloFieldPointDiameterBo, 0.05, 0.01, 0.5),
+      haloFieldSeed: Math.round(readInputNumber(els.electricAoe3dHaloFieldSeed, 4242, 1, 999999999)),
+      haloFieldShellRadiusBo: readInputNumber(els.electricAoe3dHaloFieldShellRadiusBo, 1.5, 0.5, 32),
+      haloFieldSliceHalfDepthBo: readInputNumber(els.electricAoe3dHaloFieldSliceHalfDepthBo, 0, 0, 32),
+      haloFieldWander: readInputNumber(els.electricAoe3dHaloFieldWander, 0.35, 0, 2),
+      haloFieldWanderSpeed: readInputNumber(els.electricAoe3dHaloFieldWanderSpeed, 0.45, 0, 12),
+    });
+  }
+
+  function buildHaloFieldPaths(bo, time = 0) {
+    if (!haloFieldPlanner) haloFieldPlanner = createElectricAoeHaloFieldPlanner();
+    return haloFieldPlanner.buildPaths({
       bo,
-      config: {
-        dominantBoltZBo: 0,
-        haloBoltForkLengthMaxBo: forkLengthMaxBo,
-        haloBoltForkLengthMinBo: forkLengthMinBo,
-        haloBoltForksMax: forksMax,
-        haloBoltForksMin: forksMin,
-        haloBoltMaxRangeBo: maxRangeBo,
-        haloBoltMaxStepBo: maxStepBo,
-        haloBoltMaxTotal: maxTotal,
-        haloBoltMaxWalkSpeed: maxWalkSpeed,
-        haloBoltMinRangeBo: minRangeBo,
-        haloBoltMinStepBo: minStepBo,
-        haloBoltMinTotal: minTotal,
-        haloBoltMinWalkSpeed: minWalkSpeed,
-        haloBoltPathJitterBo: pathJitterBo,
-        haloFieldCellSpread: readInputNumber(els.electricAoe3dHaloFieldCellSpread, 0.62, 0, 1),
-        haloFieldEnabled: readInputBoolean(els.electricAoe3dHaloFieldEnabled, true),
-        haloFieldEndpointMaxOffset,
-        haloFieldEndpointMinOffset,
-        haloFieldFeaturePoints,
-        haloFieldSeed: Math.round(readInputNumber(els.electricAoe3dHaloFieldSeed, 4242, 1, 999999999)),
-        haloFieldVectorInfluence: readInputNumber(els.electricAoe3dHaloFieldVectorInfluence, 1, 0, 2),
-        haloFieldVectorMaxSpeed,
-        haloFieldVectorMinSpeed,
-        haloFieldZInfluence: readInputNumber(els.electricAoe3dHaloFieldZInfluence, 0.35, 0, 2),
-      },
+      config: readHaloFieldConfig(),
       time,
     });
   }
@@ -203,7 +180,28 @@ export function createElectricAoe3dPreview({
     haloControlPointLastRefreshMs = nowMs;
     clearLayerChildren(haloControlPointLayer);
     if (!haloControlPointLayer.visible) return;
-    const paths = buildHaloBoltPaths(bo, time);
+    const paths = buildHaloFieldPaths(bo, time);
+    const fieldConfig = readHaloFieldConfig();
+    if (!haloShellMaterial) {
+      haloShellMaterial = new THREE.MeshBasicMaterial({
+        color: 0x376fff,
+        transparent: true,
+        opacity: 0.14,
+        wireframe: true,
+        toneMapped: false,
+        depthTest: false,
+        depthWrite: false,
+      });
+    }
+    if (fieldConfig.haloFieldEnabled) {
+      const shell = new THREE.Mesh(
+        new THREE.SphereGeometry(fieldConfig.haloFieldShellRadiusBo * bo, 32, 16),
+        haloShellMaterial
+      );
+      shell.name = "electric_aoe3d:halo_field_shell";
+      shell.renderOrder = 213;
+      haloControlPointLayer.add(shell);
+    }
     if (!haloControlPointLineMaterial) {
       haloControlPointLineMaterial = new THREE.LineBasicMaterial({
         color: 0xd8f7ff,
@@ -224,23 +222,24 @@ export function createElectricAoe3dPreview({
         depthWrite: false,
       });
     }
-    if (!haloControlPointGeometry) haloControlPointGeometry = new THREE.SphereGeometry(bo * 0.05 * 0.5, 14, 8);
+    const pointRadius = bo * fieldConfig.haloFieldPointDiameterBo * 0.5;
+    if (!haloControlPointGeometry || Math.abs((haloControlPointGeometry.userData.radius || 0) - pointRadius) > 0.0001) {
+      if (haloControlPointGeometry && typeof haloControlPointGeometry.dispose === "function") haloControlPointGeometry.dispose();
+      haloControlPointGeometry = new THREE.SphereGeometry(pointRadius, 14, 8);
+      haloControlPointGeometry.userData.radius = pointRadius;
+    }
+    const centerMarker = new THREE.Mesh(haloControlPointGeometry, haloControlPointMaterial);
+    centerMarker.name = "electric_aoe3d:halo_field_center_point";
+    centerMarker.renderOrder = 216;
+    centerMarker.position.set(0, 0, fieldConfig.dominantBoltZBo * bo);
+    haloControlPointLayer.add(centerMarker);
     paths.forEach((path, pathIndex) => {
       const linePoints = path.points.map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
       const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(linePoints), haloControlPointLineMaterial);
       line.name = `electric_aoe3d:halo_control_line_${pathIndex}`;
       line.renderOrder = 214;
       haloControlPointLayer.add(line);
-      path.forks.forEach((fork, forkIndex) => {
-        const forkLine = new THREE.Line(
-          new THREE.BufferGeometry().setFromPoints(fork.map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo))),
-          haloControlPointLineMaterial
-        );
-        forkLine.name = `electric_aoe3d:halo_control_fork_${pathIndex}_${forkIndex}`;
-        forkLine.renderOrder = 215;
-        haloControlPointLayer.add(forkLine);
-      });
-      path.points.forEach((point, pointIndex) => {
+      path.points.slice(1).forEach((point, pointIndex) => {
         const marker = new THREE.Mesh(haloControlPointGeometry, haloControlPointMaterial);
         marker.name = `electric_aoe3d:halo_control_point_${pathIndex}_${pointIndex}`;
         marker.renderOrder = 216;
@@ -393,9 +392,9 @@ export function createElectricAoe3dPreview({
   }
 
   function toggleHaloControlPoints() {
-    if (!els.electricAoe3dHaloControlPointsVisibleBtn) return;
-    const visible = els.electricAoe3dHaloControlPointsVisibleBtn.getAttribute("aria-pressed") !== "false";
-    els.electricAoe3dHaloControlPointsVisibleBtn.setAttribute("aria-pressed", visible ? "false" : "true");
+    if (!els.electricAoe3dHaloFieldVisibleBtn) return;
+    const visible = els.electricAoe3dHaloFieldVisibleBtn.getAttribute("aria-pressed") !== "false";
+    els.electricAoe3dHaloFieldVisibleBtn.setAttribute("aria-pressed", visible ? "false" : "true");
     if (haloControlPointLayer) {
       haloControlPointLayer.visible = !visible;
       if (!visible) syncHaloControlPointLayer(readBo(), (performance.now() - createdAt) / 1000, true);
@@ -412,7 +411,7 @@ export function createElectricAoe3dPreview({
     if (els.previewElectricAoe3d) els.previewElectricAoe3d.addEventListener("click", apply);
     if (els.electricAoe3dOrbVisibleBtn) els.electricAoe3dOrbVisibleBtn.addEventListener("click", toggleOrb);
     if (els.electricAoe3dControlPointsVisibleBtn) els.electricAoe3dControlPointsVisibleBtn.addEventListener("click", toggleControlPoints);
-    if (els.electricAoe3dHaloControlPointsVisibleBtn) els.electricAoe3dHaloControlPointsVisibleBtn.addEventListener("click", toggleHaloControlPoints);
+    if (els.electricAoe3dHaloFieldVisibleBtn) els.electricAoe3dHaloFieldVisibleBtn.addEventListener("click", toggleHaloControlPoints);
     [
       els.electricAoe3dDominantBoltMinRangeBo,
       els.electricAoe3dDominantBoltMaxRangeBo,
@@ -423,28 +422,13 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dDominantBoltHeadingMemory,
       els.electricAoe3dDominantBoltWanderStrength,
       els.electricAoe3dDominantBoltPathJitterBo,
-      els.electricAoe3dHaloBoltMinRangeBo,
-      els.electricAoe3dHaloBoltMaxRangeBo,
-      els.electricAoe3dHaloBoltMinTotal,
-      els.electricAoe3dHaloBoltMaxTotal,
-      els.electricAoe3dHaloBoltMinWalkSpeed,
-      els.electricAoe3dHaloBoltMaxWalkSpeed,
-      els.electricAoe3dHaloBoltMinStepBo,
-      els.electricAoe3dHaloBoltMaxStepBo,
-      els.electricAoe3dHaloBoltPathJitterBo,
-      els.electricAoe3dHaloBoltForksMin,
-      els.electricAoe3dHaloBoltForksMax,
-      els.electricAoe3dHaloBoltForkLengthMinBo,
-      els.electricAoe3dHaloBoltForkLengthMaxBo,
       els.electricAoe3dHaloFieldEnabled,
-      els.electricAoe3dHaloFieldFeaturePoints,
-      els.electricAoe3dHaloFieldVectorMinSpeed,
-      els.electricAoe3dHaloFieldVectorMaxSpeed,
-      els.electricAoe3dHaloFieldVectorInfluence,
-      els.electricAoe3dHaloFieldCellSpread,
-      els.electricAoe3dHaloFieldEndpointMinOffset,
-      els.electricAoe3dHaloFieldEndpointMaxOffset,
-      els.electricAoe3dHaloFieldZInfluence,
+      els.electricAoe3dHaloFieldShellRadiusBo,
+      els.electricAoe3dHaloFieldPointCount,
+      els.electricAoe3dHaloFieldPointDiameterBo,
+      els.electricAoe3dHaloFieldWanderSpeed,
+      els.electricAoe3dHaloFieldWander,
+      els.electricAoe3dHaloFieldSliceHalfDepthBo,
       els.electricAoe3dHaloFieldSeed,
     ].forEach((input) => {
       if (!input) return;

@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260521-electric-field-e";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260521-electric-field-f";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -186,7 +186,7 @@ export function createStudioBootstrap({
       previewElectricAoe3d: els.previewElectricAoe3d,
       electricAoe3dOrbVisibleBtn: els.electricAoe3dOrbVisibleBtn,
       electricAoe3dControlPointsVisibleBtn: els.electricAoe3dControlPointsVisibleBtn,
-      electricAoe3dHaloControlPointsVisibleBtn: els.electricAoe3dHaloControlPointsVisibleBtn,
+      electricAoe3dHaloFieldVisibleBtn: els.electricAoe3dHaloFieldVisibleBtn,
       electricAoe3dSpellDurationMs: els.electricAoe3dSpellDurationMs,
       electricAoe3dDominantBoltMinRangeBo: els.electricAoe3dDominantBoltMinRangeBo,
       electricAoe3dDominantBoltMaxRangeBo: els.electricAoe3dDominantBoltMaxRangeBo,
@@ -205,19 +205,14 @@ export function createStudioBootstrap({
       electricAoe3dDominantBoltHeadingMemory: els.electricAoe3dDominantBoltHeadingMemory,
       electricAoe3dDominantBoltWanderStrength: els.electricAoe3dDominantBoltWanderStrength,
       electricAoe3dDominantBoltPathJitterBo: els.electricAoe3dDominantBoltPathJitterBo,
-      electricAoe3dHaloBoltMinRangeBo: els.electricAoe3dHaloBoltMinRangeBo,
-      electricAoe3dHaloBoltMaxRangeBo: els.electricAoe3dHaloBoltMaxRangeBo,
-      electricAoe3dHaloBoltMinTotal: els.electricAoe3dHaloBoltMinTotal,
-      electricAoe3dHaloBoltMaxTotal: els.electricAoe3dHaloBoltMaxTotal,
-      electricAoe3dHaloBoltMinWalkSpeed: els.electricAoe3dHaloBoltMinWalkSpeed,
-      electricAoe3dHaloBoltMaxWalkSpeed: els.electricAoe3dHaloBoltMaxWalkSpeed,
-      electricAoe3dHaloBoltMinStepBo: els.electricAoe3dHaloBoltMinStepBo,
-      electricAoe3dHaloBoltMaxStepBo: els.electricAoe3dHaloBoltMaxStepBo,
-      electricAoe3dHaloBoltPathJitterBo: els.electricAoe3dHaloBoltPathJitterBo,
-      electricAoe3dHaloBoltForksMin: els.electricAoe3dHaloBoltForksMin,
-      electricAoe3dHaloBoltForksMax: els.electricAoe3dHaloBoltForksMax,
-      electricAoe3dHaloBoltForkLengthMinBo: els.electricAoe3dHaloBoltForkLengthMinBo,
-      electricAoe3dHaloBoltForkLengthMaxBo: els.electricAoe3dHaloBoltForkLengthMaxBo,
+      electricAoe3dHaloFieldEnabled: els.electricAoe3dHaloFieldEnabled,
+      electricAoe3dHaloFieldShellRadiusBo: els.electricAoe3dHaloFieldShellRadiusBo,
+      electricAoe3dHaloFieldPointCount: els.electricAoe3dHaloFieldPointCount,
+      electricAoe3dHaloFieldPointDiameterBo: els.electricAoe3dHaloFieldPointDiameterBo,
+      electricAoe3dHaloFieldWanderSpeed: els.electricAoe3dHaloFieldWanderSpeed,
+      electricAoe3dHaloFieldWander: els.electricAoe3dHaloFieldWander,
+      electricAoe3dHaloFieldSliceHalfDepthBo: els.electricAoe3dHaloFieldSliceHalfDepthBo,
+      electricAoe3dHaloFieldSeed: els.electricAoe3dHaloFieldSeed,
     }),
     bankOrb3d: Object.freeze({
       ...els,

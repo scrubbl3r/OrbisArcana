@@ -1,6 +1,3 @@
-import { createElectricAoeHaloWalkController } from "./electric-aoe-halo-walk-controller.js?v=20260521a";
-
-const ORIGIN_RADIUS_BO = 0.5;
 const TWO_PI = Math.PI * 2;
 
 function clampNumber(value, min, max, fallback) {
@@ -18,12 +15,6 @@ function randomBetween(seed, salt, min, max) {
   return min + (max - min) * random01(seed, salt);
 }
 
-function normalizeVector(x = 0, y = 0, fallback = { x: 1, y: 0 }) {
-  const length = Math.hypot(Number(x) || 0, Number(y) || 0);
-  if (length <= 0.000001) return fallback;
-  return { x: (Number(x) || 0) / length, y: (Number(y) || 0) / length };
-}
-
 function normalizeVector3(x = 0, y = 0, z = 0, fallback = { x: 1, y: 0, z: 0 }) {
   const length = Math.hypot(Number(x) || 0, Number(y) || 0, Number(z) || 0);
   if (length <= 0.000001) return fallback;
@@ -32,20 +23,6 @@ function normalizeVector3(x = 0, y = 0, z = 0, fallback = { x: 1, y: 0, z: 0 }) 
     y: (Number(y) || 0) / length,
     z: (Number(z) || 0) / length,
   };
-}
-
-function smoothstep(t) {
-  const x = Math.max(0, Math.min(1, Number(t) || 0));
-  return x * x * (3 - 2 * x);
-}
-
-function normalizeAngle(angle) {
-  const value = Number(angle) || 0;
-  return ((value % TWO_PI) + TWO_PI) % TWO_PI;
-}
-
-function shortestAngleDelta(from, to) {
-  return Math.atan2(Math.sin(to - from), Math.cos(to - from));
 }
 
 function rotateXY(v, angle = 0) {
@@ -66,226 +43,45 @@ function rotateYZ(v, angle = 0) {
   return { x: v.x, y: c * v.y - s * v.z, z: s * v.y + c * v.z };
 }
 
-function chooseEndpointOffsetTarget(state, seed, time) {
-  state.retargetCount += 1;
-  const retargetSeed = seed + state.retargetCount * 29.73;
-  const previousSign = state.targetOffset < 0 ? -1 : 1;
-  const sign = random01(retargetSeed, 11) < 0.32 ? -previousSign : (random01(retargetSeed, 12) < 0.5 ? -1 : 1);
-  const magnitude = randomBetween(retargetSeed, 13, 0.035, 0.28);
-  state.targetOffset = sign * magnitude;
-  state.easeRate = randomBetween(retargetSeed, 14, 0.85, 2.8);
-  state.nextRetargetAt = time + randomBetween(retargetSeed, 15, 0.55, 2.4);
+function sphericalFibonacciDirection(index, total, seed) {
+  const safeTotal = Math.max(1, Number(total) || 1);
+  const jitter = random01(seed, 11) * 0.72;
+  const y = 1 - 2 * ((index + 0.5 + jitter) / safeTotal);
+  const radius = Math.sqrt(Math.max(0, 1 - y * y));
+  const theta = (index + random01(seed, 12)) * Math.PI * (3 - Math.sqrt(5));
+  return normalizeVector3(Math.cos(theta) * radius, y, Math.sin(theta) * radius);
 }
 
 function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
-  const minRangeBo = clampNumber(source.haloBoltMinRangeBo, 0, 16, 0.55);
-  const maxRangeBo = clampNumber(source.haloBoltMaxRangeBo, Math.max(0.05, minRangeBo), 16, 1.65);
-  const minTotal = Math.round(clampNumber(source.haloBoltMinTotal, 0, 64, 4));
-  const maxTotal = Math.round(clampNumber(source.haloBoltMaxTotal, minTotal, 64, 10));
-  const minWalkSpeed = clampNumber(source.haloBoltMinWalkSpeed, 0, 24, 0.35);
-  const maxWalkSpeed = clampNumber(source.haloBoltMaxWalkSpeed, minWalkSpeed, 24, 1.2);
-  const minStepBo = clampNumber(source.haloBoltMinStepBo, 0.01, 4, 0.08);
-  const maxStepBo = clampNumber(source.haloBoltMaxStepBo, minStepBo, 4, 0.28);
-  const forksMin = Math.round(clampNumber(source.haloBoltForksMin, 0, 12, 0));
-  const forksMax = Math.round(clampNumber(source.haloBoltForksMax, forksMin, 12, 2));
-  const forkLengthMinBo = clampNumber(source.haloBoltForkLengthMinBo, 0, 8, 0.2);
-  const forkLengthMaxBo = clampNumber(source.haloBoltForkLengthMaxBo, forkLengthMinBo, 8, 0.7);
-  const fieldFeaturePoints = Math.round(clampNumber(source.haloFieldFeaturePoints, 0, 64, 12));
-  const fieldVectorMinSpeed = clampNumber(source.haloFieldVectorMinSpeed, 0, 12, 0.35);
-  const fieldVectorMaxSpeed = clampNumber(source.haloFieldVectorMaxSpeed, fieldVectorMinSpeed, 12, 1.2);
-  const fieldEndpointMinOffset = clampNumber(source.haloFieldEndpointMinOffset, 0, 1, 0.18);
-  const fieldEndpointMaxOffset = clampNumber(source.haloFieldEndpointMaxOffset, fieldEndpointMinOffset, 1, 0.46);
   return Object.freeze({
-    fieldCellSpread: clampNumber(source.haloFieldCellSpread, 0, 1, 0.62),
     fieldEnabled: source.haloFieldEnabled !== false,
-    fieldEndpointMaxOffset,
-    fieldEndpointMinOffset,
-    fieldFeaturePoints,
+    fieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, 24)),
+    fieldPointDiameterBo: clampNumber(source.haloFieldPointDiameterBo, 0.01, 0.5, 0.05),
     fieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, 4242)),
-    fieldVectorInfluence: clampNumber(source.haloFieldVectorInfluence, 0, 2, 1),
-    fieldVectorMaxSpeed,
-    fieldVectorMinSpeed,
-    fieldZInfluence: clampNumber(source.haloFieldZInfluence, 0, 2, 0.35),
-    forkLengthMaxBo,
-    forkLengthMinBo,
-    forksMax,
-    forksMin,
-    maxRangeBo,
-    maxStepBo,
-    maxTotal,
-    maxWalkSpeed,
-    minRangeBo,
-    minStepBo,
-    minTotal,
-    minWalkSpeed,
-    pathJitterBo: clampNumber(source.haloBoltPathJitterBo, 0, 2, 0.16),
+    fieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5),
+    fieldSliceHalfDepthBo: clampNumber(source.haloFieldSliceHalfDepthBo, 0, 32, 0),
+    fieldWander: clampNumber(source.haloFieldWander, 0, 2, 0.35),
+    fieldWanderSpeed: clampNumber(source.haloFieldWanderSpeed, 0, 12, 0.45),
     zBo: clampNumber(source.zBo ?? source.dominantBoltZBo, -64, 64, 0),
   });
 }
 
-function buildHaloPath({ angle, bo, config, destinationAngle, from, seed, time }) {
-  const originXW = Number(from && from.xW) || 0;
-  const originYW = Number(from && from.yW) || 0;
-  const rangeBreath = 0.5 + 0.5 * Math.sin(seed * 1.91 + time * randomBetween(seed, 31, 0.9, 1.9));
-  const rangeBo = config.minRangeBo + (config.maxRangeBo - config.minRangeBo) * smoothstep(rangeBreath);
-  const originRadial = { x: Math.cos(angle), y: Math.sin(angle) };
-  const destinationRadial = { x: Math.cos(destinationAngle), y: Math.sin(destinationAngle) };
-  const start = Object.freeze({
-    xW: originXW + originRadial.x * ORIGIN_RADIUS_BO * bo,
-    yW: originYW + originRadial.y * ORIGIN_RADIUS_BO * bo,
-    zBo: config.zBo,
-  });
-  const end = Object.freeze({
-    xW: originXW + destinationRadial.x * (ORIGIN_RADIUS_BO + rangeBo) * bo,
-    yW: originYW + destinationRadial.y * (ORIGIN_RADIUS_BO + rangeBo) * bo,
-    zBo: config.zBo,
-  });
-  const points = [start];
-  const targetDistanceBo = Math.max(0.001, Math.hypot(end.xW - start.xW, end.yW - start.yW) / bo);
-  const targetDirection = normalizeVector(end.xW - start.xW, end.yW - start.yW, originRadial);
-  const tangent = { x: -targetDirection.y, y: targetDirection.x };
-  const maxNodes = 28;
-  let distanceBo = 0;
-  let current = start;
-  let heading = targetDirection;
-  for (let pointIndex = 1; pointIndex < maxNodes && distanceBo < targetDistanceBo; pointIndex += 1) {
-    const remainingBo = Math.max(0, Math.hypot(end.xW - current.xW, end.yW - current.yW) / bo);
-    if (remainingBo <= config.maxStepBo) break;
-    const stepWave = 0.5 + 0.5 * Math.sin(seed * 2.71 + pointIndex * 3.37 + time * randomBetween(seed, pointIndex + 41, 7.5, 14.5));
-    const twitchWave = Math.sin(seed * 9.19 + pointIndex * 5.11 + time * randomBetween(seed, pointIndex + 61, 18, 34));
-    const stepBo = Math.min(
-      remainingBo,
-      config.minStepBo + (config.maxStepBo - config.minStepBo) * smoothstep(stepWave)
-    );
-    const t = Math.min(1, (distanceBo + stepBo) / targetDistanceBo);
-    const seek = normalizeVector(end.xW - current.xW, end.yW - current.yW, targetDirection);
-    const wander = twitchWave * config.pathJitterBo * Math.sin(t * Math.PI);
-    const seekWeight = 0.92 + 0.14 * Math.sin(seed * 4.7 + time * 3.1);
-    heading = normalizeVector(
-      heading.x * 0.5 + seek.x * seekWeight + tangent.x * wander,
-      heading.y * 0.5 + seek.y * seekWeight + tangent.y * wander,
-      seek
-    );
-    current = Object.freeze({
-      xW: current.xW + heading.x * stepBo * bo,
-      yW: current.yW + heading.y * stepBo * bo,
-      zBo: config.zBo,
-    });
-    points.push(current);
-    distanceBo += stepBo;
-  }
-  points.push(end);
-  return points;
+function sampleShellDirection({ config, index, time, total }) {
+  const seed = config.fieldSeed + index * 37.17;
+  let direction = sphericalFibonacciDirection(index, total, seed);
+  const speed = config.fieldWanderSpeed * randomBetween(seed, 21, 0.45, 1.35);
+  const wander = config.fieldWander;
+  direction = rotateXY(direction, time * speed * randomBetween(seed, 22, -0.92, 0.92)
+    + Math.sin(time * speed * 0.37 + seed * 0.017) * wander * 0.28);
+  direction = rotateYZ(direction, time * speed * randomBetween(seed, 23, -0.74, 0.74)
+    + Math.cos(time * speed * 0.29 + seed * 0.023) * wander * 0.34);
+  direction = rotateXZ(direction, time * speed * randomBetween(seed, 24, -0.58, 0.58)
+    + Math.sin(time * speed * 0.43 + seed * 0.031) * wander * 0.24);
+  return normalizeVector3(direction.x, direction.y, direction.z);
 }
 
-function buildForks({ bo, config, pathIndex, points, seed, time }) {
-  const forkSpan = config.forksMax - config.forksMin;
-  const forkPulse = 0.5 + 0.5 * Math.sin(seed * 1.37 + time * randomBetween(seed, 81, 3.6, 8.2));
-  const forkCount = Math.max(0, Math.round(config.forksMin + forkSpan * smoothstep(forkPulse)));
-  const forks = [];
-  for (let forkIndex = 0; forkIndex < forkCount; forkIndex += 1) {
-    if (points.length < 3) break;
-    const basePointIndex = Math.min(points.length - 2, Math.max(1, 1 + ((forkIndex * 2 + pathIndex + seed) % Math.max(1, points.length - 2))));
-    const base = points[basePointIndex];
-    const prev = points[Math.max(0, basePointIndex - 1)];
-    const next = points[Math.min(points.length - 1, basePointIndex + 1)];
-    const heading = normalizeVector(next.xW - prev.xW, next.yW - prev.yW);
-    const tangent = { x: -heading.y, y: heading.x };
-    const side = random01(seed + forkIndex, 91) >= 0.5 ? 1 : -1;
-    const forkLengthBo = config.forkLengthMinBo + (config.forkLengthMaxBo - config.forkLengthMinBo)
-      * smoothstep(0.5 + 0.5 * Math.sin(seed * 3.31 + forkIndex * 2.1 + time * 11.5));
-    const forkJitter = Math.sin(seed * 13.7 + forkIndex * 4.2 + time * 21.0) * config.pathJitterBo * 0.55;
-    forks.push(Object.freeze([
-      base,
-      Object.freeze({
-        xW: base.xW + (tangent.x * side + heading.x * (0.16 + forkJitter)) * forkLengthBo * bo,
-        yW: base.yW + (tangent.y * side + heading.y * (0.16 + forkJitter)) * forkLengthBo * bo,
-        zBo: config.zBo,
-      }),
-    ]));
-  }
-  return Object.freeze(forks);
-}
-
-export function createElectricAoeHaloBoltPlanner() {
-  const walkController = createElectricAoeHaloWalkController();
-  const endpointStates = [];
-  let lastEndpointTime = null;
-
-  function sampleFieldVectorAngle({ config, index, radialOffset = 0, time, total }) {
-    const cellWidth = TWO_PI / Math.max(1, total);
-    const seed = config.fieldSeed + index * 17.13;
-    const cellCenter = (index + 0.5) * cellWidth + radialOffset * cellWidth * 0.18;
-    const basePhase = cellCenter + (random01(seed, 31) - 0.5) * cellWidth * 0.12;
-    const virtualZ = (random01(seed, 32) - 0.5) * (0.22 + Math.min(1.2, config.fieldZInfluence));
-    let vector = normalizeVector3(Math.cos(basePhase), Math.sin(basePhase), virtualZ);
-    const driftSpeed = randomBetween(seed, 51, config.fieldVectorMinSpeed, config.fieldVectorMaxSpeed);
-    const speedSign = random01(seed, 33) < 0.5 ? -1 : 1;
-    const phaseA = seed * 0.19 + config.fieldSeed * 0.0017 + radialOffset * 1.7;
-    const phaseB = seed * 0.31 + config.fieldSeed * 0.0023 + radialOffset * 2.3;
-    const phaseC = seed * 0.47 + config.fieldSeed * 0.0031 + radialOffset * 3.1;
-    const xyAngle = speedSign * time * driftSpeed * randomBetween(seed, 34, 0.32, 0.88)
-      + Math.cos(time * randomBetween(seed, 35, 0.24, 0.72) + phaseA) * (0.06 + config.fieldVectorInfluence * 0.16);
-    const yzAngle = Math.cos(time * randomBetween(seed, 36, 0.18, 0.58) + phaseB) * (0.12 + config.fieldZInfluence * 0.34);
-    const xzAngle = Math.sin(time * randomBetween(seed, 37, 0.16, 0.52) + phaseC) * (0.08 + config.fieldVectorInfluence * 0.24);
-    vector = rotateXY(vector, xyAngle);
-    vector = rotateYZ(vector, yzAngle);
-    vector = rotateXZ(vector, xzAngle);
-    const rawAngle = Math.atan2(vector.y, vector.x);
-    const projectionWeight = smoothstep((Math.hypot(vector.x, vector.y) - 0.08) / 0.38);
-    const fieldSignal = Math.sin(rawAngle - cellCenter) * projectionWeight;
-    const cellOffsetLimit = Math.min(
-      0.42,
-      0.08 + config.fieldCellSpread * 0.18 + Math.min(1.2, config.fieldVectorInfluence) * 0.2
-    );
-    const cellOffset = Math.tanh(fieldSignal * 1.4) * cellOffsetLimit;
-    return normalizeAngle(cellCenter + cellOffset * cellWidth);
-  }
-
-  function sampleFieldAngle({ config, index, time, total }) {
-    return sampleFieldVectorAngle({ config, index, radialOffset: 0, time, total });
-  }
-
-  function ensureEndpointState(index, seed, time) {
-    if (endpointStates[index]) return endpointStates[index];
-    const sign = random01(seed, 101) < 0.5 ? -1 : 1;
-    const state = {
-      easeRate: randomBetween(seed, 102, 1.1, 2.6),
-      nextRetargetAt: time + randomBetween(seed, 103, 0.45, 1.9),
-      offset: sign * randomBetween(seed, 104, 0.04, 0.18),
-      retargetCount: 0,
-      targetOffset: sign * randomBetween(seed, 105, 0.06, 0.22),
-    };
-    endpointStates[index] = state;
-    return state;
-  }
-
-  function sampleDestinationAngle({ index, originAngle, seed, time, total }) {
-    endpointStates.length = Math.max(0, Number(total) || 0);
-    const dt = lastEndpointTime == null ? 0 : Math.max(0, Math.min(0.12, time - lastEndpointTime));
-    const state = ensureEndpointState(index, seed, time);
-    if (time >= state.nextRetargetAt) chooseEndpointOffsetTarget(state, seed, time);
-    const blend = 1 - Math.exp(-dt * state.easeRate);
-    state.offset += (state.targetOffset - state.offset) * blend;
-    const flutter = Math.sin(seed * 7.1 + time * randomBetween(seed, 34, 1.4, 2.6)) * 0.025;
-    return originAngle + state.offset + flutter;
-  }
-
-  function sampleFieldDestinationAngle({ config, index, originAngle, seed, time, total }) {
-    const cellWidth = TWO_PI / Math.max(1, total);
-    const minOffset = config.fieldEndpointMinOffset * cellWidth;
-    const maxOffset = config.fieldEndpointMaxOffset * cellWidth;
-    const fieldAngle = sampleFieldVectorAngle({ config, index, radialOffset: 1, time: time + seed * 0.017, total });
-    const vectorDelta = shortestAngleDelta(originAngle, fieldAngle);
-    const fallbackSign = random01(config.fieldSeed + seed, 71) < 0.5 ? -1 : 1;
-    const sign = Math.abs(vectorDelta) <= 0.0001 ? fallbackSign : (vectorDelta < 0 ? -1 : 1);
-    const fieldSeed = config.fieldSeed + seed * 23.71 + index * 5.19;
-    const magnitudeWave = 0.5 + 0.5 * Math.sin(time * randomBetween(fieldSeed, 62, 0.18, 0.54) + fieldSeed * 0.131);
-    const magnitude = minOffset + (maxOffset - minOffset) * smoothstep(magnitudeWave);
-    return normalizeAngle(originAngle + sign * Math.min(maxOffset, Math.max(minOffset, Math.abs(vectorDelta) * 0.5 + magnitude * 0.5)));
-  }
-
+export function createElectricAoeHaloFieldPlanner() {
   function buildPaths({
     bo = 42,
     config: rawConfig = {},
@@ -295,60 +91,34 @@ export function createElectricAoeHaloBoltPlanner() {
     const safeBo = Math.max(1, Number(bo) || 42);
     const safeTime = Math.max(0, Number(time) || 0);
     const config = normalizeConfig(rawConfig);
-    const total = Math.max(0, Math.round(config.fieldEnabled
-      ? config.fieldFeaturePoints
-      : (config.minTotal + config.maxTotal) * 0.5));
-    const walkSamples = walkController.sample({
-      maxWalkSpeed: config.maxWalkSpeed,
-      minWalkSpeed: config.minWalkSpeed,
-      time: safeTime,
-      total,
-    });
-    lastEndpointTime = lastEndpointTime == null ? safeTime : lastEndpointTime;
+    if (!config.fieldEnabled) return Object.freeze([]);
+    const originXW = Number(from && from.xW) || 0;
+    const originYW = Number(from && from.yW) || 0;
     const paths = [];
-    for (let pathIndex = 0; pathIndex < total; pathIndex += 1) {
-      const seed = pathIndex + 1;
-      const angle = config.fieldEnabled
-        ? sampleFieldAngle({ config, index: pathIndex, time: safeTime, total })
-        : (walkSamples[pathIndex] && walkSamples[pathIndex].angle || 0)
-          + Math.sin(safeTime * randomBetween(seed, 11, 0.4, 1.2) + seed) * 0.08;
-      const destinationAngle = config.fieldEnabled ? sampleFieldDestinationAngle({
-        config,
-        index: pathIndex,
-        originAngle: angle,
-        seed,
-        time: safeTime,
-        total,
-      }) : sampleDestinationAngle({
-        index: pathIndex,
-        originAngle: angle,
-        seed,
-        time: safeTime,
-        total,
+    for (let index = 0; index < config.fieldPointCount; index += 1) {
+      const direction = sampleShellDirection({ config, index, time: safeTime, total: config.fieldPointCount });
+      const end = Object.freeze({
+        xW: originXW + direction.x * config.fieldShellRadiusBo * safeBo,
+        yW: originYW + direction.y * config.fieldShellRadiusBo * safeBo,
+        zBo: config.zBo + direction.z * config.fieldShellRadiusBo,
       });
-      const points = Object.freeze(buildHaloPath({
-        angle,
-        bo: safeBo,
-        config,
-        destinationAngle,
-        from,
-        seed,
-        time: safeTime,
-      }));
+      if (config.fieldSliceHalfDepthBo > 0 && Math.abs(end.zBo - config.zBo) > config.fieldSliceHalfDepthBo) continue;
       paths.push(Object.freeze({
-        forks: buildForks({ bo: safeBo, config, pathIndex, points, seed, time: safeTime }),
-        points,
+        forks: Object.freeze([]),
+        points: Object.freeze([
+          Object.freeze({ xW: originXW, yW: originYW, zBo: config.zBo }),
+          end,
+        ]),
+        shellRadiusBo: config.fieldShellRadiusBo,
+        pointDiameterBo: config.fieldPointDiameterBo,
       }));
     }
-    lastEndpointTime = safeTime;
     return Object.freeze(paths);
   }
 
-  function reset() {
-    walkController.reset();
-    endpointStates.length = 0;
-    lastEndpointTime = null;
-  }
+  function reset() {}
 
   return Object.freeze({ buildPaths, reset });
 }
+
+export const createElectricAoeHaloBoltPlanner = createElectricAoeHaloFieldPlanner;

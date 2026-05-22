@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloBoltPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521h";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521i";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521180001b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-b";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-c";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -66,23 +66,6 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     60000,
     ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltEnemyFrequencyMaxMs
   ));
-  const haloBoltMinRangeBo = clampNumber(source.haloBoltMinRangeBo, 0, 16, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltMinRangeBo);
-  const haloBoltMaxRangeBo = clampNumber(source.haloBoltMaxRangeBo, Math.max(0.05, haloBoltMinRangeBo), 16, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltMaxRangeBo);
-  const haloBoltMinTotal = Math.round(clampNumber(source.haloBoltMinTotal, 0, 64, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltMinTotal));
-  const haloBoltMaxTotal = Math.round(clampNumber(source.haloBoltMaxTotal, haloBoltMinTotal, 64, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltMaxTotal));
-  const haloBoltMinWalkSpeed = clampNumber(source.haloBoltMinWalkSpeed, 0, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltMinWalkSpeed);
-  const haloBoltMaxWalkSpeed = clampNumber(source.haloBoltMaxWalkSpeed, haloBoltMinWalkSpeed, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltMaxWalkSpeed);
-  const haloBoltMinStepBo = clampNumber(source.haloBoltMinStepBo, 0.01, 4, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltMinStepBo);
-  const haloBoltMaxStepBo = clampNumber(source.haloBoltMaxStepBo, haloBoltMinStepBo, 4, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltMaxStepBo);
-  const haloBoltForksMin = Math.round(clampNumber(source.haloBoltForksMin, 0, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForksMin));
-  const haloBoltForksMax = Math.round(clampNumber(source.haloBoltForksMax, haloBoltForksMin, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForksMax));
-  const haloBoltForkLengthMinBo = clampNumber(source.haloBoltForkLengthMinBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkLengthMinBo);
-  const haloBoltForkLengthMaxBo = clampNumber(source.haloBoltForkLengthMaxBo, haloBoltForkLengthMinBo, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkLengthMaxBo);
-  const haloFieldFeaturePoints = Math.round(clampNumber(source.haloFieldFeaturePoints, 0, 64, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldFeaturePoints));
-  const haloFieldVectorMinSpeed = clampNumber(source.haloFieldVectorMinSpeed, 0, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldVectorMinSpeed);
-  const haloFieldVectorMaxSpeed = clampNumber(source.haloFieldVectorMaxSpeed, haloFieldVectorMinSpeed, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldVectorMaxSpeed);
-  const haloFieldEndpointMinOffset = clampNumber(source.haloFieldEndpointMinOffset, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldEndpointMinOffset);
-  const haloFieldEndpointMaxOffset = clampNumber(source.haloFieldEndpointMaxOffset, haloFieldEndpointMinOffset, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldEndpointMaxOffset);
   return Object.freeze({
     durationMs: Math.round(clampNumber(source.spellDurationMs ?? source.durationMs, 200, 60000, ELECTRIC_AOE_BEHAVIOR_DEFAULT.spellDurationMs)),
     dominantBoltDamageMax,
@@ -112,29 +95,14 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     dominantBoltTargetRadiusBo: clampNumber(source.dominantBoltTargetRadiusBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.targetRadiusBo),
     dominantBoltWanderStrength: clampNumber(source.dominantBoltWanderStrength, 0, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.wanderStrength),
     dominantBoltZBo: clampNumber(source.dominantBoltZBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
-    haloBoltForkLengthMaxBo,
-    haloBoltForkLengthMinBo,
-    haloBoltForksMax,
-    haloBoltForksMin,
-    haloBoltMaxRangeBo,
-    haloBoltMaxStepBo,
-    haloBoltMaxTotal,
-    haloBoltMaxWalkSpeed,
-    haloBoltMinRangeBo,
-    haloBoltMinStepBo,
-    haloBoltMinTotal,
-    haloBoltMinWalkSpeed,
-    haloBoltPathJitterBo: clampNumber(source.haloBoltPathJitterBo, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltPathJitterBo),
-    haloFieldCellSpread: clampNumber(source.haloFieldCellSpread, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldCellSpread),
     haloFieldEnabled: source.haloFieldEnabled !== false,
-    haloFieldEndpointMaxOffset,
-    haloFieldEndpointMinOffset,
-    haloFieldFeaturePoints,
+    haloFieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldPointCount)),
+    haloFieldPointDiameterBo: clampNumber(source.haloFieldPointDiameterBo, 0.01, 0.5, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldPointDiameterBo),
     haloFieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldSeed)),
-    haloFieldVectorInfluence: clampNumber(source.haloFieldVectorInfluence, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldVectorInfluence),
-    haloFieldVectorMaxSpeed,
-    haloFieldVectorMinSpeed,
-    haloFieldZInfluence: clampNumber(source.haloFieldZInfluence, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldZInfluence),
+    haloFieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldShellRadiusBo),
+    haloFieldSliceHalfDepthBo: clampNumber(source.haloFieldSliceHalfDepthBo, 0, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldSliceHalfDepthBo),
+    haloFieldWander: clampNumber(source.haloFieldWander, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWander),
+    haloFieldWanderSpeed: clampNumber(source.haloFieldWanderSpeed, 0, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWanderSpeed),
   });
 }
 
@@ -167,7 +135,8 @@ export function createElectricAoe3dRuntime(options = {}) {
   let haloLineMaterial = null;
   let haloPointGeometry = null;
   let haloPointMaterial = null;
-  let haloBoltPlanner = null;
+  let haloShellMaterial = null;
+  let haloFieldPlanner = null;
 
   function clear() {
     if (timer) clearTimeout(timer);
@@ -188,8 +157,9 @@ export function createElectricAoe3dRuntime(options = {}) {
     haloLineMaterial = null;
     haloPointGeometry = null;
     haloPointMaterial = null;
-    if (haloBoltPlanner && typeof haloBoltPlanner.reset === "function") haloBoltPlanner.reset();
-    haloBoltPlanner = null;
+    haloShellMaterial = null;
+    if (haloFieldPlanner && typeof haloFieldPlanner.reset === "function") haloFieldPlanner.reset();
+    haloFieldPlanner = null;
     requestFrame();
   }
 
@@ -248,15 +218,19 @@ export function createElectricAoe3dRuntime(options = {}) {
       const child = layer.children[0];
       layer.remove(child);
       if (child.geometry && child.geometry !== haloPointGeometry && typeof child.geometry.dispose === "function") child.geometry.dispose();
-      if (child.material && child.material !== haloLineMaterial && child.material !== haloPointMaterial && typeof child.material.dispose === "function") {
+      if (child.material
+        && child.material !== haloLineMaterial
+        && child.material !== haloPointMaterial
+        && child.material !== haloShellMaterial
+        && typeof child.material.dispose === "function") {
         child.material.dispose();
       }
     }
   }
 
-  function buildHaloBoltPaths(config, bo, time = 0, from = {}) {
-    if (!haloBoltPlanner) haloBoltPlanner = createElectricAoeHaloBoltPlanner();
-    return haloBoltPlanner.buildPaths({
+  function buildHaloFieldPaths(config, bo, time = 0, from = {}) {
+    if (!haloFieldPlanner) haloFieldPlanner = createElectricAoeHaloFieldPlanner();
+    return haloFieldPlanner.buildPaths({
       bo,
       config,
       from,
@@ -264,8 +238,8 @@ export function createElectricAoe3dRuntime(options = {}) {
     });
   }
 
-  function toRuntimeVector(point, bo, path = null) {
-    const sharedRuntimeZ = typeof getRuntimeZ === "function" ? getRuntimeZ({ bo, path }) : null;
+  function toRuntimeVector(point, bo, path = null, { usePointZ = false } = {}) {
+    const sharedRuntimeZ = !usePointZ && typeof getRuntimeZ === "function" ? getRuntimeZ({ bo, path }) : null;
     const runtimePoint = typeof toRuntimePosition === "function"
       ? toRuntimePosition({
         xW: point.xW,
@@ -281,12 +255,31 @@ export function createElectricAoe3dRuntime(options = {}) {
     );
   }
 
-  function syncHaloBolts(config, bo) {
+  function syncHaloField(config, bo) {
     if (!haloLayer) return;
     clearLayerChildren(haloLayer);
     const time = (typeof now === "function" ? now() : performance.now()) / 1000;
     const from = typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : {};
-    const paths = buildHaloBoltPaths(config, bo, time, from);
+    const paths = buildHaloFieldPaths(config, bo, time, from);
+    if (!haloShellMaterial) {
+      haloShellMaterial = new THREE.MeshBasicMaterial({
+        color: 0x376fff,
+        transparent: true,
+        opacity: 0.14,
+        wireframe: true,
+        toneMapped: false,
+        depthTest: false,
+        depthWrite: false,
+      });
+    }
+    if (config.haloFieldEnabled) {
+      const shellCenter = toRuntimeVector({ xW: Number(from.xW) || 0, yW: Number(from.yW) || 0, zBo: config.dominantBoltZBo }, bo, null, { usePointZ: true });
+      const shell = new THREE.Mesh(new THREE.SphereGeometry(config.haloFieldShellRadiusBo * bo, 32, 16), haloShellMaterial);
+      shell.name = "electric_aoe3d:stage_halo_field_shell";
+      shell.renderOrder = 233;
+      shell.position.copy(shellCenter);
+      haloLayer.add(shell);
+    }
     if (!haloLineMaterial) {
       haloLineMaterial = new THREE.LineBasicMaterial({
         color: 0xd8f7ff,
@@ -307,20 +300,25 @@ export function createElectricAoe3dRuntime(options = {}) {
         depthWrite: false,
       });
     }
-    if (!haloPointGeometry) haloPointGeometry = new THREE.SphereGeometry(bo * 0.05 * 0.5, 14, 8);
+    const pointRadius = bo * config.haloFieldPointDiameterBo * 0.5;
+    if (!haloPointGeometry || Math.abs((haloPointGeometry.userData.radius || 0) - pointRadius) > 0.0001) {
+      if (haloPointGeometry && typeof haloPointGeometry.dispose === "function") haloPointGeometry.dispose();
+      haloPointGeometry = new THREE.SphereGeometry(pointRadius, 14, 8);
+      haloPointGeometry.userData.radius = pointRadius;
+    }
+    const centerPoint = toRuntimeVector({ xW: Number(from.xW) || 0, yW: Number(from.yW) || 0, zBo: config.dominantBoltZBo }, bo, null, { usePointZ: true });
+    const centerMarker = new THREE.Mesh(haloPointGeometry, haloPointMaterial);
+    centerMarker.name = "electric_aoe3d:stage_halo_field_center_point";
+    centerMarker.renderOrder = 236;
+    centerMarker.position.copy(centerPoint);
+    haloLayer.add(centerMarker);
     paths.forEach((path, pathIndex) => {
-      const linePoints = path.points.map((point) => toRuntimeVector(point, bo, path));
+      const linePoints = path.points.map((point) => toRuntimeVector(point, bo, path, { usePointZ: true }));
       const haloLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(linePoints), haloLineMaterial);
       haloLine.name = `electric_aoe3d:stage_halo_control_line_${pathIndex}`;
       haloLine.renderOrder = 234;
       haloLayer.add(haloLine);
-      path.forks.forEach((fork, forkIndex) => {
-        const forkLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(fork.map((point) => toRuntimeVector(point, bo, path))), haloLineMaterial);
-        forkLine.name = `electric_aoe3d:stage_halo_control_fork_${pathIndex}_${forkIndex}`;
-        forkLine.renderOrder = 235;
-        haloLayer.add(forkLine);
-      });
-      linePoints.forEach((point, pointIndex) => {
+      linePoints.slice(1).forEach((point, pointIndex) => {
         const marker = new THREE.Mesh(haloPointGeometry, haloPointMaterial);
         marker.name = `electric_aoe3d:stage_halo_control_point_${pathIndex}_${pointIndex}`;
         marker.renderOrder = 236;
@@ -486,9 +484,9 @@ export function createElectricAoe3dRuntime(options = {}) {
     group.add(haloLayer);
     (parent || orbModel).add(group);
     syncControlPoints(path, bo);
-    syncHaloBolts(config, bo);
+    syncHaloField(config, bo);
     haloTimer = setInterval(() => {
-      syncHaloBolts(config, bo);
+      syncHaloField(config, bo);
       requestFrame();
     }, HALO_CONTROL_POINT_REFRESH_MS);
     const enemyResult = applyEnemyStrike(path, config, bo, payload);
