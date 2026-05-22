@@ -125,6 +125,7 @@ function normalizeConfig(raw = {}) {
     forkSpreadMaxBo,
     forkSpreadMinBo,
     forkTargetOffsetBo: clampNumber(source.haloBoltForkTargetOffsetBo, 0, 8, 0.18),
+    forkTtlMs: Math.round(clampNumber(source.haloBoltForkTtlMs, 16, 20000, 180)),
     forkZTineMaxBo,
     forkZTineMinBo,
     zBo: clampNumber(source.zBo ?? source.dominantBoltZBo, -64, 64, 0),
@@ -445,7 +446,6 @@ function vectorBetweenBo(from, to, safeBo) {
 }
 
 function buildHaloFork({ config, endpoint, forkPoint, originXW, originYW, safeBo, seed, time }) {
-  if (config.forkChance <= 0 || random01(seed, 151) > config.forkChance) return null;
   const tangent = vectorBetweenBo(forkPoint, endpoint, safeBo);
   const planarLength = Math.hypot(tangent.x, tangent.y);
   const perpendicular = planarLength > 0.000001
@@ -486,8 +486,30 @@ function buildHaloFork({ config, endpoint, forkPoint, originXW, originYW, safeBo
   });
 }
 
+function ensureForkState(states, { config, index, seed, time }) {
+  let state = states[index];
+  if (!state) {
+    state = { active: false, expiresAt: -1, roll: 0, ttlMs: config.forkTtlMs };
+    states[index] = state;
+  }
+  if (config.forkChance <= 0) {
+    state.active = false;
+    state.expiresAt = time + config.forkTtlMs / 1000;
+    state.ttlMs = config.forkTtlMs;
+    return state;
+  }
+  if (time >= state.expiresAt || state.ttlMs !== config.forkTtlMs) {
+    state.roll += 1;
+    state.ttlMs = config.forkTtlMs;
+    state.active = random01(seed + state.roll * 211.13, 173) <= config.forkChance;
+    state.expiresAt = time + config.forkTtlMs / 1000;
+  }
+  return state;
+}
+
 export function createElectricAoeHaloFieldPlanner() {
   const pointStates = [];
+  const forkStates = [];
 
   function buildPaths({
     bo = 42,
@@ -503,6 +525,7 @@ export function createElectricAoeHaloFieldPlanner() {
     const originYW = Number(from && from.yW) || 0;
     const paths = [];
     pointStates.length = config.fieldPointCount;
+    forkStates.length = config.fieldPointCount;
     for (let index = 0; index < config.fieldPointCount; index += 1) {
       const point = sampleShellPoint({ config, index, states: pointStates, time: safeTime, total: config.fieldPointCount });
       const end = Object.freeze({
@@ -512,9 +535,11 @@ export function createElectricAoeHaloFieldPlanner() {
       });
       const seed = config.fieldSeed + index * 37.17;
       const fullPoints = buildHaloBoltPath({ config, endpoint: end, index, originXW, originYW, safeBo, seed, time: safeTime });
-      const forkPct = randomBetween(seed, 149, config.forkEndPctMin, config.forkEndPctMax);
+      const forkState = ensureForkState(forkStates, { config, index, seed, time: safeTime });
+      const forkSeed = seed + (forkState.roll || 0) * 211.13;
+      const forkPct = randomBetween(forkSeed, 149, config.forkEndPctMin, config.forkEndPctMax);
       const forkPoint = samplePointAtPathPct(fullPoints, forkPct, safeBo);
-      const fork = buildHaloFork({ config, endpoint: end, forkPoint, originXW, originYW, safeBo, seed, time: safeTime });
+      const fork = forkState.active ? buildHaloFork({ config, endpoint: end, forkPoint, originXW, originYW, safeBo, seed: forkSeed, time: safeTime }) : null;
       const points = fork ? buildHaloBoltPath({ config, endpoint: forkPoint, index, originXW, originYW, safeBo, seed: seed + 130.13, time: safeTime }) : fullPoints;
       paths.push(Object.freeze({
         forks: Object.freeze(fork ? [fork] : []),
@@ -529,6 +554,7 @@ export function createElectricAoeHaloFieldPlanner() {
 
   function reset() {
     pointStates.length = 0;
+    forkStates.length = 0;
   }
 
   return Object.freeze({ buildPaths, reset });

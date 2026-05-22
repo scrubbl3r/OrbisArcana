@@ -229,6 +229,7 @@ export function createStudioBootstrap({
       electricAoe3dHaloBoltShapeSpeedHz: els.electricAoe3dHaloBoltShapeSpeedHz,
       electricAoe3dHaloBoltShapeSmoothing: els.electricAoe3dHaloBoltShapeSmoothing,
       electricAoe3dHaloBoltForkChance: els.electricAoe3dHaloBoltForkChance,
+      electricAoe3dHaloBoltForkTtlMs: els.electricAoe3dHaloBoltForkTtlMs,
       electricAoe3dHaloBoltForkStartPct: els.electricAoe3dHaloBoltForkStartPct,
       electricAoe3dHaloBoltForkEndPct: els.electricAoe3dHaloBoltForkEndPct,
       electricAoe3dHaloBoltForkSpreadMinBo: els.electricAoe3dHaloBoltForkSpreadMinBo,

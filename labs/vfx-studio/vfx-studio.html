@@ -2113,6 +2113,7 @@
             <div class="paramFieldRow"><label for="electricAoe3dHaloBoltShapeSpeedHz">Shape speed Hz</label><input id="electricAoe3dHaloBoltShapeSpeedHz" class="paramFieldInput" type="number" min="0" max="120" step="0.1" value="18" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloBoltShapeSmoothing">Shape smoothing</label><input id="electricAoe3dHaloBoltShapeSmoothing" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.18" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloBoltForkChance">Fork chance</label><input id="electricAoe3dHaloBoltForkChance" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltForkTtlMs">Fork ttl ms</label><input id="electricAoe3dHaloBoltForkTtlMs" class="paramFieldInput" type="number" min="16" max="20000" step="1" value="180" /></div>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">FORK RANGE</span>
               <label for="electricAoe3dHaloBoltForkStartPct">min</label><input id="electricAoe3dHaloBoltForkStartPct" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.33" />
@@ -2920,11 +2921,11 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260522-bolt-forks-b";
-    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-b";
+    } from "../../src/vfx/presets/index.js?v=20260522143457i";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522143457";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
-    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521214600b";
+    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522143457b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
@@ -3470,6 +3471,7 @@
       electricAoe3dHaloBoltShapeSpeedHz: $("electricAoe3dHaloBoltShapeSpeedHz"),
       electricAoe3dHaloBoltShapeSmoothing: $("electricAoe3dHaloBoltShapeSmoothing"),
       electricAoe3dHaloBoltForkChance: $("electricAoe3dHaloBoltForkChance"),
+      electricAoe3dHaloBoltForkTtlMs: $("electricAoe3dHaloBoltForkTtlMs"),
       electricAoe3dHaloBoltForkStartPct: $("electricAoe3dHaloBoltForkStartPct"),
       electricAoe3dHaloBoltForkEndPct: $("electricAoe3dHaloBoltForkEndPct"),
       electricAoe3dHaloBoltForkSpreadMinBo: $("electricAoe3dHaloBoltForkSpreadMinBo"),
