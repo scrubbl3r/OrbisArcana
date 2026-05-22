@@ -60,6 +60,7 @@ function normalizeZRange(source, shellRadiusBo) {
 function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fieldShellRadiusBo = clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5);
+  const legacyWanderSpeed = clampNumber(source.haloFieldWanderSpeed, 0, 12, 0.45);
   const zRange = normalizeZRange(source, fieldShellRadiusBo);
   return Object.freeze({
     fieldLingerMaxMs: Math.round(clampNumber(
@@ -93,23 +94,24 @@ function normalizeConfig(raw = {}) {
       20000,
       1200
     )),
-    fieldWanderSpeed: clampNumber(source.haloFieldWanderSpeed, 0, 12, 0.45),
+    fieldWanderSpeedMax: clampNumber(source.haloFieldWanderSpeedMax ?? source.haloFieldWanderSpeed, 0, 12, Math.max(legacyWanderSpeed, 0.75)),
+    fieldWanderSpeedMin: clampNumber(source.haloFieldWanderSpeedMin ?? source.haloFieldWanderSpeed, 0, 12, Math.min(legacyWanderSpeed, 0.25)),
     fieldZMaxBo: zRange.max,
     fieldZMinBo: zRange.min,
     zBo: clampNumber(source.zBo ?? source.dominantBoltZBo, -64, 64, 0),
   });
 }
 
-function randomSignedSpeed(seed, salt, speedScale) {
+function randomSignedSpeed(seed, salt, speedMin, speedMax) {
   const sign = random01(seed, salt) < 0.5 ? -1 : 1;
-  return sign * speedScale * randomBetween(seed, salt + 1, 0.45, 1.35);
+  return sign * randomBetween(seed, salt + 1, Math.min(speedMin, speedMax), Math.max(speedMin, speedMax));
 }
 
-function chooseTargetVelocity({ chance, current, salt, seed, speedScale }) {
+function chooseTargetVelocity({ chance, current, salt, seed, speedMax, speedMin }) {
   const currentSign = current < 0 ? -1 : 1;
   const shouldReverse = random01(seed, salt) < chance;
   const sign = shouldReverse ? -currentSign : currentSign;
-  return sign * speedScale * randomBetween(seed, salt + 1, 0.45, 1.35);
+  return sign * randomBetween(seed, salt + 1, Math.min(speedMin, speedMax), Math.max(speedMin, speedMax));
 }
 
 function rollDurationSeconds(seed, salt, minMs, maxMs) {
@@ -158,14 +160,16 @@ function beginEaseIn(state, config, seed, time) {
     current: state.lastDirectionSign,
     salt: 33,
     seed: rollSeed,
-    speedScale: config.fieldWanderSpeed,
+    speedMax: config.fieldWanderSpeedMax,
+    speedMin: config.fieldWanderSpeedMin,
   });
   state.targetZVelocity = chooseTargetVelocity({
     chance: config.fieldReversalChance,
     current: state.lastZDirectionSign,
     salt: 35,
     seed: rollSeed,
-    speedScale: config.fieldWanderSpeed * 0.72,
+    speedMax: config.fieldWanderSpeedMax * 0.72,
+    speedMin: config.fieldWanderSpeedMin * 0.72,
   });
   state.lastDirectionSign = state.targetAngularVelocity < 0 ? -1 : 1;
   state.lastZDirectionSign = state.targetZVelocity < 0 ? -1 : 1;
@@ -186,7 +190,7 @@ function ensurePointState(states, { config, index, time, total }) {
   const direction = sphericalFibonacciDirection(index, total, seed);
   const state = {
     anglePhase: Math.atan2(direction.y, direction.x),
-    angularVelocity: randomSignedSpeed(seed, 41, config.fieldWanderSpeed),
+    angularVelocity: randomSignedSpeed(seed, 41, config.fieldWanderSpeedMin, config.fieldWanderSpeedMax),
     fromAngularVelocity: 0,
     fromZVelocity: 0,
     lastTime: time,
@@ -199,7 +203,7 @@ function ensurePointState(states, { config, index, time, total }) {
     targetAngularVelocity: 0,
     targetZVelocity: 0,
     zPhase: random01(seed, 24) * 2,
-    zVelocity: randomSignedSpeed(seed, 45, config.fieldWanderSpeed * 0.72),
+    zVelocity: randomSignedSpeed(seed, 45, config.fieldWanderSpeedMin * 0.72, config.fieldWanderSpeedMax * 0.72),
   };
   state.lastDirectionSign = state.angularVelocity < 0 ? -1 : 1;
   state.lastZDirectionSign = state.zVelocity < 0 ? -1 : 1;

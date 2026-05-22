@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521n";
-import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521214501b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521214501";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521o";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521205230b";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521205230";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -126,7 +126,18 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
       20000,
       ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWanderDurationMaxMs
     )),
-    haloFieldWanderSpeed: clampNumber(source.haloFieldWanderSpeed, 0, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWanderSpeed),
+    haloFieldWanderSpeedMin: clampNumber(
+      source.haloFieldWanderSpeedMin ?? source.haloFieldWanderSpeed,
+      0,
+      12,
+      ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWanderSpeedMin
+    ),
+    haloFieldWanderSpeedMax: clampNumber(
+      source.haloFieldWanderSpeedMax ?? source.haloFieldWanderSpeed,
+      0,
+      12,
+      ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWanderSpeedMax
+    ),
     haloFieldZMinBo: clampNumber(source.haloFieldZMinBo, -32, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldZMinBo),
     haloFieldZMaxBo: clampNumber(source.haloFieldZMaxBo, -32, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldZMaxBo),
   });

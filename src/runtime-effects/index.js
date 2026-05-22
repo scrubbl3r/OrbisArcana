@@ -13,7 +13,7 @@
 export { executeShockwave } from "./shockwave.js";
 export { executeTeleport } from "./teleport.js";
 export { executeAoeElectric } from "./aoe-electric.js";
-export { createElectricAoe3dRuntime, normalizeElectricAoe3dRuntimeConfig } from "./electric-aoe-3d.js?v=20260521-electric-field-k";
+export { createElectricAoe3dRuntime, normalizeElectricAoe3dRuntimeConfig } from "./electric-aoe-3d.js?v=20260521-electric-field-l";
 export { executeAoeFlame } from "./aoe-flame.js";
 export { executeAoeFrost } from "./aoe-frost.js";
 export { executeBubbleShield } from "./bubble-shield.js";
