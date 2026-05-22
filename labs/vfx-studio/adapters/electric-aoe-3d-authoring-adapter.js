@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-c";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-halo-length-a";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -145,6 +145,8 @@ export function createElectricAoe3dAuthoringAdapter({
       haloFieldPointDiameterBo: 0.05,
       haloFieldSeed: Math.round(readNumber(els.electricAoe3dHaloFieldSeed, defaults.haloFieldSeed, 1, 999999999)),
       haloFieldShellRadiusBo: readNumber(els.electricAoe3dHaloFieldShellRadiusBo, defaults.haloFieldShellRadiusBo, 0.5, 32),
+      haloFieldBoltLengthMinBo: readNumber(els.electricAoe3dHaloFieldBoltLengthMinBo, defaults.haloFieldBoltLengthMinBo, 0.05, 32),
+      haloFieldBoltLengthMaxBo: readNumber(els.electricAoe3dHaloFieldBoltLengthMaxBo, defaults.haloFieldBoltLengthMaxBo, 0.05, 32),
       haloFieldReversalChance: readNumber(els.electricAoe3dHaloFieldReversalChance, defaults.haloFieldReversalChance, 0, 1),
       haloFieldWander: readNumber(els.electricAoe3dHaloFieldWander, defaults.haloFieldWander, 0, 2),
       haloFieldWanderDurationMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldWanderDurationMinMs, defaults.haloFieldWanderDurationMinMs, 50, 20000)),
@@ -217,6 +219,12 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dHaloFieldShellRadiusBo) {
       els.electricAoe3dHaloFieldShellRadiusBo.value = String(source.haloFieldShellRadiusBo ?? 1.5);
+    }
+    if (els.electricAoe3dHaloFieldBoltLengthMinBo) {
+      els.electricAoe3dHaloFieldBoltLengthMinBo.value = String(source.haloFieldBoltLengthMinBo ?? source.haloFieldShellRadiusBo ?? 1.5);
+    }
+    if (els.electricAoe3dHaloFieldBoltLengthMaxBo) {
+      els.electricAoe3dHaloFieldBoltLengthMaxBo.value = String(source.haloFieldBoltLengthMaxBo ?? source.haloFieldShellRadiusBo ?? 1.5);
     }
     if (els.electricAoe3dHaloFieldPointCount) {
       els.electricAoe3dHaloFieldPointCount.value = String(source.haloFieldPointCount ?? 24);

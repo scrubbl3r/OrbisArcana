@@ -35,6 +35,8 @@ export const ELECTRIC_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "haloFieldReversalChance": 0.8,
   "haloFieldSeed": 4242,
   "haloFieldShellRadiusBo": 1.5,
+  "haloFieldBoltLengthMinBo": 1.5,
+  "haloFieldBoltLengthMaxBo": 1.5,
   "haloFieldWander": 1,
   "haloFieldWanderDurationMinMs": 50,
   "haloFieldWanderDurationMaxMs": 4000,

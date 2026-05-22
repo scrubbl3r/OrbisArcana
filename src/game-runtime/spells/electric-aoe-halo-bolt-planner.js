@@ -63,6 +63,18 @@ function normalizeZRange(source, shellRadiusBo) {
 function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fieldShellRadiusBo = clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5);
+  const fieldBoltLengthMinBo = clampNumber(
+    source.haloFieldBoltLengthMinBo ?? fieldShellRadiusBo,
+    0.05,
+    fieldShellRadiusBo,
+    fieldShellRadiusBo
+  );
+  const fieldBoltLengthMaxBo = clampNumber(
+    source.haloFieldBoltLengthMaxBo ?? fieldShellRadiusBo,
+    fieldBoltLengthMinBo,
+    fieldShellRadiusBo,
+    fieldShellRadiusBo
+  );
   const legacyWanderSpeed = clampNumber(source.haloFieldWanderSpeed, 0, 64, 0.45);
   const boltMinStepBo = clampNumber(source.haloBoltShapeMinStepBo ?? source.haloBoltMinStepBo, 0.01, 8, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.minStepBo);
   const boltMaxStepBo = clampNumber(source.haloBoltShapeMaxStepBo ?? source.haloBoltMaxStepBo, boltMinStepBo, 8, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.maxStepBo);
@@ -100,6 +112,8 @@ function normalizeConfig(raw = {}) {
     fieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, 24)),
     fieldPointDiameterBo: 0.05,
     fieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, 4242)),
+    fieldBoltLengthMaxBo,
+    fieldBoltLengthMinBo,
     fieldShellRadiusBo,
     fieldReversalChance: clampNumber(source.haloFieldReversalChance, 0, 1, 0.35),
     fieldWander: clampNumber(source.haloFieldWander, 0, 2, 0.35),
@@ -374,11 +388,13 @@ function sampleShellPoint({ config, index, states, time, total }) {
   const angle = state.anglePhase
     + Math.sin(time * 0.37 + seed * 0.017) * wander * 0.38
     + Math.cos(time * 0.29 + seed * 0.023) * wander * 0.24;
-  const planarRadiusBo = Math.sqrt(Math.max(0, config.fieldShellRadiusBo * config.fieldShellRadiusBo - zBo * zBo));
+  const lengthBo = randomBetween(seed, 71.3, config.fieldBoltLengthMinBo, config.fieldBoltLengthMaxBo);
+  const clampedZBo = Math.max(-lengthBo, Math.min(lengthBo, zBo));
+  const planarRadiusBo = Math.sqrt(Math.max(0, lengthBo * lengthBo - clampedZBo * clampedZBo));
   return Object.freeze({
     xBo: Math.cos(angle) * planarRadiusBo,
     yBo: Math.sin(angle) * planarRadiusBo,
-    zBo,
+    zBo: clampedZBo,
   });
 }
 

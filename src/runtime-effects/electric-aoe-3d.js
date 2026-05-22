@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522e";
-import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522143457b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522143457";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522f";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522haloLengthAb";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522haloLengthA";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -131,6 +131,8 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     haloFieldReversalChance: clampNumber(source.haloFieldReversalChance, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldReversalChance),
     haloFieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldSeed)),
     haloFieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldShellRadiusBo),
+    haloFieldBoltLengthMinBo: clampNumber(source.haloFieldBoltLengthMinBo, 0.05, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldBoltLengthMinBo),
+    haloFieldBoltLengthMaxBo: clampNumber(source.haloFieldBoltLengthMaxBo, 0.05, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldBoltLengthMaxBo),
     haloFieldWander: clampNumber(source.haloFieldWander, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWander),
     haloFieldWanderDurationMinMs: Math.round(clampNumber(
       source.haloFieldWanderDurationMinMs,
