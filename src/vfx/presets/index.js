@@ -6,7 +6,7 @@ export { FLAME_AOE_PRESET_DEFAULT } from "./flame-aoe-default.js";
 export { FLAME_AOE_3D_PRESET_DEFAULT } from "./flame-aoe-3d-default.js?v=20260520235547";
 export { HEAL_PRESET_DEFAULT } from "./heal-default.js?v=20260517b";
 export { ELECTRIC_AOE_PRESET_DEFAULT } from "./electric-aoe-default.js";
-export { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "./electric-aoe-3d-default.js?v=20260522-bolt-shape-a";
+export { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "./electric-aoe-3d-default.js?v=20260522-bolt-forks-a";
 export { ORB_SHATTER_PRESET_DEFAULT } from "./orb-shatter-default.js";
 export { ORB_NOD_PRESET_DEFAULT } from "./orb-nod-default.js";
 export { ORB_NOD_3D_PRESET_DEFAULT } from "./orb-nod3d-default.js";

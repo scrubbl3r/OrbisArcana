@@ -1,7 +1,7 @@
 import {
   buildElectricAoeBoltShapePath,
   ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS,
-} from "./electric-aoe-bolt-shape-planner.js?v=20260522a";
+} from "./electric-aoe-bolt-shape-planner.js?v=20260522b";
 
 function clampNumber(value, min, max, fallback) {
   const numeric = Number(value);
@@ -67,6 +67,8 @@ function normalizeConfig(raw = {}) {
   const boltMinStepBo = clampNumber(source.haloBoltShapeMinStepBo ?? source.haloBoltMinStepBo, 0.01, 8, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.minStepBo);
   const boltMaxStepBo = clampNumber(source.haloBoltShapeMaxStepBo ?? source.haloBoltMaxStepBo, boltMinStepBo, 8, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.maxStepBo);
   const zRange = normalizeZRange(source, fieldShellRadiusBo);
+  const forkStartPct = clampNumber(source.haloBoltForkStartPct, 0, 1, 0.33);
+  const forkEndPct = clampNumber(source.haloBoltForkEndPct, 0, 1, 0.75);
   return Object.freeze({
     boltHeadingMemory: clampNumber(source.haloBoltShapeHeadingMemory ?? source.haloBoltHeadingMemory, 0, 1, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.headingMemory),
     boltMaxStepBo,
@@ -112,6 +114,11 @@ function normalizeConfig(raw = {}) {
     fieldWanderSpeedMin: clampNumber(source.haloFieldWanderSpeedMin ?? source.haloFieldWanderSpeed, 0, 64, Math.min(legacyWanderSpeed, 0.25)),
     fieldZMaxBo: zRange.max,
     fieldZMinBo: zRange.min,
+    forkChance: clampNumber(source.haloBoltForkChance, 0, 1, 0),
+    forkEndPctMax: Math.max(forkStartPct, forkEndPct),
+    forkEndPctMin: Math.min(forkStartPct, forkEndPct),
+    forkSpreadBo: clampNumber(source.haloBoltForkSpreadBo, 0, 8, 0.34),
+    forkTargetOffsetBo: clampNumber(source.haloBoltForkTargetOffsetBo, 0, 8, 0.18),
     zBo: clampNumber(source.zBo ?? source.dominantBoltZBo, -64, 64, 0),
   });
 }
@@ -366,7 +373,7 @@ function sampleShellPoint({ config, index, states, time, total }) {
   });
 }
 
-function buildHaloBoltPath({ config, endpoint, originXW, originYW, safeBo, seed, time }) {
+function buildHaloBoltPath({ config, endpoint, originXW, originYW, originZBo = null, safeBo, seed, time }) {
   return buildElectricAoeBoltShapePath({
     bo: safeBo,
     config: {
@@ -379,10 +386,95 @@ function buildHaloBoltPath({ config, endpoint, originXW, originYW, safeBo, seed,
       shapeSpeedHz: config.boltShapeSpeedHz,
       wanderStrength: config.boltWanderStrength,
     },
-    from: { xW: originXW, yW: originYW, zBo: config.zBo },
+    from: { xW: originXW, yW: originYW, zBo: Number.isFinite(Number(originZBo)) ? Number(originZBo) : config.zBo },
     seed,
     time,
     to: endpoint,
+  });
+}
+
+function distanceBetweenPointsBo(from, to, safeBo) {
+  return Math.hypot(
+    ((Number(to && to.xW) || 0) - (Number(from && from.xW) || 0)) / safeBo,
+    ((Number(to && to.yW) || 0) - (Number(from && from.yW) || 0)) / safeBo,
+    (Number(to && to.zBo) || 0) - (Number(from && from.zBo) || 0)
+  );
+}
+
+function interpolatePoint(from, to, t) {
+  const x = Math.max(0, Math.min(1, Number(t) || 0));
+  return Object.freeze({
+    xW: lerp(Number(from && from.xW) || 0, Number(to && to.xW) || 0, x),
+    yW: lerp(Number(from && from.yW) || 0, Number(to && to.yW) || 0, x),
+    zBo: lerp(Number(from && from.zBo) || 0, Number(to && to.zBo) || 0, x),
+  });
+}
+
+function samplePointAtPathPct(points, pct, safeBo) {
+  if (!Array.isArray(points) || points.length <= 1) return points && points[0] || Object.freeze({ xW: 0, yW: 0, zBo: 0 });
+  const distances = [0];
+  let total = 0;
+  for (let index = 1; index < points.length; index += 1) {
+    total += distanceBetweenPointsBo(points[index - 1], points[index], safeBo);
+    distances.push(total);
+  }
+  if (total <= 0.000001) return points[0];
+  const target = total * Math.max(0, Math.min(1, Number(pct) || 0));
+  for (let index = 1; index < points.length; index += 1) {
+    if (distances[index] < target) continue;
+    const segmentLength = Math.max(0.000001, distances[index] - distances[index - 1]);
+    return interpolatePoint(points[index - 1], points[index], (target - distances[index - 1]) / segmentLength);
+  }
+  return points[points.length - 1];
+}
+
+function vectorBetweenBo(from, to, safeBo) {
+  return normalizeVector3(
+    ((Number(to && to.xW) || 0) - (Number(from && from.xW) || 0)) / safeBo,
+    ((Number(to && to.yW) || 0) - (Number(from && from.yW) || 0)) / safeBo,
+    (Number(to && to.zBo) || 0) - (Number(from && from.zBo) || 0)
+  );
+}
+
+function buildHaloFork({ config, endpoint, forkPoint, originXW, originYW, safeBo, seed, time }) {
+  if (config.forkChance <= 0 || random01(seed, 151) > config.forkChance) return null;
+  const tangent = vectorBetweenBo(forkPoint, endpoint, safeBo);
+  const planarLength = Math.hypot(tangent.x, tangent.y);
+  const perpendicular = planarLength > 0.000001
+    ? Object.freeze({ x: -tangent.y / planarLength, y: tangent.x / planarLength, z: 0 })
+    : Object.freeze({ x: 0, y: 1, z: 0 });
+  const spreadBo = config.forkSpreadBo * (0.65 + random01(seed, 153) * 0.7);
+  const offsetBo = config.forkTargetOffsetBo * (random01(seed, 157) * 2 - 1);
+  const zSpreadBo = config.forkSpreadBo * 0.18 * (random01(seed, 159) * 2 - 1);
+  const center = Object.freeze({
+    xW: (Number(endpoint.xW) || 0) + tangent.x * offsetBo * safeBo,
+    yW: (Number(endpoint.yW) || 0) + tangent.y * offsetBo * safeBo,
+    zBo: (Number(endpoint.zBo) || 0) + tangent.z * offsetBo,
+  });
+  const tineAEnd = Object.freeze({
+    xW: center.xW + perpendicular.x * spreadBo * safeBo * 0.5,
+    yW: center.yW + perpendicular.y * spreadBo * safeBo * 0.5,
+    zBo: center.zBo + zSpreadBo,
+  });
+  const tineBEnd = Object.freeze({
+    xW: center.xW - perpendicular.x * spreadBo * safeBo * 0.5,
+    yW: center.yW - perpendicular.y * spreadBo * safeBo * 0.5,
+    zBo: center.zBo - zSpreadBo,
+  });
+  return Object.freeze({
+    kind: "fork",
+    point: forkPoint,
+    points: Object.freeze([forkPoint]),
+    tines: Object.freeze([
+      Object.freeze({
+        points: buildHaloBoltPath({ config, endpoint: tineAEnd, originXW: forkPoint.xW, originYW: forkPoint.yW, originZBo: forkPoint.zBo, safeBo, seed: seed + 170.17, time }),
+        target: tineAEnd,
+      }),
+      Object.freeze({
+        points: buildHaloBoltPath({ config, endpoint: tineBEnd, originXW: forkPoint.xW, originYW: forkPoint.yW, originZBo: forkPoint.zBo, safeBo, seed: seed + 190.19, time }),
+        target: tineBEnd,
+      }),
+    ]),
   });
 }
 
@@ -411,12 +503,17 @@ export function createElectricAoeHaloFieldPlanner() {
         zBo: config.zBo + point.zBo,
       });
       const seed = config.fieldSeed + index * 37.17;
-      const points = buildHaloBoltPath({ config, endpoint: end, index, originXW, originYW, safeBo, seed, time: safeTime });
+      const fullPoints = buildHaloBoltPath({ config, endpoint: end, index, originXW, originYW, safeBo, seed, time: safeTime });
+      const forkPct = randomBetween(seed, 149, config.forkEndPctMin, config.forkEndPctMax);
+      const forkPoint = samplePointAtPathPct(fullPoints, forkPct, safeBo);
+      const fork = buildHaloFork({ config, endpoint: end, forkPoint, originXW, originYW, safeBo, seed, time: safeTime });
+      const points = fork ? buildHaloBoltPath({ config, endpoint: forkPoint, index, originXW, originYW, safeBo, seed: seed + 130.13, time: safeTime }) : fullPoints;
       paths.push(Object.freeze({
-        forks: Object.freeze([]),
+        forks: Object.freeze(fork ? [fork] : []),
         points,
         shellRadiusBo: config.fieldShellRadiusBo,
         pointDiameterBo: config.fieldPointDiameterBo,
+        target: end,
       }));
     }
     return Object.freeze(paths);

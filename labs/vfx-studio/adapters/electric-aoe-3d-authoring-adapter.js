@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-shape-a";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-a";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -128,6 +128,11 @@ export function createElectricAoe3dAuthoringAdapter({
       haloBoltShapePathJitterBo: readNumber(els.electricAoe3dHaloBoltShapePathJitterBo, defaults.haloBoltShapePathJitterBo, 0, 4),
       haloBoltShapeSpeedHz: readNumber(els.electricAoe3dHaloBoltShapeSpeedHz, defaults.haloBoltShapeSpeedHz, 0, 120),
       haloBoltShapeSmoothing: readNumber(els.electricAoe3dHaloBoltShapeSmoothing, defaults.haloBoltShapeSmoothing, 0, 1),
+      haloBoltForkChance: readNumber(els.electricAoe3dHaloBoltForkChance, defaults.haloBoltForkChance, 0, 1),
+      haloBoltForkStartPct: readNumber(els.electricAoe3dHaloBoltForkStartPct, defaults.haloBoltForkStartPct, 0, 1),
+      haloBoltForkEndPct: readNumber(els.electricAoe3dHaloBoltForkEndPct, defaults.haloBoltForkEndPct, 0, 1),
+      haloBoltForkSpreadBo: readNumber(els.electricAoe3dHaloBoltForkSpreadBo, defaults.haloBoltForkSpreadBo, 0, 8),
+      haloBoltForkTargetOffsetBo: readNumber(els.electricAoe3dHaloBoltForkTargetOffsetBo, defaults.haloBoltForkTargetOffsetBo, 0, 8),
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
       haloFieldLingerMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMinMs, defaults.haloFieldLingerMinMs ?? defaults.haloFieldReversalFrequencyMinMs, 50, 20000)),
       haloFieldLingerMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMaxMs, defaults.haloFieldLingerMaxMs ?? defaults.haloFieldReversalFrequencyMaxMs, 50, 20000)),
@@ -271,6 +276,21 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dHaloBoltShapeSmoothing) {
       els.electricAoe3dHaloBoltShapeSmoothing.value = String(source.haloBoltShapeSmoothing ?? 0.18);
+    }
+    if (els.electricAoe3dHaloBoltForkChance) {
+      els.electricAoe3dHaloBoltForkChance.value = String(source.haloBoltForkChance ?? 0);
+    }
+    if (els.electricAoe3dHaloBoltForkStartPct) {
+      els.electricAoe3dHaloBoltForkStartPct.value = String(source.haloBoltForkStartPct ?? 0.33);
+    }
+    if (els.electricAoe3dHaloBoltForkEndPct) {
+      els.electricAoe3dHaloBoltForkEndPct.value = String(source.haloBoltForkEndPct ?? 0.75);
+    }
+    if (els.electricAoe3dHaloBoltForkSpreadBo) {
+      els.electricAoe3dHaloBoltForkSpreadBo.value = String(source.haloBoltForkSpreadBo ?? 0.34);
+    }
+    if (els.electricAoe3dHaloBoltForkTargetOffsetBo) {
+      els.electricAoe3dHaloBoltForkTargetOffsetBo.value = String(source.haloBoltForkTargetOffsetBo ?? 0.18);
     }
     if (typeof applyPreview === "function") applyPreview();
     return true;

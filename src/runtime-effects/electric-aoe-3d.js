@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522b";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522c";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521214600b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-shape-a";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-a";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -103,6 +103,11 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     haloBoltShapePathJitterBo: clampNumber(source.haloBoltShapePathJitterBo, 0, 4, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltShapePathJitterBo),
     haloBoltShapeSpeedHz: clampNumber(source.haloBoltShapeSpeedHz, 0, 120, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltShapeSpeedHz),
     haloBoltShapeSmoothing: clampNumber(source.haloBoltShapeSmoothing, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltShapeSmoothing),
+    haloBoltForkChance: clampNumber(source.haloBoltForkChance, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkChance),
+    haloBoltForkStartPct: clampNumber(source.haloBoltForkStartPct, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkStartPct),
+    haloBoltForkEndPct: clampNumber(source.haloBoltForkEndPct, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkEndPct),
+    haloBoltForkSpreadBo: clampNumber(source.haloBoltForkSpreadBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkSpreadBo),
+    haloBoltForkTargetOffsetBo: clampNumber(source.haloBoltForkTargetOffsetBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkTargetOffsetBo),
     haloFieldLingerMinMs: Math.round(clampNumber(
       source.haloFieldLingerMinMs ?? source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,
       50,
@@ -364,6 +369,22 @@ export function createElectricAoe3dRuntime(options = {}) {
       haloLine.name = `electric_aoe3d:stage_halo_control_line_${pathIndex}`;
       haloLine.renderOrder = 234;
       haloLayer.add(haloLine);
+      (Array.isArray(path.forks) ? path.forks : []).forEach((fork, forkIndex) => {
+        (Array.isArray(fork.tines) ? fork.tines : []).forEach((tine, tineIndex) => {
+          const tinePoints = (Array.isArray(tine.points) ? tine.points : []).map((point) => toRuntimeVector(point, bo, path, { usePointZ: true }));
+          if (tinePoints.length <= 1) return;
+          const tineLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(tinePoints), haloLineMaterial);
+          tineLine.name = `electric_aoe3d:stage_halo_fork_${pathIndex}_${forkIndex}_${tineIndex}`;
+          tineLine.renderOrder = 235;
+          haloLayer.add(tineLine);
+          const tip = tinePoints[tinePoints.length - 1];
+          const marker = new THREE.Mesh(haloPointGeometry, haloPointMaterial);
+          marker.name = `electric_aoe3d:stage_halo_fork_tip_${pathIndex}_${forkIndex}_${tineIndex}`;
+          marker.renderOrder = 236;
+          marker.position.copy(tip);
+          haloLayer.add(marker);
+        });
+      });
       linePoints.slice(-1).forEach((point, pointIndex) => {
         const marker = new THREE.Mesh(haloPointGeometry, haloPointMaterial);
         marker.name = `electric_aoe3d:stage_halo_control_point_${pathIndex}_${pointIndex}`;

@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522b";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522c";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -161,6 +161,11 @@ export function createElectricAoe3dPreview({
       haloBoltShapePathJitterBo: readInputNumber(els.electricAoe3dHaloBoltShapePathJitterBo, 0.18, 0, 4),
       haloBoltShapeSpeedHz: readInputNumber(els.electricAoe3dHaloBoltShapeSpeedHz, 18, 0, 120),
       haloBoltShapeSmoothing: readInputNumber(els.electricAoe3dHaloBoltShapeSmoothing, 0.18, 0, 1),
+      haloBoltForkChance: readInputNumber(els.electricAoe3dHaloBoltForkChance, 0, 0, 1),
+      haloBoltForkStartPct: readInputNumber(els.electricAoe3dHaloBoltForkStartPct, 0.33, 0, 1),
+      haloBoltForkEndPct: readInputNumber(els.electricAoe3dHaloBoltForkEndPct, 0.75, 0, 1),
+      haloBoltForkSpreadBo: readInputNumber(els.electricAoe3dHaloBoltForkSpreadBo, 0.34, 0, 8),
+      haloBoltForkTargetOffsetBo: readInputNumber(els.electricAoe3dHaloBoltForkTargetOffsetBo, 0.18, 0, 8),
       haloFieldLingerMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMinMs, 900, 50, 20000)),
       haloFieldLingerMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMaxMs, 2600, 50, 20000)),
       haloFieldLingerDrift: readInputNumber(els.electricAoe3dHaloFieldLingerDrift, 0, 0, 1),
@@ -255,6 +260,22 @@ export function createElectricAoe3dPreview({
       line.name = `electric_aoe3d:halo_control_line_${pathIndex}`;
       line.renderOrder = 214;
       haloControlPointLayer.add(line);
+      (Array.isArray(path.forks) ? path.forks : []).forEach((fork, forkIndex) => {
+        (Array.isArray(fork.tines) ? fork.tines : []).forEach((tine, tineIndex) => {
+          const tinePoints = (Array.isArray(tine.points) ? tine.points : []).map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
+          if (tinePoints.length <= 1) return;
+          const tineLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(tinePoints), haloControlPointLineMaterial);
+          tineLine.name = `electric_aoe3d:halo_control_fork_${pathIndex}_${forkIndex}_${tineIndex}`;
+          tineLine.renderOrder = 215;
+          haloControlPointLayer.add(tineLine);
+          const tip = tinePoints[tinePoints.length - 1];
+          const marker = new THREE.Mesh(haloControlPointGeometry, haloControlPointMaterial);
+          marker.name = `electric_aoe3d:halo_control_fork_tip_${pathIndex}_${forkIndex}_${tineIndex}`;
+          marker.renderOrder = 216;
+          marker.position.copy(tip);
+          haloControlPointLayer.add(marker);
+        });
+      });
       path.points.slice(-1).forEach((point, pointIndex) => {
         const marker = new THREE.Mesh(haloControlPointGeometry, haloControlPointMaterial);
         marker.name = `electric_aoe3d:halo_control_point_${pathIndex}_${pointIndex}`;
@@ -461,6 +482,11 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dHaloBoltShapePathJitterBo,
       els.electricAoe3dHaloBoltShapeSpeedHz,
       els.electricAoe3dHaloBoltShapeSmoothing,
+      els.electricAoe3dHaloBoltForkChance,
+      els.electricAoe3dHaloBoltForkStartPct,
+      els.electricAoe3dHaloBoltForkEndPct,
+      els.electricAoe3dHaloBoltForkSpreadBo,
+      els.electricAoe3dHaloBoltForkTargetOffsetBo,
     ].forEach((input) => {
       if (!input) return;
       input.addEventListener("blur", refreshOnCommit);
