@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521q";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521r";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -153,6 +153,10 @@ export function createElectricAoe3dPreview({
   function readHaloFieldConfig() {
     return Object.freeze({
       dominantBoltZBo: 0,
+      haloBoltCurveMin: readInputNumber(els.electricAoe3dHaloBoltCurveMin, 0.12, 0, 1),
+      haloBoltCurveMax: readInputNumber(els.electricAoe3dHaloBoltCurveMax, 0.34, 0, 1),
+      haloBoltSmoothing: readInputNumber(els.electricAoe3dHaloBoltSmoothing, 0.72, 0, 1),
+      haloBoltTension: readInputNumber(els.electricAoe3dHaloBoltTension, 0.62, 0, 1),
       haloFieldLingerMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMinMs, 900, 50, 20000)),
       haloFieldLingerMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMaxMs, 2600, 50, 20000)),
       haloFieldLingerDrift: readInputNumber(els.electricAoe3dHaloFieldLingerDrift, 0, 0, 1),
@@ -247,7 +251,7 @@ export function createElectricAoe3dPreview({
       line.name = `electric_aoe3d:halo_control_line_${pathIndex}`;
       line.renderOrder = 214;
       haloControlPointLayer.add(line);
-      path.points.slice(1).forEach((point, pointIndex) => {
+      path.points.slice(-1).forEach((point, pointIndex) => {
         const marker = new THREE.Mesh(haloControlPointGeometry, haloControlPointMaterial);
         marker.name = `electric_aoe3d:halo_control_point_${pathIndex}_${pointIndex}`;
         marker.renderOrder = 216;
@@ -445,6 +449,10 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dHaloFieldZMinBo,
       els.electricAoe3dHaloFieldZMaxBo,
       els.electricAoe3dHaloFieldSeed,
+      els.electricAoe3dHaloBoltCurveMin,
+      els.electricAoe3dHaloBoltCurveMax,
+      els.electricAoe3dHaloBoltSmoothing,
+      els.electricAoe3dHaloBoltTension,
     ].forEach((input) => {
       if (!input) return;
       input.addEventListener("blur", refreshOnCommit);

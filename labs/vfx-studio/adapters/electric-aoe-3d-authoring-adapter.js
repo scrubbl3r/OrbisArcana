@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-j";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-k";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -120,6 +120,10 @@ export function createElectricAoe3dAuthoringAdapter({
       dominantBoltRangeBo: maxRange,
       dominantBoltSeekStrength: readNumber(els.electricAoe3dDominantBoltSeekStrength, defaults.dominantBoltSeekStrength, 0, 4),
       dominantBoltWanderStrength: readNumber(els.electricAoe3dDominantBoltWanderStrength, defaults.dominantBoltWanderStrength, 0, 4),
+      haloBoltCurveMin: readNumber(els.electricAoe3dHaloBoltCurveMin, defaults.haloBoltCurveMin, 0, 1),
+      haloBoltCurveMax: readNumber(els.electricAoe3dHaloBoltCurveMax, defaults.haloBoltCurveMax, 0, 1),
+      haloBoltSmoothing: readNumber(els.electricAoe3dHaloBoltSmoothing, defaults.haloBoltSmoothing, 0, 1),
+      haloBoltTension: readNumber(els.electricAoe3dHaloBoltTension, defaults.haloBoltTension, 0, 1),
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
       haloFieldLingerMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMinMs, defaults.haloFieldLingerMinMs ?? defaults.haloFieldReversalFrequencyMinMs, 50, 20000)),
       haloFieldLingerMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMaxMs, defaults.haloFieldLingerMaxMs ?? defaults.haloFieldReversalFrequencyMaxMs, 50, 20000)),
@@ -239,6 +243,18 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dHaloFieldSeed) {
       els.electricAoe3dHaloFieldSeed.value = String(source.haloFieldSeed ?? 4242);
+    }
+    if (els.electricAoe3dHaloBoltCurveMin) {
+      els.electricAoe3dHaloBoltCurveMin.value = String(source.haloBoltCurveMin ?? 0.12);
+    }
+    if (els.electricAoe3dHaloBoltCurveMax) {
+      els.electricAoe3dHaloBoltCurveMax.value = String(source.haloBoltCurveMax ?? 0.34);
+    }
+    if (els.electricAoe3dHaloBoltSmoothing) {
+      els.electricAoe3dHaloBoltSmoothing.value = String(source.haloBoltSmoothing ?? 0.72);
+    }
+    if (els.electricAoe3dHaloBoltTension) {
+      els.electricAoe3dHaloBoltTension.value = String(source.haloBoltTension ?? 0.62);
     }
     if (typeof applyPreview === "function") applyPreview();
     return true;

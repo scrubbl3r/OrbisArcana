@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260521-electric-field-n";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260521-electric-field-o";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -220,6 +220,10 @@ export function createStudioBootstrap({
       electricAoe3dHaloFieldZMinBo: els.electricAoe3dHaloFieldZMinBo,
       electricAoe3dHaloFieldZMaxBo: els.electricAoe3dHaloFieldZMaxBo,
       electricAoe3dHaloFieldSeed: els.electricAoe3dHaloFieldSeed,
+      electricAoe3dHaloBoltCurveMin: els.electricAoe3dHaloBoltCurveMin,
+      electricAoe3dHaloBoltCurveMax: els.electricAoe3dHaloBoltCurveMax,
+      electricAoe3dHaloBoltSmoothing: els.electricAoe3dHaloBoltSmoothing,
+      electricAoe3dHaloBoltTension: els.electricAoe3dHaloBoltTension,
     }),
     bankOrb3d: Object.freeze({
       ...els,

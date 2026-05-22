@@ -4,7 +4,7 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521q";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521r";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521214600b";
 import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521214600";
 
@@ -95,6 +95,10 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     dominantBoltTargetRadiusBo: clampNumber(source.dominantBoltTargetRadiusBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.targetRadiusBo),
     dominantBoltWanderStrength: clampNumber(source.dominantBoltWanderStrength, 0, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.wanderStrength),
     dominantBoltZBo: clampNumber(source.dominantBoltZBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
+    haloBoltCurveMin: clampNumber(source.haloBoltCurveMin, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltCurveMin),
+    haloBoltCurveMax: clampNumber(source.haloBoltCurveMax, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltCurveMax),
+    haloBoltSmoothing: clampNumber(source.haloBoltSmoothing, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltSmoothing),
+    haloBoltTension: clampNumber(source.haloBoltTension, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltTension),
     haloFieldLingerMinMs: Math.round(clampNumber(
       source.haloFieldLingerMinMs ?? source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,
       50,
@@ -356,7 +360,7 @@ export function createElectricAoe3dRuntime(options = {}) {
       haloLine.name = `electric_aoe3d:stage_halo_control_line_${pathIndex}`;
       haloLine.renderOrder = 234;
       haloLayer.add(haloLine);
-      linePoints.slice(1).forEach((point, pointIndex) => {
+      linePoints.slice(-1).forEach((point, pointIndex) => {
         const marker = new THREE.Mesh(haloPointGeometry, haloPointMaterial);
         marker.name = `electric_aoe3d:stage_halo_control_point_${pathIndex}_${pointIndex}`;
         marker.renderOrder = 236;

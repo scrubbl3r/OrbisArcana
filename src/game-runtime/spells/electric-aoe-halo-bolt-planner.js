@@ -57,12 +57,26 @@ function normalizeZRange(source, shellRadiusBo) {
   return Object.freeze({ max, min });
 }
 
+function normalizeRange(source, minKey, maxKey, min, max, fallbackMin, fallbackMax) {
+  const rawMin = clampNumber(source[minKey], min, max, fallbackMin);
+  const rawMax = clampNumber(source[maxKey], min, max, fallbackMax);
+  return Object.freeze({
+    max: Math.max(rawMin, rawMax),
+    min: Math.min(rawMin, rawMax),
+  });
+}
+
 function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fieldShellRadiusBo = clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5);
   const legacyWanderSpeed = clampNumber(source.haloFieldWanderSpeed, 0, 64, 0.45);
+  const boltCurve = normalizeRange(source, "haloBoltCurveMin", "haloBoltCurveMax", 0, 1, 0.12, 0.34);
   const zRange = normalizeZRange(source, fieldShellRadiusBo);
   return Object.freeze({
+    boltCurveMax: boltCurve.max,
+    boltCurveMin: boltCurve.min,
+    boltSmoothing: clampNumber(source.haloBoltSmoothing, 0, 1, 0.72),
+    boltTension: clampNumber(source.haloBoltTension, 0, 1, 0.62),
     fieldLingerMaxMs: Math.round(clampNumber(
       source.haloFieldLingerMaxMs ?? source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs,
       50,
@@ -353,6 +367,48 @@ function sampleShellPoint({ config, index, states, time, total }) {
   });
 }
 
+function buildHaloBoltPath({ config, endpoint, index, originXW, originYW, safeBo, seed, time }) {
+  const endXBo = (endpoint.xW - originXW) / safeBo;
+  const endYBo = (endpoint.yW - originYW) / safeBo;
+  const endZBo = endpoint.zBo - config.zBo;
+  const lengthBo = Math.max(0.001, Math.hypot(endXBo, endYBo, endZBo));
+  const radial = normalizeVector3(endXBo, endYBo, endZBo);
+  const tangent = normalizeVector3(-radial.y, radial.x, 0, { x: 0, y: 1, z: 0 });
+  const lift = normalizeVector3(
+    radial.y * tangent.z - radial.z * tangent.y,
+    radial.z * tangent.x - radial.x * tangent.z,
+    radial.x * tangent.y - radial.y * tangent.x,
+    { x: 0, y: 0, z: 1 }
+  );
+  const curve = randomBetween(seed, 81, config.boltCurveMin, config.boltCurveMax);
+  const amplitudeBo = lengthBo * curve * (1 - config.boltTension * 0.72);
+  const phase = randomBetween(seed, 83, 0, TWO_PI) + time * randomBetween(seed, 84, 0.7, 1.9);
+  const harmonic = randomBetween(seed, 85, 1.35, 2.85);
+  const bendSign = random01(seed, 86) < 0.5 ? -1 : 1;
+  const samples = 10;
+  const points = [Object.freeze({ xW: originXW, yW: originYW, zBo: config.zBo })];
+  for (let sample = 1; sample < samples; sample += 1) {
+    const t = sample / samples;
+    const envelope = Math.pow(Math.sin(Math.PI * t), 0.55 + config.boltTension * 1.15);
+    const tooth = ((sample % 2 ? 1 : -1) * (0.55 + random01(seed, 90 + sample) * 0.9));
+    const serpentine = Math.sin(t * Math.PI * harmonic + phase)
+      + Math.sin(t * Math.PI * (harmonic * 0.47 + 0.31) - phase * 0.73) * 0.36;
+    const bend = bendSign * lerp(tooth, serpentine, config.boltSmoothing) * amplitudeBo * envelope;
+    const liftBend = Math.sin(t * Math.PI * (harmonic + 0.7) + phase * 0.61)
+      * amplitudeBo
+      * envelope
+      * (0.08 + curve * 0.18)
+      * config.boltSmoothing;
+    points.push(Object.freeze({
+      xW: originXW + (endXBo * t + tangent.x * bend + lift.x * liftBend) * safeBo,
+      yW: originYW + (endYBo * t + tangent.y * bend + lift.y * liftBend) * safeBo,
+      zBo: config.zBo + endZBo * t + tangent.z * bend + lift.z * liftBend,
+    }));
+  }
+  points.push(endpoint);
+  return Object.freeze(points);
+}
+
 export function createElectricAoeHaloFieldPlanner() {
   const pointStates = [];
 
@@ -377,12 +433,11 @@ export function createElectricAoeHaloFieldPlanner() {
         yW: originYW + point.yBo * safeBo,
         zBo: config.zBo + point.zBo,
       });
+      const seed = config.fieldSeed + index * 37.17;
+      const points = buildHaloBoltPath({ config, endpoint: end, index, originXW, originYW, safeBo, seed, time: safeTime });
       paths.push(Object.freeze({
         forks: Object.freeze([]),
-        points: Object.freeze([
-          Object.freeze({ xW: originXW, yW: originYW, zBo: config.zBo }),
-          end,
-        ]),
+        points,
         shellRadiusBo: config.fieldShellRadiusBo,
         pointDiameterBo: config.fieldPointDiameterBo,
       }));

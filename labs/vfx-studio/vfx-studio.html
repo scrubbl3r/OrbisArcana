@@ -2093,6 +2093,20 @@
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldSeed">Field seed</label><input id="electricAoe3dHaloFieldSeed" class="paramFieldInput" type="number" min="1" max="999999999" step="1" value="4242" /></div>
           </div>
         </div>
+        <div class="controlGroup" data-control-group>
+          <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dHaloBoltControls">Halo Bolt</button>
+          </div>
+          <div id="electricAoe3dHaloBoltControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">CURVE</span>
+              <label for="electricAoe3dHaloBoltCurveMin">min</label><input id="electricAoe3dHaloBoltCurveMin" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.12" />
+              <label for="electricAoe3dHaloBoltCurveMax">max</label><input id="electricAoe3dHaloBoltCurveMax" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.34" />
+            </div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltSmoothing">Smoothing</label><input id="electricAoe3dHaloBoltSmoothing" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.72" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltTension">Tension</label><input id="electricAoe3dHaloBoltTension" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.62" /></div>
+          </div>
+        </div>
       </div>
 
       <div class="section" data-effect="bank-orb-3d" hidden>
@@ -2835,7 +2849,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-n"),
+      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-o"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -3423,6 +3437,10 @@
       electricAoe3dHaloFieldZMinBo: $("electricAoe3dHaloFieldZMinBo"),
       electricAoe3dHaloFieldZMaxBo: $("electricAoe3dHaloFieldZMaxBo"),
       electricAoe3dHaloFieldSeed: $("electricAoe3dHaloFieldSeed"),
+      electricAoe3dHaloBoltCurveMin: $("electricAoe3dHaloBoltCurveMin"),
+      electricAoe3dHaloBoltCurveMax: $("electricAoe3dHaloBoltCurveMax"),
+      electricAoe3dHaloBoltSmoothing: $("electricAoe3dHaloBoltSmoothing"),
+      electricAoe3dHaloBoltTension: $("electricAoe3dHaloBoltTension"),
       flameAoe3dAoeAuraDiameterBo: $("flameAoe3dAoeAuraDiameterBo"),
       flameAoe3dApplyAoeAuraDiameterBtn: $("flameAoe3dApplyAoeAuraDiameterBtn"),
       flameAoe3dAoeAuraSoftness: $("flameAoe3dAoeAuraSoftness"),
