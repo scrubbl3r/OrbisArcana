@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-electric-halo-ui-a";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-bolt-shape-a";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -220,15 +220,14 @@ export function createStudioBootstrap({
       electricAoe3dHaloFieldZMinBo: els.electricAoe3dHaloFieldZMinBo,
       electricAoe3dHaloFieldZMaxBo: els.electricAoe3dHaloFieldZMaxBo,
       electricAoe3dHaloFieldSeed: els.electricAoe3dHaloFieldSeed,
-      electricAoe3dHaloBoltSegmentsMin: els.electricAoe3dHaloBoltSegmentsMin,
-      electricAoe3dHaloBoltSegmentsMax: els.electricAoe3dHaloBoltSegmentsMax,
-      electricAoe3dHaloBoltStepVariance: els.electricAoe3dHaloBoltStepVariance,
-      electricAoe3dHaloBoltSeek: els.electricAoe3dHaloBoltSeek,
-      electricAoe3dHaloBoltHeadingMemory: els.electricAoe3dHaloBoltHeadingMemory,
-      electricAoe3dHaloBoltTurnAngleMin: els.electricAoe3dHaloBoltTurnAngleMin,
-      electricAoe3dHaloBoltTurnAngleMax: els.electricAoe3dHaloBoltTurnAngleMax,
-      electricAoe3dHaloBoltSmoothing: els.electricAoe3dHaloBoltSmoothing,
-      electricAoe3dHaloBoltTension: els.electricAoe3dHaloBoltTension,
+      electricAoe3dHaloBoltShapeMinStepBo: els.electricAoe3dHaloBoltShapeMinStepBo,
+      electricAoe3dHaloBoltShapeMaxStepBo: els.electricAoe3dHaloBoltShapeMaxStepBo,
+      electricAoe3dHaloBoltShapeSeekStrength: els.electricAoe3dHaloBoltShapeSeekStrength,
+      electricAoe3dHaloBoltShapeHeadingMemory: els.electricAoe3dHaloBoltShapeHeadingMemory,
+      electricAoe3dHaloBoltShapeWanderStrength: els.electricAoe3dHaloBoltShapeWanderStrength,
+      electricAoe3dHaloBoltShapePathJitterBo: els.electricAoe3dHaloBoltShapePathJitterBo,
+      electricAoe3dHaloBoltShapeSpeedHz: els.electricAoe3dHaloBoltShapeSpeedHz,
+      electricAoe3dHaloBoltShapeSmoothing: els.electricAoe3dHaloBoltShapeSmoothing,
     }),
     bankOrb3d: Object.freeze({
       ...els,

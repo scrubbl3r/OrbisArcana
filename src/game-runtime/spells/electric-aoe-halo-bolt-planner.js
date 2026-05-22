@@ -1,4 +1,7 @@
-const TWO_PI = Math.PI * 2;
+import {
+  buildElectricAoeBoltShapePath,
+  ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS,
+} from "./electric-aoe-bolt-shape-planner.js?v=20260522a";
 
 function clampNumber(value, min, max, fallback) {
   const numeric = Number(value);
@@ -57,32 +60,22 @@ function normalizeZRange(source, shellRadiusBo) {
   return Object.freeze({ max, min });
 }
 
-function normalizeRange(source, minKey, maxKey, min, max, fallbackMin, fallbackMax) {
-  const rawMin = clampNumber(source[minKey], min, max, fallbackMin);
-  const rawMax = clampNumber(source[maxKey], min, max, fallbackMax);
-  return Object.freeze({
-    max: Math.max(rawMin, rawMax),
-    min: Math.min(rawMin, rawMax),
-  });
-}
-
 function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fieldShellRadiusBo = clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5);
   const legacyWanderSpeed = clampNumber(source.haloFieldWanderSpeed, 0, 64, 0.45);
-  const boltSegments = normalizeRange(source, "haloBoltSegmentsMin", "haloBoltSegmentsMax", 1, 48, 6, 11);
-  const boltTurnAngle = normalizeRange(source, "haloBoltTurnAngleMin", "haloBoltTurnAngleMax", 0, 180, 18, 72);
+  const boltMinStepBo = clampNumber(source.haloBoltShapeMinStepBo ?? source.haloBoltMinStepBo, 0.01, 8, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.minStepBo);
+  const boltMaxStepBo = clampNumber(source.haloBoltShapeMaxStepBo ?? source.haloBoltMaxStepBo, boltMinStepBo, 8, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.maxStepBo);
   const zRange = normalizeZRange(source, fieldShellRadiusBo);
   return Object.freeze({
-    boltHeadingMemory: clampNumber(source.haloBoltHeadingMemory, 0, 1, 0.46),
-    boltSeek: clampNumber(source.haloBoltSeek, 0, 4, 1.18),
-    boltSegmentsMax: Math.round(boltSegments.max),
-    boltSegmentsMin: Math.round(boltSegments.min),
-    boltSmoothing: clampNumber(source.haloBoltSmoothing, 0, 1, 0.22),
-    boltStepVariance: clampNumber(source.haloBoltStepVariance, 0, 1, 0.38),
-    boltTension: clampNumber(source.haloBoltTension, 0, 1, 0.62),
-    boltTurnAngleMaxDeg: boltTurnAngle.max,
-    boltTurnAngleMinDeg: boltTurnAngle.min,
+    boltHeadingMemory: clampNumber(source.haloBoltShapeHeadingMemory ?? source.haloBoltHeadingMemory, 0, 1, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.headingMemory),
+    boltMaxStepBo,
+    boltMinStepBo,
+    boltPathJitterBo: clampNumber(source.haloBoltShapePathJitterBo ?? source.haloBoltPathJitterBo, 0, 4, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.pathJitterBo),
+    boltSeekStrength: clampNumber(source.haloBoltShapeSeekStrength ?? source.haloBoltSeek, 0, 4, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.seekStrength),
+    boltShapeSmoothing: clampNumber(source.haloBoltShapeSmoothing ?? source.haloBoltSmoothing, 0, 1, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.shapeSmoothing),
+    boltShapeSpeedHz: clampNumber(source.haloBoltShapeSpeedHz, 0, 120, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.shapeSpeedHz),
+    boltWanderStrength: clampNumber(source.haloBoltShapeWanderStrength ?? source.haloBoltWanderStrength, 0, 4, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.wanderStrength),
     fieldLingerMaxMs: Math.round(clampNumber(
       source.haloFieldLingerMaxMs ?? source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs,
       50,
@@ -373,89 +366,24 @@ function sampleShellPoint({ config, index, states, time, total }) {
   });
 }
 
-function rotateAroundAxis(vector, axis, angle) {
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
-  const dot = vector.x * axis.x + vector.y * axis.y + vector.z * axis.z;
-  return normalizeVector3(
-    vector.x * c + (axis.y * vector.z - axis.z * vector.y) * s + axis.x * dot * (1 - c),
-    vector.y * c + (axis.z * vector.x - axis.x * vector.z) * s + axis.y * dot * (1 - c),
-    vector.z * c + (axis.x * vector.y - axis.y * vector.x) * s + axis.z * dot * (1 - c),
-    vector
-  );
-}
-
-function smoothPath(points, smoothing) {
-  if (smoothing <= 0 || points.length <= 3) return points;
-  const next = [points[0]];
-  for (let index = 1; index < points.length - 1; index += 1) {
-    const prev = points[index - 1];
-    const point = points[index];
-    const after = points[index + 1];
-    const t = smoothing * 0.5;
-    next.push(Object.freeze({
-      xW: lerp(point.xW, (prev.xW + after.xW) * 0.5, t),
-      yW: lerp(point.yW, (prev.yW + after.yW) * 0.5, t),
-      zBo: lerp(point.zBo, (prev.zBo + after.zBo) * 0.5, t),
-    }));
-  }
-  next.push(points[points.length - 1]);
-  return Object.freeze(next);
-}
-
-function buildHaloBoltPath({ config, endpoint, originXW, originYW, safeBo, seed }) {
-  const endXBo = (endpoint.xW - originXW) / safeBo;
-  const endYBo = (endpoint.yW - originYW) / safeBo;
-  const endZBo = endpoint.zBo - config.zBo;
-  const lengthBo = Math.max(0.001, Math.hypot(endXBo, endYBo, endZBo));
-  const destination = Object.freeze({ x: endXBo, y: endYBo, z: endZBo });
-  const segmentCount = Math.max(1, Math.round(randomBetween(seed, 81, config.boltSegmentsMin, config.boltSegmentsMax)));
-  const baseStepBo = lengthBo / segmentCount;
-  const direct = normalizeVector3(endXBo, endYBo, endZBo);
-  let heading = direct;
-  let cursor = { x: 0, y: 0, z: 0 };
-  const points = [Object.freeze({ xW: originXW, yW: originYW, zBo: config.zBo })];
-  for (let step = 1; step < segmentCount; step += 1) {
-    const remaining = {
-      x: destination.x - cursor.x,
-      y: destination.y - cursor.y,
-      z: destination.z - cursor.z,
-    };
-    const seek = normalizeVector3(remaining.x, remaining.y, remaining.z, direct);
-    const axisSeed = seed + step * 17.17;
-    const axis = normalizeVector3(
-      randomBetween(axisSeed, 91, -1, 1),
-      randomBetween(axisSeed, 92, -1, 1),
-      randomBetween(axisSeed, 93, -0.35, 0.35),
-      { x: 0, y: 0, z: 1 }
-    );
-    const turnDeg = randomBetween(axisSeed, 94, config.boltTurnAngleMinDeg, config.boltTurnAngleMaxDeg);
-    const turnSign = random01(axisSeed, 95) < 0.5 ? -1 : 1;
-    const turn = rotateAroundAxis(seek, axis, turnSign * turnDeg * Math.PI / 180);
-    const towardEnd = step / segmentCount;
-    const tensionGain = config.boltTension * smoothstep(towardEnd) * 2.2;
-    heading = normalizeVector3(
-      heading.x * config.boltHeadingMemory + seek.x * (config.boltSeek + tensionGain) + turn.x,
-      heading.y * config.boltHeadingMemory + seek.y * (config.boltSeek + tensionGain) + turn.y,
-      heading.z * config.boltHeadingMemory + seek.z * (config.boltSeek + tensionGain) + turn.z,
-      seek
-    );
-    const remainingDistanceBo = Math.hypot(remaining.x, remaining.y, remaining.z);
-    const variance = 1 + (randomBetween(axisSeed, 96, -1, 1) * config.boltStepVariance * 0.72);
-    const stepLengthBo = Math.min(remainingDistanceBo * 0.82, baseStepBo * variance);
-    cursor = {
-      x: cursor.x + heading.x * stepLengthBo,
-      y: cursor.y + heading.y * stepLengthBo,
-      z: cursor.z + heading.z * stepLengthBo,
-    };
-    points.push(Object.freeze({
-      xW: originXW + cursor.x * safeBo,
-      yW: originYW + cursor.y * safeBo,
-      zBo: config.zBo + cursor.z,
-    }));
-  }
-  points.push(endpoint);
-  return smoothPath(Object.freeze(points), config.boltSmoothing);
+function buildHaloBoltPath({ config, endpoint, originXW, originYW, safeBo, seed, time }) {
+  return buildElectricAoeBoltShapePath({
+    bo: safeBo,
+    config: {
+      headingMemory: config.boltHeadingMemory,
+      maxStepBo: config.boltMaxStepBo,
+      minStepBo: config.boltMinStepBo,
+      pathJitterBo: config.boltPathJitterBo,
+      seekStrength: config.boltSeekStrength,
+      shapeSmoothing: config.boltShapeSmoothing,
+      shapeSpeedHz: config.boltShapeSpeedHz,
+      wanderStrength: config.boltWanderStrength,
+    },
+    from: { xW: originXW, yW: originYW, zBo: config.zBo },
+    seed,
+    time,
+    to: endpoint,
+  });
 }
 
 export function createElectricAoeHaloFieldPlanner() {
