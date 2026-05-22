@@ -226,16 +226,16 @@ export function createElectricAoeHaloBoltPlanner() {
     const phaseA = seed * 0.19 + config.fieldSeed * 0.0017 + radialOffset * 1.7;
     const phaseB = seed * 0.31 + config.fieldSeed * 0.0023 + radialOffset * 2.3;
     const phaseC = seed * 0.47 + config.fieldSeed * 0.0031 + radialOffset * 3.1;
-    const xyAngle = speedSign * time * driftSpeed * randomBetween(seed, 34, 0.16, 0.42)
-      + Math.cos(time * randomBetween(seed, 35, 0.18, 0.58) + phaseA) * (0.03 + config.fieldCellJitter * 0.05);
-    const yzAngle = Math.cos(time * randomBetween(seed, 36, 0.14, 0.44) + phaseB) * (0.06 + config.fieldCellJitter * 0.14);
-    const xzAngle = Math.sin(time * randomBetween(seed, 37, 0.12, 0.38) + phaseC) * (0.04 + config.fieldCellJitter * 0.1);
+    const xyAngle = speedSign * time * driftSpeed * randomBetween(seed, 34, 0.32, 0.88)
+      + Math.cos(time * randomBetween(seed, 35, 0.24, 0.72) + phaseA) * (0.06 + config.fieldCellJitter * 0.16);
+    const yzAngle = Math.cos(time * randomBetween(seed, 36, 0.18, 0.58) + phaseB) * (0.12 + config.fieldCellJitter * 0.34);
+    const xzAngle = Math.sin(time * randomBetween(seed, 37, 0.16, 0.52) + phaseC) * (0.08 + config.fieldCellJitter * 0.24);
     vector = rotateXY(vector, xyAngle);
     vector = rotateYZ(vector, yzAngle);
     vector = rotateXZ(vector, xzAngle);
     const rawAngle = Math.atan2(vector.y, vector.x);
     const rawDelta = shortestAngleDelta(cellCenter, rawAngle);
-    const cellOffset = Math.tanh(rawDelta / Math.max(0.001, cellWidth * 0.72)) * (0.08 + config.fieldCellJitter * 0.28);
+    const cellOffset = Math.tanh(rawDelta / Math.max(0.001, cellWidth * 0.52)) * (0.14 + config.fieldCellJitter * 0.58);
     return normalizeAngle(cellCenter + cellOffset * cellWidth);
   }
 
