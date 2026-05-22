@@ -131,8 +131,8 @@ export function createElectricAoe3dAuthoringAdapter({
       haloFieldWander: readNumber(els.electricAoe3dHaloFieldWander, defaults.haloFieldWander, 0, 2),
       haloFieldWanderDurationMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldWanderDurationMinMs, defaults.haloFieldWanderDurationMinMs, 50, 20000)),
       haloFieldWanderDurationMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldWanderDurationMaxMs, defaults.haloFieldWanderDurationMaxMs, 50, 20000)),
-      haloFieldWanderSpeedMin: readNumber(els.electricAoe3dHaloFieldWanderSpeedMin, defaults.haloFieldWanderSpeedMin ?? defaults.haloFieldWanderSpeed, 0, 12),
-      haloFieldWanderSpeedMax: readNumber(els.electricAoe3dHaloFieldWanderSpeedMax, defaults.haloFieldWanderSpeedMax ?? defaults.haloFieldWanderSpeed, 0, 12),
+      haloFieldWanderSpeedMin: readNumber(els.electricAoe3dHaloFieldWanderSpeedMin, defaults.haloFieldWanderSpeedMin ?? defaults.haloFieldWanderSpeed, 0, 64),
+      haloFieldWanderSpeedMax: readNumber(els.electricAoe3dHaloFieldWanderSpeedMax, defaults.haloFieldWanderSpeedMax ?? defaults.haloFieldWanderSpeed, 0, 64),
       haloFieldZMinBo: readNumber(els.electricAoe3dHaloFieldZMinBo, defaults.haloFieldZMinBo, -32, 32),
       haloFieldZMaxBo: readNumber(els.electricAoe3dHaloFieldZMaxBo, defaults.haloFieldZMaxBo, -32, 32),
     });

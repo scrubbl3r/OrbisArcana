@@ -60,7 +60,7 @@ function normalizeZRange(source, shellRadiusBo) {
 function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fieldShellRadiusBo = clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5);
-  const legacyWanderSpeed = clampNumber(source.haloFieldWanderSpeed, 0, 12, 0.45);
+  const legacyWanderSpeed = clampNumber(source.haloFieldWanderSpeed, 0, 64, 0.45);
   const zRange = normalizeZRange(source, fieldShellRadiusBo);
   return Object.freeze({
     fieldLingerMaxMs: Math.round(clampNumber(
@@ -94,24 +94,38 @@ function normalizeConfig(raw = {}) {
       20000,
       1200
     )),
-    fieldWanderSpeedMax: clampNumber(source.haloFieldWanderSpeedMax ?? source.haloFieldWanderSpeed, 0, 12, Math.max(legacyWanderSpeed, 0.75)),
-    fieldWanderSpeedMin: clampNumber(source.haloFieldWanderSpeedMin ?? source.haloFieldWanderSpeed, 0, 12, Math.min(legacyWanderSpeed, 0.25)),
+    fieldWanderSpeedMax: clampNumber(source.haloFieldWanderSpeedMax ?? source.haloFieldWanderSpeed, 0, 64, Math.max(legacyWanderSpeed, 0.75)),
+    fieldWanderSpeedMin: clampNumber(source.haloFieldWanderSpeedMin ?? source.haloFieldWanderSpeed, 0, 64, Math.min(legacyWanderSpeed, 0.25)),
     fieldZMaxBo: zRange.max,
     fieldZMinBo: zRange.min,
     zBo: clampNumber(source.zBo ?? source.dominantBoltZBo, -64, 64, 0),
   });
 }
 
+function lerpSpeed(speedMin, speedMax, roll) {
+  return Math.min(speedMin, speedMax) + (Math.max(speedMin, speedMax) - Math.min(speedMin, speedMax)) * roll;
+}
+
 function randomSignedSpeed(seed, salt, speedMin, speedMax) {
   const sign = random01(seed, salt) < 0.5 ? -1 : 1;
-  return sign * randomBetween(seed, salt + 1, Math.min(speedMin, speedMax), Math.max(speedMin, speedMax));
+  const roll = random01(seed, salt + 1);
+  return Object.freeze({
+    roll,
+    sign,
+    value: sign * lerpSpeed(speedMin, speedMax, roll),
+  });
 }
 
 function chooseTargetVelocity({ chance, current, salt, seed, speedMax, speedMin }) {
   const currentSign = current < 0 ? -1 : 1;
   const shouldReverse = random01(seed, salt) < chance;
   const sign = shouldReverse ? -currentSign : currentSign;
-  return sign * randomBetween(seed, salt + 1, Math.min(speedMin, speedMax), Math.max(speedMin, speedMax));
+  const roll = random01(seed, salt + 1);
+  return Object.freeze({
+    roll,
+    sign,
+    value: sign * lerpSpeed(speedMin, speedMax, roll),
+  });
 }
 
 function rollDurationSeconds(seed, salt, minMs, maxMs) {
@@ -150,12 +164,7 @@ function beginLinger(state, config, seed, time) {
 
 function beginEaseIn(state, config, seed, time) {
   const rollSeed = seed + state.rollCount * 97.31;
-  state.phase = "ease-in";
-  state.phaseEndsAt = time + randomBetween(rollSeed, 39, 0.45, 1.25);
-  state.phaseStartedAt = time;
-  state.fromAngularVelocity = 0;
-  state.fromZVelocity = 0;
-  state.targetAngularVelocity = chooseTargetVelocity({
+  const angularTarget = chooseTargetVelocity({
     chance: config.fieldReversalChance,
     current: state.lastDirectionSign,
     salt: 33,
@@ -163,7 +172,7 @@ function beginEaseIn(state, config, seed, time) {
     speedMax: config.fieldWanderSpeedMax,
     speedMin: config.fieldWanderSpeedMin,
   });
-  state.targetZVelocity = chooseTargetVelocity({
+  const zTarget = chooseTargetVelocity({
     chance: config.fieldReversalChance,
     current: state.lastZDirectionSign,
     salt: 35,
@@ -171,8 +180,17 @@ function beginEaseIn(state, config, seed, time) {
     speedMax: config.fieldWanderSpeedMax * 0.72,
     speedMin: config.fieldWanderSpeedMin * 0.72,
   });
-  state.lastDirectionSign = state.targetAngularVelocity < 0 ? -1 : 1;
-  state.lastZDirectionSign = state.targetZVelocity < 0 ? -1 : 1;
+  state.phase = "ease-in";
+  state.phaseEndsAt = time + randomBetween(rollSeed, 39, 0.45, 1.25);
+  state.phaseStartedAt = time;
+  state.fromAngularVelocity = 0;
+  state.fromZVelocity = 0;
+  state.targetAngularSpeedRoll = angularTarget.roll;
+  state.targetZSpeedRoll = zTarget.roll;
+  state.targetAngularVelocity = angularTarget.value;
+  state.targetZVelocity = zTarget.value;
+  state.lastDirectionSign = angularTarget.sign;
+  state.lastZDirectionSign = zTarget.sign;
 }
 
 function beginWander(state, config, seed, time) {
@@ -180,17 +198,22 @@ function beginWander(state, config, seed, time) {
   state.phase = "wander";
   state.phaseEndsAt = time + rollDurationSeconds(rollSeed, 41, config.fieldWanderDurationMinMs, config.fieldWanderDurationMaxMs);
   state.phaseStartedAt = time;
-  state.angularVelocity = state.targetAngularVelocity;
-  state.zVelocity = state.targetZVelocity;
+  state.angularSpeedRoll = state.targetAngularSpeedRoll;
+  state.zSpeedRoll = state.targetZSpeedRoll;
+  state.angularVelocity = state.lastDirectionSign * lerpSpeed(config.fieldWanderSpeedMin, config.fieldWanderSpeedMax, state.angularSpeedRoll);
+  state.zVelocity = state.lastZDirectionSign * lerpSpeed(config.fieldWanderSpeedMin * 0.72, config.fieldWanderSpeedMax * 0.72, state.zSpeedRoll);
 }
 
 function ensurePointState(states, { config, index, time, total }) {
   if (states[index]) return states[index];
   const seed = config.fieldSeed + index * 37.17;
   const direction = sphericalFibonacciDirection(index, total, seed);
+  const angularSpeed = randomSignedSpeed(seed, 41, config.fieldWanderSpeedMin, config.fieldWanderSpeedMax);
+  const zSpeed = randomSignedSpeed(seed, 45, config.fieldWanderSpeedMin * 0.72, config.fieldWanderSpeedMax * 0.72);
   const state = {
     anglePhase: Math.atan2(direction.y, direction.x),
-    angularVelocity: randomSignedSpeed(seed, 41, config.fieldWanderSpeedMin, config.fieldWanderSpeedMax),
+    angularSpeedRoll: angularSpeed.roll,
+    angularVelocity: angularSpeed.value,
     fromAngularVelocity: 0,
     fromZVelocity: 0,
     lastTime: time,
@@ -200,15 +223,16 @@ function ensurePointState(states, { config, index, time, total }) {
     phaseEndsAt: time + rollDurationSeconds(seed, 43, config.fieldWanderDurationMinMs, config.fieldWanderDurationMaxMs),
     phaseStartedAt: time,
     rollCount: 0,
-    targetAngularVelocity: 0,
-    targetZVelocity: 0,
+    targetAngularSpeedRoll: angularSpeed.roll,
+    targetAngularVelocity: angularSpeed.value,
+    targetZSpeedRoll: zSpeed.roll,
+    targetZVelocity: zSpeed.value,
     zPhase: random01(seed, 24) * 2,
-    zVelocity: randomSignedSpeed(seed, 45, config.fieldWanderSpeedMin * 0.72, config.fieldWanderSpeedMax * 0.72),
+    zSpeedRoll: zSpeed.roll,
+    zVelocity: zSpeed.value,
   };
-  state.lastDirectionSign = state.angularVelocity < 0 ? -1 : 1;
-  state.lastZDirectionSign = state.zVelocity < 0 ? -1 : 1;
-  state.targetAngularVelocity = state.angularVelocity;
-  state.targetZVelocity = state.zVelocity;
+  state.lastDirectionSign = angularSpeed.sign;
+  state.lastZDirectionSign = zSpeed.sign;
   states[index] = state;
   return state;
 }
@@ -224,11 +248,18 @@ function advancePointState(state, config, seed, time) {
   if (state.phase === "ease-out" || state.phase === "ease-in") {
     const duration = Math.max(0.001, state.phaseEndsAt - state.phaseStartedAt);
     const t = smoothstep((time - state.phaseStartedAt) / duration);
+    if (state.phase === "ease-in") {
+      state.targetAngularVelocity = state.lastDirectionSign * lerpSpeed(config.fieldWanderSpeedMin, config.fieldWanderSpeedMax, state.targetAngularSpeedRoll);
+      state.targetZVelocity = state.lastZDirectionSign * lerpSpeed(config.fieldWanderSpeedMin * 0.72, config.fieldWanderSpeedMax * 0.72, state.targetZSpeedRoll);
+    }
     state.angularVelocity = lerp(state.fromAngularVelocity, state.targetAngularVelocity, t);
     state.zVelocity = lerp(state.fromZVelocity, state.targetZVelocity, t);
   } else if (state.phase === "linger") {
     state.angularVelocity = 0;
     state.zVelocity = 0;
+  } else {
+    state.angularVelocity = state.lastDirectionSign * lerpSpeed(config.fieldWanderSpeedMin, config.fieldWanderSpeedMax, state.angularSpeedRoll);
+    state.zVelocity = state.lastZDirectionSign * lerpSpeed(config.fieldWanderSpeedMin * 0.72, config.fieldWanderSpeedMax * 0.72, state.zSpeedRoll);
   }
   state.anglePhase += state.angularVelocity * dt;
   state.zPhase += state.zVelocity * dt;

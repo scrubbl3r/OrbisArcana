@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521o";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521p";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -164,8 +164,8 @@ export function createElectricAoe3dPreview({
       haloFieldWander: readInputNumber(els.electricAoe3dHaloFieldWander, 0.35, 0, 2),
       haloFieldWanderDurationMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldWanderDurationMinMs, 1200, 50, 20000)),
       haloFieldWanderDurationMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldWanderDurationMaxMs, 3200, 50, 20000)),
-      haloFieldWanderSpeedMin: readInputNumber(els.electricAoe3dHaloFieldWanderSpeedMin, 0.25, 0, 12),
-      haloFieldWanderSpeedMax: readInputNumber(els.electricAoe3dHaloFieldWanderSpeedMax, 0.75, 0, 12),
+      haloFieldWanderSpeedMin: readInputNumber(els.electricAoe3dHaloFieldWanderSpeedMin, 0.25, 0, 64),
+      haloFieldWanderSpeedMax: readInputNumber(els.electricAoe3dHaloFieldWanderSpeedMax, 0.75, 0, 64),
       haloFieldZMinBo: readInputNumber(els.electricAoe3dHaloFieldZMinBo, -1.5, -32, 32),
       haloFieldZMaxBo: readInputNumber(els.electricAoe3dHaloFieldZMaxBo, 1.5, -32, 32),
     });
