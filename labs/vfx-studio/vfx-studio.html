@@ -595,6 +595,9 @@
     .section[data-effect="flame-aoe-3d"] .rgbaParamRow.rgbParamRow{
       grid-template-columns: auto repeat(3, auto minmax(54px, 1fr));
     }
+    .section[data-effect="electric-aoe-3d"] .rgbaParamRow.rgbParamRow{
+      grid-template-columns: auto repeat(3, auto minmax(54px, 1fr));
+    }
     .rgbaParamRow.densityRangeRow{
       grid-template-columns: auto auto minmax(86px, 1fr) auto minmax(86px, 1fr) auto;
     }
@@ -2063,13 +2066,13 @@
             <div class="paramFieldRow"><label for="electricAoe3dBoltShaderGlowIntensity">Glow intensity</label><input id="electricAoe3dBoltShaderGlowIntensity" class="paramFieldInput" type="number" min="0" max="20" step="0.01" value="1.8" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dBoltShaderFlickerSpeedHz">Flicker speed Hz</label><input id="electricAoe3dBoltShaderFlickerSpeedHz" class="paramFieldInput" type="number" min="0" max="60" step="0.01" value="4" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dBoltShaderFlickerDepth">Flicker depth</label><input id="electricAoe3dBoltShaderFlickerDepth" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.35" /></div>
-            <div class="rgbaParamRow densityRangeRow">
+            <div class="rgbaParamRow rgbParamRow">
               <span class="rgbaLabel">CORE RGB</span>
               <label for="electricAoe3dBoltShaderCoreR">r</label><input id="electricAoe3dBoltShaderCoreR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="235" />
               <label for="electricAoe3dBoltShaderCoreG">g</label><input id="electricAoe3dBoltShaderCoreG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="250" />
               <label for="electricAoe3dBoltShaderCoreB">b</label><input id="electricAoe3dBoltShaderCoreB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
             </div>
-            <div class="rgbaParamRow densityRangeRow">
+            <div class="rgbaParamRow rgbParamRow">
               <span class="rgbaLabel">GLOW RGB</span>
               <label for="electricAoe3dBoltShaderGlowR">r</label><input id="electricAoe3dBoltShaderGlowR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="60" />
               <label for="electricAoe3dBoltShaderGlowG">g</label><input id="electricAoe3dBoltShaderGlowG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="130" />
@@ -2959,7 +2962,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260522-shader-a"),
+      import("./vfx-studio-bootstrap.js?v=20260522-shader-b"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),

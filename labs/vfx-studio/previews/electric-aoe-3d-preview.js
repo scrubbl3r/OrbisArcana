@@ -103,6 +103,83 @@ export function createElectricAoe3dPreview({
     return !!el.checked;
   }
 
+  function rgbColor(r = 255, g = 255, b = 255) {
+    return new THREE.Color(
+      Math.max(0, Math.min(255, Number(r) || 0)) / 255,
+      Math.max(0, Math.min(255, Number(g) || 0)) / 255,
+      Math.max(0, Math.min(255, Number(b) || 0)) / 255
+    );
+  }
+
+  function pathLength(points = []) {
+    let total = 0;
+    for (let index = 1; index < points.length; index += 1) {
+      total += points[index - 1].distanceTo(points[index]);
+    }
+    return total;
+  }
+
+  function addBoltShaderMeshes(layer, points, config, bo, namePrefix, renderOrder, time = 0) {
+    if (!layer || !Array.isArray(points) || points.length <= 1) return;
+    if (config && config.boltShaderEnabled === false) {
+      const fallback = new THREE.LineBasicMaterial({
+        color: 0xd8f7ff,
+        transparent: true,
+        opacity: 0.56,
+        toneMapped: false,
+        depthTest: false,
+        depthWrite: false,
+      });
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), fallback);
+      line.name = `${namePrefix}_line`;
+      line.renderOrder = renderOrder;
+      layer.add(line);
+      return;
+    }
+    const lengthBo = pathLength(points) / Math.max(1, bo);
+    const taper = Math.max(0, Math.min(4, Number(config && config.boltShaderLengthTaper) || 0));
+    const lengthMix = Math.max(0, Math.min(1, Math.pow(lengthBo / 2.5, 1 / Math.max(0.2, taper || 1))));
+    const coreMin = Math.max(0.001, Number(config && config.boltShaderCoreWidthMinBo) || 0.006);
+    const coreMax = Math.max(coreMin, Number(config && config.boltShaderCoreWidthMaxBo) || 0.022);
+    const glowMin = Math.max(0.001, Number(config && config.boltShaderGlowWidthMinBo) || 0.035);
+    const glowMax = Math.max(glowMin, Number(config && config.boltShaderGlowWidthMaxBo) || 0.16);
+    const coreRadius = bo * (coreMin + (coreMax - coreMin) * lengthMix) * 0.5;
+    const glowRadius = bo * (glowMin + (glowMax - glowMin) * lengthMix) * 0.5;
+    const flickerDepth = Math.max(0, Math.min(1, Number(config && config.boltShaderFlickerDepth) || 0));
+    const flickerHz = Math.max(0, Number(config && config.boltShaderFlickerSpeedHz) || 0);
+    const flicker = 1 - flickerDepth * (0.5 + 0.5 * Math.sin((time * flickerHz * Math.PI * 2) + lengthBo));
+    const curve = new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.5);
+    const segments = Math.max(2, Math.min(96, Math.round(points.length * 4)));
+    const glowGeometry = new THREE.TubeGeometry(curve, segments, glowRadius, 6, false);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      blending: THREE.AdditiveBlending,
+      color: rgbColor(config && config.boltShaderGlowR, config && config.boltShaderGlowG, config && config.boltShaderGlowB),
+      opacity: Math.max(0, Math.min(1, 0.18 * (Number(config && config.boltShaderGlowIntensity) || 1.8) * flicker)),
+      transparent: true,
+      toneMapped: false,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+    glow.name = `${namePrefix}_glow`;
+    glow.renderOrder = renderOrder;
+    layer.add(glow);
+    const coreGeometry = new THREE.TubeGeometry(curve, segments, coreRadius, 5, false);
+    const coreMaterial = new THREE.MeshBasicMaterial({
+      blending: THREE.AdditiveBlending,
+      color: rgbColor(config && config.boltShaderCoreR, config && config.boltShaderCoreG, config && config.boltShaderCoreB),
+      opacity: Math.max(0, Math.min(1, 0.28 * (Number(config && config.boltShaderCoreIntensity) || 3.5) * flicker)),
+      transparent: true,
+      toneMapped: false,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const core = new THREE.Mesh(coreGeometry, coreMaterial);
+    core.name = `${namePrefix}_core`;
+    core.renderOrder = renderOrder + 1;
+    layer.add(core);
+  }
+
   function buildPreviewControlPath(bo, time = 0) {
     const minRangeBo = readInputNumber(els.electricAoe3dDominantBoltMinRangeBo, 2, 0, 64);
     const maxRangeBo = readInputNumber(els.electricAoe3dDominantBoltMaxRangeBo, 8, minRangeBo + 0.25, 64);
@@ -304,27 +381,18 @@ export function createElectricAoe3dPreview({
       (Array.isArray(branches) ? branches : []).forEach((branch, branchIndex) => {
         const branchPoints = (Array.isArray(branch.points) ? branch.points : []).map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
         if (branchPoints.length <= 1) return;
-        const branchLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(branchPoints), haloControlPointLineMaterial);
-        branchLine.name = `${namePrefix}_branch_${branchIndex}`;
-        branchLine.renderOrder = 215;
-        haloControlPointLayer.add(branchLine);
+        addBoltShaderMeshes(haloControlPointLayer, branchPoints, fieldConfig, bo, `${namePrefix}_branch_${branchIndex}`, 215, time);
       });
     };
     paths.forEach((path, pathIndex) => {
       const linePoints = path.points.map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
-      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(linePoints), haloControlPointLineMaterial);
-      line.name = `electric_aoe3d:halo_control_line_${pathIndex}`;
-      line.renderOrder = 214;
-      haloControlPointLayer.add(line);
+      addBoltShaderMeshes(haloControlPointLayer, linePoints, fieldConfig, bo, `electric_aoe3d:halo_control_line_${pathIndex}`, 214, time);
       addBranchLines(path.branches, `electric_aoe3d:halo_control_${pathIndex}`);
       (Array.isArray(path.forks) ? path.forks : []).forEach((fork, forkIndex) => {
         (Array.isArray(fork.tines) ? fork.tines : []).forEach((tine, tineIndex) => {
           const tinePoints = (Array.isArray(tine.points) ? tine.points : []).map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
           if (tinePoints.length <= 1) return;
-          const tineLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(tinePoints), haloControlPointLineMaterial);
-          tineLine.name = `electric_aoe3d:halo_control_fork_${pathIndex}_${forkIndex}_${tineIndex}`;
-          tineLine.renderOrder = 215;
-          haloControlPointLayer.add(tineLine);
+          addBoltShaderMeshes(haloControlPointLayer, tinePoints, fieldConfig, bo, `electric_aoe3d:halo_control_fork_${pathIndex}_${forkIndex}_${tineIndex}`, 215, time);
           const tip = tinePoints[tinePoints.length - 1];
           const marker = new THREE.Mesh(haloControlPointGeometry, haloControlPointMaterial);
           marker.name = `electric_aoe3d:halo_control_fork_tip_${pathIndex}_${forkIndex}_${tineIndex}`;
@@ -350,16 +418,22 @@ export function createElectricAoe3dPreview({
     if (!force && nowMs - controlPointLastRefreshMs < CONTROL_POINT_REFRESH_MS) return;
     controlPointLastRefreshMs = nowMs;
     const path = buildPreviewControlPath(bo, time);
+    const shaderConfig = readHaloFieldConfig();
     const points = Array.isArray(path && path.points) ? path.points : [];
     const linePoints = points.map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
     if (!controlPointLineMaterial) {
       controlPointLineMaterial = new THREE.LineBasicMaterial({
+        blending: THREE.AdditiveBlending,
         color: 0xffffff,
+        transparent: true,
+        opacity: 1,
         toneMapped: false,
         depthTest: false,
         depthWrite: false,
       });
     }
+    controlPointLineMaterial.color.copy(rgbColor(shaderConfig.boltShaderCoreR, shaderConfig.boltShaderCoreG, shaderConfig.boltShaderCoreB));
+    controlPointLineMaterial.opacity = shaderConfig.boltShaderEnabled === false ? 0.68 : Math.max(0.2, Math.min(1, 0.28 * shaderConfig.boltShaderCoreIntensity));
     if (!controlPointLine) {
       controlPointLine = new THREE.Line(new THREE.BufferGeometry(), controlPointLineMaterial);
       controlPointLine.name = "electric_aoe3d:dominant_control_line";
