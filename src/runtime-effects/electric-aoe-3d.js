@@ -95,8 +95,18 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     dominantBoltTargetRadiusBo: clampNumber(source.dominantBoltTargetRadiusBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.targetRadiusBo),
     dominantBoltWanderStrength: clampNumber(source.dominantBoltWanderStrength, 0, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.wanderStrength),
     dominantBoltZBo: clampNumber(source.dominantBoltZBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
-    haloFieldDirectionHoldMinMs: Math.round(clampNumber(source.haloFieldDirectionHoldMinMs, 50, 20000, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldDirectionHoldMinMs)),
-    haloFieldDirectionHoldMaxMs: Math.round(clampNumber(source.haloFieldDirectionHoldMaxMs, 50, 20000, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldDirectionHoldMaxMs)),
+    haloFieldReversalFrequencyMinMs: Math.round(clampNumber(
+      source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,
+      50,
+      20000,
+      ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldReversalFrequencyMinMs
+    )),
+    haloFieldReversalFrequencyMaxMs: Math.round(clampNumber(
+      source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs,
+      50,
+      20000,
+      ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldReversalFrequencyMaxMs
+    )),
     haloFieldEnabled: source.haloFieldEnabled !== false,
     haloFieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldPointCount)),
     haloFieldPointDiameterBo: 0.05,

@@ -153,8 +153,8 @@ export function createElectricAoe3dPreview({
   function readHaloFieldConfig() {
     return Object.freeze({
       dominantBoltZBo: 0,
-      haloFieldDirectionHoldMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldDirectionHoldMinMs, 900, 50, 20000)),
-      haloFieldDirectionHoldMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldDirectionHoldMaxMs, 2600, 50, 20000)),
+      haloFieldReversalFrequencyMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldReversalFrequencyMinMs, 900, 50, 20000)),
+      haloFieldReversalFrequencyMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldReversalFrequencyMaxMs, 2600, 50, 20000)),
       haloFieldEnabled: readInputBoolean(els.electricAoe3dHaloFieldEnabled, true),
       haloFieldPointCount: Math.round(readInputNumber(els.electricAoe3dHaloFieldPointCount, 24, 0, 256)),
       haloFieldPointDiameterBo: 0.05,
@@ -430,8 +430,8 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dHaloFieldPointCount,
       els.electricAoe3dHaloFieldWanderSpeed,
       els.electricAoe3dHaloFieldWander,
-      els.electricAoe3dHaloFieldDirectionHoldMinMs,
-      els.electricAoe3dHaloFieldDirectionHoldMaxMs,
+      els.electricAoe3dHaloFieldReversalFrequencyMinMs,
+      els.electricAoe3dHaloFieldReversalFrequencyMaxMs,
       els.electricAoe3dHaloFieldZMinBo,
       els.electricAoe3dHaloFieldZMaxBo,
       els.electricAoe3dHaloFieldSeed,

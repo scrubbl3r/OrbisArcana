@@ -121,8 +121,8 @@ export function createElectricAoe3dAuthoringAdapter({
       dominantBoltSeekStrength: readNumber(els.electricAoe3dDominantBoltSeekStrength, defaults.dominantBoltSeekStrength, 0, 4),
       dominantBoltWanderStrength: readNumber(els.electricAoe3dDominantBoltWanderStrength, defaults.dominantBoltWanderStrength, 0, 4),
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
-      haloFieldDirectionHoldMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldDirectionHoldMinMs, defaults.haloFieldDirectionHoldMinMs, 50, 20000)),
-      haloFieldDirectionHoldMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldDirectionHoldMaxMs, defaults.haloFieldDirectionHoldMaxMs, 50, 20000)),
+      haloFieldReversalFrequencyMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldReversalFrequencyMinMs, defaults.haloFieldReversalFrequencyMinMs, 50, 20000)),
+      haloFieldReversalFrequencyMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldReversalFrequencyMaxMs, defaults.haloFieldReversalFrequencyMaxMs, 50, 20000)),
       haloFieldPointCount: Math.round(readNumber(els.electricAoe3dHaloFieldPointCount, defaults.haloFieldPointCount, 0, 256)),
       haloFieldPointDiameterBo: 0.05,
       haloFieldSeed: Math.round(readNumber(els.electricAoe3dHaloFieldSeed, defaults.haloFieldSeed, 1, 999999999)),
@@ -205,11 +205,11 @@ export function createElectricAoe3dAuthoringAdapter({
     if (els.electricAoe3dHaloFieldWander) {
       els.electricAoe3dHaloFieldWander.value = String(source.haloFieldWander ?? 0.35);
     }
-    if (els.electricAoe3dHaloFieldDirectionHoldMinMs) {
-      els.electricAoe3dHaloFieldDirectionHoldMinMs.value = String(source.haloFieldDirectionHoldMinMs ?? 900);
+    if (els.electricAoe3dHaloFieldReversalFrequencyMinMs) {
+      els.electricAoe3dHaloFieldReversalFrequencyMinMs.value = String(source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs ?? 900);
     }
-    if (els.electricAoe3dHaloFieldDirectionHoldMaxMs) {
-      els.electricAoe3dHaloFieldDirectionHoldMaxMs.value = String(source.haloFieldDirectionHoldMaxMs ?? 2600);
+    if (els.electricAoe3dHaloFieldReversalFrequencyMaxMs) {
+      els.electricAoe3dHaloFieldReversalFrequencyMaxMs.value = String(source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs ?? 2600);
     }
     if (els.electricAoe3dHaloFieldZMinBo) {
       els.electricAoe3dHaloFieldZMinBo.value = String(source.haloFieldZMinBo ?? -1.5);

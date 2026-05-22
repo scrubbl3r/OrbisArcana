@@ -62,8 +62,18 @@ function normalizeConfig(raw = {}) {
   const fieldShellRadiusBo = clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5);
   const zRange = normalizeZRange(source, fieldShellRadiusBo);
   return Object.freeze({
-    fieldDirectionHoldMaxMs: Math.round(clampNumber(source.haloFieldDirectionHoldMaxMs, 50, 20000, 2600)),
-    fieldDirectionHoldMinMs: Math.round(clampNumber(source.haloFieldDirectionHoldMinMs, 50, 20000, 900)),
+    fieldReversalFrequencyMaxMs: Math.round(clampNumber(
+      source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs,
+      50,
+      20000,
+      2600
+    )),
+    fieldReversalFrequencyMinMs: Math.round(clampNumber(
+      source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,
+      50,
+      20000,
+      900
+    )),
     fieldEnabled: source.haloFieldEnabled !== false,
     fieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, 24)),
     fieldPointDiameterBo: 0.05,
@@ -85,8 +95,8 @@ function randomSignedSpeed(seed, salt, speedScale) {
 function chooseDirectionTarget(state, config, seed, time) {
   state.rollCount += 1;
   const rollSeed = seed + state.rollCount * 97.31;
-  const holdMinS = Math.min(config.fieldDirectionHoldMinMs, config.fieldDirectionHoldMaxMs) / 1000;
-  const holdMaxS = Math.max(config.fieldDirectionHoldMinMs, config.fieldDirectionHoldMaxMs) / 1000;
+  const holdMinS = Math.min(config.fieldReversalFrequencyMinMs, config.fieldReversalFrequencyMaxMs) / 1000;
+  const holdMaxS = Math.max(config.fieldReversalFrequencyMinMs, config.fieldReversalFrequencyMaxMs) / 1000;
   state.transitionStart = time;
   state.transitionDuration = randomBetween(rollSeed, 31, 0.45, 1.25);
   state.fromAngularVelocity = state.angularVelocity;
@@ -108,8 +118,8 @@ function ensurePointState(states, { config, index, time, total }) {
     holdUntil: time + randomBetween(
       seed,
       43,
-      Math.min(config.fieldDirectionHoldMinMs, config.fieldDirectionHoldMaxMs) / 1000,
-      Math.max(config.fieldDirectionHoldMinMs, config.fieldDirectionHoldMaxMs) / 1000
+      Math.min(config.fieldReversalFrequencyMinMs, config.fieldReversalFrequencyMaxMs) / 1000,
+      Math.max(config.fieldReversalFrequencyMinMs, config.fieldReversalFrequencyMaxMs) / 1000
     ),
     lastTime: time,
     rollCount: 0,
