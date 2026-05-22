@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-l";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-m";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -120,11 +120,13 @@ export function createElectricAoe3dAuthoringAdapter({
       dominantBoltRangeBo: maxRange,
       dominantBoltSeekStrength: readNumber(els.electricAoe3dDominantBoltSeekStrength, defaults.dominantBoltSeekStrength, 0, 4),
       dominantBoltWanderStrength: readNumber(els.electricAoe3dDominantBoltWanderStrength, defaults.dominantBoltWanderStrength, 0, 4),
-      haloBoltCurveMin: readNumber(els.electricAoe3dHaloBoltCurveMin, defaults.haloBoltCurveMin, 0, 1),
-      haloBoltCurveMax: readNumber(els.electricAoe3dHaloBoltCurveMax, defaults.haloBoltCurveMax, 0, 1),
-      haloBoltFrequency: readNumber(els.electricAoe3dHaloBoltFrequency, defaults.haloBoltFrequency, 0.1, 32),
-      haloBoltDetail: readNumber(els.electricAoe3dHaloBoltDetail, defaults.haloBoltDetail, 0, 1),
-      haloBoltCrawl: readNumber(els.electricAoe3dHaloBoltCrawl, defaults.haloBoltCrawl, 0, 12),
+      haloBoltSegmentsMin: Math.round(readNumber(els.electricAoe3dHaloBoltSegmentsMin, defaults.haloBoltSegmentsMin, 1, 48)),
+      haloBoltSegmentsMax: Math.round(readNumber(els.electricAoe3dHaloBoltSegmentsMax, defaults.haloBoltSegmentsMax, 1, 48)),
+      haloBoltStepVariance: readNumber(els.electricAoe3dHaloBoltStepVariance, defaults.haloBoltStepVariance, 0, 1),
+      haloBoltSeek: readNumber(els.electricAoe3dHaloBoltSeek, defaults.haloBoltSeek, 0, 4),
+      haloBoltHeadingMemory: readNumber(els.electricAoe3dHaloBoltHeadingMemory, defaults.haloBoltHeadingMemory, 0, 1),
+      haloBoltTurnAngleMin: readNumber(els.electricAoe3dHaloBoltTurnAngleMin, defaults.haloBoltTurnAngleMin, 0, 180),
+      haloBoltTurnAngleMax: readNumber(els.electricAoe3dHaloBoltTurnAngleMax, defaults.haloBoltTurnAngleMax, 0, 180),
       haloBoltSmoothing: readNumber(els.electricAoe3dHaloBoltSmoothing, defaults.haloBoltSmoothing, 0, 1),
       haloBoltTension: readNumber(els.electricAoe3dHaloBoltTension, defaults.haloBoltTension, 0, 1),
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
@@ -247,23 +249,29 @@ export function createElectricAoe3dAuthoringAdapter({
     if (els.electricAoe3dHaloFieldSeed) {
       els.electricAoe3dHaloFieldSeed.value = String(source.haloFieldSeed ?? 4242);
     }
-    if (els.electricAoe3dHaloBoltCurveMin) {
-      els.electricAoe3dHaloBoltCurveMin.value = String(source.haloBoltCurveMin ?? 0.12);
+    if (els.electricAoe3dHaloBoltSegmentsMin) {
+      els.electricAoe3dHaloBoltSegmentsMin.value = String(source.haloBoltSegmentsMin ?? 6);
     }
-    if (els.electricAoe3dHaloBoltCurveMax) {
-      els.electricAoe3dHaloBoltCurveMax.value = String(source.haloBoltCurveMax ?? 0.34);
+    if (els.electricAoe3dHaloBoltSegmentsMax) {
+      els.electricAoe3dHaloBoltSegmentsMax.value = String(source.haloBoltSegmentsMax ?? 11);
     }
-    if (els.electricAoe3dHaloBoltFrequency) {
-      els.electricAoe3dHaloBoltFrequency.value = String(source.haloBoltFrequency ?? 3.4);
+    if (els.electricAoe3dHaloBoltStepVariance) {
+      els.electricAoe3dHaloBoltStepVariance.value = String(source.haloBoltStepVariance ?? 0.38);
     }
-    if (els.electricAoe3dHaloBoltDetail) {
-      els.electricAoe3dHaloBoltDetail.value = String(source.haloBoltDetail ?? 0.58);
+    if (els.electricAoe3dHaloBoltSeek) {
+      els.electricAoe3dHaloBoltSeek.value = String(source.haloBoltSeek ?? 1.18);
     }
-    if (els.electricAoe3dHaloBoltCrawl) {
-      els.electricAoe3dHaloBoltCrawl.value = String(source.haloBoltCrawl ?? 0.72);
+    if (els.electricAoe3dHaloBoltHeadingMemory) {
+      els.electricAoe3dHaloBoltHeadingMemory.value = String(source.haloBoltHeadingMemory ?? 0.46);
+    }
+    if (els.electricAoe3dHaloBoltTurnAngleMin) {
+      els.electricAoe3dHaloBoltTurnAngleMin.value = String(source.haloBoltTurnAngleMin ?? 18);
+    }
+    if (els.electricAoe3dHaloBoltTurnAngleMax) {
+      els.electricAoe3dHaloBoltTurnAngleMax.value = String(source.haloBoltTurnAngleMax ?? 72);
     }
     if (els.electricAoe3dHaloBoltSmoothing) {
-      els.electricAoe3dHaloBoltSmoothing.value = String(source.haloBoltSmoothing ?? 0.72);
+      els.electricAoe3dHaloBoltSmoothing.value = String(source.haloBoltSmoothing ?? 0.22);
     }
     if (els.electricAoe3dHaloBoltTension) {
       els.electricAoe3dHaloBoltTension.value = String(source.haloBoltTension ?? 0.62);

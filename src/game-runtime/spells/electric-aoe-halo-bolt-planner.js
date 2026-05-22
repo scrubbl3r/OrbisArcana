@@ -15,10 +15,6 @@ function randomBetween(seed, salt, min, max) {
   return min + (max - min) * random01(seed, salt);
 }
 
-function hash3(x, y, z, seed = 0) {
-  return random01(x * 157.31 + y * 311.71 + z * 911.53 + seed * 17.17, 19.19);
-}
-
 function normalizeVector3(x = 0, y = 0, z = 0, fallback = { x: 1, y: 0, z: 0 }) {
   const length = Math.hypot(Number(x) || 0, Number(y) || 0, Number(z) || 0);
   if (length <= 0.000001) return fallback;
@@ -52,46 +48,6 @@ function lerp(from, to, t) {
   return from + (to - from) * t;
 }
 
-function fade(t) {
-  const x = Math.max(0, Math.min(1, Number(t) || 0));
-  return x * x * x * (x * (x * 6 - 15) + 10);
-}
-
-function valueNoise3(x, y, z, seed = 0) {
-  const x0 = Math.floor(x);
-  const y0 = Math.floor(y);
-  const z0 = Math.floor(z);
-  const fx = fade(x - x0);
-  const fy = fade(y - y0);
-  const fz = fade(z - z0);
-  const sample = (dx, dy, dz) => hash3(x0 + dx, y0 + dy, z0 + dz, seed) * 2 - 1;
-  const x00 = lerp(sample(0, 0, 0), sample(1, 0, 0), fx);
-  const x10 = lerp(sample(0, 1, 0), sample(1, 1, 0), fx);
-  const x01 = lerp(sample(0, 0, 1), sample(1, 0, 1), fx);
-  const x11 = lerp(sample(0, 1, 1), sample(1, 1, 1), fx);
-  return lerp(lerp(x00, x10, fy), lerp(x01, x11, fy), fz);
-}
-
-function fbm3(x, y, z, seed = 0, detail = 0.5) {
-  const detailMix = Math.max(0, Math.min(1, Number(detail) || 0));
-  const weights = [
-    0.5333333,
-    0.2666667,
-    0.1333333 * (0.18 + detailMix * 0.82),
-    0.0666667 * detailMix,
-  ];
-  let value = 0;
-  let weightTotal = 0;
-  let frequency = 1;
-  for (let octave = 0; octave < weights.length; octave += 1) {
-    const weight = weights[octave];
-    value += valueNoise3(x * frequency, y * frequency, z * frequency, seed + octave * 101.7) * weight;
-    weightTotal += weight;
-    frequency *= 2;
-  }
-  return weightTotal > 0 ? value / weightTotal : 0;
-}
-
 function normalizeZRange(source, shellRadiusBo) {
   const radius = Math.max(0.5, Number(shellRadiusBo) || 1.5);
   const rawMin = clampNumber(source.haloFieldZMinBo, -32, 32, -radius);
@@ -114,16 +70,19 @@ function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fieldShellRadiusBo = clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5);
   const legacyWanderSpeed = clampNumber(source.haloFieldWanderSpeed, 0, 64, 0.45);
-  const boltCurve = normalizeRange(source, "haloBoltCurveMin", "haloBoltCurveMax", 0, 1, 0.12, 0.34);
+  const boltSegments = normalizeRange(source, "haloBoltSegmentsMin", "haloBoltSegmentsMax", 1, 48, 6, 11);
+  const boltTurnAngle = normalizeRange(source, "haloBoltTurnAngleMin", "haloBoltTurnAngleMax", 0, 180, 18, 72);
   const zRange = normalizeZRange(source, fieldShellRadiusBo);
   return Object.freeze({
-    boltCurveMax: boltCurve.max,
-    boltCurveMin: boltCurve.min,
-    boltCrawl: clampNumber(source.haloBoltCrawl, 0, 12, 0.72),
-    boltDetail: clampNumber(source.haloBoltDetail, 0, 1, 0.58),
-    boltFrequency: clampNumber(source.haloBoltFrequency, 0.1, 32, 3.4),
-    boltSmoothing: clampNumber(source.haloBoltSmoothing, 0, 1, 0.72),
+    boltHeadingMemory: clampNumber(source.haloBoltHeadingMemory, 0, 1, 0.46),
+    boltSeek: clampNumber(source.haloBoltSeek, 0, 4, 1.18),
+    boltSegmentsMax: Math.round(boltSegments.max),
+    boltSegmentsMin: Math.round(boltSegments.min),
+    boltSmoothing: clampNumber(source.haloBoltSmoothing, 0, 1, 0.22),
+    boltStepVariance: clampNumber(source.haloBoltStepVariance, 0, 1, 0.38),
     boltTension: clampNumber(source.haloBoltTension, 0, 1, 0.62),
+    boltTurnAngleMaxDeg: boltTurnAngle.max,
+    boltTurnAngleMinDeg: boltTurnAngle.min,
     fieldLingerMaxMs: Math.round(clampNumber(
       source.haloFieldLingerMaxMs ?? source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs,
       50,
@@ -414,49 +373,89 @@ function sampleShellPoint({ config, index, states, time, total }) {
   });
 }
 
-function buildHaloBoltPath({ config, endpoint, originXW, originYW, safeBo, seed, time }) {
+function rotateAroundAxis(vector, axis, angle) {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  const dot = vector.x * axis.x + vector.y * axis.y + vector.z * axis.z;
+  return normalizeVector3(
+    vector.x * c + (axis.y * vector.z - axis.z * vector.y) * s + axis.x * dot * (1 - c),
+    vector.y * c + (axis.z * vector.x - axis.x * vector.z) * s + axis.y * dot * (1 - c),
+    vector.z * c + (axis.x * vector.y - axis.y * vector.x) * s + axis.z * dot * (1 - c),
+    vector
+  );
+}
+
+function smoothPath(points, smoothing) {
+  if (smoothing <= 0 || points.length <= 3) return points;
+  const next = [points[0]];
+  for (let index = 1; index < points.length - 1; index += 1) {
+    const prev = points[index - 1];
+    const point = points[index];
+    const after = points[index + 1];
+    const t = smoothing * 0.5;
+    next.push(Object.freeze({
+      xW: lerp(point.xW, (prev.xW + after.xW) * 0.5, t),
+      yW: lerp(point.yW, (prev.yW + after.yW) * 0.5, t),
+      zBo: lerp(point.zBo, (prev.zBo + after.zBo) * 0.5, t),
+    }));
+  }
+  next.push(points[points.length - 1]);
+  return Object.freeze(next);
+}
+
+function buildHaloBoltPath({ config, endpoint, originXW, originYW, safeBo, seed }) {
   const endXBo = (endpoint.xW - originXW) / safeBo;
   const endYBo = (endpoint.yW - originYW) / safeBo;
   const endZBo = endpoint.zBo - config.zBo;
   const lengthBo = Math.max(0.001, Math.hypot(endXBo, endYBo, endZBo));
-  const radial = normalizeVector3(endXBo, endYBo, endZBo);
-  const tangent = normalizeVector3(-radial.y, radial.x, 0, { x: 0, y: 1, z: 0 });
-  const lift = normalizeVector3(
-    radial.y * tangent.z - radial.z * tangent.y,
-    radial.z * tangent.x - radial.x * tangent.z,
-    radial.x * tangent.y - radial.y * tangent.x,
-    { x: 0, y: 0, z: 1 }
-  );
-  const curve = randomBetween(seed, 81, config.boltCurveMin, config.boltCurveMax);
-  const amplitudeBo = lengthBo * curve * (1 - config.boltTension * 0.72);
-  const fieldPhase = time * config.boltCrawl + randomBetween(seed, 83, 0, 64);
-  const fieldOffset = randomBetween(seed, 84, -32, 32);
-  const angularBlend = 1 - config.boltSmoothing;
-  const samples = 14;
+  const destination = Object.freeze({ x: endXBo, y: endYBo, z: endZBo });
+  const segmentCount = Math.max(1, Math.round(randomBetween(seed, 81, config.boltSegmentsMin, config.boltSegmentsMax)));
+  const baseStepBo = lengthBo / segmentCount;
+  const direct = normalizeVector3(endXBo, endYBo, endZBo);
+  let heading = direct;
+  let cursor = { x: 0, y: 0, z: 0 };
   const points = [Object.freeze({ xW: originXW, yW: originYW, zBo: config.zBo })];
-  for (let sample = 1; sample < samples; sample += 1) {
-    const u = sample / samples;
-    const envelope = Math.pow(Math.sin(Math.PI * u), 0.58 + config.boltTension * 1.42);
-    const noiseU = u * config.boltFrequency;
-    const body = fbm3(noiseU + fieldOffset, seed * 0.013, fieldPhase, seed, config.boltDetail);
-    const cross = fbm3(noiseU + fieldOffset + 13.7, seed * 0.019 + 2.3, fieldPhase * 0.83 + 5.1, seed + 17.0, config.boltDetail);
-    const bite = ((sample % 2 ? 1 : -1) * (0.45 + random01(seed, 90 + sample) * 0.65));
-    const bendNoise = lerp(bite, body, config.boltSmoothing);
-    const bend = bendNoise * amplitudeBo * envelope;
-    const liftBend = cross
-      * amplitudeBo
-      * envelope
-      * (0.07 + curve * 0.22)
-      * config.boltSmoothing;
-    const lightningKick = bite * amplitudeBo * envelope * angularBlend * 0.22;
+  for (let step = 1; step < segmentCount; step += 1) {
+    const remaining = {
+      x: destination.x - cursor.x,
+      y: destination.y - cursor.y,
+      z: destination.z - cursor.z,
+    };
+    const seek = normalizeVector3(remaining.x, remaining.y, remaining.z, direct);
+    const axisSeed = seed + step * 17.17;
+    const axis = normalizeVector3(
+      randomBetween(axisSeed, 91, -1, 1),
+      randomBetween(axisSeed, 92, -1, 1),
+      randomBetween(axisSeed, 93, -0.35, 0.35),
+      { x: 0, y: 0, z: 1 }
+    );
+    const turnDeg = randomBetween(axisSeed, 94, config.boltTurnAngleMinDeg, config.boltTurnAngleMaxDeg);
+    const turnSign = random01(axisSeed, 95) < 0.5 ? -1 : 1;
+    const turn = rotateAroundAxis(seek, axis, turnSign * turnDeg * Math.PI / 180);
+    const towardEnd = step / segmentCount;
+    const tensionGain = config.boltTension * smoothstep(towardEnd) * 2.2;
+    heading = normalizeVector3(
+      heading.x * config.boltHeadingMemory + seek.x * (config.boltSeek + tensionGain) + turn.x,
+      heading.y * config.boltHeadingMemory + seek.y * (config.boltSeek + tensionGain) + turn.y,
+      heading.z * config.boltHeadingMemory + seek.z * (config.boltSeek + tensionGain) + turn.z,
+      seek
+    );
+    const remainingDistanceBo = Math.hypot(remaining.x, remaining.y, remaining.z);
+    const variance = 1 + (randomBetween(axisSeed, 96, -1, 1) * config.boltStepVariance * 0.72);
+    const stepLengthBo = Math.min(remainingDistanceBo * 0.82, baseStepBo * variance);
+    cursor = {
+      x: cursor.x + heading.x * stepLengthBo,
+      y: cursor.y + heading.y * stepLengthBo,
+      z: cursor.z + heading.z * stepLengthBo,
+    };
     points.push(Object.freeze({
-      xW: originXW + (endXBo * u + tangent.x * (bend + lightningKick) + lift.x * liftBend) * safeBo,
-      yW: originYW + (endYBo * u + tangent.y * (bend + lightningKick) + lift.y * liftBend) * safeBo,
-      zBo: config.zBo + endZBo * u + tangent.z * (bend + lightningKick) + lift.z * liftBend,
+      xW: originXW + cursor.x * safeBo,
+      yW: originYW + cursor.y * safeBo,
+      zBo: config.zBo + cursor.z,
     }));
   }
   points.push(endpoint);
-  return Object.freeze(points);
+  return smoothPath(Object.freeze(points), config.boltSmoothing);
 }
 
 export function createElectricAoeHaloFieldPlanner() {

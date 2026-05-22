@@ -2099,14 +2099,19 @@
           </div>
           <div id="electricAoe3dHaloBoltControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">CURVE</span>
-              <label for="electricAoe3dHaloBoltCurveMin">min</label><input id="electricAoe3dHaloBoltCurveMin" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.12" />
-              <label for="electricAoe3dHaloBoltCurveMax">max</label><input id="electricAoe3dHaloBoltCurveMax" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.34" />
+              <span class="rgbaLabel">SEGMENTS</span>
+              <label for="electricAoe3dHaloBoltSegmentsMin">min</label><input id="electricAoe3dHaloBoltSegmentsMin" class="paramFieldInput" type="number" min="1" max="48" step="1" value="6" />
+              <label for="electricAoe3dHaloBoltSegmentsMax">max</label><input id="electricAoe3dHaloBoltSegmentsMax" class="paramFieldInput" type="number" min="1" max="48" step="1" value="11" />
             </div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltFrequency">Frequency</label><input id="electricAoe3dHaloBoltFrequency" class="paramFieldInput" type="number" min="0.1" max="32" step="0.05" value="3.4" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltDetail">Detail</label><input id="electricAoe3dHaloBoltDetail" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.58" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltCrawl">Crawl</label><input id="electricAoe3dHaloBoltCrawl" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="0.72" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltSmoothing">Smoothing</label><input id="electricAoe3dHaloBoltSmoothing" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.72" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltStepVariance">Step variance</label><input id="electricAoe3dHaloBoltStepVariance" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.38" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltSeek">Seek</label><input id="electricAoe3dHaloBoltSeek" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="1.18" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltHeadingMemory">Heading memory</label><input id="electricAoe3dHaloBoltHeadingMemory" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.46" /></div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">TURN ANGLE</span>
+              <label for="electricAoe3dHaloBoltTurnAngleMin">min</label><input id="electricAoe3dHaloBoltTurnAngleMin" class="paramFieldInput" type="number" min="0" max="180" step="1" value="18" />
+              <label for="electricAoe3dHaloBoltTurnAngleMax">max</label><input id="electricAoe3dHaloBoltTurnAngleMax" class="paramFieldInput" type="number" min="0" max="180" step="1" value="72" />
+            </div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltSmoothing">Smoothing</label><input id="electricAoe3dHaloBoltSmoothing" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.22" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloBoltTension">Tension</label><input id="electricAoe3dHaloBoltTension" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.62" /></div>
           </div>
         </div>
@@ -2852,7 +2857,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-p"),
+      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-q"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -3440,11 +3445,13 @@
       electricAoe3dHaloFieldZMinBo: $("electricAoe3dHaloFieldZMinBo"),
       electricAoe3dHaloFieldZMaxBo: $("electricAoe3dHaloFieldZMaxBo"),
       electricAoe3dHaloFieldSeed: $("electricAoe3dHaloFieldSeed"),
-      electricAoe3dHaloBoltCurveMin: $("electricAoe3dHaloBoltCurveMin"),
-      electricAoe3dHaloBoltCurveMax: $("electricAoe3dHaloBoltCurveMax"),
-      electricAoe3dHaloBoltFrequency: $("electricAoe3dHaloBoltFrequency"),
-      electricAoe3dHaloBoltDetail: $("electricAoe3dHaloBoltDetail"),
-      electricAoe3dHaloBoltCrawl: $("electricAoe3dHaloBoltCrawl"),
+      electricAoe3dHaloBoltSegmentsMin: $("electricAoe3dHaloBoltSegmentsMin"),
+      electricAoe3dHaloBoltSegmentsMax: $("electricAoe3dHaloBoltSegmentsMax"),
+      electricAoe3dHaloBoltStepVariance: $("electricAoe3dHaloBoltStepVariance"),
+      electricAoe3dHaloBoltSeek: $("electricAoe3dHaloBoltSeek"),
+      electricAoe3dHaloBoltHeadingMemory: $("electricAoe3dHaloBoltHeadingMemory"),
+      electricAoe3dHaloBoltTurnAngleMin: $("electricAoe3dHaloBoltTurnAngleMin"),
+      electricAoe3dHaloBoltTurnAngleMax: $("electricAoe3dHaloBoltTurnAngleMax"),
       electricAoe3dHaloBoltSmoothing: $("electricAoe3dHaloBoltSmoothing"),
       electricAoe3dHaloBoltTension: $("electricAoe3dHaloBoltTension"),
       flameAoe3dAoeAuraDiameterBo: $("flameAoe3dAoeAuraDiameterBo"),

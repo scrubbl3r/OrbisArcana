@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521s";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521t";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -153,12 +153,14 @@ export function createElectricAoe3dPreview({
   function readHaloFieldConfig() {
     return Object.freeze({
       dominantBoltZBo: 0,
-      haloBoltCurveMin: readInputNumber(els.electricAoe3dHaloBoltCurveMin, 0.12, 0, 1),
-      haloBoltCurveMax: readInputNumber(els.electricAoe3dHaloBoltCurveMax, 0.34, 0, 1),
-      haloBoltFrequency: readInputNumber(els.electricAoe3dHaloBoltFrequency, 3.4, 0.1, 32),
-      haloBoltDetail: readInputNumber(els.electricAoe3dHaloBoltDetail, 0.58, 0, 1),
-      haloBoltCrawl: readInputNumber(els.electricAoe3dHaloBoltCrawl, 0.72, 0, 12),
-      haloBoltSmoothing: readInputNumber(els.electricAoe3dHaloBoltSmoothing, 0.72, 0, 1),
+      haloBoltSegmentsMin: Math.round(readInputNumber(els.electricAoe3dHaloBoltSegmentsMin, 6, 1, 48)),
+      haloBoltSegmentsMax: Math.round(readInputNumber(els.electricAoe3dHaloBoltSegmentsMax, 11, 1, 48)),
+      haloBoltStepVariance: readInputNumber(els.electricAoe3dHaloBoltStepVariance, 0.38, 0, 1),
+      haloBoltSeek: readInputNumber(els.electricAoe3dHaloBoltSeek, 1.18, 0, 4),
+      haloBoltHeadingMemory: readInputNumber(els.electricAoe3dHaloBoltHeadingMemory, 0.46, 0, 1),
+      haloBoltTurnAngleMin: readInputNumber(els.electricAoe3dHaloBoltTurnAngleMin, 18, 0, 180),
+      haloBoltTurnAngleMax: readInputNumber(els.electricAoe3dHaloBoltTurnAngleMax, 72, 0, 180),
+      haloBoltSmoothing: readInputNumber(els.electricAoe3dHaloBoltSmoothing, 0.22, 0, 1),
       haloBoltTension: readInputNumber(els.electricAoe3dHaloBoltTension, 0.62, 0, 1),
       haloFieldLingerMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMinMs, 900, 50, 20000)),
       haloFieldLingerMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMaxMs, 2600, 50, 20000)),
@@ -452,11 +454,13 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dHaloFieldZMinBo,
       els.electricAoe3dHaloFieldZMaxBo,
       els.electricAoe3dHaloFieldSeed,
-      els.electricAoe3dHaloBoltCurveMin,
-      els.electricAoe3dHaloBoltCurveMax,
-      els.electricAoe3dHaloBoltFrequency,
-      els.electricAoe3dHaloBoltDetail,
-      els.electricAoe3dHaloBoltCrawl,
+      els.electricAoe3dHaloBoltSegmentsMin,
+      els.electricAoe3dHaloBoltSegmentsMax,
+      els.electricAoe3dHaloBoltStepVariance,
+      els.electricAoe3dHaloBoltSeek,
+      els.electricAoe3dHaloBoltHeadingMemory,
+      els.electricAoe3dHaloBoltTurnAngleMin,
+      els.electricAoe3dHaloBoltTurnAngleMax,
       els.electricAoe3dHaloBoltSmoothing,
       els.electricAoe3dHaloBoltTension,
     ].forEach((input) => {

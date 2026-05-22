@@ -4,7 +4,7 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521s";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521t";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521214600b";
 import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521214600";
 
@@ -95,11 +95,13 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     dominantBoltTargetRadiusBo: clampNumber(source.dominantBoltTargetRadiusBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.targetRadiusBo),
     dominantBoltWanderStrength: clampNumber(source.dominantBoltWanderStrength, 0, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.wanderStrength),
     dominantBoltZBo: clampNumber(source.dominantBoltZBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
-    haloBoltCurveMin: clampNumber(source.haloBoltCurveMin, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltCurveMin),
-    haloBoltCurveMax: clampNumber(source.haloBoltCurveMax, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltCurveMax),
-    haloBoltFrequency: clampNumber(source.haloBoltFrequency, 0.1, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltFrequency),
-    haloBoltDetail: clampNumber(source.haloBoltDetail, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltDetail),
-    haloBoltCrawl: clampNumber(source.haloBoltCrawl, 0, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltCrawl),
+    haloBoltSegmentsMin: Math.round(clampNumber(source.haloBoltSegmentsMin, 1, 48, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltSegmentsMin)),
+    haloBoltSegmentsMax: Math.round(clampNumber(source.haloBoltSegmentsMax, 1, 48, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltSegmentsMax)),
+    haloBoltStepVariance: clampNumber(source.haloBoltStepVariance, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltStepVariance),
+    haloBoltSeek: clampNumber(source.haloBoltSeek, 0, 4, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltSeek),
+    haloBoltHeadingMemory: clampNumber(source.haloBoltHeadingMemory, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltHeadingMemory),
+    haloBoltTurnAngleMin: clampNumber(source.haloBoltTurnAngleMin, 0, 180, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltTurnAngleMin),
+    haloBoltTurnAngleMax: clampNumber(source.haloBoltTurnAngleMax, 0, 180, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltTurnAngleMax),
     haloBoltSmoothing: clampNumber(source.haloBoltSmoothing, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltSmoothing),
     haloBoltTension: clampNumber(source.haloBoltTension, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltTension),
     haloFieldLingerMinMs: Math.round(clampNumber(

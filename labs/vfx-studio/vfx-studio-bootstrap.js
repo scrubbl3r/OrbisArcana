@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260521-electric-field-p";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260521-electric-field-q";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -220,11 +220,13 @@ export function createStudioBootstrap({
       electricAoe3dHaloFieldZMinBo: els.electricAoe3dHaloFieldZMinBo,
       electricAoe3dHaloFieldZMaxBo: els.electricAoe3dHaloFieldZMaxBo,
       electricAoe3dHaloFieldSeed: els.electricAoe3dHaloFieldSeed,
-      electricAoe3dHaloBoltCurveMin: els.electricAoe3dHaloBoltCurveMin,
-      electricAoe3dHaloBoltCurveMax: els.electricAoe3dHaloBoltCurveMax,
-      electricAoe3dHaloBoltFrequency: els.electricAoe3dHaloBoltFrequency,
-      electricAoe3dHaloBoltDetail: els.electricAoe3dHaloBoltDetail,
-      electricAoe3dHaloBoltCrawl: els.electricAoe3dHaloBoltCrawl,
+      electricAoe3dHaloBoltSegmentsMin: els.electricAoe3dHaloBoltSegmentsMin,
+      electricAoe3dHaloBoltSegmentsMax: els.electricAoe3dHaloBoltSegmentsMax,
+      electricAoe3dHaloBoltStepVariance: els.electricAoe3dHaloBoltStepVariance,
+      electricAoe3dHaloBoltSeek: els.electricAoe3dHaloBoltSeek,
+      electricAoe3dHaloBoltHeadingMemory: els.electricAoe3dHaloBoltHeadingMemory,
+      electricAoe3dHaloBoltTurnAngleMin: els.electricAoe3dHaloBoltTurnAngleMin,
+      electricAoe3dHaloBoltTurnAngleMax: els.electricAoe3dHaloBoltTurnAngleMax,
       electricAoe3dHaloBoltSmoothing: els.electricAoe3dHaloBoltSmoothing,
       electricAoe3dHaloBoltTension: els.electricAoe3dHaloBoltTension,
     }),
