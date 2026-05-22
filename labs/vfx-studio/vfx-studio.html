@@ -2060,21 +2060,32 @@
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
-            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dHaloFieldControls">Halo Field</button>
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dHaloFieldControls">Halo Shell</button>
             <button id="electricAoe3dHaloFieldVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Halo Field visibility" title="Toggle Halo Field visibility"></button>
           </div>
           <div id="electricAoe3dHaloFieldControls" class="controlGroupBody paramFieldRows" hidden>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldEnabled">Field enabled</label><input id="electricAoe3dHaloFieldEnabled" class="paramFieldInput" type="checkbox" checked /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldEnabled">Shell enabled</label><input id="electricAoe3dHaloFieldEnabled" class="paramFieldInput" type="checkbox" checked /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldShellRadiusBo">Shell radius BO</label><input id="electricAoe3dHaloFieldShellRadiusBo" class="paramFieldInput" type="number" min="0.5" max="32" step="0.05" value="1.5" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldPointCount">Point count</label><input id="electricAoe3dHaloFieldPointCount" class="paramFieldInput" type="number" min="0" max="256" step="1" value="24" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldPointCount">Bolt count</label><input id="electricAoe3dHaloFieldPointCount" class="paramFieldInput" type="number" min="0" max="256" step="1" value="24" /></div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">Z RANGE BO</span>
+              <label for="electricAoe3dHaloFieldZMinBo">min</label><input id="electricAoe3dHaloFieldZMinBo" class="paramFieldInput" type="number" min="-32" max="32" step="0.05" value="-1.5" />
+              <label for="electricAoe3dHaloFieldZMaxBo">max</label><input id="electricAoe3dHaloFieldZMaxBo" class="paramFieldInput" type="number" min="-32" max="32" step="0.05" value="1.5" />
+            </div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldSeed">Shell seed</label><input id="electricAoe3dHaloFieldSeed" class="paramFieldInput" type="number" min="1" max="999999999" step="1" value="4242" /></div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dHaloMotionControls">Halo Motion</button>
+          <div id="electricAoe3dHaloMotionControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">WANDER SPEED</span>
               <label for="electricAoe3dHaloFieldWanderSpeedMin">min</label><input id="electricAoe3dHaloFieldWanderSpeedMin" class="paramFieldInput" type="number" min="0" max="64" step="0.05" value="0.25" />
               <label for="electricAoe3dHaloFieldWanderSpeedMax">max</label><input id="electricAoe3dHaloFieldWanderSpeedMax" class="paramFieldInput" type="number" min="0" max="64" step="0.05" value="0.75" />
             </div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldWander">Wander</label><input id="electricAoe3dHaloFieldWander" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.35" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldWander">Orbit wobble</label><input id="electricAoe3dHaloFieldWander" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.35" /></div>
             <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">WANDER DURATION MS</span>
+              <span class="rgbaLabel">WANDER HOLD MS</span>
               <label for="electricAoe3dHaloFieldWanderDurationMinMs">min</label><input id="electricAoe3dHaloFieldWanderDurationMinMs" class="paramFieldInput" type="number" min="50" max="20000" step="50" value="1200" />
               <label for="electricAoe3dHaloFieldWanderDurationMaxMs">max</label><input id="electricAoe3dHaloFieldWanderDurationMaxMs" class="paramFieldInput" type="number" min="50" max="20000" step="50" value="3200" />
             </div>
@@ -2084,17 +2095,11 @@
               <label for="electricAoe3dHaloFieldLingerMaxMs">max</label><input id="electricAoe3dHaloFieldLingerMaxMs" class="paramFieldInput" type="number" min="50" max="20000" step="50" value="2600" />
             </div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldLingerDrift">Linger drift</label><input id="electricAoe3dHaloFieldLingerDrift" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldReversalChance">Reversal chance</label><input id="electricAoe3dHaloFieldReversalChance" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.35" /></div>
-            <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">Z RANGE BO</span>
-              <label for="electricAoe3dHaloFieldZMinBo">min</label><input id="electricAoe3dHaloFieldZMinBo" class="paramFieldInput" type="number" min="-32" max="32" step="0.05" value="-1.5" />
-              <label for="electricAoe3dHaloFieldZMaxBo">max</label><input id="electricAoe3dHaloFieldZMaxBo" class="paramFieldInput" type="number" min="-32" max="32" step="0.05" value="1.5" />
-            </div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldSeed">Field seed</label><input id="electricAoe3dHaloFieldSeed" class="paramFieldInput" type="number" min="1" max="999999999" step="1" value="4242" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldReversalChance">Direction flip chance</label><input id="electricAoe3dHaloFieldReversalChance" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.35" /></div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dHaloBoltControls">Halo Bolt</button>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dHaloBoltControls">Halo Bolt Shape</button>
           <div id="electricAoe3dHaloBoltControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">SEGMENTS</span>
@@ -2102,15 +2107,15 @@
               <label for="electricAoe3dHaloBoltSegmentsMax">max</label><input id="electricAoe3dHaloBoltSegmentsMax" class="paramFieldInput" type="number" min="1" max="48" step="1" value="11" />
             </div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloBoltStepVariance">Step variance</label><input id="electricAoe3dHaloBoltStepVariance" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.38" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltSeek">Seek</label><input id="electricAoe3dHaloBoltSeek" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="1.18" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltHeadingMemory">Heading memory</label><input id="electricAoe3dHaloBoltHeadingMemory" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.46" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltSeek">Endpoint pull</label><input id="electricAoe3dHaloBoltSeek" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="1.18" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltHeadingMemory">Flow memory</label><input id="electricAoe3dHaloBoltHeadingMemory" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.46" /></div>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">TURN ANGLE</span>
               <label for="electricAoe3dHaloBoltTurnAngleMin">min</label><input id="electricAoe3dHaloBoltTurnAngleMin" class="paramFieldInput" type="number" min="0" max="180" step="1" value="18" />
               <label for="electricAoe3dHaloBoltTurnAngleMax">max</label><input id="electricAoe3dHaloBoltTurnAngleMax" class="paramFieldInput" type="number" min="0" max="180" step="1" value="72" />
             </div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloBoltSmoothing">Smoothing</label><input id="electricAoe3dHaloBoltSmoothing" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.22" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltTension">Tension</label><input id="electricAoe3dHaloBoltTension" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.62" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltTension">Final pull</label><input id="electricAoe3dHaloBoltTension" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.62" /></div>
           </div>
         </div>
       </div>
@@ -2855,7 +2860,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-r"),
+      import("./vfx-studio-bootstrap.js?v=20260522-electric-halo-ui-a"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
