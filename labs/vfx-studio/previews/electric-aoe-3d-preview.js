@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521r";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521s";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -155,6 +155,9 @@ export function createElectricAoe3dPreview({
       dominantBoltZBo: 0,
       haloBoltCurveMin: readInputNumber(els.electricAoe3dHaloBoltCurveMin, 0.12, 0, 1),
       haloBoltCurveMax: readInputNumber(els.electricAoe3dHaloBoltCurveMax, 0.34, 0, 1),
+      haloBoltFrequency: readInputNumber(els.electricAoe3dHaloBoltFrequency, 3.4, 0.1, 32),
+      haloBoltDetail: readInputNumber(els.electricAoe3dHaloBoltDetail, 0.58, 0, 1),
+      haloBoltCrawl: readInputNumber(els.electricAoe3dHaloBoltCrawl, 0.72, 0, 12),
       haloBoltSmoothing: readInputNumber(els.electricAoe3dHaloBoltSmoothing, 0.72, 0, 1),
       haloBoltTension: readInputNumber(els.electricAoe3dHaloBoltTension, 0.62, 0, 1),
       haloFieldLingerMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMinMs, 900, 50, 20000)),
@@ -451,6 +454,9 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dHaloFieldSeed,
       els.electricAoe3dHaloBoltCurveMin,
       els.electricAoe3dHaloBoltCurveMax,
+      els.electricAoe3dHaloBoltFrequency,
+      els.electricAoe3dHaloBoltDetail,
+      els.electricAoe3dHaloBoltCrawl,
       els.electricAoe3dHaloBoltSmoothing,
       els.electricAoe3dHaloBoltTension,
     ].forEach((input) => {

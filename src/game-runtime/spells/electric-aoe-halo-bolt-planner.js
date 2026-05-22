@@ -15,6 +15,10 @@ function randomBetween(seed, salt, min, max) {
   return min + (max - min) * random01(seed, salt);
 }
 
+function hash3(x, y, z, seed = 0) {
+  return random01(x * 157.31 + y * 311.71 + z * 911.53 + seed * 17.17, 19.19);
+}
+
 function normalizeVector3(x = 0, y = 0, z = 0, fallback = { x: 1, y: 0, z: 0 }) {
   const length = Math.hypot(Number(x) || 0, Number(y) || 0, Number(z) || 0);
   if (length <= 0.000001) return fallback;
@@ -48,6 +52,46 @@ function lerp(from, to, t) {
   return from + (to - from) * t;
 }
 
+function fade(t) {
+  const x = Math.max(0, Math.min(1, Number(t) || 0));
+  return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
+function valueNoise3(x, y, z, seed = 0) {
+  const x0 = Math.floor(x);
+  const y0 = Math.floor(y);
+  const z0 = Math.floor(z);
+  const fx = fade(x - x0);
+  const fy = fade(y - y0);
+  const fz = fade(z - z0);
+  const sample = (dx, dy, dz) => hash3(x0 + dx, y0 + dy, z0 + dz, seed) * 2 - 1;
+  const x00 = lerp(sample(0, 0, 0), sample(1, 0, 0), fx);
+  const x10 = lerp(sample(0, 1, 0), sample(1, 1, 0), fx);
+  const x01 = lerp(sample(0, 0, 1), sample(1, 0, 1), fx);
+  const x11 = lerp(sample(0, 1, 1), sample(1, 1, 1), fx);
+  return lerp(lerp(x00, x10, fy), lerp(x01, x11, fy), fz);
+}
+
+function fbm3(x, y, z, seed = 0, detail = 0.5) {
+  const detailMix = Math.max(0, Math.min(1, Number(detail) || 0));
+  const weights = [
+    0.5333333,
+    0.2666667,
+    0.1333333 * (0.18 + detailMix * 0.82),
+    0.0666667 * detailMix,
+  ];
+  let value = 0;
+  let weightTotal = 0;
+  let frequency = 1;
+  for (let octave = 0; octave < weights.length; octave += 1) {
+    const weight = weights[octave];
+    value += valueNoise3(x * frequency, y * frequency, z * frequency, seed + octave * 101.7) * weight;
+    weightTotal += weight;
+    frequency *= 2;
+  }
+  return weightTotal > 0 ? value / weightTotal : 0;
+}
+
 function normalizeZRange(source, shellRadiusBo) {
   const radius = Math.max(0.5, Number(shellRadiusBo) || 1.5);
   const rawMin = clampNumber(source.haloFieldZMinBo, -32, 32, -radius);
@@ -75,6 +119,9 @@ function normalizeConfig(raw = {}) {
   return Object.freeze({
     boltCurveMax: boltCurve.max,
     boltCurveMin: boltCurve.min,
+    boltCrawl: clampNumber(source.haloBoltCrawl, 0, 12, 0.72),
+    boltDetail: clampNumber(source.haloBoltDetail, 0, 1, 0.58),
+    boltFrequency: clampNumber(source.haloBoltFrequency, 0.1, 32, 3.4),
     boltSmoothing: clampNumber(source.haloBoltSmoothing, 0, 1, 0.72),
     boltTension: clampNumber(source.haloBoltTension, 0, 1, 0.62),
     fieldLingerMaxMs: Math.round(clampNumber(
@@ -367,7 +414,7 @@ function sampleShellPoint({ config, index, states, time, total }) {
   });
 }
 
-function buildHaloBoltPath({ config, endpoint, index, originXW, originYW, safeBo, seed, time }) {
+function buildHaloBoltPath({ config, endpoint, originXW, originYW, safeBo, seed, time }) {
   const endXBo = (endpoint.xW - originXW) / safeBo;
   const endYBo = (endpoint.yW - originYW) / safeBo;
   const endZBo = endpoint.zBo - config.zBo;
@@ -382,27 +429,30 @@ function buildHaloBoltPath({ config, endpoint, index, originXW, originYW, safeBo
   );
   const curve = randomBetween(seed, 81, config.boltCurveMin, config.boltCurveMax);
   const amplitudeBo = lengthBo * curve * (1 - config.boltTension * 0.72);
-  const phase = randomBetween(seed, 83, 0, TWO_PI) + time * randomBetween(seed, 84, 0.7, 1.9);
-  const harmonic = randomBetween(seed, 85, 1.35, 2.85);
-  const bendSign = random01(seed, 86) < 0.5 ? -1 : 1;
-  const samples = 10;
+  const fieldPhase = time * config.boltCrawl + randomBetween(seed, 83, 0, 64);
+  const fieldOffset = randomBetween(seed, 84, -32, 32);
+  const angularBlend = 1 - config.boltSmoothing;
+  const samples = 14;
   const points = [Object.freeze({ xW: originXW, yW: originYW, zBo: config.zBo })];
   for (let sample = 1; sample < samples; sample += 1) {
-    const t = sample / samples;
-    const envelope = Math.pow(Math.sin(Math.PI * t), 0.55 + config.boltTension * 1.15);
-    const tooth = ((sample % 2 ? 1 : -1) * (0.55 + random01(seed, 90 + sample) * 0.9));
-    const serpentine = Math.sin(t * Math.PI * harmonic + phase)
-      + Math.sin(t * Math.PI * (harmonic * 0.47 + 0.31) - phase * 0.73) * 0.36;
-    const bend = bendSign * lerp(tooth, serpentine, config.boltSmoothing) * amplitudeBo * envelope;
-    const liftBend = Math.sin(t * Math.PI * (harmonic + 0.7) + phase * 0.61)
+    const u = sample / samples;
+    const envelope = Math.pow(Math.sin(Math.PI * u), 0.58 + config.boltTension * 1.42);
+    const noiseU = u * config.boltFrequency;
+    const body = fbm3(noiseU + fieldOffset, seed * 0.013, fieldPhase, seed, config.boltDetail);
+    const cross = fbm3(noiseU + fieldOffset + 13.7, seed * 0.019 + 2.3, fieldPhase * 0.83 + 5.1, seed + 17.0, config.boltDetail);
+    const bite = ((sample % 2 ? 1 : -1) * (0.45 + random01(seed, 90 + sample) * 0.65));
+    const bendNoise = lerp(bite, body, config.boltSmoothing);
+    const bend = bendNoise * amplitudeBo * envelope;
+    const liftBend = cross
       * amplitudeBo
       * envelope
-      * (0.08 + curve * 0.18)
+      * (0.07 + curve * 0.22)
       * config.boltSmoothing;
+    const lightningKick = bite * amplitudeBo * envelope * angularBlend * 0.22;
     points.push(Object.freeze({
-      xW: originXW + (endXBo * t + tangent.x * bend + lift.x * liftBend) * safeBo,
-      yW: originYW + (endYBo * t + tangent.y * bend + lift.y * liftBend) * safeBo,
-      zBo: config.zBo + endZBo * t + tangent.z * bend + lift.z * liftBend,
+      xW: originXW + (endXBo * u + tangent.x * (bend + lightningKick) + lift.x * liftBend) * safeBo,
+      yW: originYW + (endYBo * u + tangent.y * (bend + lightningKick) + lift.y * liftBend) * safeBo,
+      zBo: config.zBo + endZBo * u + tangent.z * (bend + lightningKick) + lift.z * liftBend,
     }));
   }
   points.push(endpoint);

@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260521-electric-field-o";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260521-electric-field-p";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -222,6 +222,9 @@ export function createStudioBootstrap({
       electricAoe3dHaloFieldSeed: els.electricAoe3dHaloFieldSeed,
       electricAoe3dHaloBoltCurveMin: els.electricAoe3dHaloBoltCurveMin,
       electricAoe3dHaloBoltCurveMax: els.electricAoe3dHaloBoltCurveMax,
+      electricAoe3dHaloBoltFrequency: els.electricAoe3dHaloBoltFrequency,
+      electricAoe3dHaloBoltDetail: els.electricAoe3dHaloBoltDetail,
+      electricAoe3dHaloBoltCrawl: els.electricAoe3dHaloBoltCrawl,
       electricAoe3dHaloBoltSmoothing: els.electricAoe3dHaloBoltSmoothing,
       electricAoe3dHaloBoltTension: els.electricAoe3dHaloBoltTension,
     }),

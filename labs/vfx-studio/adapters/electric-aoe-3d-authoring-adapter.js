@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-k";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-l";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -122,6 +122,9 @@ export function createElectricAoe3dAuthoringAdapter({
       dominantBoltWanderStrength: readNumber(els.electricAoe3dDominantBoltWanderStrength, defaults.dominantBoltWanderStrength, 0, 4),
       haloBoltCurveMin: readNumber(els.electricAoe3dHaloBoltCurveMin, defaults.haloBoltCurveMin, 0, 1),
       haloBoltCurveMax: readNumber(els.electricAoe3dHaloBoltCurveMax, defaults.haloBoltCurveMax, 0, 1),
+      haloBoltFrequency: readNumber(els.electricAoe3dHaloBoltFrequency, defaults.haloBoltFrequency, 0.1, 32),
+      haloBoltDetail: readNumber(els.electricAoe3dHaloBoltDetail, defaults.haloBoltDetail, 0, 1),
+      haloBoltCrawl: readNumber(els.electricAoe3dHaloBoltCrawl, defaults.haloBoltCrawl, 0, 12),
       haloBoltSmoothing: readNumber(els.electricAoe3dHaloBoltSmoothing, defaults.haloBoltSmoothing, 0, 1),
       haloBoltTension: readNumber(els.electricAoe3dHaloBoltTension, defaults.haloBoltTension, 0, 1),
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
@@ -249,6 +252,15 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dHaloBoltCurveMax) {
       els.electricAoe3dHaloBoltCurveMax.value = String(source.haloBoltCurveMax ?? 0.34);
+    }
+    if (els.electricAoe3dHaloBoltFrequency) {
+      els.electricAoe3dHaloBoltFrequency.value = String(source.haloBoltFrequency ?? 3.4);
+    }
+    if (els.electricAoe3dHaloBoltDetail) {
+      els.electricAoe3dHaloBoltDetail.value = String(source.haloBoltDetail ?? 0.58);
+    }
+    if (els.electricAoe3dHaloBoltCrawl) {
+      els.electricAoe3dHaloBoltCrawl.value = String(source.haloBoltCrawl ?? 0.72);
     }
     if (els.electricAoe3dHaloBoltSmoothing) {
       els.electricAoe3dHaloBoltSmoothing.value = String(source.haloBoltSmoothing ?? 0.72);
