@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-b";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-bolt-forks-c";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -129,6 +129,7 @@ export function createElectricAoe3dAuthoringAdapter({
       haloBoltShapeSpeedHz: readNumber(els.electricAoe3dHaloBoltShapeSpeedHz, defaults.haloBoltShapeSpeedHz, 0, 120),
       haloBoltShapeSmoothing: readNumber(els.electricAoe3dHaloBoltShapeSmoothing, defaults.haloBoltShapeSmoothing, 0, 1),
       haloBoltForkChance: readNumber(els.electricAoe3dHaloBoltForkChance, defaults.haloBoltForkChance, 0, 1),
+      haloBoltForkTtlMs: Math.round(readNumber(els.electricAoe3dHaloBoltForkTtlMs, defaults.haloBoltForkTtlMs, 16, 20000)),
       haloBoltForkStartPct: readNumber(els.electricAoe3dHaloBoltForkStartPct, defaults.haloBoltForkStartPct, 0, 1),
       haloBoltForkEndPct: readNumber(els.electricAoe3dHaloBoltForkEndPct, defaults.haloBoltForkEndPct, 0, 1),
       haloBoltForkSpreadMinBo: readNumber(els.electricAoe3dHaloBoltForkSpreadMinBo, defaults.haloBoltForkSpreadMinBo, 0, 8),
@@ -282,6 +283,9 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dHaloBoltForkChance) {
       els.electricAoe3dHaloBoltForkChance.value = String(source.haloBoltForkChance ?? 0);
+    }
+    if (els.electricAoe3dHaloBoltForkTtlMs) {
+      els.electricAoe3dHaloBoltForkTtlMs.value = String(source.haloBoltForkTtlMs ?? 180);
     }
     if (els.electricAoe3dHaloBoltForkStartPct) {
       els.electricAoe3dHaloBoltForkStartPct.value = String(source.haloBoltForkStartPct ?? 0.33);
