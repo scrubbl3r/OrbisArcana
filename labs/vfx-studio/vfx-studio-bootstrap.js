@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-branches-a";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-shader-a";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -205,6 +205,23 @@ export function createStudioBootstrap({
       electricAoe3dDominantBoltHeadingMemory: els.electricAoe3dDominantBoltHeadingMemory,
       electricAoe3dDominantBoltWanderStrength: els.electricAoe3dDominantBoltWanderStrength,
       electricAoe3dDominantBoltPathJitterBo: els.electricAoe3dDominantBoltPathJitterBo,
+      electricAoe3dBoltShaderVisibleBtn: els.electricAoe3dBoltShaderVisibleBtn,
+      electricAoe3dBoltShaderEnabled: els.electricAoe3dBoltShaderEnabled,
+      electricAoe3dBoltShaderCoreWidthMinBo: els.electricAoe3dBoltShaderCoreWidthMinBo,
+      electricAoe3dBoltShaderCoreWidthMaxBo: els.electricAoe3dBoltShaderCoreWidthMaxBo,
+      electricAoe3dBoltShaderGlowWidthMinBo: els.electricAoe3dBoltShaderGlowWidthMinBo,
+      electricAoe3dBoltShaderGlowWidthMaxBo: els.electricAoe3dBoltShaderGlowWidthMaxBo,
+      electricAoe3dBoltShaderLengthTaper: els.electricAoe3dBoltShaderLengthTaper,
+      electricAoe3dBoltShaderCoreIntensity: els.electricAoe3dBoltShaderCoreIntensity,
+      electricAoe3dBoltShaderGlowIntensity: els.electricAoe3dBoltShaderGlowIntensity,
+      electricAoe3dBoltShaderFlickerSpeedHz: els.electricAoe3dBoltShaderFlickerSpeedHz,
+      electricAoe3dBoltShaderFlickerDepth: els.electricAoe3dBoltShaderFlickerDepth,
+      electricAoe3dBoltShaderCoreR: els.electricAoe3dBoltShaderCoreR,
+      electricAoe3dBoltShaderCoreG: els.electricAoe3dBoltShaderCoreG,
+      electricAoe3dBoltShaderCoreB: els.electricAoe3dBoltShaderCoreB,
+      electricAoe3dBoltShaderGlowR: els.electricAoe3dBoltShaderGlowR,
+      electricAoe3dBoltShaderGlowG: els.electricAoe3dBoltShaderGlowG,
+      electricAoe3dBoltShaderGlowB: els.electricAoe3dBoltShaderGlowB,
       electricAoe3dHaloFieldEnabled: els.electricAoe3dHaloFieldEnabled,
       electricAoe3dHaloFieldShellRadiusBo: els.electricAoe3dHaloFieldShellRadiusBo,
       electricAoe3dHaloFieldBoltStartMinBo: els.electricAoe3dHaloFieldBoltStartMinBo,

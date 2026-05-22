@@ -157,6 +157,22 @@ export function createElectricAoe3dPreview({
     const branchTtlMinMs = Math.round(readInputNumber(els.electricAoe3dHaloBoltBranchTtlMinMs, 120, 16, 20000));
     return Object.freeze({
       dominantBoltZBo: 0,
+      boltShaderEnabled: readInputBoolean(els.electricAoe3dBoltShaderEnabled, true),
+      boltShaderCoreWidthMinBo: readInputNumber(els.electricAoe3dBoltShaderCoreWidthMinBo, 0.006, 0, 1),
+      boltShaderCoreWidthMaxBo: readInputNumber(els.electricAoe3dBoltShaderCoreWidthMaxBo, 0.022, 0, 1),
+      boltShaderGlowWidthMinBo: readInputNumber(els.electricAoe3dBoltShaderGlowWidthMinBo, 0.035, 0, 4),
+      boltShaderGlowWidthMaxBo: readInputNumber(els.electricAoe3dBoltShaderGlowWidthMaxBo, 0.16, 0, 4),
+      boltShaderLengthTaper: readInputNumber(els.electricAoe3dBoltShaderLengthTaper, 1, 0, 4),
+      boltShaderCoreIntensity: readInputNumber(els.electricAoe3dBoltShaderCoreIntensity, 3.5, 0, 20),
+      boltShaderGlowIntensity: readInputNumber(els.electricAoe3dBoltShaderGlowIntensity, 1.8, 0, 20),
+      boltShaderFlickerSpeedHz: readInputNumber(els.electricAoe3dBoltShaderFlickerSpeedHz, 4, 0, 60),
+      boltShaderFlickerDepth: readInputNumber(els.electricAoe3dBoltShaderFlickerDepth, 0.35, 0, 1),
+      boltShaderCoreR: Math.round(readInputNumber(els.electricAoe3dBoltShaderCoreR, 235, 0, 255)),
+      boltShaderCoreG: Math.round(readInputNumber(els.electricAoe3dBoltShaderCoreG, 250, 0, 255)),
+      boltShaderCoreB: Math.round(readInputNumber(els.electricAoe3dBoltShaderCoreB, 255, 0, 255)),
+      boltShaderGlowR: Math.round(readInputNumber(els.electricAoe3dBoltShaderGlowR, 60, 0, 255)),
+      boltShaderGlowG: Math.round(readInputNumber(els.electricAoe3dBoltShaderGlowG, 130, 0, 255)),
+      boltShaderGlowB: Math.round(readInputNumber(els.electricAoe3dBoltShaderGlowB, 255, 0, 255)),
       haloBoltShapeMinStepBo: readInputNumber(els.electricAoe3dHaloBoltShapeMinStepBo, 0.05, 0.01, 8),
       haloBoltShapeMaxStepBo: readInputNumber(els.electricAoe3dHaloBoltShapeMaxStepBo, 0.28, 0.01, 8),
       haloBoltShapeSeekStrength: readInputNumber(els.electricAoe3dHaloBoltShapeSeekStrength, 0.42, 0, 4),
@@ -481,6 +497,13 @@ export function createElectricAoe3dPreview({
     if (inspector && typeof inspector.render === "function") inspector.render();
   }
 
+  function toggleBoltShader() {
+    if (!els.electricAoe3dBoltShaderVisibleBtn) return;
+    const visible = els.electricAoe3dBoltShaderVisibleBtn.getAttribute("aria-pressed") !== "false";
+    els.electricAoe3dBoltShaderVisibleBtn.setAttribute("aria-pressed", visible ? "false" : "true");
+    if (inspector && typeof inspector.render === "function") inspector.render();
+  }
+
   function wire() {
     apply();
     const refreshOnCommit = (event) => {
@@ -489,6 +512,7 @@ export function createElectricAoe3dPreview({
     };
     if (els.previewElectricAoe3d) els.previewElectricAoe3d.addEventListener("click", apply);
     if (els.electricAoe3dOrbVisibleBtn) els.electricAoe3dOrbVisibleBtn.addEventListener("click", toggleOrb);
+    if (els.electricAoe3dBoltShaderVisibleBtn) els.electricAoe3dBoltShaderVisibleBtn.addEventListener("click", toggleBoltShader);
     if (els.electricAoe3dControlPointsVisibleBtn) els.electricAoe3dControlPointsVisibleBtn.addEventListener("click", toggleControlPoints);
     if (els.electricAoe3dHaloFieldVisibleBtn) els.electricAoe3dHaloFieldVisibleBtn.addEventListener("click", toggleHaloControlPoints);
     [
@@ -501,6 +525,22 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dDominantBoltHeadingMemory,
       els.electricAoe3dDominantBoltWanderStrength,
       els.electricAoe3dDominantBoltPathJitterBo,
+      els.electricAoe3dBoltShaderEnabled,
+      els.electricAoe3dBoltShaderCoreWidthMinBo,
+      els.electricAoe3dBoltShaderCoreWidthMaxBo,
+      els.electricAoe3dBoltShaderGlowWidthMinBo,
+      els.electricAoe3dBoltShaderGlowWidthMaxBo,
+      els.electricAoe3dBoltShaderLengthTaper,
+      els.electricAoe3dBoltShaderCoreIntensity,
+      els.electricAoe3dBoltShaderGlowIntensity,
+      els.electricAoe3dBoltShaderFlickerSpeedHz,
+      els.electricAoe3dBoltShaderFlickerDepth,
+      els.electricAoe3dBoltShaderCoreR,
+      els.electricAoe3dBoltShaderCoreG,
+      els.electricAoe3dBoltShaderCoreB,
+      els.electricAoe3dBoltShaderGlowR,
+      els.electricAoe3dBoltShaderGlowG,
+      els.electricAoe3dBoltShaderGlowB,
       els.electricAoe3dHaloFieldEnabled,
       els.electricAoe3dHaloFieldShellRadiusBo,
       els.electricAoe3dHaloFieldBoltStartMinBo,

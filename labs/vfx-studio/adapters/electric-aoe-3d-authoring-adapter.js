@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-branches-a";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-shader-a";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -98,6 +98,30 @@ export function createElectricAoe3dAuthoringAdapter({
       minStep,
       8
     );
+    const boltShaderCoreWidthMinBo = readNumber(
+      els.electricAoe3dBoltShaderCoreWidthMinBo,
+      defaults.boltShaderCoreWidthMinBo,
+      0,
+      1
+    );
+    const boltShaderCoreWidthMaxBo = readNumber(
+      els.electricAoe3dBoltShaderCoreWidthMaxBo,
+      defaults.boltShaderCoreWidthMaxBo,
+      boltShaderCoreWidthMinBo,
+      1
+    );
+    const boltShaderGlowWidthMinBo = readNumber(
+      els.electricAoe3dBoltShaderGlowWidthMinBo,
+      defaults.boltShaderGlowWidthMinBo,
+      0,
+      4
+    );
+    const boltShaderGlowWidthMaxBo = readNumber(
+      els.electricAoe3dBoltShaderGlowWidthMaxBo,
+      defaults.boltShaderGlowWidthMaxBo,
+      boltShaderGlowWidthMinBo,
+      4
+    );
     const forkTtlMinMs = Math.round(readNumber(
       els.electricAoe3dHaloBoltForkTtlMinMs,
       defaults.haloBoltForkTtlMinMs ?? defaults.haloBoltForkTtlMs,
@@ -134,6 +158,22 @@ export function createElectricAoe3dAuthoringAdapter({
       dominantBoltRangeBo: maxRange,
       dominantBoltSeekStrength: readNumber(els.electricAoe3dDominantBoltSeekStrength, defaults.dominantBoltSeekStrength, 0, 4),
       dominantBoltWanderStrength: readNumber(els.electricAoe3dDominantBoltWanderStrength, defaults.dominantBoltWanderStrength, 0, 4),
+      boltShaderEnabled: readBoolean(els.electricAoe3dBoltShaderEnabled, defaults.boltShaderEnabled),
+      boltShaderCoreWidthMinBo,
+      boltShaderCoreWidthMaxBo,
+      boltShaderGlowWidthMinBo,
+      boltShaderGlowWidthMaxBo,
+      boltShaderLengthTaper: readNumber(els.electricAoe3dBoltShaderLengthTaper, defaults.boltShaderLengthTaper, 0, 4),
+      boltShaderCoreIntensity: readNumber(els.electricAoe3dBoltShaderCoreIntensity, defaults.boltShaderCoreIntensity, 0, 20),
+      boltShaderGlowIntensity: readNumber(els.electricAoe3dBoltShaderGlowIntensity, defaults.boltShaderGlowIntensity, 0, 20),
+      boltShaderFlickerSpeedHz: readNumber(els.electricAoe3dBoltShaderFlickerSpeedHz, defaults.boltShaderFlickerSpeedHz, 0, 60),
+      boltShaderFlickerDepth: readNumber(els.electricAoe3dBoltShaderFlickerDepth, defaults.boltShaderFlickerDepth, 0, 1),
+      boltShaderCoreR: Math.round(readNumber(els.electricAoe3dBoltShaderCoreR, defaults.boltShaderCoreR, 0, 255)),
+      boltShaderCoreG: Math.round(readNumber(els.electricAoe3dBoltShaderCoreG, defaults.boltShaderCoreG, 0, 255)),
+      boltShaderCoreB: Math.round(readNumber(els.electricAoe3dBoltShaderCoreB, defaults.boltShaderCoreB, 0, 255)),
+      boltShaderGlowR: Math.round(readNumber(els.electricAoe3dBoltShaderGlowR, defaults.boltShaderGlowR, 0, 255)),
+      boltShaderGlowG: Math.round(readNumber(els.electricAoe3dBoltShaderGlowG, defaults.boltShaderGlowG, 0, 255)),
+      boltShaderGlowB: Math.round(readNumber(els.electricAoe3dBoltShaderGlowB, defaults.boltShaderGlowB, 0, 255)),
       haloBoltShapeMinStepBo: readNumber(els.electricAoe3dHaloBoltShapeMinStepBo, defaults.haloBoltShapeMinStepBo, 0.01, 8),
       haloBoltShapeMaxStepBo: readNumber(els.electricAoe3dHaloBoltShapeMaxStepBo, defaults.haloBoltShapeMaxStepBo, 0.01, 8),
       haloBoltShapeSeekStrength: readNumber(els.electricAoe3dHaloBoltShapeSeekStrength, defaults.haloBoltShapeSeekStrength, 0, 4),
@@ -247,6 +287,54 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dDominantBoltPathJitterBo) {
       els.electricAoe3dDominantBoltPathJitterBo.value = String(source.dominantBoltPathJitterBo ?? 0.18);
+    }
+    if (els.electricAoe3dBoltShaderEnabled) {
+      els.electricAoe3dBoltShaderEnabled.checked = source.boltShaderEnabled !== false;
+    }
+    if (els.electricAoe3dBoltShaderCoreWidthMinBo) {
+      els.electricAoe3dBoltShaderCoreWidthMinBo.value = String(source.boltShaderCoreWidthMinBo ?? 0.006);
+    }
+    if (els.electricAoe3dBoltShaderCoreWidthMaxBo) {
+      els.electricAoe3dBoltShaderCoreWidthMaxBo.value = String(source.boltShaderCoreWidthMaxBo ?? 0.022);
+    }
+    if (els.electricAoe3dBoltShaderGlowWidthMinBo) {
+      els.electricAoe3dBoltShaderGlowWidthMinBo.value = String(source.boltShaderGlowWidthMinBo ?? 0.035);
+    }
+    if (els.electricAoe3dBoltShaderGlowWidthMaxBo) {
+      els.electricAoe3dBoltShaderGlowWidthMaxBo.value = String(source.boltShaderGlowWidthMaxBo ?? 0.16);
+    }
+    if (els.electricAoe3dBoltShaderLengthTaper) {
+      els.electricAoe3dBoltShaderLengthTaper.value = String(source.boltShaderLengthTaper ?? 1);
+    }
+    if (els.electricAoe3dBoltShaderCoreIntensity) {
+      els.electricAoe3dBoltShaderCoreIntensity.value = String(source.boltShaderCoreIntensity ?? 3.5);
+    }
+    if (els.electricAoe3dBoltShaderGlowIntensity) {
+      els.electricAoe3dBoltShaderGlowIntensity.value = String(source.boltShaderGlowIntensity ?? 1.8);
+    }
+    if (els.electricAoe3dBoltShaderFlickerSpeedHz) {
+      els.electricAoe3dBoltShaderFlickerSpeedHz.value = String(source.boltShaderFlickerSpeedHz ?? 4);
+    }
+    if (els.electricAoe3dBoltShaderFlickerDepth) {
+      els.electricAoe3dBoltShaderFlickerDepth.value = String(source.boltShaderFlickerDepth ?? 0.35);
+    }
+    if (els.electricAoe3dBoltShaderCoreR) {
+      els.electricAoe3dBoltShaderCoreR.value = String(source.boltShaderCoreR ?? 235);
+    }
+    if (els.electricAoe3dBoltShaderCoreG) {
+      els.electricAoe3dBoltShaderCoreG.value = String(source.boltShaderCoreG ?? 250);
+    }
+    if (els.electricAoe3dBoltShaderCoreB) {
+      els.electricAoe3dBoltShaderCoreB.value = String(source.boltShaderCoreB ?? 255);
+    }
+    if (els.electricAoe3dBoltShaderGlowR) {
+      els.electricAoe3dBoltShaderGlowR.value = String(source.boltShaderGlowR ?? 60);
+    }
+    if (els.electricAoe3dBoltShaderGlowG) {
+      els.electricAoe3dBoltShaderGlowG.value = String(source.boltShaderGlowG ?? 130);
+    }
+    if (els.electricAoe3dBoltShaderGlowB) {
+      els.electricAoe3dBoltShaderGlowB.value = String(source.boltShaderGlowB ?? 255);
     }
     if (els.electricAoe3dHaloFieldEnabled) {
       els.electricAoe3dHaloFieldEnabled.checked = source.haloFieldEnabled !== false;

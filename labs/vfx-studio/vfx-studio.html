@@ -2042,8 +2042,40 @@
           <div id="electricAoe3dOrbControls" class="controlGroupBody paramFieldRows" hidden></div>
         </div>
         <div class="controlGroup" data-control-group>
-          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dBoltShaderControls">Bolt Shader</button>
-          <div id="electricAoe3dBoltShaderControls" class="controlGroupBody paramFieldRows" hidden></div>
+          <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dBoltShaderControls">Bolt Shader</button>
+            <button id="electricAoe3dBoltShaderVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Bolt Shader visibility" title="Toggle Bolt Shader visibility"></button>
+          </div>
+          <div id="electricAoe3dBoltShaderControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow"><label for="electricAoe3dBoltShaderEnabled">Shader enabled</label><input id="electricAoe3dBoltShaderEnabled" class="paramFieldInput" type="checkbox" checked /></div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">CORE WIDTH BO</span>
+              <label for="electricAoe3dBoltShaderCoreWidthMinBo">min</label><input id="electricAoe3dBoltShaderCoreWidthMinBo" class="paramFieldInput" type="number" min="0" max="1" step="0.001" value="0.006" />
+              <label for="electricAoe3dBoltShaderCoreWidthMaxBo">max</label><input id="electricAoe3dBoltShaderCoreWidthMaxBo" class="paramFieldInput" type="number" min="0" max="1" step="0.001" value="0.022" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">GLOW WIDTH BO</span>
+              <label for="electricAoe3dBoltShaderGlowWidthMinBo">min</label><input id="electricAoe3dBoltShaderGlowWidthMinBo" class="paramFieldInput" type="number" min="0" max="4" step="0.001" value="0.035" />
+              <label for="electricAoe3dBoltShaderGlowWidthMaxBo">max</label><input id="electricAoe3dBoltShaderGlowWidthMaxBo" class="paramFieldInput" type="number" min="0" max="4" step="0.001" value="0.16" />
+            </div>
+            <div class="paramFieldRow"><label for="electricAoe3dBoltShaderLengthTaper">Length taper</label><input id="electricAoe3dBoltShaderLengthTaper" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="1" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dBoltShaderCoreIntensity">Core intensity</label><input id="electricAoe3dBoltShaderCoreIntensity" class="paramFieldInput" type="number" min="0" max="20" step="0.01" value="3.5" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dBoltShaderGlowIntensity">Glow intensity</label><input id="electricAoe3dBoltShaderGlowIntensity" class="paramFieldInput" type="number" min="0" max="20" step="0.01" value="1.8" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dBoltShaderFlickerSpeedHz">Flicker speed Hz</label><input id="electricAoe3dBoltShaderFlickerSpeedHz" class="paramFieldInput" type="number" min="0" max="60" step="0.01" value="4" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dBoltShaderFlickerDepth">Flicker depth</label><input id="electricAoe3dBoltShaderFlickerDepth" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.35" /></div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">CORE RGB</span>
+              <label for="electricAoe3dBoltShaderCoreR">r</label><input id="electricAoe3dBoltShaderCoreR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="235" />
+              <label for="electricAoe3dBoltShaderCoreG">g</label><input id="electricAoe3dBoltShaderCoreG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="250" />
+              <label for="electricAoe3dBoltShaderCoreB">b</label><input id="electricAoe3dBoltShaderCoreB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">GLOW RGB</span>
+              <label for="electricAoe3dBoltShaderGlowR">r</label><input id="electricAoe3dBoltShaderGlowR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="60" />
+              <label for="electricAoe3dBoltShaderGlowG">g</label><input id="electricAoe3dBoltShaderGlowG" class="paramFieldInput" type="number" min="0" max="255" step="1" value="130" />
+              <label for="electricAoe3dBoltShaderGlowB">b</label><input id="electricAoe3dBoltShaderGlowB" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+            </div>
+          </div>
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
@@ -2927,7 +2959,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260522-branches-a"),
+      import("./vfx-studio-bootstrap.js?v=20260522-shader-a"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2943,7 +2975,7 @@
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
     import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
-    import { createElectricAoe3dAuthoringAdapter } from "./adapters/electric-aoe-3d-authoring-adapter.js?v=20260521d";
+    import { createElectricAoe3dAuthoringAdapter } from "./adapters/electric-aoe-3d-authoring-adapter.js?v=20260522-shader-a";
     import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260520aeo-diameter-a";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
@@ -2974,8 +3006,8 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260522162654i";
-    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522162654";
+    } from "../../src/vfx/presets/index.js?v=20260522-shader-a";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-shader-a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522162654b";
@@ -3480,6 +3512,7 @@
       previewElectricAoe3d: $("previewElectricAoe3d"),
       electricAoe3dBehaviorReadout: $("electricAoe3dBehaviorReadout"),
       electricAoe3dOrbVisibleBtn: $("electricAoe3dOrbVisibleBtn"),
+      electricAoe3dBoltShaderVisibleBtn: $("electricAoe3dBoltShaderVisibleBtn"),
       electricAoe3dControlPointsVisibleBtn: $("electricAoe3dControlPointsVisibleBtn"),
       electricAoe3dHaloFieldVisibleBtn: $("electricAoe3dHaloFieldVisibleBtn"),
       electricAoe3dSpellDurationMs: $("electricAoe3dSpellDurationMs"),
@@ -3501,6 +3534,22 @@
       electricAoe3dDominantBoltWanderStrength: $("electricAoe3dDominantBoltWanderStrength"),
       electricAoe3dDominantBoltPathJitterBo: $("electricAoe3dDominantBoltPathJitterBo"),
       electricAoe3dBoltShaderControls: $("electricAoe3dBoltShaderControls"),
+      electricAoe3dBoltShaderEnabled: $("electricAoe3dBoltShaderEnabled"),
+      electricAoe3dBoltShaderCoreWidthMinBo: $("electricAoe3dBoltShaderCoreWidthMinBo"),
+      electricAoe3dBoltShaderCoreWidthMaxBo: $("electricAoe3dBoltShaderCoreWidthMaxBo"),
+      electricAoe3dBoltShaderGlowWidthMinBo: $("electricAoe3dBoltShaderGlowWidthMinBo"),
+      electricAoe3dBoltShaderGlowWidthMaxBo: $("electricAoe3dBoltShaderGlowWidthMaxBo"),
+      electricAoe3dBoltShaderLengthTaper: $("electricAoe3dBoltShaderLengthTaper"),
+      electricAoe3dBoltShaderCoreIntensity: $("electricAoe3dBoltShaderCoreIntensity"),
+      electricAoe3dBoltShaderGlowIntensity: $("electricAoe3dBoltShaderGlowIntensity"),
+      electricAoe3dBoltShaderFlickerSpeedHz: $("electricAoe3dBoltShaderFlickerSpeedHz"),
+      electricAoe3dBoltShaderFlickerDepth: $("electricAoe3dBoltShaderFlickerDepth"),
+      electricAoe3dBoltShaderCoreR: $("electricAoe3dBoltShaderCoreR"),
+      electricAoe3dBoltShaderCoreG: $("electricAoe3dBoltShaderCoreG"),
+      electricAoe3dBoltShaderCoreB: $("electricAoe3dBoltShaderCoreB"),
+      electricAoe3dBoltShaderGlowR: $("electricAoe3dBoltShaderGlowR"),
+      electricAoe3dBoltShaderGlowG: $("electricAoe3dBoltShaderGlowG"),
+      electricAoe3dBoltShaderGlowB: $("electricAoe3dBoltShaderGlowB"),
       electricAoe3dHaloFieldEnabled: $("electricAoe3dHaloFieldEnabled"),
       electricAoe3dHaloFieldShellRadiusBo: $("electricAoe3dHaloFieldShellRadiusBo"),
       electricAoe3dHaloFieldBoltStartMinBo: $("electricAoe3dHaloFieldBoltStartMinBo"),

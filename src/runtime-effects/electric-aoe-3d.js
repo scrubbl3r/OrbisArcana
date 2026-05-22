@@ -6,7 +6,7 @@ import {
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
 import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522k";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522162654b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522162654";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522-shader-a";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -66,6 +66,8 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     60000,
     ELECTRIC_AOE_BEHAVIOR_DEFAULT.dominantBoltEnemyFrequencyMaxMs
   ));
+  const boltShaderCoreWidthMinBo = clampNumber(source.boltShaderCoreWidthMinBo, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderCoreWidthMinBo);
+  const boltShaderGlowWidthMinBo = clampNumber(source.boltShaderGlowWidthMinBo, 0, 4, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderGlowWidthMinBo);
   const haloBoltForkTtlMinMs = Math.round(clampNumber(
     source.haloBoltForkTtlMinMs ?? source.haloBoltForkTtlMs,
     16,
@@ -107,6 +109,22 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     dominantBoltTargetRadiusBo: clampNumber(source.dominantBoltTargetRadiusBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.targetRadiusBo),
     dominantBoltWanderStrength: clampNumber(source.dominantBoltWanderStrength, 0, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.wanderStrength),
     dominantBoltZBo: clampNumber(source.dominantBoltZBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
+    boltShaderEnabled: source.boltShaderEnabled !== false,
+    boltShaderCoreWidthMinBo,
+    boltShaderCoreWidthMaxBo: clampNumber(source.boltShaderCoreWidthMaxBo, boltShaderCoreWidthMinBo, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderCoreWidthMaxBo),
+    boltShaderGlowWidthMinBo,
+    boltShaderGlowWidthMaxBo: clampNumber(source.boltShaderGlowWidthMaxBo, boltShaderGlowWidthMinBo, 4, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderGlowWidthMaxBo),
+    boltShaderLengthTaper: clampNumber(source.boltShaderLengthTaper, 0, 4, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderLengthTaper),
+    boltShaderCoreIntensity: clampNumber(source.boltShaderCoreIntensity, 0, 20, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderCoreIntensity),
+    boltShaderGlowIntensity: clampNumber(source.boltShaderGlowIntensity, 0, 20, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderGlowIntensity),
+    boltShaderFlickerSpeedHz: clampNumber(source.boltShaderFlickerSpeedHz, 0, 60, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderFlickerSpeedHz),
+    boltShaderFlickerDepth: clampNumber(source.boltShaderFlickerDepth, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderFlickerDepth),
+    boltShaderCoreR: Math.round(clampNumber(source.boltShaderCoreR, 0, 255, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderCoreR)),
+    boltShaderCoreG: Math.round(clampNumber(source.boltShaderCoreG, 0, 255, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderCoreG)),
+    boltShaderCoreB: Math.round(clampNumber(source.boltShaderCoreB, 0, 255, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderCoreB)),
+    boltShaderGlowR: Math.round(clampNumber(source.boltShaderGlowR, 0, 255, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderGlowR)),
+    boltShaderGlowG: Math.round(clampNumber(source.boltShaderGlowG, 0, 255, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderGlowG)),
+    boltShaderGlowB: Math.round(clampNumber(source.boltShaderGlowB, 0, 255, ELECTRIC_AOE_3D_PRESET_DEFAULT.boltShaderGlowB)),
     haloBoltShapeMinStepBo: clampNumber(source.haloBoltShapeMinStepBo, 0.01, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltShapeMinStepBo),
     haloBoltShapeMaxStepBo: clampNumber(source.haloBoltShapeMaxStepBo, 0.01, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltShapeMaxStepBo),
     haloBoltShapeSeekStrength: clampNumber(source.haloBoltShapeSeekStrength, 0, 4, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltShapeSeekStrength),
