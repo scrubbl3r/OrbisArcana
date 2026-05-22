@@ -482,7 +482,43 @@ function vectorBetweenBo(from, to, safeBo) {
   );
 }
 
-function buildHaloFork({ config, endpoint, forkPoint, originXW, originYW, safeBo, seed, time }) {
+function clampPointToHaloShell(point, { centerXW, centerYW, centerZBo, radiusBo, safeBo }) {
+  const dxBo = ((Number(point && point.xW) || 0) - centerXW) / safeBo;
+  const dyBo = ((Number(point && point.yW) || 0) - centerYW) / safeBo;
+  const dzBo = (Number(point && point.zBo) || 0) - centerZBo;
+  const distanceBo = Math.hypot(dxBo, dyBo, dzBo);
+  if (distanceBo <= Math.max(0, radiusBo) || distanceBo <= 0.000001) return point;
+  const scale = radiusBo / distanceBo;
+  return Object.freeze({
+    xW: centerXW + dxBo * scale * safeBo,
+    yW: centerYW + dyBo * scale * safeBo,
+    zBo: centerZBo + dzBo * scale,
+  });
+}
+
+function clampPathToHaloShell(points, shell) {
+  if (!Array.isArray(points)) return Object.freeze([]);
+  return Object.freeze(points.map((point) => clampPointToHaloShell(point, shell)));
+}
+
+function buildHaloForkTine({ config, endpoint, forkPoint, safeBo, seed, shell, time }) {
+  const target = clampPointToHaloShell(endpoint, shell);
+  return Object.freeze({
+    points: clampPathToHaloShell(buildHaloBoltPath({
+      config,
+      endpoint: target,
+      originXW: forkPoint.xW,
+      originYW: forkPoint.yW,
+      originZBo: forkPoint.zBo,
+      safeBo,
+      seed,
+      time,
+    }), shell),
+    target,
+  });
+}
+
+function buildHaloFork({ config, endpoint, forkPoint, originXW, originYW, originZBo, safeBo, seed, time }) {
   const tangent = vectorBetweenBo(forkPoint, endpoint, safeBo);
   const planarLength = Math.hypot(tangent.x, tangent.y);
   const perpendicular = planarLength > 0.000001
@@ -511,13 +547,23 @@ function buildHaloFork({ config, endpoint, forkPoint, originXW, originYW, safeBo
     point: forkPoint,
     points: Object.freeze([forkPoint]),
     tines: Object.freeze([
-      Object.freeze({
-        points: buildHaloBoltPath({ config, endpoint: tineAEnd, originXW: forkPoint.xW, originYW: forkPoint.yW, originZBo: forkPoint.zBo, safeBo, seed: seed + 170.17, time }),
-        target: tineAEnd,
+      buildHaloForkTine({
+        config,
+        endpoint: tineAEnd,
+        forkPoint,
+        safeBo,
+        seed: seed + 170.17,
+        shell: { centerXW: originXW, centerYW: originYW, centerZBo: originZBo, radiusBo: config.fieldShellRadiusBo, safeBo },
+        time,
       }),
-      Object.freeze({
-        points: buildHaloBoltPath({ config, endpoint: tineBEnd, originXW: forkPoint.xW, originYW: forkPoint.yW, originZBo: forkPoint.zBo, safeBo, seed: seed + 190.19, time }),
-        target: tineBEnd,
+      buildHaloForkTine({
+        config,
+        endpoint: tineBEnd,
+        forkPoint,
+        safeBo,
+        seed: seed + 190.19,
+        shell: { centerXW: originXW, centerYW: originYW, centerZBo: originZBo, radiusBo: config.fieldShellRadiusBo, safeBo },
+        time,
       }),
     ]),
   });
@@ -583,7 +629,17 @@ export function createElectricAoeHaloFieldPlanner() {
       const forkSeed = seed + (forkState.roll || 0) * 211.13;
       const forkPct = randomBetween(forkSeed, 149, config.forkEndPctMin, config.forkEndPctMax);
       const forkPoint = samplePointAtPathPct(fullPoints, forkPct, safeBo);
-      const fork = forkState.active ? buildHaloFork({ config, endpoint: end, forkPoint, originXW: start.xW, originYW: start.yW, safeBo, seed: forkSeed, time: safeTime }) : null;
+      const fork = forkState.active ? buildHaloFork({
+        config,
+        endpoint: end,
+        forkPoint,
+        originXW,
+        originYW,
+        originZBo: config.zBo,
+        safeBo,
+        seed: forkSeed,
+        time: safeTime,
+      }) : null;
       const points = fork ? buildHaloBoltPath({ config, endpoint: forkPoint, index, originXW: start.xW, originYW: start.yW, originZBo: start.zBo, safeBo, seed: seed + 130.13, time: safeTime }) : fullPoints;
       paths.push(Object.freeze({
         forks: Object.freeze(fork ? [fork] : []),
