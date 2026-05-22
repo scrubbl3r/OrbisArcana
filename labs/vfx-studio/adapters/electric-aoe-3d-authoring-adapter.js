@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-f";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-g";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -121,12 +121,13 @@ export function createElectricAoe3dAuthoringAdapter({
       dominantBoltSeekStrength: readNumber(els.electricAoe3dDominantBoltSeekStrength, defaults.dominantBoltSeekStrength, 0, 4),
       dominantBoltWanderStrength: readNumber(els.electricAoe3dDominantBoltWanderStrength, defaults.dominantBoltWanderStrength, 0, 4),
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
-      haloFieldReversalFrequencyMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldReversalFrequencyMinMs, defaults.haloFieldReversalFrequencyMinMs, 50, 20000)),
-      haloFieldReversalFrequencyMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldReversalFrequencyMaxMs, defaults.haloFieldReversalFrequencyMaxMs, 50, 20000)),
+      haloFieldLingerMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMinMs, defaults.haloFieldLingerMinMs ?? defaults.haloFieldReversalFrequencyMinMs, 50, 20000)),
+      haloFieldLingerMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMaxMs, defaults.haloFieldLingerMaxMs ?? defaults.haloFieldReversalFrequencyMaxMs, 50, 20000)),
       haloFieldPointCount: Math.round(readNumber(els.electricAoe3dHaloFieldPointCount, defaults.haloFieldPointCount, 0, 256)),
       haloFieldPointDiameterBo: 0.05,
       haloFieldSeed: Math.round(readNumber(els.electricAoe3dHaloFieldSeed, defaults.haloFieldSeed, 1, 999999999)),
       haloFieldShellRadiusBo: readNumber(els.electricAoe3dHaloFieldShellRadiusBo, defaults.haloFieldShellRadiusBo, 0.5, 32),
+      haloFieldReversalChance: readNumber(els.electricAoe3dHaloFieldReversalChance, defaults.haloFieldReversalChance, 0, 1),
       haloFieldWander: readNumber(els.electricAoe3dHaloFieldWander, defaults.haloFieldWander, 0, 2),
       haloFieldWanderSpeed: readNumber(els.electricAoe3dHaloFieldWanderSpeed, defaults.haloFieldWanderSpeed, 0, 12),
       haloFieldZMinBo: readNumber(els.electricAoe3dHaloFieldZMinBo, defaults.haloFieldZMinBo, -32, 32),
@@ -205,11 +206,14 @@ export function createElectricAoe3dAuthoringAdapter({
     if (els.electricAoe3dHaloFieldWander) {
       els.electricAoe3dHaloFieldWander.value = String(source.haloFieldWander ?? 0.35);
     }
-    if (els.electricAoe3dHaloFieldReversalFrequencyMinMs) {
-      els.electricAoe3dHaloFieldReversalFrequencyMinMs.value = String(source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs ?? 900);
+    if (els.electricAoe3dHaloFieldLingerMinMs) {
+      els.electricAoe3dHaloFieldLingerMinMs.value = String(source.haloFieldLingerMinMs ?? source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs ?? 900);
     }
-    if (els.electricAoe3dHaloFieldReversalFrequencyMaxMs) {
-      els.electricAoe3dHaloFieldReversalFrequencyMaxMs.value = String(source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs ?? 2600);
+    if (els.electricAoe3dHaloFieldLingerMaxMs) {
+      els.electricAoe3dHaloFieldLingerMaxMs.value = String(source.haloFieldLingerMaxMs ?? source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs ?? 2600);
+    }
+    if (els.electricAoe3dHaloFieldReversalChance) {
+      els.electricAoe3dHaloFieldReversalChance.value = String(source.haloFieldReversalChance ?? 0.35);
     }
     if (els.electricAoe3dHaloFieldZMinBo) {
       els.electricAoe3dHaloFieldZMinBo.value = String(source.haloFieldZMinBo ?? -1.5);

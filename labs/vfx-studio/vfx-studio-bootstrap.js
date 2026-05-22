@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260521-electric-field-i";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260521-electric-field-j";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -210,8 +210,9 @@ export function createStudioBootstrap({
       electricAoe3dHaloFieldPointCount: els.electricAoe3dHaloFieldPointCount,
       electricAoe3dHaloFieldWanderSpeed: els.electricAoe3dHaloFieldWanderSpeed,
       electricAoe3dHaloFieldWander: els.electricAoe3dHaloFieldWander,
-      electricAoe3dHaloFieldReversalFrequencyMinMs: els.electricAoe3dHaloFieldReversalFrequencyMinMs,
-      electricAoe3dHaloFieldReversalFrequencyMaxMs: els.electricAoe3dHaloFieldReversalFrequencyMaxMs,
+      electricAoe3dHaloFieldLingerMinMs: els.electricAoe3dHaloFieldLingerMinMs,
+      electricAoe3dHaloFieldLingerMaxMs: els.electricAoe3dHaloFieldLingerMaxMs,
+      electricAoe3dHaloFieldReversalChance: els.electricAoe3dHaloFieldReversalChance,
       electricAoe3dHaloFieldZMinBo: els.electricAoe3dHaloFieldZMinBo,
       electricAoe3dHaloFieldZMaxBo: els.electricAoe3dHaloFieldZMaxBo,
       electricAoe3dHaloFieldSeed: els.electricAoe3dHaloFieldSeed,

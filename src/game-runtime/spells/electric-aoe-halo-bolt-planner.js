@@ -62,14 +62,14 @@ function normalizeConfig(raw = {}) {
   const fieldShellRadiusBo = clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5);
   const zRange = normalizeZRange(source, fieldShellRadiusBo);
   return Object.freeze({
-    fieldReversalFrequencyMaxMs: Math.round(clampNumber(
-      source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs,
+    fieldLingerMaxMs: Math.round(clampNumber(
+      source.haloFieldLingerMaxMs ?? source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs,
       50,
       20000,
       2600
     )),
-    fieldReversalFrequencyMinMs: Math.round(clampNumber(
-      source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,
+    fieldLingerMinMs: Math.round(clampNumber(
+      source.haloFieldLingerMinMs ?? source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,
       50,
       20000,
       900
@@ -79,6 +79,7 @@ function normalizeConfig(raw = {}) {
     fieldPointDiameterBo: 0.05,
     fieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, 4242)),
     fieldShellRadiusBo,
+    fieldReversalChance: clampNumber(source.haloFieldReversalChance, 0, 1, 0.35),
     fieldWander: clampNumber(source.haloFieldWander, 0, 2, 0.35),
     fieldWanderSpeed: clampNumber(source.haloFieldWanderSpeed, 0, 12, 0.45),
     fieldZMaxBo: zRange.max,
@@ -92,17 +93,36 @@ function randomSignedSpeed(seed, salt, speedScale) {
   return sign * speedScale * randomBetween(seed, salt + 1, 0.45, 1.35);
 }
 
+function chooseTargetVelocity({ chance, current, salt, seed, speedScale }) {
+  const currentSign = current < 0 ? -1 : 1;
+  const shouldReverse = random01(seed, salt) < chance;
+  const sign = shouldReverse ? -currentSign : currentSign;
+  return sign * speedScale * randomBetween(seed, salt + 1, 0.45, 1.35);
+}
+
 function chooseDirectionTarget(state, config, seed, time) {
   state.rollCount += 1;
   const rollSeed = seed + state.rollCount * 97.31;
-  const holdMinS = Math.min(config.fieldReversalFrequencyMinMs, config.fieldReversalFrequencyMaxMs) / 1000;
-  const holdMaxS = Math.max(config.fieldReversalFrequencyMinMs, config.fieldReversalFrequencyMaxMs) / 1000;
+  const holdMinS = Math.min(config.fieldLingerMinMs, config.fieldLingerMaxMs) / 1000;
+  const holdMaxS = Math.max(config.fieldLingerMinMs, config.fieldLingerMaxMs) / 1000;
   state.transitionStart = time;
   state.transitionDuration = randomBetween(rollSeed, 31, 0.45, 1.25);
   state.fromAngularVelocity = state.angularVelocity;
   state.fromZVelocity = state.zVelocity;
-  state.targetAngularVelocity = randomSignedSpeed(rollSeed, 33, config.fieldWanderSpeed);
-  state.targetZVelocity = randomSignedSpeed(rollSeed, 35, config.fieldWanderSpeed * 0.72);
+  state.targetAngularVelocity = chooseTargetVelocity({
+    chance: config.fieldReversalChance,
+    current: state.angularVelocity,
+    salt: 33,
+    seed: rollSeed,
+    speedScale: config.fieldWanderSpeed,
+  });
+  state.targetZVelocity = chooseTargetVelocity({
+    chance: config.fieldReversalChance,
+    current: state.zVelocity,
+    salt: 35,
+    seed: rollSeed,
+    speedScale: config.fieldWanderSpeed * 0.72,
+  });
   state.holdUntil = time + state.transitionDuration + randomBetween(rollSeed, 37, holdMinS, holdMaxS);
 }
 
@@ -118,8 +138,8 @@ function ensurePointState(states, { config, index, time, total }) {
     holdUntil: time + randomBetween(
       seed,
       43,
-      Math.min(config.fieldReversalFrequencyMinMs, config.fieldReversalFrequencyMaxMs) / 1000,
-      Math.max(config.fieldReversalFrequencyMinMs, config.fieldReversalFrequencyMaxMs) / 1000
+      Math.min(config.fieldLingerMinMs, config.fieldLingerMaxMs) / 1000,
+      Math.max(config.fieldLingerMinMs, config.fieldLingerMaxMs) / 1000
     ),
     lastTime: time,
     rollCount: 0,

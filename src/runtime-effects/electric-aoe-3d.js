@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521l";
-import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521204501b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521204501";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521m";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521211001b";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521211001";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -95,21 +95,22 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     dominantBoltTargetRadiusBo: clampNumber(source.dominantBoltTargetRadiusBo, 0.25, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.targetRadiusBo),
     dominantBoltWanderStrength: clampNumber(source.dominantBoltWanderStrength, 0, 4, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.wanderStrength),
     dominantBoltZBo: clampNumber(source.dominantBoltZBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
-    haloFieldReversalFrequencyMinMs: Math.round(clampNumber(
-      source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,
+    haloFieldLingerMinMs: Math.round(clampNumber(
+      source.haloFieldLingerMinMs ?? source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,
       50,
       20000,
-      ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldReversalFrequencyMinMs
+      ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldLingerMinMs
     )),
-    haloFieldReversalFrequencyMaxMs: Math.round(clampNumber(
-      source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs,
+    haloFieldLingerMaxMs: Math.round(clampNumber(
+      source.haloFieldLingerMaxMs ?? source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs,
       50,
       20000,
-      ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldReversalFrequencyMaxMs
+      ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldLingerMaxMs
     )),
     haloFieldEnabled: source.haloFieldEnabled !== false,
     haloFieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldPointCount)),
     haloFieldPointDiameterBo: 0.05,
+    haloFieldReversalChance: clampNumber(source.haloFieldReversalChance, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldReversalChance),
     haloFieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldSeed)),
     haloFieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldShellRadiusBo),
     haloFieldWander: clampNumber(source.haloFieldWander, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWander),

@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521l";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521m";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -153,11 +153,12 @@ export function createElectricAoe3dPreview({
   function readHaloFieldConfig() {
     return Object.freeze({
       dominantBoltZBo: 0,
-      haloFieldReversalFrequencyMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldReversalFrequencyMinMs, 900, 50, 20000)),
-      haloFieldReversalFrequencyMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldReversalFrequencyMaxMs, 2600, 50, 20000)),
+      haloFieldLingerMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMinMs, 900, 50, 20000)),
+      haloFieldLingerMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMaxMs, 2600, 50, 20000)),
       haloFieldEnabled: readInputBoolean(els.electricAoe3dHaloFieldEnabled, true),
       haloFieldPointCount: Math.round(readInputNumber(els.electricAoe3dHaloFieldPointCount, 24, 0, 256)),
       haloFieldPointDiameterBo: 0.05,
+      haloFieldReversalChance: readInputNumber(els.electricAoe3dHaloFieldReversalChance, 0.35, 0, 1),
       haloFieldSeed: Math.round(readInputNumber(els.electricAoe3dHaloFieldSeed, 4242, 1, 999999999)),
       haloFieldShellRadiusBo: readInputNumber(els.electricAoe3dHaloFieldShellRadiusBo, 1.5, 0.5, 32),
       haloFieldWander: readInputNumber(els.electricAoe3dHaloFieldWander, 0.35, 0, 2),
@@ -430,8 +431,9 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dHaloFieldPointCount,
       els.electricAoe3dHaloFieldWanderSpeed,
       els.electricAoe3dHaloFieldWander,
-      els.electricAoe3dHaloFieldReversalFrequencyMinMs,
-      els.electricAoe3dHaloFieldReversalFrequencyMaxMs,
+      els.electricAoe3dHaloFieldLingerMinMs,
+      els.electricAoe3dHaloFieldLingerMaxMs,
+      els.electricAoe3dHaloFieldReversalChance,
       els.electricAoe3dHaloFieldZMinBo,
       els.electricAoe3dHaloFieldZMaxBo,
       els.electricAoe3dHaloFieldSeed,
