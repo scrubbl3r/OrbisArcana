@@ -12,7 +12,6 @@ export const ELECTRIC_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "dominantBoltZBo": 0,
   "haloFieldEnabled": true,
   "haloFieldPointCount": 24,
-  "haloFieldPointDiameterBo": 0.05,
   "haloFieldSeed": 4242,
   "haloFieldShellRadiusBo": 1.5,
   "haloFieldSliceHalfDepthBo": 0,

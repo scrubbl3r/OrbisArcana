@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521i";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521j";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521180001b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-c";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-d";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -97,7 +97,7 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     dominantBoltZBo: clampNumber(source.dominantBoltZBo, -64, 64, ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS.zBo),
     haloFieldEnabled: source.haloFieldEnabled !== false,
     haloFieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldPointCount)),
-    haloFieldPointDiameterBo: clampNumber(source.haloFieldPointDiameterBo, 0.01, 0.5, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldPointDiameterBo),
+    haloFieldPointDiameterBo: 0.05,
     haloFieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldSeed)),
     haloFieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldShellRadiusBo),
     haloFieldSliceHalfDepthBo: clampNumber(source.haloFieldSliceHalfDepthBo, 0, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldSliceHalfDepthBo),

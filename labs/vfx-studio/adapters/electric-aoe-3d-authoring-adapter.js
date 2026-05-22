@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-c";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-d";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -122,7 +122,7 @@ export function createElectricAoe3dAuthoringAdapter({
       dominantBoltWanderStrength: readNumber(els.electricAoe3dDominantBoltWanderStrength, defaults.dominantBoltWanderStrength, 0, 4),
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
       haloFieldPointCount: Math.round(readNumber(els.electricAoe3dHaloFieldPointCount, defaults.haloFieldPointCount, 0, 256)),
-      haloFieldPointDiameterBo: readNumber(els.electricAoe3dHaloFieldPointDiameterBo, defaults.haloFieldPointDiameterBo, 0.01, 0.5),
+      haloFieldPointDiameterBo: 0.05,
       haloFieldSeed: Math.round(readNumber(els.electricAoe3dHaloFieldSeed, defaults.haloFieldSeed, 1, 999999999)),
       haloFieldShellRadiusBo: readNumber(els.electricAoe3dHaloFieldShellRadiusBo, defaults.haloFieldShellRadiusBo, 0.5, 32),
       haloFieldSliceHalfDepthBo: readNumber(els.electricAoe3dHaloFieldSliceHalfDepthBo, defaults.haloFieldSliceHalfDepthBo, 0, 32),
@@ -195,9 +195,6 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dHaloFieldPointCount) {
       els.electricAoe3dHaloFieldPointCount.value = String(source.haloFieldPointCount ?? 24);
-    }
-    if (els.electricAoe3dHaloFieldPointDiameterBo) {
-      els.electricAoe3dHaloFieldPointDiameterBo.value = String(source.haloFieldPointDiameterBo ?? 0.05);
     }
     if (els.electricAoe3dHaloFieldWanderSpeed) {
       els.electricAoe3dHaloFieldWanderSpeed.value = String(source.haloFieldWanderSpeed ?? 0.45);

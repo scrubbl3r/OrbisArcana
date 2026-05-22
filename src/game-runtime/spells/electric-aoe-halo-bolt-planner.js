@@ -57,7 +57,7 @@ function normalizeConfig(raw = {}) {
   return Object.freeze({
     fieldEnabled: source.haloFieldEnabled !== false,
     fieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, 24)),
-    fieldPointDiameterBo: clampNumber(source.haloFieldPointDiameterBo, 0.01, 0.5, 0.05),
+    fieldPointDiameterBo: 0.05,
     fieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, 4242)),
     fieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5),
     fieldSliceHalfDepthBo: clampNumber(source.haloFieldSliceHalfDepthBo, 0, 32, 0),

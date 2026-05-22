@@ -2067,7 +2067,6 @@
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldEnabled">Field enabled</label><input id="electricAoe3dHaloFieldEnabled" class="paramFieldInput" type="checkbox" checked /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldShellRadiusBo">Shell radius BO</label><input id="electricAoe3dHaloFieldShellRadiusBo" class="paramFieldInput" type="number" min="0.5" max="32" step="0.05" value="1.5" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldPointCount">Point count</label><input id="electricAoe3dHaloFieldPointCount" class="paramFieldInput" type="number" min="0" max="256" step="1" value="24" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldPointDiameterBo">Point diameter BO</label><input id="electricAoe3dHaloFieldPointDiameterBo" class="paramFieldInput" type="number" min="0.01" max="0.5" step="0.01" value="0.05" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldWanderSpeed">Wander speed</label><input id="electricAoe3dHaloFieldWanderSpeed" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="0.45" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldWander">Wander</label><input id="electricAoe3dHaloFieldWander" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.35" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldSliceHalfDepthBo">Slice half-depth BO</label><input id="electricAoe3dHaloFieldSliceHalfDepthBo" class="paramFieldInput" type="number" min="0" max="32" step="0.05" value="0" /></div>
@@ -2816,7 +2815,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-f"),
+      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-g"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2863,8 +2862,8 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260521-halo-field-c";
-    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-c";
+    } from "../../src/vfx/presets/index.js?v=20260521-halo-field-d";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-d";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521180001b";
@@ -3392,7 +3391,6 @@
       electricAoe3dHaloFieldEnabled: $("electricAoe3dHaloFieldEnabled"),
       electricAoe3dHaloFieldShellRadiusBo: $("electricAoe3dHaloFieldShellRadiusBo"),
       electricAoe3dHaloFieldPointCount: $("electricAoe3dHaloFieldPointCount"),
-      electricAoe3dHaloFieldPointDiameterBo: $("electricAoe3dHaloFieldPointDiameterBo"),
       electricAoe3dHaloFieldWanderSpeed: $("electricAoe3dHaloFieldWanderSpeed"),
       electricAoe3dHaloFieldWander: $("electricAoe3dHaloFieldWander"),
       electricAoe3dHaloFieldSliceHalfDepthBo: $("electricAoe3dHaloFieldSliceHalfDepthBo"),

@@ -13,7 +13,7 @@ import {
   normalizeLevelDefinition,
 } from "../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../game-runtime/level/resolve-level-world-size.js";
-import { createGameStageDepth3dLayer } from "./game-stage/game-stage-depth3d.js?v=20260521-electric-field-f";
+import { createGameStageDepth3dLayer } from "./game-stage/game-stage-depth3d.js?v=20260521-electric-field-g";
 
 const AUTHORED_THREE_STAGE_DEFAULT_PREVIEW_ZOOM = 0.25;
 
