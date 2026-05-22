@@ -4,7 +4,7 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521p";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521q";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521211534b";
 import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521211534";
 
@@ -107,6 +107,7 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
       20000,
       ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldLingerMaxMs
     )),
+    haloFieldLingerDrift: clampNumber(source.haloFieldLingerDrift, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldLingerDrift),
     haloFieldEnabled: source.haloFieldEnabled !== false,
     haloFieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldPointCount)),
     haloFieldPointDiameterBo: 0.05,

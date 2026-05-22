@@ -233,7 +233,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "dominantBoltHeadingMemory", "dominantBoltMaxStepBo", "dominantBoltMinStepBo", "dominantBoltPathJitterBo",
         "dominantBoltPointSpacingBo", "dominantBoltSeekStrength", "dominantBoltTargetRadiusBo",
         "dominantBoltWanderStrength", "dominantBoltZBo",
-        "haloFieldLingerMinMs", "haloFieldLingerMaxMs", "haloFieldEnabled", "haloFieldPointCount",
+        "haloFieldLingerMinMs", "haloFieldLingerMaxMs", "haloFieldLingerDrift", "haloFieldEnabled", "haloFieldPointCount",
         "haloFieldReversalChance", "haloFieldSeed",
         "haloFieldShellRadiusBo", "haloFieldWander", "haloFieldWanderDurationMinMs", "haloFieldWanderDurationMaxMs",
         "haloFieldWanderSpeedMin", "haloFieldWanderSpeedMax", "haloFieldZMinBo", "haloFieldZMaxBo",

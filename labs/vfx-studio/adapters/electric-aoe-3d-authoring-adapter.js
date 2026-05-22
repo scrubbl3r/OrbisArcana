@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-i";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-j";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -123,6 +123,7 @@ export function createElectricAoe3dAuthoringAdapter({
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
       haloFieldLingerMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMinMs, defaults.haloFieldLingerMinMs ?? defaults.haloFieldReversalFrequencyMinMs, 50, 20000)),
       haloFieldLingerMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMaxMs, defaults.haloFieldLingerMaxMs ?? defaults.haloFieldReversalFrequencyMaxMs, 50, 20000)),
+      haloFieldLingerDrift: readNumber(els.electricAoe3dHaloFieldLingerDrift, defaults.haloFieldLingerDrift, 0, 1),
       haloFieldPointCount: Math.round(readNumber(els.electricAoe3dHaloFieldPointCount, defaults.haloFieldPointCount, 0, 256)),
       haloFieldPointDiameterBo: 0.05,
       haloFieldSeed: Math.round(readNumber(els.electricAoe3dHaloFieldSeed, defaults.haloFieldSeed, 1, 999999999)),
@@ -223,6 +224,9 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dHaloFieldLingerMaxMs) {
       els.electricAoe3dHaloFieldLingerMaxMs.value = String(source.haloFieldLingerMaxMs ?? source.haloFieldReversalFrequencyMaxMs ?? source.haloFieldDirectionHoldMaxMs ?? 2600);
+    }
+    if (els.electricAoe3dHaloFieldLingerDrift) {
+      els.electricAoe3dHaloFieldLingerDrift.value = String(source.haloFieldLingerDrift ?? 0);
     }
     if (els.electricAoe3dHaloFieldReversalChance) {
       els.electricAoe3dHaloFieldReversalChance.value = String(source.haloFieldReversalChance ?? 0.35);

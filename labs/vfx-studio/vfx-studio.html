@@ -2083,6 +2083,7 @@
               <label for="electricAoe3dHaloFieldLingerMinMs">min</label><input id="electricAoe3dHaloFieldLingerMinMs" class="paramFieldInput" type="number" min="50" max="20000" step="50" value="900" />
               <label for="electricAoe3dHaloFieldLingerMaxMs">max</label><input id="electricAoe3dHaloFieldLingerMaxMs" class="paramFieldInput" type="number" min="50" max="20000" step="50" value="2600" />
             </div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldLingerDrift">Linger drift</label><input id="electricAoe3dHaloFieldLingerDrift" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldReversalChance">Reversal chance</label><input id="electricAoe3dHaloFieldReversalChance" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.35" /></div>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">Z RANGE BO</span>
@@ -2834,7 +2835,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-m"),
+      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-n"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -3417,6 +3418,7 @@
       electricAoe3dHaloFieldWanderDurationMaxMs: $("electricAoe3dHaloFieldWanderDurationMaxMs"),
       electricAoe3dHaloFieldLingerMinMs: $("electricAoe3dHaloFieldLingerMinMs"),
       electricAoe3dHaloFieldLingerMaxMs: $("electricAoe3dHaloFieldLingerMaxMs"),
+      electricAoe3dHaloFieldLingerDrift: $("electricAoe3dHaloFieldLingerDrift"),
       electricAoe3dHaloFieldReversalChance: $("electricAoe3dHaloFieldReversalChance"),
       electricAoe3dHaloFieldZMinBo: $("electricAoe3dHaloFieldZMinBo"),
       electricAoe3dHaloFieldZMaxBo: $("electricAoe3dHaloFieldZMaxBo"),
