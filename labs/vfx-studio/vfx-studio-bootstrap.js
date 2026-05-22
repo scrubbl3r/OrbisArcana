@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-fork-shell-clamp-a";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-branches-a";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -242,6 +242,19 @@ export function createStudioBootstrap({
       electricAoe3dHaloBoltForkZTineMinBo: els.electricAoe3dHaloBoltForkZTineMinBo,
       electricAoe3dHaloBoltForkZTineMaxBo: els.electricAoe3dHaloBoltForkZTineMaxBo,
       electricAoe3dHaloBoltForkTargetOffsetBo: els.electricAoe3dHaloBoltForkTargetOffsetBo,
+      electricAoe3dHaloBoltBranchEnabled: els.electricAoe3dHaloBoltBranchEnabled,
+      electricAoe3dHaloBoltBranchChance: els.electricAoe3dHaloBoltBranchChance,
+      electricAoe3dHaloBoltBranchTotalMin: els.electricAoe3dHaloBoltBranchTotalMin,
+      electricAoe3dHaloBoltBranchTotalMax: els.electricAoe3dHaloBoltBranchTotalMax,
+      electricAoe3dHaloBoltBranchRangeStartPct: els.electricAoe3dHaloBoltBranchRangeStartPct,
+      electricAoe3dHaloBoltBranchRangeEndPct: els.electricAoe3dHaloBoltBranchRangeEndPct,
+      electricAoe3dHaloBoltBranchLengthMinBo: els.electricAoe3dHaloBoltBranchLengthMinBo,
+      electricAoe3dHaloBoltBranchLengthMaxBo: els.electricAoe3dHaloBoltBranchLengthMaxBo,
+      electricAoe3dHaloBoltBranchAngleMinDeg: els.electricAoe3dHaloBoltBranchAngleMinDeg,
+      electricAoe3dHaloBoltBranchAngleMaxDeg: els.electricAoe3dHaloBoltBranchAngleMaxDeg,
+      electricAoe3dHaloBoltBranchTtlMinMs: els.electricAoe3dHaloBoltBranchTtlMinMs,
+      electricAoe3dHaloBoltBranchTtlMaxMs: els.electricAoe3dHaloBoltBranchTtlMaxMs,
+      electricAoe3dHaloBoltBranchShapeScale: els.electricAoe3dHaloBoltBranchShapeScale,
     }),
     bankOrb3d: Object.freeze({
       ...els,

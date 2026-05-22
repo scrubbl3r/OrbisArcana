@@ -2144,6 +2144,34 @@
               <label for="electricAoe3dHaloBoltForkZTineMaxBo">max</label><input id="electricAoe3dHaloBoltForkZTineMaxBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.08" />
             </div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloBoltForkTargetOffsetBo">Fork target offset BO</label><input id="electricAoe3dHaloBoltForkTargetOffsetBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.18" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltBranchEnabled">Branches enabled</label><input id="electricAoe3dHaloBoltBranchEnabled" class="paramFieldInput" type="checkbox" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltBranchChance">Branch chance</label><input id="electricAoe3dHaloBoltBranchChance" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0" /></div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BRANCH TOTAL</span>
+              <label for="electricAoe3dHaloBoltBranchTotalMin">min</label><input id="electricAoe3dHaloBoltBranchTotalMin" class="paramFieldInput" type="number" min="0" max="16" step="1" value="0" />
+              <label for="electricAoe3dHaloBoltBranchTotalMax">max</label><input id="electricAoe3dHaloBoltBranchTotalMax" class="paramFieldInput" type="number" min="0" max="16" step="1" value="0" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BRANCH RANGE %</span>
+              <label for="electricAoe3dHaloBoltBranchRangeStartPct">min</label><input id="electricAoe3dHaloBoltBranchRangeStartPct" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.15" />
+              <label for="electricAoe3dHaloBoltBranchRangeEndPct">max</label><input id="electricAoe3dHaloBoltBranchRangeEndPct" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.85" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BRANCH LENGTH BO</span>
+              <label for="electricAoe3dHaloBoltBranchLengthMinBo">min</label><input id="electricAoe3dHaloBoltBranchLengthMinBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.08" />
+              <label for="electricAoe3dHaloBoltBranchLengthMaxBo">max</label><input id="electricAoe3dHaloBoltBranchLengthMaxBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.28" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BRANCH ANGLE DEG</span>
+              <label for="electricAoe3dHaloBoltBranchAngleMinDeg">min</label><input id="electricAoe3dHaloBoltBranchAngleMinDeg" class="paramFieldInput" type="number" min="0" max="180" step="1" value="72" />
+              <label for="electricAoe3dHaloBoltBranchAngleMaxDeg">max</label><input id="electricAoe3dHaloBoltBranchAngleMaxDeg" class="paramFieldInput" type="number" min="0" max="180" step="1" value="112" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BRANCH TTL MS</span>
+              <label for="electricAoe3dHaloBoltBranchTtlMinMs">min</label><input id="electricAoe3dHaloBoltBranchTtlMinMs" class="paramFieldInput" type="number" min="16" max="20000" step="1" value="120" />
+              <label for="electricAoe3dHaloBoltBranchTtlMaxMs">max</label><input id="electricAoe3dHaloBoltBranchTtlMaxMs" class="paramFieldInput" type="number" min="16" max="20000" step="1" value="260" />
+            </div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltBranchShapeScale">Branch shape scale</label><input id="electricAoe3dHaloBoltBranchShapeScale" class="paramFieldInput" type="number" min="0.05" max="1" step="0.01" value="0.45" /></div>
           </div>
         </div>
       </div>
@@ -2888,7 +2916,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260522-fork-shell-clamp-a"),
+      import("./vfx-studio-bootstrap.js?v=20260522-branches-a"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2935,11 +2963,11 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260522155558i";
-    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522155558";
+    } from "../../src/vfx/presets/index.js?v=20260522branchesAi";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522branchesA";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
-    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522155558b";
+    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522branchesAb";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
@@ -3498,6 +3526,19 @@
       electricAoe3dHaloBoltForkZTineMinBo: $("electricAoe3dHaloBoltForkZTineMinBo"),
       electricAoe3dHaloBoltForkZTineMaxBo: $("electricAoe3dHaloBoltForkZTineMaxBo"),
       electricAoe3dHaloBoltForkTargetOffsetBo: $("electricAoe3dHaloBoltForkTargetOffsetBo"),
+      electricAoe3dHaloBoltBranchEnabled: $("electricAoe3dHaloBoltBranchEnabled"),
+      electricAoe3dHaloBoltBranchChance: $("electricAoe3dHaloBoltBranchChance"),
+      electricAoe3dHaloBoltBranchTotalMin: $("electricAoe3dHaloBoltBranchTotalMin"),
+      electricAoe3dHaloBoltBranchTotalMax: $("electricAoe3dHaloBoltBranchTotalMax"),
+      electricAoe3dHaloBoltBranchRangeStartPct: $("electricAoe3dHaloBoltBranchRangeStartPct"),
+      electricAoe3dHaloBoltBranchRangeEndPct: $("electricAoe3dHaloBoltBranchRangeEndPct"),
+      electricAoe3dHaloBoltBranchLengthMinBo: $("electricAoe3dHaloBoltBranchLengthMinBo"),
+      electricAoe3dHaloBoltBranchLengthMaxBo: $("electricAoe3dHaloBoltBranchLengthMaxBo"),
+      electricAoe3dHaloBoltBranchAngleMinDeg: $("electricAoe3dHaloBoltBranchAngleMinDeg"),
+      electricAoe3dHaloBoltBranchAngleMaxDeg: $("electricAoe3dHaloBoltBranchAngleMaxDeg"),
+      electricAoe3dHaloBoltBranchTtlMinMs: $("electricAoe3dHaloBoltBranchTtlMinMs"),
+      electricAoe3dHaloBoltBranchTtlMaxMs: $("electricAoe3dHaloBoltBranchTtlMaxMs"),
+      electricAoe3dHaloBoltBranchShapeScale: $("electricAoe3dHaloBoltBranchShapeScale"),
       flameAoe3dAoeAuraDiameterBo: $("flameAoe3dAoeAuraDiameterBo"),
       flameAoe3dApplyAoeAuraDiameterBtn: $("flameAoe3dApplyAoeAuraDiameterBtn"),
       flameAoe3dAoeAuraSoftness: $("flameAoe3dAoeAuraSoftness"),

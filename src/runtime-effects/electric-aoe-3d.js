@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522i";
-import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522155558b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522155558";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522j";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522branchesAb";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522branchesA";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -125,6 +125,19 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     haloBoltForkZTineMinBo: clampNumber(source.haloBoltForkZTineMinBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkZTineMinBo),
     haloBoltForkZTineMaxBo: clampNumber(source.haloBoltForkZTineMaxBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkZTineMaxBo),
     haloBoltForkTargetOffsetBo: clampNumber(source.haloBoltForkTargetOffsetBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkTargetOffsetBo),
+    haloBoltBranchEnabled: source.haloBoltBranchEnabled === true,
+    haloBoltBranchChance: clampNumber(source.haloBoltBranchChance, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchChance),
+    haloBoltBranchTotalMin: Math.round(clampNumber(source.haloBoltBranchTotalMin, 0, 16, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchTotalMin)),
+    haloBoltBranchTotalMax: Math.round(clampNumber(source.haloBoltBranchTotalMax, 0, 16, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchTotalMax)),
+    haloBoltBranchRangeStartPct: clampNumber(source.haloBoltBranchRangeStartPct, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchRangeStartPct),
+    haloBoltBranchRangeEndPct: clampNumber(source.haloBoltBranchRangeEndPct, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchRangeEndPct),
+    haloBoltBranchLengthMinBo: clampNumber(source.haloBoltBranchLengthMinBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchLengthMinBo),
+    haloBoltBranchLengthMaxBo: clampNumber(source.haloBoltBranchLengthMaxBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchLengthMaxBo),
+    haloBoltBranchAngleMinDeg: clampNumber(source.haloBoltBranchAngleMinDeg, 0, 180, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchAngleMinDeg),
+    haloBoltBranchAngleMaxDeg: clampNumber(source.haloBoltBranchAngleMaxDeg, 0, 180, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchAngleMaxDeg),
+    haloBoltBranchTtlMinMs: Math.round(clampNumber(source.haloBoltBranchTtlMinMs, 16, 20000, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchTtlMinMs)),
+    haloBoltBranchTtlMaxMs: Math.round(clampNumber(source.haloBoltBranchTtlMaxMs, 16, 20000, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchTtlMaxMs)),
+    haloBoltBranchShapeScale: clampNumber(source.haloBoltBranchShapeScale, 0.05, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchShapeScale),
     haloFieldLingerMinMs: Math.round(clampNumber(
       source.haloFieldLingerMinMs ?? source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,
       50,
@@ -384,12 +397,23 @@ export function createElectricAoe3dRuntime(options = {}) {
     centerMarker.renderOrder = 236;
     centerMarker.position.copy(centerPoint);
     haloLayer.add(centerMarker);
+    const addBranchLines = (branches, path, namePrefix) => {
+      (Array.isArray(branches) ? branches : []).forEach((branch, branchIndex) => {
+        const branchPoints = (Array.isArray(branch.points) ? branch.points : []).map((point) => toRuntimeVector(point, bo, path, { usePointZ: true }));
+        if (branchPoints.length <= 1) return;
+        const branchLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(branchPoints), haloLineMaterial);
+        branchLine.name = `${namePrefix}_branch_${branchIndex}`;
+        branchLine.renderOrder = 235;
+        haloLayer.add(branchLine);
+      });
+    };
     paths.forEach((path, pathIndex) => {
       const linePoints = path.points.map((point) => toRuntimeVector(point, bo, path, { usePointZ: true }));
       const haloLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(linePoints), haloLineMaterial);
       haloLine.name = `electric_aoe3d:stage_halo_control_line_${pathIndex}`;
       haloLine.renderOrder = 234;
       haloLayer.add(haloLine);
+      addBranchLines(path.branches, path, `electric_aoe3d:stage_halo_${pathIndex}`);
       (Array.isArray(path.forks) ? path.forks : []).forEach((fork, forkIndex) => {
         (Array.isArray(fork.tines) ? fork.tines : []).forEach((tine, tineIndex) => {
           const tinePoints = (Array.isArray(tine.points) ? tine.points : []).map((point) => toRuntimeVector(point, bo, path, { usePointZ: true }));
@@ -404,6 +428,7 @@ export function createElectricAoe3dRuntime(options = {}) {
           marker.renderOrder = 236;
           marker.position.copy(tip);
           haloLayer.add(marker);
+          addBranchLines(tine.branches, path, `electric_aoe3d:stage_halo_fork_${pathIndex}_${forkIndex}_${tineIndex}`);
         });
       });
       linePoints.slice(-1).forEach((point, pointIndex) => {

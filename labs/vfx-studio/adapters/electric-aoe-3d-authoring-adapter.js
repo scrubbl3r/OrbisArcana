@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-fork-shell-clamp-a";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-branches-a";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -110,6 +110,8 @@ export function createElectricAoe3dAuthoringAdapter({
       forkTtlMinMs,
       20000
     ));
+    const branchTotalMin = Math.round(readNumber(els.electricAoe3dHaloBoltBranchTotalMin, defaults.haloBoltBranchTotalMin, 0, 16));
+    const branchTtlMinMs = Math.round(readNumber(els.electricAoe3dHaloBoltBranchTtlMinMs, defaults.haloBoltBranchTtlMinMs, 16, 20000));
     return Object.freeze({
       ...defaults,
       durationMs: spellDurationMs,
@@ -150,6 +152,19 @@ export function createElectricAoe3dAuthoringAdapter({
       haloBoltForkZTineMinBo: readNumber(els.electricAoe3dHaloBoltForkZTineMinBo, defaults.haloBoltForkZTineMinBo, 0, 8),
       haloBoltForkZTineMaxBo: readNumber(els.electricAoe3dHaloBoltForkZTineMaxBo, defaults.haloBoltForkZTineMaxBo, 0, 8),
       haloBoltForkTargetOffsetBo: readNumber(els.electricAoe3dHaloBoltForkTargetOffsetBo, defaults.haloBoltForkTargetOffsetBo, 0, 8),
+      haloBoltBranchEnabled: readBoolean(els.electricAoe3dHaloBoltBranchEnabled, defaults.haloBoltBranchEnabled),
+      haloBoltBranchChance: readNumber(els.electricAoe3dHaloBoltBranchChance, defaults.haloBoltBranchChance, 0, 1),
+      haloBoltBranchTotalMin: branchTotalMin,
+      haloBoltBranchTotalMax: Math.round(readNumber(els.electricAoe3dHaloBoltBranchTotalMax, defaults.haloBoltBranchTotalMax, branchTotalMin, 16)),
+      haloBoltBranchRangeStartPct: readNumber(els.electricAoe3dHaloBoltBranchRangeStartPct, defaults.haloBoltBranchRangeStartPct, 0, 1),
+      haloBoltBranchRangeEndPct: readNumber(els.electricAoe3dHaloBoltBranchRangeEndPct, defaults.haloBoltBranchRangeEndPct, 0, 1),
+      haloBoltBranchLengthMinBo: readNumber(els.electricAoe3dHaloBoltBranchLengthMinBo, defaults.haloBoltBranchLengthMinBo, 0, 8),
+      haloBoltBranchLengthMaxBo: readNumber(els.electricAoe3dHaloBoltBranchLengthMaxBo, defaults.haloBoltBranchLengthMaxBo, 0, 8),
+      haloBoltBranchAngleMinDeg: readNumber(els.electricAoe3dHaloBoltBranchAngleMinDeg, defaults.haloBoltBranchAngleMinDeg, 0, 180),
+      haloBoltBranchAngleMaxDeg: readNumber(els.electricAoe3dHaloBoltBranchAngleMaxDeg, defaults.haloBoltBranchAngleMaxDeg, 0, 180),
+      haloBoltBranchTtlMinMs: branchTtlMinMs,
+      haloBoltBranchTtlMaxMs: Math.round(readNumber(els.electricAoe3dHaloBoltBranchTtlMaxMs, defaults.haloBoltBranchTtlMaxMs, branchTtlMinMs, 20000)),
+      haloBoltBranchShapeScale: readNumber(els.electricAoe3dHaloBoltBranchShapeScale, defaults.haloBoltBranchShapeScale, 0.05, 1),
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
       haloFieldLingerMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMinMs, defaults.haloFieldLingerMinMs ?? defaults.haloFieldReversalFrequencyMinMs, 50, 20000)),
       haloFieldLingerMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMaxMs, defaults.haloFieldLingerMaxMs ?? defaults.haloFieldReversalFrequencyMaxMs, 50, 20000)),
@@ -339,6 +354,45 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dHaloBoltForkTargetOffsetBo) {
       els.electricAoe3dHaloBoltForkTargetOffsetBo.value = String(source.haloBoltForkTargetOffsetBo ?? 0.18);
+    }
+    if (els.electricAoe3dHaloBoltBranchEnabled) {
+      els.electricAoe3dHaloBoltBranchEnabled.checked = source.haloBoltBranchEnabled === true;
+    }
+    if (els.electricAoe3dHaloBoltBranchChance) {
+      els.electricAoe3dHaloBoltBranchChance.value = String(source.haloBoltBranchChance ?? 0);
+    }
+    if (els.electricAoe3dHaloBoltBranchTotalMin) {
+      els.electricAoe3dHaloBoltBranchTotalMin.value = String(source.haloBoltBranchTotalMin ?? 0);
+    }
+    if (els.electricAoe3dHaloBoltBranchTotalMax) {
+      els.electricAoe3dHaloBoltBranchTotalMax.value = String(source.haloBoltBranchTotalMax ?? 0);
+    }
+    if (els.electricAoe3dHaloBoltBranchRangeStartPct) {
+      els.electricAoe3dHaloBoltBranchRangeStartPct.value = String(source.haloBoltBranchRangeStartPct ?? 0.15);
+    }
+    if (els.electricAoe3dHaloBoltBranchRangeEndPct) {
+      els.electricAoe3dHaloBoltBranchRangeEndPct.value = String(source.haloBoltBranchRangeEndPct ?? 0.85);
+    }
+    if (els.electricAoe3dHaloBoltBranchLengthMinBo) {
+      els.electricAoe3dHaloBoltBranchLengthMinBo.value = String(source.haloBoltBranchLengthMinBo ?? 0.08);
+    }
+    if (els.electricAoe3dHaloBoltBranchLengthMaxBo) {
+      els.electricAoe3dHaloBoltBranchLengthMaxBo.value = String(source.haloBoltBranchLengthMaxBo ?? 0.28);
+    }
+    if (els.electricAoe3dHaloBoltBranchAngleMinDeg) {
+      els.electricAoe3dHaloBoltBranchAngleMinDeg.value = String(source.haloBoltBranchAngleMinDeg ?? 72);
+    }
+    if (els.electricAoe3dHaloBoltBranchAngleMaxDeg) {
+      els.electricAoe3dHaloBoltBranchAngleMaxDeg.value = String(source.haloBoltBranchAngleMaxDeg ?? 112);
+    }
+    if (els.electricAoe3dHaloBoltBranchTtlMinMs) {
+      els.electricAoe3dHaloBoltBranchTtlMinMs.value = String(source.haloBoltBranchTtlMinMs ?? 120);
+    }
+    if (els.electricAoe3dHaloBoltBranchTtlMaxMs) {
+      els.electricAoe3dHaloBoltBranchTtlMaxMs.value = String(source.haloBoltBranchTtlMaxMs ?? 260);
+    }
+    if (els.electricAoe3dHaloBoltBranchShapeScale) {
+      els.electricAoe3dHaloBoltBranchShapeScale.value = String(source.haloBoltBranchShapeScale ?? 0.45);
     }
     if (typeof applyPreview === "function") applyPreview();
     return true;
