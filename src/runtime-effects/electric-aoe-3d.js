@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521m";
-import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521211001b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521211001";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521n";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521214501b";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521214501";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -114,6 +114,18 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     haloFieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldSeed)),
     haloFieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldShellRadiusBo),
     haloFieldWander: clampNumber(source.haloFieldWander, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWander),
+    haloFieldWanderDurationMinMs: Math.round(clampNumber(
+      source.haloFieldWanderDurationMinMs,
+      50,
+      20000,
+      ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWanderDurationMinMs
+    )),
+    haloFieldWanderDurationMaxMs: Math.round(clampNumber(
+      source.haloFieldWanderDurationMaxMs,
+      50,
+      20000,
+      ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWanderDurationMaxMs
+    )),
     haloFieldWanderSpeed: clampNumber(source.haloFieldWanderSpeed, 0, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWanderSpeed),
     haloFieldZMinBo: clampNumber(source.haloFieldZMinBo, -32, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldZMinBo),
     haloFieldZMaxBo: clampNumber(source.haloFieldZMaxBo, -32, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldZMaxBo),

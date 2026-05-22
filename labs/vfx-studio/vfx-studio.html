@@ -2070,6 +2070,11 @@
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldWanderSpeed">Wander speed</label><input id="electricAoe3dHaloFieldWanderSpeed" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="0.45" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldWander">Wander</label><input id="electricAoe3dHaloFieldWander" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.35" /></div>
             <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">WANDER DURATION MS</span>
+              <label for="electricAoe3dHaloFieldWanderDurationMinMs">min</label><input id="electricAoe3dHaloFieldWanderDurationMinMs" class="paramFieldInput" type="number" min="50" max="20000" step="50" value="1200" />
+              <label for="electricAoe3dHaloFieldWanderDurationMaxMs">max</label><input id="electricAoe3dHaloFieldWanderDurationMaxMs" class="paramFieldInput" type="number" min="50" max="20000" step="50" value="3200" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">LINGER MS</span>
               <label for="electricAoe3dHaloFieldLingerMinMs">min</label><input id="electricAoe3dHaloFieldLingerMinMs" class="paramFieldInput" type="number" min="50" max="20000" step="50" value="900" />
               <label for="electricAoe3dHaloFieldLingerMaxMs">max</label><input id="electricAoe3dHaloFieldLingerMaxMs" class="paramFieldInput" type="number" min="50" max="20000" step="50" value="2600" />
@@ -2825,7 +2830,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-j"),
+      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-k"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2872,11 +2877,11 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260521211001i";
-    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521211001";
+    } from "../../src/vfx/presets/index.js?v=20260521214501i";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521214501";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
-    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521211001b";
+    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521214501b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
@@ -3403,6 +3408,8 @@
       electricAoe3dHaloFieldPointCount: $("electricAoe3dHaloFieldPointCount"),
       electricAoe3dHaloFieldWanderSpeed: $("electricAoe3dHaloFieldWanderSpeed"),
       electricAoe3dHaloFieldWander: $("electricAoe3dHaloFieldWander"),
+      electricAoe3dHaloFieldWanderDurationMinMs: $("electricAoe3dHaloFieldWanderDurationMinMs"),
+      electricAoe3dHaloFieldWanderDurationMaxMs: $("electricAoe3dHaloFieldWanderDurationMaxMs"),
       electricAoe3dHaloFieldLingerMinMs: $("electricAoe3dHaloFieldLingerMinMs"),
       electricAoe3dHaloFieldLingerMaxMs: $("electricAoe3dHaloFieldLingerMaxMs"),
       electricAoe3dHaloFieldReversalChance: $("electricAoe3dHaloFieldReversalChance"),

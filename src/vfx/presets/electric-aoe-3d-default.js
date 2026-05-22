@@ -18,6 +18,8 @@ export const ELECTRIC_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "haloFieldSeed": 4242,
   "haloFieldShellRadiusBo": 1.5,
   "haloFieldWander": 0.35,
+  "haloFieldWanderDurationMaxMs": 3200,
+  "haloFieldWanderDurationMinMs": 1200,
   "haloFieldWanderSpeed": 0.45,
   "haloFieldZMinBo": -1.5,
   "haloFieldZMaxBo": 1.5,

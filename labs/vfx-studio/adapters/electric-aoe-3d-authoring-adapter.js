@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-g";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-h";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -129,6 +129,8 @@ export function createElectricAoe3dAuthoringAdapter({
       haloFieldShellRadiusBo: readNumber(els.electricAoe3dHaloFieldShellRadiusBo, defaults.haloFieldShellRadiusBo, 0.5, 32),
       haloFieldReversalChance: readNumber(els.electricAoe3dHaloFieldReversalChance, defaults.haloFieldReversalChance, 0, 1),
       haloFieldWander: readNumber(els.electricAoe3dHaloFieldWander, defaults.haloFieldWander, 0, 2),
+      haloFieldWanderDurationMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldWanderDurationMinMs, defaults.haloFieldWanderDurationMinMs, 50, 20000)),
+      haloFieldWanderDurationMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldWanderDurationMaxMs, defaults.haloFieldWanderDurationMaxMs, 50, 20000)),
       haloFieldWanderSpeed: readNumber(els.electricAoe3dHaloFieldWanderSpeed, defaults.haloFieldWanderSpeed, 0, 12),
       haloFieldZMinBo: readNumber(els.electricAoe3dHaloFieldZMinBo, defaults.haloFieldZMinBo, -32, 32),
       haloFieldZMaxBo: readNumber(els.electricAoe3dHaloFieldZMaxBo, defaults.haloFieldZMaxBo, -32, 32),
@@ -205,6 +207,12 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dHaloFieldWander) {
       els.electricAoe3dHaloFieldWander.value = String(source.haloFieldWander ?? 0.35);
+    }
+    if (els.electricAoe3dHaloFieldWanderDurationMinMs) {
+      els.electricAoe3dHaloFieldWanderDurationMinMs.value = String(source.haloFieldWanderDurationMinMs ?? 1200);
+    }
+    if (els.electricAoe3dHaloFieldWanderDurationMaxMs) {
+      els.electricAoe3dHaloFieldWanderDurationMaxMs.value = String(source.haloFieldWanderDurationMaxMs ?? 3200);
     }
     if (els.electricAoe3dHaloFieldLingerMinMs) {
       els.electricAoe3dHaloFieldLingerMinMs.value = String(source.haloFieldLingerMinMs ?? source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs ?? 900);
