@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522g";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522h";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -182,8 +182,10 @@ export function createElectricAoe3dPreview({
       haloFieldReversalChance: readInputNumber(els.electricAoe3dHaloFieldReversalChance, 0.35, 0, 1),
       haloFieldSeed: Math.round(readInputNumber(els.electricAoe3dHaloFieldSeed, 4242, 1, 999999999)),
       haloFieldShellRadiusBo: readInputNumber(els.electricAoe3dHaloFieldShellRadiusBo, 1.5, 0.5, 32),
-      haloFieldBoltLengthMinBo: readInputNumber(els.electricAoe3dHaloFieldBoltLengthMinBo, 1.5, 0.05, 32),
-      haloFieldBoltLengthMaxBo: readInputNumber(els.electricAoe3dHaloFieldBoltLengthMaxBo, 1.5, 0.05, 32),
+      haloFieldBoltStartMinBo: readInputNumber(els.electricAoe3dHaloFieldBoltStartMinBo, 0, 0, 32),
+      haloFieldBoltStartMaxBo: readInputNumber(els.electricAoe3dHaloFieldBoltStartMaxBo, 0, 0, 32),
+      haloFieldBoltEndMinBo: readInputNumber(els.electricAoe3dHaloFieldBoltEndMinBo, 1.5, 0.05, 32),
+      haloFieldBoltEndMaxBo: readInputNumber(els.electricAoe3dHaloFieldBoltEndMaxBo, 1.5, 0.05, 32),
       haloFieldWander: readInputNumber(els.electricAoe3dHaloFieldWander, 0.35, 0, 2),
       haloFieldWanderDurationMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldWanderDurationMinMs, 1200, 50, 20000)),
       haloFieldWanderDurationMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldWanderDurationMaxMs, 3200, 50, 20000)),
@@ -470,8 +472,10 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dDominantBoltPathJitterBo,
       els.electricAoe3dHaloFieldEnabled,
       els.electricAoe3dHaloFieldShellRadiusBo,
-      els.electricAoe3dHaloFieldBoltLengthMinBo,
-      els.electricAoe3dHaloFieldBoltLengthMaxBo,
+      els.electricAoe3dHaloFieldBoltStartMinBo,
+      els.electricAoe3dHaloFieldBoltStartMaxBo,
+      els.electricAoe3dHaloFieldBoltEndMinBo,
+      els.electricAoe3dHaloFieldBoltEndMaxBo,
       els.electricAoe3dHaloFieldPointCount,
       els.electricAoe3dHaloFieldWanderSpeedMin,
       els.electricAoe3dHaloFieldWanderSpeedMax,

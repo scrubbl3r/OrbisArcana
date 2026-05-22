@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522g";
-import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522forkTtlRangeAb";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522forkTtlRangeA";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522h";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522boltSpanAb";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522boltSpanA";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -144,8 +144,10 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     haloFieldReversalChance: clampNumber(source.haloFieldReversalChance, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldReversalChance),
     haloFieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldSeed)),
     haloFieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldShellRadiusBo),
-    haloFieldBoltLengthMinBo: clampNumber(source.haloFieldBoltLengthMinBo, 0.05, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldBoltLengthMinBo),
-    haloFieldBoltLengthMaxBo: clampNumber(source.haloFieldBoltLengthMaxBo, 0.05, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldBoltLengthMaxBo),
+    haloFieldBoltStartMinBo: clampNumber(source.haloFieldBoltStartMinBo, 0, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldBoltStartMinBo),
+    haloFieldBoltStartMaxBo: clampNumber(source.haloFieldBoltStartMaxBo, 0, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldBoltStartMaxBo),
+    haloFieldBoltEndMinBo: clampNumber(source.haloFieldBoltEndMinBo ?? source.haloFieldBoltLengthMinBo, 0.05, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldBoltEndMinBo),
+    haloFieldBoltEndMaxBo: clampNumber(source.haloFieldBoltEndMaxBo ?? source.haloFieldBoltLengthMaxBo, 0.05, 32, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldBoltEndMaxBo),
     haloFieldWander: clampNumber(source.haloFieldWander, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldWander),
     haloFieldWanderDurationMinMs: Math.round(clampNumber(
       source.haloFieldWanderDurationMinMs,

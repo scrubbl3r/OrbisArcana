@@ -1,4 +1,4 @@
-import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260522forkTtlRangeAs";
+import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260522boltSpanAs";
 import { createGameStageRuntimeAdapter } from "./game-stage-runtime-adapter.js?v=20260517a";
 
 export function renderGameStage(root, {

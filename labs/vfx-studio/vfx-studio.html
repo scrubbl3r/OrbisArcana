@@ -2067,9 +2067,14 @@
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldEnabled">Shell enabled</label><input id="electricAoe3dHaloFieldEnabled" class="paramFieldInput" type="checkbox" checked /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldShellRadiusBo">Shell radius BO</label><input id="electricAoe3dHaloFieldShellRadiusBo" class="paramFieldInput" type="number" min="0.5" max="32" step="0.05" value="1.5" /></div>
             <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">BOLT LENGTH BO</span>
-              <label for="electricAoe3dHaloFieldBoltLengthMinBo">min</label><input id="electricAoe3dHaloFieldBoltLengthMinBo" class="paramFieldInput" type="number" min="0.05" max="32" step="0.05" value="1.5" />
-              <label for="electricAoe3dHaloFieldBoltLengthMaxBo">max</label><input id="electricAoe3dHaloFieldBoltLengthMaxBo" class="paramFieldInput" type="number" min="0.05" max="32" step="0.05" value="1.5" />
+              <span class="rgbaLabel">BOLT START BO</span>
+              <label for="electricAoe3dHaloFieldBoltStartMinBo">min</label><input id="electricAoe3dHaloFieldBoltStartMinBo" class="paramFieldInput" type="number" min="0" max="32" step="0.05" value="0" />
+              <label for="electricAoe3dHaloFieldBoltStartMaxBo">max</label><input id="electricAoe3dHaloFieldBoltStartMaxBo" class="paramFieldInput" type="number" min="0" max="32" step="0.05" value="0" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BOLT END BO</span>
+              <label for="electricAoe3dHaloFieldBoltEndMinBo">min</label><input id="electricAoe3dHaloFieldBoltEndMinBo" class="paramFieldInput" type="number" min="0.05" max="32" step="0.05" value="1.5" />
+              <label for="electricAoe3dHaloFieldBoltEndMaxBo">max</label><input id="electricAoe3dHaloFieldBoltEndMaxBo" class="paramFieldInput" type="number" min="0.05" max="32" step="0.05" value="1.5" />
             </div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldPointCount">Bolt count</label><input id="electricAoe3dHaloFieldPointCount" class="paramFieldInput" type="number" min="0" max="256" step="1" value="24" /></div>
             <div class="rgbaParamRow densityRangeRow">
@@ -2883,7 +2888,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260522-fork-ttl-range-a"),
+      import("./vfx-studio-bootstrap.js?v=20260522-bolt-span-a"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2930,11 +2935,11 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260522forkTtlRangeAi";
-    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522forkTtlRangeA";
+    } from "../../src/vfx/presets/index.js?v=20260522boltSpanAi";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522boltSpanA";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
-    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522forkTtlRangeAb";
+    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522boltSpanAb";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
@@ -3458,8 +3463,10 @@
       electricAoe3dDominantBoltPathJitterBo: $("electricAoe3dDominantBoltPathJitterBo"),
       electricAoe3dHaloFieldEnabled: $("electricAoe3dHaloFieldEnabled"),
       electricAoe3dHaloFieldShellRadiusBo: $("electricAoe3dHaloFieldShellRadiusBo"),
-      electricAoe3dHaloFieldBoltLengthMinBo: $("electricAoe3dHaloFieldBoltLengthMinBo"),
-      electricAoe3dHaloFieldBoltLengthMaxBo: $("electricAoe3dHaloFieldBoltLengthMaxBo"),
+      electricAoe3dHaloFieldBoltStartMinBo: $("electricAoe3dHaloFieldBoltStartMinBo"),
+      electricAoe3dHaloFieldBoltStartMaxBo: $("electricAoe3dHaloFieldBoltStartMaxBo"),
+      electricAoe3dHaloFieldBoltEndMinBo: $("electricAoe3dHaloFieldBoltEndMinBo"),
+      electricAoe3dHaloFieldBoltEndMaxBo: $("electricAoe3dHaloFieldBoltEndMaxBo"),
       electricAoe3dHaloFieldPointCount: $("electricAoe3dHaloFieldPointCount"),
       electricAoe3dHaloFieldWanderSpeedMin: $("electricAoe3dHaloFieldWanderSpeedMin"),
       electricAoe3dHaloFieldWanderSpeedMax: $("electricAoe3dHaloFieldWanderSpeedMax"),

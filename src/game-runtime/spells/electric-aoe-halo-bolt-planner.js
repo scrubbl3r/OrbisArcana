@@ -63,18 +63,20 @@ function normalizeZRange(source, shellRadiusBo) {
 function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
   const fieldShellRadiusBo = clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5);
-  const fieldBoltLengthMinBo = clampNumber(
-    source.haloFieldBoltLengthMinBo ?? fieldShellRadiusBo,
+  const fieldBoltEndMinBo = clampNumber(
+    source.haloFieldBoltEndMinBo ?? source.haloFieldBoltLengthMinBo ?? fieldShellRadiusBo,
     0.05,
     fieldShellRadiusBo,
     fieldShellRadiusBo
   );
-  const fieldBoltLengthMaxBo = clampNumber(
-    source.haloFieldBoltLengthMaxBo ?? fieldShellRadiusBo,
-    fieldBoltLengthMinBo,
+  const fieldBoltEndMaxBo = clampNumber(
+    source.haloFieldBoltEndMaxBo ?? source.haloFieldBoltLengthMaxBo ?? fieldShellRadiusBo,
+    fieldBoltEndMinBo,
     fieldShellRadiusBo,
     fieldShellRadiusBo
   );
+  const fieldBoltStartMinBo = clampNumber(source.haloFieldBoltStartMinBo, 0, fieldBoltEndMaxBo, 0);
+  const fieldBoltStartMaxBo = clampNumber(source.haloFieldBoltStartMaxBo, fieldBoltStartMinBo, fieldBoltEndMaxBo, 0);
   const legacyWanderSpeed = clampNumber(source.haloFieldWanderSpeed, 0, 64, 0.45);
   const boltMinStepBo = clampNumber(source.haloBoltShapeMinStepBo ?? source.haloBoltMinStepBo, 0.01, 8, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.minStepBo);
   const boltMaxStepBo = clampNumber(source.haloBoltShapeMaxStepBo ?? source.haloBoltMaxStepBo, boltMinStepBo, 8, ELECTRIC_AOE_BOLT_SHAPE_DEFAULTS.maxStepBo);
@@ -114,8 +116,10 @@ function normalizeConfig(raw = {}) {
     fieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, 24)),
     fieldPointDiameterBo: 0.05,
     fieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, 4242)),
-    fieldBoltLengthMaxBo,
-    fieldBoltLengthMinBo,
+    fieldBoltEndMaxBo,
+    fieldBoltEndMinBo,
+    fieldBoltStartMaxBo,
+    fieldBoltStartMinBo,
     fieldShellRadiusBo,
     fieldReversalChance: clampNumber(source.haloFieldReversalChance, 0, 1, 0.35),
     fieldWander: clampNumber(source.haloFieldWander, 0, 2, 0.35),
@@ -391,13 +395,27 @@ function sampleShellPoint({ config, index, states, time, total }) {
   const angle = state.anglePhase
     + Math.sin(time * 0.37 + seed * 0.017) * wander * 0.38
     + Math.cos(time * 0.29 + seed * 0.023) * wander * 0.24;
-  const lengthBo = randomBetween(seed, 71.3, config.fieldBoltLengthMinBo, config.fieldBoltLengthMaxBo);
-  const clampedZBo = Math.max(-lengthBo, Math.min(lengthBo, zBo));
-  const planarRadiusBo = Math.sqrt(Math.max(0, lengthBo * lengthBo - clampedZBo * clampedZBo));
-  return Object.freeze({
+  const endLengthBo = randomBetween(seed, 71.3, config.fieldBoltEndMinBo, config.fieldBoltEndMaxBo);
+  const startLengthBo = Math.min(
+    endLengthBo,
+    randomBetween(seed, 73.7, config.fieldBoltStartMinBo, config.fieldBoltStartMaxBo)
+  );
+  const clampedZBo = Math.max(-endLengthBo, Math.min(endLengthBo, zBo));
+  const planarRadiusBo = Math.sqrt(Math.max(0, endLengthBo * endLengthBo - clampedZBo * clampedZBo));
+  const end = Object.freeze({
     xBo: Math.cos(angle) * planarRadiusBo,
     yBo: Math.sin(angle) * planarRadiusBo,
     zBo: clampedZBo,
+  });
+  const endLength = Math.max(0.000001, Math.hypot(end.xBo, end.yBo, end.zBo));
+  const startScale = Math.max(0, startLengthBo) / endLength;
+  return Object.freeze({
+    end,
+    start: Object.freeze({
+      xBo: end.xBo * startScale,
+      yBo: end.yBo * startScale,
+      zBo: end.zBo * startScale,
+    }),
   });
 }
 
@@ -549,24 +567,30 @@ export function createElectricAoeHaloFieldPlanner() {
     forkStates.length = config.fieldPointCount;
     for (let index = 0; index < config.fieldPointCount; index += 1) {
       const point = sampleShellPoint({ config, index, states: pointStates, time: safeTime, total: config.fieldPointCount });
+      const start = Object.freeze({
+        xW: originXW + point.start.xBo * safeBo,
+        yW: originYW + point.start.yBo * safeBo,
+        zBo: config.zBo + point.start.zBo,
+      });
       const end = Object.freeze({
-        xW: originXW + point.xBo * safeBo,
-        yW: originYW + point.yBo * safeBo,
-        zBo: config.zBo + point.zBo,
+        xW: originXW + point.end.xBo * safeBo,
+        yW: originYW + point.end.yBo * safeBo,
+        zBo: config.zBo + point.end.zBo,
       });
       const seed = config.fieldSeed + index * 37.17;
-      const fullPoints = buildHaloBoltPath({ config, endpoint: end, index, originXW, originYW, safeBo, seed, time: safeTime });
+      const fullPoints = buildHaloBoltPath({ config, endpoint: end, index, originXW: start.xW, originYW: start.yW, originZBo: start.zBo, safeBo, seed, time: safeTime });
       const forkState = ensureForkState(forkStates, { config, index, seed, time: safeTime });
       const forkSeed = seed + (forkState.roll || 0) * 211.13;
       const forkPct = randomBetween(forkSeed, 149, config.forkEndPctMin, config.forkEndPctMax);
       const forkPoint = samplePointAtPathPct(fullPoints, forkPct, safeBo);
-      const fork = forkState.active ? buildHaloFork({ config, endpoint: end, forkPoint, originXW, originYW, safeBo, seed: forkSeed, time: safeTime }) : null;
-      const points = fork ? buildHaloBoltPath({ config, endpoint: forkPoint, index, originXW, originYW, safeBo, seed: seed + 130.13, time: safeTime }) : fullPoints;
+      const fork = forkState.active ? buildHaloFork({ config, endpoint: end, forkPoint, originXW: start.xW, originYW: start.yW, safeBo, seed: forkSeed, time: safeTime }) : null;
+      const points = fork ? buildHaloBoltPath({ config, endpoint: forkPoint, index, originXW: start.xW, originYW: start.yW, originZBo: start.zBo, safeBo, seed: seed + 130.13, time: safeTime }) : fullPoints;
       paths.push(Object.freeze({
         forks: Object.freeze(fork ? [fork] : []),
         points,
         shellRadiusBo: config.fieldShellRadiusBo,
         pointDiameterBo: config.fieldPointDiameterBo,
+        start,
         target: end,
       }));
     }
