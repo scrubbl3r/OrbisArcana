@@ -25,24 +25,6 @@ function normalizeVector3(x = 0, y = 0, z = 0, fallback = { x: 1, y: 0, z: 0 }) 
   };
 }
 
-function rotateXY(v, angle = 0) {
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
-  return { x: c * v.x - s * v.y, y: s * v.x + c * v.y, z: v.z };
-}
-
-function rotateXZ(v, angle = 0) {
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
-  return { x: c * v.x - s * v.z, y: v.y, z: s * v.x + c * v.z };
-}
-
-function rotateYZ(v, angle = 0) {
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
-  return { x: v.x, y: c * v.y - s * v.z, z: s * v.y + c * v.z };
-}
-
 function sphericalFibonacciDirection(index, total, seed) {
   const safeTotal = Math.max(1, Number(total) || 1);
   const jitter = random01(seed, 11) * 0.72;
@@ -52,33 +34,57 @@ function sphericalFibonacciDirection(index, total, seed) {
   return normalizeVector3(Math.cos(theta) * radius, y, Math.sin(theta) * radius);
 }
 
+function pingPong01(value) {
+  const cycle = ((Number(value) || 0) % 2 + 2) % 2;
+  return cycle <= 1 ? cycle : 2 - cycle;
+}
+
+function normalizeZRange(source, shellRadiusBo) {
+  const radius = Math.max(0.5, Number(shellRadiusBo) || 1.5);
+  const rawMin = clampNumber(source.haloFieldZMinBo, -32, 32, -radius);
+  const rawMax = clampNumber(source.haloFieldZMaxBo, -32, 32, radius);
+  const min = Math.max(-radius, Math.min(radius, Math.min(rawMin, rawMax)));
+  const max = Math.max(-radius, Math.min(radius, Math.max(rawMin, rawMax)));
+  return Object.freeze({ max, min });
+}
+
 function normalizeConfig(raw = {}) {
   const source = raw && typeof raw === "object" ? raw : {};
+  const fieldShellRadiusBo = clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5);
+  const zRange = normalizeZRange(source, fieldShellRadiusBo);
   return Object.freeze({
     fieldEnabled: source.haloFieldEnabled !== false,
     fieldPointCount: Math.round(clampNumber(source.haloFieldPointCount, 0, 256, 24)),
     fieldPointDiameterBo: 0.05,
     fieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, 4242)),
-    fieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, 1.5),
-    fieldSliceHalfDepthBo: clampNumber(source.haloFieldSliceHalfDepthBo, 0, 32, 0),
+    fieldShellRadiusBo,
     fieldWander: clampNumber(source.haloFieldWander, 0, 2, 0.35),
     fieldWanderSpeed: clampNumber(source.haloFieldWanderSpeed, 0, 12, 0.45),
+    fieldZMaxBo: zRange.max,
+    fieldZMinBo: zRange.min,
     zBo: clampNumber(source.zBo ?? source.dominantBoltZBo, -64, 64, 0),
   });
 }
 
-function sampleShellDirection({ config, index, time, total }) {
+function sampleShellPoint({ config, index, time, total }) {
   const seed = config.fieldSeed + index * 37.17;
-  let direction = sphericalFibonacciDirection(index, total, seed);
+  const direction = sphericalFibonacciDirection(index, total, seed);
   const speed = config.fieldWanderSpeed * randomBetween(seed, 21, 0.45, 1.35);
   const wander = config.fieldWander;
-  direction = rotateXY(direction, time * speed * randomBetween(seed, 22, -0.92, 0.92)
-    + Math.sin(time * speed * 0.37 + seed * 0.017) * wander * 0.28);
-  direction = rotateYZ(direction, time * speed * randomBetween(seed, 23, -0.74, 0.74)
-    + Math.cos(time * speed * 0.29 + seed * 0.023) * wander * 0.34);
-  direction = rotateXZ(direction, time * speed * randomBetween(seed, 24, -0.58, 0.58)
-    + Math.sin(time * speed * 0.43 + seed * 0.031) * wander * 0.24);
-  return normalizeVector3(direction.x, direction.y, direction.z);
+  const zSpan = Math.max(0, config.fieldZMaxBo - config.fieldZMinBo);
+  const zPhase = random01(seed, 24) * 2 + time * speed * randomBetween(seed, 25, 0.16, 0.72);
+  const zBo = zSpan <= 0.000001 ? config.fieldZMinBo : config.fieldZMinBo + pingPong01(zPhase) * zSpan;
+  const baseAngle = Math.atan2(direction.y, direction.x);
+  const angle = baseAngle
+    + time * speed * randomBetween(seed, 22, -0.92, 0.92)
+    + Math.sin(time * speed * 0.37 + seed * 0.017) * wander * 0.38
+    + Math.cos(time * speed * 0.29 + seed * 0.023) * wander * 0.24;
+  const planarRadiusBo = Math.sqrt(Math.max(0, config.fieldShellRadiusBo * config.fieldShellRadiusBo - zBo * zBo));
+  return Object.freeze({
+    xBo: Math.cos(angle) * planarRadiusBo,
+    yBo: Math.sin(angle) * planarRadiusBo,
+    zBo,
+  });
 }
 
 export function createElectricAoeHaloFieldPlanner() {
@@ -96,13 +102,12 @@ export function createElectricAoeHaloFieldPlanner() {
     const originYW = Number(from && from.yW) || 0;
     const paths = [];
     for (let index = 0; index < config.fieldPointCount; index += 1) {
-      const direction = sampleShellDirection({ config, index, time: safeTime, total: config.fieldPointCount });
+      const point = sampleShellPoint({ config, index, time: safeTime, total: config.fieldPointCount });
       const end = Object.freeze({
-        xW: originXW + direction.x * config.fieldShellRadiusBo * safeBo,
-        yW: originYW + direction.y * config.fieldShellRadiusBo * safeBo,
-        zBo: config.zBo + direction.z * config.fieldShellRadiusBo,
+        xW: originXW + point.xBo * safeBo,
+        yW: originYW + point.yBo * safeBo,
+        zBo: config.zBo + point.zBo,
       });
-      if (config.fieldSliceHalfDepthBo > 0 && Math.abs(end.zBo - config.zBo) > config.fieldSliceHalfDepthBo) continue;
       paths.push(Object.freeze({
         forks: Object.freeze([]),
         points: Object.freeze([

@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-d";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-e";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -125,9 +125,10 @@ export function createElectricAoe3dAuthoringAdapter({
       haloFieldPointDiameterBo: 0.05,
       haloFieldSeed: Math.round(readNumber(els.electricAoe3dHaloFieldSeed, defaults.haloFieldSeed, 1, 999999999)),
       haloFieldShellRadiusBo: readNumber(els.electricAoe3dHaloFieldShellRadiusBo, defaults.haloFieldShellRadiusBo, 0.5, 32),
-      haloFieldSliceHalfDepthBo: readNumber(els.electricAoe3dHaloFieldSliceHalfDepthBo, defaults.haloFieldSliceHalfDepthBo, 0, 32),
       haloFieldWander: readNumber(els.electricAoe3dHaloFieldWander, defaults.haloFieldWander, 0, 2),
       haloFieldWanderSpeed: readNumber(els.electricAoe3dHaloFieldWanderSpeed, defaults.haloFieldWanderSpeed, 0, 12),
+      haloFieldZMinBo: readNumber(els.electricAoe3dHaloFieldZMinBo, defaults.haloFieldZMinBo, -32, 32),
+      haloFieldZMaxBo: readNumber(els.electricAoe3dHaloFieldZMaxBo, defaults.haloFieldZMaxBo, -32, 32),
     });
   }
 
@@ -202,8 +203,11 @@ export function createElectricAoe3dAuthoringAdapter({
     if (els.electricAoe3dHaloFieldWander) {
       els.electricAoe3dHaloFieldWander.value = String(source.haloFieldWander ?? 0.35);
     }
-    if (els.electricAoe3dHaloFieldSliceHalfDepthBo) {
-      els.electricAoe3dHaloFieldSliceHalfDepthBo.value = String(source.haloFieldSliceHalfDepthBo ?? 0);
+    if (els.electricAoe3dHaloFieldZMinBo) {
+      els.electricAoe3dHaloFieldZMinBo.value = String(source.haloFieldZMinBo ?? -1.5);
+    }
+    if (els.electricAoe3dHaloFieldZMaxBo) {
+      els.electricAoe3dHaloFieldZMaxBo.value = String(source.haloFieldZMaxBo ?? 1.5);
     }
     if (els.electricAoe3dHaloFieldSeed) {
       els.electricAoe3dHaloFieldSeed.value = String(source.haloFieldSeed ?? 4242);
