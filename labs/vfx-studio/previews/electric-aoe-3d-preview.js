@@ -119,6 +119,55 @@ export function createElectricAoe3dPreview({
     return total;
   }
 
+  function createTaperedTubeGeometry(points, baseRadius, radialSegments = 6, taper = 1) {
+    const sourcePoints = Array.isArray(points) ? points.filter(Boolean) : [];
+    if (sourcePoints.length <= 1) return new THREE.BufferGeometry().setFromPoints(sourcePoints);
+    const curve = new THREE.CatmullRomCurve3(sourcePoints, false, "catmullrom", 0.5);
+    const tubularSegments = Math.max(2, Math.min(96, Math.round(sourcePoints.length * 4)));
+    const rings = tubularSegments + 1;
+    const sides = Math.max(3, Math.round(radialSegments));
+    const positions = [];
+    const indices = [];
+    const taperAmount = Math.max(0, Math.min(1, Number(taper) / 4));
+    const worldUp = new THREE.Vector3(0, 0, 1);
+    let previousNormal = null;
+    for (let ringIndex = 0; ringIndex < rings; ringIndex += 1) {
+      const t = ringIndex / Math.max(1, tubularSegments);
+      const center = curve.getPointAt(t);
+      const tangent = curve.getTangentAt(t).normalize();
+      let normal = previousNormal
+        ? previousNormal.clone().sub(tangent.clone().multiplyScalar(previousNormal.dot(tangent)))
+        : worldUp.clone().cross(tangent);
+      if (normal.lengthSq() < 0.000001) normal = new THREE.Vector3(1, 0, 0).cross(tangent);
+      normal.normalize();
+      const binormal = tangent.clone().cross(normal).normalize();
+      previousNormal = normal.clone();
+      const easedT = t * t * (3 - 2 * t);
+      const radiusScale = Math.max(0.08, 1 - (0.92 * taperAmount * easedT));
+      const radius = Math.max(0.001, baseRadius * radiusScale);
+      for (let sideIndex = 0; sideIndex < sides; sideIndex += 1) {
+        const angle = (sideIndex / sides) * Math.PI * 2;
+        const offset = normal.clone().multiplyScalar(Math.cos(angle) * radius)
+          .add(binormal.clone().multiplyScalar(Math.sin(angle) * radius));
+        positions.push(center.x + offset.x, center.y + offset.y, center.z + offset.z);
+      }
+    }
+    for (let ringIndex = 0; ringIndex < tubularSegments; ringIndex += 1) {
+      for (let sideIndex = 0; sideIndex < sides; sideIndex += 1) {
+        const a = ringIndex * sides + sideIndex;
+        const b = ringIndex * sides + ((sideIndex + 1) % sides);
+        const c = (ringIndex + 1) * sides + ((sideIndex + 1) % sides);
+        const d = (ringIndex + 1) * sides + sideIndex;
+        indices.push(a, b, d, b, c, d);
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
   function addBoltShaderMeshes(layer, points, config, bo, namePrefix, renderOrder, time = 0) {
     if (!layer || !Array.isArray(points) || points.length <= 1) return;
     if (config && config.boltShaderEnabled === false) {
@@ -148,9 +197,7 @@ export function createElectricAoe3dPreview({
     const flickerDepth = Math.max(0, Math.min(1, Number(config && config.boltShaderFlickerDepth) || 0));
     const flickerHz = Math.max(0, Number(config && config.boltShaderFlickerSpeedHz) || 0);
     const flicker = 1 - flickerDepth * (0.5 + 0.5 * Math.sin((time * flickerHz * Math.PI * 2) + lengthBo));
-    const curve = new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.5);
-    const segments = Math.max(2, Math.min(96, Math.round(points.length * 4)));
-    const glowGeometry = new THREE.TubeGeometry(curve, segments, glowRadius, 6, false);
+    const glowGeometry = createTaperedTubeGeometry(points, glowRadius, 6, taper);
     const glowMaterial = new THREE.MeshBasicMaterial({
       blending: THREE.AdditiveBlending,
       color: rgbColor(config && config.boltShaderGlowR, config && config.boltShaderGlowG, config && config.boltShaderGlowB),
@@ -164,7 +211,7 @@ export function createElectricAoe3dPreview({
     glow.name = `${namePrefix}_glow`;
     glow.renderOrder = renderOrder;
     layer.add(glow);
-    const coreGeometry = new THREE.TubeGeometry(curve, segments, coreRadius, 5, false);
+    const coreGeometry = createTaperedTubeGeometry(points, coreRadius, 5, taper);
     const coreMaterial = new THREE.MeshBasicMaterial({
       blending: THREE.AdditiveBlending,
       color: rgbColor(config && config.boltShaderCoreR, config && config.boltShaderCoreG, config && config.boltShaderCoreB),
