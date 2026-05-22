@@ -164,7 +164,11 @@ export function createElectricAoe3dAuthoringAdapter({
       haloBoltBranchAngleMaxDeg: readNumber(els.electricAoe3dHaloBoltBranchAngleMaxDeg, defaults.haloBoltBranchAngleMaxDeg, 0, 180),
       haloBoltBranchTtlMinMs: branchTtlMinMs,
       haloBoltBranchTtlMaxMs: Math.round(readNumber(els.electricAoe3dHaloBoltBranchTtlMaxMs, defaults.haloBoltBranchTtlMaxMs, branchTtlMinMs, 20000)),
-      haloBoltBranchShapeScale: readNumber(els.electricAoe3dHaloBoltBranchShapeScale, defaults.haloBoltBranchShapeScale, 0.05, 1),
+      haloBoltBranchStepMinBo: readNumber(els.electricAoe3dHaloBoltBranchStepMinBo, defaults.haloBoltBranchStepMinBo, 0.001, 1),
+      haloBoltBranchStepMaxBo: readNumber(els.electricAoe3dHaloBoltBranchStepMaxBo, defaults.haloBoltBranchStepMaxBo, 0.001, 1),
+      haloBoltBranchBendStrength: readNumber(els.electricAoe3dHaloBoltBranchBendStrength, defaults.haloBoltBranchBendStrength, 0, 4),
+      haloBoltBranchCurlStrength: readNumber(els.electricAoe3dHaloBoltBranchCurlStrength, defaults.haloBoltBranchCurlStrength, 0, 4),
+      haloBoltBranchShapeScale: readNumber(els.electricAoe3dHaloBoltBranchShapeScale, defaults.haloBoltBranchShapeScale, 0.001, 1),
       haloFieldEnabled: readBoolean(els.electricAoe3dHaloFieldEnabled, defaults.haloFieldEnabled),
       haloFieldLingerMinMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMinMs, defaults.haloFieldLingerMinMs ?? defaults.haloFieldReversalFrequencyMinMs, 50, 20000)),
       haloFieldLingerMaxMs: Math.round(readNumber(els.electricAoe3dHaloFieldLingerMaxMs, defaults.haloFieldLingerMaxMs ?? defaults.haloFieldReversalFrequencyMaxMs, 50, 20000)),
@@ -390,6 +394,18 @@ export function createElectricAoe3dAuthoringAdapter({
     }
     if (els.electricAoe3dHaloBoltBranchTtlMaxMs) {
       els.electricAoe3dHaloBoltBranchTtlMaxMs.value = String(source.haloBoltBranchTtlMaxMs ?? 260);
+    }
+    if (els.electricAoe3dHaloBoltBranchStepMinBo) {
+      els.electricAoe3dHaloBoltBranchStepMinBo.value = String(source.haloBoltBranchStepMinBo ?? 0.006);
+    }
+    if (els.electricAoe3dHaloBoltBranchStepMaxBo) {
+      els.electricAoe3dHaloBoltBranchStepMaxBo.value = String(source.haloBoltBranchStepMaxBo ?? 0.035);
+    }
+    if (els.electricAoe3dHaloBoltBranchBendStrength) {
+      els.electricAoe3dHaloBoltBranchBendStrength.value = String(source.haloBoltBranchBendStrength ?? 0.75);
+    }
+    if (els.electricAoe3dHaloBoltBranchCurlStrength) {
+      els.electricAoe3dHaloBoltBranchCurlStrength.value = String(source.haloBoltBranchCurlStrength ?? 0.55);
     }
     if (els.electricAoe3dHaloBoltBranchShapeScale) {
       els.electricAoe3dHaloBoltBranchShapeScale.value = String(source.haloBoltBranchShapeScale ?? 0.45);

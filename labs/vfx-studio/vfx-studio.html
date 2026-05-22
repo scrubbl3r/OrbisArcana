@@ -2171,7 +2171,14 @@
               <label for="electricAoe3dHaloBoltBranchTtlMinMs">min</label><input id="electricAoe3dHaloBoltBranchTtlMinMs" class="paramFieldInput" type="number" min="16" max="20000" step="1" value="120" />
               <label for="electricAoe3dHaloBoltBranchTtlMaxMs">max</label><input id="electricAoe3dHaloBoltBranchTtlMaxMs" class="paramFieldInput" type="number" min="16" max="20000" step="1" value="260" />
             </div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltBranchShapeScale">Branch shape scale</label><input id="electricAoe3dHaloBoltBranchShapeScale" class="paramFieldInput" type="number" min="0.05" max="1" step="0.01" value="0.45" /></div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BRANCH STEP BO</span>
+              <label for="electricAoe3dHaloBoltBranchStepMinBo">min</label><input id="electricAoe3dHaloBoltBranchStepMinBo" class="paramFieldInput" type="number" min="0.001" max="1" step="0.001" value="0.006" />
+              <label for="electricAoe3dHaloBoltBranchStepMaxBo">max</label><input id="electricAoe3dHaloBoltBranchStepMaxBo" class="paramFieldInput" type="number" min="0.001" max="1" step="0.001" value="0.035" />
+            </div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltBranchBendStrength">Branch bend strength</label><input id="electricAoe3dHaloBoltBranchBendStrength" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="0.75" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltBranchCurlStrength">Branch curl strength</label><input id="electricAoe3dHaloBoltBranchCurlStrength" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="0.55" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloBoltBranchShapeScale">Branch jitter scale</label><input id="electricAoe3dHaloBoltBranchShapeScale" class="paramFieldInput" type="number" min="0.001" max="1" step="0.001" value="0.45" /></div>
           </div>
         </div>
       </div>
@@ -2963,11 +2970,11 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260522branchesAi";
-    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522branchesA";
+    } from "../../src/vfx/presets/index.js?v=20260522branchShapeAi";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522branchShapeA";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
-    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522branchesAb";
+    import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522branchShapeAb";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
@@ -3538,6 +3545,10 @@
       electricAoe3dHaloBoltBranchAngleMaxDeg: $("electricAoe3dHaloBoltBranchAngleMaxDeg"),
       electricAoe3dHaloBoltBranchTtlMinMs: $("electricAoe3dHaloBoltBranchTtlMinMs"),
       electricAoe3dHaloBoltBranchTtlMaxMs: $("electricAoe3dHaloBoltBranchTtlMaxMs"),
+      electricAoe3dHaloBoltBranchStepMinBo: $("electricAoe3dHaloBoltBranchStepMinBo"),
+      electricAoe3dHaloBoltBranchStepMaxBo: $("electricAoe3dHaloBoltBranchStepMaxBo"),
+      electricAoe3dHaloBoltBranchBendStrength: $("electricAoe3dHaloBoltBranchBendStrength"),
+      electricAoe3dHaloBoltBranchCurlStrength: $("electricAoe3dHaloBoltBranchCurlStrength"),
       electricAoe3dHaloBoltBranchShapeScale: $("electricAoe3dHaloBoltBranchShapeScale"),
       flameAoe3dAoeAuraDiameterBo: $("flameAoe3dAoeAuraDiameterBo"),
       flameAoe3dApplyAoeAuraDiameterBtn: $("flameAoe3dApplyAoeAuraDiameterBtn"),

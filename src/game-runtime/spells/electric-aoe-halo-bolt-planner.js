@@ -100,16 +100,22 @@ function normalizeConfig(raw = {}) {
   const branchAngleMaxDeg = clampNumber(source.haloBoltBranchAngleMaxDeg, branchAngleMinDeg, 180, 112);
   const branchTtlMinMs = Math.round(clampNumber(source.haloBoltBranchTtlMinMs, 16, 20000, 120));
   const branchTtlMaxMs = Math.round(clampNumber(source.haloBoltBranchTtlMaxMs, branchTtlMinMs, 20000, 260));
+  const branchStepMinBo = clampNumber(source.haloBoltBranchStepMinBo, 0.001, 1, 0.006);
+  const branchStepMaxBo = clampNumber(source.haloBoltBranchStepMaxBo, branchStepMinBo, 1, 0.035);
   return Object.freeze({
     branchAngleMaxDeg,
     branchAngleMinDeg,
+    branchBendStrength: clampNumber(source.haloBoltBranchBendStrength, 0, 4, 0.75),
     branchChance: clampNumber(source.haloBoltBranchChance, 0, 1, 0),
+    branchCurlStrength: clampNumber(source.haloBoltBranchCurlStrength, 0, 4, 0.55),
     branchEnabled: source.haloBoltBranchEnabled === true,
     branchLengthMaxBo,
     branchLengthMinBo,
     branchRangeEndPct,
     branchRangeStartPct,
-    branchShapeScale: clampNumber(source.haloBoltBranchShapeScale, 0.05, 1, 0.45),
+    branchShapeScale: clampNumber(source.haloBoltBranchShapeScale, 0.001, 1, 0.45),
+    branchStepMaxBo,
+    branchStepMinBo,
     branchTotalMax,
     branchTotalMin,
     branchTtlMaxMs,
@@ -462,25 +468,52 @@ function buildHaloBoltPath({ config, endpoint, originXW, originYW, originZBo = n
   });
 }
 
+function shapeHaloBranchPath(points, { config, endpoint, origin, safeBo, seed, time }) {
+  if (!Array.isArray(points) || points.length <= 2) return points;
+  const branchVector = vectorBetweenBo(origin, endpoint, safeBo);
+  const planarLength = Math.hypot(branchVector.x, branchVector.y);
+  const perpendicular = planarLength > 0.000001
+    ? Object.freeze({ x: -branchVector.y / planarLength, y: branchVector.x / planarLength, z: 0 })
+    : Object.freeze({ x: 0, y: 1, z: 0 });
+  const side = random01(seed, 251) < 0.5 ? -1 : 1;
+  const lengthBo = distanceBetweenPointsBo(origin, endpoint, safeBo);
+  const bendBo = lengthBo * config.branchBendStrength * 0.34;
+  const curlBo = lengthBo * config.branchCurlStrength * 0.22;
+  const animatedSalt = (Number(time) || 0) * config.boltShapeSpeedHz;
+  return Object.freeze(points.map((point, index) => {
+    if (index <= 0 || index >= points.length - 1) return point;
+    const t = index / Math.max(1, points.length - 1);
+    const envelope = Math.sin(Math.PI * t);
+    const bend = Math.sin(Math.PI * t + random01(seed, 253) * Math.PI) * bendBo;
+    const curl = Math.sin(t * Math.PI * 2.0 + random01(seed, 257) * Math.PI * 2.0 + animatedSalt * 0.37) * curlBo;
+    const zCurl = Math.cos(t * Math.PI * 1.5 + random01(seed, 259) * Math.PI * 2.0 + animatedSalt * 0.29) * curlBo * 0.42;
+    return Object.freeze({
+      xW: point.xW + perpendicular.x * (bend + curl) * envelope * safeBo * side,
+      yW: point.yW + perpendicular.y * (bend + curl) * envelope * safeBo * side,
+      zBo: point.zBo + zCurl * envelope,
+    });
+  }));
+}
+
 function buildHaloBranchPath({ config, endpoint, origin, safeBo, seed, time }) {
-  const scale = Math.max(0.05, Math.min(1, config.branchShapeScale));
-  return buildElectricAoeBoltShapePath({
+  const basePath = buildElectricAoeBoltShapePath({
     bo: safeBo,
     config: {
-      headingMemory: config.boltHeadingMemory,
-      maxStepBo: Math.max(0.01, config.boltMaxStepBo * scale),
-      minStepBo: Math.max(0.01, config.boltMinStepBo * scale),
-      pathJitterBo: config.boltPathJitterBo * scale,
-      seekStrength: config.boltSeekStrength,
+      headingMemory: Math.min(1, config.boltHeadingMemory + 0.12),
+      maxStepBo: config.branchStepMaxBo,
+      minStepBo: config.branchStepMinBo,
+      pathJitterBo: Math.max(config.boltPathJitterBo * config.branchShapeScale, config.branchBendStrength * 0.025),
+      seekStrength: Math.max(0.2, config.boltSeekStrength * 0.85),
       shapeSmoothing: config.boltShapeSmoothing,
       shapeSpeedHz: config.boltShapeSpeedHz,
-      wanderStrength: config.boltWanderStrength * scale,
+      wanderStrength: Math.max(config.boltWanderStrength * config.branchShapeScale, config.branchBendStrength * 0.22),
     },
     from: origin,
     seed,
     time,
     to: endpoint,
   });
+  return shapeHaloBranchPath(basePath, { config, endpoint, origin, safeBo, seed, time });
 }
 
 function distanceBetweenPointsBo(from, to, safeBo) {

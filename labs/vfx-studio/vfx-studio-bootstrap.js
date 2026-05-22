@@ -254,6 +254,10 @@ export function createStudioBootstrap({
       electricAoe3dHaloBoltBranchAngleMaxDeg: els.electricAoe3dHaloBoltBranchAngleMaxDeg,
       electricAoe3dHaloBoltBranchTtlMinMs: els.electricAoe3dHaloBoltBranchTtlMinMs,
       electricAoe3dHaloBoltBranchTtlMaxMs: els.electricAoe3dHaloBoltBranchTtlMaxMs,
+      electricAoe3dHaloBoltBranchStepMinBo: els.electricAoe3dHaloBoltBranchStepMinBo,
+      electricAoe3dHaloBoltBranchStepMaxBo: els.electricAoe3dHaloBoltBranchStepMaxBo,
+      electricAoe3dHaloBoltBranchBendStrength: els.electricAoe3dHaloBoltBranchBendStrength,
+      electricAoe3dHaloBoltBranchCurlStrength: els.electricAoe3dHaloBoltBranchCurlStrength,
       electricAoe3dHaloBoltBranchShapeScale: els.electricAoe3dHaloBoltBranchShapeScale,
     }),
     bankOrb3d: Object.freeze({

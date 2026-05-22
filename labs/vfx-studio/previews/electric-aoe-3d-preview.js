@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522j";
+import { createElectricAoeHaloFieldPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522k";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -187,7 +187,11 @@ export function createElectricAoe3dPreview({
       haloBoltBranchAngleMaxDeg: readInputNumber(els.electricAoe3dHaloBoltBranchAngleMaxDeg, 112, 0, 180),
       haloBoltBranchTtlMinMs: branchTtlMinMs,
       haloBoltBranchTtlMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloBoltBranchTtlMaxMs, branchTtlMinMs, branchTtlMinMs, 20000)),
-      haloBoltBranchShapeScale: readInputNumber(els.electricAoe3dHaloBoltBranchShapeScale, 0.45, 0.05, 1),
+      haloBoltBranchStepMinBo: readInputNumber(els.electricAoe3dHaloBoltBranchStepMinBo, 0.006, 0.001, 1),
+      haloBoltBranchStepMaxBo: readInputNumber(els.electricAoe3dHaloBoltBranchStepMaxBo, 0.035, 0.001, 1),
+      haloBoltBranchBendStrength: readInputNumber(els.electricAoe3dHaloBoltBranchBendStrength, 0.75, 0, 4),
+      haloBoltBranchCurlStrength: readInputNumber(els.electricAoe3dHaloBoltBranchCurlStrength, 0.55, 0, 4),
+      haloBoltBranchShapeScale: readInputNumber(els.electricAoe3dHaloBoltBranchShapeScale, 0.45, 0.001, 1),
       haloFieldLingerMinMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMinMs, 900, 50, 20000)),
       haloFieldLingerMaxMs: Math.round(readInputNumber(els.electricAoe3dHaloFieldLingerMaxMs, 2600, 50, 20000)),
       haloFieldLingerDrift: readInputNumber(els.electricAoe3dHaloFieldLingerDrift, 0, 0, 1),
@@ -546,6 +550,10 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dHaloBoltBranchAngleMaxDeg,
       els.electricAoe3dHaloBoltBranchTtlMinMs,
       els.electricAoe3dHaloBoltBranchTtlMaxMs,
+      els.electricAoe3dHaloBoltBranchStepMinBo,
+      els.electricAoe3dHaloBoltBranchStepMaxBo,
+      els.electricAoe3dHaloBoltBranchBendStrength,
+      els.electricAoe3dHaloBoltBranchCurlStrength,
       els.electricAoe3dHaloBoltBranchShapeScale,
     ].forEach((input) => {
       if (!input) return;

@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522j";
-import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522branchesAb";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522branchesA";
+import { createElectricAoeHaloFieldPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260522k";
+import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522branchShapeAb";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260522branchShapeA";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -137,7 +137,11 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     haloBoltBranchAngleMaxDeg: clampNumber(source.haloBoltBranchAngleMaxDeg, 0, 180, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchAngleMaxDeg),
     haloBoltBranchTtlMinMs: Math.round(clampNumber(source.haloBoltBranchTtlMinMs, 16, 20000, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchTtlMinMs)),
     haloBoltBranchTtlMaxMs: Math.round(clampNumber(source.haloBoltBranchTtlMaxMs, 16, 20000, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchTtlMaxMs)),
-    haloBoltBranchShapeScale: clampNumber(source.haloBoltBranchShapeScale, 0.05, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchShapeScale),
+    haloBoltBranchStepMinBo: clampNumber(source.haloBoltBranchStepMinBo, 0.001, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchStepMinBo),
+    haloBoltBranchStepMaxBo: clampNumber(source.haloBoltBranchStepMaxBo, 0.001, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchStepMaxBo),
+    haloBoltBranchBendStrength: clampNumber(source.haloBoltBranchBendStrength, 0, 4, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchBendStrength),
+    haloBoltBranchCurlStrength: clampNumber(source.haloBoltBranchCurlStrength, 0, 4, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchCurlStrength),
+    haloBoltBranchShapeScale: clampNumber(source.haloBoltBranchShapeScale, 0.001, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltBranchShapeScale),
     haloFieldLingerMinMs: Math.round(clampNumber(
       source.haloFieldLingerMinMs ?? source.haloFieldReversalFrequencyMinMs ?? source.haloFieldDirectionHoldMinMs,
       50,
