@@ -2070,16 +2070,6 @@
               <label for="electricAoe3dHaloBoltMaxRangeBo">max</label><input id="electricAoe3dHaloBoltMaxRangeBo" class="paramFieldInput" type="number" min="0.05" max="16" step="0.05" value="1.65" />
             </div>
             <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">BOLTS TOTAL</span>
-              <label for="electricAoe3dHaloBoltMinTotal">min</label><input id="electricAoe3dHaloBoltMinTotal" class="paramFieldInput" type="number" min="0" max="64" step="1" value="4" />
-              <label for="electricAoe3dHaloBoltMaxTotal">max</label><input id="electricAoe3dHaloBoltMaxTotal" class="paramFieldInput" type="number" min="0" max="64" step="1" value="10" />
-            </div>
-            <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">WALK SPEED</span>
-              <label for="electricAoe3dHaloBoltMinWalkSpeed">min</label><input id="electricAoe3dHaloBoltMinWalkSpeed" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="0.35" />
-              <label for="electricAoe3dHaloBoltMaxWalkSpeed">max</label><input id="electricAoe3dHaloBoltMaxWalkSpeed" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="1.2" />
-            </div>
-            <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">STEP LENGTH BO</span>
               <label for="electricAoe3dHaloBoltMinStepBo">min</label><input id="electricAoe3dHaloBoltMinStepBo" class="paramFieldInput" type="number" min="0.01" max="4" step="0.01" value="0.08" />
               <label for="electricAoe3dHaloBoltMaxStepBo">max</label><input id="electricAoe3dHaloBoltMaxStepBo" class="paramFieldInput" type="number" min="0.01" max="4" step="0.01" value="0.28" />
@@ -2101,23 +2091,20 @@
           <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dHaloFieldControls">Halo Field</button>
           <div id="electricAoe3dHaloFieldControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldEnabled">Field enabled</label><input id="electricAoe3dHaloFieldEnabled" class="paramFieldInput" type="checkbox" checked /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldFeaturePoints">Feature points</label><input id="electricAoe3dHaloFieldFeaturePoints" class="paramFieldInput" type="number" min="0" max="64" step="1" value="12" /></div>
             <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">FEATURE POINTS</span>
-              <label for="electricAoe3dHaloFieldMinFeaturePoints">min</label><input id="electricAoe3dHaloFieldMinFeaturePoints" class="paramFieldInput" type="number" min="0" max="64" step="1" value="7" />
-              <label for="electricAoe3dHaloFieldMaxFeaturePoints">max</label><input id="electricAoe3dHaloFieldMaxFeaturePoints" class="paramFieldInput" type="number" min="0" max="64" step="1" value="12" />
+              <span class="rgbaLabel">VECTOR SPEED</span>
+              <label for="electricAoe3dHaloFieldVectorMinSpeed">min</label><input id="electricAoe3dHaloFieldVectorMinSpeed" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="0.35" />
+              <label for="electricAoe3dHaloFieldVectorMaxSpeed">max</label><input id="electricAoe3dHaloFieldVectorMaxSpeed" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="1.2" />
             </div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldSliceWidthBo">Slice width BO</label><input id="electricAoe3dHaloFieldSliceWidthBo" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.18" /></div>
-            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldCellJitter">Cell jitter</label><input id="electricAoe3dHaloFieldCellJitter" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.42" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldVectorInfluence">Vector influence</label><input id="electricAoe3dHaloFieldVectorInfluence" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="1" /></div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldCellSpread">Cell spread</label><input id="electricAoe3dHaloFieldCellSpread" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.62" /></div>
             <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">DRIFT SPEED</span>
-              <label for="electricAoe3dHaloFieldMinDriftSpeed">min</label><input id="electricAoe3dHaloFieldMinDriftSpeed" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="0.18" />
-              <label for="electricAoe3dHaloFieldMaxDriftSpeed">max</label><input id="electricAoe3dHaloFieldMaxDriftSpeed" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="0.55" />
+              <span class="rgbaLabel">ENDPOINT OFFSET</span>
+              <label for="electricAoe3dHaloFieldEndpointMinOffset">min</label><input id="electricAoe3dHaloFieldEndpointMinOffset" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.18" />
+              <label for="electricAoe3dHaloFieldEndpointMaxOffset">max</label><input id="electricAoe3dHaloFieldEndpointMaxOffset" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.46" />
             </div>
-            <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">DIFFERENTIAL OFFSET</span>
-              <label for="electricAoe3dHaloFieldMinDifferentialOffset">min</label><input id="electricAoe3dHaloFieldMinDifferentialOffset" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.18" />
-              <label for="electricAoe3dHaloFieldMaxDifferentialOffset">max</label><input id="electricAoe3dHaloFieldMaxDifferentialOffset" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.46" />
-            </div>
+            <div class="paramFieldRow"><label for="electricAoe3dHaloFieldZInfluence">Z influence</label><input id="electricAoe3dHaloFieldZInfluence" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0.35" /></div>
             <div class="paramFieldRow"><label for="electricAoe3dHaloFieldSeed">Field seed</label><input id="electricAoe3dHaloFieldSeed" class="paramFieldInput" type="number" min="1" max="999999999" step="1" value="4242" /></div>
           </div>
         </div>
@@ -2863,7 +2850,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-d"),
+      import("./vfx-studio-bootstrap.js?v=20260521-electric-field-e"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2910,8 +2897,8 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260521180001i";
-    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521180001";
+    } from "../../src/vfx/presets/index.js?v=20260521-halo-field-b";
+    import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-b";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521180001b";
@@ -3450,14 +3437,14 @@
       electricAoe3dHaloBoltForkLengthMinBo: $("electricAoe3dHaloBoltForkLengthMinBo"),
       electricAoe3dHaloBoltForkLengthMaxBo: $("electricAoe3dHaloBoltForkLengthMaxBo"),
       electricAoe3dHaloFieldEnabled: $("electricAoe3dHaloFieldEnabled"),
-      electricAoe3dHaloFieldMinFeaturePoints: $("electricAoe3dHaloFieldMinFeaturePoints"),
-      electricAoe3dHaloFieldMaxFeaturePoints: $("electricAoe3dHaloFieldMaxFeaturePoints"),
-      electricAoe3dHaloFieldSliceWidthBo: $("electricAoe3dHaloFieldSliceWidthBo"),
-      electricAoe3dHaloFieldCellJitter: $("electricAoe3dHaloFieldCellJitter"),
-      electricAoe3dHaloFieldMinDriftSpeed: $("electricAoe3dHaloFieldMinDriftSpeed"),
-      electricAoe3dHaloFieldMaxDriftSpeed: $("electricAoe3dHaloFieldMaxDriftSpeed"),
-      electricAoe3dHaloFieldMinDifferentialOffset: $("electricAoe3dHaloFieldMinDifferentialOffset"),
-      electricAoe3dHaloFieldMaxDifferentialOffset: $("electricAoe3dHaloFieldMaxDifferentialOffset"),
+      electricAoe3dHaloFieldFeaturePoints: $("electricAoe3dHaloFieldFeaturePoints"),
+      electricAoe3dHaloFieldVectorMinSpeed: $("electricAoe3dHaloFieldVectorMinSpeed"),
+      electricAoe3dHaloFieldVectorMaxSpeed: $("electricAoe3dHaloFieldVectorMaxSpeed"),
+      electricAoe3dHaloFieldVectorInfluence: $("electricAoe3dHaloFieldVectorInfluence"),
+      electricAoe3dHaloFieldCellSpread: $("electricAoe3dHaloFieldCellSpread"),
+      electricAoe3dHaloFieldEndpointMinOffset: $("electricAoe3dHaloFieldEndpointMinOffset"),
+      electricAoe3dHaloFieldEndpointMaxOffset: $("electricAoe3dHaloFieldEndpointMaxOffset"),
+      electricAoe3dHaloFieldZInfluence: $("electricAoe3dHaloFieldZInfluence"),
       electricAoe3dHaloFieldSeed: $("electricAoe3dHaloFieldSeed"),
       flameAoe3dAoeAuraDiameterBo: $("flameAoe3dAoeAuraDiameterBo"),
       flameAoe3dApplyAoeAuraDiameterBtn: $("flameAoe3dApplyAoeAuraDiameterBtn"),

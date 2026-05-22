@@ -91,23 +91,22 @@ function normalizeConfig(raw = {}) {
   const forksMax = Math.round(clampNumber(source.haloBoltForksMax, forksMin, 12, 2));
   const forkLengthMinBo = clampNumber(source.haloBoltForkLengthMinBo, 0, 8, 0.2);
   const forkLengthMaxBo = clampNumber(source.haloBoltForkLengthMaxBo, forkLengthMinBo, 8, 0.7);
-  const fieldMinFeaturePoints = Math.round(clampNumber(source.haloFieldMinFeaturePoints, 0, 64, minTotal));
-  const fieldMaxFeaturePoints = Math.round(clampNumber(source.haloFieldMaxFeaturePoints, fieldMinFeaturePoints, 64, maxTotal));
-  const fieldMinDriftSpeed = clampNumber(source.haloFieldMinDriftSpeed, 0, 12, minWalkSpeed);
-  const fieldMaxDriftSpeed = clampNumber(source.haloFieldMaxDriftSpeed, fieldMinDriftSpeed, 12, maxWalkSpeed);
-  const fieldMinDifferentialOffset = clampNumber(source.haloFieldMinDifferentialOffset, 0, 1, 0.18);
-  const fieldMaxDifferentialOffset = clampNumber(source.haloFieldMaxDifferentialOffset, fieldMinDifferentialOffset, 1, 0.46);
+  const fieldFeaturePoints = Math.round(clampNumber(source.haloFieldFeaturePoints, 0, 64, 12));
+  const fieldVectorMinSpeed = clampNumber(source.haloFieldVectorMinSpeed, 0, 12, 0.35);
+  const fieldVectorMaxSpeed = clampNumber(source.haloFieldVectorMaxSpeed, fieldVectorMinSpeed, 12, 1.2);
+  const fieldEndpointMinOffset = clampNumber(source.haloFieldEndpointMinOffset, 0, 1, 0.18);
+  const fieldEndpointMaxOffset = clampNumber(source.haloFieldEndpointMaxOffset, fieldEndpointMinOffset, 1, 0.46);
   return Object.freeze({
-    fieldCellJitter: clampNumber(source.haloFieldCellJitter, 0, 1, 0.42),
+    fieldCellSpread: clampNumber(source.haloFieldCellSpread, 0, 1, 0.62),
     fieldEnabled: source.haloFieldEnabled !== false,
-    fieldMaxDifferentialOffset,
-    fieldMaxDriftSpeed,
-    fieldMaxFeaturePoints,
-    fieldMinDifferentialOffset,
-    fieldMinDriftSpeed,
-    fieldMinFeaturePoints,
+    fieldEndpointMaxOffset,
+    fieldEndpointMinOffset,
+    fieldFeaturePoints,
     fieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, 4242)),
-    fieldSliceWidthBo: clampNumber(source.haloFieldSliceWidthBo, 0, 2, 0.18),
+    fieldVectorInfluence: clampNumber(source.haloFieldVectorInfluence, 0, 2, 1),
+    fieldVectorMaxSpeed,
+    fieldVectorMinSpeed,
+    fieldZInfluence: clampNumber(source.haloFieldZInfluence, 0, 2, 0.35),
     forkLengthMaxBo,
     forkLengthMinBo,
     forksMax,
@@ -219,23 +218,28 @@ export function createElectricAoeHaloBoltPlanner() {
     const seed = config.fieldSeed + index * 17.13;
     const cellCenter = (index + 0.5) * cellWidth + radialOffset * cellWidth * 0.18;
     const basePhase = cellCenter + (random01(seed, 31) - 0.5) * cellWidth * 0.12;
-    const virtualZ = (random01(seed, 32) - 0.5) * (0.22 + Math.min(0.8, config.fieldSliceWidthBo));
+    const virtualZ = (random01(seed, 32) - 0.5) * (0.22 + Math.min(1.2, config.fieldZInfluence));
     let vector = normalizeVector3(Math.cos(basePhase), Math.sin(basePhase), virtualZ);
-    const driftSpeed = randomBetween(seed, 51, config.fieldMinDriftSpeed, config.fieldMaxDriftSpeed);
+    const driftSpeed = randomBetween(seed, 51, config.fieldVectorMinSpeed, config.fieldVectorMaxSpeed);
     const speedSign = random01(seed, 33) < 0.5 ? -1 : 1;
     const phaseA = seed * 0.19 + config.fieldSeed * 0.0017 + radialOffset * 1.7;
     const phaseB = seed * 0.31 + config.fieldSeed * 0.0023 + radialOffset * 2.3;
     const phaseC = seed * 0.47 + config.fieldSeed * 0.0031 + radialOffset * 3.1;
     const xyAngle = speedSign * time * driftSpeed * randomBetween(seed, 34, 0.32, 0.88)
-      + Math.cos(time * randomBetween(seed, 35, 0.24, 0.72) + phaseA) * (0.06 + config.fieldCellJitter * 0.16);
-    const yzAngle = Math.cos(time * randomBetween(seed, 36, 0.18, 0.58) + phaseB) * (0.12 + config.fieldCellJitter * 0.34);
-    const xzAngle = Math.sin(time * randomBetween(seed, 37, 0.16, 0.52) + phaseC) * (0.08 + config.fieldCellJitter * 0.24);
+      + Math.cos(time * randomBetween(seed, 35, 0.24, 0.72) + phaseA) * (0.06 + config.fieldVectorInfluence * 0.16);
+    const yzAngle = Math.cos(time * randomBetween(seed, 36, 0.18, 0.58) + phaseB) * (0.12 + config.fieldZInfluence * 0.34);
+    const xzAngle = Math.sin(time * randomBetween(seed, 37, 0.16, 0.52) + phaseC) * (0.08 + config.fieldVectorInfluence * 0.24);
     vector = rotateXY(vector, xyAngle);
     vector = rotateYZ(vector, yzAngle);
     vector = rotateXZ(vector, xzAngle);
     const rawAngle = Math.atan2(vector.y, vector.x);
-    const rawDelta = shortestAngleDelta(cellCenter, rawAngle);
-    const cellOffset = Math.tanh(rawDelta / Math.max(0.001, cellWidth * 0.52)) * (0.14 + config.fieldCellJitter * 0.58);
+    const projectionWeight = smoothstep((Math.hypot(vector.x, vector.y) - 0.08) / 0.38);
+    const fieldSignal = Math.sin(rawAngle - cellCenter) * projectionWeight;
+    const cellOffsetLimit = Math.min(
+      0.42,
+      0.08 + config.fieldCellSpread * 0.18 + Math.min(1.2, config.fieldVectorInfluence) * 0.2
+    );
+    const cellOffset = Math.tanh(fieldSignal * 1.4) * cellOffsetLimit;
     return normalizeAngle(cellCenter + cellOffset * cellWidth);
   }
 
@@ -270,8 +274,8 @@ export function createElectricAoeHaloBoltPlanner() {
 
   function sampleFieldDestinationAngle({ config, index, originAngle, seed, time, total }) {
     const cellWidth = TWO_PI / Math.max(1, total);
-    const minOffset = config.fieldMinDifferentialOffset * cellWidth;
-    const maxOffset = config.fieldMaxDifferentialOffset * cellWidth;
+    const minOffset = config.fieldEndpointMinOffset * cellWidth;
+    const maxOffset = config.fieldEndpointMaxOffset * cellWidth;
     const fieldAngle = sampleFieldVectorAngle({ config, index, radialOffset: 1, time: time + seed * 0.017, total });
     const vectorDelta = shortestAngleDelta(originAngle, fieldAngle);
     const fallbackSign = random01(config.fieldSeed + seed, 71) < 0.5 ? -1 : 1;
@@ -292,7 +296,7 @@ export function createElectricAoeHaloBoltPlanner() {
     const safeTime = Math.max(0, Number(time) || 0);
     const config = normalizeConfig(rawConfig);
     const total = Math.max(0, Math.round(config.fieldEnabled
-      ? (config.fieldMinFeaturePoints + config.fieldMaxFeaturePoints) * 0.5
+      ? config.fieldFeaturePoints
       : (config.minTotal + config.maxTotal) * 0.5));
     const walkSamples = walkController.sample({
       maxWalkSpeed: config.maxWalkSpeed,

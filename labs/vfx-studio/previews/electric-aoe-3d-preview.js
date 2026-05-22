@@ -9,7 +9,7 @@ import {
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 import { buildElectricAoeDominantBoltControlPath } from "../../../src/game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloBoltPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521g";
+import { createElectricAoeHaloBoltPlanner } from "../../../src/game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521h";
 
 const CONTROL_POINT_REFRESH_MS = 1000 / 60;
 
@@ -158,12 +158,11 @@ export function createElectricAoe3dPreview({
     const forksMax = Math.round(readInputNumber(els.electricAoe3dHaloBoltForksMax, 2, forksMin, 12));
     const forkLengthMinBo = readInputNumber(els.electricAoe3dHaloBoltForkLengthMinBo, 0.2, 0, 8);
     const forkLengthMaxBo = readInputNumber(els.electricAoe3dHaloBoltForkLengthMaxBo, 0.7, forkLengthMinBo, 8);
-    const haloFieldMinFeaturePoints = Math.round(readInputNumber(els.electricAoe3dHaloFieldMinFeaturePoints, 7, 0, 64));
-    const haloFieldMaxFeaturePoints = Math.round(readInputNumber(els.electricAoe3dHaloFieldMaxFeaturePoints, 12, haloFieldMinFeaturePoints, 64));
-    const haloFieldMinDriftSpeed = readInputNumber(els.electricAoe3dHaloFieldMinDriftSpeed, 0.18, 0, 12);
-    const haloFieldMaxDriftSpeed = readInputNumber(els.electricAoe3dHaloFieldMaxDriftSpeed, 0.55, haloFieldMinDriftSpeed, 12);
-    const haloFieldMinDifferentialOffset = readInputNumber(els.electricAoe3dHaloFieldMinDifferentialOffset, 0.18, 0, 1);
-    const haloFieldMaxDifferentialOffset = readInputNumber(els.electricAoe3dHaloFieldMaxDifferentialOffset, 0.46, haloFieldMinDifferentialOffset, 1);
+    const haloFieldFeaturePoints = Math.round(readInputNumber(els.electricAoe3dHaloFieldFeaturePoints, 12, 0, 64));
+    const haloFieldVectorMinSpeed = readInputNumber(els.electricAoe3dHaloFieldVectorMinSpeed, 0.35, 0, 12);
+    const haloFieldVectorMaxSpeed = readInputNumber(els.electricAoe3dHaloFieldVectorMaxSpeed, 1.2, haloFieldVectorMinSpeed, 12);
+    const haloFieldEndpointMinOffset = readInputNumber(els.electricAoe3dHaloFieldEndpointMinOffset, 0.18, 0, 1);
+    const haloFieldEndpointMaxOffset = readInputNumber(els.electricAoe3dHaloFieldEndpointMaxOffset, 0.46, haloFieldEndpointMinOffset, 1);
     if (!haloBoltPlanner) haloBoltPlanner = createElectricAoeHaloBoltPlanner();
     return haloBoltPlanner.buildPaths({
       bo,
@@ -182,16 +181,16 @@ export function createElectricAoe3dPreview({
         haloBoltMinTotal: minTotal,
         haloBoltMinWalkSpeed: minWalkSpeed,
         haloBoltPathJitterBo: pathJitterBo,
-        haloFieldCellJitter: readInputNumber(els.electricAoe3dHaloFieldCellJitter, 0.42, 0, 1),
+        haloFieldCellSpread: readInputNumber(els.electricAoe3dHaloFieldCellSpread, 0.62, 0, 1),
         haloFieldEnabled: readInputBoolean(els.electricAoe3dHaloFieldEnabled, true),
-        haloFieldMaxDifferentialOffset,
-        haloFieldMaxDriftSpeed,
-        haloFieldMaxFeaturePoints,
-        haloFieldMinDifferentialOffset,
-        haloFieldMinDriftSpeed,
-        haloFieldMinFeaturePoints,
+        haloFieldEndpointMaxOffset,
+        haloFieldEndpointMinOffset,
+        haloFieldFeaturePoints,
         haloFieldSeed: Math.round(readInputNumber(els.electricAoe3dHaloFieldSeed, 4242, 1, 999999999)),
-        haloFieldSliceWidthBo: readInputNumber(els.electricAoe3dHaloFieldSliceWidthBo, 0.18, 0, 2),
+        haloFieldVectorInfluence: readInputNumber(els.electricAoe3dHaloFieldVectorInfluence, 1, 0, 2),
+        haloFieldVectorMaxSpeed,
+        haloFieldVectorMinSpeed,
+        haloFieldZInfluence: readInputNumber(els.electricAoe3dHaloFieldZInfluence, 0.35, 0, 2),
       },
       time,
     });
@@ -437,6 +436,16 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dHaloBoltForksMax,
       els.electricAoe3dHaloBoltForkLengthMinBo,
       els.electricAoe3dHaloBoltForkLengthMaxBo,
+      els.electricAoe3dHaloFieldEnabled,
+      els.electricAoe3dHaloFieldFeaturePoints,
+      els.electricAoe3dHaloFieldVectorMinSpeed,
+      els.electricAoe3dHaloFieldVectorMaxSpeed,
+      els.electricAoe3dHaloFieldVectorInfluence,
+      els.electricAoe3dHaloFieldCellSpread,
+      els.electricAoe3dHaloFieldEndpointMinOffset,
+      els.electricAoe3dHaloFieldEndpointMaxOffset,
+      els.electricAoe3dHaloFieldZInfluence,
+      els.electricAoe3dHaloFieldSeed,
     ].forEach((input) => {
       if (!input) return;
       input.addEventListener("blur", refreshOnCommit);

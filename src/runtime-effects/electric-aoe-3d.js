@@ -4,9 +4,9 @@ import {
   buildElectricAoeDominantBoltControlPath,
   ELECTRIC_AOE_DOMINANT_BOLT_DEFAULTS,
 } from "../game-runtime/spells/electric-aoe-dominant-bolt-planner.js?v=20260521a";
-import { createElectricAoeHaloBoltPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521g";
+import { createElectricAoeHaloBoltPlanner } from "../game-runtime/spells/electric-aoe-halo-bolt-planner.js?v=20260521h";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521180001b";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521180001";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/electric-aoe-3d-default.js?v=20260521-halo-field-b";
 
 const HALO_CONTROL_POINT_REFRESH_MS = 1000 / 30;
 
@@ -78,12 +78,11 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
   const haloBoltForksMax = Math.round(clampNumber(source.haloBoltForksMax, haloBoltForksMin, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForksMax));
   const haloBoltForkLengthMinBo = clampNumber(source.haloBoltForkLengthMinBo, 0, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkLengthMinBo);
   const haloBoltForkLengthMaxBo = clampNumber(source.haloBoltForkLengthMaxBo, haloBoltForkLengthMinBo, 8, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltForkLengthMaxBo);
-  const haloFieldMinFeaturePoints = Math.round(clampNumber(source.haloFieldMinFeaturePoints, 0, 64, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldMinFeaturePoints));
-  const haloFieldMaxFeaturePoints = Math.round(clampNumber(source.haloFieldMaxFeaturePoints, haloFieldMinFeaturePoints, 64, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldMaxFeaturePoints));
-  const haloFieldMinDriftSpeed = clampNumber(source.haloFieldMinDriftSpeed, 0, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldMinDriftSpeed);
-  const haloFieldMaxDriftSpeed = clampNumber(source.haloFieldMaxDriftSpeed, haloFieldMinDriftSpeed, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldMaxDriftSpeed);
-  const haloFieldMinDifferentialOffset = clampNumber(source.haloFieldMinDifferentialOffset, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldMinDifferentialOffset);
-  const haloFieldMaxDifferentialOffset = clampNumber(source.haloFieldMaxDifferentialOffset, haloFieldMinDifferentialOffset, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldMaxDifferentialOffset);
+  const haloFieldFeaturePoints = Math.round(clampNumber(source.haloFieldFeaturePoints, 0, 64, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldFeaturePoints));
+  const haloFieldVectorMinSpeed = clampNumber(source.haloFieldVectorMinSpeed, 0, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldVectorMinSpeed);
+  const haloFieldVectorMaxSpeed = clampNumber(source.haloFieldVectorMaxSpeed, haloFieldVectorMinSpeed, 12, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldVectorMaxSpeed);
+  const haloFieldEndpointMinOffset = clampNumber(source.haloFieldEndpointMinOffset, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldEndpointMinOffset);
+  const haloFieldEndpointMaxOffset = clampNumber(source.haloFieldEndpointMaxOffset, haloFieldEndpointMinOffset, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldEndpointMaxOffset);
   return Object.freeze({
     durationMs: Math.round(clampNumber(source.spellDurationMs ?? source.durationMs, 200, 60000, ELECTRIC_AOE_BEHAVIOR_DEFAULT.spellDurationMs)),
     dominantBoltDamageMax,
@@ -126,16 +125,16 @@ export function normalizeElectricAoe3dRuntimeConfig(raw = {}) {
     haloBoltMinTotal,
     haloBoltMinWalkSpeed,
     haloBoltPathJitterBo: clampNumber(source.haloBoltPathJitterBo, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloBoltPathJitterBo),
-    haloFieldCellJitter: clampNumber(source.haloFieldCellJitter, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldCellJitter),
+    haloFieldCellSpread: clampNumber(source.haloFieldCellSpread, 0, 1, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldCellSpread),
     haloFieldEnabled: source.haloFieldEnabled !== false,
-    haloFieldMaxDifferentialOffset,
-    haloFieldMaxDriftSpeed,
-    haloFieldMaxFeaturePoints,
-    haloFieldMinDifferentialOffset,
-    haloFieldMinDriftSpeed,
-    haloFieldMinFeaturePoints,
+    haloFieldEndpointMaxOffset,
+    haloFieldEndpointMinOffset,
+    haloFieldFeaturePoints,
     haloFieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldSeed)),
-    haloFieldSliceWidthBo: clampNumber(source.haloFieldSliceWidthBo, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldSliceWidthBo),
+    haloFieldVectorInfluence: clampNumber(source.haloFieldVectorInfluence, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldVectorInfluence),
+    haloFieldVectorMaxSpeed,
+    haloFieldVectorMinSpeed,
+    haloFieldZInfluence: clampNumber(source.haloFieldZInfluence, 0, 2, ELECTRIC_AOE_3D_PRESET_DEFAULT.haloFieldZInfluence),
   });
 }
 
