@@ -24,6 +24,16 @@ function normalizeVector(x = 0, y = 0, fallback = { x: 1, y: 0 }) {
   return { x: (Number(x) || 0) / length, y: (Number(y) || 0) / length };
 }
 
+function normalizeVector3(x = 0, y = 0, z = 0, fallback = { x: 1, y: 0, z: 0 }) {
+  const length = Math.hypot(Number(x) || 0, Number(y) || 0, Number(z) || 0);
+  if (length <= 0.000001) return fallback;
+  return {
+    x: (Number(x) || 0) / length,
+    y: (Number(y) || 0) / length,
+    z: (Number(z) || 0) / length,
+  };
+}
+
 function smoothstep(t) {
   const x = Math.max(0, Math.min(1, Number(t) || 0));
   return x * x * (3 - 2 * x);
@@ -36,6 +46,24 @@ function normalizeAngle(angle) {
 
 function shortestAngleDelta(from, to) {
   return Math.atan2(Math.sin(to - from), Math.cos(to - from));
+}
+
+function rotateXY(v, angle = 0) {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return { x: c * v.x - s * v.y, y: s * v.x + c * v.y, z: v.z };
+}
+
+function rotateXZ(v, angle = 0) {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return { x: c * v.x - s * v.z, y: v.y, z: s * v.x + c * v.z };
+}
+
+function rotateYZ(v, angle = 0) {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return { x: v.x, y: c * v.y - s * v.z, z: s * v.y + c * v.z };
 }
 
 function chooseEndpointOffsetTarget(state, seed, time) {
@@ -186,18 +214,33 @@ export function createElectricAoeHaloBoltPlanner() {
   const endpointStates = [];
   let lastEndpointTime = null;
 
-  function sampleFieldAngle({ config, index, time, total }) {
+  function sampleFieldVectorAngle({ config, index, radialOffset = 0, time, total }) {
     const cellWidth = TWO_PI / Math.max(1, total);
     const seed = config.fieldSeed + index * 17.13;
-    const cellCenter = (index + 0.5) * cellWidth;
+    const cellCenter = (index + 0.5) * cellWidth + radialOffset * cellWidth * 0.18;
+    const basePhase = cellCenter + (random01(seed, 31) - 0.5) * cellWidth * 0.12;
+    const virtualZ = (random01(seed, 32) - 0.5) * (0.22 + Math.min(0.8, config.fieldSliceWidthBo));
+    let vector = normalizeVector3(Math.cos(basePhase), Math.sin(basePhase), virtualZ);
     const driftSpeed = randomBetween(seed, 51, config.fieldMinDriftSpeed, config.fieldMaxDriftSpeed);
-    const phaseA = seed * 0.19 + config.fieldSeed * 0.0017;
-    const phaseB = seed * 0.31 + config.fieldSeed * 0.0023;
-    const primary = Math.sin(time * driftSpeed + phaseA);
-    const secondary = Math.sin(time * randomBetween(seed, 52, config.fieldMinDriftSpeed * 0.38, config.fieldMaxDriftSpeed * 0.72) + phaseB) * 0.48;
-    const slice = Math.sin(time * randomBetween(seed, 53, 0.12, 0.36) + seed * 0.47) * config.fieldSliceWidthBo * 0.05;
-    const offset = Math.max(-0.34, Math.min(0.34, (primary + secondary) * config.fieldCellJitter * 0.16 + slice));
-    return normalizeAngle(cellCenter + offset * cellWidth);
+    const speedSign = random01(seed, 33) < 0.5 ? -1 : 1;
+    const phaseA = seed * 0.19 + config.fieldSeed * 0.0017 + radialOffset * 1.7;
+    const phaseB = seed * 0.31 + config.fieldSeed * 0.0023 + radialOffset * 2.3;
+    const phaseC = seed * 0.47 + config.fieldSeed * 0.0031 + radialOffset * 3.1;
+    const xyAngle = speedSign * time * driftSpeed * randomBetween(seed, 34, 0.16, 0.42)
+      + Math.cos(time * randomBetween(seed, 35, 0.18, 0.58) + phaseA) * (0.03 + config.fieldCellJitter * 0.05);
+    const yzAngle = Math.cos(time * randomBetween(seed, 36, 0.14, 0.44) + phaseB) * (0.06 + config.fieldCellJitter * 0.14);
+    const xzAngle = Math.sin(time * randomBetween(seed, 37, 0.12, 0.38) + phaseC) * (0.04 + config.fieldCellJitter * 0.1);
+    vector = rotateXY(vector, xyAngle);
+    vector = rotateYZ(vector, yzAngle);
+    vector = rotateXZ(vector, xzAngle);
+    const rawAngle = Math.atan2(vector.y, vector.x);
+    const rawDelta = shortestAngleDelta(cellCenter, rawAngle);
+    const cellOffset = Math.tanh(rawDelta / Math.max(0.001, cellWidth * 0.72)) * (0.08 + config.fieldCellJitter * 0.28);
+    return normalizeAngle(cellCenter + cellOffset * cellWidth);
+  }
+
+  function sampleFieldAngle({ config, index, time, total }) {
+    return sampleFieldVectorAngle({ config, index, radialOffset: 0, time, total });
   }
 
   function ensureEndpointState(index, seed, time) {
@@ -229,13 +272,14 @@ export function createElectricAoeHaloBoltPlanner() {
     const cellWidth = TWO_PI / Math.max(1, total);
     const minOffset = config.fieldMinDifferentialOffset * cellWidth;
     const maxOffset = config.fieldMaxDifferentialOffset * cellWidth;
+    const fieldAngle = sampleFieldVectorAngle({ config, index, radialOffset: 1, time: time + seed * 0.017, total });
+    const vectorDelta = shortestAngleDelta(originAngle, fieldAngle);
+    const fallbackSign = random01(config.fieldSeed + seed, 71) < 0.5 ? -1 : 1;
+    const sign = Math.abs(vectorDelta) <= 0.0001 ? fallbackSign : (vectorDelta < 0 ? -1 : 1);
     const fieldSeed = config.fieldSeed + seed * 23.71 + index * 5.19;
-    const phaseA = fieldSeed * 0.097;
-    const phaseB = fieldSeed * 0.131;
-    const offsetWave = Math.sin(time * randomBetween(fieldSeed, 61, config.fieldMinDriftSpeed * 0.46, config.fieldMaxDriftSpeed * 0.82) + phaseA);
-    const magnitudeWave = 0.5 + 0.5 * Math.sin(time * randomBetween(fieldSeed, 62, 0.18, 0.54) + phaseB);
+    const magnitudeWave = 0.5 + 0.5 * Math.sin(time * randomBetween(fieldSeed, 62, 0.18, 0.54) + fieldSeed * 0.131);
     const magnitude = minOffset + (maxOffset - minOffset) * smoothstep(magnitudeWave);
-    return normalizeAngle(originAngle + offsetWave * magnitude);
+    return normalizeAngle(originAngle + sign * Math.min(maxOffset, Math.max(minOffset, Math.abs(vectorDelta) * 0.5 + magnitude * 0.5)));
   }
 
   function buildPaths({
