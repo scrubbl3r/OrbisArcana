@@ -1,6 +1,7 @@
 import { createElectricAoeHaloWalkController } from "./electric-aoe-halo-walk-controller.js?v=20260521a";
 
 const ORIGIN_RADIUS_BO = 0.5;
+const TWO_PI = Math.PI * 2;
 
 function clampNumber(value, min, max, fallback) {
   const numeric = Number(value);
@@ -28,6 +29,25 @@ function smoothstep(t) {
   return x * x * (3 - 2 * x);
 }
 
+function normalizeAngle(angle) {
+  const value = Number(angle) || 0;
+  return ((value % TWO_PI) + TWO_PI) % TWO_PI;
+}
+
+function shortestAngleDelta(from, to) {
+  return Math.atan2(Math.sin(to - from), Math.cos(to - from));
+}
+
+function chooseFieldOffsetTarget(state, seed, config, time) {
+  state.retargetCount += 1;
+  const retargetSeed = seed + state.retargetCount * 37.91 + config.fieldSeed * 0.013;
+  const sign = random01(retargetSeed, 21) < 0.5 ? -1 : 1;
+  const magnitude = randomBetween(retargetSeed, 22, 0, config.fieldCellJitter * 0.32);
+  state.targetOffsetUnit = sign * magnitude;
+  state.easeRate = randomBetween(retargetSeed, 23, 0.9, 2.6);
+  state.nextRetargetAt = time + randomBetween(retargetSeed, 24, 0.65, 2.8);
+}
+
 function chooseEndpointOffsetTarget(state, seed, time) {
   state.retargetCount += 1;
   const retargetSeed = seed + state.retargetCount * 29.73;
@@ -53,7 +73,23 @@ function normalizeConfig(raw = {}) {
   const forksMax = Math.round(clampNumber(source.haloBoltForksMax, forksMin, 12, 2));
   const forkLengthMinBo = clampNumber(source.haloBoltForkLengthMinBo, 0, 8, 0.2);
   const forkLengthMaxBo = clampNumber(source.haloBoltForkLengthMaxBo, forkLengthMinBo, 8, 0.7);
+  const fieldMinFeaturePoints = Math.round(clampNumber(source.haloFieldMinFeaturePoints, 0, 64, minTotal));
+  const fieldMaxFeaturePoints = Math.round(clampNumber(source.haloFieldMaxFeaturePoints, fieldMinFeaturePoints, 64, maxTotal));
+  const fieldMinDriftSpeed = clampNumber(source.haloFieldMinDriftSpeed, 0, 12, minWalkSpeed);
+  const fieldMaxDriftSpeed = clampNumber(source.haloFieldMaxDriftSpeed, fieldMinDriftSpeed, 12, maxWalkSpeed);
+  const fieldMinDifferentialOffset = clampNumber(source.haloFieldMinDifferentialOffset, 0, 1, 0.18);
+  const fieldMaxDifferentialOffset = clampNumber(source.haloFieldMaxDifferentialOffset, fieldMinDifferentialOffset, 1, 0.46);
   return Object.freeze({
+    fieldCellJitter: clampNumber(source.haloFieldCellJitter, 0, 1, 0.42),
+    fieldEnabled: source.haloFieldEnabled !== false,
+    fieldMaxDifferentialOffset,
+    fieldMaxDriftSpeed,
+    fieldMaxFeaturePoints,
+    fieldMinDifferentialOffset,
+    fieldMinDriftSpeed,
+    fieldMinFeaturePoints,
+    fieldSeed: Math.round(clampNumber(source.haloFieldSeed, 1, 999999999, 4242)),
+    fieldSliceWidthBo: clampNumber(source.haloFieldSliceWidthBo, 0, 2, 0.18),
     forkLengthMaxBo,
     forkLengthMinBo,
     forksMax,
@@ -157,8 +193,41 @@ function buildForks({ bo, config, pathIndex, points, seed, time }) {
 
 export function createElectricAoeHaloBoltPlanner() {
   const walkController = createElectricAoeHaloWalkController();
+  const fieldStates = [];
   const endpointStates = [];
   let lastEndpointTime = null;
+  let lastFieldTime = null;
+
+  function ensureFieldState(index, seed, config, time) {
+    if (fieldStates[index]) return fieldStates[index];
+    const sign = random01(seed + config.fieldSeed, 41) < 0.5 ? -1 : 1;
+    const state = {
+      easeRate: randomBetween(seed + config.fieldSeed, 42, 1.1, 2.4),
+      nextRetargetAt: time + randomBetween(seed + config.fieldSeed, 43, 0.45, 2.1),
+      offsetUnit: sign * randomBetween(seed + config.fieldSeed, 44, 0, config.fieldCellJitter * 0.32),
+      retargetCount: 0,
+      targetOffsetUnit: sign * randomBetween(seed + config.fieldSeed, 45, 0, config.fieldCellJitter * 0.32),
+    };
+    fieldStates[index] = state;
+    return state;
+  }
+
+  function sampleFieldAngle({ config, index, time, total }) {
+    fieldStates.length = Math.max(0, Number(total) || 0);
+    const cellWidth = TWO_PI / Math.max(1, total);
+    const seed = config.fieldSeed + index * 17.13;
+    const state = ensureFieldState(index, seed, config, time);
+    const dt = lastFieldTime == null ? 0 : Math.max(0, Math.min(0.12, time - lastFieldTime));
+    if (time >= state.nextRetargetAt) chooseFieldOffsetTarget(state, seed, config, time);
+    const blend = 1 - Math.exp(-dt * state.easeRate);
+    state.offsetUnit += (state.targetOffsetUnit - state.offsetUnit) * blend;
+    const cellCenter = (index + 0.5) * cellWidth;
+    const driftSpeed = randomBetween(seed, 51, config.fieldMinDriftSpeed, config.fieldMaxDriftSpeed);
+    const drift = Math.sin(time * driftSpeed + seed * 0.19) * config.fieldCellJitter * 0.08;
+    const slice = Math.sin(seed * 0.31 + time * randomBetween(seed, 52, 0.16, 0.48)) * config.fieldSliceWidthBo * 0.08;
+    const offset = Math.max(-0.36, Math.min(0.36, state.offsetUnit + drift + slice));
+    return normalizeAngle(cellCenter + offset * cellWidth);
+  }
 
   function ensureEndpointState(index, seed, time) {
     if (endpointStates[index]) return endpointStates[index];
@@ -185,6 +254,17 @@ export function createElectricAoeHaloBoltPlanner() {
     return originAngle + state.offset + flutter;
   }
 
+  function sampleFieldDestinationAngle({ config, index, originAngle, seed, time, total }) {
+    const cellWidth = TWO_PI / Math.max(1, total);
+    const stateAngle = sampleDestinationAngle({ index, originAngle, seed, time, total });
+    const desiredDelta = shortestAngleDelta(originAngle, stateAngle);
+    const minOffset = config.fieldMinDifferentialOffset * cellWidth;
+    const maxOffset = config.fieldMaxDifferentialOffset * cellWidth;
+    const sign = desiredDelta < 0 ? -1 : 1;
+    const magnitude = Math.max(minOffset, Math.min(maxOffset, Math.abs(desiredDelta)));
+    return normalizeAngle(originAngle + sign * magnitude);
+  }
+
   function buildPaths({
     bo = 42,
     config: rawConfig = {},
@@ -194,7 +274,9 @@ export function createElectricAoeHaloBoltPlanner() {
     const safeBo = Math.max(1, Number(bo) || 42);
     const safeTime = Math.max(0, Number(time) || 0);
     const config = normalizeConfig(rawConfig);
-    const total = Math.max(0, Math.round((config.minTotal + config.maxTotal) * 0.5));
+    const total = Math.max(0, Math.round(config.fieldEnabled
+      ? (config.fieldMinFeaturePoints + config.fieldMaxFeaturePoints) * 0.5
+      : (config.minTotal + config.maxTotal) * 0.5));
     const walkSamples = walkController.sample({
       maxWalkSpeed: config.maxWalkSpeed,
       minWalkSpeed: config.minWalkSpeed,
@@ -202,12 +284,22 @@ export function createElectricAoeHaloBoltPlanner() {
       total,
     });
     lastEndpointTime = lastEndpointTime == null ? safeTime : lastEndpointTime;
+    lastFieldTime = lastFieldTime == null ? safeTime : lastFieldTime;
     const paths = [];
     for (let pathIndex = 0; pathIndex < total; pathIndex += 1) {
       const seed = pathIndex + 1;
-      const angle = (walkSamples[pathIndex] && walkSamples[pathIndex].angle || 0)
-        + Math.sin(safeTime * randomBetween(seed, 11, 0.4, 1.2) + seed) * 0.08;
-      const destinationAngle = sampleDestinationAngle({
+      const angle = config.fieldEnabled
+        ? sampleFieldAngle({ config, index: pathIndex, time: safeTime, total })
+        : (walkSamples[pathIndex] && walkSamples[pathIndex].angle || 0)
+          + Math.sin(safeTime * randomBetween(seed, 11, 0.4, 1.2) + seed) * 0.08;
+      const destinationAngle = config.fieldEnabled ? sampleFieldDestinationAngle({
+        config,
+        index: pathIndex,
+        originAngle: angle,
+        seed,
+        time: safeTime,
+        total,
+      }) : sampleDestinationAngle({
         index: pathIndex,
         originAngle: angle,
         seed,
@@ -229,13 +321,16 @@ export function createElectricAoeHaloBoltPlanner() {
       }));
     }
     lastEndpointTime = safeTime;
+    lastFieldTime = safeTime;
     return Object.freeze(paths);
   }
 
   function reset() {
     walkController.reset();
+    fieldStates.length = 0;
     endpointStates.length = 0;
     lastEndpointTime = null;
+    lastFieldTime = null;
   }
 
   return Object.freeze({ buildPaths, reset });
