@@ -92,6 +92,13 @@ export function createElectricAoe3dPreview({
       || els.electricAoe3dHaloFieldVisibleBtn.getAttribute("aria-pressed") !== "false";
   }
 
+  function addHaloSkeletonObject(object) {
+    if (!object || !haloControlPointLayer) return;
+    object.userData.isElectricAoeHaloSkeleton = true;
+    object.visible = haloControlPointsVisible();
+    haloControlPointLayer.add(object);
+  }
+
   function readInputNumber(el, fallback, min = -Infinity, max = Infinity) {
     const numeric = Number(el && el.value);
     const safe = Number.isFinite(numeric) ? numeric : Number(fallback);
@@ -432,7 +439,6 @@ export function createElectricAoe3dPreview({
     if (!force && nowMs - haloControlPointLastRefreshMs < CONTROL_POINT_REFRESH_MS) return;
     haloControlPointLastRefreshMs = nowMs;
     clearLayerChildren(haloControlPointLayer);
-    if (!haloControlPointLayer.visible) return;
     const paths = buildHaloFieldPaths(bo, time);
     const fieldConfig = readHaloFieldConfig();
     if (!haloShellMaterial) {
@@ -453,7 +459,7 @@ export function createElectricAoe3dPreview({
       );
       shell.name = "electric_aoe3d:halo_field_shell";
       shell.renderOrder = 213;
-      haloControlPointLayer.add(shell);
+      addHaloSkeletonObject(shell);
     }
     if (!haloControlPointLineMaterial) {
       haloControlPointLineMaterial = new THREE.LineBasicMaterial({
@@ -485,7 +491,7 @@ export function createElectricAoe3dPreview({
     centerMarker.name = "electric_aoe3d:halo_field_center_point";
     centerMarker.renderOrder = 216;
     centerMarker.position.set(0, 0, fieldConfig.dominantBoltZBo * bo);
-    haloControlPointLayer.add(centerMarker);
+    addHaloSkeletonObject(centerMarker);
     const addBranchLines = (branches, namePrefix) => {
       (Array.isArray(branches) ? branches : []).forEach((branch, branchIndex) => {
         const branchPoints = (Array.isArray(branch.points) ? branch.points : []).map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
@@ -507,7 +513,7 @@ export function createElectricAoe3dPreview({
           marker.name = `electric_aoe3d:halo_control_fork_tip_${pathIndex}_${forkIndex}_${tineIndex}`;
           marker.renderOrder = 216;
           marker.position.copy(tip);
-          haloControlPointLayer.add(marker);
+          addHaloSkeletonObject(marker);
           addBranchLines(tine.branches, `electric_aoe3d:halo_control_fork_${pathIndex}_${forkIndex}_${tineIndex}`);
         });
       });
@@ -516,7 +522,7 @@ export function createElectricAoe3dPreview({
         marker.name = `electric_aoe3d:halo_control_point_${pathIndex}_${pointIndex}`;
         marker.renderOrder = 216;
         marker.position.set(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo);
-        haloControlPointLayer.add(marker);
+        addHaloSkeletonObject(marker);
       });
     });
   }
@@ -586,7 +592,7 @@ export function createElectricAoe3dPreview({
   function createHaloControlPointLayer(bo) {
     const layer = new THREE.Group();
     layer.name = "electric_aoe3d:halo_bolt_control_points";
-    layer.visible = haloControlPointsVisible();
+    layer.visible = true;
     haloControlPointLayer = layer;
     syncHaloControlPointLayer(bo, 0, true);
     return layer;
@@ -670,10 +676,7 @@ export function createElectricAoe3dPreview({
     if (!els.electricAoe3dHaloFieldVisibleBtn) return;
     const visible = els.electricAoe3dHaloFieldVisibleBtn.getAttribute("aria-pressed") !== "false";
     els.electricAoe3dHaloFieldVisibleBtn.setAttribute("aria-pressed", visible ? "false" : "true");
-    if (haloControlPointLayer) {
-      haloControlPointLayer.visible = !visible;
-      if (!visible) syncHaloControlPointLayer(readBo(), (performance.now() - createdAt) / 1000, true);
-    }
+    syncHaloControlPointLayer(readBo(), (performance.now() - createdAt) / 1000, true);
     if (inspector && typeof inspector.render === "function") inspector.render();
   }
 
