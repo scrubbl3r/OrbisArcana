@@ -192,7 +192,101 @@ function createBoltMaterial({ color, opacity, tipOpacity }) {
       void main() {
         float baseFade = mix(1.0, uTipOpacity, clamp(vPathT, 0.0, 1.0));
         float headFade = smoothstep(0.0, 0.06, vPathT);
-        gl_FragColor = vec4(uColor, uOpacity * baseFade * headFade);
+        float energy = max(0.0, uOpacity * baseFade * headFade);
+        float alpha = clamp(1.0 - exp(-energy * 2.4), 0.0, 1.0);
+        gl_FragColor = vec4(uColor * (0.72 + alpha * 0.5), alpha);
+      }
+    `,
+  });
+}
+
+function createCentralCoreMaterial({ coreColor, glowColor, intensity, softness, noiseScale, noiseSpeed }) {
+  return new THREE.ShaderMaterial({
+    blending: THREE.AdditiveBlending,
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    transparent: true,
+    toneMapped: false,
+    uniforms: {
+      uTime: { value: 0 },
+      uCoreColor: { value: coreColor },
+      uGlowColor: { value: glowColor },
+      uIntensity: { value: clampNumber(intensity, 0, 20, 3.6) },
+      uSoftness: { value: clampNumber(softness, 0, 1, 0.55) },
+      uNoiseScale: { value: clampNumber(noiseScale, 0, 200, 50) },
+      uNoiseSpeed: { value: clampNumber(noiseSpeed, 0, 60, 5) },
+    },
+    vertexShader: `
+      varying vec3 vNormalW;
+      varying vec3 vPositionW;
+      void main() {
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vPositionW = worldPosition.xyz;
+        vNormalW = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * worldPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uCoreColor;
+      uniform vec3 uGlowColor;
+      uniform float uTime;
+      uniform float uIntensity;
+      uniform float uSoftness;
+      uniform float uNoiseScale;
+      uniform float uNoiseSpeed;
+      varying vec3 vNormalW;
+      varying vec3 vPositionW;
+
+      float hash(vec3 p) {
+        p = fract(p * 0.3183099 + vec3(0.1, 0.2, 0.3));
+        p *= 17.0;
+        return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+      }
+
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = smoothstep(vec3(0.0), vec3(1.0), fract(p));
+        float n000 = hash(i + vec3(0.0, 0.0, 0.0));
+        float n100 = hash(i + vec3(1.0, 0.0, 0.0));
+        float n010 = hash(i + vec3(0.0, 1.0, 0.0));
+        float n110 = hash(i + vec3(1.0, 1.0, 0.0));
+        float n001 = hash(i + vec3(0.0, 0.0, 1.0));
+        float n101 = hash(i + vec3(1.0, 0.0, 1.0));
+        float n011 = hash(i + vec3(0.0, 1.0, 1.0));
+        float n111 = hash(i + vec3(1.0, 1.0, 1.0));
+        float nx00 = mix(n000, n100, f.x);
+        float nx10 = mix(n010, n110, f.x);
+        float nx01 = mix(n001, n101, f.x);
+        float nx11 = mix(n011, n111, f.x);
+        float nxy0 = mix(nx00, nx10, f.y);
+        float nxy1 = mix(nx01, nx11, f.y);
+        return mix(nxy0, nxy1, f.z);
+      }
+
+      float fbm(vec3 p) {
+        float sum = 0.0;
+        float amp = 0.55;
+        float norm = 0.0;
+        for (int i = 0; i < 4; i += 1) {
+          sum += noise(p) * amp;
+          norm += amp;
+          p *= 2.35;
+          amp *= 0.5;
+        }
+        return sum / max(0.0001, norm);
+      }
+
+      void main() {
+        vec3 viewDir = normalize(cameraPosition - vPositionW);
+        float facing = abs(dot(normalize(vNormalW), viewDir));
+        float rim = pow(1.0 - facing, mix(0.65, 3.5, uSoftness));
+        float field = fbm(normalize(vPositionW + vec3(0.001)) * max(0.01, uNoiseScale) + vec3(0.0, 0.0, uTime * uNoiseSpeed));
+        float pulse = 0.72 + 0.28 * sin(uTime * 25.1327 + field * 6.2832);
+        float body = pow(clamp(field, 0.0, 1.0), mix(1.8, 0.45, uSoftness));
+        float alpha = clamp((rim * 0.85 + body * 0.28) * uIntensity * 0.28 * pulse, 0.0, 1.0);
+        vec3 color = mix(uCoreColor, uGlowColor, clamp(rim + body * 0.25, 0.0, 1.0));
+        gl_FragColor = vec4(color * (0.8 + alpha * 1.3), alpha);
       }
     `,
   });
@@ -262,6 +356,7 @@ export function createTesla1Preview({
   let model = null;
   let masterLayer = null;
   let haloLayer = null;
+  let coreLayer = null;
   let treeLayer = null;
   let createdAt = 0;
 
@@ -287,6 +382,7 @@ export function createTesla1Preview({
     model = null;
     masterLayer = null;
     haloLayer = null;
+    coreLayer = null;
     treeLayer = null;
   }
 
@@ -443,6 +539,35 @@ export function createTesla1Preview({
     addBoltMeshes(treeLayer, masterTree, els, bo, "tesla1:master_tree", 216, time, 1.15);
   }
 
+  function syncCoreLayer(bo, time) {
+    if (!coreLayer) return;
+    clearLayer(coreLayer);
+    coreLayer.visible = readInputBoolean(els.tesla1BoltShaderEnabled, true) && readInputBoolean(els.tesla1BoltShaderCentralCoreEnabled, true);
+    if (!coreLayer.visible) return;
+    const coreColor = rgbColor(els.tesla1BoltShaderCoreR && els.tesla1BoltShaderCoreR.value, els.tesla1BoltShaderCoreG && els.tesla1BoltShaderCoreG.value, els.tesla1BoltShaderCoreB && els.tesla1BoltShaderCoreB.value);
+    const glowColor = rgbColor(els.tesla1BoltShaderGlowR && els.tesla1BoltShaderGlowR.value, els.tesla1BoltShaderGlowG && els.tesla1BoltShaderGlowG.value, els.tesla1BoltShaderGlowB && els.tesla1BoltShaderGlowB.value);
+    const intensity = readInputNumber(els.tesla1BoltShaderCentralCoreIntensity, 3.6, 0, 20);
+    const softness = readInputNumber(els.tesla1BoltShaderCentralCoreSoftness, 0.55, 0, 1);
+    const noiseScale = readInputNumber(els.tesla1BoltShaderCentralCoreNoiseScale, 50, 0, 200);
+    const noiseSpeed = readInputNumber(els.tesla1BoltShaderCentralCoreNoiseSpeed, 5, 0, 60);
+    const material = createCentralCoreMaterial({ coreColor, glowColor, intensity, softness, noiseScale, noiseSpeed });
+    material.uniforms.uTime.value = time;
+    const coreRadius = bo * readInputNumber(els.tesla1BoltShaderCentralCoreRadiusBo, 0.42, 0, 8);
+    const glowRadius = bo * readInputNumber(els.tesla1BoltShaderCentralCoreGlowRadiusBo, 0.82, 0, 8);
+    const core = new THREE.Mesh(new THREE.SphereGeometry(Math.max(1, coreRadius), 64, 32), material);
+    core.name = "tesla1:central_core_field";
+    core.renderOrder = 212;
+    coreLayer.add(core);
+    if (glowRadius > coreRadius) {
+      const glowMaterial = createCentralCoreMaterial({ coreColor, glowColor, intensity: intensity * 0.42, softness: Math.min(1, softness + 0.22), noiseScale, noiseSpeed });
+      glowMaterial.uniforms.uTime.value = time;
+      const glow = new THREE.Mesh(new THREE.SphereGeometry(Math.max(1, glowRadius), 64, 32), glowMaterial);
+      glow.name = "tesla1:central_core_glow";
+      glow.renderOrder = 211;
+      coreLayer.add(glow);
+    }
+  }
+
   function apply() {
     if (!els.previewRoot) return null;
     destroyInspector();
@@ -464,6 +589,7 @@ export function createTesla1Preview({
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
         syncMasterLayer(bo, time);
         syncHaloLayer(bo);
+        syncCoreLayer(bo, time);
         syncTreeLayer(bo, time);
       },
     });
@@ -490,15 +616,19 @@ export function createTesla1Preview({
     masterLayer.name = "tesla1:master_bolt_control_layer";
     haloLayer = new THREE.Group();
     haloLayer.name = "tesla1:halo_envelope_layer";
+    coreLayer = new THREE.Group();
+    coreLayer.name = "tesla1:central_core_layer";
     treeLayer = new THREE.Group();
     treeLayer.name = "tesla1:lightning_tree_layer";
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.035));
     inspector.scene.add(model);
     inspector.scene.add(haloLayer);
+    inspector.scene.add(coreLayer);
     inspector.scene.add(treeLayer);
     inspector.scene.add(masterLayer);
     syncMasterLayer(bo, 0);
     syncHaloLayer(bo);
+    syncCoreLayer(bo, 0);
     syncTreeLayer(bo, 0);
     inspector.render();
     return activeConfig;
@@ -572,6 +702,13 @@ export function createTesla1Preview({
       els.tesla1BoltShaderGlowSoftness,
       els.tesla1BoltShaderFlickerSpeedHz,
       els.tesla1BoltShaderFlickerDepth,
+      els.tesla1BoltShaderCentralCoreEnabled,
+      els.tesla1BoltShaderCentralCoreRadiusBo,
+      els.tesla1BoltShaderCentralCoreGlowRadiusBo,
+      els.tesla1BoltShaderCentralCoreNoiseScale,
+      els.tesla1BoltShaderCentralCoreNoiseSpeed,
+      els.tesla1BoltShaderCentralCoreIntensity,
+      els.tesla1BoltShaderCentralCoreSoftness,
       els.tesla1BoltShaderCoreR,
       els.tesla1BoltShaderCoreG,
       els.tesla1BoltShaderCoreB,

@@ -41,6 +41,11 @@ function readNumber(el, fallback, min = -Infinity, max = Infinity) {
   return Math.max(min, Math.min(max, Number.isFinite(safe) ? safe : min));
 }
 
+function readBoolean(el, fallback = true) {
+  if (!el) return !!fallback;
+  return !!el.checked;
+}
+
 function mapTeslaElsToElectric(els = {}) {
   const mapped = { ...els };
   for (const [teslaKey, electricKey] of Object.entries(TESLA_TO_ELECTRIC_ELEMENT_KEYS)) {
@@ -94,6 +99,13 @@ export function createTesla1AuthoringAdapter({
       haloFieldTargetMinRangeBo: readNumber(els.tesla1HaloTargetMinRangeBo, tesla1PresetDefault.haloFieldTargetMinRangeBo, 0, 32),
       haloFieldTargetMaxRangeBo: readNumber(els.tesla1HaloTargetMaxRangeBo, tesla1PresetDefault.haloFieldTargetMaxRangeBo, 0, 32),
       haloFieldContactRadiusBo: readNumber(els.tesla1HaloContactRadiusBo, tesla1PresetDefault.haloFieldContactRadiusBo, 0, 8),
+      boltShaderCentralCoreEnabled: readBoolean(els.tesla1BoltShaderCentralCoreEnabled, tesla1PresetDefault.boltShaderCentralCoreEnabled),
+      boltShaderCentralCoreRadiusBo: readNumber(els.tesla1BoltShaderCentralCoreRadiusBo, tesla1PresetDefault.boltShaderCentralCoreRadiusBo, 0, 8),
+      boltShaderCentralCoreGlowRadiusBo: readNumber(els.tesla1BoltShaderCentralCoreGlowRadiusBo, tesla1PresetDefault.boltShaderCentralCoreGlowRadiusBo, 0, 8),
+      boltShaderCentralCoreNoiseScale: readNumber(els.tesla1BoltShaderCentralCoreNoiseScale, tesla1PresetDefault.boltShaderCentralCoreNoiseScale, 0, 200),
+      boltShaderCentralCoreNoiseSpeed: readNumber(els.tesla1BoltShaderCentralCoreNoiseSpeed, tesla1PresetDefault.boltShaderCentralCoreNoiseSpeed, 0, 60),
+      boltShaderCentralCoreIntensity: readNumber(els.tesla1BoltShaderCentralCoreIntensity, tesla1PresetDefault.boltShaderCentralCoreIntensity, 0, 20),
+      boltShaderCentralCoreSoftness: readNumber(els.tesla1BoltShaderCentralCoreSoftness, tesla1PresetDefault.boltShaderCentralCoreSoftness, 0, 1),
     });
   }
 
@@ -120,6 +132,13 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1LightningTreeBranchChance) els.tesla1LightningTreeBranchChance.value = String(source.lightningTreeBranchChance ?? 0.18);
     if (els.tesla1LightningTreeBranchLengthMinBo) els.tesla1LightningTreeBranchLengthMinBo.value = String(source.lightningTreeBranchLengthMinBo ?? 0.08);
     if (els.tesla1LightningTreeBranchLengthMaxBo) els.tesla1LightningTreeBranchLengthMaxBo.value = String(source.lightningTreeBranchLengthMaxBo ?? 0.32);
+    if (els.tesla1BoltShaderCentralCoreEnabled) els.tesla1BoltShaderCentralCoreEnabled.checked = source.boltShaderCentralCoreEnabled !== false;
+    if (els.tesla1BoltShaderCentralCoreRadiusBo) els.tesla1BoltShaderCentralCoreRadiusBo.value = String(source.boltShaderCentralCoreRadiusBo ?? 0.42);
+    if (els.tesla1BoltShaderCentralCoreGlowRadiusBo) els.tesla1BoltShaderCentralCoreGlowRadiusBo.value = String(source.boltShaderCentralCoreGlowRadiusBo ?? 0.82);
+    if (els.tesla1BoltShaderCentralCoreNoiseScale) els.tesla1BoltShaderCentralCoreNoiseScale.value = String(source.boltShaderCentralCoreNoiseScale ?? 50);
+    if (els.tesla1BoltShaderCentralCoreNoiseSpeed) els.tesla1BoltShaderCentralCoreNoiseSpeed.value = String(source.boltShaderCentralCoreNoiseSpeed ?? 5);
+    if (els.tesla1BoltShaderCentralCoreIntensity) els.tesla1BoltShaderCentralCoreIntensity.value = String(source.boltShaderCentralCoreIntensity ?? 3.6);
+    if (els.tesla1BoltShaderCentralCoreSoftness) els.tesla1BoltShaderCentralCoreSoftness.value = String(source.boltShaderCentralCoreSoftness ?? 0.55);
     return true;
   }
 
