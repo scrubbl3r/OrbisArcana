@@ -2062,12 +2062,6 @@
               <label for="tesla1LightningTreeBoltCountMax">max</label><input id="tesla1LightningTreeBoltCountMax" class="paramFieldInput" type="number" min="0" max="256" step="1" value="12" />
             </div>
             <div class="paramFieldRow"><label for="tesla1LightningTreeNoiseSpeedHz">Animation Hz</label><input id="tesla1LightningTreeNoiseSpeedHz" class="paramFieldInput" type="number" min="0" max="120" step="0.1" value="18" /></div>
-            <div class="paramFieldRow"><label for="tesla1LightningTreeBranchChance">Branch chance</label><input id="tesla1LightningTreeBranchChance" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.18" /></div>
-            <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">BRANCH LENGTH BO</span>
-              <label for="tesla1LightningTreeBranchLengthMinBo">min</label><input id="tesla1LightningTreeBranchLengthMinBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.08" />
-              <label for="tesla1LightningTreeBranchLengthMaxBo">max</label><input id="tesla1LightningTreeBranchLengthMaxBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.32" />
-            </div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -3070,7 +3064,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260523-tesla-e"),
+      import("./vfx-studio-bootstrap.js?v=20260523-tesla-f"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -3103,7 +3097,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260523c";
+    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260523d";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -3120,7 +3114,7 @@
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260522172828i";
     import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522172828";
-    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260523c";
+    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260523d";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522172828b";
@@ -3630,9 +3624,6 @@
       tesla1LightningTreeBoltCountMin: $("tesla1LightningTreeBoltCountMin"),
       tesla1LightningTreeBoltCountMax: $("tesla1LightningTreeBoltCountMax"),
       tesla1LightningTreeNoiseSpeedHz: $("tesla1LightningTreeNoiseSpeedHz"),
-      tesla1LightningTreeBranchChance: $("tesla1LightningTreeBranchChance"),
-      tesla1LightningTreeBranchLengthMinBo: $("tesla1LightningTreeBranchLengthMinBo"),
-      tesla1LightningTreeBranchLengthMaxBo: $("tesla1LightningTreeBranchLengthMaxBo"),
       tesla1LightningShaderVisibleBtn: $("tesla1LightningShaderVisibleBtn"),
       tesla1BoltShaderEnabled: $("tesla1BoltShaderEnabled"),
       tesla1BoltShaderLineWidthBo: $("tesla1BoltShaderLineWidthBo"),

@@ -10,7 +10,7 @@ import {
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
 
 const ORB_RADIUS_BO = 0.5;
-const MAX_FIELD_SEGMENTS = 128;
+const MAX_HALO_BOLTS = 32;
 
 function frameCameraToSsotOrbSize(inspector, root, bo) {
   if (!inspector || !inspector.camera || !root) return;
@@ -46,11 +46,6 @@ function readInputBoolean(el, fallback = true) {
   return !!el.checked;
 }
 
-function random01(seed) {
-  const x = Math.sin((Number(seed) || 0) * 12.9898) * 43758.5453123;
-  return x - Math.floor(x);
-}
-
 function rgbColor(r = 255, g = 255, b = 255) {
   return new THREE.Color(
     clampNumber(r, 0, 255, 255) / 255,
@@ -70,44 +65,12 @@ function disposeObject(object) {
   });
 }
 
-function midpointTree({ from, to, bo, subdivisions, displacementBo, decay, smoothing, seed, time }) {
-  let points = [from.clone(), to.clone()];
-  let amplitude = Math.max(0, Number(displacementBo) || 0) * bo;
-  const safeDecay = clampNumber(decay, 0, 1, 0.58);
-  for (let depth = 0; depth < subdivisions; depth += 1) {
-    const next = [points[0]];
-    for (let index = 0; index < points.length - 1; index += 1) {
-      const a = points[index];
-      const b = points[index + 1];
-      const mid = a.clone().lerp(b, 0.5);
-      const tangent = b.clone().sub(a).normalize();
-      let normal = new THREE.Vector3(-tangent.y, tangent.x, 0);
-      if (normal.lengthSq() < 0.000001) normal = new THREE.Vector3(1, 0, 0);
-      normal.normalize();
-      const zAxis = new THREE.Vector3(0, 0, 1).cross(tangent).normalize();
-      const roll = random01(seed + depth * 83 + index * 31 + Math.floor(time * 60) * 0.13) * 2 - 1;
-      const zRoll = random01(seed + depth * 97 + index * 43 + Math.floor(time * 60) * 0.17) * 2 - 1;
-      mid.add(normal.multiplyScalar(roll * amplitude));
-      if (zAxis.lengthSq() > 0.000001) mid.add(zAxis.multiplyScalar(zRoll * amplitude * 0.35));
-      next.push(mid, b);
-    }
-    points = next;
-    amplitude *= safeDecay;
-  }
-  const smooth = clampNumber(smoothing, 0, 1, 0.22);
-  if (smooth > 0 && points.length > 3) {
-    const smoothed = [points[0]];
-    for (let index = 1; index < points.length - 1; index += 1) {
-      smoothed.push(points[index].clone().lerp(points[index - 1].clone().add(points[index + 1]).multiplyScalar(0.5), smooth * 0.5));
-    }
-    smoothed.push(points[points.length - 1]);
-    points = smoothed;
-  }
-  return points;
-}
-
 function buildLightningFieldUniformValues({
-  segments,
+  boltCount,
+  startMin,
+  startMax,
+  endMin,
+  endMax,
   bo,
   boltColor,
   lineWidth,
@@ -117,23 +80,25 @@ function buildLightningFieldUniformValues({
   flickerDepth,
   time,
 }) {
-  const starts = [];
-  const ends = [];
-  const weights = [];
-  const safeSegments = Array.isArray(segments) ? segments.slice(0, MAX_FIELD_SEGMENTS) : [];
-  for (let index = 0; index < MAX_FIELD_SEGMENTS; index += 1) {
-    const segment = safeSegments[index];
-    starts.push(segment ? segment.from : new THREE.Vector3());
-    ends.push(segment ? segment.to : new THREE.Vector3());
-    weights.push(segment ? new THREE.Vector3(segment.strength, segment.fade, segment.seed) : new THREE.Vector3());
+  const count = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCount) || 0)));
+  const descriptors = [];
+  for (let index = 0; index < MAX_HALO_BOLTS; index += 1) {
+    const seed = index * 37.13 + 11.7;
+    const slot = count > 0 ? (index + 0.5) / count : 0;
+    descriptors.push(new THREE.Vector4(
+      slot * Math.PI * 2,
+      startMin,
+      endMin,
+      seed
+    ));
   }
   return {
-    uSegmentCount: safeSegments.length,
-    uSegmentStart: starts,
-    uSegmentEnd: ends,
-    uSegmentWeight: weights,
+    uBoltCount: count,
+    uBoltDescriptor: descriptors,
     uBo: Math.max(1, bo),
     uTime: time,
+    uStartMax: Math.max(startMin, startMax),
+    uEndMax: Math.max(endMin, endMax),
     uBoltColor: boltColor,
     uLineWidth: Math.max(0.001, lineWidth),
     uIntensity: clampNumber(intensity, 0, 20, 6),
@@ -161,12 +126,12 @@ function createLightningFieldMaterial(params) {
     transparent: true,
     toneMapped: false,
     uniforms: {
-      uSegmentCount: { value: values.uSegmentCount },
-      uSegmentStart: { value: values.uSegmentStart },
-      uSegmentEnd: { value: values.uSegmentEnd },
-      uSegmentWeight: { value: values.uSegmentWeight },
+      uBoltCount: { value: values.uBoltCount },
+      uBoltDescriptor: { value: values.uBoltDescriptor },
       uBo: { value: values.uBo },
       uTime: { value: values.uTime },
+      uStartMax: { value: values.uStartMax },
+      uEndMax: { value: values.uEndMax },
       uBoltColor: { value: values.uBoltColor },
       uLineWidth: { value: values.uLineWidth },
       uIntensity: { value: values.uIntensity },
@@ -183,13 +148,13 @@ function createLightningFieldMaterial(params) {
       }
     `,
     fragmentShader: `
-      #define MAX_SEGMENTS ${MAX_FIELD_SEGMENTS}
-      uniform int uSegmentCount;
-      uniform vec3 uSegmentStart[MAX_SEGMENTS];
-      uniform vec3 uSegmentEnd[MAX_SEGMENTS];
-      uniform vec3 uSegmentWeight[MAX_SEGMENTS];
+      #define MAX_HALO_BOLTS ${MAX_HALO_BOLTS}
+      uniform int uBoltCount;
+      uniform vec4 uBoltDescriptor[MAX_HALO_BOLTS];
       uniform float uBo;
       uniform float uTime;
+      uniform float uStartMax;
+      uniform float uEndMax;
       uniform vec3 uBoltColor;
       uniform float uLineWidth;
       uniform float uIntensity;
@@ -198,60 +163,94 @@ function createLightningFieldMaterial(params) {
       uniform float uFlickerDepth;
       varying vec3 vWorldPosition;
 
-      float segmentDistance(vec2 p, vec2 a, vec2 b, out float h) {
+      mat2 rotate2(float angle) {
+        float c = cos(angle);
+        float s = sin(angle);
+        return mat2(c, -s, s, c);
+      }
+
+      float randomFloat(vec2 seed) {
+        seed = sin(seed * vec2(123.45, 546.23)) * 345.21 + 12.57;
+        return fract(seed.x * seed.y);
+      }
+
+      float simpleNoise(vec2 uv, float octaves) {
+        float sn = 0.0;
+        float amplitude = 1.0;
+        float deno = 0.0;
+        octaves = clamp(octaves, 1.0, 6.0);
+        for (float i = 1.0; i <= 6.0; i += 1.0) {
+          if (i > octaves) break;
+          vec2 grid = smoothstep(vec2(0.0), vec2(1.0), fract(uv));
+          vec2 id = floor(uv);
+          vec2 offs = vec2(0.0, 1.0);
+          float bl = randomFloat(id);
+          float br = randomFloat(id + offs.yx);
+          float tl = randomFloat(id + offs);
+          float tr = randomFloat(id + offs.yy);
+          sn += mix(mix(bl, br, grid.x), mix(tl, tr, grid.x), grid.y) * amplitude;
+          deno += amplitude;
+          uv *= 3.5;
+          amplitude *= 0.5;
+        }
+        return sn / max(0.0001, deno);
+      }
+
+      float lineSdf(vec2 p, vec2 a, vec2 b, float width, out float h) {
+        vec2 pa = p - a;
         vec2 ba = b - a;
-        h = clamp(dot(p - a, ba) / max(0.00001, dot(ba, ba)), 0.0, 1.0);
-        return length(p - (a + ba * h));
+        h = clamp(dot(pa, ba) / max(0.00001, dot(ba, ba)), 0.0, 1.0);
+        return length(pa - ba * h) - width;
+      }
+
+      vec3 proceduralBolt(vec2 p, vec4 descriptor, float index) {
+        float seed = descriptor.w;
+        float angleNoise = (randomFloat(vec2(seed, floor(uTime * 5.0))) - 0.5) * 0.42;
+        float angle = descriptor.x + angleNoise + uTime * 0.11;
+        vec2 uv = rotate2(-angle) * p;
+        float startR = mix(descriptor.y, uStartMax, randomFloat(vec2(seed, 7.0)));
+        float endR = mix(descriptor.z, uEndMax, randomFloat(vec2(seed, 11.0)));
+        float len = max(uLineWidth * 6.0, endR - startR);
+        vec2 local = vec2(uv.x - startR, uv.y);
+        vec2 t = vec2(0.0, mod(uTime, 200.0) * 2.0);
+        float sn = simpleNoise(local * vec2(0.08, 0.16) - t * 3.0 + vec2(seed * 1.5, 0.0), 2.0) * 2.0 - 1.0;
+        local.y += sn * uBo * 0.045 * smoothstep(0.0, uBo * 0.22, abs(local.x));
+
+        float h = 0.0;
+        float d = lineSdf(local, vec2(0.0), vec2(len, 0.0), uLineWidth * 0.08, h);
+        float core = uLineWidth / max(max(d, 0.0), uLineWidth * 0.025);
+        vec3 bolt = clamp(1.0 - exp(-(core * vec3(1.0, 1.08, 1.22)) * 0.08), 0.0, 1.0);
+        bolt *= mix(1.0, uTipFade, clamp(local.x / max(0.0001, len), 0.0, 1.0));
+
+        vec2 branch = rotate2(0.78) * local;
+        float branchLen = len * (0.28 + 0.28 * randomFloat(vec2(seed, 13.0)));
+        branch.x -= len * (0.28 + 0.38 * randomFloat(vec2(seed, 17.0)));
+        float bsn = simpleNoise(branch * vec2(0.1, 0.18) - t * 4.0 + vec2(seed * 2.3, 0.0), 2.0) * 2.0 - 1.0;
+        branch.y += bsn * branch.x * 0.22;
+        float bh = 0.0;
+        float bd = lineSdf(branch, vec2(0.0), vec2(branchLen, 0.0), uLineWidth * 0.04, bh);
+        float branchCore = uLineWidth / max(max(bd, 0.0), uLineWidth * 0.035);
+        vec3 branchBolt = clamp(1.0 - exp(-(branchCore * uBoltColor) * 0.06), 0.0, 1.0);
+        branchBolt *= 1.0 - clamp(branch.x / max(0.0001, branchLen), 0.0, 1.0) * 0.82;
+
+        float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(uTime * uFlickerHz * 6.2831853 + seed * 2.31));
+        float radialFade = mix(1.0, uTipFade, clamp(h, 0.0, 1.0));
+        return (bolt + branchBolt * 0.72) * flicker * radialFade;
       }
 
       void main() {
         vec2 p = vWorldPosition.xy;
         vec3 color = vec3(0.0);
-        for (int i = 0; i < MAX_SEGMENTS; i += 1) {
-          if (i >= uSegmentCount) break;
-          vec3 a = uSegmentStart[i];
-          vec3 b = uSegmentEnd[i];
-          float h = 0.0;
-          float d = segmentDistance(p, a.xy, b.xy, h);
-          float zDelta = abs(mix(a.z, b.z, h) - vWorldPosition.z);
-          float zFade = exp(-zDelta / max(uBo * 0.75, uLineWidth * 16.0));
-          float lifeFade = max(0.0, uSegmentWeight[i].y);
-          float seed = uSegmentWeight[i].z;
-          float lengthFade = mix(1.0, uTipFade, h);
-          float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(uTime * uFlickerHz * 6.2831853 + seed * 2.31));
-          float core = smoothstep(uLineWidth, uLineWidth * 0.24, d);
-          float rim = smoothstep(uLineWidth * 3.2, uLineWidth * 0.75, d) * (1.0 - core * 0.35);
-          float strength = uSegmentWeight[i].x * lifeFade * lengthFade * flicker * zFade;
-          vec3 lit = vec3(core) + uBoltColor * rim * 0.82;
-          color += lit * strength * uIntensity;
+        for (int i = 0; i < MAX_HALO_BOLTS; i += 1) {
+          if (i >= uBoltCount) break;
+          color += proceduralBolt(p, uBoltDescriptor[i], float(i)) * uIntensity;
         }
-        color = 1.0 - exp(-color * 0.38);
+        color = 1.0 - exp(-color * 0.55);
         float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
         gl_FragColor = vec4(color, alpha);
       }
     `,
   });
-}
-
-function appendFieldPolyline(segments, points, strength = 1, fade = 1, seed = 1, maxSegments = 12) {
-  if (!Array.isArray(segments) || !Array.isArray(points) || points.length < 2) return;
-  const totalPieces = points.length - 1;
-  const pieceCount = Math.max(1, Math.min(totalPieces, Math.round(maxSegments)));
-  for (let index = 0; index < pieceCount && segments.length < MAX_FIELD_SEGMENTS; index += 1) {
-    const startIndex = Math.min(totalPieces - 1, Math.floor(index * totalPieces / pieceCount));
-    const endIndex = Math.min(totalPieces, Math.max(startIndex + 1, Math.floor((index + 1) * totalPieces / pieceCount)));
-    const from = points[startIndex];
-    const to = points[endIndex];
-    if (!from || !to || from.distanceToSquared(to) <= 0.0001) continue;
-    const h = index / Math.max(1, pieceCount - 1);
-    segments.push({
-      from: from.clone(),
-      to: to.clone(),
-      strength,
-      fade: fade * (1 - h * 0.28),
-      seed: seed + index * 0.071,
-    });
-  }
 }
 
 export function createTesla1Preview({
@@ -315,14 +314,7 @@ export function createTesla1Preview({
     const boltMax = Math.round(readInputNumber(els.tesla1LightningTreeBoltCountMax, 12, boltMin, 256));
     return Object.freeze({
       boltCount: Math.round((boltMin + boltMax) * 0.5),
-      subdivisions: 7,
-      displacementBo: 0.2,
-      displacementDecay: 0.6,
-      smoothing: 0.08,
       noiseSpeedHz: readInputNumber(els.tesla1LightningTreeNoiseSpeedHz, 18, 0, 120),
-      branchChance: readInputNumber(els.tesla1LightningTreeBranchChance, 0.18, 0, 1),
-      branchLengthMinBo: readInputNumber(els.tesla1LightningTreeBranchLengthMinBo, 0.08, 0, 8),
-      branchLengthMaxBo: readInputNumber(els.tesla1LightningTreeBranchLengthMaxBo, 0.32, 0, 8),
     });
   }
 
@@ -380,111 +372,25 @@ export function createTesla1Preview({
     if (!treeLayer) return;
     treeLayer.visible = !els.tesla1LightningTreeVisibleBtn || els.tesla1LightningTreeVisibleBtn.getAttribute("aria-pressed") !== "false";
     const tree = readTreeConfig();
-    const fieldSegments = [];
     const startMin = readInputNumber(els.tesla1HaloFieldBoltStartMinBo, 0.5, 0, 32);
     const startMax = readInputNumber(els.tesla1HaloFieldBoltStartMaxBo, 0.65, startMin, 32);
     const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, 0.05, 32);
     const endMax = readInputNumber(els.tesla1HaloFieldBoltEndMaxBo, 1.6, endMin, 32);
-    const zMin = readInputNumber(els.tesla1HaloFieldZMinBo, -0.3, -32, 32);
-    const zMax = readInputNumber(els.tesla1HaloFieldZMaxBo, 0.3, zMin, 32);
-    const animatedSeed = Math.floor(time * Math.max(1, tree.noiseSpeedHz));
-    const count = Math.max(0, tree.boltCount);
-    const haloSegmentBudget = Math.max(4, Math.floor((MAX_FIELD_SEGMENTS - 28) / Math.max(1, count)));
-    for (let index = 0; index < count; index += 1) {
-      const baseSeed = index * 101 + animatedSeed * 17;
-      const theta = Math.PI * 2 * ((index + 0.5) / Math.max(1, count) + (random01(baseSeed) - 0.5) * 0.055 + time * 0.018);
-      const startRadius = bo * (startMin + (startMax - startMin) * random01(baseSeed + 7));
-      const endRadius = bo * (endMin + (endMax - endMin) * random01(baseSeed + 11));
-      const zStart = bo * (zMin + (zMax - zMin) * random01(baseSeed + 5));
-      const zEnd = bo * (zMin + (zMax - zMin) * random01(baseSeed + 19));
-      const endTheta = theta + (random01(baseSeed + 13) - 0.5) * 0.36;
-      const start = new THREE.Vector3(Math.cos(theta) * startRadius, Math.sin(theta) * startRadius, zStart);
-      const end = new THREE.Vector3(Math.cos(endTheta) * endRadius, Math.sin(endTheta) * endRadius, zEnd);
-      const trunk = midpointTree({
-        from: start,
-        to: end,
-        bo,
-        subdivisions: tree.subdivisions,
-        displacementBo: tree.displacementBo,
-        decay: tree.displacementDecay,
-        smoothing: tree.smoothing,
-        seed: baseSeed,
-        time,
-      });
-      appendFieldPolyline(fieldSegments, trunk, 0.82, 0.96, baseSeed, haloSegmentBudget);
-      if (random01(baseSeed + 23) < tree.branchChance && trunk.length > 4) {
-        const branchAt = 1 + Math.floor(random01(baseSeed + 29) * (trunk.length - 3));
-        const a = trunk[branchAt - 1];
-        const b = trunk[branchAt + 1];
-        const dir = b.clone().sub(a).normalize();
-        const normal = new THREE.Vector3(-dir.y, dir.x, 0).normalize();
-        const branchLength = bo * (tree.branchLengthMinBo + (tree.branchLengthMaxBo - tree.branchLengthMinBo) * random01(baseSeed + 31));
-        const branchEnd = trunk[branchAt].clone().add(normal.multiplyScalar(branchLength * (random01(baseSeed + 37) < 0.5 ? -1 : 1)));
-        const branch = midpointTree({
-          from: trunk[branchAt],
-          to: branchEnd,
-          bo,
-          subdivisions: Math.max(1, Math.min(tree.subdivisions, 3)),
-          displacementBo: tree.displacementBo * 0.6,
-          decay: tree.displacementDecay,
-          smoothing: tree.smoothing,
-          seed: baseSeed + 41,
-          time,
-        });
-        appendFieldPolyline(fieldSegments, branch, 0.46, 0.72, baseSeed + 41, 4);
-        if (random01(baseSeed + 47) < 0.42) {
-          const twinEnd = trunk[branchAt].clone().add(normal.multiplyScalar(branchLength * -0.72));
-          const twin = midpointTree({
-            from: trunk[branchAt],
-            to: twinEnd,
-            bo,
-            subdivisions: Math.max(1, Math.min(tree.subdivisions, 3)),
-            displacementBo: tree.displacementBo * 0.48,
-            decay: tree.displacementDecay,
-            smoothing: tree.smoothing,
-            seed: baseSeed + 53,
-            time,
-          });
-          appendFieldPolyline(fieldSegments, twin, 0.34, 0.58, baseSeed + 53, 4);
-        }
-      }
-    }
-    const includeMasterBolt = els.tesla1MasterBoltVisibleBtn && els.tesla1MasterBoltVisibleBtn.getAttribute("aria-pressed") !== "false";
-    if (includeMasterBolt) {
-      const master = masterRoute(bo, time);
-      const masterTree = midpointTree({
-        from: master[0],
-        to: master[master.length - 1],
-        bo,
-        subdivisions: Math.max(2, tree.subdivisions),
-        displacementBo: tree.displacementBo,
-        decay: tree.displacementDecay,
-        smoothing: tree.smoothing,
-        seed: 999 + animatedSeed,
-        time,
-      });
-      appendFieldPolyline(fieldSegments, masterTree, 1.18, 1, 999 + animatedSeed, 20);
-    }
     if (!readInputBoolean(els.tesla1BoltShaderEnabled, true)) {
       clearLayer(treeLayer);
       fieldMesh = null;
       fieldPlaneSize = 0;
-      fieldSegments.forEach((segment, index) => {
-        const line = new THREE.Line(
-          new THREE.BufferGeometry().setFromPoints([segment.from, segment.to]),
-          new THREE.LineBasicMaterial({ color: 0xd8f7ff, transparent: true, opacity: 0.38, depthTest: false, depthWrite: false, toneMapped: false })
-        );
-        line.name = `tesla1:field_fallback_${index}`;
-        line.renderOrder = 214;
-        treeLayer.add(line);
-      });
       return;
     }
     const boltColor = rgbColor(els.tesla1BoltShaderColorR && els.tesla1BoltShaderColorR.value, els.tesla1BoltShaderColorG && els.tesla1BoltShaderColorG.value, els.tesla1BoltShaderColorB && els.tesla1BoltShaderColorB.value);
-    const maxRangeBo = Math.max(endMax, readInputNumber(els.tesla1MasterBoltMaxRangeBo, 7, 0.25, 64));
+    const maxRangeBo = Math.max(endMax, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
     const materialParams = {
-      segments: fieldSegments,
+      boltCount: tree.boltCount,
+      startMin: bo * startMin,
+      startMax: bo * startMax,
+      endMin: bo * endMin,
+      endMax: bo * endMax,
       bo,
       boltColor,
       lineWidth: bo * readInputNumber(els.tesla1BoltShaderLineWidthBo, 0.012, 0.001, 0.25),
@@ -531,7 +437,6 @@ export function createTesla1Preview({
         const time = (performance.now() - createdAt) / 1000;
         if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = time;
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
-        syncMasterLayer(bo, time);
         syncHaloLayer(bo);
         syncTreeLayer(bo, time);
       },
@@ -615,9 +520,6 @@ export function createTesla1Preview({
       els.tesla1LightningTreeBoltCountMin,
       els.tesla1LightningTreeBoltCountMax,
       els.tesla1LightningTreeNoiseSpeedHz,
-      els.tesla1LightningTreeBranchChance,
-      els.tesla1LightningTreeBranchLengthMinBo,
-      els.tesla1LightningTreeBranchLengthMaxBo,
       els.tesla1BoltShaderEnabled,
       els.tesla1BoltShaderLineWidthBo,
       els.tesla1BoltShaderIntensity,

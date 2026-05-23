@@ -60,16 +60,12 @@ export function createTesla1AuthoringAdapter({
       "boltShaderCentralCoreSoftness",
     ].forEach((key) => delete captured[key]);
     const treeBoltCountMin = Math.round(readNumber(els.tesla1LightningTreeBoltCountMin, tesla1PresetDefault.lightningTreeBoltCountMin, 0, 256));
-    const branchLengthMinBo = readNumber(els.tesla1LightningTreeBranchLengthMinBo, tesla1PresetDefault.lightningTreeBranchLengthMinBo, 0, 8);
     return Object.freeze({
       ...captured,
       dominantBoltTargetRadiusBo: readNumber(els.tesla1MasterBoltContactRadiusBo, tesla1PresetDefault.dominantBoltTargetRadiusBo, 0, 8),
       lightningTreeBoltCountMin: treeBoltCountMin,
       lightningTreeBoltCountMax: Math.round(readNumber(els.tesla1LightningTreeBoltCountMax, tesla1PresetDefault.lightningTreeBoltCountMax, treeBoltCountMin, 256)),
       lightningTreeNoiseSpeedHz: readNumber(els.tesla1LightningTreeNoiseSpeedHz, tesla1PresetDefault.lightningTreeNoiseSpeedHz, 0, 120),
-      lightningTreeBranchChance: readNumber(els.tesla1LightningTreeBranchChance, tesla1PresetDefault.lightningTreeBranchChance, 0, 1),
-      lightningTreeBranchLengthMinBo: branchLengthMinBo,
-      lightningTreeBranchLengthMaxBo: readNumber(els.tesla1LightningTreeBranchLengthMaxBo, tesla1PresetDefault.lightningTreeBranchLengthMaxBo, branchLengthMinBo, 8),
       haloFieldTargetMinRangeBo: readNumber(els.tesla1HaloTargetMinRangeBo, tesla1PresetDefault.haloFieldTargetMinRangeBo, 0, 32),
       haloFieldTargetMaxRangeBo: readNumber(els.tesla1HaloTargetMaxRangeBo, tesla1PresetDefault.haloFieldTargetMaxRangeBo, 0, 32),
       haloFieldContactRadiusBo: readNumber(els.tesla1HaloContactRadiusBo, tesla1PresetDefault.haloFieldContactRadiusBo, 0, 8),
@@ -94,9 +90,6 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1LightningTreeBoltCountMin) els.tesla1LightningTreeBoltCountMin.value = String(source.lightningTreeBoltCountMin ?? 4);
     if (els.tesla1LightningTreeBoltCountMax) els.tesla1LightningTreeBoltCountMax.value = String(source.lightningTreeBoltCountMax ?? 12);
     if (els.tesla1LightningTreeNoiseSpeedHz) els.tesla1LightningTreeNoiseSpeedHz.value = String(source.lightningTreeNoiseSpeedHz ?? 18);
-    if (els.tesla1LightningTreeBranchChance) els.tesla1LightningTreeBranchChance.value = String(source.lightningTreeBranchChance ?? 0.18);
-    if (els.tesla1LightningTreeBranchLengthMinBo) els.tesla1LightningTreeBranchLengthMinBo.value = String(source.lightningTreeBranchLengthMinBo ?? 0.08);
-    if (els.tesla1LightningTreeBranchLengthMaxBo) els.tesla1LightningTreeBranchLengthMaxBo.value = String(source.lightningTreeBranchLengthMaxBo ?? 0.32);
     if (els.tesla1BoltShaderLineWidthBo) els.tesla1BoltShaderLineWidthBo.value = String(source.boltShaderLineWidthBo ?? 0.012);
     if (els.tesla1BoltShaderIntensity) els.tesla1BoltShaderIntensity.value = String(source.boltShaderIntensity ?? 6);
     if (els.tesla1BoltShaderTipFade) els.tesla1BoltShaderTipFade.value = String(source.boltShaderTipFade ?? 0.08);

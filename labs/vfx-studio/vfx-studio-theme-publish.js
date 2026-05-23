@@ -261,7 +261,6 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "haloFieldWanderSpeedMin", "haloFieldWanderSpeedMax", "haloFieldZMinBo", "haloFieldZMaxBo",
         "lightningTreeBoltCountMin", "lightningTreeBoltCountMax",
         "lightningTreeNoiseSpeedHz",
-        "lightningTreeBranchChance", "lightningTreeBranchLengthMinBo", "lightningTreeBranchLengthMaxBo",
         "aoeAuraDiameterBo", "aoeAuraSoftness", "aoeAuraR", "aoeAuraG", "aoeAuraB", "aoeAuraA",
         "auraAlpha", "auraScale", "auraPulse", "auraNoiseScale", "auraNoiseSpeed", "auraFresnelPower", "auraR", "auraG", "auraB",
         "wakeLengthBo", "wakeRadiusBo", "wakeSubdivisions",
