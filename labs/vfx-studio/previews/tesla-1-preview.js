@@ -136,6 +136,8 @@ function createLightningFieldMaterial({
   centralCoreSoftness,
   centralCoreNoiseScale,
   centralCoreNoiseSpeed,
+  coreAlpha,
+  glowAlpha,
   time,
 }) {
   const starts = [];
@@ -163,6 +165,8 @@ function createLightningFieldMaterial({
       uTime: { value: time },
       uCoreColor: { value: coreColor },
       uGlowColor: { value: glowColor },
+      uCoreAlpha: { value: clampNumber(coreAlpha, 0, 1, 1) },
+      uGlowAlpha: { value: clampNumber(glowAlpha, 0, 1, 1) },
       uCoreWidth: { value: Math.max(0.001, coreWidth) },
       uGlowWidth: { value: Math.max(0.001, glowWidth) },
       uCoreIntensity: { value: clampNumber(coreIntensity, 0, 20, 5.5) },
@@ -198,6 +202,8 @@ function createLightningFieldMaterial({
       uniform float uTime;
       uniform vec3 uCoreColor;
       uniform vec3 uGlowColor;
+      uniform float uCoreAlpha;
+      uniform float uGlowAlpha;
       uniform float uCoreWidth;
       uniform float uGlowWidth;
       uniform float uCoreIntensity;
@@ -299,8 +305,8 @@ function createLightningFieldMaterial({
         }
 
         vec3 color = vec3(0.0);
-        color += uGlowColor * (glowEnergy * uGlowIntensity * 0.42 + coreGlow);
-        color += uCoreColor * (coreEnergy * uCoreIntensity * 0.54 + coreField);
+        color += uGlowColor * uGlowAlpha * (glowEnergy * uGlowIntensity * 0.42 + coreGlow);
+        color += uCoreColor * uCoreAlpha * (coreEnergy * uCoreIntensity * 0.54 + coreField);
         float alpha = clamp(1.0 - exp(-length(color) * 0.38), 0.0, 1.0);
         gl_FragColor = vec4(color, alpha);
       }
@@ -556,6 +562,8 @@ export function createTesla1Preview({
       centralCoreSoftness: readInputNumber(els.tesla1BoltShaderCentralCoreSoftness, 0.55, 0, 1),
       centralCoreNoiseScale: readInputNumber(els.tesla1BoltShaderCentralCoreNoiseScale, 50, 0, 200),
       centralCoreNoiseSpeed: readInputNumber(els.tesla1BoltShaderCentralCoreNoiseSpeed, 5, 0, 60),
+      coreAlpha: readInputNumber(els.tesla1BoltShaderCoreA, 1, 0, 1),
+      glowAlpha: readInputNumber(els.tesla1BoltShaderGlowA, 1, 0, 1),
       time,
     });
     const field = new THREE.Mesh(new THREE.PlaneGeometry(planeSize, planeSize, 1, 1), material);
@@ -703,9 +711,11 @@ export function createTesla1Preview({
       els.tesla1BoltShaderCoreR,
       els.tesla1BoltShaderCoreG,
       els.tesla1BoltShaderCoreB,
+      els.tesla1BoltShaderCoreA,
       els.tesla1BoltShaderGlowR,
       els.tesla1BoltShaderGlowG,
       els.tesla1BoltShaderGlowB,
+      els.tesla1BoltShaderGlowA,
     ].forEach((field) => {
       if (!field) return;
       field.addEventListener("keydown", refreshOnCommit);

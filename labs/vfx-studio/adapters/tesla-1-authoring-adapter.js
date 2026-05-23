@@ -99,6 +99,8 @@ export function createTesla1AuthoringAdapter({
       haloFieldTargetMinRangeBo: readNumber(els.tesla1HaloTargetMinRangeBo, tesla1PresetDefault.haloFieldTargetMinRangeBo, 0, 32),
       haloFieldTargetMaxRangeBo: readNumber(els.tesla1HaloTargetMaxRangeBo, tesla1PresetDefault.haloFieldTargetMaxRangeBo, 0, 32),
       haloFieldContactRadiusBo: readNumber(els.tesla1HaloContactRadiusBo, tesla1PresetDefault.haloFieldContactRadiusBo, 0, 8),
+      boltShaderCoreA: readNumber(els.tesla1BoltShaderCoreA, tesla1PresetDefault.boltShaderCoreA, 0, 1),
+      boltShaderGlowA: readNumber(els.tesla1BoltShaderGlowA, tesla1PresetDefault.boltShaderGlowA, 0, 1),
       boltShaderCentralCoreEnabled: readBoolean(els.tesla1BoltShaderCentralCoreEnabled, tesla1PresetDefault.boltShaderCentralCoreEnabled),
       boltShaderCentralCoreRadiusBo: readNumber(els.tesla1BoltShaderCentralCoreRadiusBo, tesla1PresetDefault.boltShaderCentralCoreRadiusBo, 0, 8),
       boltShaderCentralCoreGlowRadiusBo: readNumber(els.tesla1BoltShaderCentralCoreGlowRadiusBo, tesla1PresetDefault.boltShaderCentralCoreGlowRadiusBo, 0, 8),
@@ -132,6 +134,8 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1LightningTreeBranchChance) els.tesla1LightningTreeBranchChance.value = String(source.lightningTreeBranchChance ?? 0.18);
     if (els.tesla1LightningTreeBranchLengthMinBo) els.tesla1LightningTreeBranchLengthMinBo.value = String(source.lightningTreeBranchLengthMinBo ?? 0.08);
     if (els.tesla1LightningTreeBranchLengthMaxBo) els.tesla1LightningTreeBranchLengthMaxBo.value = String(source.lightningTreeBranchLengthMaxBo ?? 0.32);
+    if (els.tesla1BoltShaderCoreA) els.tesla1BoltShaderCoreA.value = String(source.boltShaderCoreA ?? 1);
+    if (els.tesla1BoltShaderGlowA) els.tesla1BoltShaderGlowA.value = String(source.boltShaderGlowA ?? 1);
     if (els.tesla1BoltShaderCentralCoreEnabled) els.tesla1BoltShaderCentralCoreEnabled.checked = source.boltShaderCentralCoreEnabled !== false;
     if (els.tesla1BoltShaderCentralCoreRadiusBo) els.tesla1BoltShaderCentralCoreRadiusBo.value = String(source.boltShaderCentralCoreRadiusBo ?? 0.42);
     if (els.tesla1BoltShaderCentralCoreGlowRadiusBo) els.tesla1BoltShaderCentralCoreGlowRadiusBo.value = String(source.boltShaderCentralCoreGlowRadiusBo ?? 0.82);
