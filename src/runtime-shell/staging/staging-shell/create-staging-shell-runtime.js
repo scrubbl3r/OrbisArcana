@@ -10,7 +10,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260522activeaoea";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260522activeaoeb";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -18,7 +18,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260522activeaoea";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260522activeaoeb";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260519pyromodulafb";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260522-active-aoe-a";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260522-active-aoe-b";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
@@ -75,7 +75,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260522activeaoea";
+globalThis.__orbisStagingShellRuntimeVersion = "20260522activeaoeb";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2084,8 +2084,8 @@ function initShellReceiverVfxRuntime(shellContext) {
     playOrbTeleport3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playOrbTeleport3d", payload, "active_stage_orb_teleport3d_missing"),
     playBubbleShield3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playBubbleShield3d", payload, "active_stage_bubble_shield3d_missing"),
     playShockwave3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playShockwave3d", payload, "active_stage_shockwave3d_missing"),
-    playFlameAoe3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playFlameAoe3d", payload, "active_stage_flame_aoe3d_missing"),
-    playElectricAoe3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playElectricAoe3d", payload, "active_stage_electric_aoe3d_missing"),
+    playFlameAoe3dRuntime: (payload = {}) => callActiveShellRootAoeStageMethod(shellContext, "playFlameAoe3d", payload, "active_stage_flame_aoe3d_missing"),
+    playElectricAoe3dRuntime: (payload = {}) => callActiveShellRootAoeStageMethod(shellContext, "playElectricAoe3d", payload, "active_stage_electric_aoe3d_missing"),
     requestCameraTravel: (payload = {}) => {
       const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
       return cameraRuntime && typeof cameraRuntime.requestTravel === "function"
@@ -2383,6 +2383,20 @@ function callActiveShellStageMethod(shellContext, methodName, payload = {}, skip
     : { handled: false, skipped };
 }
 
+function clearInactiveShellRootAoe(shellContext, reason = "stage_inactive") {
+  if (!shellContext) return;
+  const activeAdapter = getActiveShellStageAdapter(shellContext);
+  for (const adapter of getShellStageAdapters(shellContext)) {
+    if (!adapter || adapter === activeAdapter || typeof adapter.clearRootAoe3d !== "function") continue;
+    adapter.clearRootAoe3d(reason);
+  }
+}
+
+function callActiveShellRootAoeStageMethod(shellContext, methodName, payload = {}, skipped = "active_stage_method_missing") {
+  clearInactiveShellRootAoe(shellContext, `${methodName || "root_aoe"}_started`);
+  return callActiveShellStageMethod(shellContext, methodName, payload, skipped);
+}
+
 function callShellStageMethodOnAdapters(shellContext, methodName, payload = {}, skipped = "stage_method_missing") {
   const adapters = getShellStageAdapters(shellContext);
   const results = [];
@@ -2509,6 +2523,7 @@ function syncActiveShellStage(shellContext) {
   const activeStageAdapter = resolveShellStageAdapterForMode(shellContext, modeState);
   shellContext.activeStageAdapter = activeStageAdapter || shellContext.orbStageAdapter || null;
   refreshShellActiveStageRuntimeBindings(shellContext);
+  clearInactiveShellRootAoe(shellContext, "stage_mode_changed");
   const runtime = shellContext.runtime || null;
   if (runtime) {
     runtime.stageRectCache = null;
@@ -3074,7 +3089,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260522activeaoea",
+  moduleCacheBustV = "20260522activeaoeb",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
