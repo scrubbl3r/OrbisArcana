@@ -138,8 +138,8 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1BoltShaderGlowA) els.tesla1BoltShaderGlowA.value = String(source.boltShaderGlowA ?? 1);
     if (els.tesla1BoltShaderCentralCoreEnabled) els.tesla1BoltShaderCentralCoreEnabled.checked = source.boltShaderCentralCoreEnabled !== false;
     if (els.tesla1BoltShaderCentralCoreRadiusBo) els.tesla1BoltShaderCentralCoreRadiusBo.value = String(source.boltShaderCentralCoreRadiusBo ?? 0.42);
-    if (els.tesla1BoltShaderCentralCoreGlowRadiusBo) els.tesla1BoltShaderCentralCoreGlowRadiusBo.value = String(source.boltShaderCentralCoreGlowRadiusBo ?? 0.82);
-    if (els.tesla1BoltShaderCentralCoreNoiseScale) els.tesla1BoltShaderCentralCoreNoiseScale.value = String(source.boltShaderCentralCoreNoiseScale ?? 50);
+    if (els.tesla1BoltShaderCentralCoreGlowRadiusBo) els.tesla1BoltShaderCentralCoreGlowRadiusBo.value = String(source.boltShaderCentralCoreGlowRadiusBo ?? 0.65);
+    if (els.tesla1BoltShaderCentralCoreNoiseScale) els.tesla1BoltShaderCentralCoreNoiseScale.value = String(source.boltShaderCentralCoreNoiseScale ?? 36);
     if (els.tesla1BoltShaderCentralCoreNoiseSpeed) els.tesla1BoltShaderCentralCoreNoiseSpeed.value = String(source.boltShaderCentralCoreNoiseSpeed ?? 5);
     if (els.tesla1BoltShaderCentralCoreIntensity) els.tesla1BoltShaderCentralCoreIntensity.value = String(source.boltShaderCentralCoreIntensity ?? 3.6);
     if (els.tesla1BoltShaderCentralCoreSoftness) els.tesla1BoltShaderCentralCoreSoftness.value = String(source.boltShaderCentralCoreSoftness ?? 0.55);

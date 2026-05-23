@@ -59,15 +59,6 @@ function rgbColor(r = 255, g = 255, b = 255) {
   );
 }
 
-function spherePoint(radius, theta, phi, zScale = 1) {
-  const sinPhi = Math.sin(phi);
-  return new THREE.Vector3(
-    Math.cos(theta) * sinPhi * radius,
-    Math.sin(theta) * sinPhi * radius,
-    Math.cos(phi) * radius * zScale
-  );
-}
-
 function disposeObject(object) {
   if (!object) return;
   object.traverse((child) => {
@@ -282,13 +273,13 @@ function createLightningFieldMaterial({
           float tipFade = mix(1.0, uTipOpacity, 1.0 - lifeFade);
           float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(uTime * uFlickerHz * 6.2831853 + seed * 2.31));
           float edgeNoise = fbm(vec3(p / max(1.0, uBo) * 7.5 + seed, uTime * 1.8 + seed));
-          float coreD = d + (edgeNoise - 0.5) * uCoreWidth * 0.75;
-          float glowD = d + (edgeNoise - 0.5) * uGlowWidth * 0.18;
-          float coreFalloff = exp(-pow(max(0.0, coreD) / max(0.0001, uCoreWidth), mix(0.7, 2.2, uCoreSoftness)));
-          float glowFalloff = exp(-pow(max(0.0, glowD) / max(0.0001, uGlowWidth), mix(0.55, 2.8, uGlowSoftness)));
+          float coreD = max(0.0005 * uBo, d + (edgeNoise - 0.5) * uCoreWidth * 0.22);
+          float glowD = max(0.0, d + (edgeNoise - 0.5) * uGlowWidth * 0.08);
+          float coreFalloff = 1.0 - exp(-(uCoreWidth / coreD) * mix(0.55, 1.65, 1.0 - uCoreSoftness));
+          float glowFalloff = exp(-pow(glowD / max(0.0001, uGlowWidth), mix(1.35, 3.6, uGlowSoftness)));
           float weight = uSegmentWeight[i].x * lifeFade * tipFade * flicker * zFade;
           coreEnergy += coreFalloff * weight;
-          glowEnergy += glowFalloff * weight;
+          glowEnergy += glowFalloff * weight * 0.62;
         }
 
         float coreField = 0.0;
@@ -314,13 +305,17 @@ function createLightningFieldMaterial({
   });
 }
 
-function appendFieldPolyline(segments, points, strength = 1, fade = 1, seed = 1) {
+function appendFieldPolyline(segments, points, strength = 1, fade = 1, seed = 1, maxSegments = 12) {
   if (!Array.isArray(segments) || !Array.isArray(points) || points.length < 2) return;
-  for (let index = 0; index < points.length - 1 && segments.length < MAX_FIELD_SEGMENTS; index += 1) {
-    const from = points[index];
-    const to = points[index + 1];
+  const totalPieces = points.length - 1;
+  const pieceCount = Math.max(1, Math.min(totalPieces, Math.round(maxSegments)));
+  for (let index = 0; index < pieceCount && segments.length < MAX_FIELD_SEGMENTS; index += 1) {
+    const startIndex = Math.min(totalPieces - 1, Math.floor(index * totalPieces / pieceCount));
+    const endIndex = Math.min(totalPieces, Math.max(startIndex + 1, Math.floor((index + 1) * totalPieces / pieceCount)));
+    const from = points[startIndex];
+    const to = points[endIndex];
     if (!from || !to || from.distanceToSquared(to) <= 0.0001) continue;
-    const h = index / Math.max(1, points.length - 2);
+    const h = index / Math.max(1, pieceCount - 1);
     segments.push({
       from: from.clone(),
       to: to.clone(),
@@ -463,17 +458,19 @@ export function createTesla1Preview({
     const endMax = readInputNumber(els.tesla1HaloFieldBoltEndMaxBo, 1.6, endMin, 32);
     const zMin = readInputNumber(els.tesla1HaloFieldZMinBo, -0.3, -32, 32);
     const zMax = readInputNumber(els.tesla1HaloFieldZMaxBo, 0.3, zMin, 32);
-    const zScale = Math.max(0.02, Math.max(Math.abs(zMin), Math.abs(zMax)) / Math.max(0.001, endMax));
     const animatedSeed = Math.floor(time * Math.max(1, tree.noiseSpeedHz));
     const count = Math.max(0, tree.boltCount);
+    const haloSegmentBudget = Math.max(4, Math.floor((MAX_FIELD_SEGMENTS - 28) / Math.max(1, count)));
     for (let index = 0; index < count; index += 1) {
       const baseSeed = index * 101 + animatedSeed * 17;
-      const theta = Math.PI * 2 * (index / Math.max(1, count) + random01(baseSeed) * 0.08 + time * 0.018);
-      const phi = Math.acos(2 * random01(baseSeed + 5) - 1);
+      const theta = Math.PI * 2 * ((index + 0.5) / Math.max(1, count) + (random01(baseSeed) - 0.5) * 0.055 + time * 0.018);
       const startRadius = bo * (startMin + (startMax - startMin) * random01(baseSeed + 7));
       const endRadius = bo * (endMin + (endMax - endMin) * random01(baseSeed + 11));
-      const start = spherePoint(startRadius, theta, phi, zScale);
-      const end = spherePoint(endRadius, theta + (random01(baseSeed + 13) - 0.5) * 0.36, phi + (random01(baseSeed + 19) - 0.5) * 0.24, zScale);
+      const zStart = bo * (zMin + (zMax - zMin) * random01(baseSeed + 5));
+      const zEnd = bo * (zMin + (zMax - zMin) * random01(baseSeed + 19));
+      const endTheta = theta + (random01(baseSeed + 13) - 0.5) * 0.36;
+      const start = new THREE.Vector3(Math.cos(theta) * startRadius, Math.sin(theta) * startRadius, zStart);
+      const end = new THREE.Vector3(Math.cos(endTheta) * endRadius, Math.sin(endTheta) * endRadius, zEnd);
       const trunk = midpointTree({
         from: start,
         to: end,
@@ -485,7 +482,7 @@ export function createTesla1Preview({
         seed: baseSeed,
         time,
       });
-      appendFieldPolyline(fieldSegments, trunk, 0.72, 0.9, baseSeed);
+      appendFieldPolyline(fieldSegments, trunk, 0.82, 0.96, baseSeed, haloSegmentBudget);
       if (random01(baseSeed + 23) < tree.branchChance && trunk.length > 4) {
         const branchAt = 1 + Math.floor(random01(baseSeed + 29) * (trunk.length - 3));
         const a = trunk[branchAt - 1];
@@ -505,7 +502,7 @@ export function createTesla1Preview({
           seed: baseSeed + 41,
           time,
         });
-        appendFieldPolyline(fieldSegments, branch, 0.42, 0.68, baseSeed + 41);
+        appendFieldPolyline(fieldSegments, branch, 0.46, 0.72, baseSeed + 41, 4);
       }
     }
     const master = masterRoute(bo, time);
@@ -520,7 +517,7 @@ export function createTesla1Preview({
       seed: 999 + animatedSeed,
       time,
     });
-    appendFieldPolyline(fieldSegments, masterTree, 1.15, 1, 999 + animatedSeed);
+    appendFieldPolyline(fieldSegments, masterTree, 1.18, 1, 999 + animatedSeed, 20);
     if (!readInputBoolean(els.tesla1BoltShaderEnabled, true)) {
       fieldSegments.forEach((segment, index) => {
         const line = new THREE.Line(
