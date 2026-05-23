@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-shader-c";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260522-softness-a";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -212,8 +212,11 @@ export function createStudioBootstrap({
       electricAoe3dBoltShaderGlowWidthMinBo: els.electricAoe3dBoltShaderGlowWidthMinBo,
       electricAoe3dBoltShaderGlowWidthMaxBo: els.electricAoe3dBoltShaderGlowWidthMaxBo,
       electricAoe3dBoltShaderLengthTaper: els.electricAoe3dBoltShaderLengthTaper,
+      electricAoe3dBoltShaderTipOpacity: els.electricAoe3dBoltShaderTipOpacity,
       electricAoe3dBoltShaderCoreIntensity: els.electricAoe3dBoltShaderCoreIntensity,
+      electricAoe3dBoltShaderCoreSoftness: els.electricAoe3dBoltShaderCoreSoftness,
       electricAoe3dBoltShaderGlowIntensity: els.electricAoe3dBoltShaderGlowIntensity,
+      electricAoe3dBoltShaderGlowSoftness: els.electricAoe3dBoltShaderGlowSoftness,
       electricAoe3dBoltShaderFlickerSpeedHz: els.electricAoe3dBoltShaderFlickerSpeedHz,
       electricAoe3dBoltShaderFlickerDepth: els.electricAoe3dBoltShaderFlickerDepth,
       electricAoe3dBoltShaderCoreR: els.electricAoe3dBoltShaderCoreR,

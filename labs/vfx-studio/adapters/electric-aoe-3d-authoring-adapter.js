@@ -1,4 +1,4 @@
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-shader-a";
+import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522-softness-a";
 import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260521-electric-damage-b";
 
 export function createElectricAoe3dAuthoringAdapter({
@@ -164,8 +164,11 @@ export function createElectricAoe3dAuthoringAdapter({
       boltShaderGlowWidthMinBo,
       boltShaderGlowWidthMaxBo,
       boltShaderLengthTaper: readNumber(els.electricAoe3dBoltShaderLengthTaper, defaults.boltShaderLengthTaper, 0, 4),
+      boltShaderTipOpacity: readNumber(els.electricAoe3dBoltShaderTipOpacity, defaults.boltShaderTipOpacity, 0, 1),
       boltShaderCoreIntensity: readNumber(els.electricAoe3dBoltShaderCoreIntensity, defaults.boltShaderCoreIntensity, 0, 20),
+      boltShaderCoreSoftness: readNumber(els.electricAoe3dBoltShaderCoreSoftness, defaults.boltShaderCoreSoftness, 0, 1),
       boltShaderGlowIntensity: readNumber(els.electricAoe3dBoltShaderGlowIntensity, defaults.boltShaderGlowIntensity, 0, 20),
+      boltShaderGlowSoftness: readNumber(els.electricAoe3dBoltShaderGlowSoftness, defaults.boltShaderGlowSoftness, 0, 1),
       boltShaderFlickerSpeedHz: readNumber(els.electricAoe3dBoltShaderFlickerSpeedHz, defaults.boltShaderFlickerSpeedHz, 0, 60),
       boltShaderFlickerDepth: readNumber(els.electricAoe3dBoltShaderFlickerDepth, defaults.boltShaderFlickerDepth, 0, 1),
       boltShaderCoreR: Math.round(readNumber(els.electricAoe3dBoltShaderCoreR, defaults.boltShaderCoreR, 0, 255)),
@@ -306,11 +309,20 @@ export function createElectricAoe3dAuthoringAdapter({
     if (els.electricAoe3dBoltShaderLengthTaper) {
       els.electricAoe3dBoltShaderLengthTaper.value = String(source.boltShaderLengthTaper ?? 1);
     }
+    if (els.electricAoe3dBoltShaderTipOpacity) {
+      els.electricAoe3dBoltShaderTipOpacity.value = String(source.boltShaderTipOpacity ?? 0.35);
+    }
     if (els.electricAoe3dBoltShaderCoreIntensity) {
       els.electricAoe3dBoltShaderCoreIntensity.value = String(source.boltShaderCoreIntensity ?? 3.5);
     }
+    if (els.electricAoe3dBoltShaderCoreSoftness) {
+      els.electricAoe3dBoltShaderCoreSoftness.value = String(source.boltShaderCoreSoftness ?? 0.22);
+    }
     if (els.electricAoe3dBoltShaderGlowIntensity) {
       els.electricAoe3dBoltShaderGlowIntensity.value = String(source.boltShaderGlowIntensity ?? 1.8);
+    }
+    if (els.electricAoe3dBoltShaderGlowSoftness) {
+      els.electricAoe3dBoltShaderGlowSoftness.value = String(source.boltShaderGlowSoftness ?? 0.55);
     }
     if (els.electricAoe3dBoltShaderFlickerSpeedHz) {
       els.electricAoe3dBoltShaderFlickerSpeedHz.value = String(source.boltShaderFlickerSpeedHz ?? 4);

@@ -128,6 +128,7 @@ export function createElectricAoe3dPreview({
     const sides = Math.max(3, Math.round(radialSegments));
     const positions = [];
     const indices = [];
+    const pathTs = [];
     const taperAmount = Math.max(0, Math.min(1, Number(taper) / 4));
     const worldUp = new THREE.Vector3(0, 0, 1);
     let previousNormal = null;
@@ -150,6 +151,7 @@ export function createElectricAoe3dPreview({
         const offset = normal.clone().multiplyScalar(Math.cos(angle) * radius)
           .add(binormal.clone().multiplyScalar(Math.sin(angle) * radius));
         positions.push(center.x + offset.x, center.y + offset.y, center.z + offset.z);
+        pathTs.push(t);
       }
     }
     for (let ringIndex = 0; ringIndex < tubularSegments; ringIndex += 1) {
@@ -163,8 +165,53 @@ export function createElectricAoe3dPreview({
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute("aPathT", new THREE.Float32BufferAttribute(pathTs, 1));
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
+    return geometry;
+  }
+
+  function createBoltFadeMaterial({ color, opacity, tipOpacity }) {
+    return new THREE.ShaderMaterial({
+      blending: THREE.AdditiveBlending,
+      depthTest: false,
+      depthWrite: false,
+      transparent: true,
+      toneMapped: false,
+      uniforms: {
+        uColor: { value: color },
+        uOpacity: { value: Math.max(0, Math.min(1, Number(opacity) || 0)) },
+        uTipOpacity: { value: Math.max(0, Math.min(1, Number(tipOpacity) || 0)) },
+      },
+      vertexShader: `
+        attribute float aPathT;
+        varying float vPathT;
+        void main() {
+          vPathT = aPathT;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uOpacity;
+        uniform float uTipOpacity;
+        varying float vPathT;
+        void main() {
+          float pathFade = mix(1.0, uTipOpacity, clamp(vPathT, 0.0, 1.0));
+          gl_FragColor = vec4(uColor, uOpacity * pathFade);
+        }
+      `,
+    });
+  }
+
+  function createPathLineGeometry(points = []) {
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const count = Array.isArray(points) ? points.length : 0;
+    const pathTs = [];
+    for (let index = 0; index < count; index += 1) {
+      pathTs.push(count <= 1 ? 0 : index / (count - 1));
+    }
+    geometry.setAttribute("aPathT", new THREE.Float32BufferAttribute(pathTs, 1));
     return geometry;
   }
 
@@ -194,34 +241,46 @@ export function createElectricAoe3dPreview({
     const glowMax = Math.max(glowMin, Number(config && config.boltShaderGlowWidthMaxBo) || 0.16);
     const coreRadius = bo * (coreMin + (coreMax - coreMin) * lengthMix) * 0.5;
     const glowRadius = bo * (glowMin + (glowMax - glowMin) * lengthMix) * 0.5;
+    const coreSoftness = Math.max(0, Math.min(1, Number(config && config.boltShaderCoreSoftness) || 0));
+    const glowSoftness = Math.max(0, Math.min(1, Number(config && config.boltShaderGlowSoftness) || 0));
+    const tipOpacity = Math.max(0, Math.min(1, Number(config && config.boltShaderTipOpacity) || 0));
     const flickerDepth = Math.max(0, Math.min(1, Number(config && config.boltShaderFlickerDepth) || 0));
     const flickerHz = Math.max(0, Number(config && config.boltShaderFlickerSpeedHz) || 0);
     const flicker = 1 - flickerDepth * (0.5 + 0.5 * Math.sin((time * flickerHz * Math.PI * 2) + lengthBo));
-    const glowGeometry = createTaperedTubeGeometry(points, glowRadius, 6, taper);
-    const glowMaterial = new THREE.MeshBasicMaterial({
-      blending: THREE.AdditiveBlending,
-      color: rgbColor(config && config.boltShaderGlowR, config && config.boltShaderGlowG, config && config.boltShaderGlowB),
-      opacity: Math.max(0, Math.min(1, 0.18 * (Number(config && config.boltShaderGlowIntensity) || 1.8) * flicker)),
-      transparent: true,
-      toneMapped: false,
-      depthTest: false,
-      depthWrite: false,
-    });
-    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+    const glowColor = rgbColor(config && config.boltShaderGlowR, config && config.boltShaderGlowG, config && config.boltShaderGlowB);
+    const coreColor = rgbColor(config && config.boltShaderCoreR, config && config.boltShaderCoreG, config && config.boltShaderCoreB);
+    const glow = new THREE.Mesh(
+      createTaperedTubeGeometry(points, glowRadius * (1 + glowSoftness * 1.8), 6, taper),
+      createBoltFadeMaterial({
+        color: glowColor,
+        opacity: Math.max(0, Math.min(1, 0.18 * (Number(config && config.boltShaderGlowIntensity) || 1.8) * flicker)),
+        tipOpacity,
+      })
+    );
     glow.name = `${namePrefix}_glow`;
     glow.renderOrder = renderOrder;
     layer.add(glow);
-    const coreGeometry = createTaperedTubeGeometry(points, coreRadius, 5, taper);
-    const coreMaterial = new THREE.MeshBasicMaterial({
-      blending: THREE.AdditiveBlending,
-      color: rgbColor(config && config.boltShaderCoreR, config && config.boltShaderCoreG, config && config.boltShaderCoreB),
-      opacity: Math.max(0, Math.min(1, 0.28 * (Number(config && config.boltShaderCoreIntensity) || 3.5) * flicker)),
-      transparent: true,
-      toneMapped: false,
-      depthTest: false,
-      depthWrite: false,
-    });
-    const core = new THREE.Mesh(coreGeometry, coreMaterial);
+    if (coreSoftness > 0) {
+      const coreSoft = new THREE.Mesh(
+        createTaperedTubeGeometry(points, coreRadius * (1 + coreSoftness * 2.2), 5, taper),
+        createBoltFadeMaterial({
+          color: coreColor,
+          opacity: Math.max(0, Math.min(1, 0.12 * coreSoftness * (Number(config && config.boltShaderCoreIntensity) || 3.5) * flicker)),
+          tipOpacity,
+        })
+      );
+      coreSoft.name = `${namePrefix}_core_soft`;
+      coreSoft.renderOrder = renderOrder + 1;
+      layer.add(coreSoft);
+    }
+    const core = new THREE.Mesh(
+      createTaperedTubeGeometry(points, coreRadius, 5, taper),
+      createBoltFadeMaterial({
+        color: coreColor,
+        opacity: Math.max(0, Math.min(1, 0.28 * (Number(config && config.boltShaderCoreIntensity) || 3.5) * flicker)),
+        tipOpacity,
+      })
+    );
     core.name = `${namePrefix}_core`;
     core.renderOrder = renderOrder + 1;
     layer.add(core);
@@ -287,8 +346,11 @@ export function createElectricAoe3dPreview({
       boltShaderGlowWidthMinBo: readInputNumber(els.electricAoe3dBoltShaderGlowWidthMinBo, 0.035, 0, 4),
       boltShaderGlowWidthMaxBo: readInputNumber(els.electricAoe3dBoltShaderGlowWidthMaxBo, 0.16, 0, 4),
       boltShaderLengthTaper: readInputNumber(els.electricAoe3dBoltShaderLengthTaper, 1, 0, 4),
+      boltShaderTipOpacity: readInputNumber(els.electricAoe3dBoltShaderTipOpacity, 0.35, 0, 1),
       boltShaderCoreIntensity: readInputNumber(els.electricAoe3dBoltShaderCoreIntensity, 3.5, 0, 20),
+      boltShaderCoreSoftness: readInputNumber(els.electricAoe3dBoltShaderCoreSoftness, 0.22, 0, 1),
       boltShaderGlowIntensity: readInputNumber(els.electricAoe3dBoltShaderGlowIntensity, 1.8, 0, 20),
+      boltShaderGlowSoftness: readInputNumber(els.electricAoe3dBoltShaderGlowSoftness, 0.55, 0, 1),
       boltShaderFlickerSpeedHz: readInputNumber(els.electricAoe3dBoltShaderFlickerSpeedHz, 4, 0, 60),
       boltShaderFlickerDepth: readInputNumber(els.electricAoe3dBoltShaderFlickerDepth, 0.35, 0, 1),
       boltShaderCoreR: Math.round(readInputNumber(els.electricAoe3dBoltShaderCoreR, 235, 0, 255)),
@@ -469,18 +531,15 @@ export function createElectricAoe3dPreview({
     const points = Array.isArray(path && path.points) ? path.points : [];
     const linePoints = points.map((point) => new THREE.Vector3(point.xW || 0, point.yW || 0, (point.zBo || 0) * bo));
     if (!controlPointLineMaterial) {
-      controlPointLineMaterial = new THREE.LineBasicMaterial({
-        blending: THREE.AdditiveBlending,
-        color: 0xffffff,
-        transparent: true,
+      controlPointLineMaterial = createBoltFadeMaterial({
+        color: rgbColor(shaderConfig.boltShaderCoreR, shaderConfig.boltShaderCoreG, shaderConfig.boltShaderCoreB),
         opacity: 1,
-        toneMapped: false,
-        depthTest: false,
-        depthWrite: false,
+        tipOpacity: shaderConfig.boltShaderTipOpacity,
       });
     }
-    controlPointLineMaterial.color.copy(rgbColor(shaderConfig.boltShaderCoreR, shaderConfig.boltShaderCoreG, shaderConfig.boltShaderCoreB));
-    controlPointLineMaterial.opacity = shaderConfig.boltShaderEnabled === false ? 0.68 : Math.max(0.2, Math.min(1, 0.28 * shaderConfig.boltShaderCoreIntensity));
+    controlPointLineMaterial.uniforms.uColor.value.copy(rgbColor(shaderConfig.boltShaderCoreR, shaderConfig.boltShaderCoreG, shaderConfig.boltShaderCoreB));
+    controlPointLineMaterial.uniforms.uOpacity.value = shaderConfig.boltShaderEnabled === false ? 0.68 : Math.max(0.2, Math.min(1, 0.28 * shaderConfig.boltShaderCoreIntensity));
+    controlPointLineMaterial.uniforms.uTipOpacity.value = Math.max(0, Math.min(1, Number(shaderConfig.boltShaderTipOpacity) || 0));
     if (!controlPointLine) {
       controlPointLine = new THREE.Line(new THREE.BufferGeometry(), controlPointLineMaterial);
       controlPointLine.name = "electric_aoe3d:dominant_control_line";
@@ -488,7 +547,7 @@ export function createElectricAoe3dPreview({
       controlPointLayer.add(controlPointLine);
     }
     controlPointLine.geometry.dispose();
-    controlPointLine.geometry = new THREE.BufferGeometry().setFromPoints(linePoints);
+    controlPointLine.geometry = createPathLineGeometry(linePoints);
     controlPointLine.visible = linePoints.length > 1;
     if (!controlPointGeometry) controlPointGeometry = new THREE.SphereGeometry(bo * 0.05 * 0.5, 18, 10);
     if (!controlPointMaterial) {
@@ -652,8 +711,11 @@ export function createElectricAoe3dPreview({
       els.electricAoe3dBoltShaderGlowWidthMinBo,
       els.electricAoe3dBoltShaderGlowWidthMaxBo,
       els.electricAoe3dBoltShaderLengthTaper,
+      els.electricAoe3dBoltShaderTipOpacity,
       els.electricAoe3dBoltShaderCoreIntensity,
+      els.electricAoe3dBoltShaderCoreSoftness,
       els.electricAoe3dBoltShaderGlowIntensity,
+      els.electricAoe3dBoltShaderGlowSoftness,
       els.electricAoe3dBoltShaderFlickerSpeedHz,
       els.electricAoe3dBoltShaderFlickerDepth,
       els.electricAoe3dBoltShaderCoreR,
