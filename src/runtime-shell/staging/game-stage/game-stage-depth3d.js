@@ -60,7 +60,7 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createElectricAoe3dRuntime } from "../../../runtime-effects/electric-aoe-3d.js?v=20260522172828s";
+import { createElectricAoe3dRuntime } from "../../../runtime-effects/electric-aoe-3d.js?v=20260522-stage-halo-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
@@ -263,6 +263,7 @@ export function createGameStageDepth3dLayer({
   const electricAoe3dRuntime = createElectricAoe3dRuntime({
     getParent: () => actorGroup,
     getOrbModel: () => orb3dActorRuntime.getModel(),
+    getOrbRuntimePosition: () => orb3dActorRuntime.getPosition(),
     getOrbWorldPosition: () => currentOrbWorldPosition || { xW: 0, yW: 0 },
     getEnemyTargets: () => gnatSwarm3dRuntime.getCombatTargets(),
     getLevelNav: () => currentLevelNavContext,

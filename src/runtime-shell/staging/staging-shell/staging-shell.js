@@ -1,4 +1,4 @@
-import { createStagingShellRuntime } from "./create-staging-shell-runtime.js?v=20260522172828s";
+import { createStagingShellRuntime } from "./create-staging-shell-runtime.js?v=20260522-stage-halo-a";
 import { createShellBootStatusController } from "./shell-boot-status.js?v=20260408a";
 
 globalThis.__orbisStagingShellEntryVersion = "20260522172828s";

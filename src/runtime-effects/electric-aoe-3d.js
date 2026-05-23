@@ -225,6 +225,7 @@ export function createElectricAoe3dRuntime(options = {}) {
     getLevelNav = () => null,
     getParent = () => null,
     getOrbModel = () => null,
+    getOrbRuntimePosition = () => null,
     getOrbWorldPosition = () => ({ xW: 0, yW: 0 }),
     getRuntimeZ = null,
     now = () => performance.now(),
@@ -553,89 +554,41 @@ export function createElectricAoe3dRuntime(options = {}) {
     clearLayerChildren(haloLayer);
     const time = (typeof now === "function" ? now() : performance.now()) / 1000;
     const from = typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : {};
+    const orbRuntimePosition = typeof getOrbRuntimePosition === "function" ? getOrbRuntimePosition() : null;
+    const hasOrbRuntimePosition = !!orbRuntimePosition
+      && Number.isFinite(Number(orbRuntimePosition.x))
+      && Number.isFinite(Number(orbRuntimePosition.y))
+      && Number.isFinite(Number(orbRuntimePosition.z));
     const paths = buildHaloFieldPaths(config, bo, time, from);
-    if (!haloShellMaterial) {
-      haloShellMaterial = new THREE.MeshBasicMaterial({
-        color: 0x376fff,
-        transparent: true,
-        opacity: 0.14,
-        wireframe: true,
-        toneMapped: false,
-        depthTest: false,
-        depthWrite: false,
-      });
-    }
-    if (config.haloFieldEnabled) {
-      const shellCenter = toRuntimeVector({ xW: Number(from.xW) || 0, yW: Number(from.yW) || 0, zBo: config.dominantBoltZBo }, bo, null, { usePointZ: true });
-      const shell = new THREE.Mesh(new THREE.SphereGeometry(config.haloFieldShellRadiusBo * bo, 32, 16), haloShellMaterial);
-      shell.name = "electric_aoe3d:stage_halo_field_shell";
-      shell.renderOrder = 233;
-      shell.position.copy(shellCenter);
-      haloLayer.add(shell);
-    }
-    if (!haloLineMaterial) {
-      haloLineMaterial = new THREE.LineBasicMaterial({
-        color: 0xd8f7ff,
-        transparent: true,
-        opacity: 0.56,
-        toneMapped: false,
-        depthTest: false,
-        depthWrite: false,
-      });
-    }
-    if (!haloPointMaterial) {
-      haloPointMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffff00,
-        transparent: true,
-        opacity: 0.92,
-        toneMapped: false,
-        depthTest: false,
-        depthWrite: false,
-      });
-    }
-    const pointRadius = bo * config.haloFieldPointDiameterBo * 0.5;
-    if (!haloPointGeometry || Math.abs((haloPointGeometry.userData.radius || 0) - pointRadius) > 0.0001) {
-      if (haloPointGeometry && typeof haloPointGeometry.dispose === "function") haloPointGeometry.dispose();
-      haloPointGeometry = new THREE.SphereGeometry(pointRadius, 14, 8);
-      haloPointGeometry.userData.radius = pointRadius;
-    }
-    const centerPoint = toRuntimeVector({ xW: Number(from.xW) || 0, yW: Number(from.yW) || 0, zBo: config.dominantBoltZBo }, bo, null, { usePointZ: true });
-    const centerMarker = new THREE.Mesh(haloPointGeometry, haloPointMaterial);
-    centerMarker.name = "electric_aoe3d:stage_halo_field_center_point";
-    centerMarker.renderOrder = 236;
-    centerMarker.position.copy(centerPoint);
-    haloLayer.add(centerMarker);
+    const toHaloRuntimeVector = (point, path = null) => {
+      const zOffset = (Number(point && point.zBo) || 0) * bo;
+      if (hasOrbRuntimePosition) {
+        return new THREE.Vector3(
+          Number(orbRuntimePosition.x) + ((Number(point && point.xW) || 0) - (Number(from && from.xW) || 0)),
+          Number(orbRuntimePosition.y) + ((Number(point && point.yW) || 0) - (Number(from && from.yW) || 0)),
+          Number(orbRuntimePosition.z) + zOffset
+        );
+      }
+      return toRuntimeVector(point, bo, path, { usePointZ: true });
+    };
     const addBranchLines = (branches, path, namePrefix) => {
       (Array.isArray(branches) ? branches : []).forEach((branch, branchIndex) => {
-        const branchPoints = (Array.isArray(branch.points) ? branch.points : []).map((point) => toRuntimeVector(point, bo, path, { usePointZ: true }));
+        const branchPoints = (Array.isArray(branch.points) ? branch.points : []).map((point) => toHaloRuntimeVector(point, path));
         if (branchPoints.length <= 1) return;
         addBoltShaderMeshes(haloLayer, branchPoints, config, bo, `${namePrefix}_branch_${branchIndex}`, 235, time);
       });
     };
     paths.forEach((path, pathIndex) => {
-      const linePoints = path.points.map((point) => toRuntimeVector(point, bo, path, { usePointZ: true }));
+      const linePoints = path.points.map((point) => toHaloRuntimeVector(point, path));
       addBoltShaderMeshes(haloLayer, linePoints, config, bo, `electric_aoe3d:stage_halo_control_line_${pathIndex}`, 234, time);
       addBranchLines(path.branches, path, `electric_aoe3d:stage_halo_${pathIndex}`);
       (Array.isArray(path.forks) ? path.forks : []).forEach((fork, forkIndex) => {
         (Array.isArray(fork.tines) ? fork.tines : []).forEach((tine, tineIndex) => {
-          const tinePoints = (Array.isArray(tine.points) ? tine.points : []).map((point) => toRuntimeVector(point, bo, path, { usePointZ: true }));
+          const tinePoints = (Array.isArray(tine.points) ? tine.points : []).map((point) => toHaloRuntimeVector(point, path));
           if (tinePoints.length <= 1) return;
           addBoltShaderMeshes(haloLayer, tinePoints, config, bo, `electric_aoe3d:stage_halo_fork_${pathIndex}_${forkIndex}_${tineIndex}`, 235, time);
-          const tip = tinePoints[tinePoints.length - 1];
-          const marker = new THREE.Mesh(haloPointGeometry, haloPointMaterial);
-          marker.name = `electric_aoe3d:stage_halo_fork_tip_${pathIndex}_${forkIndex}_${tineIndex}`;
-          marker.renderOrder = 236;
-          marker.position.copy(tip);
-          haloLayer.add(marker);
           addBranchLines(tine.branches, path, `electric_aoe3d:stage_halo_fork_${pathIndex}_${forkIndex}_${tineIndex}`);
         });
-      });
-      linePoints.slice(-1).forEach((point, pointIndex) => {
-        const marker = new THREE.Mesh(haloPointGeometry, haloPointMaterial);
-        marker.name = `electric_aoe3d:stage_halo_control_point_${pathIndex}_${pointIndex}`;
-        marker.renderOrder = 236;
-        marker.position.copy(point);
-        haloLayer.add(marker);
       });
     });
   }
