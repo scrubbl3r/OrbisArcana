@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260523-tesla-d";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260523-tesla-e";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -319,7 +319,7 @@ export function createStudioBootstrap({
       electricAoe3dHaloBoltShapePathJitterBo: null,
       electricAoe3dHaloBoltShapeSpeedHz: null,
       electricAoe3dHaloBoltShapeSmoothing: null,
-      electricAoe3dHaloBoltForkChance: els.tesla1LightningTreeForkChance,
+      electricAoe3dHaloBoltForkChance: null,
       electricAoe3dHaloBoltBranchEnabled: null,
       electricAoe3dHaloBoltBranchChance: els.tesla1LightningTreeBranchChance,
     }),

@@ -60,25 +60,13 @@ export function createTesla1AuthoringAdapter({
       "boltShaderCentralCoreSoftness",
     ].forEach((key) => delete captured[key]);
     const treeBoltCountMin = Math.round(readNumber(els.tesla1LightningTreeBoltCountMin, tesla1PresetDefault.lightningTreeBoltCountMin, 0, 256));
-    const treeFrequencyMinMs = Math.round(readNumber(els.tesla1LightningTreeFrequencyMinMs, tesla1PresetDefault.lightningTreeFrequencyMinMs, 16, 60000));
-    const treeTtlMinMs = Math.round(readNumber(els.tesla1LightningTreeTtlMinMs, tesla1PresetDefault.lightningTreeTtlMinMs, 16, 20000));
     const branchLengthMinBo = readNumber(els.tesla1LightningTreeBranchLengthMinBo, tesla1PresetDefault.lightningTreeBranchLengthMinBo, 0, 8);
     return Object.freeze({
       ...captured,
       dominantBoltTargetRadiusBo: readNumber(els.tesla1MasterBoltContactRadiusBo, tesla1PresetDefault.dominantBoltTargetRadiusBo, 0, 8),
       lightningTreeBoltCountMin: treeBoltCountMin,
       lightningTreeBoltCountMax: Math.round(readNumber(els.tesla1LightningTreeBoltCountMax, tesla1PresetDefault.lightningTreeBoltCountMax, treeBoltCountMin, 256)),
-      lightningTreeFrequencyMinMs: treeFrequencyMinMs,
-      lightningTreeFrequencyMaxMs: Math.round(readNumber(els.tesla1LightningTreeFrequencyMaxMs, tesla1PresetDefault.lightningTreeFrequencyMaxMs, treeFrequencyMinMs, 60000)),
-      lightningTreeTtlMinMs: treeTtlMinMs,
-      lightningTreeTtlMaxMs: Math.round(readNumber(els.tesla1LightningTreeTtlMaxMs, tesla1PresetDefault.lightningTreeTtlMaxMs, treeTtlMinMs, 20000)),
-      lightningTreeSubdivisions: Math.round(readNumber(els.tesla1LightningTreeSubdivisions, tesla1PresetDefault.lightningTreeSubdivisions, 0, 10)),
-      lightningTreeDisplacementBo: readNumber(els.tesla1LightningTreeDisplacementBo, tesla1PresetDefault.lightningTreeDisplacementBo, 0, 8),
-      lightningTreeDisplacementDecay: readNumber(els.tesla1LightningTreeDisplacementDecay, tesla1PresetDefault.lightningTreeDisplacementDecay, 0, 1),
-      lightningTreeSmoothing: readNumber(els.tesla1LightningTreeSmoothing, tesla1PresetDefault.lightningTreeSmoothing, 0, 1),
       lightningTreeNoiseSpeedHz: readNumber(els.tesla1LightningTreeNoiseSpeedHz, tesla1PresetDefault.lightningTreeNoiseSpeedHz, 0, 120),
-      lightningTreeForkChance: readNumber(els.tesla1LightningTreeForkChance, tesla1PresetDefault.lightningTreeForkChance, 0, 1),
-      lightningTreeForkDepth: Math.round(readNumber(els.tesla1LightningTreeForkDepth, tesla1PresetDefault.lightningTreeForkDepth, 0, 4)),
       lightningTreeBranchChance: readNumber(els.tesla1LightningTreeBranchChance, tesla1PresetDefault.lightningTreeBranchChance, 0, 1),
       lightningTreeBranchLengthMinBo: branchLengthMinBo,
       lightningTreeBranchLengthMaxBo: readNumber(els.tesla1LightningTreeBranchLengthMaxBo, tesla1PresetDefault.lightningTreeBranchLengthMaxBo, branchLengthMinBo, 8),
@@ -105,17 +93,7 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1HaloContactRadiusBo) els.tesla1HaloContactRadiusBo.value = String(source.haloFieldContactRadiusBo ?? 0.14);
     if (els.tesla1LightningTreeBoltCountMin) els.tesla1LightningTreeBoltCountMin.value = String(source.lightningTreeBoltCountMin ?? 4);
     if (els.tesla1LightningTreeBoltCountMax) els.tesla1LightningTreeBoltCountMax.value = String(source.lightningTreeBoltCountMax ?? 12);
-    if (els.tesla1LightningTreeFrequencyMinMs) els.tesla1LightningTreeFrequencyMinMs.value = String(source.lightningTreeFrequencyMinMs ?? 90);
-    if (els.tesla1LightningTreeFrequencyMaxMs) els.tesla1LightningTreeFrequencyMaxMs.value = String(source.lightningTreeFrequencyMaxMs ?? 260);
-    if (els.tesla1LightningTreeTtlMinMs) els.tesla1LightningTreeTtlMinMs.value = String(source.lightningTreeTtlMinMs ?? 120);
-    if (els.tesla1LightningTreeTtlMaxMs) els.tesla1LightningTreeTtlMaxMs.value = String(source.lightningTreeTtlMaxMs ?? 420);
-    if (els.tesla1LightningTreeSubdivisions) els.tesla1LightningTreeSubdivisions.value = String(source.lightningTreeSubdivisions ?? 5);
-    if (els.tesla1LightningTreeDisplacementBo) els.tesla1LightningTreeDisplacementBo.value = String(source.lightningTreeDisplacementBo ?? 0.22);
-    if (els.tesla1LightningTreeDisplacementDecay) els.tesla1LightningTreeDisplacementDecay.value = String(source.lightningTreeDisplacementDecay ?? 0.58);
-    if (els.tesla1LightningTreeSmoothing) els.tesla1LightningTreeSmoothing.value = String(source.lightningTreeSmoothing ?? 0.22);
     if (els.tesla1LightningTreeNoiseSpeedHz) els.tesla1LightningTreeNoiseSpeedHz.value = String(source.lightningTreeNoiseSpeedHz ?? 18);
-    if (els.tesla1LightningTreeForkChance) els.tesla1LightningTreeForkChance.value = String(source.lightningTreeForkChance ?? 0.15);
-    if (els.tesla1LightningTreeForkDepth) els.tesla1LightningTreeForkDepth.value = String(source.lightningTreeForkDepth ?? 1);
     if (els.tesla1LightningTreeBranchChance) els.tesla1LightningTreeBranchChance.value = String(source.lightningTreeBranchChance ?? 0.18);
     if (els.tesla1LightningTreeBranchLengthMinBo) els.tesla1LightningTreeBranchLengthMinBo.value = String(source.lightningTreeBranchLengthMinBo ?? 0.08);
     if (els.tesla1LightningTreeBranchLengthMaxBo) els.tesla1LightningTreeBranchLengthMaxBo.value = String(source.lightningTreeBranchLengthMaxBo ?? 0.32);

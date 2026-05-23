@@ -214,16 +214,18 @@ function createLightningFieldMaterial(params) {
           float h = 0.0;
           float d = segmentDistance(p, a.xy, b.xy, h);
           float zDelta = abs(mix(a.z, b.z, h) - vWorldPosition.z);
-          float zFade = exp(-zDelta / max(uBo * 0.06, uLineWidth * 4.0));
+          float zFade = exp(-zDelta / max(uBo * 0.75, uLineWidth * 16.0));
           float lifeFade = max(0.0, uSegmentWeight[i].y);
           float seed = uSegmentWeight[i].z;
           float lengthFade = mix(1.0, uTipFade, h);
           float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(uTime * uFlickerHz * 6.2831853 + seed * 2.31));
-          float line = uLineWidth / max(d, uLineWidth * 0.035);
-          vec3 lit = line * uBoltColor * uIntensity * 0.18;
-          lit = clamp(1.0 - exp(lit * -0.05), 0.0, 1.0);
-          color += lit * uSegmentWeight[i].x * lifeFade * lengthFade * flicker * zFade;
+          float core = smoothstep(uLineWidth, uLineWidth * 0.24, d);
+          float rim = smoothstep(uLineWidth * 3.2, uLineWidth * 0.75, d) * (1.0 - core * 0.35);
+          float strength = uSegmentWeight[i].x * lifeFade * lengthFade * flicker * zFade;
+          vec3 lit = vec3(core) + uBoltColor * rim * 0.82;
+          color += lit * strength * uIntensity;
         }
+        color = 1.0 - exp(-color * 0.38);
         float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
         gl_FragColor = vec4(color, alpha);
       }
@@ -313,13 +315,11 @@ export function createTesla1Preview({
     const boltMax = Math.round(readInputNumber(els.tesla1LightningTreeBoltCountMax, 12, boltMin, 256));
     return Object.freeze({
       boltCount: Math.round((boltMin + boltMax) * 0.5),
-      subdivisions: Math.round(readInputNumber(els.tesla1LightningTreeSubdivisions, 5, 0, 10)),
-      displacementBo: readInputNumber(els.tesla1LightningTreeDisplacementBo, 0.22, 0, 8),
-      displacementDecay: readInputNumber(els.tesla1LightningTreeDisplacementDecay, 0.58, 0, 1),
-      smoothing: readInputNumber(els.tesla1LightningTreeSmoothing, 0.22, 0, 1),
+      subdivisions: 7,
+      displacementBo: 0.2,
+      displacementDecay: 0.6,
+      smoothing: 0.08,
       noiseSpeedHz: readInputNumber(els.tesla1LightningTreeNoiseSpeedHz, 18, 0, 120),
-      forkChance: readInputNumber(els.tesla1LightningTreeForkChance, 0.15, 0, 1),
-      forkDepth: Math.round(readInputNumber(els.tesla1LightningTreeForkDepth, 1, 0, 4)),
       branchChance: readInputNumber(els.tesla1LightningTreeBranchChance, 0.18, 0, 1),
       branchLengthMinBo: readInputNumber(els.tesla1LightningTreeBranchLengthMinBo, 0.08, 0, 8),
       branchLengthMaxBo: readInputNumber(els.tesla1LightningTreeBranchLengthMaxBo, 0.32, 0, 8),
@@ -432,6 +432,21 @@ export function createTesla1Preview({
           time,
         });
         appendFieldPolyline(fieldSegments, branch, 0.46, 0.72, baseSeed + 41, 4);
+        if (random01(baseSeed + 47) < 0.42) {
+          const twinEnd = trunk[branchAt].clone().add(normal.multiplyScalar(branchLength * -0.72));
+          const twin = midpointTree({
+            from: trunk[branchAt],
+            to: twinEnd,
+            bo,
+            subdivisions: Math.max(1, Math.min(tree.subdivisions, 3)),
+            displacementBo: tree.displacementBo * 0.48,
+            decay: tree.displacementDecay,
+            smoothing: tree.smoothing,
+            seed: baseSeed + 53,
+            time,
+          });
+          appendFieldPolyline(fieldSegments, twin, 0.34, 0.58, baseSeed + 53, 4);
+        }
       }
     }
     const master = masterRoute(bo, time);
@@ -596,17 +611,7 @@ export function createTesla1Preview({
       els.tesla1HaloFieldZMaxBo,
       els.tesla1LightningTreeBoltCountMin,
       els.tesla1LightningTreeBoltCountMax,
-      els.tesla1LightningTreeFrequencyMinMs,
-      els.tesla1LightningTreeFrequencyMaxMs,
-      els.tesla1LightningTreeTtlMinMs,
-      els.tesla1LightningTreeTtlMaxMs,
-      els.tesla1LightningTreeSubdivisions,
-      els.tesla1LightningTreeDisplacementBo,
-      els.tesla1LightningTreeDisplacementDecay,
-      els.tesla1LightningTreeSmoothing,
       els.tesla1LightningTreeNoiseSpeedHz,
-      els.tesla1LightningTreeForkChance,
-      els.tesla1LightningTreeForkDepth,
       els.tesla1LightningTreeBranchChance,
       els.tesla1LightningTreeBranchLengthMinBo,
       els.tesla1LightningTreeBranchLengthMaxBo,

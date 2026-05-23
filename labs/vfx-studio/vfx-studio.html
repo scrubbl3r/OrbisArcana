@@ -2061,23 +2061,7 @@
               <label for="tesla1LightningTreeBoltCountMin">min</label><input id="tesla1LightningTreeBoltCountMin" class="paramFieldInput" type="number" min="0" max="256" step="1" value="4" />
               <label for="tesla1LightningTreeBoltCountMax">max</label><input id="tesla1LightningTreeBoltCountMax" class="paramFieldInput" type="number" min="0" max="256" step="1" value="12" />
             </div>
-            <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">FREQUENCY MS</span>
-              <label for="tesla1LightningTreeFrequencyMinMs">min</label><input id="tesla1LightningTreeFrequencyMinMs" class="paramFieldInput" type="number" min="16" max="60000" step="1" value="90" />
-              <label for="tesla1LightningTreeFrequencyMaxMs">max</label><input id="tesla1LightningTreeFrequencyMaxMs" class="paramFieldInput" type="number" min="16" max="60000" step="1" value="260" />
-            </div>
-            <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">TTL MS</span>
-              <label for="tesla1LightningTreeTtlMinMs">min</label><input id="tesla1LightningTreeTtlMinMs" class="paramFieldInput" type="number" min="16" max="20000" step="1" value="120" />
-              <label for="tesla1LightningTreeTtlMaxMs">max</label><input id="tesla1LightningTreeTtlMaxMs" class="paramFieldInput" type="number" min="16" max="20000" step="1" value="420" />
-            </div>
-            <div class="paramFieldRow"><label for="tesla1LightningTreeSubdivisions">Subdivisions</label><input id="tesla1LightningTreeSubdivisions" class="paramFieldInput" type="number" min="0" max="10" step="1" value="5" /></div>
-            <div class="paramFieldRow"><label for="tesla1LightningTreeDisplacementBo">Displacement BO</label><input id="tesla1LightningTreeDisplacementBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.22" /></div>
-            <div class="paramFieldRow"><label for="tesla1LightningTreeDisplacementDecay">Displacement decay</label><input id="tesla1LightningTreeDisplacementDecay" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.58" /></div>
-            <div class="paramFieldRow"><label for="tesla1LightningTreeSmoothing">Smoothing</label><input id="tesla1LightningTreeSmoothing" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.22" /></div>
-            <div class="paramFieldRow"><label for="tesla1LightningTreeNoiseSpeedHz">Noise speed Hz</label><input id="tesla1LightningTreeNoiseSpeedHz" class="paramFieldInput" type="number" min="0" max="120" step="0.1" value="18" /></div>
-            <div class="paramFieldRow"><label for="tesla1LightningTreeForkChance">Fork chance</label><input id="tesla1LightningTreeForkChance" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.15" /></div>
-            <div class="paramFieldRow"><label for="tesla1LightningTreeForkDepth">Fork depth</label><input id="tesla1LightningTreeForkDepth" class="paramFieldInput" type="number" min="0" max="4" step="1" value="1" /></div>
+            <div class="paramFieldRow"><label for="tesla1LightningTreeNoiseSpeedHz">Animation Hz</label><input id="tesla1LightningTreeNoiseSpeedHz" class="paramFieldInput" type="number" min="0" max="120" step="0.1" value="18" /></div>
             <div class="paramFieldRow"><label for="tesla1LightningTreeBranchChance">Branch chance</label><input id="tesla1LightningTreeBranchChance" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.18" /></div>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">BRANCH LENGTH BO</span>
@@ -2109,7 +2093,7 @@
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="tesla1MasterBoltControls">Master Bolt</button>
-            <button id="tesla1MasterBoltVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Master Bolt visibility" title="Toggle Master Bolt visibility"></button>
+            <button id="tesla1MasterBoltVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="false" aria-label="Toggle Master Bolt visibility" title="Toggle Master Bolt visibility"></button>
           </div>
           <div id="tesla1MasterBoltControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="rgbaParamRow densityRangeRow">
@@ -2124,7 +2108,7 @@
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="tesla1HaloControls">Halo</button>
-            <button id="tesla1HaloVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Halo visibility" title="Toggle Halo visibility"></button>
+            <button id="tesla1HaloVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="false" aria-label="Toggle Halo visibility" title="Toggle Halo visibility"></button>
           </div>
           <div id="tesla1HaloControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow"><label for="tesla1HaloFieldEnabled">Halo enabled</label><input id="tesla1HaloFieldEnabled" class="paramFieldInput" type="checkbox" checked /></div>
@@ -3086,7 +3070,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260523-tesla-d"),
+      import("./vfx-studio-bootstrap.js?v=20260523-tesla-e"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -3119,7 +3103,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260523b";
+    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260523c";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -3136,7 +3120,7 @@
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260522172828i";
     import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522172828";
-    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260523b";
+    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260523c";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522172828b";
@@ -3645,17 +3629,7 @@
       tesla1LightningTreeVisibleBtn: $("tesla1LightningTreeVisibleBtn"),
       tesla1LightningTreeBoltCountMin: $("tesla1LightningTreeBoltCountMin"),
       tesla1LightningTreeBoltCountMax: $("tesla1LightningTreeBoltCountMax"),
-      tesla1LightningTreeFrequencyMinMs: $("tesla1LightningTreeFrequencyMinMs"),
-      tesla1LightningTreeFrequencyMaxMs: $("tesla1LightningTreeFrequencyMaxMs"),
-      tesla1LightningTreeTtlMinMs: $("tesla1LightningTreeTtlMinMs"),
-      tesla1LightningTreeTtlMaxMs: $("tesla1LightningTreeTtlMaxMs"),
-      tesla1LightningTreeSubdivisions: $("tesla1LightningTreeSubdivisions"),
-      tesla1LightningTreeDisplacementBo: $("tesla1LightningTreeDisplacementBo"),
-      tesla1LightningTreeDisplacementDecay: $("tesla1LightningTreeDisplacementDecay"),
-      tesla1LightningTreeSmoothing: $("tesla1LightningTreeSmoothing"),
       tesla1LightningTreeNoiseSpeedHz: $("tesla1LightningTreeNoiseSpeedHz"),
-      tesla1LightningTreeForkChance: $("tesla1LightningTreeForkChance"),
-      tesla1LightningTreeForkDepth: $("tesla1LightningTreeForkDepth"),
       tesla1LightningTreeBranchChance: $("tesla1LightningTreeBranchChance"),
       tesla1LightningTreeBranchLengthMinBo: $("tesla1LightningTreeBranchLengthMinBo"),
       tesla1LightningTreeBranchLengthMaxBo: $("tesla1LightningTreeBranchLengthMaxBo"),
