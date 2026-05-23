@@ -113,6 +113,7 @@ export function createTesla1AuthoringAdapter({
 
   function apply(els = {}, settings = null, options = {}) {
     const source = settings && typeof settings === "object" ? settings : defaultSettings();
+    const restoredVisibleAlpha = (Number(source.boltShaderCoreA) || 0) <= 0 && (Number(source.boltShaderGlowA) || 0) <= 0;
     electricAdapter.apply(mapTeslaElsToElectric(els), source, options);
     if (els.tesla1MasterBoltContactRadiusBo) els.tesla1MasterBoltContactRadiusBo.value = String(source.dominantBoltTargetRadiusBo ?? 0.18);
     if (els.tesla1HaloTargetMinRangeBo) els.tesla1HaloTargetMinRangeBo.value = String(source.haloFieldTargetMinRangeBo ?? 0.5);
@@ -134,8 +135,8 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1LightningTreeBranchChance) els.tesla1LightningTreeBranchChance.value = String(source.lightningTreeBranchChance ?? 0.18);
     if (els.tesla1LightningTreeBranchLengthMinBo) els.tesla1LightningTreeBranchLengthMinBo.value = String(source.lightningTreeBranchLengthMinBo ?? 0.08);
     if (els.tesla1LightningTreeBranchLengthMaxBo) els.tesla1LightningTreeBranchLengthMaxBo.value = String(source.lightningTreeBranchLengthMaxBo ?? 0.32);
-    if (els.tesla1BoltShaderCoreA) els.tesla1BoltShaderCoreA.value = String(source.boltShaderCoreA ?? 1);
-    if (els.tesla1BoltShaderGlowA) els.tesla1BoltShaderGlowA.value = String(source.boltShaderGlowA ?? 1);
+    if (els.tesla1BoltShaderCoreA) els.tesla1BoltShaderCoreA.value = String(restoredVisibleAlpha ? 1 : source.boltShaderCoreA ?? 1);
+    if (els.tesla1BoltShaderGlowA) els.tesla1BoltShaderGlowA.value = String(restoredVisibleAlpha ? 1 : source.boltShaderGlowA ?? 1);
     if (els.tesla1BoltShaderCentralCoreEnabled) els.tesla1BoltShaderCentralCoreEnabled.checked = source.boltShaderCentralCoreEnabled !== false;
     if (els.tesla1BoltShaderCentralCoreRadiusBo) els.tesla1BoltShaderCentralCoreRadiusBo.value = String(source.boltShaderCentralCoreRadiusBo ?? 0.42);
     if (els.tesla1BoltShaderCentralCoreGlowRadiusBo) els.tesla1BoltShaderCentralCoreGlowRadiusBo.value = String(source.boltShaderCentralCoreGlowRadiusBo ?? 0.65);

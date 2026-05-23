@@ -59,6 +59,13 @@ function rgbColor(r = 255, g = 255, b = 255) {
   );
 }
 
+function visibleShaderAlphas(coreAlpha, glowAlpha) {
+  const core = clampNumber(coreAlpha, 0, 1, 1);
+  const glow = clampNumber(glowAlpha, 0, 1, 1);
+  if (core <= 0 && glow <= 0) return Object.freeze({ core: 1, glow: 1 });
+  return Object.freeze({ core, glow });
+}
+
 function disposeObject(object) {
   if (!object) return;
   object.traverse((child) => {
@@ -150,8 +157,8 @@ function buildLightningFieldUniformValues({
     uTime: time,
     uCoreColor: coreColor,
     uGlowColor: glowColor,
-    uCoreAlpha: clampNumber(coreAlpha, 0, 1, 1),
-    uGlowAlpha: clampNumber(glowAlpha, 0, 1, 1),
+    uCoreAlpha: visibleShaderAlphas(coreAlpha, glowAlpha).core,
+    uGlowAlpha: visibleShaderAlphas(coreAlpha, glowAlpha).glow,
     uCoreWidth: Math.max(0.001, coreWidth),
     uGlowWidth: Math.max(0.001, glowWidth),
     uCoreIntensity: clampNumber(coreIntensity, 0, 20, 5.5),
