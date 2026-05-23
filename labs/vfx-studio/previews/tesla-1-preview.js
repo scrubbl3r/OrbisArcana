@@ -106,7 +106,7 @@ function midpointTree({ from, to, bo, subdivisions, displacementBo, decay, smoot
   return points;
 }
 
-function createLightningFieldMaterial({
+function buildLightningFieldUniformValues({
   segments,
   bo,
   coreColor,
@@ -141,6 +141,47 @@ function createLightningFieldMaterial({
     ends.push(segment ? segment.to : new THREE.Vector3());
     weights.push(segment ? new THREE.Vector3(segment.strength, segment.fade, segment.seed) : new THREE.Vector3());
   }
+  return {
+    uSegmentCount: safeSegments.length,
+    uSegmentStart: starts,
+    uSegmentEnd: ends,
+    uSegmentWeight: weights,
+    uBo: Math.max(1, bo),
+    uTime: time,
+    uCoreColor: coreColor,
+    uGlowColor: glowColor,
+    uCoreAlpha: clampNumber(coreAlpha, 0, 1, 1),
+    uGlowAlpha: clampNumber(glowAlpha, 0, 1, 1),
+    uCoreWidth: Math.max(0.001, coreWidth),
+    uGlowWidth: Math.max(0.001, glowWidth),
+    uCoreIntensity: clampNumber(coreIntensity, 0, 20, 5.5),
+    uGlowIntensity: clampNumber(glowIntensity, 0, 20, 3.2),
+    uCoreSoftness: clampNumber(coreSoftness, 0, 1, 0.22),
+    uGlowSoftness: clampNumber(glowSoftness, 0, 1, 0.82),
+    uFlickerHz: clampNumber(flickerHz, 0, 60, 4),
+    uFlickerDepth: clampNumber(flickerDepth, 0, 1, 0.5),
+    uTipOpacity: clampNumber(tipOpacity, 0, 1, 0),
+    uCentralCoreEnabled: centralCoreEnabled ? 1 : 0,
+    uCentralCoreRadius: Math.max(0, centralCoreRadius),
+    uCentralCoreGlowRadius: Math.max(0.001, centralCoreGlowRadius),
+    uCentralCoreIntensity: clampNumber(centralCoreIntensity, 0, 20, 3.6),
+    uCentralCoreSoftness: clampNumber(centralCoreSoftness, 0, 1, 0.55),
+    uCentralCoreNoiseScale: clampNumber(centralCoreNoiseScale, 0, 200, 50),
+    uCentralCoreNoiseSpeed: clampNumber(centralCoreNoiseSpeed, 0, 60, 5),
+  };
+}
+
+function updateLightningFieldMaterial(material, params) {
+  if (!material || !material.uniforms) return;
+  const values = buildLightningFieldUniformValues(params);
+  Object.entries(values).forEach(([key, value]) => {
+    if (!material.uniforms[key]) material.uniforms[key] = { value };
+    else material.uniforms[key].value = value;
+  });
+}
+
+function createLightningFieldMaterial(params) {
+  const values = buildLightningFieldUniformValues(params);
   return new THREE.ShaderMaterial({
     blending: THREE.AdditiveBlending,
     depthTest: false,
@@ -148,32 +189,32 @@ function createLightningFieldMaterial({
     transparent: true,
     toneMapped: false,
     uniforms: {
-      uSegmentCount: { value: safeSegments.length },
-      uSegmentStart: { value: starts },
-      uSegmentEnd: { value: ends },
-      uSegmentWeight: { value: weights },
-      uBo: { value: Math.max(1, bo) },
-      uTime: { value: time },
-      uCoreColor: { value: coreColor },
-      uGlowColor: { value: glowColor },
-      uCoreAlpha: { value: clampNumber(coreAlpha, 0, 1, 1) },
-      uGlowAlpha: { value: clampNumber(glowAlpha, 0, 1, 1) },
-      uCoreWidth: { value: Math.max(0.001, coreWidth) },
-      uGlowWidth: { value: Math.max(0.001, glowWidth) },
-      uCoreIntensity: { value: clampNumber(coreIntensity, 0, 20, 5.5) },
-      uGlowIntensity: { value: clampNumber(glowIntensity, 0, 20, 3.2) },
-      uCoreSoftness: { value: clampNumber(coreSoftness, 0, 1, 0.22) },
-      uGlowSoftness: { value: clampNumber(glowSoftness, 0, 1, 0.82) },
-      uFlickerHz: { value: clampNumber(flickerHz, 0, 60, 4) },
-      uFlickerDepth: { value: clampNumber(flickerDepth, 0, 1, 0.5) },
-      uTipOpacity: { value: clampNumber(tipOpacity, 0, 1, 0) },
-      uCentralCoreEnabled: { value: centralCoreEnabled ? 1 : 0 },
-      uCentralCoreRadius: { value: Math.max(0, centralCoreRadius) },
-      uCentralCoreGlowRadius: { value: Math.max(0.001, centralCoreGlowRadius) },
-      uCentralCoreIntensity: { value: clampNumber(centralCoreIntensity, 0, 20, 3.6) },
-      uCentralCoreSoftness: { value: clampNumber(centralCoreSoftness, 0, 1, 0.55) },
-      uCentralCoreNoiseScale: { value: clampNumber(centralCoreNoiseScale, 0, 200, 50) },
-      uCentralCoreNoiseSpeed: { value: clampNumber(centralCoreNoiseSpeed, 0, 60, 5) },
+      uSegmentCount: { value: values.uSegmentCount },
+      uSegmentStart: { value: values.uSegmentStart },
+      uSegmentEnd: { value: values.uSegmentEnd },
+      uSegmentWeight: { value: values.uSegmentWeight },
+      uBo: { value: values.uBo },
+      uTime: { value: values.uTime },
+      uCoreColor: { value: values.uCoreColor },
+      uGlowColor: { value: values.uGlowColor },
+      uCoreAlpha: { value: values.uCoreAlpha },
+      uGlowAlpha: { value: values.uGlowAlpha },
+      uCoreWidth: { value: values.uCoreWidth },
+      uGlowWidth: { value: values.uGlowWidth },
+      uCoreIntensity: { value: values.uCoreIntensity },
+      uGlowIntensity: { value: values.uGlowIntensity },
+      uCoreSoftness: { value: values.uCoreSoftness },
+      uGlowSoftness: { value: values.uGlowSoftness },
+      uFlickerHz: { value: values.uFlickerHz },
+      uFlickerDepth: { value: values.uFlickerDepth },
+      uTipOpacity: { value: values.uTipOpacity },
+      uCentralCoreEnabled: { value: values.uCentralCoreEnabled },
+      uCentralCoreRadius: { value: values.uCentralCoreRadius },
+      uCentralCoreGlowRadius: { value: values.uCentralCoreGlowRadius },
+      uCentralCoreIntensity: { value: values.uCentralCoreIntensity },
+      uCentralCoreSoftness: { value: values.uCentralCoreSoftness },
+      uCentralCoreNoiseScale: { value: values.uCentralCoreNoiseScale },
+      uCentralCoreNoiseSpeed: { value: values.uCentralCoreNoiseSpeed },
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -337,6 +378,8 @@ export function createTesla1Preview({
   let masterLayer = null;
   let haloLayer = null;
   let treeLayer = null;
+  let fieldMesh = null;
+  let fieldPlaneSize = 0;
   let createdAt = 0;
 
   function readBo() {
@@ -362,6 +405,8 @@ export function createTesla1Preview({
     masterLayer = null;
     haloLayer = null;
     treeLayer = null;
+    fieldMesh = null;
+    fieldPlaneSize = 0;
   }
 
   function masterRoute(bo, time) {
@@ -448,7 +493,6 @@ export function createTesla1Preview({
 
   function syncTreeLayer(bo, time) {
     if (!treeLayer) return;
-    clearLayer(treeLayer);
     treeLayer.visible = !els.tesla1LightningTreeVisibleBtn || els.tesla1LightningTreeVisibleBtn.getAttribute("aria-pressed") !== "false";
     const tree = readTreeConfig();
     const fieldSegments = [];
@@ -519,6 +563,9 @@ export function createTesla1Preview({
     });
     appendFieldPolyline(fieldSegments, masterTree, 1.18, 1, 999 + animatedSeed, 20);
     if (!readInputBoolean(els.tesla1BoltShaderEnabled, true)) {
+      clearLayer(treeLayer);
+      fieldMesh = null;
+      fieldPlaneSize = 0;
       fieldSegments.forEach((segment, index) => {
         const line = new THREE.Line(
           new THREE.BufferGeometry().setFromPoints([segment.from, segment.to]),
@@ -538,7 +585,7 @@ export function createTesla1Preview({
     const glowMax = readInputNumber(els.tesla1BoltShaderGlowWidthMaxBo, 0.16, glowMin, 4);
     const maxRangeBo = Math.max(endMax, readInputNumber(els.tesla1MasterBoltMaxRangeBo, 7, 0.25, 64), readInputNumber(els.tesla1BoltShaderCentralCoreGlowRadiusBo, 0.82, 0, 8));
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
-    const material = createLightningFieldMaterial({
+    const materialParams = {
       segments: fieldSegments,
       bo,
       coreColor,
@@ -562,11 +609,23 @@ export function createTesla1Preview({
       coreAlpha: readInputNumber(els.tesla1BoltShaderCoreA, 1, 0, 1),
       glowAlpha: readInputNumber(els.tesla1BoltShaderGlowA, 1, 0, 1),
       time,
-    });
-    const field = new THREE.Mesh(new THREE.PlaneGeometry(planeSize, planeSize, 1, 1), material);
-    field.name = "tesla1:sdf_lightning_field";
-    field.renderOrder = 214;
-    treeLayer.add(field);
+    };
+    if (!fieldMesh || !fieldMesh.parent) {
+      clearLayer(treeLayer);
+      const material = createLightningFieldMaterial(materialParams);
+      fieldMesh = new THREE.Mesh(new THREE.PlaneGeometry(planeSize, planeSize, 1, 1), material);
+      fieldMesh.name = "tesla1:sdf_lightning_field";
+      fieldMesh.renderOrder = 214;
+      fieldPlaneSize = planeSize;
+      treeLayer.add(fieldMesh);
+      return;
+    }
+    updateLightningFieldMaterial(fieldMesh.material, materialParams);
+    if (Math.abs(fieldPlaneSize - planeSize) > 0.5) {
+      if (fieldMesh.geometry && typeof fieldMesh.geometry.dispose === "function") fieldMesh.geometry.dispose();
+      fieldMesh.geometry = new THREE.PlaneGeometry(planeSize, planeSize, 1, 1);
+      fieldPlaneSize = planeSize;
+    }
   }
 
   function apply() {
