@@ -1,7 +1,7 @@
-import { createStagingShellRuntime } from "./create-staging-shell-runtime.js?v=20260522-active-aoe-b";
+import { createStagingShellRuntime } from "./create-staging-shell-runtime.js?v=20260522-active-aoe-c";
 import { createShellBootStatusController } from "./shell-boot-status.js?v=20260408a";
 
-globalThis.__orbisStagingShellEntryVersion = "20260522activeaoeb";
+globalThis.__orbisStagingShellEntryVersion = "20260522activeaoec";
 
 const bootStatus = createShellBootStatusController({ rootDocument: document });
 
