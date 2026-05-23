@@ -779,6 +779,26 @@ export function createGnatSwarm3dRuntime({
     return released;
   }
 
+  function releaseFeedingGnats({ atMs = null } = {}) {
+    const now = Number(atMs);
+    const nowSec = Number.isFinite(now)
+      ? now / 1000
+      : (typeof performance !== "undefined" && performance.now ? performance.now() / 1000 : 0);
+    let released = 0;
+    for (const state of states) {
+      if (!state || state.mode !== "feeding") continue;
+      state.velocity.xW *= 0.35;
+      state.velocity.yW *= 0.35;
+      startReturn(state, nowSec);
+      released += 1;
+    }
+    if (released > 0) {
+      activeSignals = [];
+      if (typeof onNeedsFrame === "function") onNeedsFrame();
+    }
+    return released;
+  }
+
   function applyCombatEffect(effect = {}) {
     const kind = String(effect && effect.kind || "");
     const center = effect.centerWorld || effect.center || null;
@@ -1873,6 +1893,7 @@ export function createGnatSwarm3dRuntime({
     load,
     update,
     releaseOrbTargets,
+    releaseFeedingGnats,
     applyCombatEffect,
     getCombatTargets,
     hasActiveVisuals: () => states.length > 0,

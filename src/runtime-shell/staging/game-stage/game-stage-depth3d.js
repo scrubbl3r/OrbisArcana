@@ -30,7 +30,7 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260522-fire-card-tail-a";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260522-teleport-release-a";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260520-inward-normals-a";
 import { closestPointOnSegment } from "../../../game-runtime/collision/circle-boundary-collision.js?v=20260518b";
 import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260522-fire-card-tail-a";
@@ -1158,7 +1158,19 @@ export function createGameStageDepth3dLayer({
       if (disposed || !orb3dActorRuntime.hasModel()) {
         return { handled: false, skipped: "orb_teleport3d_runtime_missing" };
       }
-      const result = teleport3dRuntime.play(payload);
+      const originalOnTeleport = typeof payload.onTeleport === "function" ? payload.onTeleport : null;
+      const result = teleport3dRuntime.play({
+        ...(payload && typeof payload === "object" ? payload : {}),
+        onTeleport: () => {
+          if (gnatSwarm3dRuntime && typeof gnatSwarm3dRuntime.releaseFeedingGnats === "function") {
+            gnatSwarm3dRuntime.releaseFeedingGnats({
+              atMs: performance.now(),
+              reason: "teleport",
+            });
+          }
+          return originalOnTeleport ? originalOnTeleport() : null;
+        },
+      });
       if (result && result.handled) {
         renderLoop.scheduleAnimation();
         renderLoop.renderFrame(renderLoop.getLastFrame() || {});
