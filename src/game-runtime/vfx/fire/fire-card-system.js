@@ -141,6 +141,7 @@ export function createFireCardSystem({
   const sampleWorldPosition = new THREE.Vector3();
   const sampleClipPosition = new THREE.Vector3();
   let writeIndex = 0;
+  let activeCount = 0;
   let lastSample = null;
   let billboardMode = "local";
 
@@ -223,11 +224,21 @@ export function createFireCardSystem({
   }
 
   function endFrame() {
-    for (let i = writeIndex; i < mesh.count; i += 1) hideInstance(i);
-    mesh.instanceMatrix.needsUpdate = true;
-    seedAttribute.needsUpdate = true;
-    contactNormalAttribute.needsUpdate = true;
-    lifeAttribute.needsUpdate = true;
+    const nextActiveCount = Math.max(0, Math.min(mesh.count, writeIndex));
+    const previousActiveCount = Math.max(0, Math.min(mesh.count, activeCount));
+    if (nextActiveCount === 0 && previousActiveCount === 0) {
+      mesh.visible = false;
+      return;
+    }
+    for (let i = nextActiveCount; i < previousActiveCount; i += 1) hideInstance(i);
+    const changed = nextActiveCount > 0 || previousActiveCount !== nextActiveCount;
+    activeCount = nextActiveCount;
+    if (changed) {
+      mesh.instanceMatrix.needsUpdate = true;
+      seedAttribute.needsUpdate = true;
+      contactNormalAttribute.needsUpdate = true;
+      lifeAttribute.needsUpdate = true;
+    }
     mesh.visible = writeIndex > 0;
   }
 
@@ -294,7 +305,7 @@ export function createFireCardSystem({
       });
     },
     get activeCount() {
-      return writeIndex;
+      return activeCount;
     },
   });
 }

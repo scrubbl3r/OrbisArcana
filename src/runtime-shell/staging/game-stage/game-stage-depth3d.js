@@ -30,10 +30,10 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260521-electric-damage-a";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260522-fire-card-tail-a";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260520-inward-normals-a";
 import { closestPointOnSegment } from "../../../game-runtime/collision/circle-boundary-collision.js?v=20260518b";
-import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260520-flame-aoe-gate-a";
+import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260522-fire-card-tail-a";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -60,7 +60,7 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createElectricAoe3dRuntime } from "../../../runtime-effects/electric-aoe-3d.js?v=20260522-root-aoe-a";
+import { createElectricAoe3dRuntime } from "../../../runtime-effects/electric-aoe-3d.js?v=20260522-flame-perf-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
