@@ -262,6 +262,15 @@ export function createStudioPreviewRegistry({
   actions.playElectricAoe3d = electricAoe3dPreview.play;
   electricAoe3dPreview.wire();
 
+  const tesla1Preview = createElectricAoe3dPreview({
+    els: previewEls.tesla1,
+    getOrbBaseVisualState,
+  });
+  actions.applyTesla1 = tesla1Preview.apply;
+  actions.clearTesla1 = tesla1Preview.clear;
+  actions.playTesla1 = tesla1Preview.play;
+  tesla1Preview.wire();
+
   const bankOrb3dPreview = createBankOrb3dPreview({
     els: previewEls.bankOrb3d,
     getOrbBaseVisualState,
@@ -293,6 +302,7 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearOrbTeleport3d === "function") actions.clearOrbTeleport3d();
     if (typeof actions.clearFlameAoe3d === "function") actions.clearFlameAoe3d();
     if (typeof actions.clearElectricAoe3d === "function") actions.clearElectricAoe3d();
+    if (typeof actions.clearTesla1 === "function") actions.clearTesla1();
     if (typeof actions.clearBankOrb3d === "function") actions.clearBankOrb3d();
     Object.values(previewRootsByEffect || {}).forEach((root) => {
       if (!root || typeof root.setAttribute !== "function") return;

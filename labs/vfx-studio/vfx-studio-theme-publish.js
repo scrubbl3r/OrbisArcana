@@ -225,8 +225,11 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "",
       ].join("\n");
     case "flame-aoe-3d":
-    case "electric-aoe-3d": {
-      const isElectric3d = String(baseEffect || "") === "electric-aoe-3d";
+    case "electric-aoe-3d":
+    case "tesla-1": {
+      const normalizedBaseEffect = String(baseEffect || "");
+      const isElectric3d = normalizedBaseEffect === "electric-aoe-3d";
+      const isTesla1 = normalizedBaseEffect === "tesla-1";
       const keys = [
         "durationMs",
         "dominantBoltControlPointDiameterBo",
@@ -256,8 +259,16 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "haloFieldReversalChance", "haloFieldSeed",
         "haloFieldShellRadiusBo", "haloFieldBoltStartMinBo", "haloFieldBoltStartMaxBo",
         "haloFieldBoltEndMinBo", "haloFieldBoltEndMaxBo",
+        "haloFieldTargetMinRangeBo", "haloFieldTargetMaxRangeBo", "haloFieldContactRadiusBo",
         "haloFieldWander", "haloFieldWanderDurationMinMs", "haloFieldWanderDurationMaxMs",
         "haloFieldWanderSpeedMin", "haloFieldWanderSpeedMax", "haloFieldZMinBo", "haloFieldZMaxBo",
+        "lightningTreeBoltCountMin", "lightningTreeBoltCountMax",
+        "lightningTreeFrequencyMinMs", "lightningTreeFrequencyMaxMs",
+        "lightningTreeTtlMinMs", "lightningTreeTtlMaxMs",
+        "lightningTreeSubdivisions", "lightningTreeDisplacementBo", "lightningTreeDisplacementDecay",
+        "lightningTreeSmoothing", "lightningTreeNoiseSpeedHz",
+        "lightningTreeForkChance", "lightningTreeForkDepth",
+        "lightningTreeBranchChance", "lightningTreeBranchLengthMinBo", "lightningTreeBranchLengthMaxBo",
         "aoeAuraDiameterBo", "aoeAuraSoftness", "aoeAuraR", "aoeAuraG", "aoeAuraB", "aoeAuraA",
         "auraAlpha", "auraScale", "auraPulse", "auraNoiseScale", "auraNoiseSpeed", "auraFresnelPower", "auraR", "auraG", "auraB",
         "wakeLengthBo", "wakeRadiusBo", "wakeSubdivisions",
@@ -292,7 +303,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         const value = Number(p[key]);
         settings[key] = Number.isFinite(value) ? value : p[key];
       });
-      const exportName = isElectric3d ? "ELECTRIC_AOE_3D_PRESET_DEFAULT" : "FLAME_AOE_3D_PRESET_DEFAULT";
+      const exportName = isTesla1 ? "TESLA_1_PRESET_DEFAULT" : isElectric3d ? "ELECTRIC_AOE_3D_PRESET_DEFAULT" : "FLAME_AOE_3D_PRESET_DEFAULT";
       return `export const ${exportName} = Object.freeze(${JSON.stringify(settings, null, 2)});\n`;
     }
     case "electric-aoe":

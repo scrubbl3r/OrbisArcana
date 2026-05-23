@@ -69,6 +69,7 @@ const surfaces = createLabEffectSurfaces({
   createShockwaveAuthoringAdapter: createSentinelAdapter("shockwave"),
   createTeleportAuthoringAdapter: createSentinelAdapter("teleport"),
   createTeleport3dAuthoringAdapter: createSentinelAdapter("teleport-3d"),
+  createTesla1AuthoringAdapter: createSentinelAdapter("tesla-1"),
   createWorldGlobe3dAuthoringAdapter: createSentinelAdapter("world-globe-3d"),
   createWorldGlobeAuthoringAdapter: createSentinelAdapter("world-globe"),
 });
