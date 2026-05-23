@@ -3,24 +3,6 @@ import { createElectricAoe3dAuthoringAdapter } from "./electric-aoe-3d-authoring
 
 const TESLA_TO_ELECTRIC_ELEMENT_KEYS = Object.freeze({
   tesla1BoltShaderEnabled: "electricAoe3dBoltShaderEnabled",
-  tesla1BoltShaderCoreWidthMinBo: "electricAoe3dBoltShaderCoreWidthMinBo",
-  tesla1BoltShaderCoreWidthMaxBo: "electricAoe3dBoltShaderCoreWidthMaxBo",
-  tesla1BoltShaderGlowWidthMinBo: "electricAoe3dBoltShaderGlowWidthMinBo",
-  tesla1BoltShaderGlowWidthMaxBo: "electricAoe3dBoltShaderGlowWidthMaxBo",
-  tesla1BoltShaderLengthTaper: "electricAoe3dBoltShaderLengthTaper",
-  tesla1BoltShaderTipOpacity: "electricAoe3dBoltShaderTipOpacity",
-  tesla1BoltShaderCoreIntensity: "electricAoe3dBoltShaderCoreIntensity",
-  tesla1BoltShaderCoreSoftness: "electricAoe3dBoltShaderCoreSoftness",
-  tesla1BoltShaderGlowIntensity: "electricAoe3dBoltShaderGlowIntensity",
-  tesla1BoltShaderGlowSoftness: "electricAoe3dBoltShaderGlowSoftness",
-  tesla1BoltShaderFlickerSpeedHz: "electricAoe3dBoltShaderFlickerSpeedHz",
-  tesla1BoltShaderFlickerDepth: "electricAoe3dBoltShaderFlickerDepth",
-  tesla1BoltShaderCoreR: "electricAoe3dBoltShaderCoreR",
-  tesla1BoltShaderCoreG: "electricAoe3dBoltShaderCoreG",
-  tesla1BoltShaderCoreB: "electricAoe3dBoltShaderCoreB",
-  tesla1BoltShaderGlowR: "electricAoe3dBoltShaderGlowR",
-  tesla1BoltShaderGlowG: "electricAoe3dBoltShaderGlowG",
-  tesla1BoltShaderGlowB: "electricAoe3dBoltShaderGlowB",
   tesla1HaloFieldEnabled: "electricAoe3dHaloFieldEnabled",
   tesla1HaloFieldShellRadiusBo: "electricAoe3dHaloFieldShellRadiusBo",
   tesla1HaloFieldBoltStartMinBo: "electricAoe3dHaloFieldBoltStartMinBo",
@@ -39,11 +21,6 @@ function readNumber(el, fallback, min = -Infinity, max = Infinity) {
   const numeric = Number(el && el.value);
   const safe = Number.isFinite(numeric) ? numeric : Number(fallback);
   return Math.max(min, Math.min(max, Number.isFinite(safe) ? safe : min));
-}
-
-function readBoolean(el, fallback = true) {
-  if (!el) return !!fallback;
-  return !!el.checked;
 }
 
 function mapTeslaElsToElectric(els = {}) {
@@ -72,7 +49,16 @@ export function createTesla1AuthoringAdapter({
 
   function capture(els = {}) {
     const mappedEls = mapTeslaElsToElectric(els);
-    const captured = electricAdapter.capture(mappedEls);
+    const captured = { ...electricAdapter.capture(mappedEls) };
+    [
+      "boltShaderCoreWidthMinBo", "boltShaderCoreWidthMaxBo", "boltShaderGlowWidthMinBo", "boltShaderGlowWidthMaxBo",
+      "boltShaderLengthTaper", "boltShaderTipOpacity", "boltShaderCoreIntensity", "boltShaderCoreSoftness",
+      "boltShaderGlowIntensity", "boltShaderGlowSoftness", "boltShaderCoreR", "boltShaderCoreG", "boltShaderCoreB",
+      "boltShaderGlowR", "boltShaderGlowG", "boltShaderGlowB", "boltShaderCoreA", "boltShaderGlowA",
+      "boltShaderCentralCoreEnabled", "boltShaderCentralCoreRadiusBo", "boltShaderCentralCoreGlowRadiusBo",
+      "boltShaderCentralCoreNoiseScale", "boltShaderCentralCoreNoiseSpeed", "boltShaderCentralCoreIntensity",
+      "boltShaderCentralCoreSoftness",
+    ].forEach((key) => delete captured[key]);
     const treeBoltCountMin = Math.round(readNumber(els.tesla1LightningTreeBoltCountMin, tesla1PresetDefault.lightningTreeBoltCountMin, 0, 256));
     const treeFrequencyMinMs = Math.round(readNumber(els.tesla1LightningTreeFrequencyMinMs, tesla1PresetDefault.lightningTreeFrequencyMinMs, 16, 60000));
     const treeTtlMinMs = Math.round(readNumber(els.tesla1LightningTreeTtlMinMs, tesla1PresetDefault.lightningTreeTtlMinMs, 16, 20000));
@@ -99,21 +85,19 @@ export function createTesla1AuthoringAdapter({
       haloFieldTargetMinRangeBo: readNumber(els.tesla1HaloTargetMinRangeBo, tesla1PresetDefault.haloFieldTargetMinRangeBo, 0, 32),
       haloFieldTargetMaxRangeBo: readNumber(els.tesla1HaloTargetMaxRangeBo, tesla1PresetDefault.haloFieldTargetMaxRangeBo, 0, 32),
       haloFieldContactRadiusBo: readNumber(els.tesla1HaloContactRadiusBo, tesla1PresetDefault.haloFieldContactRadiusBo, 0, 8),
-      boltShaderCoreA: readNumber(els.tesla1BoltShaderCoreA, tesla1PresetDefault.boltShaderCoreA, 0, 1),
-      boltShaderGlowA: readNumber(els.tesla1BoltShaderGlowA, tesla1PresetDefault.boltShaderGlowA, 0, 1),
-      boltShaderCentralCoreEnabled: readBoolean(els.tesla1BoltShaderCentralCoreEnabled, tesla1PresetDefault.boltShaderCentralCoreEnabled),
-      boltShaderCentralCoreRadiusBo: readNumber(els.tesla1BoltShaderCentralCoreRadiusBo, tesla1PresetDefault.boltShaderCentralCoreRadiusBo, 0, 8),
-      boltShaderCentralCoreGlowRadiusBo: readNumber(els.tesla1BoltShaderCentralCoreGlowRadiusBo, tesla1PresetDefault.boltShaderCentralCoreGlowRadiusBo, 0, 8),
-      boltShaderCentralCoreNoiseScale: readNumber(els.tesla1BoltShaderCentralCoreNoiseScale, tesla1PresetDefault.boltShaderCentralCoreNoiseScale, 0, 200),
-      boltShaderCentralCoreNoiseSpeed: readNumber(els.tesla1BoltShaderCentralCoreNoiseSpeed, tesla1PresetDefault.boltShaderCentralCoreNoiseSpeed, 0, 60),
-      boltShaderCentralCoreIntensity: readNumber(els.tesla1BoltShaderCentralCoreIntensity, tesla1PresetDefault.boltShaderCentralCoreIntensity, 0, 20),
-      boltShaderCentralCoreSoftness: readNumber(els.tesla1BoltShaderCentralCoreSoftness, tesla1PresetDefault.boltShaderCentralCoreSoftness, 0, 1),
+      boltShaderLineWidthBo: readNumber(els.tesla1BoltShaderLineWidthBo, tesla1PresetDefault.boltShaderLineWidthBo, 0.001, 0.25),
+      boltShaderIntensity: readNumber(els.tesla1BoltShaderIntensity, tesla1PresetDefault.boltShaderIntensity, 0, 20),
+      boltShaderTipFade: readNumber(els.tesla1BoltShaderTipFade, tesla1PresetDefault.boltShaderTipFade, 0, 1),
+      boltShaderFlickerSpeedHz: readNumber(els.tesla1BoltShaderFlickerSpeedHz, tesla1PresetDefault.boltShaderFlickerSpeedHz, 0, 60),
+      boltShaderFlickerDepth: readNumber(els.tesla1BoltShaderFlickerDepth, tesla1PresetDefault.boltShaderFlickerDepth, 0, 1),
+      boltShaderColorR: Math.round(readNumber(els.tesla1BoltShaderColorR, tesla1PresetDefault.boltShaderColorR, 0, 255)),
+      boltShaderColorG: Math.round(readNumber(els.tesla1BoltShaderColorG, tesla1PresetDefault.boltShaderColorG, 0, 255)),
+      boltShaderColorB: Math.round(readNumber(els.tesla1BoltShaderColorB, tesla1PresetDefault.boltShaderColorB, 0, 255)),
     });
   }
 
   function apply(els = {}, settings = null, options = {}) {
     const source = settings && typeof settings === "object" ? settings : defaultSettings();
-    const restoredVisibleAlpha = (Number(source.boltShaderCoreA) || 0) <= 0 && (Number(source.boltShaderGlowA) || 0) <= 0;
     electricAdapter.apply(mapTeslaElsToElectric(els), source, options);
     if (els.tesla1MasterBoltContactRadiusBo) els.tesla1MasterBoltContactRadiusBo.value = String(source.dominantBoltTargetRadiusBo ?? 0.18);
     if (els.tesla1HaloTargetMinRangeBo) els.tesla1HaloTargetMinRangeBo.value = String(source.haloFieldTargetMinRangeBo ?? 0.5);
@@ -135,15 +119,14 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1LightningTreeBranchChance) els.tesla1LightningTreeBranchChance.value = String(source.lightningTreeBranchChance ?? 0.18);
     if (els.tesla1LightningTreeBranchLengthMinBo) els.tesla1LightningTreeBranchLengthMinBo.value = String(source.lightningTreeBranchLengthMinBo ?? 0.08);
     if (els.tesla1LightningTreeBranchLengthMaxBo) els.tesla1LightningTreeBranchLengthMaxBo.value = String(source.lightningTreeBranchLengthMaxBo ?? 0.32);
-    if (els.tesla1BoltShaderCoreA) els.tesla1BoltShaderCoreA.value = String(restoredVisibleAlpha ? 1 : source.boltShaderCoreA ?? 1);
-    if (els.tesla1BoltShaderGlowA) els.tesla1BoltShaderGlowA.value = String(restoredVisibleAlpha ? 1 : source.boltShaderGlowA ?? 1);
-    if (els.tesla1BoltShaderCentralCoreEnabled) els.tesla1BoltShaderCentralCoreEnabled.checked = source.boltShaderCentralCoreEnabled !== false;
-    if (els.tesla1BoltShaderCentralCoreRadiusBo) els.tesla1BoltShaderCentralCoreRadiusBo.value = String(source.boltShaderCentralCoreRadiusBo ?? 0.42);
-    if (els.tesla1BoltShaderCentralCoreGlowRadiusBo) els.tesla1BoltShaderCentralCoreGlowRadiusBo.value = String(source.boltShaderCentralCoreGlowRadiusBo ?? 0.65);
-    if (els.tesla1BoltShaderCentralCoreNoiseScale) els.tesla1BoltShaderCentralCoreNoiseScale.value = String(source.boltShaderCentralCoreNoiseScale ?? 36);
-    if (els.tesla1BoltShaderCentralCoreNoiseSpeed) els.tesla1BoltShaderCentralCoreNoiseSpeed.value = String(source.boltShaderCentralCoreNoiseSpeed ?? 5);
-    if (els.tesla1BoltShaderCentralCoreIntensity) els.tesla1BoltShaderCentralCoreIntensity.value = String(source.boltShaderCentralCoreIntensity ?? 3.6);
-    if (els.tesla1BoltShaderCentralCoreSoftness) els.tesla1BoltShaderCentralCoreSoftness.value = String(source.boltShaderCentralCoreSoftness ?? 0.55);
+    if (els.tesla1BoltShaderLineWidthBo) els.tesla1BoltShaderLineWidthBo.value = String(source.boltShaderLineWidthBo ?? 0.012);
+    if (els.tesla1BoltShaderIntensity) els.tesla1BoltShaderIntensity.value = String(source.boltShaderIntensity ?? 6);
+    if (els.tesla1BoltShaderTipFade) els.tesla1BoltShaderTipFade.value = String(source.boltShaderTipFade ?? 0.08);
+    if (els.tesla1BoltShaderFlickerSpeedHz) els.tesla1BoltShaderFlickerSpeedHz.value = String(source.boltShaderFlickerSpeedHz ?? 4);
+    if (els.tesla1BoltShaderFlickerDepth) els.tesla1BoltShaderFlickerDepth.value = String(source.boltShaderFlickerDepth ?? 0.5);
+    if (els.tesla1BoltShaderColorR) els.tesla1BoltShaderColorR.value = String(source.boltShaderColorR ?? 40);
+    if (els.tesla1BoltShaderColorG) els.tesla1BoltShaderColorG.value = String(source.boltShaderColorG ?? 90);
+    if (els.tesla1BoltShaderColorB) els.tesla1BoltShaderColorB.value = String(source.boltShaderColorB ?? 255);
     return true;
   }
 

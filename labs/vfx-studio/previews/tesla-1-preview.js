@@ -59,13 +59,6 @@ function rgbColor(r = 255, g = 255, b = 255) {
   );
 }
 
-function visibleShaderAlphas(coreAlpha, glowAlpha) {
-  const core = clampNumber(coreAlpha, 0, 1, 1);
-  const glow = clampNumber(glowAlpha, 0, 1, 1);
-  if (core <= 0 && glow <= 0) return Object.freeze({ core: 1, glow: 1 });
-  return Object.freeze({ core, glow });
-}
-
 function disposeObject(object) {
   if (!object) return;
   object.traverse((child) => {
@@ -116,26 +109,12 @@ function midpointTree({ from, to, bo, subdivisions, displacementBo, decay, smoot
 function buildLightningFieldUniformValues({
   segments,
   bo,
-  coreColor,
-  glowColor,
-  coreWidth,
-  glowWidth,
-  coreIntensity,
-  glowIntensity,
-  coreSoftness,
-  glowSoftness,
+  boltColor,
+  lineWidth,
+  intensity,
+  tipFade,
   flickerHz,
   flickerDepth,
-  tipOpacity,
-  centralCoreEnabled,
-  centralCoreRadius,
-  centralCoreGlowRadius,
-  centralCoreIntensity,
-  centralCoreSoftness,
-  centralCoreNoiseScale,
-  centralCoreNoiseSpeed,
-  coreAlpha,
-  glowAlpha,
   time,
 }) {
   const starts = [];
@@ -155,26 +134,12 @@ function buildLightningFieldUniformValues({
     uSegmentWeight: weights,
     uBo: Math.max(1, bo),
     uTime: time,
-    uCoreColor: coreColor,
-    uGlowColor: glowColor,
-    uCoreAlpha: visibleShaderAlphas(coreAlpha, glowAlpha).core,
-    uGlowAlpha: visibleShaderAlphas(coreAlpha, glowAlpha).glow,
-    uCoreWidth: Math.max(0.001, coreWidth),
-    uGlowWidth: Math.max(0.001, glowWidth),
-    uCoreIntensity: clampNumber(coreIntensity, 0, 20, 5.5),
-    uGlowIntensity: clampNumber(glowIntensity, 0, 20, 3.2),
-    uCoreSoftness: clampNumber(coreSoftness, 0, 1, 0.22),
-    uGlowSoftness: clampNumber(glowSoftness, 0, 1, 0.82),
+    uBoltColor: boltColor,
+    uLineWidth: Math.max(0.001, lineWidth),
+    uIntensity: clampNumber(intensity, 0, 20, 6),
+    uTipFade: clampNumber(tipFade, 0, 1, 0.08),
     uFlickerHz: clampNumber(flickerHz, 0, 60, 4),
     uFlickerDepth: clampNumber(flickerDepth, 0, 1, 0.5),
-    uTipOpacity: clampNumber(tipOpacity, 0, 1, 0),
-    uCentralCoreEnabled: centralCoreEnabled ? 1 : 0,
-    uCentralCoreRadius: Math.max(0, centralCoreRadius),
-    uCentralCoreGlowRadius: Math.max(0.001, centralCoreGlowRadius),
-    uCentralCoreIntensity: clampNumber(centralCoreIntensity, 0, 20, 3.6),
-    uCentralCoreSoftness: clampNumber(centralCoreSoftness, 0, 1, 0.55),
-    uCentralCoreNoiseScale: clampNumber(centralCoreNoiseScale, 0, 200, 50),
-    uCentralCoreNoiseSpeed: clampNumber(centralCoreNoiseSpeed, 0, 60, 5),
   };
 }
 
@@ -202,26 +167,12 @@ function createLightningFieldMaterial(params) {
       uSegmentWeight: { value: values.uSegmentWeight },
       uBo: { value: values.uBo },
       uTime: { value: values.uTime },
-      uCoreColor: { value: values.uCoreColor },
-      uGlowColor: { value: values.uGlowColor },
-      uCoreAlpha: { value: values.uCoreAlpha },
-      uGlowAlpha: { value: values.uGlowAlpha },
-      uCoreWidth: { value: values.uCoreWidth },
-      uGlowWidth: { value: values.uGlowWidth },
-      uCoreIntensity: { value: values.uCoreIntensity },
-      uGlowIntensity: { value: values.uGlowIntensity },
-      uCoreSoftness: { value: values.uCoreSoftness },
-      uGlowSoftness: { value: values.uGlowSoftness },
+      uBoltColor: { value: values.uBoltColor },
+      uLineWidth: { value: values.uLineWidth },
+      uIntensity: { value: values.uIntensity },
+      uTipFade: { value: values.uTipFade },
       uFlickerHz: { value: values.uFlickerHz },
       uFlickerDepth: { value: values.uFlickerDepth },
-      uTipOpacity: { value: values.uTipOpacity },
-      uCentralCoreEnabled: { value: values.uCentralCoreEnabled },
-      uCentralCoreRadius: { value: values.uCentralCoreRadius },
-      uCentralCoreGlowRadius: { value: values.uCentralCoreGlowRadius },
-      uCentralCoreIntensity: { value: values.uCentralCoreIntensity },
-      uCentralCoreSoftness: { value: values.uCentralCoreSoftness },
-      uCentralCoreNoiseScale: { value: values.uCentralCoreNoiseScale },
-      uCentralCoreNoiseSpeed: { value: values.uCentralCoreNoiseSpeed },
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -239,64 +190,13 @@ function createLightningFieldMaterial(params) {
       uniform vec3 uSegmentWeight[MAX_SEGMENTS];
       uniform float uBo;
       uniform float uTime;
-      uniform vec3 uCoreColor;
-      uniform vec3 uGlowColor;
-      uniform float uCoreAlpha;
-      uniform float uGlowAlpha;
-      uniform float uCoreWidth;
-      uniform float uGlowWidth;
-      uniform float uCoreIntensity;
-      uniform float uGlowIntensity;
-      uniform float uCoreSoftness;
-      uniform float uGlowSoftness;
+      uniform vec3 uBoltColor;
+      uniform float uLineWidth;
+      uniform float uIntensity;
+      uniform float uTipFade;
       uniform float uFlickerHz;
       uniform float uFlickerDepth;
-      uniform float uTipOpacity;
-      uniform int uCentralCoreEnabled;
-      uniform float uCentralCoreRadius;
-      uniform float uCentralCoreGlowRadius;
-      uniform float uCentralCoreIntensity;
-      uniform float uCentralCoreSoftness;
-      uniform float uCentralCoreNoiseScale;
-      uniform float uCentralCoreNoiseSpeed;
       varying vec3 vWorldPosition;
-
-      float hash(vec3 p) {
-        p = fract(p * 0.3183099 + vec3(0.11, 0.17, 0.23));
-        p *= 17.0;
-        return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
-      }
-
-      float noise(vec3 p) {
-        vec3 i = floor(p);
-        vec3 f = smoothstep(vec3(0.0), vec3(1.0), fract(p));
-        float n000 = hash(i + vec3(0.0, 0.0, 0.0));
-        float n100 = hash(i + vec3(1.0, 0.0, 0.0));
-        float n010 = hash(i + vec3(0.0, 1.0, 0.0));
-        float n110 = hash(i + vec3(1.0, 1.0, 0.0));
-        float n001 = hash(i + vec3(0.0, 0.0, 1.0));
-        float n101 = hash(i + vec3(1.0, 0.0, 1.0));
-        float n011 = hash(i + vec3(0.0, 1.0, 1.0));
-        float n111 = hash(i + vec3(1.0, 1.0, 1.0));
-        float nx00 = mix(n000, n100, f.x);
-        float nx10 = mix(n010, n110, f.x);
-        float nx01 = mix(n001, n101, f.x);
-        float nx11 = mix(n011, n111, f.x);
-        return mix(mix(nx00, nx10, f.y), mix(nx01, nx11, f.y), f.z);
-      }
-
-      float fbm(vec3 p) {
-        float sum = 0.0;
-        float amp = 0.55;
-        float norm = 0.0;
-        for (int i = 0; i < 4; i += 1) {
-          sum += noise(p) * amp;
-          norm += amp;
-          p *= 2.2;
-          amp *= 0.5;
-        }
-        return sum / max(0.0001, norm);
-      }
 
       float segmentDistance(vec2 p, vec2 a, vec2 b, out float h) {
         vec2 ba = b - a;
@@ -306,8 +206,7 @@ function createLightningFieldMaterial(params) {
 
       void main() {
         vec2 p = vWorldPosition.xy;
-        float coreEnergy = 0.0;
-        float glowEnergy = 0.0;
+        vec3 color = vec3(0.0);
         for (int i = 0; i < MAX_SEGMENTS; i += 1) {
           if (i >= uSegmentCount) break;
           vec3 a = uSegmentStart[i];
@@ -315,38 +214,17 @@ function createLightningFieldMaterial(params) {
           float h = 0.0;
           float d = segmentDistance(p, a.xy, b.xy, h);
           float zDelta = abs(mix(a.z, b.z, h) - vWorldPosition.z);
-          float zFade = exp(-zDelta / max(uGlowWidth * 3.0, uBo * 0.04));
+          float zFade = exp(-zDelta / max(uBo * 0.06, uLineWidth * 4.0));
           float lifeFade = max(0.0, uSegmentWeight[i].y);
           float seed = uSegmentWeight[i].z;
-          float tipFade = mix(1.0, uTipOpacity, 1.0 - lifeFade);
+          float lengthFade = mix(1.0, uTipFade, h);
           float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(uTime * uFlickerHz * 6.2831853 + seed * 2.31));
-          float edgeNoise = fbm(vec3(p / max(1.0, uBo) * 7.5 + seed, uTime * 1.8 + seed));
-          float coreD = max(0.0005 * uBo, d + (edgeNoise - 0.5) * uCoreWidth * 0.22);
-          float glowD = max(0.0, d + (edgeNoise - 0.5) * uGlowWidth * 0.08);
-          float coreFalloff = 1.0 - exp(-(uCoreWidth / coreD) * mix(0.55, 1.65, 1.0 - uCoreSoftness));
-          float glowFalloff = exp(-pow(glowD / max(0.0001, uGlowWidth), mix(1.35, 3.6, uGlowSoftness)));
-          float weight = uSegmentWeight[i].x * lifeFade * tipFade * flicker * zFade;
-          coreEnergy += coreFalloff * weight;
-          glowEnergy += glowFalloff * weight * 0.62;
+          float line = uLineWidth / max(d, uLineWidth * 0.035);
+          vec3 lit = line * uBoltColor * uIntensity * 0.18;
+          lit = clamp(1.0 - exp(lit * -0.05), 0.0, 1.0);
+          color += lit * uSegmentWeight[i].x * lifeFade * lengthFade * flicker * zFade;
         }
-
-        float coreField = 0.0;
-        float coreGlow = 0.0;
-        if (uCentralCoreEnabled == 1) {
-          float cd = length(p);
-          float n = fbm(vec3(p / max(1.0, uBo) * uCentralCoreNoiseScale, uTime * uCentralCoreNoiseSpeed));
-          float radius = uCentralCoreRadius * (0.88 + n * 0.24);
-          float glowRadius = max(radius + 0.001, uCentralCoreGlowRadius);
-          float coreFalloff = exp(-pow(cd / max(0.001, radius), mix(1.05, 3.5, uCentralCoreSoftness)));
-          float glowFalloff = exp(-pow(cd / glowRadius, mix(0.85, 2.6, uCentralCoreSoftness)));
-          coreField = coreFalloff * uCentralCoreIntensity * (0.65 + n * 0.5);
-          coreGlow = glowFalloff * uCentralCoreIntensity * 0.42;
-        }
-
-        vec3 color = vec3(0.0);
-        color += uGlowColor * uGlowAlpha * (glowEnergy * uGlowIntensity * 0.42 + coreGlow);
-        color += uCoreColor * uCoreAlpha * (coreEnergy * uCoreIntensity * 0.54 + coreField);
-        float alpha = clamp(1.0 - exp(-length(color) * 0.38), 0.0, 1.0);
+        float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
         gl_FragColor = vec4(color, alpha);
       }
     `,
@@ -584,37 +462,18 @@ export function createTesla1Preview({
       });
       return;
     }
-    const coreColor = rgbColor(els.tesla1BoltShaderCoreR && els.tesla1BoltShaderCoreR.value, els.tesla1BoltShaderCoreG && els.tesla1BoltShaderCoreG.value, els.tesla1BoltShaderCoreB && els.tesla1BoltShaderCoreB.value);
-    const glowColor = rgbColor(els.tesla1BoltShaderGlowR && els.tesla1BoltShaderGlowR.value, els.tesla1BoltShaderGlowG && els.tesla1BoltShaderGlowG.value, els.tesla1BoltShaderGlowB && els.tesla1BoltShaderGlowB.value);
-    const coreMin = readInputNumber(els.tesla1BoltShaderCoreWidthMinBo, 0.006, 0, 1);
-    const coreMax = readInputNumber(els.tesla1BoltShaderCoreWidthMaxBo, 0.016, coreMin, 1);
-    const glowMin = readInputNumber(els.tesla1BoltShaderGlowWidthMinBo, 0.055, 0, 4);
-    const glowMax = readInputNumber(els.tesla1BoltShaderGlowWidthMaxBo, 0.16, glowMin, 4);
-    const maxRangeBo = Math.max(endMax, readInputNumber(els.tesla1MasterBoltMaxRangeBo, 7, 0.25, 64), readInputNumber(els.tesla1BoltShaderCentralCoreGlowRadiusBo, 0.82, 0, 8));
+    const boltColor = rgbColor(els.tesla1BoltShaderColorR && els.tesla1BoltShaderColorR.value, els.tesla1BoltShaderColorG && els.tesla1BoltShaderColorG.value, els.tesla1BoltShaderColorB && els.tesla1BoltShaderColorB.value);
+    const maxRangeBo = Math.max(endMax, readInputNumber(els.tesla1MasterBoltMaxRangeBo, 7, 0.25, 64));
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
     const materialParams = {
       segments: fieldSegments,
       bo,
-      coreColor,
-      glowColor,
-      coreWidth: bo * (coreMin + coreMax) * 0.5,
-      glowWidth: bo * (glowMin + glowMax) * 0.5,
-      coreIntensity: readInputNumber(els.tesla1BoltShaderCoreIntensity, 5.5, 0, 20),
-      glowIntensity: readInputNumber(els.tesla1BoltShaderGlowIntensity, 3.2, 0, 20),
-      coreSoftness: readInputNumber(els.tesla1BoltShaderCoreSoftness, 0.22, 0, 1),
-      glowSoftness: readInputNumber(els.tesla1BoltShaderGlowSoftness, 0.82, 0, 1),
+      boltColor,
+      lineWidth: bo * readInputNumber(els.tesla1BoltShaderLineWidthBo, 0.012, 0.001, 0.25),
+      intensity: readInputNumber(els.tesla1BoltShaderIntensity, 6, 0, 20),
+      tipFade: readInputNumber(els.tesla1BoltShaderTipFade, 0.08, 0, 1),
       flickerHz: readInputNumber(els.tesla1BoltShaderFlickerSpeedHz, 4, 0, 60),
       flickerDepth: readInputNumber(els.tesla1BoltShaderFlickerDepth, 0.5, 0, 1),
-      tipOpacity: readInputNumber(els.tesla1BoltShaderTipOpacity, 0, 0, 1),
-      centralCoreEnabled: readInputBoolean(els.tesla1BoltShaderCentralCoreEnabled, true),
-      centralCoreRadius: bo * readInputNumber(els.tesla1BoltShaderCentralCoreRadiusBo, 0.42, 0, 8),
-      centralCoreGlowRadius: bo * readInputNumber(els.tesla1BoltShaderCentralCoreGlowRadiusBo, 0.82, 0, 8),
-      centralCoreIntensity: readInputNumber(els.tesla1BoltShaderCentralCoreIntensity, 3.6, 0, 20),
-      centralCoreSoftness: readInputNumber(els.tesla1BoltShaderCentralCoreSoftness, 0.55, 0, 1),
-      centralCoreNoiseScale: readInputNumber(els.tesla1BoltShaderCentralCoreNoiseScale, 50, 0, 200),
-      centralCoreNoiseSpeed: readInputNumber(els.tesla1BoltShaderCentralCoreNoiseSpeed, 5, 0, 60),
-      coreAlpha: readInputNumber(els.tesla1BoltShaderCoreA, 1, 0, 1),
-      glowAlpha: readInputNumber(els.tesla1BoltShaderGlowA, 1, 0, 1),
       time,
     };
     if (!fieldMesh || !fieldMesh.parent) {
@@ -752,33 +611,14 @@ export function createTesla1Preview({
       els.tesla1LightningTreeBranchLengthMinBo,
       els.tesla1LightningTreeBranchLengthMaxBo,
       els.tesla1BoltShaderEnabled,
-      els.tesla1BoltShaderCoreWidthMinBo,
-      els.tesla1BoltShaderCoreWidthMaxBo,
-      els.tesla1BoltShaderGlowWidthMinBo,
-      els.tesla1BoltShaderGlowWidthMaxBo,
-      els.tesla1BoltShaderLengthTaper,
-      els.tesla1BoltShaderTipOpacity,
-      els.tesla1BoltShaderCoreIntensity,
-      els.tesla1BoltShaderCoreSoftness,
-      els.tesla1BoltShaderGlowIntensity,
-      els.tesla1BoltShaderGlowSoftness,
+      els.tesla1BoltShaderLineWidthBo,
+      els.tesla1BoltShaderIntensity,
+      els.tesla1BoltShaderTipFade,
       els.tesla1BoltShaderFlickerSpeedHz,
       els.tesla1BoltShaderFlickerDepth,
-      els.tesla1BoltShaderCentralCoreEnabled,
-      els.tesla1BoltShaderCentralCoreRadiusBo,
-      els.tesla1BoltShaderCentralCoreGlowRadiusBo,
-      els.tesla1BoltShaderCentralCoreNoiseScale,
-      els.tesla1BoltShaderCentralCoreNoiseSpeed,
-      els.tesla1BoltShaderCentralCoreIntensity,
-      els.tesla1BoltShaderCentralCoreSoftness,
-      els.tesla1BoltShaderCoreR,
-      els.tesla1BoltShaderCoreG,
-      els.tesla1BoltShaderCoreB,
-      els.tesla1BoltShaderCoreA,
-      els.tesla1BoltShaderGlowR,
-      els.tesla1BoltShaderGlowG,
-      els.tesla1BoltShaderGlowB,
-      els.tesla1BoltShaderGlowA,
+      els.tesla1BoltShaderColorR,
+      els.tesla1BoltShaderColorG,
+      els.tesla1BoltShaderColorB,
     ].forEach((field) => {
       if (!field) return;
       field.addEventListener("keydown", refreshOnCommit);

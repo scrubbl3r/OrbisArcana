@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260523-tesla-c";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260523-tesla-d";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -292,24 +292,6 @@ export function createStudioBootstrap({
       electricAoe3dDominantBoltMaxRangeBo: els.tesla1MasterBoltMaxRangeBo,
       electricAoe3dDominantBoltDetourRatioMax: els.tesla1MasterBoltPathBendAllowance,
       electricAoe3dBoltShaderEnabled: els.tesla1BoltShaderEnabled,
-      electricAoe3dBoltShaderCoreWidthMinBo: els.tesla1BoltShaderCoreWidthMinBo,
-      electricAoe3dBoltShaderCoreWidthMaxBo: els.tesla1BoltShaderCoreWidthMaxBo,
-      electricAoe3dBoltShaderGlowWidthMinBo: els.tesla1BoltShaderGlowWidthMinBo,
-      electricAoe3dBoltShaderGlowWidthMaxBo: els.tesla1BoltShaderGlowWidthMaxBo,
-      electricAoe3dBoltShaderLengthTaper: els.tesla1BoltShaderLengthTaper,
-      electricAoe3dBoltShaderTipOpacity: els.tesla1BoltShaderTipOpacity,
-      electricAoe3dBoltShaderCoreIntensity: els.tesla1BoltShaderCoreIntensity,
-      electricAoe3dBoltShaderCoreSoftness: els.tesla1BoltShaderCoreSoftness,
-      electricAoe3dBoltShaderGlowIntensity: els.tesla1BoltShaderGlowIntensity,
-      electricAoe3dBoltShaderGlowSoftness: els.tesla1BoltShaderGlowSoftness,
-      electricAoe3dBoltShaderFlickerSpeedHz: els.tesla1BoltShaderFlickerSpeedHz,
-      electricAoe3dBoltShaderFlickerDepth: els.tesla1BoltShaderFlickerDepth,
-      electricAoe3dBoltShaderCoreR: els.tesla1BoltShaderCoreR,
-      electricAoe3dBoltShaderCoreG: els.tesla1BoltShaderCoreG,
-      electricAoe3dBoltShaderCoreB: els.tesla1BoltShaderCoreB,
-      electricAoe3dBoltShaderGlowR: els.tesla1BoltShaderGlowR,
-      electricAoe3dBoltShaderGlowG: els.tesla1BoltShaderGlowG,
-      electricAoe3dBoltShaderGlowB: els.tesla1BoltShaderGlowB,
       electricAoe3dHaloFieldEnabled: els.tesla1HaloFieldEnabled,
       electricAoe3dHaloFieldShellRadiusBo: els.tesla1HaloFieldShellRadiusBo,
       electricAoe3dHaloFieldBoltStartMinBo: els.tesla1HaloFieldBoltStartMinBo,
