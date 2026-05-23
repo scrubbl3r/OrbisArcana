@@ -205,37 +205,35 @@ function createLightningFieldMaterial(params) {
 
       vec3 proceduralBolt(vec2 p, vec4 descriptor, float index) {
         float seed = descriptor.w;
-        float angleNoise = (randomFloat(vec2(seed, floor(uTime * 5.0))) - 0.5) * 0.42;
-        float angle = descriptor.x + angleNoise + uTime * 0.11;
-        vec2 uv = rotate2(-angle) * p;
+        float angleStep = floor(uTime * 5.0 + index);
+        float angle = descriptor.x + randomFloat(vec2(float(uBoltCount) + angleStep, seed)) * 0.5;
+        vec2 uv = rotate2(angle) * p;
         float startR = mix(descriptor.y, uStartMax, randomFloat(vec2(seed, 7.0)));
         float endR = mix(descriptor.z, uEndMax, randomFloat(vec2(seed, 11.0)));
         float len = max(uLineWidth * 6.0, endR - startR);
-        vec2 local = vec2(uv.x - startR, uv.y);
+        uv.y -= startR;
         vec2 t = vec2(0.0, mod(uTime, 200.0) * 2.0);
-        float sn = simpleNoise(local * vec2(0.08, 0.16) - t * 3.0 + vec2(seed * 1.5, 0.0), 2.0) * 2.0 - 1.0;
-        local.y += sn * uBo * 0.045 * smoothstep(0.0, uBo * 0.22, abs(local.x));
 
         float h = 0.0;
-        float d = lineSdf(local, vec2(0.0), vec2(len, 0.0), uLineWidth * 0.08, h);
-        float core = uLineWidth / max(max(d, 0.0), uLineWidth * 0.025);
-        vec3 bolt = clamp(1.0 - exp(-(core * vec3(1.0, 1.08, 1.22)) * 0.08), 0.0, 1.0);
-        bolt *= mix(1.0, uTipFade, clamp(local.x / max(0.0001, len), 0.0, 1.0));
+        float sn = simpleNoise(uv / max(1.0, uBo) * 20.0 - t * 3.0 + vec2(seed * 1.5, 0.0), 2.0) * 2.0 - 1.0;
+        uv.x += sn * uBo * 0.03 * smoothstep(0.0, uBo * 0.2, abs(uv.y));
+        float d = lineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), uLineWidth * 0.006, h);
+        float line = 0.1 / max(max(d / max(1.0, uBo), 0.0), 0.0001);
+        vec3 bolt = clamp(1.0 - exp(-(line * uBoltColor) * 0.02), 0.0, 1.0);
+        bolt *= smoothstep(len, len * (1.0 - uTipFade), abs(uv.y));
 
-        vec2 branch = rotate2(0.78) * local;
-        float branchLen = len * (0.28 + 0.28 * randomFloat(vec2(seed, 13.0)));
-        branch.x -= len * (0.28 + 0.38 * randomFloat(vec2(seed, 17.0)));
-        float bsn = simpleNoise(branch * vec2(0.1, 0.18) - t * 4.0 + vec2(seed * 2.3, 0.0), 2.0) * 2.0 - 1.0;
-        branch.y += bsn * branch.x * 0.22;
+        uv = rotate2(0.785398) * uv;
+        sn = simpleNoise(uv / max(1.0, uBo) * 25.0 - t * 4.0 + vec2(seed * 2.3, 0.0), 2.0) * 2.0 - 1.0;
+        uv.x += sn * uv.y * 0.35 * smoothstep(uBo * 0.1, uBo * 0.25, len);
+        float branchLen = len * 0.5;
         float bh = 0.0;
-        float bd = lineSdf(branch, vec2(0.0), vec2(branchLen, 0.0), uLineWidth * 0.04, bh);
-        float branchCore = uLineWidth / max(max(bd, 0.0), uLineWidth * 0.035);
-        vec3 branchBolt = clamp(1.0 - exp(-(branchCore * uBoltColor) * 0.06), 0.0, 1.0);
-        branchBolt *= 1.0 - clamp(branch.x / max(0.0001, branchLen), 0.0, 1.0) * 0.82;
+        float bd = lineSdf(uv, vec2(0.0), vec2(0.0, branchLen), -uLineWidth * 0.001, bh);
+        float branchLine = 0.2 / max(max(bd / max(1.0, uBo), 0.0), 0.0001);
+        vec3 branchBolt = clamp(1.0 - exp(-(branchLine * uBoltColor) * 0.03), 0.0, 1.0);
+        branchBolt *= smoothstep(branchLen * 0.7, 0.0, abs(uv.y));
 
         float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(uTime * uFlickerHz * 6.2831853 + seed * 2.31));
-        float radialFade = mix(1.0, uTipFade, clamp(h, 0.0, 1.0));
-        return (bolt + branchBolt * 0.72) * flicker * radialFade;
+        return (bolt + branchBolt) * flicker;
       }
 
       void main() {
