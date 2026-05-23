@@ -3099,13 +3099,13 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260523-tesla-a"),
+      import("./vfx-studio-bootstrap.js?v=20260523-tesla-b"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
-      import("./vfx-studio-surfaces.js?v=20260523-tesla-a"),
+      import("./vfx-studio-surfaces.js?v=20260523-tesla-b"),
       import("./vfx-studio-theme-publish.js?v=20260523-tesla-a"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
