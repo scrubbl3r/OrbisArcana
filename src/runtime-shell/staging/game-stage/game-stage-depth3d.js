@@ -60,7 +60,7 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createElectricAoe3dRuntime } from "../../../runtime-effects/electric-aoe-3d.js?v=20260522-stage-halo-a";
+import { createElectricAoe3dRuntime } from "../../../runtime-effects/electric-aoe-3d.js?v=20260522-root-aoe-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
@@ -651,6 +651,25 @@ export function createGameStageDepth3dLayer({
     return damageResult;
   }
 
+  function clearElectricAoe3dRuntime(reason = "root_spell_transition") {
+    if (!electricAoe3dRuntime || typeof electricAoe3dRuntime.clear !== "function") return;
+    const wasActive = typeof electricAoe3dRuntime.isActive === "function" && electricAoe3dRuntime.isActive();
+    electricAoe3dRuntime.clear();
+    if (wasActive && perfTrace && typeof perfTrace.mark === "function") {
+      perfTrace.mark("electricAoe.gameStage.cleared", { reason });
+    }
+  }
+
+  function clearFlameAoe3dRuntime(reason = "root_spell_transition") {
+    const wasActive = !!activeFlameAoeHazard
+      || (flameAoe3dRuntime && typeof flameAoe3dRuntime.isActive === "function" && flameAoe3dRuntime.isActive());
+    activeFlameAoeHazard = null;
+    if (flameAoe3dRuntime && typeof flameAoe3dRuntime.clear === "function") flameAoe3dRuntime.clear();
+    if (wasActive && perfTrace && typeof perfTrace.mark === "function") {
+      perfTrace.mark("flameAoe.gameStage.cleared", { reason });
+    }
+  }
+
   function resolveOrbGroundContactRuntimeY() {
     if (!currentOrbWorldPosition || !currentBoundarySegments.length) return null;
     const orbRuntimePosition = orb3dActorRuntime.getPosition();
@@ -1215,6 +1234,7 @@ export function createGameStageDepth3dLayer({
       if (disposed) {
         return { handled: false, skipped: "flame_aoe3d_runtime_missing" };
       }
+      clearElectricAoe3dRuntime("flame_aoe3d_started");
       const flamePayload = payload && typeof payload === "object" ? payload : {};
       const hasOrbModel = orb3dActorRuntime.hasModel();
       const result = hasOrbModel
@@ -1269,6 +1289,7 @@ export function createGameStageDepth3dLayer({
       if (disposed || !orb3dActorRuntime.hasModel() || !currentOrbWorldPosition) {
         return { handled: false, skipped: "electric_aoe3d_runtime_missing" };
       }
+      clearFlameAoe3dRuntime("electric_aoe3d_started");
       const result = electricAoe3dRuntime.play(payload && typeof payload === "object" ? payload : {});
       root.dataset.enemy3dLastElectricAoeStageCallAt = String(Math.round(callAtMs));
       root.dataset.enemy3dLastElectricAoePointCount = String(result && result.path && result.path.points ? result.path.points.length : 0);
