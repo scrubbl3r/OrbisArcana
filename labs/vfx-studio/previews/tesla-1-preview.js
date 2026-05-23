@@ -449,19 +449,22 @@ export function createTesla1Preview({
         }
       }
     }
-    const master = masterRoute(bo, time);
-    const masterTree = midpointTree({
-      from: master[0],
-      to: master[master.length - 1],
-      bo,
-      subdivisions: Math.max(2, tree.subdivisions),
-      displacementBo: tree.displacementBo,
-      decay: tree.displacementDecay,
-      smoothing: tree.smoothing,
-      seed: 999 + animatedSeed,
-      time,
-    });
-    appendFieldPolyline(fieldSegments, masterTree, 1.18, 1, 999 + animatedSeed, 20);
+    const includeMasterBolt = els.tesla1MasterBoltVisibleBtn && els.tesla1MasterBoltVisibleBtn.getAttribute("aria-pressed") !== "false";
+    if (includeMasterBolt) {
+      const master = masterRoute(bo, time);
+      const masterTree = midpointTree({
+        from: master[0],
+        to: master[master.length - 1],
+        bo,
+        subdivisions: Math.max(2, tree.subdivisions),
+        displacementBo: tree.displacementBo,
+        decay: tree.displacementDecay,
+        smoothing: tree.smoothing,
+        seed: 999 + animatedSeed,
+        time,
+      });
+      appendFieldPolyline(fieldSegments, masterTree, 1.18, 1, 999 + animatedSeed, 20);
+    }
     if (!readInputBoolean(els.tesla1BoltShaderEnabled, true)) {
       clearLayer(treeLayer);
       fieldMesh = null;
@@ -541,7 +544,7 @@ export function createTesla1Preview({
       shellMaterial,
       edgeMaterials: inspector.edgeMaterials,
       includeCore: false,
-      includeRibs: true,
+      includeRibs: false,
       edgeColor: 0xffffff,
       edgeWidth: 2,
       shellSegments: 96,
