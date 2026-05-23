@@ -81,23 +81,13 @@ function buildLightningFieldUniformValues({
   time,
 }) {
   const count = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCount) || 0)));
-  const descriptors = [];
-  for (let index = 0; index < MAX_HALO_BOLTS; index += 1) {
-    const seed = index * 37.13 + 11.7;
-    const slot = count > 0 ? (index + 0.5) / count : 0;
-    descriptors.push(new THREE.Vector4(
-      slot * Math.PI * 2,
-      startMin,
-      endMin,
-      seed
-    ));
-  }
   return {
     uBoltCount: count,
-    uBoltDescriptor: descriptors,
     uBo: Math.max(1, bo),
     uTime: time,
+    uStartMin: startMin,
     uStartMax: Math.max(startMin, startMax),
+    uEndMin: endMin,
     uEndMax: Math.max(endMin, endMax),
     uBoltColor: boltColor,
     uLineWidth: Math.max(0.001, lineWidth),
@@ -127,10 +117,11 @@ function createLightningFieldMaterial(params) {
     toneMapped: false,
     uniforms: {
       uBoltCount: { value: values.uBoltCount },
-      uBoltDescriptor: { value: values.uBoltDescriptor },
       uBo: { value: values.uBo },
       uTime: { value: values.uTime },
+      uStartMin: { value: values.uStartMin },
       uStartMax: { value: values.uStartMax },
+      uEndMin: { value: values.uEndMin },
       uEndMax: { value: values.uEndMax },
       uBoltColor: { value: values.uBoltColor },
       uLineWidth: { value: values.uLineWidth },
@@ -150,10 +141,11 @@ function createLightningFieldMaterial(params) {
     fragmentShader: `
       #define MAX_HALO_BOLTS ${MAX_HALO_BOLTS}
       uniform int uBoltCount;
-      uniform vec4 uBoltDescriptor[MAX_HALO_BOLTS];
       uniform float uBo;
       uniform float uTime;
+      uniform float uStartMin;
       uniform float uStartMax;
+      uniform float uEndMin;
       uniform float uEndMax;
       uniform vec3 uBoltColor;
       uniform float uLineWidth;
@@ -203,14 +195,8 @@ function createLightningFieldMaterial(params) {
         return length(pa - ba * h) - width;
       }
 
-      vec3 proceduralBolt(vec2 p, vec4 descriptor, float index) {
-        float seed = descriptor.w;
-        float angleStep = floor(uTime * 5.0 + index);
-        float angle = descriptor.x + randomFloat(vec2(float(uBoltCount) + angleStep, seed)) * 0.5;
+      vec3 proceduralBolt(vec2 p, float angle, float startR, float len, float seed) {
         vec2 uv = rotate2(angle) * p;
-        float startR = mix(descriptor.y, uStartMax, randomFloat(vec2(seed, 7.0)));
-        float endR = mix(descriptor.z, uEndMax, randomFloat(vec2(seed, 11.0)));
-        float len = max(uLineWidth * 6.0, endR - startR);
         uv.y -= startR;
         vec2 t = vec2(0.0, mod(uTime, 200.0) * 2.0);
 
@@ -239,9 +225,18 @@ function createLightningFieldMaterial(params) {
       void main() {
         vec2 p = vWorldPosition.xy;
         vec3 color = vec3(0.0);
+        float activeCount = floor(randomFloat(vec2(floor(uTime / 0.2))) * max(1.0, float(uBoltCount) - 1.0) + 1.5);
+        float lengthMin = max(uLineWidth * 6.0, uEndMin - uStartMax);
+        float lengthMax = max(lengthMin, uEndMax - uStartMin);
         for (int i = 0; i < MAX_HALO_BOLTS; i += 1) {
-          if (i >= uBoltCount) break;
-          color += proceduralBolt(p, uBoltDescriptor[i], float(i)) * uIntensity;
+          if (float(i) >= activeCount) break;
+          float fi = float(i);
+          float angle = fi * 6.2831853 / max(1.0, activeCount);
+          angle += randomFloat(vec2(activeCount + floor(uTime * 5.0 + fi), fi + 3.17)) * 0.5;
+          float seed = fi * 37.13 + floor(uTime / 0.2) * 19.7 + 11.7;
+          float startR = mix(uStartMin, uStartMax, randomFloat(vec2(seed, 7.0)));
+          float len = mix(lengthMin, lengthMax, randomFloat(vec2(angle, seed)));
+          color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
         }
         color = 1.0 - exp(-color * 0.55);
         float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
