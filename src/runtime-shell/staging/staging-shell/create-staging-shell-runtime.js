@@ -10,7 +10,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260522172828s";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260522activeaoea";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -18,7 +18,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260522172828s";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260522activeaoea";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260519pyromodulafb";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260522-flame-perf-a";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260522-active-aoe-a";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
@@ -75,7 +75,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260522172828s";
+globalThis.__orbisStagingShellRuntimeVersion = "20260522activeaoea";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -2084,8 +2084,8 @@ function initShellReceiverVfxRuntime(shellContext) {
     playOrbTeleport3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playOrbTeleport3d", payload, "active_stage_orb_teleport3d_missing"),
     playBubbleShield3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playBubbleShield3d", payload, "active_stage_bubble_shield3d_missing"),
     playShockwave3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playShockwave3d", payload, "active_stage_shockwave3d_missing"),
-    playFlameAoe3dRuntime: (payload = {}) => callShellStageMethodOnAdapters(shellContext, "playFlameAoe3d", payload, "stage_flame_aoe3d_missing"),
-    playElectricAoe3dRuntime: (payload = {}) => callShellStageMethodOnAdapters(shellContext, "playElectricAoe3d", payload, "stage_electric_aoe3d_missing"),
+    playFlameAoe3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playFlameAoe3d", payload, "active_stage_flame_aoe3d_missing"),
+    playElectricAoe3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playElectricAoe3d", payload, "active_stage_electric_aoe3d_missing"),
     requestCameraTravel: (payload = {}) => {
       const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
       return cameraRuntime && typeof cameraRuntime.requestTravel === "function"
@@ -3074,7 +3074,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260522172828s",
+  moduleCacheBustV = "20260522activeaoea",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;
