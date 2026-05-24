@@ -253,6 +253,10 @@ function createLightningFieldMaterial(params) {
         return sn / max(0.0001, deno);
       }
 
+      float stableFrame(float value) {
+        return mod(floor(value), 1024.0);
+      }
+
       float lineSdf(vec2 p, vec2 a, vec2 b, float width, out float h) {
         vec2 pa = p - a;
         vec2 ba = b - a;
@@ -271,11 +275,12 @@ function createLightningFieldMaterial(params) {
         float h = 0.0;
         vec2 noiseUv = uv / max(1.0, uBo) * uNoiseScale;
         float shapeHz = mix(uNoiseSpeedMin, max(uNoiseSpeedMin, uNoiseSpeedMax), randomFloat(vec2(seed, 173.0)));
-        float shapeClock = uTime * shapeHz;
-        float shapeFrame = floor(shapeClock);
+        float shapeClock = mod(uTime * shapeHz, 1024.0);
+        float shapeFrame = stableFrame(shapeClock);
+        float nextShapeFrame = mod(shapeFrame + 1.0, 1024.0);
         float shapeBlend = smoothstep(0.0, 1.0, fract(shapeClock));
         vec2 snapA = vec2(seed * 1.5 + shapeFrame * 19.13, seed * 0.37 + shapeFrame * 7.17);
-        vec2 snapB = vec2(seed * 1.5 + (shapeFrame + 1.0) * 19.13, seed * 0.37 + (shapeFrame + 1.0) * 7.17);
+        vec2 snapB = vec2(seed * 1.5 + nextShapeFrame * 19.13, seed * 0.37 + nextShapeFrame * 7.17);
         float snA = simpleNoise(noiseUv + snapA, 2.0);
         float snB = simpleNoise(noiseUv + snapB, 2.0);
         float sn = mix(snA, snB, shapeBlend) * 2.0 - 1.0;
@@ -285,7 +290,8 @@ function createLightningFieldMaterial(params) {
         vec3 bolt = clamp(1.0 - exp(-(line * uBoltColor) * 0.02), 0.0, 1.0);
         bolt *= smoothstep(len, len * (1.0 - uTipFade), abs(uv.y));
 
-        float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(uTime * uFlickerHz * 6.2831853 + seed * 2.31));
+        float flickerTime = mod(uTime, 1024.0);
+        float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(flickerTime * uFlickerHz * 6.2831853 + seed * 2.31));
         return bolt * flicker;
       }
 
@@ -303,10 +309,10 @@ function createLightningFieldMaterial(params) {
           float baseTtl = max(0.016, uTtlMin);
           float maxTtl = max(baseTtl, uTtlMax);
           float offset = randomFloat(vec2(fi, 9.0)) * maxTtl;
-          float shiftedTime = uTime + offset;
-          float coarseCycle = floor(shiftedTime / maxTtl);
+          float shiftedTime = mod(uTime + offset, maxTtl * 1024.0);
+          float coarseCycle = stableFrame(shiftedTime / maxTtl);
           float ttl = mix(baseTtl, maxTtl, randomFloat(vec2(fi * 17.7, coarseCycle + 41.0)));
-          float ttlCycle = floor(shiftedTime / ttl);
+          float ttlCycle = stableFrame(shiftedTime / ttl);
           float ttlAge = mod(shiftedTime, ttl);
           float seed = fi * 37.13 + ttlCycle * 19.7 + 11.7;
           float activeRoll = randomFloat(vec2(seed, 23.0));
