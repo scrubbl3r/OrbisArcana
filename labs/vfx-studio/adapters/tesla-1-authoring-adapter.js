@@ -87,7 +87,6 @@ export function createTesla1AuthoringAdapter({
       lightningShapeNoiseStrength: readNumber(els.tesla1LightningShapeNoiseStrength, tesla1PresetDefault.lightningShapeNoiseStrength, 0, 0.5),
       lightningShapeNoiseSpeedMin,
       lightningShapeNoiseSpeedMax: readNumber(els.tesla1LightningShapeNoiseSpeedMax, tesla1PresetDefault.lightningShapeNoiseSpeedMax ?? fallbackShapeHz, lightningShapeNoiseSpeedMin, 20),
-      boltShaderLineWidthBo: readNumber(els.tesla1BoltShaderLineWidthBo, tesla1PresetDefault.boltShaderLineWidthBo, 0.001, 0.25),
       boltShaderIntensity: readNumber(els.tesla1BoltShaderIntensity, tesla1PresetDefault.boltShaderIntensity, 0, 20),
       boltShaderTipFade: readNumber(els.tesla1BoltShaderTipFade, tesla1PresetDefault.boltShaderTipFade, 0, 1),
       boltShaderFlickerSpeedHz: readNumber(els.tesla1BoltShaderFlickerSpeedHz, tesla1PresetDefault.boltShaderFlickerSpeedHz, 0, 60),
@@ -119,7 +118,6 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1LightningShapeNoiseStrength) els.tesla1LightningShapeNoiseStrength.value = String(source.lightningShapeNoiseStrength ?? 0.03);
     if (els.tesla1LightningShapeNoiseSpeedMin) els.tesla1LightningShapeNoiseSpeedMin.value = String(source.lightningShapeNoiseSpeedMin ?? source.lightningShapeNoiseSpeed ?? 3);
     if (els.tesla1LightningShapeNoiseSpeedMax) els.tesla1LightningShapeNoiseSpeedMax.value = String(source.lightningShapeNoiseSpeedMax ?? source.lightningShapeNoiseSpeed ?? 3);
-    if (els.tesla1BoltShaderLineWidthBo) els.tesla1BoltShaderLineWidthBo.value = String(source.boltShaderLineWidthBo ?? 0.012);
     if (els.tesla1BoltShaderIntensity) els.tesla1BoltShaderIntensity.value = String(source.boltShaderIntensity ?? 6);
     if (els.tesla1BoltShaderTipFade) els.tesla1BoltShaderTipFade.value = String(source.boltShaderTipFade ?? 0.08);
     if (els.tesla1BoltShaderFlickerSpeedHz) els.tesla1BoltShaderFlickerSpeedHz.value = String(source.boltShaderFlickerSpeedHz ?? 4);

@@ -2072,7 +2072,6 @@
           </div>
           <div id="tesla1LightningShaderControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow"><label for="tesla1BoltShaderEnabled">Shader enabled</label><input id="tesla1BoltShaderEnabled" class="paramFieldInput" type="checkbox" checked /></div>
-            <div class="paramFieldRow"><label for="tesla1BoltShaderLineWidthBo">Line width BO</label><input id="tesla1BoltShaderLineWidthBo" class="paramFieldInput" type="number" min="0.001" max="0.25" step="0.001" value="0.012" /></div>
             <div class="paramFieldRow"><label for="tesla1BoltShaderIntensity">Intensity</label><input id="tesla1BoltShaderIntensity" class="paramFieldInput" type="number" min="0" max="20" step="0.01" value="6" /></div>
             <div class="paramFieldRow"><label for="tesla1BoltShaderTipFade">Tip fade</label><input id="tesla1BoltShaderTipFade" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.08" /></div>
             <div class="paramFieldRow"><label for="tesla1BoltShaderFlickerSpeedHz">Flicker speed Hz</label><input id="tesla1BoltShaderFlickerSpeedHz" class="paramFieldInput" type="number" min="0" max="60" step="0.01" value="4" /></div>
@@ -3085,7 +3084,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260524-tesla-f"),
+      import("./vfx-studio-bootstrap.js?v=20260524-tesla-g"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -3648,7 +3647,6 @@
       tesla1LightningShapeNoiseSpeedMax: $("tesla1LightningShapeNoiseSpeedMax"),
       tesla1LightningShaderVisibleBtn: $("tesla1LightningShaderVisibleBtn"),
       tesla1BoltShaderEnabled: $("tesla1BoltShaderEnabled"),
-      tesla1BoltShaderLineWidthBo: $("tesla1BoltShaderLineWidthBo"),
       tesla1BoltShaderIntensity: $("tesla1BoltShaderIntensity"),
       tesla1BoltShaderTipFade: $("tesla1BoltShaderTipFade"),
       tesla1BoltShaderFlickerSpeedHz: $("tesla1BoltShaderFlickerSpeedHz"),

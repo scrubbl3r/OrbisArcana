@@ -236,7 +236,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "dominantBoltHeadingMemory", "dominantBoltMaxStepBo", "dominantBoltMinStepBo", "dominantBoltPathJitterBo",
         "dominantBoltPointSpacingBo", "dominantBoltSeekStrength", "dominantBoltTargetRadiusBo",
         "dominantBoltWanderStrength", "dominantBoltZBo",
-        "boltShaderEnabled", "boltShaderLineWidthBo", "boltShaderIntensity", "boltShaderTipFade",
+        "boltShaderEnabled", "boltShaderIntensity", "boltShaderTipFade",
         "boltShaderFlickerSpeedHz", "boltShaderFlickerDepth",
         "boltShaderColorR", "boltShaderColorG", "boltShaderColorB",
         "haloBoltShapeMinStepBo", "haloBoltShapeMaxStepBo", "haloBoltShapeSeekStrength", "haloBoltShapeHeadingMemory",

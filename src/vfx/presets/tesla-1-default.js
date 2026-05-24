@@ -10,7 +10,6 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "dominantBoltWanderStrength": 0.65,
   "dominantBoltZBo": 0,
   "boltShaderEnabled": 1,
-  "boltShaderLineWidthBo": 0.012,
   "boltShaderIntensity": 6,
   "boltShaderTipFade": 0.08,
   "boltShaderFlickerSpeedHz": 4,

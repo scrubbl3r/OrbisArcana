@@ -11,6 +11,7 @@ import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-def
 
 const ORB_RADIUS_BO = 0.5;
 const MAX_HALO_BOLTS = 32;
+const TESLA_HALO_INTERNAL_LINE_WIDTH_BO = 0.012;
 
 function frameCameraToSsotOrbSize(inspector, root, bo) {
   if (!inspector || !inspector.camera || !root) return;
@@ -74,7 +75,6 @@ function buildLightningFieldUniformValues({
   endMax,
   bo,
   boltColor,
-  lineWidth,
   intensity,
   tipFade,
   flickerHz,
@@ -108,7 +108,7 @@ function buildLightningFieldUniformValues({
     uEndMin: endMin,
     uEndMax: Math.max(endMin, endMax),
     uBoltColor: boltColor,
-    uLineWidth: Math.max(0.001, lineWidth),
+    uLineWidth: Math.max(0.001, bo * TESLA_HALO_INTERNAL_LINE_WIDTH_BO),
     uIntensity: clampNumber(intensity, 0, 20, 6),
     uTipFade: clampNumber(tipFade, 0, 1, 0.08),
     uFlickerHz: clampNumber(flickerHz, 0, 60, 4),
@@ -350,7 +350,7 @@ function createLightningFieldMaterial(params) {
           float lengthSlotOffset = floor(randomFloat(vec2(seed, 193.0)) * lengthSlotCount);
           float lengthSlot = mod(fi + lengthSlotOffset, lengthSlotCount);
           float lengthRoll = (lengthSlot + randomFloat(vec2(seed, 191.0))) / lengthSlotCount;
-          float len = max(uLineWidth * 6.0, mix(uEndMin, uEndMax, lengthRoll));
+          float len = max(0.001 * uBo, mix(uEndMin, uEndMax, lengthRoll));
           color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
         }
         color = 1.0 - exp(-color * 0.55);
@@ -525,7 +525,6 @@ export function createTesla1Preview({
       endMax: bo * endMax,
       bo,
       boltColor,
-      lineWidth: bo * readInputNumber(els.tesla1BoltShaderLineWidthBo, 0.012, 0.001, 0.25),
       intensity: readInputNumber(els.tesla1BoltShaderIntensity, 6, 0, 20),
       tipFade: readInputNumber(els.tesla1BoltShaderTipFade, 0.08, 0, 1),
       flickerHz: readInputNumber(els.tesla1BoltShaderFlickerSpeedHz, 4, 0, 60),
@@ -677,7 +676,6 @@ export function createTesla1Preview({
       els.tesla1LightningShapeNoiseSpeedMin,
       els.tesla1LightningShapeNoiseSpeedMax,
       els.tesla1BoltShaderEnabled,
-      els.tesla1BoltShaderLineWidthBo,
       els.tesla1BoltShaderIntensity,
       els.tesla1BoltShaderTipFade,
       els.tesla1BoltShaderFlickerSpeedHz,
