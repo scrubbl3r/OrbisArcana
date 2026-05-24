@@ -81,6 +81,8 @@ function buildLightningFieldUniformValues({
   noiseScale,
   noiseStrength,
   noiseSpeed,
+  ttlMinMs,
+  ttlMaxMs,
   time,
 }) {
   const count = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCount) || 0)));
@@ -101,6 +103,8 @@ function buildLightningFieldUniformValues({
     uNoiseScale: clampNumber(noiseScale, 0.1, 200, 20),
     uNoiseStrength: clampNumber(noiseStrength, 0, 0.5, 0.03),
     uNoiseSpeed: clampNumber(noiseSpeed, 0, 20, 3),
+    uTtlMin: clampNumber(ttlMinMs, 16, 10000, 350) / 1000,
+    uTtlMax: clampNumber(ttlMaxMs, 16, 10000, 900) / 1000,
   };
 }
 
@@ -138,6 +142,8 @@ function createLightningFieldMaterial(params) {
       uNoiseScale: { value: values.uNoiseScale },
       uNoiseStrength: { value: values.uNoiseStrength },
       uNoiseSpeed: { value: values.uNoiseSpeed },
+      uTtlMin: { value: values.uTtlMin },
+      uTtlMax: { value: values.uTtlMax },
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -165,6 +171,8 @@ function createLightningFieldMaterial(params) {
       uniform float uNoiseScale;
       uniform float uNoiseStrength;
       uniform float uNoiseSpeed;
+      uniform float uTtlMin;
+      uniform float uTtlMax;
       varying vec3 vWorldPosition;
 
       mat2 rotate2(float angle) {
@@ -227,13 +235,18 @@ function createLightningFieldMaterial(params) {
       void main() {
         vec2 p = vWorldPosition.xy;
         vec3 color = vec3(0.0);
-        float activeCount = floor(randomFloat(vec2(floor(uTime / 0.2))) * max(1.0, float(uBoltCount) - 1.0) + 1.5);
+        float countTtl = max(0.016, uTtlMin);
+        float countCycle = floor(uTime / countTtl);
+        float activeCount = floor(randomFloat(vec2(countCycle, 19.17)) * max(1.0, float(uBoltCount) - 1.0) + 1.5);
         float lengthMin = max(uLineWidth * 6.0, uEndMin - uStartMax);
         float lengthMax = max(lengthMin, uEndMax - uStartMin);
         for (int i = 0; i < MAX_HALO_BOLTS; i += 1) {
           if (float(i) >= activeCount) break;
           float fi = float(i);
-          float seed = fi * 37.13 + floor(uTime / 0.2) * 19.7 + 11.7;
+          float ttl = mix(max(0.016, uTtlMin), max(uTtlMin, uTtlMax), randomFloat(vec2(fi * 17.7, 41.0)));
+          float offset = randomFloat(vec2(fi, 9.0)) * ttl;
+          float ttlCycle = floor((uTime + offset) / ttl);
+          float seed = fi * 37.13 + ttlCycle * 19.7 + 11.7;
           float angle = randomFloat(vec2(seed, activeCount + 3.17)) * 6.2831853;
           float startR = mix(uStartMin, uStartMax, randomFloat(vec2(seed, 7.0)));
           float len = mix(lengthMin, lengthMax, randomFloat(vec2(angle, seed)));
@@ -306,8 +319,12 @@ export function createTesla1Preview({
   function readShapeConfig() {
     const boltMin = Math.round(readInputNumber(els.tesla1HaloBoltCountMin, 4, 0, 256));
     const boltMax = Math.round(readInputNumber(els.tesla1HaloBoltCountMax, 12, boltMin, 256));
+    const ttlMinMs = Math.round(readInputNumber(els.tesla1HaloBoltTtlMinMs, 350, 16, 10000));
+    const ttlMaxMs = Math.round(readInputNumber(els.tesla1HaloBoltTtlMaxMs, 900, ttlMinMs, 10000));
     return Object.freeze({
       boltCount: Math.round((boltMin + boltMax) * 0.5),
+      ttlMinMs,
+      ttlMaxMs,
       noiseScale: readInputNumber(els.tesla1LightningShapeNoiseScale, 20, 0.1, 200),
       noiseStrength: readInputNumber(els.tesla1LightningShapeNoiseStrength, 0.03, 0, 0.5),
       noiseSpeed: readInputNumber(els.tesla1LightningShapeNoiseSpeed, 3, 0, 20),
@@ -393,6 +410,8 @@ export function createTesla1Preview({
       noiseScale: shape.noiseScale,
       noiseStrength: shape.noiseStrength,
       noiseSpeed: shape.noiseSpeed,
+      ttlMinMs: shape.ttlMinMs,
+      ttlMaxMs: shape.ttlMaxMs,
       time,
     };
     if (!fieldMesh || !fieldMesh.parent) {
@@ -509,6 +528,8 @@ export function createTesla1Preview({
       els.tesla1HaloFieldBoltEndMaxBo,
       els.tesla1HaloBoltCountMin,
       els.tesla1HaloBoltCountMax,
+      els.tesla1HaloBoltTtlMinMs,
+      els.tesla1HaloBoltTtlMaxMs,
       els.tesla1LightningShapeNoiseScale,
       els.tesla1LightningShapeNoiseStrength,
       els.tesla1LightningShapeNoiseSpeed,

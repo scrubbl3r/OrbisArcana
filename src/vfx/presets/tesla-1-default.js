@@ -72,6 +72,8 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "haloFieldWanderSpeedMax": 0.75,
   "haloBoltCountMin": 4,
   "haloBoltCountMax": 12,
+  "haloBoltTtlMinMs": 350,
+  "haloBoltTtlMaxMs": 900,
   "lightningShapeNoiseScale": 3.5,
   "lightningShapeNoiseStrength": 0.2,
   "lightningShapeNoiseSpeed": 1,

@@ -60,11 +60,14 @@ export function createTesla1AuthoringAdapter({
       "haloFieldZMinBo", "haloFieldZMaxBo",
     ].forEach((key) => delete captured[key]);
     const haloBoltCountMin = Math.round(readNumber(els.tesla1HaloBoltCountMin, tesla1PresetDefault.haloBoltCountMin, 0, 256));
+    const haloBoltTtlMinMs = Math.round(readNumber(els.tesla1HaloBoltTtlMinMs, tesla1PresetDefault.haloBoltTtlMinMs, 16, 10000));
     return Object.freeze({
       ...captured,
       dominantBoltTargetRadiusBo: readNumber(els.tesla1MasterBoltContactRadiusBo, tesla1PresetDefault.dominantBoltTargetRadiusBo, 0, 8),
       haloBoltCountMin,
       haloBoltCountMax: Math.round(readNumber(els.tesla1HaloBoltCountMax, tesla1PresetDefault.haloBoltCountMax, haloBoltCountMin, 256)),
+      haloBoltTtlMinMs,
+      haloBoltTtlMaxMs: Math.round(readNumber(els.tesla1HaloBoltTtlMaxMs, tesla1PresetDefault.haloBoltTtlMaxMs, haloBoltTtlMinMs, 10000)),
       lightningShapeNoiseScale: readNumber(els.tesla1LightningShapeNoiseScale, tesla1PresetDefault.lightningShapeNoiseScale, 0.1, 200),
       lightningShapeNoiseStrength: readNumber(els.tesla1LightningShapeNoiseStrength, tesla1PresetDefault.lightningShapeNoiseStrength, 0, 0.5),
       lightningShapeNoiseSpeed: readNumber(els.tesla1LightningShapeNoiseSpeed, tesla1PresetDefault.lightningShapeNoiseSpeed, 0, 20),
@@ -85,6 +88,8 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1MasterBoltContactRadiusBo) els.tesla1MasterBoltContactRadiusBo.value = String(source.dominantBoltTargetRadiusBo ?? 0.18);
     if (els.tesla1HaloBoltCountMin) els.tesla1HaloBoltCountMin.value = String(source.haloBoltCountMin ?? 4);
     if (els.tesla1HaloBoltCountMax) els.tesla1HaloBoltCountMax.value = String(source.haloBoltCountMax ?? 12);
+    if (els.tesla1HaloBoltTtlMinMs) els.tesla1HaloBoltTtlMinMs.value = String(source.haloBoltTtlMinMs ?? 350);
+    if (els.tesla1HaloBoltTtlMaxMs) els.tesla1HaloBoltTtlMaxMs.value = String(source.haloBoltTtlMaxMs ?? 900);
     if (els.tesla1LightningShapeNoiseScale) els.tesla1LightningShapeNoiseScale.value = String(source.lightningShapeNoiseScale ?? 20);
     if (els.tesla1LightningShapeNoiseStrength) els.tesla1LightningShapeNoiseStrength.value = String(source.lightningShapeNoiseStrength ?? 0.03);
     if (els.tesla1LightningShapeNoiseSpeed) els.tesla1LightningShapeNoiseSpeed.value = String(source.lightningShapeNoiseSpeed ?? 3);
