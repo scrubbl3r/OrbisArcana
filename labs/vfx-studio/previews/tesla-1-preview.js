@@ -66,7 +66,8 @@ function disposeObject(object) {
 }
 
 function buildLightningFieldUniformValues({
-  boltCount,
+  boltCountMin,
+  boltCountMax,
   startMin,
   startMax,
   endMin,
@@ -85,9 +86,11 @@ function buildLightningFieldUniformValues({
   ttlMaxMs,
   time,
 }) {
-  const count = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCount) || 0)));
+  const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMin) || 0)));
+  const countMax = Math.max(countMin, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMax) || countMin)));
   return {
-    uBoltCount: count,
+    uBoltCountMin: countMin,
+    uBoltCountMax: countMax,
     uBo: Math.max(1, bo),
     uTime: time,
     uStartMin: startMin,
@@ -126,7 +129,8 @@ function createLightningFieldMaterial(params) {
     transparent: true,
     toneMapped: false,
     uniforms: {
-      uBoltCount: { value: values.uBoltCount },
+      uBoltCountMin: { value: values.uBoltCountMin },
+      uBoltCountMax: { value: values.uBoltCountMax },
       uBo: { value: values.uBo },
       uTime: { value: values.uTime },
       uStartMin: { value: values.uStartMin },
@@ -155,7 +159,8 @@ function createLightningFieldMaterial(params) {
     `,
     fragmentShader: `
       #define MAX_HALO_BOLTS ${MAX_HALO_BOLTS}
-      uniform int uBoltCount;
+      uniform int uBoltCountMin;
+      uniform int uBoltCountMax;
       uniform float uBo;
       uniform float uTime;
       uniform float uStartMin;
@@ -237,7 +242,10 @@ function createLightningFieldMaterial(params) {
         vec3 color = vec3(0.0);
         float countTtl = max(0.016, uTtlMin);
         float countCycle = floor(uTime / countTtl);
-        float activeCount = floor(randomFloat(vec2(countCycle, 19.17)) * max(1.0, float(uBoltCount) - 1.0) + 1.5);
+        float minCount = float(min(uBoltCountMin, uBoltCountMax));
+        float maxCount = float(max(uBoltCountMin, uBoltCountMax));
+        float activeCount = floor(mix(minCount, maxCount + 1.0, randomFloat(vec2(countCycle, 19.17))));
+        activeCount = clamp(activeCount, minCount, maxCount);
         float lengthMin = max(uLineWidth * 6.0, uEndMin - uStartMax);
         float lengthMax = max(lengthMin, uEndMax - uStartMin);
         for (int i = 0; i < MAX_HALO_BOLTS; i += 1) {
@@ -322,7 +330,8 @@ export function createTesla1Preview({
     const ttlMinMs = Math.round(readInputNumber(els.tesla1HaloBoltTtlMinMs, 350, 16, 10000));
     const ttlMaxMs = Math.round(readInputNumber(els.tesla1HaloBoltTtlMaxMs, 900, ttlMinMs, 10000));
     return Object.freeze({
-      boltCount: Math.round((boltMin + boltMax) * 0.5),
+      boltCountMin: boltMin,
+      boltCountMax: boltMax,
       ttlMinMs,
       ttlMaxMs,
       noiseScale: readInputNumber(els.tesla1LightningShapeNoiseScale, 20, 0.1, 200),
@@ -395,7 +404,8 @@ export function createTesla1Preview({
     const maxRangeBo = Math.max(endMax, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
     const materialParams = {
-      boltCount: shape.boltCount,
+      boltCountMin: shape.boltCountMin,
+      boltCountMax: shape.boltCountMax,
       startMin: bo * startMin,
       startMax: bo * startMax,
       endMin: bo * endMin,
