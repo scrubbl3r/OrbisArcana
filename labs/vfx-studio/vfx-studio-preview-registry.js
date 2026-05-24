@@ -23,7 +23,7 @@ import { createOrbTeleportPreview } from "./previews/orb-teleport-preview.js?v=2
 import { createOrbTeleport3dPreview } from "./previews/orb-teleport-3d-preview.js?v=20260501a";
 import { createFlameAoe3dPreview } from "./previews/flame-aoe-3d-preview.js?v=20260520aeo-diameter-a";
 import { createElectricAoe3dPreview } from "./previews/electric-aoe-3d-preview.js?v=20260522-skeleton-a";
-import { createTesla1Preview } from "./previews/tesla-1-preview.js?v=20260523r";
+import { createTesla1Preview } from "./previews/tesla-1-preview.js?v=20260523s";
 import { createBankOrb3dPreview } from "./previews/bank-orb-3d-preview.js?v=20260502a";
 
 export function createStudioPreviewRegistry({

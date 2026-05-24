@@ -81,7 +81,8 @@ function buildLightningFieldUniformValues({
   flickerDepth,
   noiseScale,
   noiseStrength,
-  noiseSpeed,
+  noiseSpeedMin,
+  noiseSpeedMax,
   ttlMinMs,
   ttlMaxMs,
   wanderSpeedMin,
@@ -114,7 +115,8 @@ function buildLightningFieldUniformValues({
     uFlickerDepth: clampNumber(flickerDepth, 0, 1, 0.5),
     uNoiseScale: clampNumber(noiseScale, 0.1, 200, 20),
     uNoiseStrength: clampNumber(noiseStrength, 0, 0.5, 0.03),
-    uNoiseSpeed: clampNumber(noiseSpeed, 0, 20, 3),
+    uNoiseSpeedMin: clampNumber(noiseSpeedMin, 0, 20, 2),
+    uNoiseSpeedMax: clampNumber(noiseSpeedMax, 0, 20, 3),
     uTtlMin: clampNumber(ttlMinMs, 16, 10000, 350) / 1000,
     uTtlMax: clampNumber(ttlMaxMs, 16, 10000, 900) / 1000,
     uWanderSpeedMin: clampNumber(wanderSpeedMin, 0, 4, 0.05),
@@ -163,7 +165,8 @@ function createLightningFieldMaterial(params) {
       uFlickerDepth: { value: values.uFlickerDepth },
       uNoiseScale: { value: values.uNoiseScale },
       uNoiseStrength: { value: values.uNoiseStrength },
-      uNoiseSpeed: { value: values.uNoiseSpeed },
+      uNoiseSpeedMin: { value: values.uNoiseSpeedMin },
+      uNoiseSpeedMax: { value: values.uNoiseSpeedMax },
       uTtlMin: { value: values.uTtlMin },
       uTtlMax: { value: values.uTtlMax },
       uWanderSpeedMin: { value: values.uWanderSpeedMin },
@@ -202,7 +205,8 @@ function createLightningFieldMaterial(params) {
       uniform float uFlickerDepth;
       uniform float uNoiseScale;
       uniform float uNoiseStrength;
-      uniform float uNoiseSpeed;
+      uniform float uNoiseSpeedMin;
+      uniform float uNoiseSpeedMax;
       uniform float uTtlMin;
       uniform float uTtlMax;
       uniform float uWanderSpeedMin;
@@ -266,7 +270,8 @@ function createLightningFieldMaterial(params) {
         uv.y -= startR;
         float h = 0.0;
         vec2 noiseUv = uv / max(1.0, uBo) * uNoiseScale;
-        float shapeClock = uTime * uNoiseSpeed;
+        float shapeHz = mix(uNoiseSpeedMin, max(uNoiseSpeedMin, uNoiseSpeedMax), randomFloat(vec2(seed, 173.0)));
+        float shapeClock = uTime * shapeHz;
         float shapeFrame = floor(shapeClock);
         float shapeBlend = smoothstep(0.0, 1.0, fract(shapeClock));
         vec2 snapA = vec2(seed * 1.5 + shapeFrame * 19.13, seed * 0.37 + shapeFrame * 7.17);
@@ -412,6 +417,7 @@ export function createTesla1Preview({
     const turnDampingMin = readInputNumber(els.tesla1HaloBoltTurnDampingMin, 0.04, 0, 1);
     const turnDampingMax = readInputNumber(els.tesla1HaloBoltTurnDampingMax, 0.18, turnDampingMin, 1);
     const dispersion = readInputNumber(els.tesla1HaloBoltDispersion, 0.2, 0, 1);
+    const noiseSpeedMin = readInputNumber(els.tesla1LightningShapeNoiseSpeedMin, 2, 0, 20);
     return Object.freeze({
       boltCountMin: boltMin,
       boltCountMax: boltMax,
@@ -428,7 +434,8 @@ export function createTesla1Preview({
       dispersion,
       noiseScale: readInputNumber(els.tesla1LightningShapeNoiseScale, 20, 0.1, 200),
       noiseStrength: readInputNumber(els.tesla1LightningShapeNoiseStrength, 0.03, 0, 0.5),
-      noiseSpeed: readInputNumber(els.tesla1LightningShapeNoiseSpeed, 3, 0, 20),
+      noiseSpeedMin,
+      noiseSpeedMax: readInputNumber(els.tesla1LightningShapeNoiseSpeedMax, 3, noiseSpeedMin, 20),
     });
   }
 
@@ -511,7 +518,8 @@ export function createTesla1Preview({
       flickerDepth: readInputNumber(els.tesla1BoltShaderFlickerDepth, 0.5, 0, 1),
       noiseScale: shape.noiseScale,
       noiseStrength: shape.noiseStrength,
-      noiseSpeed: shape.noiseSpeed,
+      noiseSpeedMin: shape.noiseSpeedMin,
+      noiseSpeedMax: shape.noiseSpeedMax,
       ttlMinMs: shape.ttlMinMs,
       ttlMaxMs: shape.ttlMaxMs,
       wanderSpeedMin: shape.wanderSpeedMin,
@@ -652,7 +660,8 @@ export function createTesla1Preview({
       els.tesla1HaloBoltDispersion,
       els.tesla1LightningShapeNoiseScale,
       els.tesla1LightningShapeNoiseStrength,
-      els.tesla1LightningShapeNoiseSpeed,
+      els.tesla1LightningShapeNoiseSpeedMin,
+      els.tesla1LightningShapeNoiseSpeedMax,
       els.tesla1BoltShaderEnabled,
       els.tesla1BoltShaderLineWidthBo,
       els.tesla1BoltShaderIntensity,
