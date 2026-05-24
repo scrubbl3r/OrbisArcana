@@ -208,18 +208,8 @@ function createLightningFieldMaterial(params) {
         vec3 bolt = clamp(1.0 - exp(-(line * uBoltColor) * 0.02), 0.0, 1.0);
         bolt *= smoothstep(len, len * (1.0 - uTipFade), abs(uv.y));
 
-        uv = rotate2(0.785398) * uv;
-        sn = simpleNoise(uv / max(1.0, uBo) * 25.0 - t * 4.0 + vec2(seed * 2.3, 0.0), 2.0) * 2.0 - 1.0;
-        uv.x += sn * uv.y * 0.35 * smoothstep(uBo * 0.1, uBo * 0.25, len);
-        float branchLen = len * 0.5;
-        float bh = 0.0;
-        float bd = lineSdf(uv, vec2(0.0), vec2(0.0, branchLen), -uLineWidth * 0.001, bh);
-        float branchLine = 0.2 / max(max(bd / max(1.0, uBo), 0.0), 0.0001);
-        vec3 branchBolt = clamp(1.0 - exp(-(branchLine * uBoltColor) * 0.03), 0.0, 1.0);
-        branchBolt *= smoothstep(branchLen * 0.7, 0.0, abs(uv.y));
-
         float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(uTime * uFlickerHz * 6.2831853 + seed * 2.31));
-        return (bolt + branchBolt) * flicker;
+        return bolt * flicker;
       }
 
       void main() {
@@ -231,9 +221,8 @@ function createLightningFieldMaterial(params) {
         for (int i = 0; i < MAX_HALO_BOLTS; i += 1) {
           if (float(i) >= activeCount) break;
           float fi = float(i);
-          float angle = fi * 6.2831853 / max(1.0, activeCount);
-          angle += randomFloat(vec2(activeCount + floor(uTime * 5.0 + fi), fi + 3.17)) * 0.5;
           float seed = fi * 37.13 + floor(uTime / 0.2) * 19.7 + 11.7;
+          float angle = randomFloat(vec2(seed, activeCount + 3.17)) * 6.2831853;
           float startR = mix(uStartMin, uStartMax, randomFloat(vec2(seed, 7.0)));
           float len = mix(lengthMin, lengthMax, randomFloat(vec2(angle, seed)));
           color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
