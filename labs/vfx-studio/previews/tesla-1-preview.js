@@ -78,6 +78,9 @@ function buildLightningFieldUniformValues({
   tipFade,
   flickerHz,
   flickerDepth,
+  noiseScale,
+  noiseStrength,
+  noiseSpeed,
   time,
 }) {
   const count = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCount) || 0)));
@@ -95,6 +98,9 @@ function buildLightningFieldUniformValues({
     uTipFade: clampNumber(tipFade, 0, 1, 0.08),
     uFlickerHz: clampNumber(flickerHz, 0, 60, 4),
     uFlickerDepth: clampNumber(flickerDepth, 0, 1, 0.5),
+    uNoiseScale: clampNumber(noiseScale, 0.1, 200, 20),
+    uNoiseStrength: clampNumber(noiseStrength, 0, 0.5, 0.03),
+    uNoiseSpeed: clampNumber(noiseSpeed, 0, 20, 3),
   };
 }
 
@@ -129,6 +135,9 @@ function createLightningFieldMaterial(params) {
       uTipFade: { value: values.uTipFade },
       uFlickerHz: { value: values.uFlickerHz },
       uFlickerDepth: { value: values.uFlickerDepth },
+      uNoiseScale: { value: values.uNoiseScale },
+      uNoiseStrength: { value: values.uNoiseStrength },
+      uNoiseSpeed: { value: values.uNoiseSpeed },
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -153,6 +162,9 @@ function createLightningFieldMaterial(params) {
       uniform float uTipFade;
       uniform float uFlickerHz;
       uniform float uFlickerDepth;
+      uniform float uNoiseScale;
+      uniform float uNoiseStrength;
+      uniform float uNoiseSpeed;
       varying vec3 vWorldPosition;
 
       mat2 rotate2(float angle) {
@@ -201,8 +213,8 @@ function createLightningFieldMaterial(params) {
         vec2 t = vec2(0.0, mod(uTime, 200.0) * 2.0);
 
         float h = 0.0;
-        float sn = simpleNoise(uv / max(1.0, uBo) * 20.0 - t * 3.0 + vec2(seed * 1.5, 0.0), 2.0) * 2.0 - 1.0;
-        uv.x += sn * uBo * 0.03 * smoothstep(0.0, uBo * 0.2, abs(uv.y));
+        float sn = simpleNoise(uv / max(1.0, uBo) * uNoiseScale - t * uNoiseSpeed + vec2(seed * 1.5, 0.0), 2.0) * 2.0 - 1.0;
+        uv.x += sn * uBo * uNoiseStrength * smoothstep(0.0, uBo * 0.2, abs(uv.y));
         float d = lineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), uLineWidth * 0.006, h);
         float line = 0.1 / max(max(d / max(1.0, uBo), 0.0), 0.0001);
         vec3 bolt = clamp(1.0 - exp(-(line * uBoltColor) * 0.02), 0.0, 1.0);
@@ -245,7 +257,7 @@ export function createTesla1Preview({
   let model = null;
   let masterLayer = null;
   let haloLayer = null;
-  let treeLayer = null;
+  let shapeLayer = null;
   let fieldMesh = null;
   let fieldPlaneSize = 0;
   let createdAt = 0;
@@ -272,7 +284,7 @@ export function createTesla1Preview({
     model = null;
     masterLayer = null;
     haloLayer = null;
-    treeLayer = null;
+    shapeLayer = null;
     fieldMesh = null;
     fieldPlaneSize = 0;
   }
@@ -291,12 +303,14 @@ export function createTesla1Preview({
     return [start, steer, end];
   }
 
-  function readTreeConfig() {
-    const boltMin = Math.round(readInputNumber(els.tesla1LightningTreeBoltCountMin, 4, 0, 256));
-    const boltMax = Math.round(readInputNumber(els.tesla1LightningTreeBoltCountMax, 12, boltMin, 256));
+  function readShapeConfig() {
+    const boltMin = Math.round(readInputNumber(els.tesla1HaloBoltCountMin, 4, 0, 256));
+    const boltMax = Math.round(readInputNumber(els.tesla1HaloBoltCountMax, 12, boltMin, 256));
     return Object.freeze({
       boltCount: Math.round((boltMin + boltMax) * 0.5),
-      noiseSpeedHz: readInputNumber(els.tesla1LightningTreeNoiseSpeedHz, 18, 0, 120),
+      noiseScale: readInputNumber(els.tesla1LightningShapeNoiseScale, 20, 0.1, 200),
+      noiseStrength: readInputNumber(els.tesla1LightningShapeNoiseStrength, 0.03, 0, 0.5),
+      noiseSpeed: readInputNumber(els.tesla1LightningShapeNoiseSpeed, 3, 0, 20),
     });
   }
 
@@ -350,16 +364,16 @@ export function createTesla1Preview({
     haloLayer.add(shell);
   }
 
-  function syncTreeLayer(bo, time) {
-    if (!treeLayer) return;
-    treeLayer.visible = !els.tesla1LightningTreeVisibleBtn || els.tesla1LightningTreeVisibleBtn.getAttribute("aria-pressed") !== "false";
-    const tree = readTreeConfig();
+  function syncShapeLayer(bo, time) {
+    if (!shapeLayer) return;
+    shapeLayer.visible = !els.tesla1LightningShapeVisibleBtn || els.tesla1LightningShapeVisibleBtn.getAttribute("aria-pressed") !== "false";
+    const shape = readShapeConfig();
     const startMin = readInputNumber(els.tesla1HaloFieldBoltStartMinBo, 0.5, 0, 32);
     const startMax = readInputNumber(els.tesla1HaloFieldBoltStartMaxBo, 0.65, startMin, 32);
     const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, 0.05, 32);
     const endMax = readInputNumber(els.tesla1HaloFieldBoltEndMaxBo, 1.6, endMin, 32);
     if (!readInputBoolean(els.tesla1BoltShaderEnabled, true)) {
-      clearLayer(treeLayer);
+      clearLayer(shapeLayer);
       fieldMesh = null;
       fieldPlaneSize = 0;
       return;
@@ -368,7 +382,7 @@ export function createTesla1Preview({
     const maxRangeBo = Math.max(endMax, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
     const materialParams = {
-      boltCount: tree.boltCount,
+      boltCount: shape.boltCount,
       startMin: bo * startMin,
       startMax: bo * startMax,
       endMin: bo * endMin,
@@ -380,16 +394,19 @@ export function createTesla1Preview({
       tipFade: readInputNumber(els.tesla1BoltShaderTipFade, 0.08, 0, 1),
       flickerHz: readInputNumber(els.tesla1BoltShaderFlickerSpeedHz, 4, 0, 60),
       flickerDepth: readInputNumber(els.tesla1BoltShaderFlickerDepth, 0.5, 0, 1),
+      noiseScale: shape.noiseScale,
+      noiseStrength: shape.noiseStrength,
+      noiseSpeed: shape.noiseSpeed,
       time,
     };
     if (!fieldMesh || !fieldMesh.parent) {
-      clearLayer(treeLayer);
+      clearLayer(shapeLayer);
       const material = createLightningFieldMaterial(materialParams);
       fieldMesh = new THREE.Mesh(new THREE.PlaneGeometry(planeSize, planeSize, 1, 1), material);
       fieldMesh.name = "tesla1:sdf_lightning_field";
       fieldMesh.renderOrder = 214;
       fieldPlaneSize = planeSize;
-      treeLayer.add(fieldMesh);
+      shapeLayer.add(fieldMesh);
       return;
     }
     updateLightningFieldMaterial(fieldMesh.material, materialParams);
@@ -420,7 +437,7 @@ export function createTesla1Preview({
         if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = time;
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
         syncHaloLayer(bo);
-        syncTreeLayer(bo, time);
+        syncShapeLayer(bo, time);
       },
     });
     if (!inspector) return activeConfig;
@@ -446,16 +463,16 @@ export function createTesla1Preview({
     masterLayer.name = "tesla1:master_bolt_control_layer";
     haloLayer = new THREE.Group();
     haloLayer.name = "tesla1:halo_envelope_layer";
-    treeLayer = new THREE.Group();
-    treeLayer.name = "tesla1:lightning_tree_layer";
+    shapeLayer = new THREE.Group();
+    shapeLayer.name = "tesla1:lightning_shape_layer";
     inspector.scene.add(new THREE.AmbientLight(0xffffff, 0.035));
     inspector.scene.add(model);
     inspector.scene.add(haloLayer);
-    inspector.scene.add(treeLayer);
+    inspector.scene.add(shapeLayer);
     inspector.scene.add(masterLayer);
     syncMasterLayer(bo, 0);
     syncHaloLayer(bo);
-    syncTreeLayer(bo, 0);
+    syncShapeLayer(bo, 0);
     inspector.render();
     return activeConfig;
   }
@@ -482,7 +499,7 @@ export function createTesla1Preview({
     if (els.tesla1OrbVisibleBtn) els.tesla1OrbVisibleBtn.addEventListener("click", () => toggleLayer(els.tesla1OrbVisibleBtn, model));
     if (els.tesla1MasterBoltVisibleBtn) els.tesla1MasterBoltVisibleBtn.addEventListener("click", () => toggleLayer(els.tesla1MasterBoltVisibleBtn, masterLayer));
     if (els.tesla1HaloVisibleBtn) els.tesla1HaloVisibleBtn.addEventListener("click", () => toggleLayer(els.tesla1HaloVisibleBtn, haloLayer));
-    if (els.tesla1LightningTreeVisibleBtn) els.tesla1LightningTreeVisibleBtn.addEventListener("click", () => toggleLayer(els.tesla1LightningTreeVisibleBtn, treeLayer));
+    if (els.tesla1LightningShapeVisibleBtn) els.tesla1LightningShapeVisibleBtn.addEventListener("click", () => toggleLayer(els.tesla1LightningShapeVisibleBtn, shapeLayer));
     [
       els.tesla1MasterBoltMinRangeBo,
       els.tesla1MasterBoltMaxRangeBo,
@@ -499,9 +516,11 @@ export function createTesla1Preview({
       els.tesla1HaloContactRadiusBo,
       els.tesla1HaloFieldZMinBo,
       els.tesla1HaloFieldZMaxBo,
-      els.tesla1LightningTreeBoltCountMin,
-      els.tesla1LightningTreeBoltCountMax,
-      els.tesla1LightningTreeNoiseSpeedHz,
+      els.tesla1HaloBoltCountMin,
+      els.tesla1HaloBoltCountMax,
+      els.tesla1LightningShapeNoiseScale,
+      els.tesla1LightningShapeNoiseStrength,
+      els.tesla1LightningShapeNoiseSpeed,
       els.tesla1BoltShaderEnabled,
       els.tesla1BoltShaderLineWidthBo,
       els.tesla1BoltShaderIntensity,

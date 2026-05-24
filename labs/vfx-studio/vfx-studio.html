@@ -2052,16 +2052,13 @@
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
-            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="tesla1LightningTreeControls">Lightning Tree</button>
-            <button id="tesla1LightningTreeVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Lightning Tree visibility" title="Toggle Lightning Tree visibility"></button>
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="tesla1LightningShapeControls">Lightning Shape</button>
+            <button id="tesla1LightningShapeVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Lightning Shape visibility" title="Toggle Lightning Shape visibility"></button>
           </div>
-          <div id="tesla1LightningTreeControls" class="controlGroupBody paramFieldRows" hidden>
-            <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">BOLT COUNT</span>
-              <label for="tesla1LightningTreeBoltCountMin">min</label><input id="tesla1LightningTreeBoltCountMin" class="paramFieldInput" type="number" min="0" max="256" step="1" value="4" />
-              <label for="tesla1LightningTreeBoltCountMax">max</label><input id="tesla1LightningTreeBoltCountMax" class="paramFieldInput" type="number" min="0" max="256" step="1" value="12" />
-            </div>
-            <div class="paramFieldRow"><label for="tesla1LightningTreeNoiseSpeedHz">Animation Hz</label><input id="tesla1LightningTreeNoiseSpeedHz" class="paramFieldInput" type="number" min="0" max="120" step="0.1" value="18" /></div>
+          <div id="tesla1LightningShapeControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow"><label for="tesla1LightningShapeNoiseScale">Noise scale</label><input id="tesla1LightningShapeNoiseScale" class="paramFieldInput" type="number" min="0.1" max="200" step="0.1" value="20" /></div>
+            <div class="paramFieldRow"><label for="tesla1LightningShapeNoiseStrength">Noise strength</label><input id="tesla1LightningShapeNoiseStrength" class="paramFieldInput" type="number" min="0" max="0.5" step="0.001" value="0.03" /></div>
+            <div class="paramFieldRow"><label for="tesla1LightningShapeNoiseSpeed">Noise speed</label><input id="tesla1LightningShapeNoiseSpeed" class="paramFieldInput" type="number" min="0" max="20" step="0.01" value="3" /></div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -2107,6 +2104,11 @@
           <div id="tesla1HaloControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow"><label for="tesla1HaloFieldEnabled">Halo enabled</label><input id="tesla1HaloFieldEnabled" class="paramFieldInput" type="checkbox" checked /></div>
             <div class="paramFieldRow"><label for="tesla1HaloFieldShellRadiusBo">Shell radius BO</label><input id="tesla1HaloFieldShellRadiusBo" class="paramFieldInput" type="number" min="0.5" max="32" step="0.05" value="1.5" /></div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BOLT COUNT</span>
+              <label for="tesla1HaloBoltCountMin">min</label><input id="tesla1HaloBoltCountMin" class="paramFieldInput" type="number" min="0" max="256" step="1" value="4" />
+              <label for="tesla1HaloBoltCountMax">max</label><input id="tesla1HaloBoltCountMax" class="paramFieldInput" type="number" min="0" max="256" step="1" value="12" />
+            </div>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">START BO</span>
               <label for="tesla1HaloFieldBoltStartMinBo">min</label><input id="tesla1HaloFieldBoltStartMinBo" class="paramFieldInput" type="number" min="0" max="32" step="0.05" value="0.5" />
@@ -3064,7 +3066,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260523-tesla-g"),
+      import("./vfx-studio-bootstrap.js?v=20260523-tesla-h"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -3097,7 +3099,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260523d";
+    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260523e";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -3114,7 +3116,7 @@
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260522172828i";
     import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522172828";
-    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260523d";
+    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260523e";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522172828b";
@@ -3620,10 +3622,10 @@
       previewElectricAoe3d: $("previewElectricAoe3d"),
       previewTesla1: $("previewTesla1"),
       tesla1OrbVisibleBtn: $("tesla1OrbVisibleBtn"),
-      tesla1LightningTreeVisibleBtn: $("tesla1LightningTreeVisibleBtn"),
-      tesla1LightningTreeBoltCountMin: $("tesla1LightningTreeBoltCountMin"),
-      tesla1LightningTreeBoltCountMax: $("tesla1LightningTreeBoltCountMax"),
-      tesla1LightningTreeNoiseSpeedHz: $("tesla1LightningTreeNoiseSpeedHz"),
+      tesla1LightningShapeVisibleBtn: $("tesla1LightningShapeVisibleBtn"),
+      tesla1LightningShapeNoiseScale: $("tesla1LightningShapeNoiseScale"),
+      tesla1LightningShapeNoiseStrength: $("tesla1LightningShapeNoiseStrength"),
+      tesla1LightningShapeNoiseSpeed: $("tesla1LightningShapeNoiseSpeed"),
       tesla1LightningShaderVisibleBtn: $("tesla1LightningShaderVisibleBtn"),
       tesla1BoltShaderEnabled: $("tesla1BoltShaderEnabled"),
       tesla1BoltShaderLineWidthBo: $("tesla1BoltShaderLineWidthBo"),
@@ -3642,6 +3644,8 @@
       tesla1HaloVisibleBtn: $("tesla1HaloVisibleBtn"),
       tesla1HaloFieldEnabled: $("tesla1HaloFieldEnabled"),
       tesla1HaloFieldShellRadiusBo: $("tesla1HaloFieldShellRadiusBo"),
+      tesla1HaloBoltCountMin: $("tesla1HaloBoltCountMin"),
+      tesla1HaloBoltCountMax: $("tesla1HaloBoltCountMax"),
       tesla1HaloFieldBoltStartMinBo: $("tesla1HaloFieldBoltStartMinBo"),
       tesla1HaloFieldBoltStartMaxBo: $("tesla1HaloFieldBoltStartMaxBo"),
       tesla1HaloFieldBoltEndMinBo: $("tesla1HaloFieldBoltEndMinBo"),

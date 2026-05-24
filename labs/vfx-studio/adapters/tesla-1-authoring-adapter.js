@@ -59,13 +59,15 @@ export function createTesla1AuthoringAdapter({
       "boltShaderCentralCoreNoiseScale", "boltShaderCentralCoreNoiseSpeed", "boltShaderCentralCoreIntensity",
       "boltShaderCentralCoreSoftness",
     ].forEach((key) => delete captured[key]);
-    const treeBoltCountMin = Math.round(readNumber(els.tesla1LightningTreeBoltCountMin, tesla1PresetDefault.lightningTreeBoltCountMin, 0, 256));
+    const haloBoltCountMin = Math.round(readNumber(els.tesla1HaloBoltCountMin, tesla1PresetDefault.haloBoltCountMin, 0, 256));
     return Object.freeze({
       ...captured,
       dominantBoltTargetRadiusBo: readNumber(els.tesla1MasterBoltContactRadiusBo, tesla1PresetDefault.dominantBoltTargetRadiusBo, 0, 8),
-      lightningTreeBoltCountMin: treeBoltCountMin,
-      lightningTreeBoltCountMax: Math.round(readNumber(els.tesla1LightningTreeBoltCountMax, tesla1PresetDefault.lightningTreeBoltCountMax, treeBoltCountMin, 256)),
-      lightningTreeNoiseSpeedHz: readNumber(els.tesla1LightningTreeNoiseSpeedHz, tesla1PresetDefault.lightningTreeNoiseSpeedHz, 0, 120),
+      haloBoltCountMin,
+      haloBoltCountMax: Math.round(readNumber(els.tesla1HaloBoltCountMax, tesla1PresetDefault.haloBoltCountMax, haloBoltCountMin, 256)),
+      lightningShapeNoiseScale: readNumber(els.tesla1LightningShapeNoiseScale, tesla1PresetDefault.lightningShapeNoiseScale, 0.1, 200),
+      lightningShapeNoiseStrength: readNumber(els.tesla1LightningShapeNoiseStrength, tesla1PresetDefault.lightningShapeNoiseStrength, 0, 0.5),
+      lightningShapeNoiseSpeed: readNumber(els.tesla1LightningShapeNoiseSpeed, tesla1PresetDefault.lightningShapeNoiseSpeed, 0, 20),
       haloFieldTargetMinRangeBo: readNumber(els.tesla1HaloTargetMinRangeBo, tesla1PresetDefault.haloFieldTargetMinRangeBo, 0, 32),
       haloFieldTargetMaxRangeBo: readNumber(els.tesla1HaloTargetMaxRangeBo, tesla1PresetDefault.haloFieldTargetMaxRangeBo, 0, 32),
       haloFieldContactRadiusBo: readNumber(els.tesla1HaloContactRadiusBo, tesla1PresetDefault.haloFieldContactRadiusBo, 0, 8),
@@ -87,9 +89,11 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1HaloTargetMinRangeBo) els.tesla1HaloTargetMinRangeBo.value = String(source.haloFieldTargetMinRangeBo ?? 0.5);
     if (els.tesla1HaloTargetMaxRangeBo) els.tesla1HaloTargetMaxRangeBo.value = String(source.haloFieldTargetMaxRangeBo ?? 2.1);
     if (els.tesla1HaloContactRadiusBo) els.tesla1HaloContactRadiusBo.value = String(source.haloFieldContactRadiusBo ?? 0.14);
-    if (els.tesla1LightningTreeBoltCountMin) els.tesla1LightningTreeBoltCountMin.value = String(source.lightningTreeBoltCountMin ?? 4);
-    if (els.tesla1LightningTreeBoltCountMax) els.tesla1LightningTreeBoltCountMax.value = String(source.lightningTreeBoltCountMax ?? 12);
-    if (els.tesla1LightningTreeNoiseSpeedHz) els.tesla1LightningTreeNoiseSpeedHz.value = String(source.lightningTreeNoiseSpeedHz ?? 18);
+    if (els.tesla1HaloBoltCountMin) els.tesla1HaloBoltCountMin.value = String(source.haloBoltCountMin ?? 4);
+    if (els.tesla1HaloBoltCountMax) els.tesla1HaloBoltCountMax.value = String(source.haloBoltCountMax ?? 12);
+    if (els.tesla1LightningShapeNoiseScale) els.tesla1LightningShapeNoiseScale.value = String(source.lightningShapeNoiseScale ?? 20);
+    if (els.tesla1LightningShapeNoiseStrength) els.tesla1LightningShapeNoiseStrength.value = String(source.lightningShapeNoiseStrength ?? 0.03);
+    if (els.tesla1LightningShapeNoiseSpeed) els.tesla1LightningShapeNoiseSpeed.value = String(source.lightningShapeNoiseSpeed ?? 3);
     if (els.tesla1BoltShaderLineWidthBo) els.tesla1BoltShaderLineWidthBo.value = String(source.boltShaderLineWidthBo ?? 0.012);
     if (els.tesla1BoltShaderIntensity) els.tesla1BoltShaderIntensity.value = String(source.boltShaderIntensity ?? 6);
     if (els.tesla1BoltShaderTipFade) els.tesla1BoltShaderTipFade.value = String(source.boltShaderTipFade ?? 0.08);
