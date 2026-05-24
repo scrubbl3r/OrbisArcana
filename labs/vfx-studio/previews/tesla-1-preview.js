@@ -88,6 +88,10 @@ function buildLightningFieldUniformValues({
   wanderSpeedMax,
   rpscMin,
   rpscMax,
+  turnTensionMin,
+  turnTensionMax,
+  turnDampingMin,
+  turnDampingMax,
   time,
 }) {
   const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMin) || 0)));
@@ -116,6 +120,10 @@ function buildLightningFieldUniformValues({
     uWanderSpeedMax: clampNumber(wanderSpeedMax, 0, 4, 0.18),
     uRpscMin: clampNumber(rpscMin, 0, 1, 0.08),
     uRpscMax: clampNumber(rpscMax, 0, 1, 0.24),
+    uTurnTensionMin: clampNumber(turnTensionMin, 0, 1, 0.22),
+    uTurnTensionMax: clampNumber(turnTensionMax, 0, 1, 0.55),
+    uTurnDampingMin: clampNumber(turnDampingMin, 0, 1, 0.04),
+    uTurnDampingMax: clampNumber(turnDampingMax, 0, 1, 0.18),
   };
 }
 
@@ -160,6 +168,10 @@ function createLightningFieldMaterial(params) {
       uWanderSpeedMax: { value: values.uWanderSpeedMax },
       uRpscMin: { value: values.uRpscMin },
       uRpscMax: { value: values.uRpscMax },
+      uTurnTensionMin: { value: values.uTurnTensionMin },
+      uTurnTensionMax: { value: values.uTurnTensionMax },
+      uTurnDampingMin: { value: values.uTurnDampingMin },
+      uTurnDampingMax: { value: values.uTurnDampingMax },
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -194,6 +206,10 @@ function createLightningFieldMaterial(params) {
       uniform float uWanderSpeedMax;
       uniform float uRpscMin;
       uniform float uRpscMax;
+      uniform float uTurnTensionMin;
+      uniform float uTurnTensionMax;
+      uniform float uTurnDampingMin;
+      uniform float uTurnDampingMax;
       varying vec3 vWorldPosition;
 
       mat2 rotate2(float angle) {
@@ -279,18 +295,24 @@ function createLightningFieldMaterial(params) {
           float direction = randomFloat(vec2(seed, 53.0)) < 0.5 ? -1.0 : 1.0;
           float wanderSpeed = mix(uWanderSpeedMin, max(uWanderSpeedMin, uWanderSpeedMax), randomFloat(vec2(seed, 71.0)));
           float rpsc = mix(uRpscMin, max(uRpscMin, uRpscMax), randomFloat(vec2(seed, 83.0)));
+          float tension = mix(uTurnTensionMin, max(uTurnTensionMin, uTurnTensionMax), randomFloat(vec2(seed, 107.0)));
+          float damping = mix(uTurnDampingMin, max(uTurnDampingMin, uTurnDampingMax), randomFloat(vec2(seed, 131.0)));
+          float velocity = direction * wanderSpeed;
           float phaseSeconds = 0.0;
           float segmentStart = 0.0;
-          for (int s = 0; s < 12; s += 1) {
-            float segmentEnd = min(ttlAge, float(s + 1));
+          float tickSeconds = 0.125;
+          for (int s = 0; s < 48; s += 1) {
+            float segmentEnd = min(ttlAge, float(s + 1) * tickSeconds);
             if (segmentEnd > segmentStart) {
-              phaseSeconds += direction * (segmentEnd - segmentStart);
+              velocity += (direction * wanderSpeed - velocity) * tension;
+              velocity *= 1.0 - damping * tickSeconds;
+              phaseSeconds += velocity * (segmentEnd - segmentStart);
             }
             if (ttlAge <= segmentEnd) break;
-            if (randomFloat(vec2(seed, 97.0 + float(s))) < rpsc) direction *= -1.0;
+            if (randomFloat(vec2(seed, 97.0 + float(s))) < rpsc * tickSeconds) direction *= -1.0;
             segmentStart = segmentEnd;
           }
-          float angle = randomFloat(vec2(seed, fi + 3.17)) * 6.2831853 + phaseSeconds * wanderSpeed * 6.2831853;
+          float angle = randomFloat(vec2(seed, fi + 3.17)) * 6.2831853 + phaseSeconds * 6.2831853;
           float startR = mix(uStartMin, uStartMax, randomFloat(vec2(seed, 7.0)));
           float len = mix(lengthMin, lengthMax, randomFloat(vec2(angle, seed)));
           color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
@@ -368,6 +390,10 @@ export function createTesla1Preview({
     const wanderSpeedMax = readInputNumber(els.tesla1HaloBoltWanderSpeedMax, 0.18, wanderSpeedMin, 4);
     const rpscMin = readInputNumber(els.tesla1HaloBoltRpscMin, 0.08, 0, 1);
     const rpscMax = readInputNumber(els.tesla1HaloBoltRpscMax, 0.24, rpscMin, 1);
+    const turnTensionMin = readInputNumber(els.tesla1HaloBoltTurnTensionMin, 0.22, 0, 1);
+    const turnTensionMax = readInputNumber(els.tesla1HaloBoltTurnTensionMax, 0.55, turnTensionMin, 1);
+    const turnDampingMin = readInputNumber(els.tesla1HaloBoltTurnDampingMin, 0.04, 0, 1);
+    const turnDampingMax = readInputNumber(els.tesla1HaloBoltTurnDampingMax, 0.18, turnDampingMin, 1);
     return Object.freeze({
       boltCountMin: boltMin,
       boltCountMax: boltMax,
@@ -377,6 +403,10 @@ export function createTesla1Preview({
       wanderSpeedMax,
       rpscMin,
       rpscMax,
+      turnTensionMin,
+      turnTensionMax,
+      turnDampingMin,
+      turnDampingMax,
       noiseScale: readInputNumber(els.tesla1LightningShapeNoiseScale, 20, 0.1, 200),
       noiseStrength: readInputNumber(els.tesla1LightningShapeNoiseStrength, 0.03, 0, 0.5),
       noiseSpeed: readInputNumber(els.tesla1LightningShapeNoiseSpeed, 3, 0, 20),
@@ -469,6 +499,10 @@ export function createTesla1Preview({
       wanderSpeedMax: shape.wanderSpeedMax,
       rpscMin: shape.rpscMin,
       rpscMax: shape.rpscMax,
+      turnTensionMin: shape.turnTensionMin,
+      turnTensionMax: shape.turnTensionMax,
+      turnDampingMin: shape.turnDampingMin,
+      turnDampingMax: shape.turnDampingMax,
       time,
     };
     if (!fieldMesh || !fieldMesh.parent) {
@@ -591,6 +625,10 @@ export function createTesla1Preview({
       els.tesla1HaloBoltWanderSpeedMax,
       els.tesla1HaloBoltRpscMin,
       els.tesla1HaloBoltRpscMax,
+      els.tesla1HaloBoltTurnTensionMin,
+      els.tesla1HaloBoltTurnTensionMax,
+      els.tesla1HaloBoltTurnDampingMin,
+      els.tesla1HaloBoltTurnDampingMax,
       els.tesla1LightningShapeNoiseScale,
       els.tesla1LightningShapeNoiseStrength,
       els.tesla1LightningShapeNoiseSpeed,
