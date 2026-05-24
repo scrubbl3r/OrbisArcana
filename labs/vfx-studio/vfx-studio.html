@@ -2115,8 +2115,8 @@
             </div>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">START BO</span>
-              <label for="tesla1HaloFieldBoltStartMinBo">min</label><input id="tesla1HaloFieldBoltStartMinBo" class="paramFieldInput" type="number" min="0" max="32" step="0.05" value="0.5" />
-              <label for="tesla1HaloFieldBoltStartMaxBo">max</label><input id="tesla1HaloFieldBoltStartMaxBo" class="paramFieldInput" type="number" min="0" max="32" step="0.05" value="0.65" />
+              <label for="tesla1HaloFieldBoltStartMinBo">min</label><input id="tesla1HaloFieldBoltStartMinBo" class="paramFieldInput" type="number" min="0" max="32" step="0.01" value="0" />
+              <label for="tesla1HaloFieldBoltStartMaxBo">max</label><input id="tesla1HaloFieldBoltStartMaxBo" class="paramFieldInput" type="number" min="0" max="32" step="0.01" value="0.15" />
             </div>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">END BO</span>
@@ -3085,7 +3085,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260524-tesla-a"),
+      import("./vfx-studio-bootstrap.js?v=20260524-tesla-b"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),

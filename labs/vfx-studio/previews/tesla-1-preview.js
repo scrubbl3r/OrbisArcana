@@ -501,9 +501,9 @@ export function createTesla1Preview({
     if (!shapeLayer) return;
     shapeLayer.visible = !els.tesla1LightningShapeVisibleBtn || els.tesla1LightningShapeVisibleBtn.getAttribute("aria-pressed") !== "false";
     const shape = readShapeConfig();
-    const startMin = readInputNumber(els.tesla1HaloFieldBoltStartMinBo, 0.5, 0, 32);
-    const startMax = readInputNumber(els.tesla1HaloFieldBoltStartMaxBo, 0.65, startMin, 32);
-    const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, 0.05, 32);
+    const startMin = readInputNumber(els.tesla1HaloFieldBoltStartMinBo, 0, 0, 32);
+    const startMax = readInputNumber(els.tesla1HaloFieldBoltStartMaxBo, 0.15, startMin, 32);
+    const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, Math.max(0.01, startMin), 32);
     const endMax = readInputNumber(els.tesla1HaloFieldBoltEndMaxBo, 1.6, endMin, 32);
     if (!readInputBoolean(els.tesla1BoltShaderEnabled, true)) {
       clearLayer(shapeLayer);
@@ -517,10 +517,10 @@ export function createTesla1Preview({
     const materialParams = {
       boltCountMin: shape.boltCountMin,
       boltCountMax: shape.boltCountMax,
-      startMin: bo * startMin,
-      startMax: bo * startMax,
-      endMin: bo * endMin,
-      endMax: bo * endMax,
+      startMin: bo * (ORB_RADIUS_BO + startMin),
+      startMax: bo * (ORB_RADIUS_BO + startMax),
+      endMin: bo * (ORB_RADIUS_BO + endMin),
+      endMax: bo * (ORB_RADIUS_BO + endMax),
       bo,
       boltColor,
       lineWidth: bo * readInputNumber(els.tesla1BoltShaderLineWidthBo, 0.012, 0.001, 0.25),
