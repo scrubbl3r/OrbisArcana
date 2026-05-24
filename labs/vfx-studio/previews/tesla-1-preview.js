@@ -258,6 +258,13 @@ function createLightningFieldMaterial(params) {
         return mod(floor(value), TIME_RING);
       }
 
+      vec2 snapshotOffset(float seed, float frame) {
+        return vec2(
+          randomFloat(vec2(seed * 0.73 + 11.0, frame + 3.0)),
+          randomFloat(vec2(seed * 1.17 + 29.0, frame + 17.0))
+        ) * 64.0;
+      }
+
       float lineSdf(vec2 p, vec2 a, vec2 b, float width, out float h) {
         vec2 pa = p - a;
         vec2 ba = b - a;
@@ -280,10 +287,8 @@ function createLightningFieldMaterial(params) {
         float shapeFrame = stableFrame(shapeClock);
         float nextShapeFrame = mod(shapeFrame + 1.0, TIME_RING);
         float shapeBlend = smoothstep(0.0, 1.0, fract(shapeClock));
-        vec2 snapA = vec2(seed * 1.5 + shapeFrame * 19.13, seed * 0.37 + shapeFrame * 7.17);
-        vec2 snapB = vec2(seed * 1.5 + nextShapeFrame * 19.13, seed * 0.37 + nextShapeFrame * 7.17);
-        float snA = simpleNoise(noiseUv + snapA, 2.0);
-        float snB = simpleNoise(noiseUv + snapB, 2.0);
+        float snA = simpleNoise(noiseUv + snapshotOffset(seed, shapeFrame), 2.0);
+        float snB = simpleNoise(noiseUv + snapshotOffset(seed, nextShapeFrame), 2.0);
         float sn = mix(snA, snB, shapeBlend) * 2.0 - 1.0;
         uv.x += sn * uBo * uNoiseStrength * smoothstep(0.0, uBo * 0.2, abs(uv.y));
         float d = lineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), uLineWidth * 0.006, h);
