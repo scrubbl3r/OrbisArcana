@@ -80,6 +80,7 @@ export function createTesla1AuthoringAdapter({
       haloBoltTurnTensionMax: readNumber(els.tesla1HaloBoltTurnTensionMax, tesla1PresetDefault.haloBoltTurnTensionMax, haloBoltTurnTensionMin, 1),
       haloBoltTurnDampingMin,
       haloBoltTurnDampingMax: readNumber(els.tesla1HaloBoltTurnDampingMax, tesla1PresetDefault.haloBoltTurnDampingMax, haloBoltTurnDampingMin, 1),
+      haloBoltDispersion: readNumber(els.tesla1HaloBoltDispersion, tesla1PresetDefault.haloBoltDispersion, 0, 1),
       lightningShapeNoiseScale: readNumber(els.tesla1LightningShapeNoiseScale, tesla1PresetDefault.lightningShapeNoiseScale, 0.1, 200),
       lightningShapeNoiseStrength: readNumber(els.tesla1LightningShapeNoiseStrength, tesla1PresetDefault.lightningShapeNoiseStrength, 0, 0.5),
       lightningShapeNoiseSpeed: readNumber(els.tesla1LightningShapeNoiseSpeed, tesla1PresetDefault.lightningShapeNoiseSpeed, 0, 20),
@@ -110,6 +111,7 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1HaloBoltTurnTensionMax) els.tesla1HaloBoltTurnTensionMax.value = String(source.haloBoltTurnTensionMax ?? 0.55);
     if (els.tesla1HaloBoltTurnDampingMin) els.tesla1HaloBoltTurnDampingMin.value = String(source.haloBoltTurnDampingMin ?? 0.04);
     if (els.tesla1HaloBoltTurnDampingMax) els.tesla1HaloBoltTurnDampingMax.value = String(source.haloBoltTurnDampingMax ?? 0.18);
+    if (els.tesla1HaloBoltDispersion) els.tesla1HaloBoltDispersion.value = String(source.haloBoltDispersion ?? 0.2);
     if (els.tesla1LightningShapeNoiseScale) els.tesla1LightningShapeNoiseScale.value = String(source.lightningShapeNoiseScale ?? 20);
     if (els.tesla1LightningShapeNoiseStrength) els.tesla1LightningShapeNoiseStrength.value = String(source.lightningShapeNoiseStrength ?? 0.03);
     if (els.tesla1LightningShapeNoiseSpeed) els.tesla1LightningShapeNoiseSpeed.value = String(source.lightningShapeNoiseSpeed ?? 3);

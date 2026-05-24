@@ -92,6 +92,7 @@ function buildLightningFieldUniformValues({
   turnTensionMax,
   turnDampingMin,
   turnDampingMax,
+  dispersion,
   time,
 }) {
   const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMin) || 0)));
@@ -124,6 +125,7 @@ function buildLightningFieldUniformValues({
     uTurnTensionMax: clampNumber(turnTensionMax, 0, 1, 0.55),
     uTurnDampingMin: clampNumber(turnDampingMin, 0, 1, 0.04),
     uTurnDampingMax: clampNumber(turnDampingMax, 0, 1, 0.18),
+    uDispersion: clampNumber(dispersion, 0, 1, 0.2),
   };
 }
 
@@ -172,6 +174,7 @@ function createLightningFieldMaterial(params) {
       uTurnTensionMax: { value: values.uTurnTensionMax },
       uTurnDampingMin: { value: values.uTurnDampingMin },
       uTurnDampingMax: { value: values.uTurnDampingMax },
+      uDispersion: { value: values.uDispersion },
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -210,6 +213,7 @@ function createLightningFieldMaterial(params) {
       uniform float uTurnTensionMax;
       uniform float uTurnDampingMin;
       uniform float uTurnDampingMax;
+      uniform float uDispersion;
       varying vec3 vWorldPosition;
 
       mat2 rotate2(float angle) {
@@ -250,6 +254,11 @@ function createLightningFieldMaterial(params) {
         vec2 ba = b - a;
         h = clamp(dot(pa, ba) / max(0.00001, dot(ba, ba)), 0.0, 1.0);
         return length(pa - ba * h) - width;
+      }
+
+      float mixAngle(float a, float b, float amount) {
+        float delta = atan(sin(b - a), cos(b - a));
+        return a + delta * amount;
       }
 
       vec3 proceduralBolt(vec2 p, float angle, float startR, float len, float seed) {
@@ -312,7 +321,9 @@ function createLightningFieldMaterial(params) {
             if (randomFloat(vec2(seed, 97.0 + float(s))) < rpsc * tickSeconds) direction *= -1.0;
             segmentStart = segmentEnd;
           }
-          float angle = randomFloat(vec2(seed, fi + 3.17)) * 6.2831853 + phaseSeconds * 6.2831853;
+          float randomAngle = randomFloat(vec2(seed, fi + 3.17)) * 6.2831853;
+          float evenAngle = (fi + 0.5 * randomFloat(vec2(seed, 149.0))) / max(1.0, maxCount) * 6.2831853;
+          float angle = mixAngle(randomAngle, evenAngle, uDispersion) + phaseSeconds * 6.2831853;
           float startR = mix(uStartMin, uStartMax, randomFloat(vec2(seed, 7.0)));
           float len = mix(lengthMin, lengthMax, randomFloat(vec2(angle, seed)));
           color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
@@ -394,6 +405,7 @@ export function createTesla1Preview({
     const turnTensionMax = readInputNumber(els.tesla1HaloBoltTurnTensionMax, 0.55, turnTensionMin, 1);
     const turnDampingMin = readInputNumber(els.tesla1HaloBoltTurnDampingMin, 0.04, 0, 1);
     const turnDampingMax = readInputNumber(els.tesla1HaloBoltTurnDampingMax, 0.18, turnDampingMin, 1);
+    const dispersion = readInputNumber(els.tesla1HaloBoltDispersion, 0.2, 0, 1);
     return Object.freeze({
       boltCountMin: boltMin,
       boltCountMax: boltMax,
@@ -407,6 +419,7 @@ export function createTesla1Preview({
       turnTensionMax,
       turnDampingMin,
       turnDampingMax,
+      dispersion,
       noiseScale: readInputNumber(els.tesla1LightningShapeNoiseScale, 20, 0.1, 200),
       noiseStrength: readInputNumber(els.tesla1LightningShapeNoiseStrength, 0.03, 0, 0.5),
       noiseSpeed: readInputNumber(els.tesla1LightningShapeNoiseSpeed, 3, 0, 20),
@@ -503,6 +516,7 @@ export function createTesla1Preview({
       turnTensionMax: shape.turnTensionMax,
       turnDampingMin: shape.turnDampingMin,
       turnDampingMax: shape.turnDampingMax,
+      dispersion: shape.dispersion,
       time,
     };
     if (!fieldMesh || !fieldMesh.parent) {
@@ -629,6 +643,7 @@ export function createTesla1Preview({
       els.tesla1HaloBoltTurnTensionMax,
       els.tesla1HaloBoltTurnDampingMin,
       els.tesla1HaloBoltTurnDampingMax,
+      els.tesla1HaloBoltDispersion,
       els.tesla1LightningShapeNoiseScale,
       els.tesla1LightningShapeNoiseStrength,
       els.tesla1LightningShapeNoiseSpeed,

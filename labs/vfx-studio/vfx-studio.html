@@ -2144,6 +2144,7 @@
               <label for="tesla1HaloBoltTurnDampingMin">min</label><input id="tesla1HaloBoltTurnDampingMin" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.04" />
               <label for="tesla1HaloBoltTurnDampingMax">max</label><input id="tesla1HaloBoltTurnDampingMax" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.18" />
             </div>
+            <div class="paramFieldRow"><label for="tesla1HaloBoltDispersion">Dispersion</label><input id="tesla1HaloBoltDispersion" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.2" /></div>
           </div>
         </div>
       </div>
@@ -3080,14 +3081,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260523-tesla-o"),
+      import("./vfx-studio-bootstrap.js?v=20260523-tesla-p"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
       import("./vfx-studio-surfaces.js?v=20260523-tesla-b"),
-      import("./vfx-studio-theme-publish.js?v=20260523-tesla-e"),
+      import("./vfx-studio-theme-publish.js?v=20260523-tesla-f"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -3113,7 +3114,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260523j";
+    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260523k";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -3130,7 +3131,7 @@
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260522172828i";
     import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522172828";
-    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260523j";
+    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260523k";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522172828b";
@@ -3670,6 +3671,7 @@
       tesla1HaloBoltTurnTensionMax: $("tesla1HaloBoltTurnTensionMax"),
       tesla1HaloBoltTurnDampingMin: $("tesla1HaloBoltTurnDampingMin"),
       tesla1HaloBoltTurnDampingMax: $("tesla1HaloBoltTurnDampingMax"),
+      tesla1HaloBoltDispersion: $("tesla1HaloBoltDispersion"),
       tesla1HaloFieldBoltStartMinBo: $("tesla1HaloFieldBoltStartMinBo"),
       tesla1HaloFieldBoltStartMaxBo: $("tesla1HaloFieldBoltStartMaxBo"),
       tesla1HaloFieldBoltEndMinBo: $("tesla1HaloFieldBoltEndMinBo"),

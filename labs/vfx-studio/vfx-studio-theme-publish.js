@@ -261,6 +261,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "haloBoltCountMin", "haloBoltCountMax", "haloBoltTtlMinMs", "haloBoltTtlMaxMs",
         "haloBoltWanderSpeedMin", "haloBoltWanderSpeedMax", "haloBoltRpscMin", "haloBoltRpscMax",
         "haloBoltTurnTensionMin", "haloBoltTurnTensionMax", "haloBoltTurnDampingMin", "haloBoltTurnDampingMax",
+        "haloBoltDispersion",
         "lightningShapeNoiseScale", "lightningShapeNoiseStrength", "lightningShapeNoiseSpeed",
         "aoeAuraDiameterBo", "aoeAuraSoftness", "aoeAuraR", "aoeAuraG", "aoeAuraB", "aoeAuraA",
         "auraAlpha", "auraScale", "auraPulse", "auraNoiseScale", "auraNoiseSpeed", "auraFresnelPower", "auraR", "auraG", "auraB",
