@@ -248,26 +248,29 @@ function createLightningFieldMaterial(params) {
       void main() {
         vec2 p = vWorldPosition.xy;
         vec3 color = vec3(0.0);
-        float countTtl = max(0.016, uTtlMin);
-        float countCycle = floor(uTime / countTtl);
         float minCount = float(min(uBoltCountMin, uBoltCountMax));
         float maxCount = float(max(uBoltCountMin, uBoltCountMax));
-        float activeCount = floor(mix(minCount, maxCount + 1.0, randomFloat(vec2(countCycle, 19.17))));
-        activeCount = clamp(activeCount, minCount, maxCount);
+        float optionalSlots = max(0.0, maxCount - minCount);
         float lengthMin = max(uLineWidth * 6.0, uEndMin - uStartMax);
         float lengthMax = max(lengthMin, uEndMax - uStartMin);
         for (int i = 0; i < MAX_HALO_BOLTS; i += 1) {
-          if (float(i) >= activeCount) break;
+          if (float(i) >= maxCount) break;
           float fi = float(i);
-          float ttl = mix(max(0.016, uTtlMin), max(uTtlMin, uTtlMax), randomFloat(vec2(fi * 17.7, 41.0)));
-          float offset = randomFloat(vec2(fi, 9.0)) * ttl;
+          float baseTtl = max(0.016, uTtlMin);
+          float maxTtl = max(baseTtl, uTtlMax);
+          float offset = randomFloat(vec2(fi, 9.0)) * maxTtl;
           float shiftedTime = uTime + offset;
+          float coarseCycle = floor(shiftedTime / maxTtl);
+          float ttl = mix(baseTtl, maxTtl, randomFloat(vec2(fi * 17.7, coarseCycle + 41.0)));
           float ttlCycle = floor(shiftedTime / ttl);
           float ttlAge = mod(shiftedTime, ttl);
           float seed = fi * 37.13 + ttlCycle * 19.7 + 11.7;
+          float activeRoll = randomFloat(vec2(seed, 23.0));
+          float optionalChance = optionalSlots > 0.0 ? 0.5 : 0.0;
+          if (fi >= minCount && activeRoll > optionalChance) continue;
           float direction = randomFloat(vec2(seed, 53.0)) < 0.5 ? -1.0 : 1.0;
           float wanderSpeed = mix(uWanderSpeedMin, max(uWanderSpeedMin, uWanderSpeedMax), randomFloat(vec2(seed, 71.0)));
-          float angle = randomFloat(vec2(seed, activeCount + 3.17)) * 6.2831853 + direction * ttlAge * wanderSpeed * 6.2831853;
+          float angle = randomFloat(vec2(seed, fi + 3.17)) * 6.2831853 + direction * ttlAge * wanderSpeed * 6.2831853;
           float startR = mix(uStartMin, uStartMax, randomFloat(vec2(seed, 7.0)));
           float len = mix(lengthMin, lengthMax, randomFloat(vec2(angle, seed)));
           color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
