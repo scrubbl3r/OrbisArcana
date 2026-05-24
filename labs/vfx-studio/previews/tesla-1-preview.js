@@ -343,9 +343,6 @@ export function createTesla1Preview({
     haloLayer.visible = !els.tesla1HaloVisibleBtn || els.tesla1HaloVisibleBtn.getAttribute("aria-pressed") !== "false";
     if (!readInputBoolean(els.tesla1HaloFieldEnabled, true)) return;
     const radius = readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32) * bo;
-    const zMin = readInputNumber(els.tesla1HaloFieldZMinBo, -0.3, -32, 32);
-    const zMax = readInputNumber(els.tesla1HaloFieldZMaxBo, 0.3, zMin, 32);
-    const zScale = Math.max(0.02, Math.max(Math.abs(zMin), Math.abs(zMax)) / Math.max(0.001, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32)));
     const shell = new THREE.Mesh(
       new THREE.SphereGeometry(radius, 32, 16),
       new THREE.MeshBasicMaterial({
@@ -359,7 +356,6 @@ export function createTesla1Preview({
       })
     );
     shell.name = "tesla1:halo_envelope";
-    shell.scale.z = zScale;
     shell.renderOrder = 210;
     haloLayer.add(shell);
   }
@@ -511,11 +507,6 @@ export function createTesla1Preview({
       els.tesla1HaloFieldBoltStartMaxBo,
       els.tesla1HaloFieldBoltEndMinBo,
       els.tesla1HaloFieldBoltEndMaxBo,
-      els.tesla1HaloTargetMinRangeBo,
-      els.tesla1HaloTargetMaxRangeBo,
-      els.tesla1HaloContactRadiusBo,
-      els.tesla1HaloFieldZMinBo,
-      els.tesla1HaloFieldZMaxBo,
       els.tesla1HaloBoltCountMin,
       els.tesla1HaloBoltCountMax,
       els.tesla1LightningShapeNoiseScale,

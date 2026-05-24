@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260523-tesla-h";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260523-tesla-i";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -308,8 +308,8 @@ export function createStudioBootstrap({
       electricAoe3dHaloFieldLingerMaxMs: null,
       electricAoe3dHaloFieldLingerDrift: null,
       electricAoe3dHaloFieldReversalChance: null,
-      electricAoe3dHaloFieldZMinBo: els.tesla1HaloFieldZMinBo,
-      electricAoe3dHaloFieldZMaxBo: els.tesla1HaloFieldZMaxBo,
+      electricAoe3dHaloFieldZMinBo: null,
+      electricAoe3dHaloFieldZMaxBo: null,
       electricAoe3dHaloFieldSeed: null,
       electricAoe3dHaloBoltShapeMinStepBo: null,
       electricAoe3dHaloBoltShapeMaxStepBo: null,

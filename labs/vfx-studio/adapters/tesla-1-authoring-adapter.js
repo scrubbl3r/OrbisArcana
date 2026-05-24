@@ -9,8 +9,6 @@ const TESLA_TO_ELECTRIC_ELEMENT_KEYS = Object.freeze({
   tesla1HaloFieldBoltStartMaxBo: "electricAoe3dHaloFieldBoltStartMaxBo",
   tesla1HaloFieldBoltEndMinBo: "electricAoe3dHaloFieldBoltEndMinBo",
   tesla1HaloFieldBoltEndMaxBo: "electricAoe3dHaloFieldBoltEndMaxBo",
-  tesla1HaloFieldZMinBo: "electricAoe3dHaloFieldZMinBo",
-  tesla1HaloFieldZMaxBo: "electricAoe3dHaloFieldZMaxBo",
   tesla1MasterBoltMinRangeBo: "electricAoe3dDominantBoltMinRangeBo",
   tesla1MasterBoltMaxRangeBo: "electricAoe3dDominantBoltMaxRangeBo",
   tesla1MasterBoltContactRadiusBo: "electricAoe3dDominantBoltTargetRadiusBo",
@@ -58,6 +56,8 @@ export function createTesla1AuthoringAdapter({
       "boltShaderCentralCoreEnabled", "boltShaderCentralCoreRadiusBo", "boltShaderCentralCoreGlowRadiusBo",
       "boltShaderCentralCoreNoiseScale", "boltShaderCentralCoreNoiseSpeed", "boltShaderCentralCoreIntensity",
       "boltShaderCentralCoreSoftness",
+      "haloFieldTargetMinRangeBo", "haloFieldTargetMaxRangeBo", "haloFieldContactRadiusBo",
+      "haloFieldZMinBo", "haloFieldZMaxBo",
     ].forEach((key) => delete captured[key]);
     const haloBoltCountMin = Math.round(readNumber(els.tesla1HaloBoltCountMin, tesla1PresetDefault.haloBoltCountMin, 0, 256));
     return Object.freeze({
@@ -68,9 +68,6 @@ export function createTesla1AuthoringAdapter({
       lightningShapeNoiseScale: readNumber(els.tesla1LightningShapeNoiseScale, tesla1PresetDefault.lightningShapeNoiseScale, 0.1, 200),
       lightningShapeNoiseStrength: readNumber(els.tesla1LightningShapeNoiseStrength, tesla1PresetDefault.lightningShapeNoiseStrength, 0, 0.5),
       lightningShapeNoiseSpeed: readNumber(els.tesla1LightningShapeNoiseSpeed, tesla1PresetDefault.lightningShapeNoiseSpeed, 0, 20),
-      haloFieldTargetMinRangeBo: readNumber(els.tesla1HaloTargetMinRangeBo, tesla1PresetDefault.haloFieldTargetMinRangeBo, 0, 32),
-      haloFieldTargetMaxRangeBo: readNumber(els.tesla1HaloTargetMaxRangeBo, tesla1PresetDefault.haloFieldTargetMaxRangeBo, 0, 32),
-      haloFieldContactRadiusBo: readNumber(els.tesla1HaloContactRadiusBo, tesla1PresetDefault.haloFieldContactRadiusBo, 0, 8),
       boltShaderLineWidthBo: readNumber(els.tesla1BoltShaderLineWidthBo, tesla1PresetDefault.boltShaderLineWidthBo, 0.001, 0.25),
       boltShaderIntensity: readNumber(els.tesla1BoltShaderIntensity, tesla1PresetDefault.boltShaderIntensity, 0, 20),
       boltShaderTipFade: readNumber(els.tesla1BoltShaderTipFade, tesla1PresetDefault.boltShaderTipFade, 0, 1),
@@ -86,9 +83,6 @@ export function createTesla1AuthoringAdapter({
     const source = settings && typeof settings === "object" ? settings : defaultSettings();
     electricAdapter.apply(mapTeslaElsToElectric(els), source, options);
     if (els.tesla1MasterBoltContactRadiusBo) els.tesla1MasterBoltContactRadiusBo.value = String(source.dominantBoltTargetRadiusBo ?? 0.18);
-    if (els.tesla1HaloTargetMinRangeBo) els.tesla1HaloTargetMinRangeBo.value = String(source.haloFieldTargetMinRangeBo ?? 0.5);
-    if (els.tesla1HaloTargetMaxRangeBo) els.tesla1HaloTargetMaxRangeBo.value = String(source.haloFieldTargetMaxRangeBo ?? 2.1);
-    if (els.tesla1HaloContactRadiusBo) els.tesla1HaloContactRadiusBo.value = String(source.haloFieldContactRadiusBo ?? 0.14);
     if (els.tesla1HaloBoltCountMin) els.tesla1HaloBoltCountMin.value = String(source.haloBoltCountMin ?? 4);
     if (els.tesla1HaloBoltCountMax) els.tesla1HaloBoltCountMax.value = String(source.haloBoltCountMax ?? 12);
     if (els.tesla1LightningShapeNoiseScale) els.tesla1LightningShapeNoiseScale.value = String(source.lightningShapeNoiseScale ?? 20);
