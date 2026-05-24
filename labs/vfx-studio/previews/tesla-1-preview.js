@@ -347,7 +347,9 @@ function createLightningFieldMaterial(params) {
           float angle = mixAngle(randomAngle, evenAngle, uDispersion) + phaseSeconds * 6.2831853;
           float startR = mix(uStartMin, uStartMax, randomFloat(vec2(seed, 7.0)));
           float lengthSlotCount = max(1.0, minCount);
-          float lengthRoll = fract((fi + randomFloat(vec2(seed, 191.0))) / lengthSlotCount);
+          float lengthSlotOffset = floor(randomFloat(vec2(seed, 193.0)) * lengthSlotCount);
+          float lengthSlot = mod(fi + lengthSlotOffset, lengthSlotCount);
+          float lengthRoll = (lengthSlot + randomFloat(vec2(seed, 191.0))) / lengthSlotCount;
           float len = max(uLineWidth * 6.0, mix(uEndMin, uEndMax, lengthRoll));
           color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
         }
