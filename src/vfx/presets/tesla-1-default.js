@@ -86,7 +86,7 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "lightningShapeNoiseScale": 7,
   "lightningShapeNoiseStrength": 0.15,
   "lightningShapeNoiseSpeedMin": 10,
-  "lightningShapeNoiseSpeedMax": 10,
+  "lightningShapeNoiseSpeedMax": 20,
   "wakeGraph0Pct": "",
   "wakeGraph0R": "",
   "wakeGraph0G": "",
