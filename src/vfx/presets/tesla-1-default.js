@@ -81,7 +81,7 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "haloBoltTurnTensionMin": 0.01,
   "haloBoltTurnTensionMax": 0.2,
   "haloBoltTurnDampingMin": 0.04,
-  "haloBoltTurnDampingMax": 0.18,
+  "haloBoltTurnDampingMax": 0.5,
   "lightningShapeNoiseScale": 3,
   "lightningShapeNoiseStrength": 0.2,
   "lightningShapeNoiseSpeed": 1.5,
