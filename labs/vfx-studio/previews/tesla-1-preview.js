@@ -346,8 +346,7 @@ function createLightningFieldMaterial(params) {
           float evenAngle = (fi + 0.5 * randomFloat(vec2(seed, 149.0))) / max(1.0, maxCount) * 6.2831853;
           float angle = mixAngle(randomAngle, evenAngle, uDispersion) + phaseSeconds * 6.2831853;
           float startR = mix(uStartMin, uStartMax, randomFloat(vec2(seed, 7.0)));
-          float endR = mix(uEndMin, uEndMax, randomFloat(vec2(angle, seed)));
-          float len = max(uLineWidth * 6.0, endR - startR);
+          float len = max(uLineWidth * 6.0, mix(uEndMin, uEndMax, randomFloat(vec2(angle, seed))));
           color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
         }
         color = 1.0 - exp(-color * 0.55);
@@ -511,15 +510,15 @@ export function createTesla1Preview({
       return;
     }
     const boltColor = rgbColor(els.tesla1BoltShaderColorR && els.tesla1BoltShaderColorR.value, els.tesla1BoltShaderColorG && els.tesla1BoltShaderColorG.value, els.tesla1BoltShaderColorB && els.tesla1BoltShaderColorB.value);
-    const maxRangeBo = Math.max(ORB_RADIUS_BO + endMax, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
+    const maxRangeBo = Math.max(ORB_RADIUS_BO + startMax + endMax, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
     const materialParams = {
       boltCountMin: shape.boltCountMin,
       boltCountMax: shape.boltCountMax,
       startMin: bo * (ORB_RADIUS_BO + startMin),
       startMax: bo * (ORB_RADIUS_BO + startMax),
-      endMin: bo * (ORB_RADIUS_BO + endMin),
-      endMax: bo * (ORB_RADIUS_BO + endMax),
+      endMin: bo * endMin,
+      endMax: bo * endMax,
       bo,
       boltColor,
       lineWidth: bo * readInputNumber(els.tesla1BoltShaderLineWidthBo, 0.012, 0.001, 0.25),
