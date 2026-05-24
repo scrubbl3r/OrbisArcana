@@ -86,6 +86,8 @@ function buildLightningFieldUniformValues({
   ttlMaxMs,
   wanderSpeedMin,
   wanderSpeedMax,
+  rpscMin,
+  rpscMax,
   time,
 }) {
   const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMin) || 0)));
@@ -112,6 +114,8 @@ function buildLightningFieldUniformValues({
     uTtlMax: clampNumber(ttlMaxMs, 16, 10000, 900) / 1000,
     uWanderSpeedMin: clampNumber(wanderSpeedMin, 0, 4, 0.05),
     uWanderSpeedMax: clampNumber(wanderSpeedMax, 0, 4, 0.18),
+    uRpscMin: clampNumber(rpscMin, 0, 1, 0.08),
+    uRpscMax: clampNumber(rpscMax, 0, 1, 0.24),
   };
 }
 
@@ -154,6 +158,8 @@ function createLightningFieldMaterial(params) {
       uTtlMax: { value: values.uTtlMax },
       uWanderSpeedMin: { value: values.uWanderSpeedMin },
       uWanderSpeedMax: { value: values.uWanderSpeedMax },
+      uRpscMin: { value: values.uRpscMin },
+      uRpscMax: { value: values.uRpscMax },
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -186,6 +192,8 @@ function createLightningFieldMaterial(params) {
       uniform float uTtlMax;
       uniform float uWanderSpeedMin;
       uniform float uWanderSpeedMax;
+      uniform float uRpscMin;
+      uniform float uRpscMax;
       varying vec3 vWorldPosition;
 
       mat2 rotate2(float angle) {
@@ -270,7 +278,19 @@ function createLightningFieldMaterial(params) {
           if (fi >= minCount && activeRoll > optionalChance) continue;
           float direction = randomFloat(vec2(seed, 53.0)) < 0.5 ? -1.0 : 1.0;
           float wanderSpeed = mix(uWanderSpeedMin, max(uWanderSpeedMin, uWanderSpeedMax), randomFloat(vec2(seed, 71.0)));
-          float angle = randomFloat(vec2(seed, fi + 3.17)) * 6.2831853 + direction * ttlAge * wanderSpeed * 6.2831853;
+          float rpsc = mix(uRpscMin, max(uRpscMin, uRpscMax), randomFloat(vec2(seed, 83.0)));
+          float phaseSeconds = 0.0;
+          float segmentStart = 0.0;
+          for (int s = 0; s < 12; s += 1) {
+            float segmentEnd = min(ttlAge, float(s + 1));
+            if (segmentEnd > segmentStart) {
+              phaseSeconds += direction * (segmentEnd - segmentStart);
+            }
+            if (ttlAge <= segmentEnd) break;
+            if (randomFloat(vec2(seed, 97.0 + float(s))) < rpsc) direction *= -1.0;
+            segmentStart = segmentEnd;
+          }
+          float angle = randomFloat(vec2(seed, fi + 3.17)) * 6.2831853 + phaseSeconds * wanderSpeed * 6.2831853;
           float startR = mix(uStartMin, uStartMax, randomFloat(vec2(seed, 7.0)));
           float len = mix(lengthMin, lengthMax, randomFloat(vec2(angle, seed)));
           color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
@@ -346,6 +366,8 @@ export function createTesla1Preview({
     const ttlMaxMs = Math.round(readInputNumber(els.tesla1HaloBoltTtlMaxMs, 900, ttlMinMs, 10000));
     const wanderSpeedMin = readInputNumber(els.tesla1HaloBoltWanderSpeedMin, 0.05, 0, 4);
     const wanderSpeedMax = readInputNumber(els.tesla1HaloBoltWanderSpeedMax, 0.18, wanderSpeedMin, 4);
+    const rpscMin = readInputNumber(els.tesla1HaloBoltRpscMin, 0.08, 0, 1);
+    const rpscMax = readInputNumber(els.tesla1HaloBoltRpscMax, 0.24, rpscMin, 1);
     return Object.freeze({
       boltCountMin: boltMin,
       boltCountMax: boltMax,
@@ -353,6 +375,8 @@ export function createTesla1Preview({
       ttlMaxMs,
       wanderSpeedMin,
       wanderSpeedMax,
+      rpscMin,
+      rpscMax,
       noiseScale: readInputNumber(els.tesla1LightningShapeNoiseScale, 20, 0.1, 200),
       noiseStrength: readInputNumber(els.tesla1LightningShapeNoiseStrength, 0.03, 0, 0.5),
       noiseSpeed: readInputNumber(els.tesla1LightningShapeNoiseSpeed, 3, 0, 20),
@@ -443,6 +467,8 @@ export function createTesla1Preview({
       ttlMaxMs: shape.ttlMaxMs,
       wanderSpeedMin: shape.wanderSpeedMin,
       wanderSpeedMax: shape.wanderSpeedMax,
+      rpscMin: shape.rpscMin,
+      rpscMax: shape.rpscMax,
       time,
     };
     if (!fieldMesh || !fieldMesh.parent) {
@@ -563,6 +589,8 @@ export function createTesla1Preview({
       els.tesla1HaloBoltTtlMaxMs,
       els.tesla1HaloBoltWanderSpeedMin,
       els.tesla1HaloBoltWanderSpeedMax,
+      els.tesla1HaloBoltRpscMin,
+      els.tesla1HaloBoltRpscMax,
       els.tesla1LightningShapeNoiseScale,
       els.tesla1LightningShapeNoiseStrength,
       els.tesla1LightningShapeNoiseSpeed,

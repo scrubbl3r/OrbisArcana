@@ -62,6 +62,7 @@ export function createTesla1AuthoringAdapter({
     const haloBoltCountMin = Math.round(readNumber(els.tesla1HaloBoltCountMin, tesla1PresetDefault.haloBoltCountMin, 0, 256));
     const haloBoltTtlMinMs = Math.round(readNumber(els.tesla1HaloBoltTtlMinMs, tesla1PresetDefault.haloBoltTtlMinMs, 16, 10000));
     const haloBoltWanderSpeedMin = readNumber(els.tesla1HaloBoltWanderSpeedMin, tesla1PresetDefault.haloBoltWanderSpeedMin, 0, 4);
+    const haloBoltRpscMin = readNumber(els.tesla1HaloBoltRpscMin, tesla1PresetDefault.haloBoltRpscMin, 0, 1);
     return Object.freeze({
       ...captured,
       dominantBoltTargetRadiusBo: readNumber(els.tesla1MasterBoltContactRadiusBo, tesla1PresetDefault.dominantBoltTargetRadiusBo, 0, 8),
@@ -71,6 +72,8 @@ export function createTesla1AuthoringAdapter({
       haloBoltTtlMaxMs: Math.round(readNumber(els.tesla1HaloBoltTtlMaxMs, tesla1PresetDefault.haloBoltTtlMaxMs, haloBoltTtlMinMs, 10000)),
       haloBoltWanderSpeedMin,
       haloBoltWanderSpeedMax: readNumber(els.tesla1HaloBoltWanderSpeedMax, tesla1PresetDefault.haloBoltWanderSpeedMax, haloBoltWanderSpeedMin, 4),
+      haloBoltRpscMin,
+      haloBoltRpscMax: readNumber(els.tesla1HaloBoltRpscMax, tesla1PresetDefault.haloBoltRpscMax, haloBoltRpscMin, 1),
       lightningShapeNoiseScale: readNumber(els.tesla1LightningShapeNoiseScale, tesla1PresetDefault.lightningShapeNoiseScale, 0.1, 200),
       lightningShapeNoiseStrength: readNumber(els.tesla1LightningShapeNoiseStrength, tesla1PresetDefault.lightningShapeNoiseStrength, 0, 0.5),
       lightningShapeNoiseSpeed: readNumber(els.tesla1LightningShapeNoiseSpeed, tesla1PresetDefault.lightningShapeNoiseSpeed, 0, 20),
@@ -95,6 +98,8 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1HaloBoltTtlMaxMs) els.tesla1HaloBoltTtlMaxMs.value = String(source.haloBoltTtlMaxMs ?? 900);
     if (els.tesla1HaloBoltWanderSpeedMin) els.tesla1HaloBoltWanderSpeedMin.value = String(source.haloBoltWanderSpeedMin ?? 0.05);
     if (els.tesla1HaloBoltWanderSpeedMax) els.tesla1HaloBoltWanderSpeedMax.value = String(source.haloBoltWanderSpeedMax ?? 0.18);
+    if (els.tesla1HaloBoltRpscMin) els.tesla1HaloBoltRpscMin.value = String(source.haloBoltRpscMin ?? 0.08);
+    if (els.tesla1HaloBoltRpscMax) els.tesla1HaloBoltRpscMax.value = String(source.haloBoltRpscMax ?? 0.24);
     if (els.tesla1LightningShapeNoiseScale) els.tesla1LightningShapeNoiseScale.value = String(source.lightningShapeNoiseScale ?? 20);
     if (els.tesla1LightningShapeNoiseStrength) els.tesla1LightningShapeNoiseStrength.value = String(source.lightningShapeNoiseStrength ?? 0.03);
     if (els.tesla1LightningShapeNoiseSpeed) els.tesla1LightningShapeNoiseSpeed.value = String(source.lightningShapeNoiseSpeed ?? 3);
