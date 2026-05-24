@@ -264,10 +264,16 @@ function createLightningFieldMaterial(params) {
       vec3 proceduralBolt(vec2 p, float angle, float startR, float len, float seed) {
         vec2 uv = rotate2(angle) * p;
         uv.y -= startR;
-        vec2 t = vec2(0.0, mod(uTime, 200.0) * 2.0);
-
         float h = 0.0;
-        float sn = simpleNoise(uv / max(1.0, uBo) * uNoiseScale - t * uNoiseSpeed + vec2(seed * 1.5, 0.0), 2.0) * 2.0 - 1.0;
+        vec2 noiseUv = uv / max(1.0, uBo) * uNoiseScale;
+        float shapeClock = uTime * uNoiseSpeed;
+        float shapeFrame = floor(shapeClock);
+        float shapeBlend = smoothstep(0.0, 1.0, fract(shapeClock));
+        vec2 snapA = vec2(seed * 1.5 + shapeFrame * 19.13, seed * 0.37 + shapeFrame * 7.17);
+        vec2 snapB = vec2(seed * 1.5 + (shapeFrame + 1.0) * 19.13, seed * 0.37 + (shapeFrame + 1.0) * 7.17);
+        float snA = simpleNoise(noiseUv + snapA, 2.0);
+        float snB = simpleNoise(noiseUv + snapB, 2.0);
+        float sn = mix(snA, snB, shapeBlend) * 2.0 - 1.0;
         uv.x += sn * uBo * uNoiseStrength * smoothstep(0.0, uBo * 0.2, abs(uv.y));
         float d = lineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), uLineWidth * 0.006, h);
         float line = 0.1 / max(max(d / max(1.0, uBo), 0.0), 0.0001);
