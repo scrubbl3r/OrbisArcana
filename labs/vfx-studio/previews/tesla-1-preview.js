@@ -371,6 +371,8 @@ export function createTesla1Preview({
   let model = null;
   let masterLayer = null;
   let haloLayer = null;
+  let haloShellMesh = null;
+  let haloShellRadius = 0;
   let shapeLayer = null;
   let fieldMesh = null;
   let fieldPlaneSize = 0;
@@ -398,6 +400,8 @@ export function createTesla1Preview({
     model = null;
     masterLayer = null;
     haloLayer = null;
+    haloShellMesh = null;
+    haloShellRadius = 0;
     shapeLayer = null;
     fieldMesh = null;
     fieldPlaneSize = 0;
@@ -478,25 +482,41 @@ export function createTesla1Preview({
 
   function syncHaloLayer(bo) {
     if (!haloLayer) return;
-    clearLayer(haloLayer);
     haloLayer.visible = !els.tesla1HaloVisibleBtn || els.tesla1HaloVisibleBtn.getAttribute("aria-pressed") !== "false";
-    if (!readInputBoolean(els.tesla1HaloFieldEnabled, true)) return;
+    if (!readInputBoolean(els.tesla1HaloFieldEnabled, true)) {
+      if (haloShellMesh) {
+        haloLayer.remove(haloShellMesh);
+        disposeObject(haloShellMesh);
+        haloShellMesh = null;
+        haloShellRadius = 0;
+      }
+      return;
+    }
     const radius = readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32) * bo;
-    const shell = new THREE.Mesh(
-      new THREE.SphereGeometry(radius, 32, 16),
-      new THREE.MeshBasicMaterial({
-        color: 0x376fff,
-        transparent: true,
-        opacity: 0.12,
-        wireframe: true,
-        depthTest: false,
-        depthWrite: false,
-        toneMapped: false,
-      })
-    );
-    shell.name = "tesla1:halo_envelope";
-    shell.renderOrder = 210;
-    haloLayer.add(shell);
+    if (!haloShellMesh) {
+      haloShellMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 32, 16),
+        new THREE.MeshBasicMaterial({
+          color: 0x376fff,
+          transparent: true,
+          opacity: 0.12,
+          wireframe: true,
+          depthTest: false,
+          depthWrite: false,
+          toneMapped: false,
+        })
+      );
+      haloShellMesh.name = "tesla1:halo_envelope";
+      haloShellMesh.renderOrder = 210;
+      haloLayer.add(haloShellMesh);
+      haloShellRadius = radius;
+      return;
+    }
+    if (Math.abs(haloShellRadius - radius) > 0.5) {
+      if (haloShellMesh.geometry && typeof haloShellMesh.geometry.dispose === "function") haloShellMesh.geometry.dispose();
+      haloShellMesh.geometry = new THREE.SphereGeometry(radius, 32, 16);
+      haloShellRadius = radius;
+    }
   }
 
   function syncShapeLayer(bo, time) {
