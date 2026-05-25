@@ -7,7 +7,6 @@ const ORB_RADIUS_BO = 0.5;
 const MAX_HALO_BOLTS = 32;
 const TESLA_HALO_INTERNAL_LINE_WIDTH_BO = 0.012;
 const TESLA_SHADER_TIME_RING_SECONDS = 32;
-const TESLA_RUNTIME_TICK_MS = 1000 / 30;
 
 function clampNumber(value, min, max, fallback) {
   const numeric = Number(value);
@@ -520,8 +519,8 @@ export function createTesla1Runtime(options = {}) {
   let fieldMesh = null;
   let fieldPlaneSize = 0;
   let timer = 0;
-  let tickTimer = 0;
   let startedAtMs = 0;
+  let activePayload = Object.freeze({});
   let strikeState = {
     activeUntil: 0,
     nextAt: 0,
@@ -532,9 +531,8 @@ export function createTesla1Runtime(options = {}) {
 
   function clear() {
     if (timer) clearTimeout(timer);
-    if (tickTimer) clearInterval(tickTimer);
     timer = 0;
-    tickTimer = 0;
+    activePayload = Object.freeze({});
     if (group && group.parent) group.parent.remove(group);
     if (group) disposeThreeObject(group);
     group = null;
@@ -640,6 +638,10 @@ export function createTesla1Runtime(options = {}) {
     strikeState.seed = seed;
     strikeState.slot = Math.floor(Math.random() * countMax) % countMax;
     strikeState.target.copy(toLocalRuntimeTarget(target, bo));
+    if (strikeState.target.lengthSq() <= 0.000001) {
+      strikeState.activeUntil = 0;
+      return;
+    }
     strikeState.activeUntil = (nowMs - startedAtMs) / 1000 + 0.16;
     if (typeof onHaloStrike === "function") {
       onHaloStrike({
@@ -653,10 +655,12 @@ export function createTesla1Runtime(options = {}) {
     }
   }
 
-  function syncRuntime(payload = {}) {
+  function syncRuntime(payload = {}, { emitFrame = true, nowMs: frameNowMs = null } = {}) {
     if (!group) return;
     const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 42);
-    const nowMs = typeof now === "function" ? now() : performance.now();
+    const nowMs = Number.isFinite(Number(frameNowMs))
+      ? Number(frameNowMs)
+      : (typeof now === "function" ? now() : performance.now());
     const config = normalizeTesla1RuntimeConfig({
       ...(typeof getConfig === "function" ? getConfig() : {}),
       ...(payload && typeof payload === "object" ? payload : {}),
@@ -685,7 +689,13 @@ export function createTesla1Runtime(options = {}) {
         fieldPlaneSize = planeSize;
       }
     }
-    requestFrame();
+    if (emitFrame) requestFrame();
+  }
+
+  function update(nowMs = typeof now === "function" ? now() : performance.now()) {
+    if (!group) return { handled: false, skipped: "tesla1_inactive" };
+    syncRuntime(activePayload, { emitFrame: false, nowMs });
+    return { handled: true };
   }
 
   function play(payload = {}) {
@@ -697,6 +707,7 @@ export function createTesla1Runtime(options = {}) {
       ...(payload && typeof payload === "object" ? payload : {}),
     });
     if (!config.haloFieldEnabled) return { handled: false, skipped: "tesla1_halo_disabled" };
+    activePayload = Object.freeze({ ...(payload && typeof payload === "object" ? payload : {}) });
     group = new THREE.Group();
     group.name = "tesla1:runtime";
     parent.add(group);
@@ -708,8 +719,7 @@ export function createTesla1Runtime(options = {}) {
       slot: -1,
       target: new THREE.Vector2(0, 0),
     };
-    syncRuntime(payload);
-    tickTimer = setInterval(() => syncRuntime(payload), TESLA_RUNTIME_TICK_MS);
+    syncRuntime(activePayload);
     timer = setTimeout(clear, config.durationMs);
     return { handled: true, config };
   }
@@ -721,5 +731,6 @@ export function createTesla1Runtime(options = {}) {
       return !!group;
     },
     play,
+    update,
   });
 }

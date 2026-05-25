@@ -60,7 +60,7 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260524-stage-a";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260524-stage-b";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
@@ -874,6 +874,7 @@ export function createGameStageDepth3dLayer({
       || teleport3dRuntime.isActive()
       || bubbleShield3dRuntime.isActive()
       || flameAoe3dRuntime.isActive()
+      || tesla1Runtime.isActive()
       || shockwave3dRuntime.isActive()
       || surfaceFireCardSystem.hasActiveVisuals()
       || gnatSwarm3dRuntime.hasActiveVisuals()
@@ -1004,6 +1005,7 @@ export function createGameStageDepth3dLayer({
     const surfaceFireEnabled = flameAoe3dRuntime.isActive() || !!activeFlameAoeHazard;
     if (measure) {
       measure("depth3d.orbUpdate", () => orb3dActorRuntime.update(frameNowMs / 1000));
+      measure("depth3d.tesla1", () => tesla1Runtime.update(frameNowMs));
       measure("depth3d.surfaceBurn", () => surfaceFireCardSystem.update({
         nowSec: frameNowMs / 1000,
         camera,
@@ -1019,6 +1021,7 @@ export function createGameStageDepth3dLayer({
       });
     } else {
       orb3dActorRuntime.update(frameNowMs / 1000);
+      tesla1Runtime.update(frameNowMs);
       surfaceFireCardSystem.update({
         nowSec: frameNowMs / 1000,
         camera,
