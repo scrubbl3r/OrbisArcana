@@ -60,7 +60,7 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260524-stage-g";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260525-stage-h";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
@@ -1301,18 +1301,25 @@ export function createGameStageDepth3dLayer({
     },
     playElectricAoe3d(payload = {}) {
       const callAtMs = performance.now();
+      const incomingPayload = payload && typeof payload === "object" ? payload : Object.create(null);
+      const incomingEffect = String(incomingPayload.effect || incomingPayload.effectId || incomingPayload.baseEffect || "").trim().toLowerCase();
+      const payloadIsTesla1 = incomingEffect === "tesla-1" || incomingEffect === "spell.tesla_1";
       if (perfTrace && typeof perfTrace.mark === "function") {
         perfTrace.mark("tesla1.gameStage.called", {
           disposed: !!disposed,
           hasOrbModel: !!(orb3dActorRuntime && orb3dActorRuntime.hasModel && orb3dActorRuntime.hasModel()),
           hasOrbWorld: !!currentOrbWorldPosition,
+          payloadIsTesla1,
+          payloadKeys: Object.keys(incomingPayload).slice(0, 12),
         });
       }
       if (disposed || !orb3dActorRuntime.hasModel() || !currentOrbWorldPosition) {
         return { handled: false, skipped: "tesla1_runtime_missing" };
       }
       clearFlameAoe3dRuntime("tesla1_started");
-      const result = tesla1Runtime.play(payload && typeof payload === "object" ? payload : {});
+      const result = tesla1Runtime.play(payloadIsTesla1
+        ? { ...incomingPayload, effect: "tesla-1" }
+        : { effect: "tesla-1" });
       root.dataset.enemy3dLastTesla1StageCallAt = String(Math.round(callAtMs));
       if (result && result.handled) {
         renderLoop.scheduleAnimation();
