@@ -322,7 +322,10 @@ function createLightningFieldMaterial(params) {
         float microB = simpleNoise(microNoiseUv + snapshotOffset(seed + 401.0, nextShapeFrame), 2.0);
         float macro = mix(macroA, macroB, shapeBlend) * 2.0 - 1.0;
         float micro = mix(microA, microB, shapeBlend) * 2.0 - 1.0;
-        uv.x += (macro * uMacroNoiseStrength + micro * uMicroNoiseStrength) * uBo * smoothstep(0.0, uBo * 0.2, abs(uv.y));
+        float tipAnchorStart = max(0.0, len - uBo * 0.18);
+        float tipAnchor = 1.0 - smoothstep(tipAnchorStart, len, clamp(uv.y, 0.0, len));
+        float baseAnchor = smoothstep(0.0, uBo * 0.2, uv.y);
+        uv.x += (macro * uMacroNoiseStrength + micro * uMicroNoiseStrength) * uBo * baseAnchor * tipAnchor;
         float d = lineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), uLineWidth * 0.006, h);
         float line = 0.1 / max(max(d / max(1.0, uBo), 0.0), 0.0001);
         vec3 bolt = clamp(1.0 - exp(-(line * uBoltColor) * 0.02), 0.0, 1.0);
@@ -342,7 +345,10 @@ function createLightningFieldMaterial(params) {
           vec2 branchMicroUv = branchUv / max(1.0, uBo) * uMicroNoiseScale;
           float branchMacro = simpleNoise(branchMacroUv + snapshotOffset(branchSeed, branchNoiseFrame), 2.0) * 2.0 - 1.0;
           float branchMicro = simpleNoise(branchMicroUv + snapshotOffset(branchSeed + 401.0, branchNoiseFrame), 2.0) * 2.0 - 1.0;
-          branchUv.x += (branchMacro * uMacroNoiseStrength + branchMicro * uMicroNoiseStrength) * uBo * smoothstep(0.0, uBo * 0.12, abs(branchUv.y));
+          float branchTipAnchorStart = max(0.0, branchLen - uBo * 0.12);
+          float branchTipAnchor = 1.0 - smoothstep(branchTipAnchorStart, branchLen, clamp(branchUv.y, 0.0, branchLen));
+          float branchBaseAnchor = smoothstep(0.0, uBo * 0.12, branchUv.y);
+          branchUv.x += (branchMacro * uMacroNoiseStrength + branchMicro * uMicroNoiseStrength) * uBo * branchBaseAnchor * branchTipAnchor;
           float branchH = 0.0;
           float branchD = lineSdf(branchUv, vec2(0.0), vec2(0.0, branchLen), uLineWidth * 0.0045, branchH);
           float branchLine = 0.08 / max(max(branchD / max(1.0, uBo), 0.0), 0.0001);
