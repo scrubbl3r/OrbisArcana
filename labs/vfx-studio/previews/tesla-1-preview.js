@@ -12,6 +12,7 @@ import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-def
 const ORB_RADIUS_BO = 0.5;
 const MAX_HALO_BOLTS = 32;
 const TESLA_HALO_INTERNAL_LINE_WIDTH_BO = 0.012;
+const TESLA_SHADER_TIME_RING_SECONDS = 32;
 
 function frameCameraToSsotOrbSize(inspector, root, bo) {
   if (!inspector || !inspector.camera || !root) return;
@@ -109,7 +110,7 @@ function buildLightningFieldUniformValues({
     uBoltCountMin: countMin,
     uBoltCountMax: countMax,
     uBo: Math.max(1, bo),
-    uTime: time,
+    uTime: ((time % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS,
     uStartMin: startMin,
     uStartMax: Math.max(startMin, startMax),
     uEndMin: endMin,
@@ -247,7 +248,8 @@ function createLightningFieldMaterial(params) {
       uniform float uTurnDampingMax;
       uniform float uDispersion;
       varying vec3 vWorldPosition;
-      const float TIME_RING = 16384.0;
+      const float TIME_RING = 32.0;
+      const float SNAPSHOT_RING = 64.0;
 
       mat2 rotate2(float angle) {
         float c = cos(angle);
@@ -283,7 +285,7 @@ function createLightningFieldMaterial(params) {
       }
 
       float stableFrame(float value) {
-        return mod(floor(value), TIME_RING);
+        return mod(floor(value), SNAPSHOT_RING);
       }
 
       vec2 snapshotOffset(float seed, float frame) {
