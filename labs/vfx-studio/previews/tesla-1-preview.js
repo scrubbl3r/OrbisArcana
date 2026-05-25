@@ -565,6 +565,7 @@ export function createTesla1Preview({
   function readHaloStrikeConfig() {
     const rangeMin = readInputNumber(els.tesla1HaloStrikeRangeMinBo, 1, 0, 64);
     const cooldownMinMs = Math.round(readInputNumber(els.tesla1HaloStrikeCooldownMinMs, 650, 16, 60000));
+    const hitRadiusMin = readInputNumber(els.tesla1HaloStrikeHitRadiusMinBo, 0.12, 0.01, 16);
     const damageMin = readInputNumber(els.tesla1HaloStrikeDamageMin, 1, 0, 10000);
     const stunDamageMin = readInputNumber(els.tesla1HaloStrikeStunDamageMin, 1, 0, 10000);
     return Object.freeze({
@@ -573,6 +574,8 @@ export function createTesla1Preview({
       rangeMax: readInputNumber(els.tesla1HaloStrikeRangeMaxBo, 5, Math.max(0.01, rangeMin), 64),
       cooldownMinMs,
       cooldownMaxMs: Math.round(readInputNumber(els.tesla1HaloStrikeCooldownMaxMs, 1400, cooldownMinMs, 60000)),
+      hitRadiusMin,
+      hitRadiusMax: readInputNumber(els.tesla1HaloStrikeHitRadiusMaxBo, 0.28, hitRadiusMin, 16),
       damageMin,
       damageMax: readInputNumber(els.tesla1HaloStrikeDamageMax, 3, damageMin, 10000),
       stunDamageMin,
@@ -867,6 +870,8 @@ export function createTesla1Preview({
       els.tesla1HaloStrikeRangeMaxBo,
       els.tesla1HaloStrikeCooldownMinMs,
       els.tesla1HaloStrikeCooldownMaxMs,
+      els.tesla1HaloStrikeHitRadiusMinBo,
+      els.tesla1HaloStrikeHitRadiusMaxBo,
       els.tesla1HaloStrikeDamageMin,
       els.tesla1HaloStrikeDamageMax,
       els.tesla1HaloStrikeStunDamageMin,

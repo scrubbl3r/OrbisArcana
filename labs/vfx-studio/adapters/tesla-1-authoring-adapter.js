@@ -24,6 +24,7 @@ export function createTesla1AuthoringAdapter({
     const haloBoltTurnDampingMin = readNumber(els.tesla1HaloBoltTurnDampingMin, tesla1PresetDefault.haloBoltTurnDampingMin, 0, 1);
     const haloStrikeRangeMinBo = readNumber(els.tesla1HaloStrikeRangeMinBo, tesla1BehaviorDefault.haloStrikeRangeMinBo, 0, 64);
     const haloStrikeCooldownMinMs = Math.round(readNumber(els.tesla1HaloStrikeCooldownMinMs, tesla1BehaviorDefault.haloStrikeCooldownMinMs, 16, 60000));
+    const haloStrikeHitRadiusMinBo = readNumber(els.tesla1HaloStrikeHitRadiusMinBo, tesla1BehaviorDefault.haloStrikeHitRadiusMinBo, 0.01, 16);
     const haloStrikeDamageMin = readNumber(els.tesla1HaloStrikeDamageMin, tesla1BehaviorDefault.haloStrikeDamageMin, 0, 10000);
     const haloStrikeStunDamageMin = readNumber(els.tesla1HaloStrikeStunDamageMin, tesla1BehaviorDefault.haloStrikeStunDamageMin, 0, 10000);
     const fallbackShapeHz = tesla1PresetDefault.lightningShapeNoiseSpeed ?? 3;
@@ -58,6 +59,8 @@ export function createTesla1AuthoringAdapter({
       haloStrikeRangeMaxBo: readNumber(els.tesla1HaloStrikeRangeMaxBo, tesla1BehaviorDefault.haloStrikeRangeMaxBo, Math.max(0.01, haloStrikeRangeMinBo), 64),
       haloStrikeCooldownMinMs,
       haloStrikeCooldownMaxMs: Math.round(readNumber(els.tesla1HaloStrikeCooldownMaxMs, tesla1BehaviorDefault.haloStrikeCooldownMaxMs, haloStrikeCooldownMinMs, 60000)),
+      haloStrikeHitRadiusMinBo,
+      haloStrikeHitRadiusMaxBo: readNumber(els.tesla1HaloStrikeHitRadiusMaxBo, tesla1BehaviorDefault.haloStrikeHitRadiusMaxBo, haloStrikeHitRadiusMinBo, 16),
       haloStrikeDamageMin,
       haloStrikeDamageMax: readNumber(els.tesla1HaloStrikeDamageMax, tesla1BehaviorDefault.haloStrikeDamageMax, haloStrikeDamageMin, 10000),
       haloStrikeStunDamageMin,
@@ -117,6 +120,8 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1HaloStrikeRangeMaxBo) els.tesla1HaloStrikeRangeMaxBo.value = String(source.haloStrikeRangeMaxBo ?? tesla1BehaviorDefault.haloStrikeRangeMaxBo);
     if (els.tesla1HaloStrikeCooldownMinMs) els.tesla1HaloStrikeCooldownMinMs.value = String(source.haloStrikeCooldownMinMs ?? tesla1BehaviorDefault.haloStrikeCooldownMinMs);
     if (els.tesla1HaloStrikeCooldownMaxMs) els.tesla1HaloStrikeCooldownMaxMs.value = String(source.haloStrikeCooldownMaxMs ?? tesla1BehaviorDefault.haloStrikeCooldownMaxMs);
+    if (els.tesla1HaloStrikeHitRadiusMinBo) els.tesla1HaloStrikeHitRadiusMinBo.value = String(source.haloStrikeHitRadiusMinBo ?? tesla1BehaviorDefault.haloStrikeHitRadiusMinBo);
+    if (els.tesla1HaloStrikeHitRadiusMaxBo) els.tesla1HaloStrikeHitRadiusMaxBo.value = String(source.haloStrikeHitRadiusMaxBo ?? tesla1BehaviorDefault.haloStrikeHitRadiusMaxBo);
     if (els.tesla1HaloStrikeDamageMin) els.tesla1HaloStrikeDamageMin.value = String(source.haloStrikeDamageMin ?? tesla1BehaviorDefault.haloStrikeDamageMin);
     if (els.tesla1HaloStrikeDamageMax) els.tesla1HaloStrikeDamageMax.value = String(source.haloStrikeDamageMax ?? tesla1BehaviorDefault.haloStrikeDamageMax);
     if (els.tesla1HaloStrikeStunDamageMin) els.tesla1HaloStrikeStunDamageMin.value = String(source.haloStrikeStunDamageMin ?? source.haloStrikeStunMinMs ?? tesla1BehaviorDefault.haloStrikeStunDamageMin);
@@ -150,6 +155,8 @@ export function createTesla1AuthoringAdapter({
       haloStrikeRangeMaxBo: settings.haloStrikeRangeMaxBo,
       haloStrikeCooldownMinMs: settings.haloStrikeCooldownMinMs,
       haloStrikeCooldownMaxMs: settings.haloStrikeCooldownMaxMs,
+      haloStrikeHitRadiusMinBo: settings.haloStrikeHitRadiusMinBo,
+      haloStrikeHitRadiusMaxBo: settings.haloStrikeHitRadiusMaxBo,
       haloStrikeDamageMin: settings.haloStrikeDamageMin,
       haloStrikeDamageMax: settings.haloStrikeDamageMax,
       haloStrikeStunDamageMin: settings.haloStrikeStunDamageMin,
@@ -161,7 +168,7 @@ export function createTesla1AuthoringAdapter({
     if (!els.tesla1BehaviorReadout) return;
     const cfg = readBehaviorPreviewConfig(els);
     els.tesla1BehaviorReadout.textContent = cfg.haloStrikeEnabled
-      ? `Halo strike range ${cfg.haloStrikeRangeMinBo}-${cfg.haloStrikeRangeMaxBo} BO. Cooldown ${cfg.haloStrikeCooldownMinMs}-${cfg.haloStrikeCooldownMaxMs}ms. Damage ${cfg.haloStrikeDamageMin}-${cfg.haloStrikeDamageMax}. Stun damage ${cfg.haloStrikeStunDamageMin}-${cfg.haloStrikeStunDamageMax}.`
+      ? `Halo strike range ${cfg.haloStrikeRangeMinBo}-${cfg.haloStrikeRangeMaxBo} BO. Hit radius ${cfg.haloStrikeHitRadiusMinBo}-${cfg.haloStrikeHitRadiusMaxBo} BO. Cooldown ${cfg.haloStrikeCooldownMinMs}-${cfg.haloStrikeCooldownMaxMs}ms. Damage ${cfg.haloStrikeDamageMin}-${cfg.haloStrikeDamageMax}. Stun damage ${cfg.haloStrikeStunDamageMin}-${cfg.haloStrikeStunDamageMax}.`
       : "Halo strike disabled.";
   }
 

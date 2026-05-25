@@ -267,16 +267,16 @@ export function createGameStageDepth3dLayer({
     getEnemyTargets: () => gnatSwarm3dRuntime.getCombatTargets(),
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => ({ ...TESLA_1_PRESET_DEFAULT, ...TESLA_1_BEHAVIOR_DEFAULT }),
-    onHaloStrike: ({ target = null, damage = 0, stunDamage = 0, config = {}, atMs = performance.now() } = {}) => {
+    onHaloStrike: ({ target = null, damage = 0, hitRadiusBo = 0.12, stunDamage = 0, config = {}, atMs = performance.now() } = {}) => {
       const position = target && target.position ? target.position : null;
       if (!position || !currentOrbWorldPosition) return Object.freeze({ handled: false, affected: 0, reason: "missing_target" });
+      const radiusBo = Math.max(0.01, Number(hitRadiusBo) || 0.12);
       const damageResult = gnatSwarm3dRuntime.applyCombatEffect({
         kind: COMBAT_EFFECT_DAMAGE,
         sourceEntityId: COMBAT_ENTITY_ORB,
-        targetEntityId: target.targetEntityId || target.id || "enemy:gnat-swarm",
-        ...(Number.isFinite(Number(target.index)) ? { targetIndex: Number(target.index) } : {}),
+        targetEntityId: "enemy:gnat-swarm",
         centerWorld: position,
-        radiusBo: Math.max(0.05, Number(target.radiusBo) || 0.25),
+        radiusBo,
         amount: Math.max(0, Number(damage) || 0),
         damageType: DAMAGE_TYPE_ELECTRIC,
         visualProfile: String(config.visualProfile || "spellstorm"),
@@ -286,10 +286,9 @@ export function createGameStageDepth3dLayer({
       const stunResult = gnatSwarm3dRuntime.applyCombatEffect({
         kind: COMBAT_EFFECT_STUN,
         sourceEntityId: COMBAT_ENTITY_ORB,
-        targetEntityId: target.targetEntityId || target.id || "enemy:gnat-swarm",
-        ...(Number.isFinite(Number(target.index)) ? { targetIndex: Number(target.index) } : {}),
+        targetEntityId: "enemy:gnat-swarm",
         centerWorld: position,
-        radiusBo: Math.max(0.05, Number(target.radiusBo) || 0.25),
+        radiusBo,
         amount: Math.max(0, Number(stunDamage) || 0),
         atMs,
         tags: ["spell", "tesla-1", "halo-strike"],
@@ -299,6 +298,7 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dLastTesla1DamageTotal = String(damageResult && Number.isFinite(Number(damageResult.totalDamage)) ? Number(damageResult.totalDamage) : 0);
       root.dataset.enemy3dLastTesla1StunCount = String(stunResult && stunResult.affected || 0);
       root.dataset.enemy3dLastTesla1StunAmount = String(Math.max(0, Number(stunDamage) || 0));
+      root.dataset.enemy3dLastTesla1HitRadiusBo = String(radiusBo);
       root.dataset.enemy3dLastTesla1Target = String(target.id || target.targetEntityId || "");
       root.dataset.enemy3dLastTesla1DamageReason = String(damageResult && damageResult.trace && damageResult.trace.reason || "");
       return Object.freeze({ damage: damageResult, stun: stunResult });

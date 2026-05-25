@@ -7,8 +7,6 @@ const ORB_RADIUS_BO = 0.5;
 const MAX_HALO_BOLTS = 32;
 const TESLA_HALO_INTERNAL_LINE_WIDTH_BO = 0.012;
 const TESLA_SHADER_TIME_RING_SECONDS = 32;
-const TESLA_STAGE_DIAGNOSTICS_ENABLED = true;
-const TESLA_STAGE_DIAGNOSTIC_SEGMENTS = 128;
 
 function clampNumber(value, min, max, fallback) {
   const numeric = Number(value);
@@ -30,33 +28,6 @@ function rgbColor(r = 255, g = 255, b = 255) {
     clampNumber(g, 0, 255, 255) / 255,
     clampNumber(b, 0, 255, 255) / 255
   );
-}
-
-function createRingPoints(radius = 1, segments = TESLA_STAGE_DIAGNOSTIC_SEGMENTS) {
-  const safeRadius = Math.max(0.001, Number(radius) || 0.001);
-  const count = Math.max(16, Math.round(Number(segments) || TESLA_STAGE_DIAGNOSTIC_SEGMENTS));
-  const points = [];
-  for (let index = 0; index <= count; index += 1) {
-    const angle = (index / count) * Math.PI * 2;
-    points.push(new THREE.Vector3(Math.cos(angle) * safeRadius, Math.sin(angle) * safeRadius, 0));
-  }
-  return points;
-}
-
-function createDiagnosticRing({ radius = 1, color = 0xffffff, opacity = 0.8, name = "tesla1:diagnostic_ring" } = {}) {
-  const geometry = new THREE.BufferGeometry().setFromPoints(createRingPoints(radius));
-  const material = new THREE.LineBasicMaterial({
-    color,
-    transparent: opacity < 1,
-    opacity,
-    depthTest: false,
-    depthWrite: false,
-    toneMapped: false,
-  });
-  const ring = new THREE.Line(geometry, material);
-  ring.name = name;
-  ring.renderOrder = 236;
-  return ring;
 }
 
 function normalizeEnemyTarget(target = null) {
@@ -96,6 +67,7 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
   const lightningShapeBranchAngleMinDeg = clampNumber(source.lightningShapeBranchAngleMinDeg, 0, 170, TESLA_1_PRESET_DEFAULT.lightningShapeBranchAngleMinDeg);
   const haloStrikeRangeMinBo = clampNumber(source.haloStrikeRangeMinBo, 0, 64, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeRangeMinBo);
   const haloStrikeCooldownMinMs = Math.round(clampNumber(source.haloStrikeCooldownMinMs, 16, 60000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeCooldownMinMs));
+  const haloStrikeHitRadiusMinBo = clampNumber(source.haloStrikeHitRadiusMinBo, 0.01, 16, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeHitRadiusMinBo);
   const haloStrikeDamageMin = clampNumber(source.haloStrikeDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeDamageMin);
   const haloStrikeStunDamageMin = clampNumber(source.haloStrikeStunDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeStunDamageMin);
   return Object.freeze({
@@ -143,6 +115,8 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     haloStrikeRangeMaxBo: clampNumber(source.haloStrikeRangeMaxBo, Math.max(0.01, haloStrikeRangeMinBo), 64, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeRangeMaxBo),
     haloStrikeCooldownMinMs,
     haloStrikeCooldownMaxMs: Math.round(clampNumber(source.haloStrikeCooldownMaxMs, haloStrikeCooldownMinMs, 60000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeCooldownMaxMs)),
+    haloStrikeHitRadiusMinBo,
+    haloStrikeHitRadiusMaxBo: clampNumber(source.haloStrikeHitRadiusMaxBo, haloStrikeHitRadiusMinBo, 16, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeHitRadiusMaxBo),
     haloStrikeDamageMin,
     haloStrikeDamageMax: clampNumber(source.haloStrikeDamageMax, haloStrikeDamageMin, 10000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeDamageMax),
     haloStrikeStunDamageMin,
@@ -548,7 +522,6 @@ export function createTesla1Runtime(options = {}) {
   let group = null;
   let fieldMesh = null;
   let fieldPlaneSize = 0;
-  let diagnosticGroup = null;
   let timer = 0;
   let startedAtMs = 0;
   let activePayload = Object.freeze({});
@@ -569,7 +542,6 @@ export function createTesla1Runtime(options = {}) {
     group = null;
     fieldMesh = null;
     fieldPlaneSize = 0;
-    diagnosticGroup = null;
     requestFrame();
   }
 
@@ -661,46 +633,6 @@ export function createTesla1Runtime(options = {}) {
     };
   }
 
-  function syncDiagnostics(config, bo) {
-    if (!TESLA_STAGE_DIAGNOSTICS_ENABLED || !group) return;
-    if (!diagnosticGroup || diagnosticGroup.parent !== group) {
-      diagnosticGroup = new THREE.Group();
-      diagnosticGroup.name = "tesla1:stage_diagnostics";
-      group.add(diagnosticGroup);
-    }
-    while (diagnosticGroup.children.length) {
-      const child = diagnosticGroup.children[0];
-      diagnosticGroup.remove(child);
-      disposeThreeObject(child);
-    }
-    const orbRadius = bo * ORB_RADIUS_BO;
-    const startMin = bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMinBo);
-    const startMax = bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo);
-    const endMin = bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMinBo);
-    const endMax = bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo);
-    [
-      { radius: orbRadius, color: 0x00ffff, opacity: 0.95, name: "tesla1:diagnostic_orb_radius" },
-      { radius: startMin, color: 0xffff00, opacity: 0.95, name: "tesla1:diagnostic_start_min" },
-      { radius: startMax, color: 0xffaa00, opacity: 0.95, name: "tesla1:diagnostic_start_max" },
-      { radius: endMin, color: 0x00ff55, opacity: 0.95, name: "tesla1:diagnostic_end_min" },
-      { radius: endMax, color: 0xff44ff, opacity: 0.95, name: "tesla1:diagnostic_end_max" },
-    ].forEach((ringConfig) => {
-      diagnosticGroup.add(createDiagnosticRing(ringConfig));
-    });
-    diagnosticGroup.userData.tesla1Diagnostics = Object.freeze({
-      bo,
-      orbRadius,
-      startMin,
-      startMax,
-      endMin,
-      endMax,
-      startMinBo: startMin / Math.max(1, bo),
-      startMaxBo: startMax / Math.max(1, bo),
-      endMinBo: endMin / Math.max(1, bo),
-      endMaxBo: endMax / Math.max(1, bo),
-    });
-  }
-
   function updateStrikeState(config, bo, nowMs) {
     if (!config.haloStrikeEnabled || config.haloBoltCountMax <= 0) {
       strikeState.activeUntil = 0;
@@ -731,6 +663,7 @@ export function createTesla1Runtime(options = {}) {
         bo,
         config,
         damage: randomBetween(config.haloStrikeDamageMin, config.haloStrikeDamageMax),
+        hitRadiusBo: randomBetween(config.haloStrikeHitRadiusMinBo, config.haloStrikeHitRadiusMaxBo),
         stunDamage: randomBetween(config.haloStrikeStunDamageMin, config.haloStrikeStunDamageMax),
         target,
       });
@@ -776,7 +709,6 @@ export function createTesla1Runtime(options = {}) {
         fieldPlaneSize = planeSize;
       }
     }
-    syncDiagnostics(config, bo);
     if (emitFrame) requestFrame();
   }
 
