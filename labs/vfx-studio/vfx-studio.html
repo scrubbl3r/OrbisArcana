@@ -3004,9 +3004,9 @@
 	                <label for="tesla1HaloStrikeDamageMax">max</label><input id="tesla1HaloStrikeDamageMax" class="paramFieldInput" type="number" min="0" max="10000" step="0.1" value="3" />
 	              </div>
 	              <div class="rgbaParamRow densityRangeRow">
-	                <span class="rgbaLabel">STUN MS</span>
-	                <label for="tesla1HaloStrikeStunMinMs">min</label><input id="tesla1HaloStrikeStunMinMs" class="paramFieldInput" type="number" min="0" max="60000" step="10" value="250" />
-	                <label for="tesla1HaloStrikeStunMaxMs">max</label><input id="tesla1HaloStrikeStunMaxMs" class="paramFieldInput" type="number" min="0" max="60000" step="10" value="700" />
+	                <span class="rgbaLabel">STUN DAMAGE</span>
+	                <label for="tesla1HaloStrikeStunDamageMin">min</label><input id="tesla1HaloStrikeStunDamageMin" class="paramFieldInput" type="number" min="0" max="10000" step="0.1" value="1" />
+	                <label for="tesla1HaloStrikeStunDamageMax">max</label><input id="tesla1HaloStrikeStunDamageMax" class="paramFieldInput" type="number" min="0" max="10000" step="0.1" value="3" />
 	              </div>
 	            </div>
 	          </div>
@@ -3129,14 +3129,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260524-tesla-n"),
+      import("./vfx-studio-bootstrap.js?v=20260524-tesla-o"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
       import("./vfx-studio-surfaces.js?v=20260524-tesla-c"),
-      import("./vfx-studio-theme-publish.js?v=20260524-tesla-i"),
+      import("./vfx-studio-theme-publish.js?v=20260524-tesla-j"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -3162,7 +3162,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260524n";
+    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260524o";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -3179,11 +3179,11 @@
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260522172828i";
     import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522172828";
-    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260524n";
+    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260524o";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522172828b";
-    import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260524b";
+    import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260524c";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
@@ -3741,8 +3741,8 @@
 	      tesla1HaloStrikeCooldownMaxMs: $("tesla1HaloStrikeCooldownMaxMs"),
 	      tesla1HaloStrikeDamageMin: $("tesla1HaloStrikeDamageMin"),
 	      tesla1HaloStrikeDamageMax: $("tesla1HaloStrikeDamageMax"),
-	      tesla1HaloStrikeStunMinMs: $("tesla1HaloStrikeStunMinMs"),
-	      tesla1HaloStrikeStunMaxMs: $("tesla1HaloStrikeStunMaxMs"),
+	      tesla1HaloStrikeStunDamageMin: $("tesla1HaloStrikeStunDamageMin"),
+	      tesla1HaloStrikeStunDamageMax: $("tesla1HaloStrikeStunDamageMax"),
 	      electricAoe3dBehaviorReadout: $("electricAoe3dBehaviorReadout"),
       electricAoe3dOrbVisibleBtn: $("electricAoe3dOrbVisibleBtn"),
       electricAoe3dBoltShaderVisibleBtn: $("electricAoe3dBoltShaderVisibleBtn"),
