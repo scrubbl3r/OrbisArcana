@@ -79,8 +79,10 @@ function buildLightningFieldUniformValues({
   tipFade,
   flickerHz,
   flickerDepth,
-  noiseScale,
-  noiseStrength,
+  macroNoiseScale,
+  macroNoiseStrength,
+  microNoiseScale,
+  microNoiseStrength,
   noiseSpeedMin,
   noiseSpeedMax,
   branchDensity,
@@ -88,7 +90,6 @@ function buildLightningFieldUniformValues({
   branchLengthMax,
   branchAngleMin,
   branchAngleMax,
-  branchNoiseStrength,
   ttlMinMs,
   ttlMaxMs,
   wanderSpeedMin,
@@ -119,8 +120,10 @@ function buildLightningFieldUniformValues({
     uTipFade: clampNumber(tipFade, 0, 1, 0.08),
     uFlickerHz: clampNumber(flickerHz, 0, 60, 4),
     uFlickerDepth: clampNumber(flickerDepth, 0, 1, 0.5),
-    uNoiseScale: clampNumber(noiseScale, 0.1, 200, 20),
-    uNoiseStrength: clampNumber(noiseStrength, 0, 0.5, 0.03),
+    uMacroNoiseScale: clampNumber(macroNoiseScale, 0.1, 200, 20),
+    uMacroNoiseStrength: clampNumber(macroNoiseStrength, 0, 0.5, 0.03),
+    uMicroNoiseScale: clampNumber(microNoiseScale, 0.1, 300, 42),
+    uMicroNoiseStrength: clampNumber(microNoiseStrength, 0, 0.5, 0.025),
     uNoiseSpeedMin: clampNumber(noiseSpeedMin, 0, 20, 2),
     uNoiseSpeedMax: clampNumber(noiseSpeedMax, 0, 20, 3),
     uBranchDensity: clampNumber(branchDensity, 0, 1, 0),
@@ -128,7 +131,6 @@ function buildLightningFieldUniformValues({
     uBranchLengthMax: clampNumber(branchLengthMax, 0, 8 * Math.max(1, bo), 0.22 * Math.max(1, bo)),
     uBranchAngleMin: clampNumber(branchAngleMin, 0, 170, 35) * Math.PI / 180,
     uBranchAngleMax: clampNumber(branchAngleMax, 0, 170, 80) * Math.PI / 180,
-    uBranchNoiseStrength: clampNumber(branchNoiseStrength, 0, 0.5, 0.08),
     uTtlMin: clampNumber(ttlMinMs, 16, 10000, 350) / 1000,
     uTtlMax: clampNumber(ttlMaxMs, 16, 10000, 900) / 1000,
     uWanderSpeedMin: clampNumber(wanderSpeedMin, 0, 4, 0.05),
@@ -175,8 +177,10 @@ function createLightningFieldMaterial(params) {
       uTipFade: { value: values.uTipFade },
       uFlickerHz: { value: values.uFlickerHz },
       uFlickerDepth: { value: values.uFlickerDepth },
-      uNoiseScale: { value: values.uNoiseScale },
-      uNoiseStrength: { value: values.uNoiseStrength },
+      uMacroNoiseScale: { value: values.uMacroNoiseScale },
+      uMacroNoiseStrength: { value: values.uMacroNoiseStrength },
+      uMicroNoiseScale: { value: values.uMicroNoiseScale },
+      uMicroNoiseStrength: { value: values.uMicroNoiseStrength },
       uNoiseSpeedMin: { value: values.uNoiseSpeedMin },
       uNoiseSpeedMax: { value: values.uNoiseSpeedMax },
       uBranchDensity: { value: values.uBranchDensity },
@@ -184,7 +188,6 @@ function createLightningFieldMaterial(params) {
       uBranchLengthMax: { value: values.uBranchLengthMax },
       uBranchAngleMin: { value: values.uBranchAngleMin },
       uBranchAngleMax: { value: values.uBranchAngleMax },
-      uBranchNoiseStrength: { value: values.uBranchNoiseStrength },
       uTtlMin: { value: values.uTtlMin },
       uTtlMax: { value: values.uTtlMax },
       uWanderSpeedMin: { value: values.uWanderSpeedMin },
@@ -221,8 +224,10 @@ function createLightningFieldMaterial(params) {
       uniform float uTipFade;
       uniform float uFlickerHz;
       uniform float uFlickerDepth;
-      uniform float uNoiseScale;
-      uniform float uNoiseStrength;
+      uniform float uMacroNoiseScale;
+      uniform float uMacroNoiseStrength;
+      uniform float uMicroNoiseScale;
+      uniform float uMicroNoiseStrength;
       uniform float uNoiseSpeedMin;
       uniform float uNoiseSpeedMax;
       uniform float uBranchDensity;
@@ -230,7 +235,6 @@ function createLightningFieldMaterial(params) {
       uniform float uBranchLengthMax;
       uniform float uBranchAngleMin;
       uniform float uBranchAngleMax;
-      uniform float uBranchNoiseStrength;
       uniform float uTtlMin;
       uniform float uTtlMax;
       uniform float uWanderSpeedMin;
@@ -305,16 +309,20 @@ function createLightningFieldMaterial(params) {
         vec2 uv = rotate2(angle) * p;
         uv.y -= startR;
         float h = 0.0;
-        vec2 noiseUv = uv / max(1.0, uBo) * uNoiseScale;
+        vec2 macroNoiseUv = uv / max(1.0, uBo) * uMacroNoiseScale;
+        vec2 microNoiseUv = uv / max(1.0, uBo) * uMicroNoiseScale;
         float shapeHz = mix(uNoiseSpeedMin, max(uNoiseSpeedMin, uNoiseSpeedMax), randomFloat(vec2(seed, 173.0)));
         float shapeClock = mod(uTime * shapeHz, TIME_RING);
         float shapeFrame = stableFrame(shapeClock);
         float nextShapeFrame = mod(shapeFrame + 1.0, TIME_RING);
         float shapeBlend = smoothstep(0.0, 1.0, fract(shapeClock));
-        float snA = simpleNoise(noiseUv + snapshotOffset(seed, shapeFrame), 2.0);
-        float snB = simpleNoise(noiseUv + snapshotOffset(seed, nextShapeFrame), 2.0);
-        float sn = mix(snA, snB, shapeBlend) * 2.0 - 1.0;
-        uv.x += sn * uBo * uNoiseStrength * smoothstep(0.0, uBo * 0.2, abs(uv.y));
+        float macroA = simpleNoise(macroNoiseUv + snapshotOffset(seed, shapeFrame), 2.0);
+        float macroB = simpleNoise(macroNoiseUv + snapshotOffset(seed, nextShapeFrame), 2.0);
+        float microA = simpleNoise(microNoiseUv + snapshotOffset(seed + 401.0, shapeFrame), 2.0);
+        float microB = simpleNoise(microNoiseUv + snapshotOffset(seed + 401.0, nextShapeFrame), 2.0);
+        float macro = mix(macroA, macroB, shapeBlend) * 2.0 - 1.0;
+        float micro = mix(microA, microB, shapeBlend) * 2.0 - 1.0;
+        uv.x += (macro * uMacroNoiseStrength + micro * uMicroNoiseStrength) * uBo * smoothstep(0.0, uBo * 0.2, abs(uv.y));
         float d = lineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), uLineWidth * 0.006, h);
         float line = 0.1 / max(max(d / max(1.0, uBo), 0.0), 0.0001);
         vec3 bolt = clamp(1.0 - exp(-(line * uBoltColor) * 0.02), 0.0, 1.0);
@@ -330,8 +338,11 @@ function createLightningFieldMaterial(params) {
           float branchAngle = side * mix(uBranchAngleMin, max(uBranchAngleMin, uBranchAngleMax), randomFloat(vec2(branchSeed, 347.0)));
           vec2 branchUv = rotate2(-branchAngle) * (uv - vec2(0.0, len * anchorT));
           float branchNoiseFrame = stableFrame(uTime * max(1.0, uNoiseSpeedMin) + bi * 5.0);
-          float branchNoise = simpleNoise(branchUv / max(1.0, uBo) * uNoiseScale + snapshotOffset(branchSeed, branchNoiseFrame), 2.0) * 2.0 - 1.0;
-          branchUv.x += branchNoise * uBo * uBranchNoiseStrength * smoothstep(0.0, uBo * 0.12, abs(branchUv.y));
+          vec2 branchMacroUv = branchUv / max(1.0, uBo) * uMacroNoiseScale;
+          vec2 branchMicroUv = branchUv / max(1.0, uBo) * uMicroNoiseScale;
+          float branchMacro = simpleNoise(branchMacroUv + snapshotOffset(branchSeed, branchNoiseFrame), 2.0) * 2.0 - 1.0;
+          float branchMicro = simpleNoise(branchMicroUv + snapshotOffset(branchSeed + 401.0, branchNoiseFrame), 2.0) * 2.0 - 1.0;
+          branchUv.x += (branchMacro * uMacroNoiseStrength + branchMicro * uMicroNoiseStrength) * uBo * smoothstep(0.0, uBo * 0.12, abs(branchUv.y));
           float branchH = 0.0;
           float branchD = lineSdf(branchUv, vec2(0.0), vec2(0.0, branchLen), uLineWidth * 0.0045, branchH);
           float branchLine = 0.08 / max(max(branchD / max(1.0, uBo), 0.0), 0.0001);
@@ -497,8 +508,10 @@ export function createTesla1Preview({
       turnDampingMin,
       turnDampingMax,
       dispersion,
-      noiseScale: readInputNumber(els.tesla1LightningShapeNoiseScale, 20, 0.1, 200),
-      noiseStrength: readInputNumber(els.tesla1LightningShapeNoiseStrength, 0.03, 0, 0.5),
+      macroNoiseScale: readInputNumber(els.tesla1LightningShapeMacroNoiseScale, 7, 0.1, 200),
+      macroNoiseStrength: readInputNumber(els.tesla1LightningShapeMacroNoiseStrength, 0.15, 0, 0.5),
+      microNoiseScale: readInputNumber(els.tesla1LightningShapeMicroNoiseScale, 42, 0.1, 300),
+      microNoiseStrength: readInputNumber(els.tesla1LightningShapeMicroNoiseStrength, 0.025, 0, 0.5),
       noiseSpeedMin,
       noiseSpeedMax: readInputNumber(els.tesla1LightningShapeNoiseSpeedMax, 3, noiseSpeedMin, 20),
       branchDensity: readInputNumber(els.tesla1LightningShapeBranchDensity, 0, 0, 1),
@@ -506,7 +519,6 @@ export function createTesla1Preview({
       branchLengthMax: readInputNumber(els.tesla1LightningShapeBranchLengthMaxBo, 0.22, branchLengthMin, 8),
       branchAngleMin,
       branchAngleMax: readInputNumber(els.tesla1LightningShapeBranchAngleMaxDeg, 80, branchAngleMin, 170),
-      branchNoiseStrength: readInputNumber(els.tesla1LightningShapeBranchNoiseStrength, 0.08, 0, 0.5),
     });
   }
 
@@ -602,8 +614,10 @@ export function createTesla1Preview({
       tipFade: readInputNumber(els.tesla1BoltShaderTipFade, 0.08, 0, 1),
       flickerHz: readInputNumber(els.tesla1BoltShaderFlickerSpeedHz, 4, 0, 60),
       flickerDepth: readInputNumber(els.tesla1BoltShaderFlickerDepth, 0.5, 0, 1),
-      noiseScale: shape.noiseScale,
-      noiseStrength: shape.noiseStrength,
+      macroNoiseScale: shape.macroNoiseScale,
+      macroNoiseStrength: shape.macroNoiseStrength,
+      microNoiseScale: shape.microNoiseScale,
+      microNoiseStrength: shape.microNoiseStrength,
       noiseSpeedMin: shape.noiseSpeedMin,
       noiseSpeedMax: shape.noiseSpeedMax,
       branchDensity: shape.branchDensity,
@@ -611,7 +625,6 @@ export function createTesla1Preview({
       branchLengthMax: bo * shape.branchLengthMax,
       branchAngleMin: shape.branchAngleMin,
       branchAngleMax: shape.branchAngleMax,
-      branchNoiseStrength: shape.branchNoiseStrength,
       ttlMinMs: shape.ttlMinMs,
       ttlMaxMs: shape.ttlMaxMs,
       wanderSpeedMin: shape.wanderSpeedMin,
@@ -750,8 +763,10 @@ export function createTesla1Preview({
       els.tesla1HaloBoltTurnDampingMin,
       els.tesla1HaloBoltTurnDampingMax,
       els.tesla1HaloBoltDispersion,
-      els.tesla1LightningShapeNoiseScale,
-      els.tesla1LightningShapeNoiseStrength,
+      els.tesla1LightningShapeMacroNoiseScale,
+      els.tesla1LightningShapeMacroNoiseStrength,
+      els.tesla1LightningShapeMicroNoiseScale,
+      els.tesla1LightningShapeMicroNoiseStrength,
       els.tesla1LightningShapeNoiseSpeedMin,
       els.tesla1LightningShapeNoiseSpeedMax,
       els.tesla1LightningShapeBranchDensity,
@@ -759,7 +774,6 @@ export function createTesla1Preview({
       els.tesla1LightningShapeBranchLengthMaxBo,
       els.tesla1LightningShapeBranchAngleMinDeg,
       els.tesla1LightningShapeBranchAngleMaxDeg,
-      els.tesla1LightningShapeBranchNoiseStrength,
       els.tesla1BoltShaderEnabled,
       els.tesla1BoltShaderIntensity,
       els.tesla1BoltShaderTipFade,

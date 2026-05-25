@@ -2056,8 +2056,10 @@
             <button id="tesla1LightningShapeVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Lightning Shape visibility" title="Toggle Lightning Shape visibility"></button>
           </div>
           <div id="tesla1LightningShapeControls" class="controlGroupBody paramFieldRows" hidden>
-            <div class="paramFieldRow"><label for="tesla1LightningShapeNoiseScale">Noise scale</label><input id="tesla1LightningShapeNoiseScale" class="paramFieldInput" type="number" min="0.1" max="200" step="0.1" value="20" /></div>
-            <div class="paramFieldRow"><label for="tesla1LightningShapeNoiseStrength">Noise strength</label><input id="tesla1LightningShapeNoiseStrength" class="paramFieldInput" type="number" min="0" max="0.5" step="0.001" value="0.03" /></div>
+            <div class="paramFieldRow"><label for="tesla1LightningShapeMacroNoiseScale">Macro noise scale</label><input id="tesla1LightningShapeMacroNoiseScale" class="paramFieldInput" type="number" min="0.1" max="200" step="0.1" value="7" /></div>
+            <div class="paramFieldRow"><label for="tesla1LightningShapeMacroNoiseStrength">Macro noise strength</label><input id="tesla1LightningShapeMacroNoiseStrength" class="paramFieldInput" type="number" min="0" max="0.5" step="0.001" value="0.15" /></div>
+            <div class="paramFieldRow"><label for="tesla1LightningShapeMicroNoiseScale">Micro noise scale</label><input id="tesla1LightningShapeMicroNoiseScale" class="paramFieldInput" type="number" min="0.1" max="300" step="0.1" value="42" /></div>
+            <div class="paramFieldRow"><label for="tesla1LightningShapeMicroNoiseStrength">Micro noise strength</label><input id="tesla1LightningShapeMicroNoiseStrength" class="paramFieldInput" type="number" min="0" max="0.5" step="0.001" value="0.025" /></div>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">SHAPE HZ</span>
               <label for="tesla1LightningShapeNoiseSpeedMin">min</label><input id="tesla1LightningShapeNoiseSpeedMin" class="paramFieldInput" type="number" min="0" max="20" step="0.01" value="2" />
@@ -2074,7 +2076,6 @@
               <label for="tesla1LightningShapeBranchAngleMinDeg">min</label><input id="tesla1LightningShapeBranchAngleMinDeg" class="paramFieldInput" type="number" min="0" max="170" step="1" value="35" />
               <label for="tesla1LightningShapeBranchAngleMaxDeg">max</label><input id="tesla1LightningShapeBranchAngleMaxDeg" class="paramFieldInput" type="number" min="0" max="170" step="1" value="80" />
             </div>
-            <div class="paramFieldRow"><label for="tesla1LightningShapeBranchNoiseStrength">Branch noise strength</label><input id="tesla1LightningShapeBranchNoiseStrength" class="paramFieldInput" type="number" min="0" max="0.5" step="0.001" value="0.08" /></div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -3096,7 +3097,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260524-tesla-i"),
+      import("./vfx-studio-bootstrap.js?v=20260524-tesla-j"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -3653,8 +3654,10 @@
       previewTesla1: $("previewTesla1"),
       tesla1OrbVisibleBtn: $("tesla1OrbVisibleBtn"),
       tesla1LightningShapeVisibleBtn: $("tesla1LightningShapeVisibleBtn"),
-      tesla1LightningShapeNoiseScale: $("tesla1LightningShapeNoiseScale"),
-      tesla1LightningShapeNoiseStrength: $("tesla1LightningShapeNoiseStrength"),
+      tesla1LightningShapeMacroNoiseScale: $("tesla1LightningShapeMacroNoiseScale"),
+      tesla1LightningShapeMacroNoiseStrength: $("tesla1LightningShapeMacroNoiseStrength"),
+      tesla1LightningShapeMicroNoiseScale: $("tesla1LightningShapeMicroNoiseScale"),
+      tesla1LightningShapeMicroNoiseStrength: $("tesla1LightningShapeMicroNoiseStrength"),
       tesla1LightningShapeNoiseSpeedMin: $("tesla1LightningShapeNoiseSpeedMin"),
       tesla1LightningShapeNoiseSpeedMax: $("tesla1LightningShapeNoiseSpeedMax"),
       tesla1LightningShapeBranchDensity: $("tesla1LightningShapeBranchDensity"),
@@ -3662,7 +3665,6 @@
       tesla1LightningShapeBranchLengthMaxBo: $("tesla1LightningShapeBranchLengthMaxBo"),
       tesla1LightningShapeBranchAngleMinDeg: $("tesla1LightningShapeBranchAngleMinDeg"),
       tesla1LightningShapeBranchAngleMaxDeg: $("tesla1LightningShapeBranchAngleMaxDeg"),
-      tesla1LightningShapeBranchNoiseStrength: $("tesla1LightningShapeBranchNoiseStrength"),
       tesla1LightningShaderVisibleBtn: $("tesla1LightningShaderVisibleBtn"),
       tesla1BoltShaderEnabled: $("tesla1BoltShaderEnabled"),
       tesla1BoltShaderIntensity: $("tesla1BoltShaderIntensity"),
