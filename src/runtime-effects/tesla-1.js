@@ -552,12 +552,22 @@ export function createTesla1Runtime(options = {}) {
     for (const rawTarget of Array.isArray(rawTargets) ? rawTargets : []) {
       const target = normalizeEnemyTarget(rawTarget);
       if (!target) continue;
-      const distanceBo = Math.hypot(
+      const centerDistanceBo = Math.hypot(
         (Number(from.xW) || 0) - target.position.xW,
         (Number(from.yW) || 0) - target.position.yW
       ) / Math.max(1, bo);
-      if (distanceBo < config.haloStrikeRangeMinBo || distanceBo > config.haloStrikeRangeMaxBo) continue;
-      if (!nearest || distanceBo < nearest.distanceBo) nearest = Object.freeze({ ...target, distanceBo });
+      const surfaceDistanceBo = Math.max(0, centerDistanceBo - ORB_RADIUS_BO);
+      const contactSlopBo = Math.max(0.08, Number(target.radiusBo) || 0);
+      const isOrbContact = centerDistanceBo <= ORB_RADIUS_BO + contactSlopBo;
+      if (!isOrbContact && surfaceDistanceBo < config.haloStrikeRangeMinBo) continue;
+      if (surfaceDistanceBo > config.haloStrikeRangeMaxBo) continue;
+      if (!nearest || surfaceDistanceBo < nearest.distanceBo) {
+        nearest = Object.freeze({
+          ...target,
+          centerDistanceBo,
+          distanceBo: surfaceDistanceBo,
+        });
+      }
     }
     return nearest;
   }
@@ -581,8 +591,8 @@ export function createTesla1Runtime(options = {}) {
       boltCountMax: config.haloBoltCountMax,
       startMin: bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMinBo),
       startMax: bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo),
-      endMin: bo * config.haloFieldBoltEndMinBo,
-      endMax: bo * config.haloFieldBoltEndMaxBo,
+      endMin: bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMinBo),
+      endMax: bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo),
       bo,
       boltColor: rgbColor(config.boltShaderColorR, config.boltShaderColorG, config.boltShaderColorB),
       intensity: config.boltShaderEnabled ? config.boltShaderIntensity : 0,
@@ -670,7 +680,12 @@ export function createTesla1Runtime(options = {}) {
       group.position.set(Number(orbRuntime.x) || 0, Number(orbRuntime.y) || 0, Number(orbRuntime.z) || 0);
     }
     updateStrikeState(config, bo, nowMs);
-    const maxRangeBo = Math.max(config.haloFieldShellRadiusBo, config.haloFieldBoltEndMaxBo, ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo, config.haloStrikeRangeMaxBo);
+    const maxRangeBo = Math.max(
+      config.haloFieldShellRadiusBo,
+      ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo,
+      ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo,
+      ORB_RADIUS_BO + config.haloStrikeRangeMaxBo
+    );
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
     const time = (nowMs - startedAtMs) / 1000;
     const materialParams = resolveMaterialParams(config, bo, time);
