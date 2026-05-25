@@ -1,4 +1,4 @@
-import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260524-tesla-l";
+import { createStudioPreviewRegistry } from "./vfx-studio-preview-registry.js?v=20260524-tesla-m";
 import { createStudioAuthoringAdapters } from "./vfx-studio-adapters.js?v=20260425d";
 import { createStudioSurfaceActivation } from "./vfx-studio-activation.js?v=20260425d";
 
@@ -24,6 +24,7 @@ export function createStudioBootstrap({
   updateTeleportBehaviorReadout,
   updateFlameAoe3dBehaviorReadout,
   updateElectricAoe3dBehaviorReadout,
+  updateTesla1BehaviorReadout,
   applyGeometryVars,
   previewApplyMap,
   previewRootsByEffect,
@@ -495,6 +496,9 @@ export function createStudioBootstrap({
       }
       if (effect === "electric-aoe-3d" && typeof updateElectricAoe3dBehaviorReadout === "function") {
         updateElectricAoe3dBehaviorReadout();
+      }
+      if (effect === "tesla-1" && typeof updateTesla1BehaviorReadout === "function") {
+        updateTesla1BehaviorReadout();
       }
       if (effect === "teleport-3d" && typeof defaults.updateTeleport3dBehaviorReadout === "function") {
         defaults.updateTeleport3dBehaviorReadout();

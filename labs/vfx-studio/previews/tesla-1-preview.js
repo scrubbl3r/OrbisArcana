@@ -102,6 +102,10 @@ function buildLightningFieldUniformValues({
   turnDampingMin,
   turnDampingMax,
   dispersion,
+  haloStrikeActive = 0,
+  haloStrikeSlot = -1,
+  haloStrikeTarget = new THREE.Vector2(0, 0),
+  haloStrikeSeed = 0,
   time,
 }) {
   const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMin) || 0)));
@@ -143,6 +147,10 @@ function buildLightningFieldUniformValues({
     uTurnDampingMin: clampNumber(turnDampingMin, 0, 1, 0.04),
     uTurnDampingMax: clampNumber(turnDampingMax, 0, 1, 0.18),
     uDispersion: clampNumber(dispersion, 0, 1, 0.2),
+    uHaloStrikeActive: haloStrikeActive ? 1 : 0,
+    uHaloStrikeSlot: Math.round(clampNumber(haloStrikeSlot, -1, MAX_HALO_BOLTS - 1, -1)),
+    uHaloStrikeTarget: haloStrikeTarget,
+    uHaloStrikeSeed: clampNumber(haloStrikeSeed, 0, 999999, 0),
   };
 }
 
@@ -200,6 +208,10 @@ function createLightningFieldMaterial(params) {
       uTurnDampingMin: { value: values.uTurnDampingMin },
       uTurnDampingMax: { value: values.uTurnDampingMax },
       uDispersion: { value: values.uDispersion },
+      uHaloStrikeActive: { value: values.uHaloStrikeActive },
+      uHaloStrikeSlot: { value: values.uHaloStrikeSlot },
+      uHaloStrikeTarget: { value: values.uHaloStrikeTarget },
+      uHaloStrikeSeed: { value: values.uHaloStrikeSeed },
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -247,6 +259,10 @@ function createLightningFieldMaterial(params) {
       uniform float uTurnDampingMin;
       uniform float uTurnDampingMax;
       uniform float uDispersion;
+      uniform int uHaloStrikeActive;
+      uniform int uHaloStrikeSlot;
+      uniform vec2 uHaloStrikeTarget;
+      uniform float uHaloStrikeSeed;
       varying vec3 vWorldPosition;
       const float TIME_RING = 32.0;
       const float SNAPSHOT_RING = 64.0;
@@ -383,7 +399,8 @@ function createLightningFieldMaterial(params) {
           float ttlCycle = stableFrame(shiftedTime / ttl);
           float ttlAge = mod(shiftedTime, ttl);
           float seed = fi * 37.13 + ttlCycle * 19.7 + 11.7;
-          float activeRoll = randomFloat(vec2(seed, 23.0));
+	          if (uHaloStrikeActive == 1 && i == uHaloStrikeSlot) continue;
+	          float activeRoll = randomFloat(vec2(seed, 23.0));
           float optionalChance = optionalSlots > 0.0 ? 0.5 : 0.0;
           if (fi >= minCount && activeRoll > optionalChance) continue;
           float direction = randomFloat(vec2(seed, 53.0)) < 0.5 ? -1.0 : 1.0;
@@ -416,9 +433,15 @@ function createLightningFieldMaterial(params) {
           float lengthRoll = (lengthSlot + randomFloat(vec2(seed, 191.0))) / lengthSlotCount;
           float endR = mix(uEndMin, uEndMax, lengthRoll);
           float len = max(0.001 * uBo, endR - startR);
-          color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
-        }
-        color = 1.0 - exp(-color * 0.55);
+	          color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
+	        }
+	        if (uHaloStrikeActive == 1 && length(uHaloStrikeTarget) > uStartMin + 0.001 * uBo) {
+	          float strikeAngle = atan(uHaloStrikeTarget.x, uHaloStrikeTarget.y);
+	          float strikeStartR = max(uStartMin, 0.5 * uBo);
+	          float strikeLen = max(0.001 * uBo, length(uHaloStrikeTarget) - strikeStartR);
+	          color += proceduralBolt(p, strikeAngle, strikeStartR, strikeLen, 900.0 + uHaloStrikeSeed) * uIntensity * 1.25;
+	        }
+	        color = 1.0 - exp(-color * 0.55);
         float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
         gl_FragColor = vec4(color, alpha);
       }
@@ -442,6 +465,13 @@ export function createTesla1Preview({
   let fieldMesh = null;
   let fieldPlaneSize = 0;
   let createdAt = 0;
+  let haloStrikeState = {
+    activeUntil: 0,
+    nextAt: 0,
+    seed: 0,
+    slot: -1,
+    target: new THREE.Vector2(0, 0),
+  };
 
   function readBo() {
     const visualState = typeof getOrbBaseVisualState === "function" ? getOrbBaseVisualState() : null;
@@ -470,6 +500,7 @@ export function createTesla1Preview({
     shapeLayer = null;
     fieldMesh = null;
     fieldPlaneSize = 0;
+    resetHaloStrikeState();
   }
 
   function masterRoute(bo, time) {
@@ -529,6 +560,52 @@ export function createTesla1Preview({
       branchAngleMin,
       branchAngleMax: readInputNumber(els.tesla1LightningShapeBranchAngleMaxDeg, 80, branchAngleMin, 170),
     });
+  }
+
+  function readHaloStrikeConfig() {
+    const rangeMin = readInputNumber(els.tesla1HaloStrikeRangeMinBo, 1, 0, 64);
+    const cooldownMinMs = Math.round(readInputNumber(els.tesla1HaloStrikeCooldownMinMs, 650, 16, 60000));
+    return Object.freeze({
+      enabled: readInputBoolean(els.tesla1HaloStrikeEnabled, false),
+      rangeMin,
+      rangeMax: readInputNumber(els.tesla1HaloStrikeRangeMaxBo, 5, Math.max(0.01, rangeMin), 64),
+      cooldownMinMs,
+      cooldownMaxMs: Math.round(readInputNumber(els.tesla1HaloStrikeCooldownMaxMs, 1400, cooldownMinMs, 60000)),
+    });
+  }
+
+  function resetHaloStrikeState() {
+    haloStrikeState = {
+      activeUntil: 0,
+      nextAt: 0,
+      seed: 0,
+      slot: -1,
+      target: new THREE.Vector2(0, 0),
+    };
+  }
+
+  function updateHaloStrikeState({ bo, shape, strike, time } = {}) {
+    if (!strike || !strike.enabled || !shape || shape.boltCountMax <= 0) {
+      haloStrikeState.activeUntil = 0;
+      return haloStrikeState;
+    }
+    if (!haloStrikeState.nextAt || time >= haloStrikeState.nextAt) {
+      const seed = Math.floor((time * 997) + haloStrikeState.seed * 17 + 1) % 100000;
+      const rangeRoll = (Math.sin(seed * 12.9898) * 43758.5453) % 1;
+      const angleRoll = (Math.sin(seed * 78.233) * 24634.6345) % 1;
+      const cooldownRoll = (Math.sin(seed * 39.425) * 14233.2341) % 1;
+      const slotRoll = (Math.sin(seed * 93.989) * 96541.123) % 1;
+      const range = strike.rangeMin + (strike.rangeMax - strike.rangeMin) * Math.abs(rangeRoll);
+      const angle = Math.abs(angleRoll) * Math.PI * 2;
+      const cooldownMs = strike.cooldownMinMs + (strike.cooldownMaxMs - strike.cooldownMinMs) * Math.abs(cooldownRoll);
+      const countMax = Math.max(1, Math.min(MAX_HALO_BOLTS, Math.round(shape.boltCountMax || 1)));
+      haloStrikeState.seed = seed;
+      haloStrikeState.slot = Math.floor(Math.abs(slotRoll) * countMax) % countMax;
+      haloStrikeState.target.set(Math.cos(angle) * range * bo, Math.sin(angle) * range * bo);
+      haloStrikeState.activeUntil = time + 0.16;
+      haloStrikeState.nextAt = time + Math.max(0.016, cooldownMs / 1000);
+    }
+    return haloStrikeState;
   }
 
   function syncMasterLayer(bo, time) {
@@ -597,6 +674,8 @@ export function createTesla1Preview({
     if (!shapeLayer) return;
     shapeLayer.visible = !els.tesla1LightningShapeVisibleBtn || els.tesla1LightningShapeVisibleBtn.getAttribute("aria-pressed") !== "false";
     const shape = readShapeConfig();
+    const strike = readHaloStrikeConfig();
+    const strikeState = updateHaloStrikeState({ bo, shape, strike, time });
     const startMin = readInputNumber(els.tesla1HaloFieldBoltStartMinBo, 0, 0, 32);
     const startMax = readInputNumber(els.tesla1HaloFieldBoltStartMaxBo, 0.15, startMin, 32);
     const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, Math.max(0.01, startMin), 32);
@@ -645,6 +724,10 @@ export function createTesla1Preview({
       turnDampingMin: shape.turnDampingMin,
       turnDampingMax: shape.turnDampingMax,
       dispersion: shape.dispersion,
+      haloStrikeActive: strike.enabled && time < strikeState.activeUntil,
+      haloStrikeSlot: strikeState.slot,
+      haloStrikeTarget: strikeState.target,
+      haloStrikeSeed: strikeState.seed,
       time,
     };
     if (!fieldMesh || !fieldMesh.parent) {
@@ -671,6 +754,7 @@ export function createTesla1Preview({
     const bo = readBo();
     const activeConfig = ORB_3D_VISUAL_DEFAULTS;
     createdAt = performance.now();
+    resetHaloStrikeState();
     inspector = createWorldObjectInspector({
       root: els.previewRoot,
       bo,
@@ -772,6 +856,11 @@ export function createTesla1Preview({
       els.tesla1HaloBoltTurnDampingMin,
       els.tesla1HaloBoltTurnDampingMax,
       els.tesla1HaloBoltDispersion,
+      els.tesla1HaloStrikeEnabled,
+      els.tesla1HaloStrikeRangeMinBo,
+      els.tesla1HaloStrikeRangeMaxBo,
+      els.tesla1HaloStrikeCooldownMinMs,
+      els.tesla1HaloStrikeCooldownMaxMs,
       els.tesla1LightningShapeMacroNoiseScale,
       els.tesla1LightningShapeMacroNoiseStrength,
       els.tesla1LightningShapeMicroNoiseScale,

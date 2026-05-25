@@ -1,6 +1,7 @@
 export function createLabEffectSurfaces({
   buildElectricAoe3dBehaviorModule,
   buildFlameAoe3dBehaviorModule,
+  buildTesla1BehaviorModule,
   buildTeleportBehaviorModule,
   createBubbleShield3dAuthoringAdapter,
   createBubbleShieldAuthoringAdapter,
@@ -30,7 +31,7 @@ export function createLabEffectSurfaces({
   return Object.freeze({
     "electric-aoe": Object.freeze({
       category: "spell",
-      panes: Object.freeze(["vfx"]),
+	      panes: Object.freeze(["vfx"]),
       settingsKey: "electric-aoe",
       defaultSettingsKey: "electric-aoe",
       registryIds: Object.freeze(["spell.aoe_electric"]),
@@ -55,8 +56,8 @@ export function createLabEffectSurfaces({
       autoPreviewKey: "applyElectricAoe3d",
       defaultBindTarget: "spell.aoe_electric",
       livePreset: Object.freeze({ buildKey: "electric-aoe-3d", path: ["src", "vfx", "presets", "electric-aoe-3d-default.js"], exportName: "ELECTRIC_AOE_3D_PRESET_DEFAULT" }),
-      behavior: Object.freeze({
-        targetIds: Object.freeze(["spell.aoe_electric"]),
+	      behavior: Object.freeze({
+	        targetIds: Object.freeze(["spell.aoe_electric"]),
         path: ["src", "game-runtime", "behaviors", "electric-aoe-behavior-default.js"],
         exportName: "ELECTRIC_AOE_BEHAVIOR_DEFAULT",
         buildModule: buildElectricAoe3dBehaviorModule,
@@ -67,7 +68,7 @@ export function createLabEffectSurfaces({
     "tesla-1": Object.freeze({
       label: "Tesla 1",
       category: "spell",
-      panes: Object.freeze(["vfx"]),
+	      panes: Object.freeze(["vfx", "behavior"]),
       settingsKey: "tesla-1",
       defaultSettingsKey: "tesla-1",
       builtinOption: true,
@@ -77,6 +78,12 @@ export function createLabEffectSurfaces({
       autoPreviewKey: "applyTesla1",
       defaultBindTarget: "spell.aoe_electric",
       livePreset: Object.freeze({ buildKey: "tesla-1", path: ["src", "vfx", "presets", "tesla-1-default.js"], exportName: "TESLA_1_PRESET_DEFAULT" }),
+      behavior: Object.freeze({
+        targetIds: Object.freeze(["spell.aoe_electric"]),
+        path: ["src", "game-runtime", "behaviors", "tesla-1-behavior-default.js"],
+        exportName: "TESLA_1_BEHAVIOR_DEFAULT",
+        buildModule: buildTesla1BehaviorModule,
+      }),
       adapterFile: "tesla-1-authoring-adapter.js",
       authoringAdapter: createTesla1AuthoringAdapter,
     }),

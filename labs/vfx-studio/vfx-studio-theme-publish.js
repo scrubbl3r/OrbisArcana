@@ -259,10 +259,12 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
         "haloFieldWander", "haloFieldWanderDurationMinMs", "haloFieldWanderDurationMaxMs",
         "haloFieldWanderSpeedMin", "haloFieldWanderSpeedMax",
         "haloBoltCountMin", "haloBoltCountMax", "haloBoltTtlMinMs", "haloBoltTtlMaxMs",
-        "haloBoltWanderSpeedMin", "haloBoltWanderSpeedMax", "haloBoltRpscMin", "haloBoltRpscMax",
-        "haloBoltTurnTensionMin", "haloBoltTurnTensionMax", "haloBoltTurnDampingMin", "haloBoltTurnDampingMax",
-        "haloBoltDispersion",
-        "lightningShapeMacroNoiseScale", "lightningShapeMacroNoiseStrength",
+	        "haloBoltWanderSpeedMin", "haloBoltWanderSpeedMax", "haloBoltRpscMin", "haloBoltRpscMax",
+	        "haloBoltTurnTensionMin", "haloBoltTurnTensionMax", "haloBoltTurnDampingMin", "haloBoltTurnDampingMax",
+	        "haloBoltDispersion",
+	        "haloStrikeEnabled", "haloStrikeRangeMinBo", "haloStrikeRangeMaxBo",
+	        "haloStrikeCooldownMinMs", "haloStrikeCooldownMaxMs",
+	        "lightningShapeMacroNoiseScale", "lightningShapeMacroNoiseStrength",
         "lightningShapeMicroNoiseScale", "lightningShapeMicroNoiseStrength",
         "lightningShapeNoiseSpeedMin", "lightningShapeNoiseSpeedMax",
         "lightningShapeBranchDensity", "lightningShapeBranchLengthMinBo", "lightningShapeBranchLengthMaxBo",
@@ -682,6 +684,23 @@ export function buildElectricAoe3dBehaviorModule(params) {
     `  shockDurationMs: ${Math.round(toNum(p.shockDurationMs ?? p.igniteDurationMs, 10000))},`,
     `  arcDps: ${toNum(p.arcDps ?? p.roastDps, 1).toFixed(2)},`,
     `  arcTickMs: ${Math.round(toNum(p.arcTickMs ?? p.roastTickMs, 50))},`,
+    "});",
+    "",
+  ].join("\n");
+}
+
+export function buildTesla1BehaviorModule(params) {
+  const p = params && typeof params === "object" ? params : {};
+  const rangeMin = toNum(p.haloStrikeRangeMinBo, 1);
+  const cooldownMin = Math.round(toNum(p.haloStrikeCooldownMinMs, 650));
+  return [
+    "export const TESLA_1_BEHAVIOR_DEFAULT = Object.freeze({",
+    "  enabled: true,",
+    `  haloStrikeEnabled: ${p.haloStrikeEnabled === false ? "false" : "true"},`,
+    `  haloStrikeRangeMinBo: ${rangeMin.toFixed(2)},`,
+    `  haloStrikeRangeMaxBo: ${toNum(p.haloStrikeRangeMaxBo, Math.max(0.01, rangeMin)).toFixed(2)},`,
+    `  haloStrikeCooldownMinMs: ${cooldownMin},`,
+    `  haloStrikeCooldownMaxMs: ${Math.round(toNum(p.haloStrikeCooldownMaxMs, cooldownMin))},`,
     "});",
     "",
   ].join("\n");

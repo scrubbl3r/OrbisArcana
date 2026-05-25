@@ -7,6 +7,7 @@ import {
   buildElectricAoe3dBehaviorModule,
   buildFlameAoe3dBehaviorModule,
   buildLivePresetModuleForBaseEffect,
+  buildTesla1BehaviorModule,
   buildTeleportBehaviorModule,
 } from "../../labs/vfx-studio/vfx-studio-theme-publish.js";
 
@@ -47,6 +48,7 @@ function createSentinelAdapter(name) {
 const surfaces = createLabEffectSurfaces({
   buildElectricAoe3dBehaviorModule,
   buildFlameAoe3dBehaviorModule,
+  buildTesla1BehaviorModule,
   buildTeleportBehaviorModule,
   createBankOrb3dAuthoringAdapter: createSentinelAdapter("bank-orb-3d"),
   createBubbleShield3dAuthoringAdapter: createSentinelAdapter("bubble-shield-3d"),

@@ -2939,8 +2939,8 @@
           </div>
         </div>
 
-        <div class="behaviorSection" data-behavior-effect="electric-aoe-3d" hidden>
-          <h3 class="behaviorTitle">Electric AOE 3D Behavior</h3>
+	        <div class="behaviorSection" data-behavior-effect="electric-aoe-3d" hidden>
+	          <h3 class="behaviorTitle">Electric AOE 3D Behavior</h3>
           <div class="behaviorReadout" id="electricAoe3dBehaviorReadout" aria-live="polite"></div>
           <div class="controlGroup" data-control-group>
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="electricAoe3dBehaviorMainControls">Main</button>
@@ -2978,10 +2978,31 @@
               </div>
               <div class="paramFieldRow"><label for="electricAoe3dDominantBoltDetourRatioMax">Path detour max</label><input id="electricAoe3dDominantBoltDetourRatioMax" class="paramFieldInput" type="number" min="1" max="8" step="0.05" value="1.4" /></div>
             </div>
-          </div>
-        </div>
+	          </div>
+	        </div>
 
-        <div class="behaviorSection" data-behavior-effect="default">
+	        <div class="behaviorSection" data-behavior-effect="tesla-1" hidden>
+	          <h3 class="behaviorTitle">Tesla 1 Behavior</h3>
+	          <div class="behaviorReadout" id="tesla1BehaviorReadout" aria-live="polite"></div>
+	          <div class="controlGroup" data-control-group>
+	            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="tesla1BehaviorHaloStrikeControls">Halo Strike</button>
+	            <div id="tesla1BehaviorHaloStrikeControls" class="controlGroupBody paramFieldRows" hidden>
+	              <div class="paramFieldRow"><label for="tesla1HaloStrikeEnabled">Halo strike enabled</label><input id="tesla1HaloStrikeEnabled" class="paramFieldInput" type="checkbox" checked /></div>
+	              <div class="rgbaParamRow densityRangeRow">
+	                <span class="rgbaLabel">STRIKE RANGE BO</span>
+	                <label for="tesla1HaloStrikeRangeMinBo">min</label><input id="tesla1HaloStrikeRangeMinBo" class="paramFieldInput" type="number" min="0" max="64" step="0.05" value="1" />
+	                <label for="tesla1HaloStrikeRangeMaxBo">max</label><input id="tesla1HaloStrikeRangeMaxBo" class="paramFieldInput" type="number" min="0.05" max="64" step="0.05" value="5" />
+	              </div>
+	              <div class="rgbaParamRow densityRangeRow">
+	                <span class="rgbaLabel">COOLDOWN MS</span>
+	                <label for="tesla1HaloStrikeCooldownMinMs">min</label><input id="tesla1HaloStrikeCooldownMinMs" class="paramFieldInput" type="number" min="16" max="60000" step="10" value="650" />
+	                <label for="tesla1HaloStrikeCooldownMaxMs">max</label><input id="tesla1HaloStrikeCooldownMaxMs" class="paramFieldInput" type="number" min="16" max="60000" step="10" value="1400" />
+	              </div>
+	            </div>
+	          </div>
+	        </div>
+
+	        <div class="behaviorSection" data-behavior-effect="default">
           <h3 class="behaviorTitle">No Behavior Surface</h3>
         </div>
       </div>
@@ -3082,9 +3103,10 @@
       },
       {
         applyLabThemeDefaults,
-        buildElectricAoe3dBehaviorModule,
-        buildFlameAoe3dBehaviorModule,
-        buildTeleportBehaviorModule,
+	        buildElectricAoe3dBehaviorModule,
+	        buildFlameAoe3dBehaviorModule,
+	        buildTesla1BehaviorModule,
+	        buildTeleportBehaviorModule,
         buildLivePresetModuleForBaseEffect,
         connectProjectFolder: connectProjectFolderHelper,
         downloadTextFile,
@@ -3097,14 +3119,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260524-tesla-l"),
+      import("./vfx-studio-bootstrap.js?v=20260524-tesla-m"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
-      import("./vfx-studio-surfaces.js?v=20260523-tesla-b"),
-      import("./vfx-studio-theme-publish.js?v=20260523-tesla-g"),
+      import("./vfx-studio-surfaces.js?v=20260524-tesla-c"),
+      import("./vfx-studio-theme-publish.js?v=20260524-tesla-h"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -3130,7 +3152,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260523l";
+    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260524m";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -3147,10 +3169,11 @@
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260522172828i";
     import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/electric-aoe-3d-default.js?v=20260522172828";
-    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260523l";
+    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260524m";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522172828b";
+    import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260524a";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
     import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
@@ -3174,9 +3197,10 @@
     let runtimeEffectBindingsState = Array.isArray(RUNTIME_EFFECT_BINDINGS) ? RUNTIME_EFFECT_BINDINGS.map((entry) => ({ ...entry })) : [];
     const VFX_PRESET_DRAFTS_PATH = ["src", "vfx", "presets", "drafts"];
     const LAB_EFFECT_SURFACES = createLabEffectSurfaces({
-      buildElectricAoe3dBehaviorModule,
-      buildFlameAoe3dBehaviorModule,
-      buildTeleportBehaviorModule,
+	      buildElectricAoe3dBehaviorModule,
+	      buildFlameAoe3dBehaviorModule,
+	      buildTesla1BehaviorModule,
+	      buildTeleportBehaviorModule,
       createBankOrb3dAuthoringAdapter,
       createBubbleShield3dAuthoringAdapter,
       createBubbleShieldAuthoringAdapter,
@@ -3696,10 +3720,16 @@
       tesla1HaloBoltTurnDampingMax: $("tesla1HaloBoltTurnDampingMax"),
       tesla1HaloBoltDispersion: $("tesla1HaloBoltDispersion"),
       tesla1HaloFieldBoltStartMinBo: $("tesla1HaloFieldBoltStartMinBo"),
-      tesla1HaloFieldBoltStartMaxBo: $("tesla1HaloFieldBoltStartMaxBo"),
-      tesla1HaloFieldBoltEndMinBo: $("tesla1HaloFieldBoltEndMinBo"),
-      tesla1HaloFieldBoltEndMaxBo: $("tesla1HaloFieldBoltEndMaxBo"),
-      electricAoe3dBehaviorReadout: $("electricAoe3dBehaviorReadout"),
+	      tesla1HaloFieldBoltStartMaxBo: $("tesla1HaloFieldBoltStartMaxBo"),
+	      tesla1HaloFieldBoltEndMinBo: $("tesla1HaloFieldBoltEndMinBo"),
+	      tesla1HaloFieldBoltEndMaxBo: $("tesla1HaloFieldBoltEndMaxBo"),
+	      tesla1BehaviorReadout: $("tesla1BehaviorReadout"),
+	      tesla1HaloStrikeEnabled: $("tesla1HaloStrikeEnabled"),
+	      tesla1HaloStrikeRangeMinBo: $("tesla1HaloStrikeRangeMinBo"),
+	      tesla1HaloStrikeRangeMaxBo: $("tesla1HaloStrikeRangeMaxBo"),
+	      tesla1HaloStrikeCooldownMinMs: $("tesla1HaloStrikeCooldownMinMs"),
+	      tesla1HaloStrikeCooldownMaxMs: $("tesla1HaloStrikeCooldownMaxMs"),
+	      electricAoe3dBehaviorReadout: $("electricAoe3dBehaviorReadout"),
       electricAoe3dOrbVisibleBtn: $("electricAoe3dOrbVisibleBtn"),
       electricAoe3dBoltShaderVisibleBtn: $("electricAoe3dBoltShaderVisibleBtn"),
       electricAoe3dControlPointsVisibleBtn: $("electricAoe3dControlPointsVisibleBtn"),
@@ -3951,9 +3981,10 @@
       bubbleShieldPresetDefault: BUBBLE_SHIELD_PRESET_DEFAULT,
       bubbleShield3dPresetDefault: BUBBLE_SHIELD_3D_PRESET_DEFAULT,
       electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
-      electricAoe3dPresetDefault: ELECTRIC_AOE_3D_PRESET_DEFAULT,
-      electricAoe3dBehaviorDefault: ELECTRIC_AOE_BEHAVIOR_DEFAULT,
-      tesla1PresetDefault: TESLA_1_PRESET_DEFAULT,
+	      electricAoe3dPresetDefault: ELECTRIC_AOE_3D_PRESET_DEFAULT,
+	      electricAoe3dBehaviorDefault: ELECTRIC_AOE_BEHAVIOR_DEFAULT,
+	      tesla1PresetDefault: TESLA_1_PRESET_DEFAULT,
+	      tesla1BehaviorDefault: TESLA_1_BEHAVIOR_DEFAULT,
       flameAoePresetDefault: FLAME_AOE_PRESET_DEFAULT,
       flameAoe3dPresetDefault: FLAME_AOE_3D_PRESET_DEFAULT,
       flameAoe3dBehaviorDefault: FLAME_AOE_BEHAVIOR_DEFAULT,
@@ -4810,9 +4841,13 @@
       authoringAdapterForBaseEffect("flame-aoe-3d").updateBehaviorReadout(els);
     }
 
-    function updateElectricAoe3dBehaviorReadout(){
-      authoringAdapterForBaseEffect("electric-aoe-3d").updateBehaviorReadout(els);
-    }
+	    function updateElectricAoe3dBehaviorReadout(){
+	      authoringAdapterForBaseEffect("electric-aoe-3d").updateBehaviorReadout(els);
+	    }
+
+	    function updateTesla1BehaviorReadout(){
+	      authoringAdapterForBaseEffect("tesla-1").updateBehaviorReadout(els);
+	    }
 
     const studioBootstrap = createStudioBootstrap({
       els,
@@ -4834,9 +4869,10 @@
       applyOrbLaneSsot,
       buildCurrentLabOrbBaseVisualState,
       updateTeleportBehaviorReadout,
-      updateFlameAoe3dBehaviorReadout,
-      updateElectricAoe3dBehaviorReadout,
-      applyGeometryVars,
+	      updateFlameAoe3dBehaviorReadout,
+	      updateElectricAoe3dBehaviorReadout,
+	      updateTesla1BehaviorReadout,
+	      applyGeometryVars,
       previewApplyMap: Object.freeze({
         "electric-aoe": () => applyElectricControls(),
         "bubble-shield": () => applyShield(),
