@@ -205,7 +205,7 @@ export function bindStagingRuntimeEvents({
         kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
       }
       if (RULE_CHAIN_TRACE_ENABLED && kwsBridge && typeof kwsBridge.pushLogLine === "function" && (
-        actionId === "teleport" || actionId === "aoe_electric" || actionId === "aoe_flame" || actionId === "shockwave"
+        actionId === "teleport" || actionId === "tesla_1" || actionId === "aoe_flame" || actionId === "shockwave"
       )) {
         const handled = !!(execResult && execResult.handled);
         kwsBridge.pushLogLine(`TRACE exec:${actionId}:cast:${handled ? "ok" : "miss"}`, handled ? "ok" : "warn");
@@ -365,8 +365,8 @@ export function bindStagingRuntimeEvents({
     if (actionType === "event" && actionId === "teleport") {
       kwsBridge.pushLogLine("TRACE action:event:teleport", "ok");
     }
-    if (actionType === "event" && actionId === "aoe_electric") {
-      kwsBridge.pushLogLine("TRACE action:event:aoe_electric", "ok");
+    if (actionType === "event" && actionId === "tesla_1") {
+      kwsBridge.pushLogLine("TRACE action:event:tesla_1", "ok");
     }
     if (actionType === "event" && actionId === "shockwave") {
       kwsBridge.pushLogLine("TRACE action:event:shockwave", "ok");

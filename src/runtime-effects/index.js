@@ -12,8 +12,7 @@
 
 export { executeShockwave } from "./shockwave.js";
 export { executeTeleport } from "./teleport.js";
-export { executeAoeElectric } from "./aoe-electric.js";
-export { createElectricAoe3dRuntime, normalizeElectricAoe3dRuntimeConfig } from "./electric-aoe-3d.js?v=20260522-active-aoe-c";
+export { executeTesla1 } from "./tesla-1-action.js";
 export { createTesla1Runtime, normalizeTesla1RuntimeConfig } from "./tesla-1.js";
 export { executeAoeFlame } from "./aoe-flame.js";
 export { executeAoeFrost } from "./aoe-frost.js";

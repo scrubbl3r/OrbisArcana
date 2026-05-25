@@ -10,15 +10,13 @@ import { reportCheckPass } from "./check-pass-v2.mjs";
 import { CHECK_TAGS_V2 } from "./check-tags-v2.mjs";
 
 const CHECK_TAG = CHECK_TAGS_V2.electricAoeRegression;
-const PASS_MESSAGE = "orbis wake followed by electrum then rota triggers aoe_electric through authored rule path";
+const PASS_MESSAGE = "orbis wake followed by electrum triggers tesla_1 through authored rule path";
 const EVT_RULE_ENGINE_ACTION_EXECUTED = "rule_engine.action_executed";
 const EVT_RULE_ENGINE_WAKE_WIN_OPENED = "rule_engine.wake_win_opened";
 const WORD_ORBIS = "orbis";
 const WORD_ELECTRUM = "electrum";
-const WORD_ROTA = "rota";
 const WINDOW_WAKE_MAIN = "wake.main";
-const WINDOW_ELECTRUM = "chain.electrum";
-const EVENT_AOE_ELECTRIC = "aoe_electric";
+const EVENT_TESLA_1 = "tesla_1";
 
 const eventBus = createCheckEventBus();
 const actionEvents = captureCheckEvents(eventBus, EVT_RULE_ENGINE_ACTION_EXECUTED);
@@ -59,22 +57,16 @@ try {
   }
 
   emitDetectedWord(WORD_ELECTRUM, 1100);
-  const electrumWindowOpened = wakeOpenedEvents.some((evt) => String(evt?.windowId || "") === WINDOW_ELECTRUM);
-  if (!electrumWindowOpened) {
-    failCheck(CHECK_TAG, "electric_aoe did not open chain.electrum after orbis -> electrum");
-  }
-
-  emitDetectedWord(WORD_ROTA, 1200);
-  const electricActions = actionEvents.filter((evt) =>
+  const teslaActions = actionEvents.filter((evt) =>
     String(evt?.actionType || "") === "event"
-    && String(evt?.actionId || "") === EVENT_AOE_ELECTRIC
+    && String(evt?.actionId || "") === EVENT_TESLA_1
   );
-  if (electricActions.length !== 1) {
-    failCheck(CHECK_TAG, `expected one authored aoe_electric action after orbis -> electrum -> rota, got ${electricActions.length}`);
+  if (teslaActions.length !== 1) {
+    failCheck(CHECK_TAG, `expected one authored tesla_1 action after orbis -> electrum, got ${teslaActions.length}`);
   }
-  const electricRuleId = String(electricActions[0]?.ruleId || "");
-  if (electricRuleId !== "electric_aoe_cast") {
-    failCheck(CHECK_TAG, `expected electric_aoe_cast rule to fire, got ${electricRuleId || "(empty)"}`);
+  const teslaRuleId = String(teslaActions[0]?.ruleId || "");
+  if (teslaRuleId !== "electrum_cast_tesla_1") {
+    failCheck(CHECK_TAG, `expected electrum_cast_tesla_1 rule to fire, got ${teslaRuleId || "(empty)"}`);
   }
 } finally {
   system.stop();

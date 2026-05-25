@@ -12,6 +12,7 @@ import { resolveRuntimeEffectBinding } from "./resolve-runtime-effect-binding.js
  * @param {string} options.targetId
  * @param {Object} [options.runtime]
  * @param {Function} [options.runtime.playFlameAoe]
+ * @param {Function} [options.runtime.playTesla1]
  * @param {Function} [options.runtime.playElectricAoe]
  * @param {Function} [options.runtime.playShockwave3d]
  * @param {Function} [options.runtime.triggerShockwave]
@@ -40,10 +41,12 @@ export function dispatchRuntimeEffect({
       return typeof runtime.playFlameAoe === "function"
         ? { ...(runtime.playFlameAoe(payload) || { handled: false }), binding }
         : { handled: false, skipped: "runtime_missing", binding };
-    case "spell.aoe_electric":
-      return typeof runtime.playElectricAoe === "function"
-        ? { ...(runtime.playElectricAoe(payload) || { handled: false }), binding }
-        : { handled: false, skipped: "runtime_missing", binding };
+    case "spell.tesla_1":
+      return typeof runtime.playTesla1 === "function"
+        ? { ...(runtime.playTesla1({ ...(payload && typeof payload === "object" ? payload : {}), effect: "tesla-1" }) || { handled: false }), binding }
+        : typeof runtime.playElectricAoe === "function"
+          ? { ...(runtime.playElectricAoe({ ...(payload && typeof payload === "object" ? payload : {}), effect: "tesla-1" }) || { handled: false }), binding }
+          : { handled: false, skipped: "runtime_missing", binding };
     case "spell.shockwave_ring":
       return typeof runtime.triggerShockwave === "function"
         ? { ...(runtime.triggerShockwave(payload) || { handled: false }), binding }

@@ -3,8 +3,8 @@
 
 export const CAST_ACTION_REGISTRY = Object.freeze([
   Object.freeze({
-    id: "aoe_electric",
-    handlerKey: "play_electric_aoe",
+    id: "tesla_1",
+    handlerKey: "play_tesla_1",
     globeCost: 1,
   }),
   Object.freeze({

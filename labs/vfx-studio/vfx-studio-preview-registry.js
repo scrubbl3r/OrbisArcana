@@ -22,7 +22,6 @@ import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=202
 import { createOrbTeleportPreview } from "./previews/orb-teleport-preview.js?v=20260425d";
 import { createOrbTeleport3dPreview } from "./previews/orb-teleport-3d-preview.js?v=20260501a";
 import { createFlameAoe3dPreview } from "./previews/flame-aoe-3d-preview.js?v=20260520aeo-diameter-a";
-import { createElectricAoe3dPreview } from "./previews/electric-aoe-3d-preview.js?v=20260522-skeleton-a";
 import { createTesla1Preview } from "./previews/tesla-1-preview.js?v=20260525surfacea";
 import { createBankOrb3dPreview } from "./previews/bank-orb-3d-preview.js?v=20260502a";
 
@@ -41,7 +40,6 @@ export function createStudioPreviewRegistry({
   previewRootsByEffect,
   updateTeleportBehaviorReadout = null,
   updateFlameAoe3dBehaviorReadout = null,
-  updateElectricAoe3dBehaviorReadout = null,
 } = {}) {
   const actions = {};
 
@@ -254,15 +252,6 @@ export function createStudioPreviewRegistry({
   actions.playFlameAoe3d = flameAoe3dPreview.play;
   flameAoe3dPreview.wire();
 
-  const electricAoe3dPreview = createElectricAoe3dPreview({
-    els: previewEls.electricAoe3d,
-    getOrbBaseVisualState,
-  });
-  actions.applyElectricAoe3d = electricAoe3dPreview.apply;
-  actions.clearElectricAoe3d = electricAoe3dPreview.clear;
-  actions.playElectricAoe3d = electricAoe3dPreview.play;
-  electricAoe3dPreview.wire();
-
   const tesla1Preview = createTesla1Preview({
     els: previewEls.tesla1,
     getOrbBaseVisualState,
@@ -302,7 +291,6 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearOrbTeleport === "function") actions.clearOrbTeleport();
     if (typeof actions.clearOrbTeleport3d === "function") actions.clearOrbTeleport3d();
     if (typeof actions.clearFlameAoe3d === "function") actions.clearFlameAoe3d();
-    if (typeof actions.clearElectricAoe3d === "function") actions.clearElectricAoe3d();
     if (typeof actions.clearTesla1 === "function") actions.clearTesla1();
     if (typeof actions.clearBankOrb3d === "function") actions.clearBankOrb3d();
     Object.values(previewRootsByEffect || {}).forEach((root) => {
@@ -398,42 +386,6 @@ export function createStudioPreviewRegistry({
       });
       field.addEventListener("change", () => commitFlameAoe3dBehaviorInput(field));
       field.addEventListener("blur", () => commitFlameAoe3dBehaviorInput(field));
-    });
-  }
-
-  if (typeof updateElectricAoe3dBehaviorReadout === "function") {
-    const commitElectricAoe3dBehaviorInput = (field = null) => {
-      if (field) {
-        const numeric = Number(field.value);
-        field.classList.toggle("isInvalid", !Number.isFinite(numeric));
-        if (!Number.isFinite(numeric)) return;
-      }
-      updateElectricAoe3dBehaviorReadout();
-      if (typeof actions.applyElectricAoe3d === "function") actions.applyElectricAoe3d();
-    };
-    [
-      els.electricAoe3dSpellDurationMs,
-      els.electricAoe3dDominantBoltMinRangeBo,
-      els.electricAoe3dDominantBoltMaxRangeBo,
-      els.electricAoe3dDominantBoltEnemyMinRangeBo,
-      els.electricAoe3dDominantBoltEnemyMaxRangeBo,
-      els.electricAoe3dDominantBoltEnvironmentFrequencyMinMs,
-      els.electricAoe3dDominantBoltEnvironmentFrequencyMaxMs,
-      els.electricAoe3dDominantBoltEnemyFrequencyMinMs,
-      els.electricAoe3dDominantBoltEnemyFrequencyMaxMs,
-      els.electricAoe3dDominantBoltDamageMin,
-      els.electricAoe3dDominantBoltDamageMax,
-      els.electricAoe3dDominantBoltDetourRatioMax,
-    ].forEach((field) => {
-      if (!field) return;
-      field.addEventListener("input", updateElectricAoe3dBehaviorReadout);
-      field.addEventListener("keydown", (event) => {
-        if (event.key !== "Enter") return;
-        event.preventDefault();
-        commitElectricAoe3dBehaviorInput(field);
-      });
-      field.addEventListener("change", () => commitElectricAoe3dBehaviorInput(field));
-      field.addEventListener("blur", () => commitElectricAoe3dBehaviorInput(field));
     });
   }
 

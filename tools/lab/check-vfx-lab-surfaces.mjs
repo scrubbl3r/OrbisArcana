@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 
 import { createLabEffectSurfaces } from "../../labs/vfx-studio/vfx-studio-surfaces.js";
 import {
-  buildElectricAoe3dBehaviorModule,
   buildFlameAoe3dBehaviorModule,
   buildLivePresetModuleForBaseEffect,
   buildTesla1BehaviorModule,
@@ -46,7 +45,6 @@ function createSentinelAdapter(name) {
 }
 
 const surfaces = createLabEffectSurfaces({
-  buildElectricAoe3dBehaviorModule,
   buildFlameAoe3dBehaviorModule,
   buildTesla1BehaviorModule,
   buildTeleportBehaviorModule,
@@ -54,7 +52,6 @@ const surfaces = createLabEffectSurfaces({
   createBubbleShield3dAuthoringAdapter: createSentinelAdapter("bubble-shield-3d"),
   createBubbleShieldAuthoringAdapter: createSentinelAdapter("bubble-shield"),
   createElectricAoeAuthoringAdapter: createSentinelAdapter("electric-aoe"),
-  createElectricAoe3dAuthoringAdapter: createSentinelAdapter("electric-aoe-3d"),
   createFlameAoe3dAuthoringAdapter: createSentinelAdapter("flame-aoe-3d"),
   createFlameAoeAuthoringAdapter: createSentinelAdapter("flame-aoe"),
   createHealAuthoringAdapter: createSentinelAdapter("heal"),

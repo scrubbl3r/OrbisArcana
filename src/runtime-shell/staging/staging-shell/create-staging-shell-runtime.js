@@ -2085,7 +2085,7 @@ function initShellReceiverVfxRuntime(shellContext) {
     playBubbleShield3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playBubbleShield3d", payload, "active_stage_bubble_shield3d_missing"),
     playShockwave3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playShockwave3d", payload, "active_stage_shockwave3d_missing"),
     playFlameAoe3dRuntime: (payload = {}) => callActiveShellRootAoeStageMethod(shellContext, "playFlameAoe3d", payload, "active_stage_flame_aoe3d_missing"),
-    playElectricAoe3dRuntime: (payload = {}) => callActiveShellRootAoeStageMethod(shellContext, "playElectricAoe3d", payload, "active_stage_tesla1_missing"),
+    playTesla1Runtime: (payload = {}) => callActiveShellRootAoeStageMethod(shellContext, "playTesla1", payload, "active_stage_tesla1_missing"),
     requestCameraTravel: (payload = {}) => {
       const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
       return cameraRuntime && typeof cameraRuntime.requestTravel === "function"
@@ -2213,7 +2213,15 @@ async function initShellReceiverHostRuntime(shellContext) {
       setOrbInputSuppressed: (next) => { runtime.orbInputSuppressed = !!next; },
       playElectricAoe: (payload = {}) => {
         const shellVfx = runtime.vfx || null;
-        return shellVfx && typeof shellVfx.playElectricAoe === "function" ? shellVfx.playElectricAoe(payload) : { handled: false };
+        return shellVfx && typeof shellVfx.playTesla1 === "function"
+          ? shellVfx.playTesla1({ ...(payload && typeof payload === "object" ? payload : {}), effect: "tesla-1" })
+          : shellVfx && typeof shellVfx.playElectricAoe === "function"
+            ? shellVfx.playElectricAoe({ ...(payload && typeof payload === "object" ? payload : {}), effect: "tesla-1" })
+            : { handled: false };
+      },
+      playTesla1: (payload = {}) => {
+        const shellVfx = runtime.vfx || null;
+        return shellVfx && typeof shellVfx.playTesla1 === "function" ? shellVfx.playTesla1(payload) : { handled: false };
       },
       playOrbNod: (payload = {}) => {
         const shellVfx = runtime.vfx || null;
@@ -2821,7 +2829,7 @@ async function initShellKwsRuntime(shellContext) {
     createRuleEnginePreviewSystem,
     createSpellCastExecutor,
     createSpellActionHandlersImported,
-    executeAoeElectric,
+    executeTesla1,
     executeAoeFlame,
     executeTeleport,
     executeBubbleShield,
@@ -2888,7 +2896,7 @@ async function initShellKwsRuntime(shellContext) {
       flameAoe: FLAME_AOE_PRESET_DEFAULT,
       flameAoe3d: FLAME_AOE_3D_PRESET_DEFAULT,
       electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
-      electricAoe3d: TESLA_1_PRESET_DEFAULT,
+      tesla1: TESLA_1_PRESET_DEFAULT,
       teleport: TELEPORT_PRESET_DEFAULT,
       orbNod: ORB_NOD_PRESET_DEFAULT,
       orbNod3d: ORB_NOD_3D_PRESET_DEFAULT,
@@ -2965,7 +2973,7 @@ async function initShellKwsRuntime(shellContext) {
       grantOrbGraceRuntime,
     },
     executors: {
-      executeAoeElectric,
+      executeTesla1,
       executeAoeFlame,
       executeTeleport,
       executeShockwave,

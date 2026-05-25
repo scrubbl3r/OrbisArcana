@@ -6,7 +6,6 @@ export { FLAME_AOE_PRESET_DEFAULT } from "./flame-aoe-default.js";
 export { FLAME_AOE_3D_PRESET_DEFAULT } from "./flame-aoe-3d-default.js?v=20260520235547";
 export { HEAL_PRESET_DEFAULT } from "./heal-default.js?v=20260517b";
 export { ELECTRIC_AOE_PRESET_DEFAULT } from "./electric-aoe-default.js";
-export { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "./electric-aoe-3d-default.js?v=20260522172828";
 export { TESLA_1_PRESET_DEFAULT } from "./tesla-1-default.js";
 export { ORB_SHATTER_PRESET_DEFAULT } from "./orb-shatter-default.js";
 export { ORB_NOD_PRESET_DEFAULT } from "./orb-nod-default.js";

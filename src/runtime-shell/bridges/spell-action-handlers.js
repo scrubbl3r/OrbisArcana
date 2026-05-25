@@ -4,6 +4,7 @@ import {
 
 export function createSpellActionHandlers({
   eventBus,
+  playTesla1,
   playElectricAoe,
   playFlameAoe,
   playFrostAoe,
@@ -11,7 +12,7 @@ export function createSpellActionHandlers({
   toggleFloat,
   enableOrbSpin,
   teleportOrbToSpawnNeutralizePhysics,
-  executeAoeElectric,
+  executeTesla1,
   executeAoeFlame,
   executeAoeFrost,
   executeTeleport,
@@ -45,9 +46,26 @@ export function createSpellActionHandlers({
   }
 
   return {
+    play_tesla_1(payload = {}) {
+      if (typeof executeTesla1 !== "function") return;
+      const result = executeTesla1({
+        playTesla1: typeof playTesla1 === "function" ? playTesla1 : playElectricAoe,
+        payload: {
+          ...(payload && typeof payload === "object" ? payload : {}),
+          effect: "tesla-1",
+        },
+      });
+      return result && result.handled ? true : false;
+    },
     play_electric_aoe(payload = {}) {
-      if (typeof executeAoeElectric !== "function") return;
-      const result = executeAoeElectric({ playElectricAoe, payload });
+      if (typeof executeTesla1 !== "function") return;
+      const result = executeTesla1({
+        playTesla1: typeof playTesla1 === "function" ? playTesla1 : playElectricAoe,
+        payload: {
+          ...(payload && typeof payload === "object" ? payload : {}),
+          effect: "tesla-1",
+        },
+      });
       return result && result.handled ? true : false;
     },
     play_flame_aoe(payload = {}) {

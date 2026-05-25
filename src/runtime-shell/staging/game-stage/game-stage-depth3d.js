@@ -1299,17 +1299,14 @@ export function createGameStageDepth3dLayer({
         damageAffected: Number(root.dataset.enemy3dLastFlameAoeDamageCount) || 0,
       };
     },
-    playElectricAoe3d(payload = {}) {
+    playTesla1(payload = {}) {
       const callAtMs = performance.now();
       const incomingPayload = payload && typeof payload === "object" ? payload : Object.create(null);
-      const incomingEffect = String(incomingPayload.effect || incomingPayload.effectId || incomingPayload.baseEffect || "").trim().toLowerCase();
-      const payloadIsTesla1 = incomingEffect === "tesla-1" || incomingEffect === "spell.tesla_1";
       if (perfTrace && typeof perfTrace.mark === "function") {
         perfTrace.mark("tesla1.gameStage.called", {
           disposed: !!disposed,
           hasOrbModel: !!(orb3dActorRuntime && orb3dActorRuntime.hasModel && orb3dActorRuntime.hasModel()),
           hasOrbWorld: !!currentOrbWorldPosition,
-          payloadIsTesla1,
           payloadKeys: Object.keys(incomingPayload).slice(0, 12),
         });
       }
@@ -1323,9 +1320,7 @@ export function createGameStageDepth3dLayer({
         endMaxBo: TESLA_1_PRESET_DEFAULT.haloFieldBoltEndMaxBo,
       });
       clearFlameAoe3dRuntime("tesla1_started");
-      const result = tesla1Runtime.play(payloadIsTesla1
-        ? { ...incomingPayload, effect: "tesla-1" }
-        : { effect: "tesla-1" });
+      const result = tesla1Runtime.play({ ...incomingPayload, effect: "tesla-1" });
       root.dataset.enemy3dLastTesla1StageCallAt = String(Math.round(callAtMs));
       if (result && result.handled) {
         renderLoop.scheduleAnimation();

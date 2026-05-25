@@ -58,9 +58,9 @@ export function createGameStageRuntimeAdapter({
         ? depth3dRuntime.playFlameAoe3d(payload)
         : { handled: false, skipped: "depth3d_runtime_missing" };
     },
-    playElectricAoe3d(payload = {}) {
-      return depth3dRuntime && typeof depth3dRuntime.playElectricAoe3d === "function"
-        ? depth3dRuntime.playElectricAoe3d(payload)
+    playTesla1(payload = {}) {
+      return depth3dRuntime && typeof depth3dRuntime.playTesla1 === "function"
+        ? depth3dRuntime.playTesla1(payload)
         : { handled: false, skipped: "depth3d_runtime_missing" };
     },
     clearRootAoe3d(reason = "stage_inactive") {

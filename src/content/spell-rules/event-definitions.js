@@ -3,7 +3,7 @@
 
 export const EVENT_DEFINITIONS = Object.freeze([
   Object.freeze({
-    id: "aoe_electric",
+    id: "tesla_1",
     type: "event",
     defaultArgs: Object.freeze({ ms: 900 }),
   }),

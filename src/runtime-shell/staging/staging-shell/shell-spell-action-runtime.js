@@ -34,9 +34,18 @@ export function createShellSpellActionRuntime({
 
   const shellSpellActionHandlers = createSpellActionHandlersImported({
     eventBus,
+    playTesla1: (payload = {}) => (
+      getRuntimeVfx() && typeof getRuntimeVfx().playTesla1 === "function"
+        ? getRuntimeVfx().playTesla1(payload)
+        : getRuntimeVfx() && typeof getRuntimeVfx().playElectricAoe === "function"
+          ? getRuntimeVfx().playElectricAoe({ ...(payload && typeof payload === "object" ? payload : {}), effect: "tesla-1" })
+          : { handled: false }
+    ),
     playElectricAoe: (payload = {}) => (
-      getRuntimeVfx() && typeof getRuntimeVfx().playElectricAoe === "function"
-        ? getRuntimeVfx().playElectricAoe(payload)
+      getRuntimeVfx() && typeof getRuntimeVfx().playTesla1 === "function"
+        ? getRuntimeVfx().playTesla1({ ...(payload && typeof payload === "object" ? payload : {}), effect: "tesla-1" })
+        : getRuntimeVfx() && typeof getRuntimeVfx().playElectricAoe === "function"
+          ? getRuntimeVfx().playElectricAoe({ ...(payload && typeof payload === "object" ? payload : {}), effect: "tesla-1" })
         : { handled: false }
     ),
     playFlameAoe: (payload = {}) => {
@@ -145,7 +154,7 @@ export function createShellSpellActionRuntime({
       });
     },
     playFrostAoe: null,
-    executeAoeElectric: executors.executeAoeElectric,
+    executeTesla1: executors.executeTesla1,
     executeAoeFlame: executors.executeAoeFlame,
     executeAoeFrost: null,
     executeTeleport: executors.executeTeleport,

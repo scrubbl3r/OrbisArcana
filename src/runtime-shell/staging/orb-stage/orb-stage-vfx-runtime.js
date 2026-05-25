@@ -35,7 +35,7 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
       durationMs: 10000,
     },
     flame3d: { ...FLAME_AOE_3D_PRESET_DEFAULT },
-    electric3d: { ...TESLA_1_PRESET_DEFAULT },
+    tesla1: { ...TESLA_1_PRESET_DEFAULT },
     electric: {
       startRatio: 0.80,
       endRatio: 2.0,
@@ -95,7 +95,7 @@ export function initOrbStageReceiverVfxRuntime({
   playBubbleShield3dRuntime = null,
   playShockwave3dRuntime = null,
   playFlameAoe3dRuntime = null,
-  playElectricAoe3dRuntime = null,
+  playTesla1Runtime = null,
   requestCameraTravel = null,
   cancelCameraTravel = null,
 } = {}) {
@@ -162,23 +162,20 @@ export function initOrbStageReceiverVfxRuntime({
     return { handled: false };
   }
 
-  function playOrbStageElectricAoeFallback(payload = {}) {
+  function playOrbStageTesla1Fallback(payload = {}) {
     const incomingPayload = payload && typeof payload === "object" ? payload : Object.create(null);
-    const defaultPayload = vfxDefaults && vfxDefaults.electric3d && typeof vfxDefaults.electric3d === "object"
-      ? vfxDefaults.electric3d
+    const defaultPayload = vfxDefaults && vfxDefaults.tesla1 && typeof vfxDefaults.tesla1 === "object"
+      ? vfxDefaults.tesla1
       : Object.create(null);
-    const effectId = String(incomingPayload.effect || incomingPayload.effectId || incomingPayload.baseEffect || "").trim().toLowerCase();
-    const payloadIsTesla1 = effectId === "tesla-1" || effectId === "spell.tesla_1";
+    const playRuntime = playTesla1Runtime;
     markTrace("tesla1.orbStageFallback.called", {
-      has3dRuntime: typeof playElectricAoe3dRuntime === "function",
+      has3dRuntime: typeof playRuntime === "function",
       payloadKeys: Object.keys(incomingPayload).slice(0, 12),
-      payloadIsTesla1,
     });
-    if (typeof playElectricAoe3dRuntime === "function") {
-      const result = playElectricAoe3dRuntime({
-        ...incomingPayload,
+    if (typeof playRuntime === "function") {
+      const result = playRuntime({
         ...defaultPayload,
-        ...(payloadIsTesla1 ? incomingPayload : Object.create(null)),
+        ...incomingPayload,
         effect: "tesla-1",
       });
       markTrace("tesla1.orbStageFallback.result", {
@@ -276,7 +273,8 @@ export function initOrbStageReceiverVfxRuntime({
         targetId: "shockwave",
         runtime: {
           playFlameAoe: () => playOrbStageFlameAoeFallback(),
-          playElectricAoe: (payload = {}) => playOrbStageElectricAoeFallback(payload),
+          playTesla1: (payload = {}) => playOrbStageTesla1Fallback(payload),
+          playElectricAoe: (payload = {}) => playOrbStageTesla1Fallback(payload),
           playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
           triggerShockwave: () => triggerOrbStageShockwaveFallback(),
           activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
@@ -285,13 +283,14 @@ export function initOrbStageReceiverVfxRuntime({
       if (dispatched && dispatched.handled) return dispatched;
       return triggerOrbStageShockwaveFallback();
     },
-    playElectricAoe(payload = {}) {
+    playTesla1(payload = {}) {
       const dispatched = dispatchRuntimeEffect({
         targetKind: "spell",
-        targetId: "aoe_electric",
+        targetId: "tesla_1",
         runtime: {
           playFlameAoe: () => playOrbStageFlameAoeFallback(),
-          playElectricAoe: (payload = {}) => playOrbStageElectricAoeFallback(payload),
+          playTesla1: (payload = {}) => playOrbStageTesla1Fallback(payload),
+          playElectricAoe: (payload = {}) => playOrbStageTesla1Fallback(payload),
           playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
           triggerShockwave: () => triggerOrbStageShockwaveFallback(),
           activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
@@ -299,7 +298,10 @@ export function initOrbStageReceiverVfxRuntime({
         payload,
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return playOrbStageElectricAoeFallback(payload);
+      return playOrbStageTesla1Fallback(payload);
+    },
+    playElectricAoe(payload = {}) {
+      return this.playTesla1({ ...(payload && typeof payload === "object" ? payload : {}), effect: "tesla-1" });
     },
     playFlameAoe(payload = {}) {
       markTrace("flameAoe.shellVfx.called", {
@@ -310,7 +312,8 @@ export function initOrbStageReceiverVfxRuntime({
         targetId: "aoe_flame",
         runtime: {
           playFlameAoe: (nextPayload = {}) => playOrbStageFlameAoeFallback(nextPayload),
-          playElectricAoe: (payload = {}) => playOrbStageElectricAoeFallback(payload),
+          playTesla1: (payload = {}) => playOrbStageTesla1Fallback(payload),
+          playElectricAoe: (payload = {}) => playOrbStageTesla1Fallback(payload),
           playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
           triggerShockwave: () => triggerOrbStageShockwaveFallback(),
           activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
@@ -325,7 +328,8 @@ export function initOrbStageReceiverVfxRuntime({
         targetId: "bubble_shield",
         runtime: {
           playFlameAoe: () => playOrbStageFlameAoeFallback(),
-          playElectricAoe: (payload = {}) => playOrbStageElectricAoeFallback(payload),
+          playTesla1: (payload = {}) => playOrbStageTesla1Fallback(payload),
+          playElectricAoe: (payload = {}) => playOrbStageTesla1Fallback(payload),
           playShockwave3d: (payload = {}) => playOrbStageShockwave3dFallback(payload),
           triggerShockwave: () => triggerOrbStageShockwaveFallback(),
           activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),

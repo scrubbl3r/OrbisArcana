@@ -3,10 +3,10 @@
 
 export const EVENT_RUNTIME_BINDINGS = Object.freeze([
   Object.freeze({
-    id: "aoe_electric",
+    id: "tesla_1",
     runtime: Object.freeze({
       kind: "cast_action",
-      castActionId: "aoe_electric",
+      castActionId: "tesla_1",
     }),
   }),
   Object.freeze({

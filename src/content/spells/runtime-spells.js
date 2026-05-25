@@ -39,7 +39,7 @@ export const RUNTIME_WORDS = Object.freeze([
     slot: "FB",
     intent: "spell.electrum",
     cooldownMs: 900,
-    castActionId: "aoe_electric",
+    castActionId: "tesla_1",
   },
 ]);
 

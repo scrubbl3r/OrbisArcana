@@ -61,11 +61,11 @@ export const INTERACTION_GRAPH_V2 = {
       on: { word: "salubrium" },
       trigger: { spell: "heal" },
     },
-    // ELECTRIC AOE
+    // TESLA 1
     {
-      id: "electrum_cast_electric_aoe",
+      id: "electrum_cast_tesla_1",
       on: { word: "electrum" },
-      trigger: { spell: "aoe_electric" },
+      trigger: { spell: "tesla_1" },
       grace: {},
     },
     // PYRO AOE CHAIN
