@@ -592,8 +592,8 @@ export function createTesla1Runtime(options = {}) {
       boltCountMax: config.haloBoltCountMax,
       startMin: bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMinBo),
       startMax: bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo),
-      endMin: bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMinBo),
-      endMax: bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo),
+      endMin: bo * config.haloFieldBoltEndMinBo,
+      endMax: bo * config.haloFieldBoltEndMaxBo,
       bo,
       boltColor: rgbColor(config.boltShaderColorR, config.boltShaderColorG, config.boltShaderColorB),
       intensity: config.boltShaderEnabled ? config.boltShaderIntensity : 0,
@@ -686,7 +686,7 @@ export function createTesla1Runtime(options = {}) {
     updateStrikeState(config, bo, nowMs);
     const maxRangeBo = Math.max(
       config.haloFieldShellRadiusBo,
-      ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo,
+      config.haloFieldBoltEndMaxBo,
       ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo,
       ORB_RADIUS_BO + config.haloStrikeRangeMaxBo
     );
