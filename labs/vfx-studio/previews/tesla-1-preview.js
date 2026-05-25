@@ -565,12 +565,18 @@ export function createTesla1Preview({
   function readHaloStrikeConfig() {
     const rangeMin = readInputNumber(els.tesla1HaloStrikeRangeMinBo, 1, 0, 64);
     const cooldownMinMs = Math.round(readInputNumber(els.tesla1HaloStrikeCooldownMinMs, 650, 16, 60000));
+    const damageMin = readInputNumber(els.tesla1HaloStrikeDamageMin, 1, 0, 10000);
+    const stunMinMs = Math.round(readInputNumber(els.tesla1HaloStrikeStunMinMs, 250, 0, 60000));
     return Object.freeze({
       enabled: readInputBoolean(els.tesla1HaloStrikeEnabled, false),
       rangeMin,
       rangeMax: readInputNumber(els.tesla1HaloStrikeRangeMaxBo, 5, Math.max(0.01, rangeMin), 64),
       cooldownMinMs,
       cooldownMaxMs: Math.round(readInputNumber(els.tesla1HaloStrikeCooldownMaxMs, 1400, cooldownMinMs, 60000)),
+      damageMin,
+      damageMax: readInputNumber(els.tesla1HaloStrikeDamageMax, 3, damageMin, 10000),
+      stunMinMs,
+      stunMaxMs: Math.round(readInputNumber(els.tesla1HaloStrikeStunMaxMs, 700, stunMinMs, 60000)),
     });
   }
 
@@ -861,6 +867,10 @@ export function createTesla1Preview({
       els.tesla1HaloStrikeRangeMaxBo,
       els.tesla1HaloStrikeCooldownMinMs,
       els.tesla1HaloStrikeCooldownMaxMs,
+      els.tesla1HaloStrikeDamageMin,
+      els.tesla1HaloStrikeDamageMax,
+      els.tesla1HaloStrikeStunMinMs,
+      els.tesla1HaloStrikeStunMaxMs,
       els.tesla1LightningShapeMacroNoiseScale,
       els.tesla1LightningShapeMacroNoiseStrength,
       els.tesla1LightningShapeMicroNoiseScale,

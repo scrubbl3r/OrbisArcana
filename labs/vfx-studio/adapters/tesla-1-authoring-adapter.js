@@ -69,6 +69,8 @@ export function createTesla1AuthoringAdapter({
     const haloBoltTurnDampingMin = readNumber(els.tesla1HaloBoltTurnDampingMin, tesla1PresetDefault.haloBoltTurnDampingMin, 0, 1);
     const haloStrikeRangeMinBo = readNumber(els.tesla1HaloStrikeRangeMinBo, tesla1BehaviorDefault.haloStrikeRangeMinBo, 0, 64);
     const haloStrikeCooldownMinMs = Math.round(readNumber(els.tesla1HaloStrikeCooldownMinMs, tesla1BehaviorDefault.haloStrikeCooldownMinMs, 16, 60000));
+    const haloStrikeDamageMin = readNumber(els.tesla1HaloStrikeDamageMin, tesla1BehaviorDefault.haloStrikeDamageMin, 0, 10000);
+    const haloStrikeStunMinMs = Math.round(readNumber(els.tesla1HaloStrikeStunMinMs, tesla1BehaviorDefault.haloStrikeStunMinMs, 0, 60000));
     const fallbackShapeHz = tesla1PresetDefault.lightningShapeNoiseSpeed ?? 3;
     const lightningShapeNoiseSpeedMin = readNumber(els.tesla1LightningShapeNoiseSpeedMin, tesla1PresetDefault.lightningShapeNoiseSpeedMin ?? fallbackShapeHz, 0, 20);
     return Object.freeze({
@@ -92,6 +94,10 @@ export function createTesla1AuthoringAdapter({
       haloStrikeRangeMaxBo: readNumber(els.tesla1HaloStrikeRangeMaxBo, tesla1BehaviorDefault.haloStrikeRangeMaxBo, Math.max(0.01, haloStrikeRangeMinBo), 64),
       haloStrikeCooldownMinMs,
       haloStrikeCooldownMaxMs: Math.round(readNumber(els.tesla1HaloStrikeCooldownMaxMs, tesla1BehaviorDefault.haloStrikeCooldownMaxMs, haloStrikeCooldownMinMs, 60000)),
+      haloStrikeDamageMin,
+      haloStrikeDamageMax: readNumber(els.tesla1HaloStrikeDamageMax, tesla1BehaviorDefault.haloStrikeDamageMax, haloStrikeDamageMin, 10000),
+      haloStrikeStunMinMs,
+      haloStrikeStunMaxMs: Math.round(readNumber(els.tesla1HaloStrikeStunMaxMs, tesla1BehaviorDefault.haloStrikeStunMaxMs, haloStrikeStunMinMs, 60000)),
       lightningShapeMacroNoiseScale: readNumber(els.tesla1LightningShapeMacroNoiseScale, tesla1PresetDefault.lightningShapeMacroNoiseScale ?? tesla1PresetDefault.lightningShapeNoiseScale, 0.1, 200),
       lightningShapeMacroNoiseStrength: readNumber(els.tesla1LightningShapeMacroNoiseStrength, tesla1PresetDefault.lightningShapeMacroNoiseStrength ?? tesla1PresetDefault.lightningShapeNoiseStrength, 0, 0.5),
       lightningShapeMicroNoiseScale: readNumber(els.tesla1LightningShapeMicroNoiseScale, tesla1PresetDefault.lightningShapeMicroNoiseScale, 0.1, 300),
@@ -135,6 +141,10 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1HaloStrikeRangeMaxBo) els.tesla1HaloStrikeRangeMaxBo.value = String(source.haloStrikeRangeMaxBo ?? tesla1BehaviorDefault.haloStrikeRangeMaxBo);
     if (els.tesla1HaloStrikeCooldownMinMs) els.tesla1HaloStrikeCooldownMinMs.value = String(source.haloStrikeCooldownMinMs ?? tesla1BehaviorDefault.haloStrikeCooldownMinMs);
     if (els.tesla1HaloStrikeCooldownMaxMs) els.tesla1HaloStrikeCooldownMaxMs.value = String(source.haloStrikeCooldownMaxMs ?? tesla1BehaviorDefault.haloStrikeCooldownMaxMs);
+    if (els.tesla1HaloStrikeDamageMin) els.tesla1HaloStrikeDamageMin.value = String(source.haloStrikeDamageMin ?? tesla1BehaviorDefault.haloStrikeDamageMin);
+    if (els.tesla1HaloStrikeDamageMax) els.tesla1HaloStrikeDamageMax.value = String(source.haloStrikeDamageMax ?? tesla1BehaviorDefault.haloStrikeDamageMax);
+    if (els.tesla1HaloStrikeStunMinMs) els.tesla1HaloStrikeStunMinMs.value = String(source.haloStrikeStunMinMs ?? tesla1BehaviorDefault.haloStrikeStunMinMs);
+    if (els.tesla1HaloStrikeStunMaxMs) els.tesla1HaloStrikeStunMaxMs.value = String(source.haloStrikeStunMaxMs ?? tesla1BehaviorDefault.haloStrikeStunMaxMs);
     if (els.tesla1LightningShapeMacroNoiseScale) els.tesla1LightningShapeMacroNoiseScale.value = String(source.lightningShapeMacroNoiseScale ?? source.lightningShapeNoiseScale ?? 7);
     if (els.tesla1LightningShapeMacroNoiseStrength) els.tesla1LightningShapeMacroNoiseStrength.value = String(source.lightningShapeMacroNoiseStrength ?? source.lightningShapeNoiseStrength ?? 0.15);
     if (els.tesla1LightningShapeMicroNoiseScale) els.tesla1LightningShapeMicroNoiseScale.value = String(source.lightningShapeMicroNoiseScale ?? 42);
@@ -164,6 +174,10 @@ export function createTesla1AuthoringAdapter({
       haloStrikeRangeMaxBo: settings.haloStrikeRangeMaxBo,
       haloStrikeCooldownMinMs: settings.haloStrikeCooldownMinMs,
       haloStrikeCooldownMaxMs: settings.haloStrikeCooldownMaxMs,
+      haloStrikeDamageMin: settings.haloStrikeDamageMin,
+      haloStrikeDamageMax: settings.haloStrikeDamageMax,
+      haloStrikeStunMinMs: settings.haloStrikeStunMinMs,
+      haloStrikeStunMaxMs: settings.haloStrikeStunMaxMs,
     });
   }
 
@@ -171,7 +185,7 @@ export function createTesla1AuthoringAdapter({
     if (!els.tesla1BehaviorReadout) return;
     const cfg = readBehaviorPreviewConfig(els);
     els.tesla1BehaviorReadout.textContent = cfg.haloStrikeEnabled
-      ? `Halo strike range ${cfg.haloStrikeRangeMinBo}-${cfg.haloStrikeRangeMaxBo} BO. Cooldown ${cfg.haloStrikeCooldownMinMs}-${cfg.haloStrikeCooldownMaxMs}ms.`
+      ? `Halo strike range ${cfg.haloStrikeRangeMinBo}-${cfg.haloStrikeRangeMaxBo} BO. Cooldown ${cfg.haloStrikeCooldownMinMs}-${cfg.haloStrikeCooldownMaxMs}ms. Damage ${cfg.haloStrikeDamageMin}-${cfg.haloStrikeDamageMax}. Stun ${cfg.haloStrikeStunMinMs}-${cfg.haloStrikeStunMaxMs}ms.`
       : "Halo strike disabled.";
   }
 

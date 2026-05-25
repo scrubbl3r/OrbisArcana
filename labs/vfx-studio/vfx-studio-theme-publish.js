@@ -264,6 +264,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
 	        "haloBoltDispersion",
 	        "haloStrikeEnabled", "haloStrikeRangeMinBo", "haloStrikeRangeMaxBo",
 	        "haloStrikeCooldownMinMs", "haloStrikeCooldownMaxMs",
+	        "haloStrikeDamageMin", "haloStrikeDamageMax",
+	        "haloStrikeStunMinMs", "haloStrikeStunMaxMs",
 	        "lightningShapeMacroNoiseScale", "lightningShapeMacroNoiseStrength",
         "lightningShapeMicroNoiseScale", "lightningShapeMicroNoiseStrength",
         "lightningShapeNoiseSpeedMin", "lightningShapeNoiseSpeedMax",
@@ -693,6 +695,8 @@ export function buildTesla1BehaviorModule(params) {
   const p = params && typeof params === "object" ? params : {};
   const rangeMin = toNum(p.haloStrikeRangeMinBo, 1);
   const cooldownMin = Math.round(toNum(p.haloStrikeCooldownMinMs, 650));
+  const damageMin = toNum(p.haloStrikeDamageMin, 1);
+  const stunMin = Math.round(toNum(p.haloStrikeStunMinMs, 250));
   return [
     "export const TESLA_1_BEHAVIOR_DEFAULT = Object.freeze({",
     "  enabled: true,",
@@ -701,6 +705,10 @@ export function buildTesla1BehaviorModule(params) {
     `  haloStrikeRangeMaxBo: ${toNum(p.haloStrikeRangeMaxBo, Math.max(0.01, rangeMin)).toFixed(2)},`,
     `  haloStrikeCooldownMinMs: ${cooldownMin},`,
     `  haloStrikeCooldownMaxMs: ${Math.round(toNum(p.haloStrikeCooldownMaxMs, cooldownMin))},`,
+    `  haloStrikeDamageMin: ${damageMin.toFixed(2)},`,
+    `  haloStrikeDamageMax: ${toNum(p.haloStrikeDamageMax, damageMin).toFixed(2)},`,
+    `  haloStrikeStunMinMs: ${stunMin},`,
+    `  haloStrikeStunMaxMs: ${Math.round(toNum(p.haloStrikeStunMaxMs, stunMin))},`,
     "});",
     "",
   ].join("\n");
