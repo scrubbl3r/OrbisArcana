@@ -83,6 +83,12 @@ function buildLightningFieldUniformValues({
   noiseStrength,
   noiseSpeedMin,
   noiseSpeedMax,
+  branchDensity,
+  branchLengthMin,
+  branchLengthMax,
+  branchAngleMin,
+  branchAngleMax,
+  branchNoiseStrength,
   ttlMinMs,
   ttlMaxMs,
   wanderSpeedMin,
@@ -117,6 +123,12 @@ function buildLightningFieldUniformValues({
     uNoiseStrength: clampNumber(noiseStrength, 0, 0.5, 0.03),
     uNoiseSpeedMin: clampNumber(noiseSpeedMin, 0, 20, 2),
     uNoiseSpeedMax: clampNumber(noiseSpeedMax, 0, 20, 3),
+    uBranchDensity: clampNumber(branchDensity, 0, 1, 0),
+    uBranchLengthMin: clampNumber(branchLengthMin, 0, 8 * Math.max(1, bo), 0.06 * Math.max(1, bo)),
+    uBranchLengthMax: clampNumber(branchLengthMax, 0, 8 * Math.max(1, bo), 0.22 * Math.max(1, bo)),
+    uBranchAngleMin: clampNumber(branchAngleMin, 0, 170, 35) * Math.PI / 180,
+    uBranchAngleMax: clampNumber(branchAngleMax, 0, 170, 80) * Math.PI / 180,
+    uBranchNoiseStrength: clampNumber(branchNoiseStrength, 0, 0.5, 0.08),
     uTtlMin: clampNumber(ttlMinMs, 16, 10000, 350) / 1000,
     uTtlMax: clampNumber(ttlMaxMs, 16, 10000, 900) / 1000,
     uWanderSpeedMin: clampNumber(wanderSpeedMin, 0, 4, 0.05),
@@ -167,6 +179,12 @@ function createLightningFieldMaterial(params) {
       uNoiseStrength: { value: values.uNoiseStrength },
       uNoiseSpeedMin: { value: values.uNoiseSpeedMin },
       uNoiseSpeedMax: { value: values.uNoiseSpeedMax },
+      uBranchDensity: { value: values.uBranchDensity },
+      uBranchLengthMin: { value: values.uBranchLengthMin },
+      uBranchLengthMax: { value: values.uBranchLengthMax },
+      uBranchAngleMin: { value: values.uBranchAngleMin },
+      uBranchAngleMax: { value: values.uBranchAngleMax },
+      uBranchNoiseStrength: { value: values.uBranchNoiseStrength },
       uTtlMin: { value: values.uTtlMin },
       uTtlMax: { value: values.uTtlMax },
       uWanderSpeedMin: { value: values.uWanderSpeedMin },
@@ -207,6 +225,12 @@ function createLightningFieldMaterial(params) {
       uniform float uNoiseStrength;
       uniform float uNoiseSpeedMin;
       uniform float uNoiseSpeedMax;
+      uniform float uBranchDensity;
+      uniform float uBranchLengthMin;
+      uniform float uBranchLengthMax;
+      uniform float uBranchAngleMin;
+      uniform float uBranchAngleMax;
+      uniform float uBranchNoiseStrength;
       uniform float uTtlMin;
       uniform float uTtlMax;
       uniform float uWanderSpeedMin;
@@ -295,6 +319,27 @@ function createLightningFieldMaterial(params) {
         float line = 0.1 / max(max(d / max(1.0, uBo), 0.0), 0.0001);
         vec3 bolt = clamp(1.0 - exp(-(line * uBoltColor) * 0.02), 0.0, 1.0);
         bolt *= smoothstep(len, len * (1.0 - uTipFade), abs(uv.y));
+
+        for (int branchIndex = 0; branchIndex < 3; branchIndex += 1) {
+          float bi = float(branchIndex);
+          float branchSeed = seed + bi * 23.17;
+          if (randomFloat(vec2(branchSeed, 311.0)) > uBranchDensity) continue;
+          float anchorT = mix(0.18, 0.82, randomFloat(vec2(branchSeed, 317.0)));
+          float side = randomFloat(vec2(branchSeed, 331.0)) < 0.5 ? -1.0 : 1.0;
+          float branchLen = mix(uBranchLengthMin, max(uBranchLengthMin, uBranchLengthMax), randomFloat(vec2(branchSeed, 337.0)));
+          float branchAngle = side * mix(uBranchAngleMin, max(uBranchAngleMin, uBranchAngleMax), randomFloat(vec2(branchSeed, 347.0)));
+          vec2 branchUv = rotate2(-branchAngle) * (uv - vec2(0.0, len * anchorT));
+          float branchNoiseFrame = stableFrame(uTime * max(1.0, uNoiseSpeedMin) + bi * 5.0);
+          float branchNoise = simpleNoise(branchUv / max(1.0, uBo) * uNoiseScale + snapshotOffset(branchSeed, branchNoiseFrame), 2.0) * 2.0 - 1.0;
+          branchUv.x += branchNoise * uBo * uBranchNoiseStrength * smoothstep(0.0, uBo * 0.12, abs(branchUv.y));
+          float branchH = 0.0;
+          float branchD = lineSdf(branchUv, vec2(0.0), vec2(0.0, branchLen), uLineWidth * 0.0045, branchH);
+          float branchLine = 0.08 / max(max(branchD / max(1.0, uBo), 0.0), 0.0001);
+          vec3 branchBolt = clamp(1.0 - exp(-(branchLine * uBoltColor) * 0.018), 0.0, 1.0);
+          branchBolt *= smoothstep(branchLen, branchLen * 0.65, abs(branchUv.y));
+          branchBolt *= smoothstep(0.02, 0.14, anchorT) * smoothstep(0.98, 0.78, anchorT);
+          bolt += branchBolt * 0.72;
+        }
 
         float flickerTime = mod(uTime, TIME_RING);
         float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(flickerTime * uFlickerHz * 6.2831853 + seed * 2.31));
@@ -436,6 +481,8 @@ export function createTesla1Preview({
     const turnDampingMax = readInputNumber(els.tesla1HaloBoltTurnDampingMax, 0.18, turnDampingMin, 1);
     const dispersion = readInputNumber(els.tesla1HaloBoltDispersion, 0.2, 0, 1);
     const noiseSpeedMin = readInputNumber(els.tesla1LightningShapeNoiseSpeedMin, 2, 0, 20);
+    const branchLengthMin = readInputNumber(els.tesla1LightningShapeBranchLengthMinBo, 0.06, 0, 8);
+    const branchAngleMin = readInputNumber(els.tesla1LightningShapeBranchAngleMinDeg, 35, 0, 170);
     return Object.freeze({
       boltCountMin: boltMin,
       boltCountMax: boltMax,
@@ -454,6 +501,12 @@ export function createTesla1Preview({
       noiseStrength: readInputNumber(els.tesla1LightningShapeNoiseStrength, 0.03, 0, 0.5),
       noiseSpeedMin,
       noiseSpeedMax: readInputNumber(els.tesla1LightningShapeNoiseSpeedMax, 3, noiseSpeedMin, 20),
+      branchDensity: readInputNumber(els.tesla1LightningShapeBranchDensity, 0, 0, 1),
+      branchLengthMin,
+      branchLengthMax: readInputNumber(els.tesla1LightningShapeBranchLengthMaxBo, 0.22, branchLengthMin, 8),
+      branchAngleMin,
+      branchAngleMax: readInputNumber(els.tesla1LightningShapeBranchAngleMaxDeg, 80, branchAngleMin, 170),
+      branchNoiseStrength: readInputNumber(els.tesla1LightningShapeBranchNoiseStrength, 0.08, 0, 0.5),
     });
   }
 
@@ -553,6 +606,12 @@ export function createTesla1Preview({
       noiseStrength: shape.noiseStrength,
       noiseSpeedMin: shape.noiseSpeedMin,
       noiseSpeedMax: shape.noiseSpeedMax,
+      branchDensity: shape.branchDensity,
+      branchLengthMin: bo * shape.branchLengthMin,
+      branchLengthMax: bo * shape.branchLengthMax,
+      branchAngleMin: shape.branchAngleMin,
+      branchAngleMax: shape.branchAngleMax,
+      branchNoiseStrength: shape.branchNoiseStrength,
       ttlMinMs: shape.ttlMinMs,
       ttlMaxMs: shape.ttlMaxMs,
       wanderSpeedMin: shape.wanderSpeedMin,
@@ -695,6 +754,12 @@ export function createTesla1Preview({
       els.tesla1LightningShapeNoiseStrength,
       els.tesla1LightningShapeNoiseSpeedMin,
       els.tesla1LightningShapeNoiseSpeedMax,
+      els.tesla1LightningShapeBranchDensity,
+      els.tesla1LightningShapeBranchLengthMinBo,
+      els.tesla1LightningShapeBranchLengthMaxBo,
+      els.tesla1LightningShapeBranchAngleMinDeg,
+      els.tesla1LightningShapeBranchAngleMaxDeg,
+      els.tesla1LightningShapeBranchNoiseStrength,
       els.tesla1BoltShaderEnabled,
       els.tesla1BoltShaderIntensity,
       els.tesla1BoltShaderTipFade,
