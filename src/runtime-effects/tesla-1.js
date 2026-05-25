@@ -676,11 +676,8 @@ export function createTesla1Runtime(options = {}) {
       ...(typeof getConfig === "function" ? getConfig() : {}),
       ...(payload && typeof payload === "object" ? payload : {}),
     });
-    const orbModel = typeof getOrbModel === "function" ? getOrbModel() : null;
     const orbRuntime = typeof getOrbRuntimePosition === "function" ? getOrbRuntimePosition() : null;
-    if (orbModel && group.parent === orbModel) {
-      group.position.set(0, 0, 0);
-    } else if (orbRuntime) {
+    if (orbRuntime) {
       group.position.set(Number(orbRuntime.x) || 0, Number(orbRuntime.y) || 0, Number(orbRuntime.z) || 0);
     }
     updateStrikeState(config, bo, nowMs);
@@ -719,8 +716,7 @@ export function createTesla1Runtime(options = {}) {
 
   function play(payload = {}) {
     clear();
-    const orbModel = typeof getOrbModel === "function" ? getOrbModel() : null;
-    const parent = orbModel || (typeof getParent === "function" ? getParent() : null);
+    const parent = typeof getParent === "function" ? getParent() : null;
     if (!parent) return { handled: false, skipped: "tesla1_parent_missing" };
     const config = normalizeTesla1RuntimeConfig({
       ...(typeof getConfig === "function" ? getConfig() : {}),
