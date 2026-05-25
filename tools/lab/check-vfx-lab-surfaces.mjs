@@ -51,7 +51,6 @@ const surfaces = createLabEffectSurfaces({
   createBankOrb3dAuthoringAdapter: createSentinelAdapter("bank-orb-3d"),
   createBubbleShield3dAuthoringAdapter: createSentinelAdapter("bubble-shield-3d"),
   createBubbleShieldAuthoringAdapter: createSentinelAdapter("bubble-shield"),
-  createElectricAoeAuthoringAdapter: createSentinelAdapter("electric-aoe"),
   createFlameAoe3dAuthoringAdapter: createSentinelAdapter("flame-aoe-3d"),
   createFlameAoeAuthoringAdapter: createSentinelAdapter("flame-aoe"),
   createHealAuthoringAdapter: createSentinelAdapter("heal"),

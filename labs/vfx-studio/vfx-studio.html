@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Orb VFX Tester — Electric AOE + Shield + Shockwave</title>
+  <title>Orb VFX Tester - Tesla + Shield + Shockwave</title>
   <link rel="stylesheet" href="../shell/lab-workspaces.css?v=20260425a" />
   <link rel="stylesheet" href="../../src/runtime-shell/ui/staging-ui.css?v=20260410-vfxlab-semantics" />
   <script type="importmap">
@@ -53,10 +53,6 @@
       --flame-stroke: rgba(255, 96, 24, 1);
       --flame-fill: rgba(255, 96, 24, 0.20);
 
-      /* Electric AOE */
-      --electric-d: 240px;
-      --electric-duration: 10000ms;
-      --electric-glow: rgba(120, 215, 255, 1);
       --lab-workspace-nav-muted: var(--text-muted);
       --lab-workspace-nav-active: var(--text-strong);
     }
@@ -919,26 +915,6 @@
       overflow:visible;
       pointer-events:none;
     }
-    .electricLayer{
-      position:absolute;
-      left:0;
-      top:0;
-      width:0;
-      height:0;
-      pointer-events:none;
-      overflow:visible;
-      z-index: 4;
-      mix-blend-mode: screen;
-    }
-    .electricSvg{
-      position:absolute;
-      left:0;
-      top:0;
-      transform: translate(-50%,-50%);
-      overflow:visible;
-      pointer-events:none;
-    }
-
     .section{
       border-top:1px solid rgba(var(--frame-rgb), .18);
       padding-top:12px;
@@ -1066,10 +1042,6 @@
         </div>
         <div class="previewLane" id="healPreviewRoot" data-preview-root hidden aria-hidden="true">
           <input id="healPreviewReadout" class="paramFieldInput" type="text" value="500 HP for 1 globe" readonly />
-        </div>
-        <div class="previewLane" id="electricPreviewRoot" data-preview-root hidden aria-hidden="true">
-          <div class="electricLayer" id="electricLaneLayer"></div>
-          <div class="orb atOrigin" id="electricLaneOrb"></div>
         </div>
         <div class="previewLane" id="orbBasePreviewRoot" data-preview-root hidden aria-hidden="true">
           <div class="orb atOrigin" id="orbBaseLaneOrb"></div>
@@ -2882,7 +2854,6 @@
     import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506c";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
-    import { createElectricAoeAuthoringAdapter } from "./adapters/electric-aoe-authoring-adapter.js?v=20260425d";
     import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260520aeo-diameter-a";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
@@ -2906,7 +2877,6 @@
     import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
-      ELECTRIC_AOE_PRESET_DEFAULT,
       ORB_NOD_3D_PRESET_DEFAULT,
       ORB_NOD_PRESET_DEFAULT,
       BUBBLE_SHIELD_PRESET_DEFAULT,
@@ -2948,7 +2918,6 @@
       createBankOrb3dAuthoringAdapter,
       createBubbleShield3dAuthoringAdapter,
       createBubbleShieldAuthoringAdapter,
-      createElectricAoeAuthoringAdapter,
       createFlameAoe3dAuthoringAdapter,
       createFlameAoeAuthoringAdapter,
       createHealAuthoringAdapter,
@@ -2996,7 +2965,6 @@
       shockwave3dPreviewRoot: $("shockwave3dPreviewRoot"),
       flamePreviewRoot: $("flamePreviewRoot"),
       healPreviewRoot: $("healPreviewRoot"),
-      electricPreviewRoot: $("electricPreviewRoot"),
       orbBasePreviewRoot: $("orbBasePreviewRoot"),
       orbTemplatePreviewRoot: $("orbTemplatePreviewRoot"),
       orb3dPreviewRoot: $("orb3dPreviewRoot"),
@@ -3185,13 +3153,6 @@
       healShaderPulseDurationMs: $("healShaderPulseDurationMs"),
       healShaderPulseEasing: $("healShaderPulseEasing"),
 
-      playElectric: $("playElectric"),
-      electricMs: $("electricMs"),
-      electricApplyDurationBtn: $("electricApplyDurationBtn"),
-      electricStartRatio: $("electricStartRatio"),
-      electricApplyStartRBtn: $("electricApplyStartRBtn"),
-      electricEndRatio: $("electricEndRatio"),
-      electricApplyEndRBtn: $("electricApplyEndRBtn"),
       orbBaseD: $("orbBaseD"),
       orbBaseApplyDiameterBtn: $("orbBaseApplyDiameterBtn"),
       orbBaseStroke: $("orbBaseStroke"),
@@ -3629,7 +3590,6 @@
       teleportBehaviorDefault: TELEPORT_BEHAVIOR_DEFAULT,
       bubbleShieldPresetDefault: BUBBLE_SHIELD_PRESET_DEFAULT,
       bubbleShield3dPresetDefault: BUBBLE_SHIELD_3D_PRESET_DEFAULT,
-	      electricAoePresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
 	      tesla1PresetDefault: TESLA_1_PRESET_DEFAULT,
 	      tesla1BehaviorDefault: TESLA_1_BEHAVIOR_DEFAULT,
       flameAoePresetDefault: FLAME_AOE_PRESET_DEFAULT,
@@ -4447,7 +4407,6 @@
       applyOrbLaneSsot(els.shockPreviewRoot);
       applyOrbLaneSsot(els.shockwave3dPreviewRoot);
       applyOrbLaneSsot(els.flamePreviewRoot);
-      applyOrbLaneSsot(els.electricPreviewRoot);
       setRootVar(els.shieldPreviewRoot, "--shield-d", GEOM.shieldD + "px");
       setRootVar(els.shieldPreviewRoot, "--shield-stroke", GEOM.shieldStroke + "px");
       applyOrbLaneSsot(els.orbBasePreviewRoot);
@@ -4546,7 +4505,6 @@
         shockwavePresetDefault: SHOCKWAVE_PRESET_DEFAULT,
         flamePresetDefault: FLAME_AOE_PRESET_DEFAULT,
         flameAoe3dBehaviorDefault: FLAME_AOE_BEHAVIOR_DEFAULT,
-	        electricPresetDefault: ELECTRIC_AOE_PRESET_DEFAULT,
         orbNod3dPresetDefault: ORB_NOD_3D_PRESET_DEFAULT,
         orbSpawnPresetDefault: ORB_SPAWN_PRESET_DEFAULT,
         updateTeleport3dBehaviorReadout,
@@ -4584,9 +4542,6 @@
       applyFlameControls,
       clearFlame,
       playFlame,
-      applyElectricControls,
-      clearElectric,
-      playElectric,
       applyOrbBase,
       applyOrbTemplate,
       clearOrbTemplate,
@@ -4640,7 +4595,6 @@
       if (typeof applyShock === "function") applyShock();
       if (typeof applyShockwave3d === "function") applyShockwave3d();
       if (typeof applyFlameControls === "function") applyFlameControls();
-      if (typeof applyElectricControls === "function") applyElectricControls();
       if (typeof applyOrbTemplate === "function") applyOrbTemplate();
       if (typeof applyOrb3d === "function") applyOrb3d();
       if (typeof applyOrbSpawn === "function") applyOrbSpawn();
@@ -4650,7 +4604,6 @@
       if (typeof applyWorldGlobe === "function") applyWorldGlobe();
       if (typeof applyOrbTeleport3d === "function") applyOrbTeleport3d();
       if (typeof applyFlameAoe3d === "function") applyFlameAoe3d();
-      if (typeof applyElectricAoe3d === "function") applyElectricAoe3d();
       if (typeof applyTesla1 === "function") applyTesla1();
       if (typeof applyBankOrb3d === "function") applyBankOrb3d();
     });
@@ -4700,9 +4653,6 @@
       }
       if (e.key.toLowerCase() === "f"){
         playFlame();
-      }
-      if (e.key.toLowerCase() === "e"){
-        playElectric();
       }
     });
   </script>

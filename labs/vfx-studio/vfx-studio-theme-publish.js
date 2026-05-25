@@ -118,7 +118,7 @@ function colorHexValue(v, fallback = 0xffffff) {
   return hexLiteral(v, fallback);
 }
 
-export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricDefaults) {
+export function buildLivePresetModuleForBaseEffect(baseEffect, params) {
   const p = params && typeof params === "object" ? params : {};
   switch (String(baseEffect || "")) {
     case "shockwave":
@@ -306,20 +306,6 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params, electricD
       const exportName = isTesla1 ? "TESLA_1_PRESET_DEFAULT" : "FLAME_AOE_3D_PRESET_DEFAULT";
       return `export const ${exportName} = Object.freeze(${JSON.stringify(settings, null, 2)});\n`;
     }
-    case "electric-aoe":
-      return [
-        "export const ELECTRIC_AOE_PRESET_DEFAULT = Object.freeze({",
-        `  startRatio: ${toNum(p.electricStartRatio, 0.83).toFixed(2)},`,
-        `  endRatio: ${toNum(p.electricEndRatio, 2.0).toFixed(2)},`,
-        `  durationMs: ${Math.round(toNum(p.electricMs, 10000))},`,
-        `  nodeCount: ${Math.round(toNum(electricDefaults && electricDefaults.nodeCount, 13))},`,
-        `  particleCount: ${Math.round(toNum(electricDefaults && electricDefaults.particleCount, 340))},`,
-        `  particleSpeed: ${toNum(electricDefaults && electricDefaults.particleSpeed, 0.62).toFixed(2)},`,
-        `  maxBoltJumpSq: ${Math.round(toNum(electricDefaults && electricDefaults.maxBoltJumpSq, 1200))},`,
-        `  startJitterRatio: ${toNum(electricDefaults && electricDefaults.startJitterRatio, 0.30).toFixed(2)},`,
-        "});",
-        "",
-      ].join("\n");
     case "teleport":
       return [
         "export const TELEPORT_PRESET_DEFAULT = Object.freeze({",
@@ -692,7 +678,6 @@ export function applyLabThemeDefaults({
   bubbleShieldPresetDefault,
   shockwavePresetDefault,
   flameAoePresetDefault,
-  electricAoePresetDefault,
 }) {
   if (!theme || typeof theme !== "object") return;
   applyGameThemeCssVars(theme);
@@ -756,14 +741,5 @@ export function applyLabThemeDefaults({
     if (els.flameFillG) els.flameFillG.value = String(Math.round(clampNum(flameFill.g, 0, 255, 96)));
     if (els.flameFillB) els.flameFillB.value = String(Math.round(clampNum(flameFill.b, 0, 255, 24)));
     if (els.flameFillA) els.flameFillA.value = String(clampNum(flameFill.a, 0, 1, 0.2).toFixed(2));
-  }
-  if (els.electricMs && electricAoePresetDefault) {
-    els.electricMs.value = String(Math.round(clamp(electricAoePresetDefault.durationMs, 200, 60000)));
-  }
-  if (els.electricStartRatio && electricAoePresetDefault) {
-    els.electricStartRatio.value = String(clamp(electricAoePresetDefault.startRatio, 0.02, 5).toFixed(2));
-  }
-  if (els.electricEndRatio && electricAoePresetDefault) {
-    els.electricEndRatio.value = String(clamp(electricAoePresetDefault.endRatio, 0.08, 12).toFixed(2));
   }
 }

@@ -4,7 +4,6 @@ import { createShockwavePreview } from "./previews/shockwave-preview.js?v=202604
 import { createShockwave3dPreview } from "./previews/shockwave-3d-preview.js?v=20260506a";
 import { createFlameAoePreview } from "./previews/flame-aoe-preview.js?v=20260425d";
 import { createHealPreview } from "./previews/heal-preview.js?v=20260517b";
-import { createElectricAoePreview } from "./previews/electric-aoe-preview.js?v=20260425d";
 import { createOrbBasePreview } from "./previews/orb-base-preview.js?v=20260425d";
 import { createOrbTemplatePreview } from "./previews/orb-template-preview.js?v=20260425d";
 import {
@@ -107,18 +106,6 @@ export function createStudioPreviewRegistry({
   actions.clearHeal = healPreview.clear;
   actions.playHeal = healPreview.play;
   healPreview.wire();
-
-  const electricPreview = createElectricAoePreview({
-    els: previewEls.electric,
-    clamp,
-    evenPx,
-    setVar: createScopedVarSetter(els.electricPreviewRoot),
-    electricPresetDefault: defaults.electricPresetDefault,
-  });
-  actions.applyElectricControls = electricPreview.apply;
-  actions.clearElectric = electricPreview.clear;
-  actions.playElectric = electricPreview.play;
-  electricPreview.wire();
 
   const orbBasePreview = createOrbBasePreview({
     els: {
@@ -276,7 +263,6 @@ export function createStudioPreviewRegistry({
     if (typeof actions.clearShock === "function") actions.clearShock();
     if (typeof actions.clearShockwave3d === "function") actions.clearShockwave3d();
     if (typeof actions.clearFlame === "function") actions.clearFlame();
-    if (typeof actions.clearElectric === "function") actions.clearElectric();
     if (typeof actions.clearOrbTemplate === "function") actions.clearOrbTemplate();
     if (typeof actions.clearOrb3d === "function") actions.clearOrb3d();
     if (typeof actions.clearOrbSpawn === "function") actions.clearOrbSpawn();

@@ -82,12 +82,6 @@ export function createStudioBootstrap({
       ...els,
       previewRoot: els.healPreviewRoot,
     }),
-    electric: Object.freeze({
-      ...els,
-      previewRoot: els.electricPreviewRoot,
-      electricLayer: getElementById("electricLaneLayer"),
-      orb: getElementById("electricLaneOrb"),
-    }),
     orbBase: Object.freeze({
       ...els,
       previewRoot: els.orbBasePreviewRoot,
@@ -203,7 +197,6 @@ export function createStudioBootstrap({
     defaults: Object.freeze({
       shockwavePresetDefault: defaults.shockwavePresetDefault,
       flamePresetDefault: defaults.flamePresetDefault,
-      electricPresetDefault: defaults.electricPresetDefault,
       orbNod3dPresetDefault: defaults.orbNod3dPresetDefault,
     }),
     getOrbBaseVisualState: buildCurrentLabOrbBaseVisualState,
@@ -318,7 +311,6 @@ export function createStudioBootstrap({
       playShield: () => studioPreviewRegistry.actions.playShield(),
       playShock: () => studioPreviewRegistry.actions.playShock(),
       playFlame: () => studioPreviewRegistry.actions.playFlame(),
-      playElectric: () => studioPreviewRegistry.actions.playElectric(),
       playBubbleShield3d: () => studioPreviewRegistry.actions.playBubbleShield3d(),
       applyOrbBase: () => studioPreviewRegistry.actions.applyOrbBase(),
       applyOrbTemplate: () => studioPreviewRegistry.actions.applyOrbTemplate(),
