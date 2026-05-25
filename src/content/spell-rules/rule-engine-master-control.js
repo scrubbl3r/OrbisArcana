@@ -4,10 +4,10 @@
 // - src/content/interactions-v2/wordbook-v2.js
 // Keep edits here limited to runtime wiring/plumbing only.
 
-import { EVENT_DEFINITIONS } from "./event-definitions.js?v=20260519pyromodulafb";
-import { EVENT_RUNTIME_BINDINGS_BY_ID } from "./event-runtime-bindings.js?v=20260519pyromodulafb";
-import { SIGNAL_DEFINITIONS } from "./signal-definitions.js?v=20260519pyromodulafb";
-import { WINDOW_DEFINITIONS } from "./window-definitions.js?v=20260519pyromodulafb";
+import { EVENT_DEFINITIONS } from "./event-definitions.js?v=20260525graviton";
+import { EVENT_RUNTIME_BINDINGS_BY_ID } from "./event-runtime-bindings.js?v=20260525graviton";
+import { SIGNAL_DEFINITIONS } from "./signal-definitions.js?v=20260525graviton";
+import { WINDOW_DEFINITIONS } from "./window-definitions.js?v=20260525graviton";
 
 const RULE_ENABLED_OVERRIDES = Object.freeze({
   // Example:

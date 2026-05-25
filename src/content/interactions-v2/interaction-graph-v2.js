@@ -13,7 +13,7 @@ export const INTERACTION_GRAPH_V2 = {
       { id: "root.sanctum", words: ["sanctum"], ttlMs: 1500 },
       { id: "root.modula", words: ["modula"], ttlMs: 1500 },
       { id: "root.salubrium", words: ["salubrium"], ttlMs: 1500 },
-      { id: "root.leviton", words: ["leviton"], ttlMs: 1500 },
+      { id: "root.graviton", words: ["graviton"], ttlMs: 1500 },
       { id: "root.electrum", words: ["electrum"], ttlMs: 1500 },
     ],
   },
@@ -43,8 +43,8 @@ export const INTERACTION_GRAPH_V2 = {
     },
     // FLOAT
     {
-      id: "orbis_leviton_cast",
-      on: { word: "leviton" },
+      id: "orbis_graviton_cast",
+      on: { word: "graviton" },
       trigger: { spell: "float" },
       grace: {},
     },

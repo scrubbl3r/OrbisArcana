@@ -36,9 +36,9 @@
       "token": "pyro"
     },
     {
-      "path": "../../../assets/kws/openwakeword-models/leviton.onnx",
-      "label": "leviton",
-      "token": "leviton"
+      "path": "../../../assets/kws/openwakeword-models/graviton.onnx",
+      "label": "graviton",
+      "token": "graviton"
     },
     {
       "path": "../../../assets/kws/openwakeword-models/modula.onnx",

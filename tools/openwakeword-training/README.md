@@ -41,6 +41,7 @@ Canonical token set
 - `domus`
 - `tempus`
 - `electrum`
+- `graviton`
 - `rota`
 - `sanctum`
 

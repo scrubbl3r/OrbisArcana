@@ -20,9 +20,9 @@ import {
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
 import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260525161932s";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
-import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260519pyromodulafb";
+import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260525graviton";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
-import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260519pyromodulafb";
+import { bootstrapShellReceiverHostRuntimeAssembly } from "./receiver-host-runtime-bootstrap.js?v=20260525graviton";
 import { createShellReceiverConfigs } from "./receiver-configs.js?v=20260517y";
 import { bootstrapShellPairingRuntime } from "./pairing-runtime-bootstrap.js?v=20260423a";
 import { bootstrapShellKwsRuntimeBase } from "./kws-runtime-bootstrap.js";

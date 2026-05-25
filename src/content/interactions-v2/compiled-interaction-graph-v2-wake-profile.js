@@ -1,5 +1,5 @@
-import { COMPILED_INTERACTION_GRAPH_V2 } from "./compiled-interaction-graph-v2.js?v=20260519pyromodulafb";
-import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js?v=20260519pyromodulafb";
+import { COMPILED_INTERACTION_GRAPH_V2 } from "./compiled-interaction-graph-v2.js?v=20260525graviton";
+import { WORDBOOK_V2_ACTIVE_WORDS_BY_ID } from "./wordbook-v2.js?v=20260525graviton";
 
 function asText(value) {
   return String(value || "").trim();

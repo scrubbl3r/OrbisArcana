@@ -2,7 +2,7 @@
 // Keep ids synthetic and deterministic so tests remain stable over content changes.
 export const UNKNOWN_WAKE_WORD_ID_V2 = "__unknown_wake_word__";
 export const OTHER_UNKNOWN_WAKE_WORD_ID_V2 = "__other_unknown_wake_word__";
-export const SAMPLE_WAKE_RULE_ID_V2 = "electric_aoe";
+export const SAMPLE_WAKE_RULE_ID_V2 = "spin_y_opens_pyro";
 export const KNOWN_WAKE_WORD_ID_V2 = "rota";
 export const KNOWN_WAKE_WORD_WORD_SELECTOR_V2 = `word.${KNOWN_WAKE_WORD_ID_V2}`;
 export const KNOWN_WAKE_WORD_SPELL_SELECTOR_V2 = `spell.${KNOWN_WAKE_WORD_ID_V2}`;
