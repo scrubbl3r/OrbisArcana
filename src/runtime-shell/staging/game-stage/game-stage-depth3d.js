@@ -64,7 +64,7 @@ import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260524o";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260525surfaceb";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
 import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-1-behavior-default.js?v=20260524c";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
@@ -1316,6 +1316,12 @@ export function createGameStageDepth3dLayer({
       if (disposed || !orb3dActorRuntime.hasModel() || !currentOrbWorldPosition) {
         return { handled: false, skipped: "tesla1_runtime_missing" };
       }
+      root.dataset.tesla1PresetHaloRanges = JSON.stringify({
+        startMinBo: TESLA_1_PRESET_DEFAULT.haloFieldBoltStartMinBo,
+        startMaxBo: TESLA_1_PRESET_DEFAULT.haloFieldBoltStartMaxBo,
+        endMinBo: TESLA_1_PRESET_DEFAULT.haloFieldBoltEndMinBo,
+        endMaxBo: TESLA_1_PRESET_DEFAULT.haloFieldBoltEndMaxBo,
+      });
       clearFlameAoe3dRuntime("tesla1_started");
       const result = tesla1Runtime.play(payloadIsTesla1
         ? { ...incomingPayload, effect: "tesla-1" }
