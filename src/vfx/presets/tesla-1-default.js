@@ -87,7 +87,7 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "haloStrikeRangeMaxBo": 1.5,
   "haloStrikeCooldownMinMs": 150,
   "haloStrikeCooldownMaxMs": 500,
-  "haloStrikeDamageMin": 1,
+  "haloStrikeDamageMin": 3,
   "haloStrikeDamageMax": 3,
   "haloStrikeStunDamageMin": 1,
   "haloStrikeStunDamageMax": 3,

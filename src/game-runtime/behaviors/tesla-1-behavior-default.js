@@ -5,7 +5,7 @@ export const TESLA_1_BEHAVIOR_DEFAULT = Object.freeze({
   haloStrikeRangeMaxBo: 1.50,
   haloStrikeCooldownMinMs: 150,
   haloStrikeCooldownMaxMs: 500,
-  haloStrikeDamageMin: 1.00,
+  haloStrikeDamageMin: 3.00,
   haloStrikeDamageMax: 3.00,
   haloStrikeStunDamageMin: 1.00,
   haloStrikeStunDamageMax: 3.00,
