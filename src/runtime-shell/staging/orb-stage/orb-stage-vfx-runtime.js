@@ -163,16 +163,23 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function playOrbStageElectricAoeFallback(payload = {}) {
+    const incomingPayload = payload && typeof payload === "object" ? payload : Object.create(null);
+    const defaultPayload = vfxDefaults && vfxDefaults.electric3d && typeof vfxDefaults.electric3d === "object"
+      ? vfxDefaults.electric3d
+      : Object.create(null);
+    const effectId = String(incomingPayload.effect || incomingPayload.effectId || incomingPayload.baseEffect || "").trim().toLowerCase();
+    const payloadIsTesla1 = effectId === "tesla-1" || effectId === "spell.tesla_1";
     markTrace("tesla1.orbStageFallback.called", {
       has3dRuntime: typeof playElectricAoe3dRuntime === "function",
-      payloadKeys: payload && typeof payload === "object" ? Object.keys(payload).slice(0, 12) : [],
+      payloadKeys: Object.keys(incomingPayload).slice(0, 12),
+      payloadIsTesla1,
     });
     if (typeof playElectricAoe3dRuntime === "function") {
       const result = playElectricAoe3dRuntime({
-        ...(vfxDefaults && vfxDefaults.electric3d && typeof vfxDefaults.electric3d === "object"
-          ? vfxDefaults.electric3d
-          : Object.create(null)),
-        ...(payload && typeof payload === "object" ? payload : {}),
+        ...incomingPayload,
+        ...defaultPayload,
+        ...(payloadIsTesla1 ? incomingPayload : Object.create(null)),
+        effect: "tesla-1",
       });
       markTrace("tesla1.orbStageFallback.result", {
         handled: !!(result && result.handled),
