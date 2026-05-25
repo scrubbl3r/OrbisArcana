@@ -4,7 +4,7 @@ import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/tel
 import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501d";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/electric-aoe-3d-default.js?v=20260522172828";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260524o";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 
 export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => value } = {}) {
@@ -35,7 +35,7 @@ export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => valu
       durationMs: 10000,
     },
     flame3d: { ...FLAME_AOE_3D_PRESET_DEFAULT },
-    electric3d: { ...ELECTRIC_AOE_3D_PRESET_DEFAULT },
+    electric3d: { ...TESLA_1_PRESET_DEFAULT },
     electric: {
       startRatio: 0.80,
       endRatio: 2.0,
@@ -163,7 +163,7 @@ export function initOrbStageReceiverVfxRuntime({
   }
 
   function playOrbStageElectricAoeFallback(payload = {}) {
-    markTrace("electricAoe.orbStageFallback.called", {
+    markTrace("tesla1.orbStageFallback.called", {
       has3dRuntime: typeof playElectricAoe3dRuntime === "function",
       payloadKeys: payload && typeof payload === "object" ? Object.keys(payload).slice(0, 12) : [],
     });
@@ -174,10 +174,10 @@ export function initOrbStageReceiverVfxRuntime({
           : Object.create(null)),
         ...(payload && typeof payload === "object" ? payload : {}),
       });
-      markTrace("electricAoe.orbStageFallback.result", {
+      markTrace("tesla1.orbStageFallback.result", {
         handled: !!(result && result.handled),
         skipped: String(result && result.skipped || ""),
-        pointCount: Number(result && result.path && result.path.points && result.path.points.length) || 0,
+        effect: "tesla-1",
       });
       if (result && result.handled) return result;
     }
@@ -278,7 +278,7 @@ export function initOrbStageReceiverVfxRuntime({
       if (dispatched && dispatched.handled) return dispatched;
       return triggerOrbStageShockwaveFallback();
     },
-    playElectricAoe() {
+    playElectricAoe(payload = {}) {
       const dispatched = dispatchRuntimeEffect({
         targetKind: "spell",
         targetId: "aoe_electric",
@@ -289,9 +289,10 @@ export function initOrbStageReceiverVfxRuntime({
           triggerShockwave: () => triggerOrbStageShockwaveFallback(),
           activateBubbleShield: (payload = {}) => activateOrbStageBubbleShieldFallback(payload),
         },
+        payload,
       });
       if (dispatched && dispatched.handled) return dispatched;
-      return playOrbStageElectricAoeFallback();
+      return playOrbStageElectricAoeFallback(payload);
     },
     playFlameAoe(payload = {}) {
       markTrace("flameAoe.shellVfx.called", {

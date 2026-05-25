@@ -2085,7 +2085,7 @@ function initShellReceiverVfxRuntime(shellContext) {
     playBubbleShield3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playBubbleShield3d", payload, "active_stage_bubble_shield3d_missing"),
     playShockwave3dRuntime: (payload = {}) => callActiveShellStageMethod(shellContext, "playShockwave3d", payload, "active_stage_shockwave3d_missing"),
     playFlameAoe3dRuntime: (payload = {}) => callActiveShellRootAoeStageMethod(shellContext, "playFlameAoe3d", payload, "active_stage_flame_aoe3d_missing"),
-    playElectricAoe3dRuntime: (payload = {}) => callActiveShellRootAoeStageMethod(shellContext, "playElectricAoe3d", payload, "active_stage_electric_aoe3d_missing"),
+    playElectricAoe3dRuntime: (payload = {}) => callActiveShellRootAoeStageMethod(shellContext, "playElectricAoe3d", payload, "active_stage_tesla1_missing"),
     requestCameraTravel: (payload = {}) => {
       const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
       return cameraRuntime && typeof cameraRuntime.requestTravel === "function"
@@ -2838,7 +2838,7 @@ async function initShellKwsRuntime(shellContext) {
     FLAME_AOE_PRESET_DEFAULT,
     FLAME_AOE_3D_PRESET_DEFAULT,
     ELECTRIC_AOE_PRESET_DEFAULT,
-    ELECTRIC_AOE_3D_PRESET_DEFAULT,
+    TESLA_1_PRESET_DEFAULT,
     TELEPORT_PRESET_DEFAULT,
     ORB_NOD_PRESET_DEFAULT,
     ORB_NOD_3D_PRESET_DEFAULT,
@@ -2888,7 +2888,7 @@ async function initShellKwsRuntime(shellContext) {
       flameAoe: FLAME_AOE_PRESET_DEFAULT,
       flameAoe3d: FLAME_AOE_3D_PRESET_DEFAULT,
       electricAoe: ELECTRIC_AOE_PRESET_DEFAULT,
-      electricAoe3d: ELECTRIC_AOE_3D_PRESET_DEFAULT,
+      electricAoe3d: TESLA_1_PRESET_DEFAULT,
       teleport: TELEPORT_PRESET_DEFAULT,
       orbNod: ORB_NOD_PRESET_DEFAULT,
       orbNod3d: ORB_NOD_3D_PRESET_DEFAULT,

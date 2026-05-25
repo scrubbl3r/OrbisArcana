@@ -60,13 +60,13 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createElectricAoe3dRuntime } from "../../../runtime-effects/electric-aoe-3d.js?v=20260522-active-aoe-c";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260524-stage-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { ELECTRIC_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/electric-aoe-3d-default.js?v=20260522172828";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260524o";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
-import { ELECTRIC_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/electric-aoe-behavior-default.js?v=20260522172828b";
+import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-1-behavior-default.js?v=20260524c";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
 import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517p";
@@ -180,7 +180,6 @@ export function createGameStageDepth3dLayer({
   let currentOrbZBO = LEVEL_DEPTH_DEFAULT_ORB_Z_BO;
   let currentOrbWorldPosition = null;
   let currentOrbAlive = true;
-  let currentLevelNavContext = null;
   let currentBoundarySegments = Object.freeze([]);
   let combatEventBus = null;
   let lastGlobe3dTickMs = 0;
@@ -260,18 +259,14 @@ export function createGameStageDepth3dLayer({
     onNeedsFrame: () => renderLoop.scheduleAnimation(),
     traceMeasure: perfTrace && typeof perfTrace.measure === "function" ? perfTrace.measure : null,
   });
-  const electricAoe3dRuntime = createElectricAoe3dRuntime({
+  const tesla1Runtime = createTesla1Runtime({
     getParent: () => actorGroup,
-    getOrbModel: () => orb3dActorRuntime.getModel(),
     getOrbRuntimePosition: () => orb3dActorRuntime.getPosition(),
     getOrbWorldPosition: () => currentOrbWorldPosition || { xW: 0, yW: 0 },
     getEnemyTargets: () => gnatSwarm3dRuntime.getCombatTargets(),
-    getLevelNav: () => currentLevelNavContext,
     getBo: () => orb3dActorRuntime.getBo(),
-    getConfig: () => ({ ...ELECTRIC_AOE_3D_PRESET_DEFAULT, ...ELECTRIC_AOE_BEHAVIOR_DEFAULT }),
-    getEnvironmentSegments: () => currentBoundarySegments,
-    getRuntimeZ: ({ bo = baseOrbWorldUnits } = {}) => -Math.max(0, currentOrbZBO) * Math.max(1, Number(bo) || baseOrbWorldUnits),
-    onEnemyStrike: ({ target = null, damage = 0, config = {}, atMs = performance.now() } = {}) => {
+    getConfig: () => ({ ...TESLA_1_PRESET_DEFAULT, ...TESLA_1_BEHAVIOR_DEFAULT }),
+    onHaloStrike: ({ target = null, damage = 0, stunDamage = 0, config = {}, atMs = performance.now() } = {}) => {
       const position = target && target.position ? target.position : null;
       if (!position || !currentOrbWorldPosition) return Object.freeze({ handled: false, affected: 0, reason: "missing_target" });
       const damageResult = gnatSwarm3dRuntime.applyCombatEffect({
@@ -285,14 +280,27 @@ export function createGameStageDepth3dLayer({
         damageType: DAMAGE_TYPE_ELECTRIC,
         visualProfile: String(config.visualProfile || "spellstorm"),
         atMs,
-        tags: ["spell", "electric-aoe", "dominant-bolt"],
+        tags: ["spell", "tesla-1", "halo-strike"],
       });
-      root.dataset.enemy3dLastElectricAoeDamageCount = String(damageResult && damageResult.affected || 0);
-      root.dataset.enemy3dLastElectricAoeDamageAmount = String(Math.max(0, Number(damage) || 0));
-      root.dataset.enemy3dLastElectricAoeDamageTotal = String(damageResult && Number.isFinite(Number(damageResult.totalDamage)) ? Number(damageResult.totalDamage) : 0);
-      root.dataset.enemy3dLastElectricAoeTarget = String(target.id || target.targetEntityId || "");
-      root.dataset.enemy3dLastElectricAoeDamageReason = String(damageResult && damageResult.trace && damageResult.trace.reason || "");
-      return damageResult;
+      const stunResult = gnatSwarm3dRuntime.applyCombatEffect({
+        kind: COMBAT_EFFECT_STUN,
+        sourceEntityId: COMBAT_ENTITY_ORB,
+        targetEntityId: target.targetEntityId || target.id || "enemy:gnat-swarm",
+        ...(Number.isFinite(Number(target.index)) ? { targetIndex: Number(target.index) } : {}),
+        centerWorld: position,
+        radiusBo: Math.max(0.05, Number(target.radiusBo) || 0.25),
+        amount: Math.max(0, Number(stunDamage) || 0),
+        atMs,
+        tags: ["spell", "tesla-1", "halo-strike"],
+      });
+      root.dataset.enemy3dLastTesla1DamageCount = String(damageResult && damageResult.affected || 0);
+      root.dataset.enemy3dLastTesla1DamageAmount = String(Math.max(0, Number(damage) || 0));
+      root.dataset.enemy3dLastTesla1DamageTotal = String(damageResult && Number.isFinite(Number(damageResult.totalDamage)) ? Number(damageResult.totalDamage) : 0);
+      root.dataset.enemy3dLastTesla1StunCount = String(stunResult && stunResult.affected || 0);
+      root.dataset.enemy3dLastTesla1StunAmount = String(Math.max(0, Number(stunDamage) || 0));
+      root.dataset.enemy3dLastTesla1Target = String(target.id || target.targetEntityId || "");
+      root.dataset.enemy3dLastTesla1DamageReason = String(damageResult && damageResult.trace && damageResult.trace.reason || "");
+      return Object.freeze({ damage: damageResult, stun: stunResult });
     },
     toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
       x: toDepthThreeX(xW, worldWidthPx),
@@ -651,12 +659,12 @@ export function createGameStageDepth3dLayer({
     return damageResult;
   }
 
-  function clearElectricAoe3dRuntime(reason = "root_spell_transition") {
-    if (!electricAoe3dRuntime || typeof electricAoe3dRuntime.clear !== "function") return;
-    const wasActive = typeof electricAoe3dRuntime.isActive === "function" && electricAoe3dRuntime.isActive();
-    electricAoe3dRuntime.clear();
+  function clearTesla1Runtime(reason = "root_spell_transition") {
+    if (!tesla1Runtime || typeof tesla1Runtime.clear !== "function") return;
+    const wasActive = typeof tesla1Runtime.isActive === "function" && tesla1Runtime.isActive();
+    tesla1Runtime.clear();
     if (wasActive && perfTrace && typeof perfTrace.mark === "function") {
-      perfTrace.mark("electricAoe.gameStage.cleared", { reason });
+      perfTrace.mark("tesla1.gameStage.cleared", { reason });
     }
   }
 
@@ -1067,7 +1075,6 @@ export function createGameStageDepth3dLayer({
         resolutionBo: LEVEL_NAV_GRID_RESOLUTION_BO,
       });
       const levelNavContext = createLevelNavContext({ navGrid: levelNavGrid });
-      currentLevelNavContext = levelNavContext;
       root.dataset.levelNavGridResolutionBo = String(LEVEL_NAV_GRID_RESOLUTION_BO);
       root.dataset.levelNavGridCells = levelNavGrid ? String(levelNavGrid.cols * levelNavGrid.rows) : "0";
       telemetry.setDepthLayerLabel(layers);
@@ -1246,7 +1253,7 @@ export function createGameStageDepth3dLayer({
       if (disposed) {
         return { handled: false, skipped: "flame_aoe3d_runtime_missing" };
       }
-      clearElectricAoe3dRuntime("flame_aoe3d_started");
+      clearTesla1Runtime("flame_aoe3d_started");
       const flamePayload = payload && typeof payload === "object" ? payload : {};
       const hasOrbModel = orb3dActorRuntime.hasModel();
       const result = hasOrbModel
@@ -1291,20 +1298,18 @@ export function createGameStageDepth3dLayer({
     playElectricAoe3d(payload = {}) {
       const callAtMs = performance.now();
       if (perfTrace && typeof perfTrace.mark === "function") {
-        perfTrace.mark("electricAoe.gameStage.called", {
+        perfTrace.mark("tesla1.gameStage.called", {
           disposed: !!disposed,
           hasOrbModel: !!(orb3dActorRuntime && orb3dActorRuntime.hasModel && orb3dActorRuntime.hasModel()),
           hasOrbWorld: !!currentOrbWorldPosition,
-          hasNav: !!currentLevelNavContext,
         });
       }
       if (disposed || !orb3dActorRuntime.hasModel() || !currentOrbWorldPosition) {
-        return { handled: false, skipped: "electric_aoe3d_runtime_missing" };
+        return { handled: false, skipped: "tesla1_runtime_missing" };
       }
-      clearFlameAoe3dRuntime("electric_aoe3d_started");
-      const result = electricAoe3dRuntime.play(payload && typeof payload === "object" ? payload : {});
-      root.dataset.enemy3dLastElectricAoeStageCallAt = String(Math.round(callAtMs));
-      root.dataset.enemy3dLastElectricAoePointCount = String(result && result.path && result.path.points ? result.path.points.length : 0);
+      clearFlameAoe3dRuntime("tesla1_started");
+      const result = tesla1Runtime.play(payload && typeof payload === "object" ? payload : {});
+      root.dataset.enemy3dLastTesla1StageCallAt = String(Math.round(callAtMs));
       if (result && result.handled) {
         renderLoop.scheduleAnimation();
         renderLoop.renderFrame(renderLoop.getLastFrame() || {});
@@ -1313,7 +1318,7 @@ export function createGameStageDepth3dLayer({
     },
     clearRootAoe3d(reason = "stage_inactive") {
       clearFlameAoe3dRuntime(reason);
-      clearElectricAoe3dRuntime(reason);
+      clearTesla1Runtime(reason);
       renderLoop.renderFrame(renderLoop.getLastFrame() || {});
       return { handled: true };
     },
@@ -1399,7 +1404,7 @@ export function createGameStageDepth3dLayer({
       teleport3dRuntime.destroy();
       bubbleShield3dRuntime.destroy();
       flameAoe3dRuntime.destroy();
-      electricAoe3dRuntime.destroy();
+      tesla1Runtime.destroy();
       shockwave3dRuntime.destroy();
       surfaceFireCardSystem.dispose();
       orbLifecycle3dRuntime.dispose();
