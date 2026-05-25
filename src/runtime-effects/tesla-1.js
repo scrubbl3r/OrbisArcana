@@ -623,8 +623,8 @@ export function createTesla1Runtime(options = {}) {
       boltCountMax: config.haloBoltCountMax,
       startMin: bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMinBo),
       startMax: bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo),
-      endMin: bo * config.haloFieldBoltEndMinBo,
-      endMax: bo * config.haloFieldBoltEndMaxBo,
+      endMin: bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMinBo),
+      endMax: bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo),
       bo,
       boltColor: rgbColor(config.boltShaderColorR, config.boltShaderColorG, config.boltShaderColorB),
       intensity: config.boltShaderEnabled ? config.boltShaderIntensity : 0,
@@ -676,8 +676,8 @@ export function createTesla1Runtime(options = {}) {
     const orbRadius = bo * ORB_RADIUS_BO;
     const startMin = bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMinBo);
     const startMax = bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo);
-    const endMin = bo * config.haloFieldBoltEndMinBo;
-    const endMax = bo * config.haloFieldBoltEndMaxBo;
+    const endMin = bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMinBo);
+    const endMax = bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo);
     [
       { radius: orbRadius, color: 0x00ffff, opacity: 0.95, name: "tesla1:diagnostic_orb_radius" },
       { radius: startMin, color: 0xffff00, opacity: 0.95, name: "tesla1:diagnostic_start_min" },
@@ -754,7 +754,7 @@ export function createTesla1Runtime(options = {}) {
     updateStrikeState(config, bo, nowMs);
     const maxRangeBo = Math.max(
       config.haloFieldShellRadiusBo,
-      config.haloFieldBoltEndMaxBo,
+      ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo,
       ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo,
       ORB_RADIUS_BO + config.haloStrikeRangeMaxBo
     );

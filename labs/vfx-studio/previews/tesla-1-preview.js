@@ -693,15 +693,15 @@ export function createTesla1Preview({
       return;
     }
     const boltColor = rgbColor(els.tesla1BoltShaderColorR && els.tesla1BoltShaderColorR.value, els.tesla1BoltShaderColorG && els.tesla1BoltShaderColorG.value, els.tesla1BoltShaderColorB && els.tesla1BoltShaderColorB.value);
-    const maxRangeBo = Math.max(endMax, ORB_RADIUS_BO + startMax, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
+    const maxRangeBo = Math.max(ORB_RADIUS_BO + endMax, ORB_RADIUS_BO + startMax, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
     const materialParams = {
       boltCountMin: shape.boltCountMin,
       boltCountMax: shape.boltCountMax,
       startMin: bo * (ORB_RADIUS_BO + startMin),
       startMax: bo * (ORB_RADIUS_BO + startMax),
-      endMin: bo * endMin,
-      endMax: bo * endMax,
+      endMin: bo * (ORB_RADIUS_BO + endMin),
+      endMax: bo * (ORB_RADIUS_BO + endMax),
       bo,
       boltColor,
       intensity: readInputNumber(els.tesla1BoltShaderIntensity, 6, 0, 20),
