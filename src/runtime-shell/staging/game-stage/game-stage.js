@@ -1,4 +1,4 @@
-import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260525-tesla-surface-a";
+import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260525161932s";
 import { createGameStageRuntimeAdapter } from "./game-stage-runtime-adapter.js?v=20260522-active-aoe-c";
 
 export function renderGameStage(root, {
