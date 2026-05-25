@@ -1706,7 +1706,7 @@ export function createGnatSwarm3dRuntime({
       }
       if (orbPosition && state.mode === "alerted") {
         const feedOuterRadiusPx = resolveFeedOuterRadiusPx(state, orbCombat);
-        if (distance(state.position, orbPosition) <= Math.max(state.arrivalRadiusPx, feedOuterRadiusPx)) {
+        if (distance(state.position, orbPosition) <= feedOuterRadiusPx) {
           startFeeding(state, orbPosition, nowSec);
         } else if (distance(state.position, state.route[state.routeIndex] || state.orbTarget || orbPosition) < Math.max(state.arrivalRadiusPx, state.scale * 1.5)) {
           state.routeIndex += 1;
