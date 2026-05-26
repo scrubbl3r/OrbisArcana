@@ -571,7 +571,8 @@ export function createTesla1Runtime(options = {}) {
       const surfaceDistanceBo = Math.max(0, centerDistanceBo - ORB_RADIUS_BO);
       const contactSlopBo = Math.max(0.08, Number(target.radiusBo) || 0);
       const isOrbContact = centerDistanceBo <= ORB_RADIUS_BO + contactSlopBo;
-      if (!isOrbContact && surfaceDistanceBo < config.haloStrikeRangeMinBo) continue;
+      const isFeedingTarget = String(target.mode || "") === "feeding";
+      if (!isOrbContact && !isFeedingTarget && surfaceDistanceBo < config.haloStrikeRangeMinBo) continue;
       if (surfaceDistanceBo > config.haloStrikeRangeMaxBo) continue;
       if (!nearest || surfaceDistanceBo < nearest.distanceBo) {
         nearest = Object.freeze({
