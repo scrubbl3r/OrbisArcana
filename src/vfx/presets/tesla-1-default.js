@@ -1,8 +1,7 @@
 export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "durationMs": 10000,
   "dominantBoltMinRangeBo": 4,
-  "dominantBoltMaxRangeBo": 8,
-  "dominantBoltTargetRadiusBo": 0.18,
+  "dominantBoltMaxRangeBo": 7,
   "dominantBoltDetourRatioMax": 1.4,
   "dominantBoltFrequencyMinMs": 900,
   "dominantBoltFrequencyMaxMs": 1400,
@@ -10,6 +9,7 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "dominantBoltMacroScaleMultiplier": 0.65,
   "dominantBoltMicroJitterMultiplier": 1,
   "dominantBoltBranchDensityMultiplier": 1,
+  "dominantBoltTargetRadiusBo": 0.18,
   "boltShaderEnabled": 1,
   "boltShaderIntensity": 6,
   "boltShaderTipFade": 1,
