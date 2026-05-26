@@ -133,6 +133,7 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     dominantBoltMacroScaleMultiplier: clampNumber(source.dominantBoltMacroScaleMultiplier, 0.05, 8, TESLA_1_PRESET_DEFAULT.dominantBoltMacroScaleMultiplier),
     dominantBoltMicroJitterMultiplier: clampNumber(source.dominantBoltMicroJitterMultiplier, 0, 8, TESLA_1_PRESET_DEFAULT.dominantBoltMicroJitterMultiplier),
     dominantBoltBranchDensityMultiplier: clampNumber(source.dominantBoltBranchDensityMultiplier, 0, 8, TESLA_1_PRESET_DEFAULT.dominantBoltBranchDensityMultiplier),
+    dominantBoltBaseWidthMultiplier: clampNumber(source.dominantBoltBaseWidthMultiplier, 0.05, 16, TESLA_1_PRESET_DEFAULT.dominantBoltBaseWidthMultiplier),
     haloStrikeEnabled: source.haloStrikeEnabled !== false && source.haloStrikeEnabled !== 0,
     haloStrikeRangeMinBo,
     haloStrikeRangeMaxBo: clampNumber(source.haloStrikeRangeMaxBo, Math.max(0.01, haloStrikeRangeMinBo), 64, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeRangeMaxBo),
@@ -205,6 +206,7 @@ function buildLightningFieldUniformValues({
   masterMacroScaleMultiplier = 1,
   masterMicroJitterMultiplier = 1,
   masterBranchDensityMultiplier = 1,
+  masterBaseWidthMultiplier = 1,
   time,
 }) {
   const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMin) || 0)));
@@ -267,6 +269,7 @@ function buildLightningFieldUniformValues({
     uMasterMacroScaleMultiplier: clampNumber(masterMacroScaleMultiplier, 0.05, 8, 1),
     uMasterMicroJitterMultiplier: clampNumber(masterMicroJitterMultiplier, 0, 8, 1),
     uMasterBranchDensityMultiplier: clampNumber(masterBranchDensityMultiplier, 0, 8, 1),
+    uMasterBaseWidthMultiplier: clampNumber(masterBaseWidthMultiplier, 0.05, 16, 1),
   };
 }
 
@@ -345,6 +348,7 @@ function createLightningFieldMaterial(params) {
       uMasterMacroScaleMultiplier: { value: values.uMasterMacroScaleMultiplier },
       uMasterMicroJitterMultiplier: { value: values.uMasterMicroJitterMultiplier },
       uMasterBranchDensityMultiplier: { value: values.uMasterBranchDensityMultiplier },
+      uMasterBaseWidthMultiplier: { value: values.uMasterBaseWidthMultiplier },
     },
     vertexShader: `
       varying vec3 vLocalPosition;
@@ -412,6 +416,7 @@ function createLightningFieldMaterial(params) {
       uniform float uMasterMacroScaleMultiplier;
       uniform float uMasterMicroJitterMultiplier;
       uniform float uMasterBranchDensityMultiplier;
+      uniform float uMasterBaseWidthMultiplier;
       varying vec3 vLocalPosition;
       const float TIME_RING = 32.0;
       const float SNAPSHOT_RING = 64.0;
@@ -492,7 +497,7 @@ function createLightningFieldMaterial(params) {
         return a + delta * amount;
       }
 
-      vec3 proceduralBolt(vec2 p, float angle, float startR, float len, float seed, float sampleTime, float macroNoiseScale, float macroNoiseStrength, float microNoiseStrength, float branchDensity) {
+      vec3 proceduralBolt(vec2 p, float angle, float startR, float len, float seed, float sampleTime, float macroNoiseScale, float macroNoiseStrength, float microNoiseStrength, float branchDensity, float baseWidthMultiplier) {
         vec2 uv = rotate2(angle) * p;
         uv.y -= startR;
         float h = 0.0;
@@ -513,7 +518,7 @@ function createLightningFieldMaterial(params) {
         float tipAnchor = 1.0 - smoothstep(tipAnchorStart, len, clamp(uv.y, 0.0, len));
         float baseAnchor = smoothstep(0.0, uBo * 0.2, uv.y);
         uv.x += (macro * macroNoiseStrength + micro * microNoiseStrength) * uBo * baseAnchor * tipAnchor;
-        float baseWidth = lengthMappedBaseWidth(len);
+        float baseWidth = lengthMappedBaseWidth(len) * baseWidthMultiplier;
         float tipWidth = max(0.0001 * uBo, baseWidth * uTipWidthRatio);
         float d = taperedLineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), baseWidth, tipWidth, h);
         float line = 0.1 / max(max(d / max(1.0, uBo), 0.0), 0.0001);
@@ -606,13 +611,13 @@ function createLightningFieldMaterial(params) {
           float lengthRoll = (lengthSlot + randomFloat(vec2(seed, 191.0))) / lengthSlotCount;
           float endR = mix(uEndMin, uEndMax, lengthRoll);
           float len = max(0.001 * uBo, endR - startR);
-          color += proceduralBolt(p, angle, startR, len, seed, uTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity) * uIntensity;
+          color += proceduralBolt(p, angle, startR, len, seed, uTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity, 1.0) * uIntensity;
         }
         if (uHaloStrikeActive == 1 && length(uHaloStrikeTarget) > uStartMin + 0.001 * uBo) {
           float strikeAngle = atan(uHaloStrikeTarget.x, uHaloStrikeTarget.y);
           float strikeStartR = max(uStartMin, 0.5 * uBo);
           float strikeLen = max(0.001 * uBo, length(uHaloStrikeTarget) - strikeStartR);
-          color += proceduralBolt(p, strikeAngle, strikeStartR, strikeLen, 900.0 + uHaloStrikeSeed, uHaloStrikeTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity) * uIntensity * 1.25;
+          color += proceduralBolt(p, strikeAngle, strikeStartR, strikeLen, 900.0 + uHaloStrikeSeed, uHaloStrikeTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity, 1.0) * uIntensity * 1.25;
         }
         if (uMasterBoltActive == 1 && length(uMasterBoltTarget) > uStartMin + 0.001 * uBo) {
           float masterAngle = atan(uMasterBoltTarget.x, uMasterBoltTarget.y);
@@ -622,7 +627,7 @@ function createLightningFieldMaterial(params) {
           float masterMacroStrength = clamp(uMacroNoiseStrength * uMasterMacroBendMultiplier, 0.0, 2.0);
           float masterMicroStrength = clamp(uMicroNoiseStrength * uMasterMicroJitterMultiplier, 0.0, 2.0);
           float masterBranchDensity = clamp(uBranchDensity * uMasterBranchDensityMultiplier, 0.0, 1.0);
-          color += proceduralBolt(p, masterAngle, masterStartR, masterLen, 1400.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity) * uIntensity * 1.65;
+          color += proceduralBolt(p, masterAngle, masterStartR, masterLen, 1400.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity, uMasterBaseWidthMultiplier) * uIntensity * 1.65;
         }
         color = 1.0 - exp(-color * 0.55);
         float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
@@ -814,6 +819,7 @@ export function createTesla1Runtime(options = {}) {
       masterMacroScaleMultiplier: config.dominantBoltMacroScaleMultiplier,
       masterMicroJitterMultiplier: config.dominantBoltMicroJitterMultiplier,
       masterBranchDensityMultiplier: config.dominantBoltBranchDensityMultiplier,
+      masterBaseWidthMultiplier: config.dominantBoltBaseWidthMultiplier,
       time,
     };
   }

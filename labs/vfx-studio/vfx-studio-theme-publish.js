@@ -236,6 +236,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params) {
         "dominantBoltFrequencyMinMs", "dominantBoltFrequencyMaxMs",
         "dominantBoltMacroBendMultiplier", "dominantBoltMacroScaleMultiplier",
         "dominantBoltMicroJitterMultiplier", "dominantBoltBranchDensityMultiplier",
+        "dominantBoltBaseWidthMultiplier",
         "dominantBoltPointSpacingBo", "dominantBoltSeekStrength", "dominantBoltTargetRadiusBo",
         "dominantBoltWanderStrength", "dominantBoltZBo",
         "boltShaderEnabled", "boltShaderIntensity", "boltShaderTipFade",
