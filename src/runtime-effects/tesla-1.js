@@ -805,7 +805,7 @@ export function createTesla1Runtime(options = {}) {
       haloStrikeSlot: strikeState.slot,
       haloStrikeTarget: strikeState.target,
       haloStrikeSeed: strikeState.seed,
-      haloStrikeTime: strikeState.snapshotTime,
+      haloStrikeTime: time,
       masterBoltActive: time < masterBoltState.activeUntil,
       masterBoltTarget: masterBoltState.target,
       masterBoltSeed: masterBoltState.seed,

@@ -927,7 +927,7 @@ export function createTesla1Preview({
       haloStrikeSlot: strikeState.slot,
       haloStrikeTarget: strikeState.target,
       haloStrikeSeed: strikeState.seed,
-      haloStrikeTime: strikeState.snapshotTime,
+      haloStrikeTime: time,
       masterBoltActive: master.enabled && time < masterState.activeUntil,
       masterBoltTarget: masterState.target,
       masterBoltSeed: masterState.seed,
