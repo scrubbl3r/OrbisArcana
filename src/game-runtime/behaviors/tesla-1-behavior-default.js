@@ -9,4 +9,10 @@ export const TESLA_1_BEHAVIOR_DEFAULT = Object.freeze({
   haloStrikeDamageMax: 0.00,
   haloStrikeStunDamageMin: 1.00,
   haloStrikeStunDamageMax: 3.00,
+  masterBoltDamageMin: 8.00,
+  masterBoltDamageMax: 14.00,
+  masterBoltStunDamageMin: 4.00,
+  masterBoltStunDamageMax: 8.00,
+  masterBoltTipAoeRadiusBo: 0.45,
+  masterBoltPathBendToleranceBo: 0.35,
 });

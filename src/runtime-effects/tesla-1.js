@@ -75,6 +75,8 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
   const haloStrikeHitRadiusMinBo = clampNumber(source.haloStrikeHitRadiusMinBo, 0.01, 16, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeHitRadiusMinBo);
   const haloStrikeDamageMin = clampNumber(source.haloStrikeDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeDamageMin);
   const haloStrikeStunDamageMin = clampNumber(source.haloStrikeStunDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeStunDamageMin);
+  const masterBoltDamageMin = clampNumber(source.masterBoltDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.masterBoltDamageMin);
+  const masterBoltStunDamageMin = clampNumber(source.masterBoltStunDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.masterBoltStunDamageMin);
   return Object.freeze({
     durationMs: Math.round(clampNumber(source.durationMs, 200, 60000, TESLA_1_PRESET_DEFAULT.durationMs)),
     haloFieldEnabled: source.haloFieldEnabled !== false && source.haloFieldEnabled !== 0,
@@ -147,6 +149,12 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     haloStrikeDamageMax: clampNumber(source.haloStrikeDamageMax, haloStrikeDamageMin, 10000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeDamageMax),
     haloStrikeStunDamageMin,
     haloStrikeStunDamageMax: clampNumber(source.haloStrikeStunDamageMax, haloStrikeStunDamageMin, 10000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeStunDamageMax),
+    masterBoltDamageMin,
+    masterBoltDamageMax: clampNumber(source.masterBoltDamageMax, masterBoltDamageMin, 10000, TESLA_1_BEHAVIOR_DEFAULT.masterBoltDamageMax),
+    masterBoltStunDamageMin,
+    masterBoltStunDamageMax: clampNumber(source.masterBoltStunDamageMax, masterBoltStunDamageMin, 10000, TESLA_1_BEHAVIOR_DEFAULT.masterBoltStunDamageMax),
+    masterBoltTipAoeRadiusBo: clampNumber(source.masterBoltTipAoeRadiusBo, 0.01, 32, TESLA_1_BEHAVIOR_DEFAULT.masterBoltTipAoeRadiusBo),
+    masterBoltPathBendToleranceBo: clampNumber(source.masterBoltPathBendToleranceBo, 0, 32, TESLA_1_BEHAVIOR_DEFAULT.masterBoltPathBendToleranceBo),
   });
 }
 
@@ -648,6 +656,7 @@ export function createTesla1Runtime(options = {}) {
     getParent = () => null,
     now = () => performance.now(),
     onHaloStrike = null,
+    onMasterBolt = null,
     requestFrame = () => {},
     toRuntimePosition = ({ xW = 0, yW = 0, z = 0 } = {}) => ({ x: xW, y: yW, z }),
   } = options;
@@ -724,7 +733,7 @@ export function createTesla1Runtime(options = {}) {
       maxRangeBo: config.dominantBoltMaxRangeBo,
       minRangeBo: config.dominantBoltMinRangeBo,
     }) : [];
-    let nearest = null;
+    let strongest = null;
     for (const rawTarget of Array.isArray(rawTargets) ? rawTargets : []) {
       const target = normalizeEnemyTarget(rawTarget);
       if (!target) continue;
@@ -738,15 +747,29 @@ export function createTesla1Runtime(options = {}) {
       const isFeedingTarget = String(target.mode || "") === "feeding";
       if (!isOrbContact && !isFeedingTarget && surfaceDistanceBo < config.dominantBoltMinRangeBo) continue;
       if (surfaceDistanceBo > config.dominantBoltMaxRangeBo) continue;
-      if (!nearest || surfaceDistanceBo < nearest.distanceBo) {
-        nearest = Object.freeze({
+      const hp = Math.max(0, Number(target.hp) || 0);
+      if (!strongest || hp > strongest.hp || (hp === strongest.hp && surfaceDistanceBo < strongest.distanceBo)) {
+        strongest = Object.freeze({
           ...target,
           centerDistanceBo,
           distanceBo: surfaceDistanceBo,
+          hp,
         });
       }
     }
-    return nearest;
+    return strongest;
+  }
+
+  function resolveRandomMasterBoltTarget({ bo, config }) {
+    const range = randomBetween(config.dominantBoltMinRangeBo, config.dominantBoltMaxRangeBo);
+    const angle = randomBetween(0, Math.PI * 2);
+    return Object.freeze({
+      id: "environment:random-master-bolt",
+      environment: true,
+      position: null,
+      distanceBo: range,
+      localTarget: new THREE.Vector2(Math.cos(angle) * range * bo, Math.sin(angle) * range * bo),
+    });
   }
 
   function toLocalRuntimeTarget(target, bo) {
@@ -873,21 +896,29 @@ export function createTesla1Runtime(options = {}) {
     const frequencyMs = randomBetween(config.dominantBoltFrequencyMinMs, config.dominantBoltFrequencyMaxMs);
     masterBoltState.nextAt = nowMs + Math.max(16, frequencyMs);
     const from = typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : {};
-    const target = resolveMasterBoltTarget({ from, bo, config });
-    if (!target) {
-      masterBoltState.activeUntil = 0;
-      return;
-    }
+    const target = resolveMasterBoltTarget({ from, bo, config }) || resolveRandomMasterBoltTarget({ bo, config });
     const seed = Math.floor((nowMs * 571) + masterBoltState.seed * 31 + 7) % 100000;
     const snapshotTime = currentTime;
     masterBoltState.seed = seed;
     masterBoltState.snapshotTime = snapshotTime;
-    masterBoltState.target.copy(toLocalRuntimeTarget(target, bo));
+    if (target.localTarget && typeof target.localTarget.lengthSq === "function") masterBoltState.target.copy(target.localTarget);
+    else masterBoltState.target.copy(toLocalRuntimeTarget(target, bo));
     if (masterBoltState.target.lengthSq() <= 0.000001) {
       masterBoltState.activeUntil = 0;
       return;
     }
     masterBoltState.activeUntil = snapshotTime + 0.22;
+    if (!target.environment && typeof onMasterBolt === "function") {
+      onMasterBolt({
+        atMs: nowMs,
+        bo,
+        config,
+        damage: randomBetween(config.masterBoltDamageMin, config.masterBoltDamageMax),
+        hitRadiusBo: config.masterBoltTipAoeRadiusBo,
+        stunDamage: randomBetween(config.masterBoltStunDamageMin, config.masterBoltStunDamageMax),
+        target,
+      });
+    }
   }
 
   function syncRuntime(payload = {}, { emitFrame = true, nowMs: frameNowMs = null } = {}) {

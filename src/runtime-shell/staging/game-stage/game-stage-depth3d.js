@@ -303,6 +303,42 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dLastTesla1DamageReason = String(damageResult && damageResult.trace && damageResult.trace.reason || "");
       return Object.freeze({ damage: damageResult, stun: stunResult });
     },
+    onMasterBolt: ({ target = null, damage = 0, hitRadiusBo = 0.45, stunDamage = 0, config = {}, atMs = performance.now() } = {}) => {
+      const position = target && target.position ? target.position : null;
+      if (!position || !currentOrbWorldPosition) return Object.freeze({ handled: false, affected: 0, reason: "missing_target" });
+      const radiusBo = Math.max(0.01, Number(hitRadiusBo) || 0.45);
+      const damageResult = gnatSwarm3dRuntime.applyCombatEffect({
+        kind: COMBAT_EFFECT_DAMAGE,
+        sourceEntityId: COMBAT_ENTITY_ORB,
+        targetEntityId: "enemy:gnat-swarm",
+        centerWorld: position,
+        radiusBo,
+        amount: Math.max(0, Number(damage) || 0),
+        damageType: DAMAGE_TYPE_ELECTRIC,
+        visualProfile: String(config.visualProfile || "spellstorm"),
+        atMs,
+        tags: ["spell", "tesla-1", "master-bolt"],
+      });
+      const stunResult = gnatSwarm3dRuntime.applyCombatEffect({
+        kind: COMBAT_EFFECT_STUN,
+        sourceEntityId: COMBAT_ENTITY_ORB,
+        targetEntityId: "enemy:gnat-swarm",
+        centerWorld: position,
+        radiusBo,
+        amount: Math.max(0, Number(stunDamage) || 0),
+        atMs,
+        tags: ["spell", "tesla-1", "master-bolt"],
+      });
+      root.dataset.enemy3dLastTesla1MasterDamageCount = String(damageResult && damageResult.affected || 0);
+      root.dataset.enemy3dLastTesla1MasterDamageAmount = String(Math.max(0, Number(damage) || 0));
+      root.dataset.enemy3dLastTesla1MasterDamageTotal = String(damageResult && Number.isFinite(Number(damageResult.totalDamage)) ? Number(damageResult.totalDamage) : 0);
+      root.dataset.enemy3dLastTesla1MasterStunCount = String(stunResult && stunResult.affected || 0);
+      root.dataset.enemy3dLastTesla1MasterStunAmount = String(Math.max(0, Number(stunDamage) || 0));
+      root.dataset.enemy3dLastTesla1MasterHitRadiusBo = String(radiusBo);
+      root.dataset.enemy3dLastTesla1MasterTarget = String(target.id || target.targetEntityId || "");
+      root.dataset.enemy3dLastTesla1MasterDamageReason = String(damageResult && damageResult.trace && damageResult.trace.reason || "");
+      return Object.freeze({ damage: damageResult, stun: stunResult });
+    },
     toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
       x: toDepthThreeX(xW, worldWidthPx),
       y: toDepthThreeY(yW, worldHeightPx),

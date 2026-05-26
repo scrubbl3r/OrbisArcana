@@ -28,6 +28,8 @@ export function createTesla1AuthoringAdapter({
     const haloStrikeHitRadiusMinBo = readNumber(els.tesla1HaloStrikeHitRadiusMinBo, tesla1BehaviorDefault.haloStrikeHitRadiusMinBo, 0.01, 16);
     const haloStrikeDamageMin = readNumber(els.tesla1HaloStrikeDamageMin, tesla1BehaviorDefault.haloStrikeDamageMin, 0, 10000);
     const haloStrikeStunDamageMin = readNumber(els.tesla1HaloStrikeStunDamageMin, tesla1BehaviorDefault.haloStrikeStunDamageMin, 0, 10000);
+    const masterBoltDamageMin = readNumber(els.tesla1MasterBoltDamageMin, tesla1BehaviorDefault.masterBoltDamageMin, 0, 10000);
+    const masterBoltStunDamageMin = readNumber(els.tesla1MasterBoltStunDamageMin, tesla1BehaviorDefault.masterBoltStunDamageMin, 0, 10000);
     const dominantBoltMinRangeBo = readNumber(els.tesla1MasterBoltMinRangeBo, tesla1PresetDefault.dominantBoltMinRangeBo, 0, 64);
     const dominantBoltFrequencyMinMs = Math.round(readNumber(els.tesla1MasterBoltFrequencyMinMs, tesla1PresetDefault.dominantBoltFrequencyMinMs, 16, 60000));
     const fallbackShapeHz = tesla1PresetDefault.lightningShapeNoiseSpeed ?? 3;
@@ -79,6 +81,12 @@ export function createTesla1AuthoringAdapter({
       haloStrikeDamageMax: readNumber(els.tesla1HaloStrikeDamageMax, tesla1BehaviorDefault.haloStrikeDamageMax, haloStrikeDamageMin, 10000),
       haloStrikeStunDamageMin,
       haloStrikeStunDamageMax: readNumber(els.tesla1HaloStrikeStunDamageMax, tesla1BehaviorDefault.haloStrikeStunDamageMax, haloStrikeStunDamageMin, 10000),
+      masterBoltDamageMin,
+      masterBoltDamageMax: readNumber(els.tesla1MasterBoltDamageMax, tesla1BehaviorDefault.masterBoltDamageMax, masterBoltDamageMin, 10000),
+      masterBoltStunDamageMin,
+      masterBoltStunDamageMax: readNumber(els.tesla1MasterBoltStunDamageMax, tesla1BehaviorDefault.masterBoltStunDamageMax, masterBoltStunDamageMin, 10000),
+      masterBoltTipAoeRadiusBo: readNumber(els.tesla1MasterBoltTipAoeRadiusBo, tesla1BehaviorDefault.masterBoltTipAoeRadiusBo, 0.01, 32),
+      masterBoltPathBendToleranceBo: readNumber(els.tesla1MasterBoltPathBendToleranceBo, tesla1BehaviorDefault.masterBoltPathBendToleranceBo, 0, 32),
       boltShaderEnabled: els.tesla1BoltShaderEnabled ? !!els.tesla1BoltShaderEnabled.checked : tesla1PresetDefault.boltShaderEnabled !== false,
       lightningShapeMacroNoiseScale: readNumber(els.tesla1LightningShapeMacroNoiseScale, tesla1PresetDefault.lightningShapeMacroNoiseScale ?? tesla1PresetDefault.lightningShapeNoiseScale, 0.1, 200),
       lightningShapeMacroNoiseStrength: readNumber(els.tesla1LightningShapeMacroNoiseStrength, tesla1PresetDefault.lightningShapeMacroNoiseStrength ?? tesla1PresetDefault.lightningShapeNoiseStrength, 0, 0.5),
@@ -157,6 +165,12 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1HaloStrikeDamageMax) els.tesla1HaloStrikeDamageMax.value = String(source.haloStrikeDamageMax ?? tesla1BehaviorDefault.haloStrikeDamageMax);
     if (els.tesla1HaloStrikeStunDamageMin) els.tesla1HaloStrikeStunDamageMin.value = String(source.haloStrikeStunDamageMin ?? source.haloStrikeStunMinMs ?? tesla1BehaviorDefault.haloStrikeStunDamageMin);
     if (els.tesla1HaloStrikeStunDamageMax) els.tesla1HaloStrikeStunDamageMax.value = String(source.haloStrikeStunDamageMax ?? source.haloStrikeStunMaxMs ?? tesla1BehaviorDefault.haloStrikeStunDamageMax);
+    if (els.tesla1MasterBoltDamageMin) els.tesla1MasterBoltDamageMin.value = String(source.masterBoltDamageMin ?? tesla1BehaviorDefault.masterBoltDamageMin);
+    if (els.tesla1MasterBoltDamageMax) els.tesla1MasterBoltDamageMax.value = String(source.masterBoltDamageMax ?? tesla1BehaviorDefault.masterBoltDamageMax);
+    if (els.tesla1MasterBoltStunDamageMin) els.tesla1MasterBoltStunDamageMin.value = String(source.masterBoltStunDamageMin ?? tesla1BehaviorDefault.masterBoltStunDamageMin);
+    if (els.tesla1MasterBoltStunDamageMax) els.tesla1MasterBoltStunDamageMax.value = String(source.masterBoltStunDamageMax ?? tesla1BehaviorDefault.masterBoltStunDamageMax);
+    if (els.tesla1MasterBoltTipAoeRadiusBo) els.tesla1MasterBoltTipAoeRadiusBo.value = String(source.masterBoltTipAoeRadiusBo ?? tesla1BehaviorDefault.masterBoltTipAoeRadiusBo);
+    if (els.tesla1MasterBoltPathBendToleranceBo) els.tesla1MasterBoltPathBendToleranceBo.value = String(source.masterBoltPathBendToleranceBo ?? tesla1BehaviorDefault.masterBoltPathBendToleranceBo);
     if (els.tesla1LightningShapeMacroNoiseScale) els.tesla1LightningShapeMacroNoiseScale.value = String(source.lightningShapeMacroNoiseScale ?? source.lightningShapeNoiseScale ?? 7);
     if (els.tesla1LightningShapeMacroNoiseStrength) els.tesla1LightningShapeMacroNoiseStrength.value = String(source.lightningShapeMacroNoiseStrength ?? source.lightningShapeNoiseStrength ?? 0.15);
     if (els.tesla1LightningShapeMicroNoiseScale) els.tesla1LightningShapeMicroNoiseScale.value = String(source.lightningShapeMicroNoiseScale ?? 42);
@@ -202,15 +216,22 @@ export function createTesla1AuthoringAdapter({
       haloStrikeDamageMax: settings.haloStrikeDamageMax,
       haloStrikeStunDamageMin: settings.haloStrikeStunDamageMin,
       haloStrikeStunDamageMax: settings.haloStrikeStunDamageMax,
+      masterBoltDamageMin: settings.masterBoltDamageMin,
+      masterBoltDamageMax: settings.masterBoltDamageMax,
+      masterBoltStunDamageMin: settings.masterBoltStunDamageMin,
+      masterBoltStunDamageMax: settings.masterBoltStunDamageMax,
+      masterBoltTipAoeRadiusBo: settings.masterBoltTipAoeRadiusBo,
+      masterBoltPathBendToleranceBo: settings.masterBoltPathBendToleranceBo,
     });
   }
 
   function updateBehaviorReadout(els = {}) {
     if (!els.tesla1BehaviorReadout) return;
     const cfg = readBehaviorPreviewConfig(els);
-    els.tesla1BehaviorReadout.textContent = cfg.haloStrikeEnabled
-      ? `Halo strike range ${cfg.haloStrikeRangeMinBo}-${cfg.haloStrikeRangeMaxBo} BO. Hang ${cfg.haloStrikeHangTimeMinMs}-${cfg.haloStrikeHangTimeMaxMs}ms. Hit radius ${cfg.haloStrikeHitRadiusMinBo}-${cfg.haloStrikeHitRadiusMaxBo} BO. Cooldown ${cfg.haloStrikeCooldownMinMs}-${cfg.haloStrikeCooldownMaxMs}ms. Damage ${cfg.haloStrikeDamageMin}-${cfg.haloStrikeDamageMax}. Stun damage ${cfg.haloStrikeStunDamageMin}-${cfg.haloStrikeStunDamageMax}.`
+    const haloText = cfg.haloStrikeEnabled
+      ? `Halo strike range ${cfg.haloStrikeRangeMinBo}-${cfg.haloStrikeRangeMaxBo} BO, cooldown ${cfg.haloStrikeCooldownMinMs}-${cfg.haloStrikeCooldownMaxMs}ms, damage ${cfg.haloStrikeDamageMin}-${cfg.haloStrikeDamageMax}, stun damage ${cfg.haloStrikeStunDamageMin}-${cfg.haloStrikeStunDamageMax}.`
       : "Halo strike disabled.";
+    els.tesla1BehaviorReadout.textContent = `${haloText} Master bolt targets highest HP enemy in range; damage ${cfg.masterBoltDamageMin}-${cfg.masterBoltDamageMax}, stun damage ${cfg.masterBoltStunDamageMin}-${cfg.masterBoltStunDamageMax}, tip AOE ${cfg.masterBoltTipAoeRadiusBo} BO, bend tolerance ${cfg.masterBoltPathBendToleranceBo} BO.`;
   }
 
   return Object.freeze({

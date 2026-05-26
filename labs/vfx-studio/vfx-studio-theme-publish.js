@@ -269,6 +269,9 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params) {
 	        "haloStrikeCooldownMinMs", "haloStrikeCooldownMaxMs",
 	        "haloStrikeDamageMin", "haloStrikeDamageMax",
 	        "haloStrikeStunDamageMin", "haloStrikeStunDamageMax",
+	        "masterBoltDamageMin", "masterBoltDamageMax",
+	        "masterBoltStunDamageMin", "masterBoltStunDamageMax",
+	        "masterBoltTipAoeRadiusBo", "masterBoltPathBendToleranceBo",
 	        "lightningShapeMacroNoiseScale", "lightningShapeMacroNoiseStrength",
         "lightningShapeMicroNoiseScale", "lightningShapeMicroNoiseStrength",
         "lightningShapeNoiseSpeedMin", "lightningShapeNoiseSpeedMax",
@@ -656,6 +659,8 @@ export function buildTesla1BehaviorModule(params) {
   const cooldownMin = Math.round(toNum(p.haloStrikeCooldownMinMs, 650));
   const damageMin = toNum(p.haloStrikeDamageMin, 1);
   const stunDamageMin = toNum(p.haloStrikeStunDamageMin, 1);
+  const masterDamageMin = toNum(p.masterBoltDamageMin, 8);
+  const masterStunDamageMin = toNum(p.masterBoltStunDamageMin, 4);
   return [
     "export const TESLA_1_BEHAVIOR_DEFAULT = Object.freeze({",
     "  enabled: true,",
@@ -668,6 +673,12 @@ export function buildTesla1BehaviorModule(params) {
     `  haloStrikeDamageMax: ${toNum(p.haloStrikeDamageMax, damageMin).toFixed(2)},`,
     `  haloStrikeStunDamageMin: ${stunDamageMin.toFixed(2)},`,
     `  haloStrikeStunDamageMax: ${toNum(p.haloStrikeStunDamageMax, stunDamageMin).toFixed(2)},`,
+    `  masterBoltDamageMin: ${masterDamageMin.toFixed(2)},`,
+    `  masterBoltDamageMax: ${toNum(p.masterBoltDamageMax, masterDamageMin).toFixed(2)},`,
+    `  masterBoltStunDamageMin: ${masterStunDamageMin.toFixed(2)},`,
+    `  masterBoltStunDamageMax: ${toNum(p.masterBoltStunDamageMax, masterStunDamageMin).toFixed(2)},`,
+    `  masterBoltTipAoeRadiusBo: ${toNum(p.masterBoltTipAoeRadiusBo, 0.45).toFixed(2)},`,
+    `  masterBoltPathBendToleranceBo: ${toNum(p.masterBoltPathBendToleranceBo, 0.35).toFixed(2)},`,
     "});",
     "",
   ].join("\n");
