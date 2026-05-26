@@ -129,6 +129,10 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     dominantBoltDetourRatioMax: clampNumber(source.dominantBoltDetourRatioMax, 1, 8, TESLA_1_PRESET_DEFAULT.dominantBoltDetourRatioMax),
     dominantBoltFrequencyMinMs,
     dominantBoltFrequencyMaxMs: Math.round(clampNumber(source.dominantBoltFrequencyMaxMs, dominantBoltFrequencyMinMs, 60000, TESLA_1_PRESET_DEFAULT.dominantBoltFrequencyMaxMs)),
+    dominantBoltMacroBendMultiplier: clampNumber(source.dominantBoltMacroBendMultiplier, 0, 8, TESLA_1_PRESET_DEFAULT.dominantBoltMacroBendMultiplier),
+    dominantBoltMacroScaleMultiplier: clampNumber(source.dominantBoltMacroScaleMultiplier, 0.05, 8, TESLA_1_PRESET_DEFAULT.dominantBoltMacroScaleMultiplier),
+    dominantBoltMicroJitterMultiplier: clampNumber(source.dominantBoltMicroJitterMultiplier, 0, 8, TESLA_1_PRESET_DEFAULT.dominantBoltMicroJitterMultiplier),
+    dominantBoltBranchDensityMultiplier: clampNumber(source.dominantBoltBranchDensityMultiplier, 0, 8, TESLA_1_PRESET_DEFAULT.dominantBoltBranchDensityMultiplier),
     haloStrikeEnabled: source.haloStrikeEnabled !== false && source.haloStrikeEnabled !== 0,
     haloStrikeRangeMinBo,
     haloStrikeRangeMaxBo: clampNumber(source.haloStrikeRangeMaxBo, Math.max(0.01, haloStrikeRangeMinBo), 64, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeRangeMaxBo),
@@ -197,6 +201,10 @@ function buildLightningFieldUniformValues({
   masterBoltTarget = new THREE.Vector2(0, 0),
   masterBoltSeed = 0,
   masterBoltTime = 0,
+  masterMacroBendMultiplier = 1,
+  masterMacroScaleMultiplier = 1,
+  masterMicroJitterMultiplier = 1,
+  masterBranchDensityMultiplier = 1,
   time,
 }) {
   const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMin) || 0)));
@@ -255,6 +263,10 @@ function buildLightningFieldUniformValues({
     uMasterBoltActive: masterBoltActive ? 1 : 0,
     uMasterBoltTarget: masterBoltTarget,
     uMasterBoltSeed: clampNumber(masterBoltSeed, 0, 999999, 0),
+    uMasterMacroBendMultiplier: clampNumber(masterMacroBendMultiplier, 0, 8, 1),
+    uMasterMacroScaleMultiplier: clampNumber(masterMacroScaleMultiplier, 0.05, 8, 1),
+    uMasterMicroJitterMultiplier: clampNumber(masterMicroJitterMultiplier, 0, 8, 1),
+    uMasterBranchDensityMultiplier: clampNumber(masterBranchDensityMultiplier, 0, 8, 1),
   };
 }
 
@@ -329,6 +341,10 @@ function createLightningFieldMaterial(params) {
       uMasterBoltActive: { value: values.uMasterBoltActive },
       uMasterBoltTarget: { value: values.uMasterBoltTarget },
       uMasterBoltSeed: { value: values.uMasterBoltSeed },
+      uMasterMacroBendMultiplier: { value: values.uMasterMacroBendMultiplier },
+      uMasterMacroScaleMultiplier: { value: values.uMasterMacroScaleMultiplier },
+      uMasterMicroJitterMultiplier: { value: values.uMasterMicroJitterMultiplier },
+      uMasterBranchDensityMultiplier: { value: values.uMasterBranchDensityMultiplier },
     },
     vertexShader: `
       varying vec3 vLocalPosition;
@@ -392,6 +408,10 @@ function createLightningFieldMaterial(params) {
       uniform int uMasterBoltActive;
       uniform vec2 uMasterBoltTarget;
       uniform float uMasterBoltSeed;
+      uniform float uMasterMacroBendMultiplier;
+      uniform float uMasterMacroScaleMultiplier;
+      uniform float uMasterMicroJitterMultiplier;
+      uniform float uMasterBranchDensityMultiplier;
       varying vec3 vLocalPosition;
       const float TIME_RING = 32.0;
       const float SNAPSHOT_RING = 64.0;
@@ -472,11 +492,11 @@ function createLightningFieldMaterial(params) {
         return a + delta * amount;
       }
 
-      vec3 proceduralBolt(vec2 p, float angle, float startR, float len, float seed, float sampleTime) {
+      vec3 proceduralBolt(vec2 p, float angle, float startR, float len, float seed, float sampleTime, float macroNoiseScale, float macroNoiseStrength, float microNoiseStrength, float branchDensity) {
         vec2 uv = rotate2(angle) * p;
         uv.y -= startR;
         float h = 0.0;
-        vec2 macroNoiseUv = uv / max(1.0, uBo) * uMacroNoiseScale;
+        vec2 macroNoiseUv = uv / max(1.0, uBo) * macroNoiseScale;
         vec2 microNoiseUv = uv / max(1.0, uBo) * uMicroNoiseScale;
         float shapeHz = mix(uNoiseSpeedMin, max(uNoiseSpeedMin, uNoiseSpeedMax), randomFloat(vec2(seed, 173.0)));
         float shapeClock = mod(sampleTime * shapeHz, TIME_RING);
@@ -492,7 +512,7 @@ function createLightningFieldMaterial(params) {
         float tipAnchorStart = max(0.0, len - uBo * 0.18);
         float tipAnchor = 1.0 - smoothstep(tipAnchorStart, len, clamp(uv.y, 0.0, len));
         float baseAnchor = smoothstep(0.0, uBo * 0.2, uv.y);
-        uv.x += (macro * uMacroNoiseStrength + micro * uMicroNoiseStrength) * uBo * baseAnchor * tipAnchor;
+        uv.x += (macro * macroNoiseStrength + micro * microNoiseStrength) * uBo * baseAnchor * tipAnchor;
         float baseWidth = lengthMappedBaseWidth(len);
         float tipWidth = max(0.0001 * uBo, baseWidth * uTipWidthRatio);
         float d = taperedLineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), baseWidth, tipWidth, h);
@@ -503,21 +523,21 @@ function createLightningFieldMaterial(params) {
         for (int branchIndex = 0; branchIndex < 3; branchIndex += 1) {
           float bi = float(branchIndex);
           float branchSeed = seed + bi * 23.17;
-          if (randomFloat(vec2(branchSeed, 311.0)) > uBranchDensity) continue;
+          if (randomFloat(vec2(branchSeed, 311.0)) > branchDensity) continue;
           float anchorT = mix(0.18, 0.82, randomFloat(vec2(branchSeed, 317.0)));
           float side = randomFloat(vec2(branchSeed, 331.0)) < 0.5 ? -1.0 : 1.0;
           float branchLen = mix(uBranchLengthMin, max(uBranchLengthMin, uBranchLengthMax), randomFloat(vec2(branchSeed, 337.0)));
           float branchAngle = side * mix(uBranchAngleMin, max(uBranchAngleMin, uBranchAngleMax), randomFloat(vec2(branchSeed, 347.0)));
           vec2 branchUv = rotate2(-branchAngle) * (uv - vec2(0.0, len * anchorT));
           float branchNoiseFrame = stableFrame(sampleTime * max(1.0, uNoiseSpeedMin) + bi * 5.0);
-          vec2 branchMacroUv = branchUv / max(1.0, uBo) * uMacroNoiseScale;
+          vec2 branchMacroUv = branchUv / max(1.0, uBo) * macroNoiseScale;
           vec2 branchMicroUv = branchUv / max(1.0, uBo) * uMicroNoiseScale;
           float branchMacro = simpleNoise(branchMacroUv + snapshotOffset(branchSeed, branchNoiseFrame), 2.0) * 2.0 - 1.0;
           float branchMicro = simpleNoise(branchMicroUv + snapshotOffset(branchSeed + 401.0, branchNoiseFrame), 2.0) * 2.0 - 1.0;
           float branchTipAnchorStart = max(0.0, branchLen - uBo * 0.12);
           float branchTipAnchor = 1.0 - smoothstep(branchTipAnchorStart, branchLen, clamp(branchUv.y, 0.0, branchLen));
           float branchBaseAnchor = smoothstep(0.0, uBo * 0.12, branchUv.y);
-          branchUv.x += (branchMacro * uMacroNoiseStrength + branchMicro * uMicroNoiseStrength) * uBo * branchBaseAnchor * branchTipAnchor;
+          branchUv.x += (branchMacro * macroNoiseStrength + branchMicro * microNoiseStrength) * uBo * branchBaseAnchor * branchTipAnchor;
           float branchH = 0.0;
           float branchBaseWidth = lengthMappedBaseWidth(branchLen) * uBranchWidthRatio;
           float branchTipWidth = max(0.0001 * uBo, branchBaseWidth * uTipWidthRatio);
@@ -586,19 +606,23 @@ function createLightningFieldMaterial(params) {
           float lengthRoll = (lengthSlot + randomFloat(vec2(seed, 191.0))) / lengthSlotCount;
           float endR = mix(uEndMin, uEndMax, lengthRoll);
           float len = max(0.001 * uBo, endR - startR);
-          color += proceduralBolt(p, angle, startR, len, seed, uTime) * uIntensity;
+          color += proceduralBolt(p, angle, startR, len, seed, uTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity) * uIntensity;
         }
         if (uHaloStrikeActive == 1 && length(uHaloStrikeTarget) > uStartMin + 0.001 * uBo) {
           float strikeAngle = atan(uHaloStrikeTarget.x, uHaloStrikeTarget.y);
           float strikeStartR = max(uStartMin, 0.5 * uBo);
           float strikeLen = max(0.001 * uBo, length(uHaloStrikeTarget) - strikeStartR);
-          color += proceduralBolt(p, strikeAngle, strikeStartR, strikeLen, 900.0 + uHaloStrikeSeed, uHaloStrikeTime) * uIntensity * 1.25;
+          color += proceduralBolt(p, strikeAngle, strikeStartR, strikeLen, 900.0 + uHaloStrikeSeed, uHaloStrikeTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity) * uIntensity * 1.25;
         }
         if (uMasterBoltActive == 1 && length(uMasterBoltTarget) > uStartMin + 0.001 * uBo) {
           float masterAngle = atan(uMasterBoltTarget.x, uMasterBoltTarget.y);
           float masterStartR = max(uStartMin, 0.5 * uBo);
           float masterLen = max(0.001 * uBo, length(uMasterBoltTarget) - masterStartR);
-          color += proceduralBolt(p, masterAngle, masterStartR, masterLen, 1400.0 + uMasterBoltSeed, uMasterBoltTime) * uIntensity * 1.65;
+          float masterMacroScale = max(0.1, uMacroNoiseScale * uMasterMacroScaleMultiplier);
+          float masterMacroStrength = clamp(uMacroNoiseStrength * uMasterMacroBendMultiplier, 0.0, 2.0);
+          float masterMicroStrength = clamp(uMicroNoiseStrength * uMasterMicroJitterMultiplier, 0.0, 2.0);
+          float masterBranchDensity = clamp(uBranchDensity * uMasterBranchDensityMultiplier, 0.0, 1.0);
+          color += proceduralBolt(p, masterAngle, masterStartR, masterLen, 1400.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity) * uIntensity * 1.65;
         }
         color = 1.0 - exp(-color * 0.55);
         float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
@@ -786,6 +810,10 @@ export function createTesla1Runtime(options = {}) {
       masterBoltTarget: masterBoltState.target,
       masterBoltSeed: masterBoltState.seed,
       masterBoltTime: masterBoltState.snapshotTime,
+      masterMacroBendMultiplier: config.dominantBoltMacroBendMultiplier,
+      masterMacroScaleMultiplier: config.dominantBoltMacroScaleMultiplier,
+      masterMicroJitterMultiplier: config.dominantBoltMicroJitterMultiplier,
+      masterBranchDensityMultiplier: config.dominantBoltBranchDensityMultiplier,
       time,
     };
   }

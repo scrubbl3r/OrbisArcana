@@ -2078,6 +2078,17 @@
         </div>
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
+            <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="tesla1MasterBoltShapeControls">Master Bolt Shape</button>
+          </div>
+          <div id="tesla1MasterBoltShapeControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow"><label for="tesla1MasterBoltMacroBendMultiplier">Macro bend x</label><input id="tesla1MasterBoltMacroBendMultiplier" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="1.75" /></div>
+            <div class="paramFieldRow"><label for="tesla1MasterBoltMacroScaleMultiplier">Macro scale x</label><input id="tesla1MasterBoltMacroScaleMultiplier" class="paramFieldInput" type="number" min="0.05" max="8" step="0.01" value="0.65" /></div>
+            <div class="paramFieldRow"><label for="tesla1MasterBoltMicroJitterMultiplier">Micro jitter x</label><input id="tesla1MasterBoltMicroJitterMultiplier" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="1" /></div>
+            <div class="paramFieldRow"><label for="tesla1MasterBoltBranchDensityMultiplier">Branch density x</label><input id="tesla1MasterBoltBranchDensityMultiplier" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="1" /></div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="tesla1HaloControls">Halo</button>
             <button id="tesla1HaloVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="false" aria-label="Toggle Halo visibility" title="Toggle Halo visibility"></button>
           </div>
@@ -3445,6 +3456,10 @@
       tesla1MasterBoltFrequencyMaxMs: $("tesla1MasterBoltFrequencyMaxMs"),
       tesla1MasterBoltContactRadiusBo: $("tesla1MasterBoltContactRadiusBo"),
       tesla1MasterBoltPathBendAllowance: $("tesla1MasterBoltPathBendAllowance"),
+      tesla1MasterBoltMacroBendMultiplier: $("tesla1MasterBoltMacroBendMultiplier"),
+      tesla1MasterBoltMacroScaleMultiplier: $("tesla1MasterBoltMacroScaleMultiplier"),
+      tesla1MasterBoltMicroJitterMultiplier: $("tesla1MasterBoltMicroJitterMultiplier"),
+      tesla1MasterBoltBranchDensityMultiplier: $("tesla1MasterBoltBranchDensityMultiplier"),
       tesla1HaloVisibleBtn: $("tesla1HaloVisibleBtn"),
       tesla1HaloFieldEnabled: $("tesla1HaloFieldEnabled"),
       tesla1HaloFieldShellRadiusBo: $("tesla1HaloFieldShellRadiusBo"),

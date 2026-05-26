@@ -42,6 +42,10 @@ export function createTesla1AuthoringAdapter({
       dominantBoltDetourRatioMax: readNumber(els.tesla1MasterBoltPathBendAllowance, tesla1PresetDefault.dominantBoltDetourRatioMax, 1, 8),
       dominantBoltFrequencyMinMs,
       dominantBoltFrequencyMaxMs: Math.round(readNumber(els.tesla1MasterBoltFrequencyMaxMs, tesla1PresetDefault.dominantBoltFrequencyMaxMs, dominantBoltFrequencyMinMs, 60000)),
+      dominantBoltMacroBendMultiplier: readNumber(els.tesla1MasterBoltMacroBendMultiplier, tesla1PresetDefault.dominantBoltMacroBendMultiplier, 0, 8),
+      dominantBoltMacroScaleMultiplier: readNumber(els.tesla1MasterBoltMacroScaleMultiplier, tesla1PresetDefault.dominantBoltMacroScaleMultiplier, 0.05, 8),
+      dominantBoltMicroJitterMultiplier: readNumber(els.tesla1MasterBoltMicroJitterMultiplier, tesla1PresetDefault.dominantBoltMicroJitterMultiplier, 0, 8),
+      dominantBoltBranchDensityMultiplier: readNumber(els.tesla1MasterBoltBranchDensityMultiplier, tesla1PresetDefault.dominantBoltBranchDensityMultiplier, 0, 8),
       haloFieldEnabled: els.tesla1HaloFieldEnabled ? !!els.tesla1HaloFieldEnabled.checked : tesla1PresetDefault.haloFieldEnabled !== false,
       haloFieldShellRadiusBo: readNumber(els.tesla1HaloFieldShellRadiusBo, tesla1PresetDefault.haloFieldShellRadiusBo, 0.5, 32),
       haloFieldBoltStartMinBo: readNumber(els.tesla1HaloFieldBoltStartMinBo, tesla1PresetDefault.haloFieldBoltStartMinBo, 0, 32),
@@ -114,6 +118,10 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1MasterBoltFrequencyMaxMs) els.tesla1MasterBoltFrequencyMaxMs.value = String(source.dominantBoltFrequencyMaxMs ?? 1400);
     if (els.tesla1MasterBoltContactRadiusBo) els.tesla1MasterBoltContactRadiusBo.value = String(source.dominantBoltTargetRadiusBo ?? 0.18);
     if (els.tesla1MasterBoltPathBendAllowance) els.tesla1MasterBoltPathBendAllowance.value = String(source.dominantBoltDetourRatioMax ?? 1.4);
+    if (els.tesla1MasterBoltMacroBendMultiplier) els.tesla1MasterBoltMacroBendMultiplier.value = String(source.dominantBoltMacroBendMultiplier ?? 1.75);
+    if (els.tesla1MasterBoltMacroScaleMultiplier) els.tesla1MasterBoltMacroScaleMultiplier.value = String(source.dominantBoltMacroScaleMultiplier ?? 0.65);
+    if (els.tesla1MasterBoltMicroJitterMultiplier) els.tesla1MasterBoltMicroJitterMultiplier.value = String(source.dominantBoltMicroJitterMultiplier ?? 1);
+    if (els.tesla1MasterBoltBranchDensityMultiplier) els.tesla1MasterBoltBranchDensityMultiplier.value = String(source.dominantBoltBranchDensityMultiplier ?? 1);
     if (els.tesla1BoltShaderEnabled) els.tesla1BoltShaderEnabled.checked = source.boltShaderEnabled !== false;
     if (els.tesla1HaloFieldEnabled) els.tesla1HaloFieldEnabled.checked = source.haloFieldEnabled !== false;
     if (els.tesla1HaloFieldShellRadiusBo) els.tesla1HaloFieldShellRadiusBo.value = String(source.haloFieldShellRadiusBo ?? 1.5);
