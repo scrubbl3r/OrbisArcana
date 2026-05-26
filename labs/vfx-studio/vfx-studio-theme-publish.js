@@ -232,6 +232,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params) {
         "durationMs",
         "dominantBoltControlPointDiameterBo",
         "dominantBoltHeadingMemory", "dominantBoltMaxStepBo", "dominantBoltMinStepBo", "dominantBoltPathJitterBo",
+        "dominantBoltMinRangeBo", "dominantBoltMaxRangeBo", "dominantBoltDetourRatioMax",
+        "dominantBoltFrequencyMinMs", "dominantBoltFrequencyMaxMs",
         "dominantBoltPointSpacingBo", "dominantBoltSeekStrength", "dominantBoltTargetRadiusBo",
         "dominantBoltWanderStrength", "dominantBoltZBo",
         "boltShaderEnabled", "boltShaderIntensity", "boltShaderTipFade",

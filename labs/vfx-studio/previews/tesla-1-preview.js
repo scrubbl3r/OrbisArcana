@@ -115,6 +115,10 @@ function buildLightningFieldUniformValues({
   haloStrikeTarget = new THREE.Vector2(0, 0),
   haloStrikeSeed = 0,
   haloStrikeTime = 0,
+  masterBoltActive = 0,
+  masterBoltTarget = new THREE.Vector2(0, 0),
+  masterBoltSeed = 0,
+  masterBoltTime = 0,
   time,
 }) {
   const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMin) || 0)));
@@ -125,6 +129,7 @@ function buildLightningFieldUniformValues({
     uBo: Math.max(1, bo),
     uTime: ((time % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS,
     uHaloStrikeTime: ((haloStrikeTime % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS,
+    uMasterBoltTime: ((masterBoltTime % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS,
     uStartMin: startMin,
     uStartMax: Math.max(startMin, startMax),
     uEndMin: endMin,
@@ -169,6 +174,9 @@ function buildLightningFieldUniformValues({
     uHaloStrikeSlot: Math.round(clampNumber(haloStrikeSlot, -1, MAX_HALO_BOLTS - 1, -1)),
     uHaloStrikeTarget: haloStrikeTarget,
     uHaloStrikeSeed: clampNumber(haloStrikeSeed, 0, 999999, 0),
+    uMasterBoltActive: masterBoltActive ? 1 : 0,
+    uMasterBoltTarget: masterBoltTarget,
+    uMasterBoltSeed: clampNumber(masterBoltSeed, 0, 999999, 0),
   };
 }
 
@@ -195,6 +203,7 @@ function createLightningFieldMaterial(params) {
       uBo: { value: values.uBo },
       uTime: { value: values.uTime },
       uHaloStrikeTime: { value: values.uHaloStrikeTime },
+      uMasterBoltTime: { value: values.uMasterBoltTime },
       uStartMin: { value: values.uStartMin },
       uStartMax: { value: values.uStartMax },
       uEndMin: { value: values.uEndMin },
@@ -239,6 +248,9 @@ function createLightningFieldMaterial(params) {
       uHaloStrikeSlot: { value: values.uHaloStrikeSlot },
       uHaloStrikeTarget: { value: values.uHaloStrikeTarget },
       uHaloStrikeSeed: { value: values.uHaloStrikeSeed },
+      uMasterBoltActive: { value: values.uMasterBoltActive },
+      uMasterBoltTarget: { value: values.uMasterBoltTarget },
+      uMasterBoltSeed: { value: values.uMasterBoltSeed },
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -255,6 +267,7 @@ function createLightningFieldMaterial(params) {
       uniform float uBo;
       uniform float uTime;
       uniform float uHaloStrikeTime;
+      uniform float uMasterBoltTime;
       uniform float uStartMin;
       uniform float uStartMax;
       uniform float uEndMin;
@@ -299,6 +312,9 @@ function createLightningFieldMaterial(params) {
       uniform int uHaloStrikeSlot;
       uniform vec2 uHaloStrikeTarget;
       uniform float uHaloStrikeSeed;
+      uniform int uMasterBoltActive;
+      uniform vec2 uMasterBoltTarget;
+      uniform float uMasterBoltSeed;
       varying vec3 vWorldPosition;
       const float TIME_RING = 32.0;
       const float SNAPSHOT_RING = 64.0;
@@ -501,6 +517,12 @@ function createLightningFieldMaterial(params) {
 	          float strikeLen = max(0.001 * uBo, length(uHaloStrikeTarget) - strikeStartR);
 	          color += proceduralBolt(p, strikeAngle, strikeStartR, strikeLen, 900.0 + uHaloStrikeSeed, uHaloStrikeTime) * uIntensity * 1.25;
 	        }
+	        if (uMasterBoltActive == 1 && length(uMasterBoltTarget) > uStartMin + 0.001 * uBo) {
+	          float masterAngle = atan(uMasterBoltTarget.x, uMasterBoltTarget.y);
+	          float masterStartR = max(uStartMin, 0.5 * uBo);
+	          float masterLen = max(0.001 * uBo, length(uMasterBoltTarget) - masterStartR);
+	          color += proceduralBolt(p, masterAngle, masterStartR, masterLen, 1400.0 + uMasterBoltSeed, uMasterBoltTime) * uIntensity * 1.65;
+	        }
 	        color = 1.0 - exp(-color * 0.55);
         float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
         gl_FragColor = vec4(color, alpha);
@@ -533,6 +555,13 @@ export function createTesla1Preview({
     snapshotTime: 0,
     target: new THREE.Vector2(0, 0),
   };
+  let masterBoltState = {
+    activeUntil: 0,
+    nextAt: 0,
+    seed: 0,
+    snapshotTime: 0,
+    target: new THREE.Vector2(0, 0),
+  };
 
   function readBo() {
     const visualState = typeof getOrbBaseVisualState === "function" ? getOrbBaseVisualState() : null;
@@ -562,16 +591,30 @@ export function createTesla1Preview({
     fieldMesh = null;
     fieldPlaneSize = 0;
     resetHaloStrikeState();
+    resetMasterBoltState();
   }
 
-  function masterRoute(bo, time) {
+  function readMasterBoltConfig() {
     const minRange = readInputNumber(els.tesla1MasterBoltMinRangeBo, 4, 0, 64);
-    const maxRange = readInputNumber(els.tesla1MasterBoltMaxRangeBo, 7, minRange + 0.25, 64);
+    const frequencyMinMs = Math.round(readInputNumber(els.tesla1MasterBoltFrequencyMinMs, 900, 16, 60000));
+    return Object.freeze({
+      enabled: !els.tesla1MasterBoltVisibleBtn || els.tesla1MasterBoltVisibleBtn.getAttribute("aria-pressed") !== "false",
+      minRange,
+      maxRange: readInputNumber(els.tesla1MasterBoltMaxRangeBo, 8, minRange + 0.25, 64),
+      frequencyMinMs,
+      frequencyMaxMs: Math.round(readInputNumber(els.tesla1MasterBoltFrequencyMaxMs, 1400, frequencyMinMs, 60000)),
+      bend: readInputNumber(els.tesla1MasterBoltPathBendAllowance, 1.4, 1, 8),
+    });
+  }
+
+  function masterRoute(bo, time, master = readMasterBoltConfig()) {
+    const minRange = master.minRange;
+    const maxRange = master.maxRange;
     const angle = time * 0.28 + 0.75;
     const radius = bo * (minRange + (maxRange - minRange) * (0.5 + 0.5 * Math.sin(time * 0.41)));
     const start = new THREE.Vector3(Math.cos(angle) * bo * ORB_RADIUS_BO, Math.sin(angle) * bo * ORB_RADIUS_BO, 0);
     const end = new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, 0);
-    const bend = readInputNumber(els.tesla1MasterBoltPathBendAllowance, 1.4, 1, 8);
+    const bend = master.bend;
     if (bend <= 1.05) return [start, end];
     const normal = new THREE.Vector3(-Math.sin(angle), Math.cos(angle), 0);
     const steer = start.clone().lerp(end, 0.55).add(normal.multiplyScalar(bo * Math.min(1.25, (bend - 1) * 0.4)));
@@ -668,6 +711,16 @@ export function createTesla1Preview({
     };
   }
 
+  function resetMasterBoltState() {
+    masterBoltState = {
+      activeUntil: 0,
+      nextAt: 0,
+      seed: 0,
+      snapshotTime: 0,
+      target: new THREE.Vector2(0, 0),
+    };
+  }
+
   function updateHaloStrikeState({ bo, shape, strike, time } = {}) {
     if (!strike || !strike.enabled || !shape || shape.boltCountMax <= 0) {
       haloStrikeState.activeUntil = 0;
@@ -696,11 +749,35 @@ export function createTesla1Preview({
     return haloStrikeState;
   }
 
+  function updateMasterBoltState({ bo, master, time } = {}) {
+    if (!master || !master.enabled) {
+      masterBoltState.activeUntil = 0;
+      return masterBoltState;
+    }
+    if (time < masterBoltState.activeUntil) return masterBoltState;
+    if (!masterBoltState.nextAt || time >= masterBoltState.nextAt) {
+      const seed = Math.floor((time * 571) + masterBoltState.seed * 31 + 7) % 100000;
+      const rangeRoll = (Math.sin(seed * 19.9898) * 63858.5453) % 1;
+      const angleRoll = (Math.sin(seed * 48.233) * 38634.6345) % 1;
+      const frequencyRoll = (Math.sin(seed * 29.425) * 19233.2341) % 1;
+      const range = master.minRange + (master.maxRange - master.minRange) * Math.abs(rangeRoll);
+      const angle = Math.abs(angleRoll) * Math.PI * 2;
+      const frequencyMs = master.frequencyMinMs + (master.frequencyMaxMs - master.frequencyMinMs) * Math.abs(frequencyRoll);
+      masterBoltState.seed = seed;
+      masterBoltState.snapshotTime = time;
+      masterBoltState.target.set(Math.cos(angle) * range * bo, Math.sin(angle) * range * bo);
+      masterBoltState.activeUntil = time + 0.22;
+      masterBoltState.nextAt = time + Math.max(0.016, frequencyMs / 1000);
+    }
+    return masterBoltState;
+  }
+
   function syncMasterLayer(bo, time) {
     if (!masterLayer) return;
     clearLayer(masterLayer);
-    masterLayer.visible = !els.tesla1MasterBoltVisibleBtn || els.tesla1MasterBoltVisibleBtn.getAttribute("aria-pressed") !== "false";
-    const route = masterRoute(bo, time);
+    const master = readMasterBoltConfig();
+    masterLayer.visible = master.enabled;
+    const route = masterRoute(bo, time, master);
     const line = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints(route),
       new THREE.LineBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.72, depthTest: false, depthWrite: false, toneMapped: false })
@@ -763,7 +840,9 @@ export function createTesla1Preview({
     shapeLayer.visible = !els.tesla1LightningShapeVisibleBtn || els.tesla1LightningShapeVisibleBtn.getAttribute("aria-pressed") !== "false";
     const shape = readShapeConfig();
     const strike = readHaloStrikeConfig();
+    const master = readMasterBoltConfig();
     const strikeState = updateHaloStrikeState({ bo, shape, strike, time });
+    const masterState = updateMasterBoltState({ bo, master, time });
     const startMin = readInputNumber(els.tesla1HaloFieldBoltStartMinBo, 0, 0, 32);
     const startMax = readInputNumber(els.tesla1HaloFieldBoltStartMaxBo, 0.15, startMin, 32);
     const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, Math.max(0.01, startMin), 32);
@@ -775,7 +854,7 @@ export function createTesla1Preview({
       return;
     }
     const boltColor = rgbColor(els.tesla1BoltShaderColorR && els.tesla1BoltShaderColorR.value, els.tesla1BoltShaderColorG && els.tesla1BoltShaderColorG.value, els.tesla1BoltShaderColorB && els.tesla1BoltShaderColorB.value);
-    const maxRangeBo = Math.max(ORB_RADIUS_BO + endMax, ORB_RADIUS_BO + startMax, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
+    const maxRangeBo = Math.max(ORB_RADIUS_BO + endMax, ORB_RADIUS_BO + startMax, ORB_RADIUS_BO + master.maxRange, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
     const materialParams = {
       boltCountMin: shape.boltCountMin,
@@ -825,6 +904,10 @@ export function createTesla1Preview({
       haloStrikeTarget: strikeState.target,
       haloStrikeSeed: strikeState.seed,
       haloStrikeTime: strikeState.snapshotTime,
+      masterBoltActive: master.enabled && time < masterState.activeUntil,
+      masterBoltTarget: masterState.target,
+      masterBoltSeed: masterState.seed,
+      masterBoltTime: masterState.snapshotTime,
       time,
     };
     if (!fieldMesh || !fieldMesh.parent) {
@@ -852,6 +935,7 @@ export function createTesla1Preview({
     const activeConfig = ORB_3D_VISUAL_DEFAULTS;
     createdAt = performance.now();
     resetHaloStrikeState();
+    resetMasterBoltState();
     inspector = createWorldObjectInspector({
       root: els.previewRoot,
       bo,
@@ -932,6 +1016,8 @@ export function createTesla1Preview({
     [
       els.tesla1MasterBoltMinRangeBo,
       els.tesla1MasterBoltMaxRangeBo,
+      els.tesla1MasterBoltFrequencyMinMs,
+      els.tesla1MasterBoltFrequencyMaxMs,
       els.tesla1MasterBoltContactRadiusBo,
       els.tesla1MasterBoltPathBendAllowance,
       els.tesla1HaloFieldEnabled,

@@ -28,16 +28,20 @@ export function createTesla1AuthoringAdapter({
     const haloStrikeHitRadiusMinBo = readNumber(els.tesla1HaloStrikeHitRadiusMinBo, tesla1BehaviorDefault.haloStrikeHitRadiusMinBo, 0.01, 16);
     const haloStrikeDamageMin = readNumber(els.tesla1HaloStrikeDamageMin, tesla1BehaviorDefault.haloStrikeDamageMin, 0, 10000);
     const haloStrikeStunDamageMin = readNumber(els.tesla1HaloStrikeStunDamageMin, tesla1BehaviorDefault.haloStrikeStunDamageMin, 0, 10000);
+    const dominantBoltMinRangeBo = readNumber(els.tesla1MasterBoltMinRangeBo, tesla1PresetDefault.dominantBoltMinRangeBo, 0, 64);
+    const dominantBoltFrequencyMinMs = Math.round(readNumber(els.tesla1MasterBoltFrequencyMinMs, tesla1PresetDefault.dominantBoltFrequencyMinMs, 16, 60000));
     const fallbackShapeHz = tesla1PresetDefault.lightningShapeNoiseSpeed ?? 3;
     const lightningShapeNoiseSpeedMin = readNumber(els.tesla1LightningShapeNoiseSpeedMin, tesla1PresetDefault.lightningShapeNoiseSpeedMin ?? fallbackShapeHz, 0, 20);
     const lightningShapeWidthLengthMinBo = readNumber(els.tesla1LightningShapeWidthLengthMinBo, tesla1PresetDefault.lightningShapeWidthLengthMinBo, 0.001, 1000);
     const lightningShapeBaseWidthMinBo = readNumber(els.tesla1LightningShapeBaseWidthMinBo, tesla1PresetDefault.lightningShapeBaseWidthMinBo, 0.0001, 32);
     return Object.freeze({
       durationMs: readNumber(els.tesla1SpellDurationMs, tesla1PresetDefault.durationMs, 200, 60000),
-      dominantBoltMinRangeBo: readNumber(els.tesla1MasterBoltMinRangeBo, tesla1PresetDefault.dominantBoltMinRangeBo, 0, 64),
-      dominantBoltMaxRangeBo: readNumber(els.tesla1MasterBoltMaxRangeBo, tesla1PresetDefault.dominantBoltMaxRangeBo, 0, 64),
+      dominantBoltMinRangeBo,
+      dominantBoltMaxRangeBo: readNumber(els.tesla1MasterBoltMaxRangeBo, tesla1PresetDefault.dominantBoltMaxRangeBo, Math.max(0.01, dominantBoltMinRangeBo), 64),
       dominantBoltTargetRadiusBo: readNumber(els.tesla1MasterBoltContactRadiusBo, tesla1PresetDefault.dominantBoltTargetRadiusBo, 0, 8),
       dominantBoltDetourRatioMax: readNumber(els.tesla1MasterBoltPathBendAllowance, tesla1PresetDefault.dominantBoltDetourRatioMax, 1, 8),
+      dominantBoltFrequencyMinMs,
+      dominantBoltFrequencyMaxMs: Math.round(readNumber(els.tesla1MasterBoltFrequencyMaxMs, tesla1PresetDefault.dominantBoltFrequencyMaxMs, dominantBoltFrequencyMinMs, 60000)),
       haloFieldEnabled: els.tesla1HaloFieldEnabled ? !!els.tesla1HaloFieldEnabled.checked : tesla1PresetDefault.haloFieldEnabled !== false,
       haloFieldShellRadiusBo: readNumber(els.tesla1HaloFieldShellRadiusBo, tesla1PresetDefault.haloFieldShellRadiusBo, 0.5, 32),
       haloFieldBoltStartMinBo: readNumber(els.tesla1HaloFieldBoltStartMinBo, tesla1PresetDefault.haloFieldBoltStartMinBo, 0, 32),
@@ -105,7 +109,9 @@ export function createTesla1AuthoringAdapter({
     const source = settings && typeof settings === "object" ? settings : defaultSettings();
     if (els.tesla1SpellDurationMs) els.tesla1SpellDurationMs.value = String(source.durationMs ?? 10000);
     if (els.tesla1MasterBoltMinRangeBo) els.tesla1MasterBoltMinRangeBo.value = String(source.dominantBoltMinRangeBo ?? 4);
-    if (els.tesla1MasterBoltMaxRangeBo) els.tesla1MasterBoltMaxRangeBo.value = String(source.dominantBoltMaxRangeBo ?? 7);
+    if (els.tesla1MasterBoltMaxRangeBo) els.tesla1MasterBoltMaxRangeBo.value = String(source.dominantBoltMaxRangeBo ?? 8);
+    if (els.tesla1MasterBoltFrequencyMinMs) els.tesla1MasterBoltFrequencyMinMs.value = String(source.dominantBoltFrequencyMinMs ?? 900);
+    if (els.tesla1MasterBoltFrequencyMaxMs) els.tesla1MasterBoltFrequencyMaxMs.value = String(source.dominantBoltFrequencyMaxMs ?? 1400);
     if (els.tesla1MasterBoltContactRadiusBo) els.tesla1MasterBoltContactRadiusBo.value = String(source.dominantBoltTargetRadiusBo ?? 0.18);
     if (els.tesla1MasterBoltPathBendAllowance) els.tesla1MasterBoltPathBendAllowance.value = String(source.dominantBoltDetourRatioMax ?? 1.4);
     if (els.tesla1BoltShaderEnabled) els.tesla1BoltShaderEnabled.checked = source.boltShaderEnabled !== false;

@@ -67,6 +67,8 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
   const lightningShapeBranchAngleMinDeg = clampNumber(source.lightningShapeBranchAngleMinDeg, 0, 170, TESLA_1_PRESET_DEFAULT.lightningShapeBranchAngleMinDeg);
   const lightningShapeWidthLengthMinBo = clampNumber(source.lightningShapeWidthLengthMinBo, 0.001, 1000, TESLA_1_PRESET_DEFAULT.lightningShapeWidthLengthMinBo);
   const lightningShapeBaseWidthMinBo = clampNumber(source.lightningShapeBaseWidthMinBo, 0.0001, 32, TESLA_1_PRESET_DEFAULT.lightningShapeBaseWidthMinBo);
+  const dominantBoltMinRangeBo = clampNumber(source.dominantBoltMinRangeBo, 0, 64, TESLA_1_PRESET_DEFAULT.dominantBoltMinRangeBo);
+  const dominantBoltFrequencyMinMs = Math.round(clampNumber(source.dominantBoltFrequencyMinMs, 16, 60000, TESLA_1_PRESET_DEFAULT.dominantBoltFrequencyMinMs));
   const haloStrikeRangeMinBo = clampNumber(source.haloStrikeRangeMinBo, 0, 64, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeRangeMinBo);
   const haloStrikeCooldownMinMs = Math.round(clampNumber(source.haloStrikeCooldownMinMs, 16, 60000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeCooldownMinMs));
   const haloStrikeHangTimeMinMs = Math.round(clampNumber(source.haloStrikeHangTimeMinMs, 16, 5000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeHangTimeMinMs));
@@ -121,6 +123,12 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     lightningShapeTaperCurve: clampNumber(source.lightningShapeTaperCurve, 0.05, 8, TESLA_1_PRESET_DEFAULT.lightningShapeTaperCurve),
     lightningShapeTipWidthRatio: clampNumber(source.lightningShapeTipWidthRatio, 0.001, 2, TESLA_1_PRESET_DEFAULT.lightningShapeTipWidthRatio),
     lightningShapeBranchWidthRatio: clampNumber(source.lightningShapeBranchWidthRatio, 0.001, 4, TESLA_1_PRESET_DEFAULT.lightningShapeBranchWidthRatio),
+    dominantBoltMinRangeBo,
+    dominantBoltMaxRangeBo: clampNumber(source.dominantBoltMaxRangeBo, Math.max(0.01, dominantBoltMinRangeBo), 128, TESLA_1_PRESET_DEFAULT.dominantBoltMaxRangeBo),
+    dominantBoltTargetRadiusBo: clampNumber(source.dominantBoltTargetRadiusBo, 0.01, 16, TESLA_1_PRESET_DEFAULT.dominantBoltTargetRadiusBo),
+    dominantBoltDetourRatioMax: clampNumber(source.dominantBoltDetourRatioMax, 1, 8, TESLA_1_PRESET_DEFAULT.dominantBoltDetourRatioMax),
+    dominantBoltFrequencyMinMs,
+    dominantBoltFrequencyMaxMs: Math.round(clampNumber(source.dominantBoltFrequencyMaxMs, dominantBoltFrequencyMinMs, 60000, TESLA_1_PRESET_DEFAULT.dominantBoltFrequencyMaxMs)),
     haloStrikeEnabled: source.haloStrikeEnabled !== false && source.haloStrikeEnabled !== 0,
     haloStrikeRangeMinBo,
     haloStrikeRangeMaxBo: clampNumber(source.haloStrikeRangeMaxBo, Math.max(0.01, haloStrikeRangeMinBo), 64, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeRangeMaxBo),
@@ -185,6 +193,10 @@ function buildLightningFieldUniformValues({
   haloStrikeTarget = new THREE.Vector2(0, 0),
   haloStrikeSeed = 0,
   haloStrikeTime = 0,
+  masterBoltActive = 0,
+  masterBoltTarget = new THREE.Vector2(0, 0),
+  masterBoltSeed = 0,
+  masterBoltTime = 0,
   time,
 }) {
   const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMin) || 0)));
@@ -195,6 +207,7 @@ function buildLightningFieldUniformValues({
     uBo: Math.max(1, bo),
     uTime: ((time % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS,
     uHaloStrikeTime: ((haloStrikeTime % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS,
+    uMasterBoltTime: ((masterBoltTime % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS,
     uStartMin: startMin,
     uStartMax: Math.max(startMin, startMax),
     uEndMin: endMin,
@@ -239,6 +252,9 @@ function buildLightningFieldUniformValues({
     uHaloStrikeSlot: Math.round(clampNumber(haloStrikeSlot, -1, MAX_HALO_BOLTS - 1, -1)),
     uHaloStrikeTarget: haloStrikeTarget,
     uHaloStrikeSeed: clampNumber(haloStrikeSeed, 0, 999999, 0),
+    uMasterBoltActive: masterBoltActive ? 1 : 0,
+    uMasterBoltTarget: masterBoltTarget,
+    uMasterBoltSeed: clampNumber(masterBoltSeed, 0, 999999, 0),
   };
 }
 
@@ -265,6 +281,7 @@ function createLightningFieldMaterial(params) {
       uBo: { value: values.uBo },
       uTime: { value: values.uTime },
       uHaloStrikeTime: { value: values.uHaloStrikeTime },
+      uMasterBoltTime: { value: values.uMasterBoltTime },
       uStartMin: { value: values.uStartMin },
       uStartMax: { value: values.uStartMax },
       uEndMin: { value: values.uEndMin },
@@ -309,6 +326,9 @@ function createLightningFieldMaterial(params) {
       uHaloStrikeSlot: { value: values.uHaloStrikeSlot },
       uHaloStrikeTarget: { value: values.uHaloStrikeTarget },
       uHaloStrikeSeed: { value: values.uHaloStrikeSeed },
+      uMasterBoltActive: { value: values.uMasterBoltActive },
+      uMasterBoltTarget: { value: values.uMasterBoltTarget },
+      uMasterBoltSeed: { value: values.uMasterBoltSeed },
     },
     vertexShader: `
       varying vec3 vLocalPosition;
@@ -324,6 +344,7 @@ function createLightningFieldMaterial(params) {
       uniform float uBo;
       uniform float uTime;
       uniform float uHaloStrikeTime;
+      uniform float uMasterBoltTime;
       uniform float uStartMin;
       uniform float uStartMax;
       uniform float uEndMin;
@@ -368,6 +389,9 @@ function createLightningFieldMaterial(params) {
       uniform int uHaloStrikeSlot;
       uniform vec2 uHaloStrikeTarget;
       uniform float uHaloStrikeSeed;
+      uniform int uMasterBoltActive;
+      uniform vec2 uMasterBoltTarget;
+      uniform float uMasterBoltSeed;
       varying vec3 vLocalPosition;
       const float TIME_RING = 32.0;
       const float SNAPSHOT_RING = 64.0;
@@ -570,6 +594,12 @@ function createLightningFieldMaterial(params) {
           float strikeLen = max(0.001 * uBo, length(uHaloStrikeTarget) - strikeStartR);
           color += proceduralBolt(p, strikeAngle, strikeStartR, strikeLen, 900.0 + uHaloStrikeSeed, uHaloStrikeTime) * uIntensity * 1.25;
         }
+        if (uMasterBoltActive == 1 && length(uMasterBoltTarget) > uStartMin + 0.001 * uBo) {
+          float masterAngle = atan(uMasterBoltTarget.x, uMasterBoltTarget.y);
+          float masterStartR = max(uStartMin, 0.5 * uBo);
+          float masterLen = max(0.001 * uBo, length(uMasterBoltTarget) - masterStartR);
+          color += proceduralBolt(p, masterAngle, masterStartR, masterLen, 1400.0 + uMasterBoltSeed, uMasterBoltTime) * uIntensity * 1.65;
+        }
         color = 1.0 - exp(-color * 0.55);
         float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
         gl_FragColor = vec4(color, alpha);
@@ -603,6 +633,13 @@ export function createTesla1Runtime(options = {}) {
     nextAt: 0,
     seed: 0,
     slot: -1,
+    snapshotTime: 0,
+    target: new THREE.Vector2(0, 0),
+  };
+  let masterBoltState = {
+    activeUntil: 0,
+    nextAt: 0,
+    seed: 0,
     snapshotTime: 0,
     target: new THREE.Vector2(0, 0),
   };
@@ -640,6 +677,38 @@ export function createTesla1Runtime(options = {}) {
       const isFeedingTarget = String(target.mode || "") === "feeding";
       if (!isOrbContact && !isFeedingTarget && surfaceDistanceBo < config.haloStrikeRangeMinBo) continue;
       if (surfaceDistanceBo > config.haloStrikeRangeMaxBo) continue;
+      if (!nearest || surfaceDistanceBo < nearest.distanceBo) {
+        nearest = Object.freeze({
+          ...target,
+          centerDistanceBo,
+          distanceBo: surfaceDistanceBo,
+        });
+      }
+    }
+    return nearest;
+  }
+
+  function resolveMasterBoltTarget({ from, bo, config }) {
+    const rawTargets = typeof getEnemyTargets === "function" ? getEnemyTargets({
+      bo,
+      fromWorld: from,
+      maxRangeBo: config.dominantBoltMaxRangeBo,
+      minRangeBo: config.dominantBoltMinRangeBo,
+    }) : [];
+    let nearest = null;
+    for (const rawTarget of Array.isArray(rawTargets) ? rawTargets : []) {
+      const target = normalizeEnemyTarget(rawTarget);
+      if (!target) continue;
+      const centerDistanceBo = Math.hypot(
+        (Number(from.xW) || 0) - target.position.xW,
+        (Number(from.yW) || 0) - target.position.yW
+      ) / Math.max(1, bo);
+      const surfaceDistanceBo = Math.max(0, centerDistanceBo - ORB_RADIUS_BO);
+      const contactSlopBo = Math.max(config.dominantBoltTargetRadiusBo, Number(target.radiusBo) || 0);
+      const isOrbContact = centerDistanceBo <= ORB_RADIUS_BO + contactSlopBo;
+      const isFeedingTarget = String(target.mode || "") === "feeding";
+      if (!isOrbContact && !isFeedingTarget && surfaceDistanceBo < config.dominantBoltMinRangeBo) continue;
+      if (surfaceDistanceBo > config.dominantBoltMaxRangeBo) continue;
       if (!nearest || surfaceDistanceBo < nearest.distanceBo) {
         nearest = Object.freeze({
           ...target,
@@ -713,6 +782,10 @@ export function createTesla1Runtime(options = {}) {
       haloStrikeTarget: strikeState.target,
       haloStrikeSeed: strikeState.seed,
       haloStrikeTime: strikeState.snapshotTime,
+      masterBoltActive: time < masterBoltState.activeUntil,
+      masterBoltTarget: masterBoltState.target,
+      masterBoltSeed: masterBoltState.seed,
+      masterBoltTime: masterBoltState.snapshotTime,
       time,
     };
   }
@@ -759,6 +832,30 @@ export function createTesla1Runtime(options = {}) {
     }
   }
 
+  function updateMasterBoltState(config, bo, nowMs) {
+    const currentTime = (nowMs - startedAtMs) / 1000;
+    if (currentTime < masterBoltState.activeUntil) return;
+    if (masterBoltState.nextAt && nowMs < masterBoltState.nextAt) return;
+    const frequencyMs = randomBetween(config.dominantBoltFrequencyMinMs, config.dominantBoltFrequencyMaxMs);
+    masterBoltState.nextAt = nowMs + Math.max(16, frequencyMs);
+    const from = typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : {};
+    const target = resolveMasterBoltTarget({ from, bo, config });
+    if (!target) {
+      masterBoltState.activeUntil = 0;
+      return;
+    }
+    const seed = Math.floor((nowMs * 571) + masterBoltState.seed * 31 + 7) % 100000;
+    const snapshotTime = currentTime;
+    masterBoltState.seed = seed;
+    masterBoltState.snapshotTime = snapshotTime;
+    masterBoltState.target.copy(toLocalRuntimeTarget(target, bo));
+    if (masterBoltState.target.lengthSq() <= 0.000001) {
+      masterBoltState.activeUntil = 0;
+      return;
+    }
+    masterBoltState.activeUntil = snapshotTime + 0.22;
+  }
+
   function syncRuntime(payload = {}, { emitFrame = true, nowMs: frameNowMs = null } = {}) {
     if (!group) return;
     const bo = Math.max(1, Number(typeof getBo === "function" ? getBo() : getBo) || 42);
@@ -774,11 +871,13 @@ export function createTesla1Runtime(options = {}) {
       group.position.set(Number(orbRuntime.x) || 0, Number(orbRuntime.y) || 0, Number(orbRuntime.z) || 0);
     }
     updateStrikeState(config, bo, nowMs);
+    updateMasterBoltState(config, bo, nowMs);
     const maxRangeBo = Math.max(
       config.haloFieldShellRadiusBo,
       ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo,
       ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo,
-      ORB_RADIUS_BO + config.haloStrikeRangeMaxBo
+      ORB_RADIUS_BO + config.haloStrikeRangeMaxBo,
+      ORB_RADIUS_BO + config.dominantBoltMaxRangeBo
     );
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
     const time = (nowMs - startedAtMs) / 1000;
@@ -826,6 +925,13 @@ export function createTesla1Runtime(options = {}) {
       nextAt: 0,
       seed: 0,
       slot: -1,
+      snapshotTime: 0,
+      target: new THREE.Vector2(0, 0),
+    };
+    masterBoltState = {
+      activeUntil: 0,
+      nextAt: 0,
+      seed: 0,
       snapshotTime: 0,
       target: new THREE.Vector2(0, 0),
     };

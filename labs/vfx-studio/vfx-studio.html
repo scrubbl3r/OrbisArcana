@@ -2065,7 +2065,12 @@
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">RANGE BO</span>
               <label for="tesla1MasterBoltMinRangeBo">min</label><input id="tesla1MasterBoltMinRangeBo" class="paramFieldInput" type="number" min="0" max="64" step="0.05" value="4" />
-              <label for="tesla1MasterBoltMaxRangeBo">max</label><input id="tesla1MasterBoltMaxRangeBo" class="paramFieldInput" type="number" min="0" max="64" step="0.05" value="7" />
+              <label for="tesla1MasterBoltMaxRangeBo">max</label><input id="tesla1MasterBoltMaxRangeBo" class="paramFieldInput" type="number" min="0" max="64" step="0.05" value="8" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">FREQUENCY MS</span>
+              <label for="tesla1MasterBoltFrequencyMinMs">min</label><input id="tesla1MasterBoltFrequencyMinMs" class="paramFieldInput" type="number" min="16" max="60000" step="10" value="900" />
+              <label for="tesla1MasterBoltFrequencyMaxMs">max</label><input id="tesla1MasterBoltFrequencyMaxMs" class="paramFieldInput" type="number" min="16" max="60000" step="10" value="1400" />
             </div>
             <div class="paramFieldRow"><label for="tesla1MasterBoltContactRadiusBo">Contact radius BO</label><input id="tesla1MasterBoltContactRadiusBo" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.18" /></div>
             <div class="paramFieldRow"><label for="tesla1MasterBoltPathBendAllowance">Path bend allowance</label><input id="tesla1MasterBoltPathBendAllowance" class="paramFieldInput" type="number" min="1" max="8" step="0.01" value="1.4" /></div>
@@ -3436,6 +3441,8 @@
       tesla1MasterBoltVisibleBtn: $("tesla1MasterBoltVisibleBtn"),
       tesla1MasterBoltMinRangeBo: $("tesla1MasterBoltMinRangeBo"),
       tesla1MasterBoltMaxRangeBo: $("tesla1MasterBoltMaxRangeBo"),
+      tesla1MasterBoltFrequencyMinMs: $("tesla1MasterBoltFrequencyMinMs"),
+      tesla1MasterBoltFrequencyMaxMs: $("tesla1MasterBoltFrequencyMaxMs"),
       tesla1MasterBoltContactRadiusBo: $("tesla1MasterBoltContactRadiusBo"),
       tesla1MasterBoltPathBendAllowance: $("tesla1MasterBoltPathBendAllowance"),
       tesla1HaloVisibleBtn: $("tesla1HaloVisibleBtn"),
