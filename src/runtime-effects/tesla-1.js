@@ -647,6 +647,8 @@ export function createTesla1Runtime(options = {}) {
       strikeState.activeUntil = 0;
       return;
     }
+    const currentTime = (nowMs - startedAtMs) / 1000;
+    if (currentTime < strikeState.activeUntil) return;
     if (strikeState.nextAt && nowMs < strikeState.nextAt) return;
     const from = typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : {};
     const target = resolveNearestEnemyTarget({ from, bo, config });
@@ -658,7 +660,7 @@ export function createTesla1Runtime(options = {}) {
     }
     const seed = Math.floor((nowMs * 997) + strikeState.seed * 17 + 1) % 100000;
     const countMax = Math.max(1, Math.min(MAX_HALO_BOLTS, Math.round(config.haloBoltCountMax || 1)));
-    const snapshotTime = (nowMs - startedAtMs) / 1000;
+    const snapshotTime = currentTime;
     const hangMs = randomBetween(config.haloStrikeHangTimeMinMs, config.haloStrikeHangTimeMaxMs);
     strikeState.seed = seed;
     strikeState.slot = Math.floor(Math.random() * countMax) % countMax;

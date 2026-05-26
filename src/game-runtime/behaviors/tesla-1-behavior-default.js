@@ -9,8 +9,8 @@ export const TESLA_1_BEHAVIOR_DEFAULT = Object.freeze({
   haloStrikeHangTimeMaxMs: 500,
   haloStrikeHitRadiusMinBo: 0.12,
   haloStrikeHitRadiusMaxBo: 0.28,
-  haloStrikeDamageMin: 3.00,
-  haloStrikeDamageMax: 3.00,
+  haloStrikeDamageMin: 0.00,
+  haloStrikeDamageMax: 0.00,
   haloStrikeStunDamageMin: 1.00,
   haloStrikeStunDamageMax: 3.00,
 });

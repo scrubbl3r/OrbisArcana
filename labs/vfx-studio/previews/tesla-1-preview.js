@@ -572,7 +572,7 @@ export function createTesla1Preview({
     const cooldownMinMs = Math.round(readInputNumber(els.tesla1HaloStrikeCooldownMinMs, 650, 16, 60000));
     const hangTimeMinMs = Math.round(readInputNumber(els.tesla1HaloStrikeHangTimeMinMs, 250, 16, 5000));
     const hitRadiusMin = readInputNumber(els.tesla1HaloStrikeHitRadiusMinBo, 0.12, 0.01, 16);
-    const damageMin = readInputNumber(els.tesla1HaloStrikeDamageMin, 1, 0, 10000);
+    const damageMin = readInputNumber(els.tesla1HaloStrikeDamageMin, 0, 0, 10000);
     const stunDamageMin = readInputNumber(els.tesla1HaloStrikeStunDamageMin, 1, 0, 10000);
     return Object.freeze({
       enabled: readInputBoolean(els.tesla1HaloStrikeEnabled, false),
@@ -585,7 +585,7 @@ export function createTesla1Preview({
       hitRadiusMin,
       hitRadiusMax: readInputNumber(els.tesla1HaloStrikeHitRadiusMaxBo, 0.28, hitRadiusMin, 16),
       damageMin,
-      damageMax: readInputNumber(els.tesla1HaloStrikeDamageMax, 3, damageMin, 10000),
+      damageMax: readInputNumber(els.tesla1HaloStrikeDamageMax, 0, damageMin, 10000),
       stunDamageMin,
       stunDamageMax: readInputNumber(els.tesla1HaloStrikeStunDamageMax, 3, stunDamageMin, 10000),
     });
@@ -607,6 +607,7 @@ export function createTesla1Preview({
       haloStrikeState.activeUntil = 0;
       return haloStrikeState;
     }
+    if (time < haloStrikeState.activeUntil) return haloStrikeState;
     if (!haloStrikeState.nextAt || time >= haloStrikeState.nextAt) {
       const seed = Math.floor((time * 997) + haloStrikeState.seed * 17 + 1) % 100000;
       const rangeRoll = (Math.sin(seed * 12.9898) * 43758.5453) % 1;
