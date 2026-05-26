@@ -931,7 +931,7 @@ export function createTesla1Preview({
       masterBoltActive: master.enabled && time < masterState.activeUntil,
       masterBoltTarget: masterState.target,
       masterBoltSeed: masterState.seed,
-      masterBoltTime: masterState.snapshotTime,
+      masterBoltTime: time,
       masterMacroBendMultiplier: master.macroBendMultiplier,
       masterMacroScaleMultiplier: master.macroScaleMultiplier,
       masterMicroJitterMultiplier: master.microJitterMultiplier,

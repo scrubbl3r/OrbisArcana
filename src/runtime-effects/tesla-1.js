@@ -809,7 +809,7 @@ export function createTesla1Runtime(options = {}) {
       masterBoltActive: time < masterBoltState.activeUntil,
       masterBoltTarget: masterBoltState.target,
       masterBoltSeed: masterBoltState.seed,
-      masterBoltTime: masterBoltState.snapshotTime,
+      masterBoltTime: time,
       masterMacroBendMultiplier: config.dominantBoltMacroBendMultiplier,
       masterMacroScaleMultiplier: config.dominantBoltMacroScaleMultiplier,
       masterMicroJitterMultiplier: config.dominantBoltMicroJitterMultiplier,
