@@ -4,7 +4,7 @@ import { buildTeleportBehaviorConfig } from "../../../game-runtime/behaviors/tel
 import { createTeleportSequenceRuntime } from "../../../game-runtime/behaviors/teleport-sequence-runtime.js?v=20260501d";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260526143201";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260526145139";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 
 export function createOrbStageReceiverVfxDefaults({ evenStroke = (value) => value } = {}) {

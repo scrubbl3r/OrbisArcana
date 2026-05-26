@@ -9,7 +9,7 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "dominantBoltMacroScaleMultiplier": 0.3,
   "dominantBoltMicroJitterMultiplier": 1.5,
   "dominantBoltBranchDensityMultiplier": 1,
-  "dominantBoltBaseWidthMultiplier": 1,
+  "dominantBoltBaseWidthMultiplier": 0.5,
   "dominantBoltTargetRadiusBo": 0.18,
   "boltShaderEnabled": 1,
   "boltShaderIntensity": 6,
