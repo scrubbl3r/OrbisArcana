@@ -806,18 +806,18 @@ export function createGnatSwarm3dRuntime({
       return Object.freeze({ handled: false, affected: 0, reason: "missing_center" });
     }
     const bo = Math.max(1, Number(getBo()) || 42);
+    const hasExplicitTargetIndex = effect.targetIndex !== null
+      && effect.targetIndex !== undefined
+      && effect.targetIndex !== "";
+    const directTargetIndex = hasExplicitTargetIndex && Number.isFinite(Number(effect.targetIndex))
+      ? Number(effect.targetIndex)
+      : (() => {
+        const match = String(effect.targetEntityId || "").match(/:(\d+)$/);
+        return match ? Number(match[1]) : NaN;
+      })();
     if (kind === COMBAT_EFFECT_DAMAGE) {
       const damage = normalizeDamageEffect(effect);
       const nowSec = damage.atMs / 1000;
-      const hasExplicitTargetIndex = effect.targetIndex !== null
-        && effect.targetIndex !== undefined
-        && effect.targetIndex !== "";
-      const directTargetIndex = hasExplicitTargetIndex && Number.isFinite(Number(effect.targetIndex))
-        ? Number(effect.targetIndex)
-        : (() => {
-          const match = String(effect.targetEntityId || "").match(/:(\d+)$/);
-          return match ? Number(match[1]) : NaN;
-        })();
       let affected = 0;
       let totalDamage = 0;
       const damageTrace = {
@@ -959,6 +959,29 @@ export function createGnatSwarm3dRuntime({
     const radiusPx = Math.max(0, Number(effect.radiusBo) || 0) * bo;
     const nowSec = stun.atMs / 1000;
     let affected = 0;
+    if (Number.isFinite(directTargetIndex)) {
+      const state = states.find((candidate) => candidate && candidate.index === directTargetIndex) || null;
+      if (!state || state.hp <= 0) return Object.freeze({ handled: true, affected: 0, reason: state ? "target_dead" : "target_missing" });
+      const result = resolveStunApplication({
+        amount: stun.amount,
+        threshold: state.stunThreshold,
+        durationMs: state.stunDurationMs,
+        atMs: stun.atMs,
+      });
+      if (!result.stunned) return Object.freeze({ handled: true, affected: 0, reason: "below_threshold" });
+      const receivedStun = { ...stun, durationMs: state.stunDurationMs };
+      if (!startStun(state, receivedStun, nowSec)) return Object.freeze({ handled: true, affected: 0, reason: "stun_rejected" });
+      if (typeof onCombatEvent === "function") {
+        onCombatEvent("combat.stun_applied", {
+          ...receivedStun,
+          targetEntityId: `enemy:gnat-swarm:${state.index}`,
+          threshold: state.stunThreshold,
+          stunUntilMs: result.stunUntilMs,
+        });
+      }
+      if (typeof onNeedsFrame === "function") onNeedsFrame();
+      return Object.freeze({ handled: true, affected: 1 });
+    }
     for (const state of states) {
       if (!state || state.hp <= 0) continue;
       if (radiusPx > 0 && distance(state.position, center) > radiusPx) continue;
