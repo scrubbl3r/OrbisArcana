@@ -95,6 +95,8 @@ function buildLightningFieldUniformValues({
   widthLengthMax,
   baseWidthMin,
   baseWidthMax,
+  widthMagnitudeCurve,
+  taperCurve,
   tipWidthRatio,
   branchWidthRatio,
   ttlMinMs,
@@ -148,6 +150,8 @@ function buildLightningFieldUniformValues({
     uWidthLengthMax: clampNumber(widthLengthMax, 0.001 * Math.max(1, bo), 1000 * Math.max(1, bo), 8 * Math.max(1, bo)),
     uBaseWidthMin: clampNumber(baseWidthMin, 0.0001 * Math.max(1, bo), 32 * Math.max(1, bo), 0.003 * Math.max(1, bo)),
     uBaseWidthMax: clampNumber(baseWidthMax, 0.0001 * Math.max(1, bo), 32 * Math.max(1, bo), 0.04 * Math.max(1, bo)),
+    uWidthMagnitudeCurve: clampNumber(widthMagnitudeCurve, 0.05, 8, 1),
+    uTaperCurve: clampNumber(taperCurve, 0.05, 8, 1),
     uTipWidthRatio: clampNumber(tipWidthRatio, 0.001, 2, 0.12),
     uBranchWidthRatio: clampNumber(branchWidthRatio, 0.001, 4, 0.55),
     uTtlMin: clampNumber(ttlMinMs, 16, 10000, 350) / 1000,
@@ -216,6 +220,8 @@ function createLightningFieldMaterial(params) {
       uWidthLengthMax: { value: values.uWidthLengthMax },
       uBaseWidthMin: { value: values.uBaseWidthMin },
       uBaseWidthMax: { value: values.uBaseWidthMax },
+      uWidthMagnitudeCurve: { value: values.uWidthMagnitudeCurve },
+      uTaperCurve: { value: values.uTaperCurve },
       uTipWidthRatio: { value: values.uTipWidthRatio },
       uBranchWidthRatio: { value: values.uBranchWidthRatio },
       uTtlMin: { value: values.uTtlMin },
@@ -274,6 +280,8 @@ function createLightningFieldMaterial(params) {
       uniform float uWidthLengthMax;
       uniform float uBaseWidthMin;
       uniform float uBaseWidthMax;
+      uniform float uWidthMagnitudeCurve;
+      uniform float uTaperCurve;
       uniform float uTipWidthRatio;
       uniform float uBranchWidthRatio;
       uniform float uTtlMin;
@@ -350,13 +358,20 @@ function createLightningFieldMaterial(params) {
         vec2 pa = p - a;
         vec2 ba = b - a;
         h = clamp(dot(pa, ba) / max(0.00001, dot(ba, ba)), 0.0, 1.0);
-        float width = mix(baseWidth, tipWidth, h);
+        float taperT = pow(h, uTaperCurve);
+        float width = mix(baseWidth, tipWidth, taperT);
         return length(pa - ba * h) - max(0.0001 * uBo, width);
+      }
+
+      float signedPow(float value, float exponent) {
+        float amount = pow(abs(value), exponent);
+        return value < 0.0 ? -amount : amount;
       }
 
       float lengthMappedBaseWidth(float len) {
         float t = (len - uWidthLengthMin) / max(0.0001 * uBo, uWidthLengthMax - uWidthLengthMin);
-        return max(0.0001 * uBo, mix(uBaseWidthMin, uBaseWidthMax, t));
+        float magnitudeT = signedPow(t, uWidthMagnitudeCurve);
+        return max(0.0001 * uBo, mix(uBaseWidthMin, uBaseWidthMax, magnitudeT));
       }
 
       float mixAngle(float a, float b, float amount) {
@@ -611,6 +626,8 @@ export function createTesla1Preview({
       widthLengthMax: readInputNumber(els.tesla1LightningShapeWidthLengthMaxBo, 8, widthLengthMin + 0.001, 1000),
       baseWidthMin,
       baseWidthMax: readInputNumber(els.tesla1LightningShapeBaseWidthMaxBo, 0.04, baseWidthMin, 32),
+      widthMagnitudeCurve: readInputNumber(els.tesla1LightningShapeWidthMagnitudeCurve, 1, 0.05, 8),
+      taperCurve: readInputNumber(els.tesla1LightningShapeTaperCurve, 1, 0.05, 8),
       tipWidthRatio: readInputNumber(els.tesla1LightningShapeTipWidthRatio, 0.12, 0.001, 2),
       branchWidthRatio: readInputNumber(els.tesla1LightningShapeBranchWidthRatio, 0.55, 0.001, 4),
     });
@@ -788,6 +805,8 @@ export function createTesla1Preview({
       widthLengthMax: bo * shape.widthLengthMax,
       baseWidthMin: bo * shape.baseWidthMin,
       baseWidthMax: bo * shape.baseWidthMax,
+      widthMagnitudeCurve: shape.widthMagnitudeCurve,
+      taperCurve: shape.taperCurve,
       tipWidthRatio: shape.tipWidthRatio,
       branchWidthRatio: shape.branchWidthRatio,
       ttlMinMs: shape.ttlMinMs,
@@ -962,6 +981,8 @@ export function createTesla1Preview({
       els.tesla1LightningShapeWidthLengthMaxBo,
       els.tesla1LightningShapeBaseWidthMinBo,
       els.tesla1LightningShapeBaseWidthMaxBo,
+      els.tesla1LightningShapeWidthMagnitudeCurve,
+      els.tesla1LightningShapeTaperCurve,
       els.tesla1LightningShapeTipWidthRatio,
       els.tesla1LightningShapeBranchWidthRatio,
       els.tesla1BoltShaderEnabled,

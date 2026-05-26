@@ -56,6 +56,8 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "lightningShapeWidthLengthMaxBo": 8,
   "lightningShapeBaseWidthMinBo": 0.003,
   "lightningShapeBaseWidthMaxBo": 0.04,
+  "lightningShapeWidthMagnitudeCurve": 1,
+  "lightningShapeTaperCurve": 1,
   "lightningShapeTipWidthRatio": 0.12,
   "lightningShapeBranchWidthRatio": 0.55,
   "wakeGraph0Pct": "",

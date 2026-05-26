@@ -86,6 +86,8 @@ export function createTesla1AuthoringAdapter({
       lightningShapeWidthLengthMaxBo: readNumber(els.tesla1LightningShapeWidthLengthMaxBo, tesla1PresetDefault.lightningShapeWidthLengthMaxBo, lightningShapeWidthLengthMinBo + 0.001, 1000),
       lightningShapeBaseWidthMinBo,
       lightningShapeBaseWidthMaxBo: readNumber(els.tesla1LightningShapeBaseWidthMaxBo, tesla1PresetDefault.lightningShapeBaseWidthMaxBo, lightningShapeBaseWidthMinBo, 32),
+      lightningShapeWidthMagnitudeCurve: readNumber(els.tesla1LightningShapeWidthMagnitudeCurve, tesla1PresetDefault.lightningShapeWidthMagnitudeCurve, 0.05, 8),
+      lightningShapeTaperCurve: readNumber(els.tesla1LightningShapeTaperCurve, tesla1PresetDefault.lightningShapeTaperCurve, 0.05, 8),
       lightningShapeTipWidthRatio: readNumber(els.tesla1LightningShapeTipWidthRatio, tesla1PresetDefault.lightningShapeTipWidthRatio, 0.001, 2),
       lightningShapeBranchWidthRatio: readNumber(els.tesla1LightningShapeBranchWidthRatio, tesla1PresetDefault.lightningShapeBranchWidthRatio, 0.001, 4),
       boltShaderIntensity: readNumber(els.tesla1BoltShaderIntensity, tesla1PresetDefault.boltShaderIntensity, 0, 20),
@@ -154,6 +156,8 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1LightningShapeWidthLengthMaxBo) els.tesla1LightningShapeWidthLengthMaxBo.value = String(source.lightningShapeWidthLengthMaxBo ?? 8);
     if (els.tesla1LightningShapeBaseWidthMinBo) els.tesla1LightningShapeBaseWidthMinBo.value = String(source.lightningShapeBaseWidthMinBo ?? 0.003);
     if (els.tesla1LightningShapeBaseWidthMaxBo) els.tesla1LightningShapeBaseWidthMaxBo.value = String(source.lightningShapeBaseWidthMaxBo ?? 0.04);
+    if (els.tesla1LightningShapeWidthMagnitudeCurve) els.tesla1LightningShapeWidthMagnitudeCurve.value = String(source.lightningShapeWidthMagnitudeCurve ?? 1);
+    if (els.tesla1LightningShapeTaperCurve) els.tesla1LightningShapeTaperCurve.value = String(source.lightningShapeTaperCurve ?? 1);
     if (els.tesla1LightningShapeTipWidthRatio) els.tesla1LightningShapeTipWidthRatio.value = String(source.lightningShapeTipWidthRatio ?? 0.12);
     if (els.tesla1LightningShapeBranchWidthRatio) els.tesla1LightningShapeBranchWidthRatio.value = String(source.lightningShapeBranchWidthRatio ?? 0.55);
     if (els.tesla1BoltShaderIntensity) els.tesla1BoltShaderIntensity.value = String(source.boltShaderIntensity ?? 6);
