@@ -2021,6 +2021,18 @@
               <label for="tesla1LightningShapeBranchAngleMinDeg">min</label><input id="tesla1LightningShapeBranchAngleMinDeg" class="paramFieldInput" type="number" min="0" max="170" step="1" value="35" />
               <label for="tesla1LightningShapeBranchAngleMaxDeg">max</label><input id="tesla1LightningShapeBranchAngleMaxDeg" class="paramFieldInput" type="number" min="0" max="170" step="1" value="80" />
             </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">WIDTH LENGTH BO</span>
+              <label for="tesla1LightningShapeWidthLengthMinBo">min</label><input id="tesla1LightningShapeWidthLengthMinBo" class="paramFieldInput" type="number" min="0.001" max="1000" step="0.01" value="0.5" />
+              <label for="tesla1LightningShapeWidthLengthMaxBo">max</label><input id="tesla1LightningShapeWidthLengthMaxBo" class="paramFieldInput" type="number" min="0.001" max="1000" step="0.01" value="8" />
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">BASE WIDTH BO</span>
+              <label for="tesla1LightningShapeBaseWidthMinBo">min</label><input id="tesla1LightningShapeBaseWidthMinBo" class="paramFieldInput" type="number" min="0.0001" max="32" step="0.001" value="0.003" />
+              <label for="tesla1LightningShapeBaseWidthMaxBo">max</label><input id="tesla1LightningShapeBaseWidthMaxBo" class="paramFieldInput" type="number" min="0.0001" max="32" step="0.001" value="0.04" />
+            </div>
+            <div class="paramFieldRow"><label for="tesla1LightningShapeTipWidthRatio">Tip width ratio</label><input id="tesla1LightningShapeTipWidthRatio" class="paramFieldInput" type="number" min="0.001" max="2" step="0.01" value="0.12" /></div>
+            <div class="paramFieldRow"><label for="tesla1LightningShapeBranchWidthRatio">Branch width ratio</label><input id="tesla1LightningShapeBranchWidthRatio" class="paramFieldInput" type="number" min="0.001" max="4" step="0.01" value="0.55" /></div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -3402,6 +3414,12 @@
       tesla1LightningShapeBranchLengthMaxBo: $("tesla1LightningShapeBranchLengthMaxBo"),
       tesla1LightningShapeBranchAngleMinDeg: $("tesla1LightningShapeBranchAngleMinDeg"),
       tesla1LightningShapeBranchAngleMaxDeg: $("tesla1LightningShapeBranchAngleMaxDeg"),
+      tesla1LightningShapeWidthLengthMinBo: $("tesla1LightningShapeWidthLengthMinBo"),
+      tesla1LightningShapeWidthLengthMaxBo: $("tesla1LightningShapeWidthLengthMaxBo"),
+      tesla1LightningShapeBaseWidthMinBo: $("tesla1LightningShapeBaseWidthMinBo"),
+      tesla1LightningShapeBaseWidthMaxBo: $("tesla1LightningShapeBaseWidthMaxBo"),
+      tesla1LightningShapeTipWidthRatio: $("tesla1LightningShapeTipWidthRatio"),
+      tesla1LightningShapeBranchWidthRatio: $("tesla1LightningShapeBranchWidthRatio"),
       tesla1LightningShaderVisibleBtn: $("tesla1LightningShaderVisibleBtn"),
       tesla1BoltShaderEnabled: $("tesla1BoltShaderEnabled"),
       tesla1BoltShaderIntensity: $("tesla1BoltShaderIntensity"),

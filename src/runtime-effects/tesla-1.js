@@ -65,6 +65,8 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
   const lightningShapeNoiseSpeedMin = clampNumber(source.lightningShapeNoiseSpeedMin, 0, 20, TESLA_1_PRESET_DEFAULT.lightningShapeNoiseSpeedMin);
   const lightningShapeBranchLengthMinBo = clampNumber(source.lightningShapeBranchLengthMinBo, 0, 8, TESLA_1_PRESET_DEFAULT.lightningShapeBranchLengthMinBo);
   const lightningShapeBranchAngleMinDeg = clampNumber(source.lightningShapeBranchAngleMinDeg, 0, 170, TESLA_1_PRESET_DEFAULT.lightningShapeBranchAngleMinDeg);
+  const lightningShapeWidthLengthMinBo = clampNumber(source.lightningShapeWidthLengthMinBo, 0.001, 1000, TESLA_1_PRESET_DEFAULT.lightningShapeWidthLengthMinBo);
+  const lightningShapeBaseWidthMinBo = clampNumber(source.lightningShapeBaseWidthMinBo, 0.0001, 32, TESLA_1_PRESET_DEFAULT.lightningShapeBaseWidthMinBo);
   const haloStrikeRangeMinBo = clampNumber(source.haloStrikeRangeMinBo, 0, 64, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeRangeMinBo);
   const haloStrikeCooldownMinMs = Math.round(clampNumber(source.haloStrikeCooldownMinMs, 16, 60000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeCooldownMinMs));
   const haloStrikeHangTimeMinMs = Math.round(clampNumber(source.haloStrikeHangTimeMinMs, 16, 5000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeHangTimeMinMs));
@@ -111,6 +113,12 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     lightningShapeBranchLengthMaxBo: clampNumber(source.lightningShapeBranchLengthMaxBo, lightningShapeBranchLengthMinBo, 8, TESLA_1_PRESET_DEFAULT.lightningShapeBranchLengthMaxBo),
     lightningShapeBranchAngleMinDeg,
     lightningShapeBranchAngleMaxDeg: clampNumber(source.lightningShapeBranchAngleMaxDeg, lightningShapeBranchAngleMinDeg, 170, TESLA_1_PRESET_DEFAULT.lightningShapeBranchAngleMaxDeg),
+    lightningShapeWidthLengthMinBo,
+    lightningShapeWidthLengthMaxBo: clampNumber(source.lightningShapeWidthLengthMaxBo, lightningShapeWidthLengthMinBo + 0.001, 1000, TESLA_1_PRESET_DEFAULT.lightningShapeWidthLengthMaxBo),
+    lightningShapeBaseWidthMinBo,
+    lightningShapeBaseWidthMaxBo: clampNumber(source.lightningShapeBaseWidthMaxBo, lightningShapeBaseWidthMinBo, 32, TESLA_1_PRESET_DEFAULT.lightningShapeBaseWidthMaxBo),
+    lightningShapeTipWidthRatio: clampNumber(source.lightningShapeTipWidthRatio, 0.001, 2, TESLA_1_PRESET_DEFAULT.lightningShapeTipWidthRatio),
+    lightningShapeBranchWidthRatio: clampNumber(source.lightningShapeBranchWidthRatio, 0.001, 4, TESLA_1_PRESET_DEFAULT.lightningShapeBranchWidthRatio),
     haloStrikeEnabled: source.haloStrikeEnabled !== false && source.haloStrikeEnabled !== 0,
     haloStrikeRangeMinBo,
     haloStrikeRangeMaxBo: clampNumber(source.haloStrikeRangeMaxBo, Math.max(0.01, haloStrikeRangeMinBo), 64, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeRangeMaxBo),
@@ -151,6 +159,12 @@ function buildLightningFieldUniformValues({
   branchLengthMax,
   branchAngleMin,
   branchAngleMax,
+  widthLengthMin,
+  widthLengthMax,
+  baseWidthMin,
+  baseWidthMax,
+  tipWidthRatio,
+  branchWidthRatio,
   ttlMinMs,
   ttlMaxMs,
   wanderSpeedMin,
@@ -198,6 +212,12 @@ function buildLightningFieldUniformValues({
     uBranchLengthMax: clampNumber(branchLengthMax, 0, 8 * Math.max(1, bo), 0.22 * Math.max(1, bo)),
     uBranchAngleMin: clampNumber(branchAngleMin, 0, 170, 35) * Math.PI / 180,
     uBranchAngleMax: clampNumber(branchAngleMax, 0, 170, 80) * Math.PI / 180,
+    uWidthLengthMin: clampNumber(widthLengthMin, 0.001 * Math.max(1, bo), 1000 * Math.max(1, bo), 0.5 * Math.max(1, bo)),
+    uWidthLengthMax: clampNumber(widthLengthMax, 0.001 * Math.max(1, bo), 1000 * Math.max(1, bo), 8 * Math.max(1, bo)),
+    uBaseWidthMin: clampNumber(baseWidthMin, 0.0001 * Math.max(1, bo), 32 * Math.max(1, bo), 0.003 * Math.max(1, bo)),
+    uBaseWidthMax: clampNumber(baseWidthMax, 0.0001 * Math.max(1, bo), 32 * Math.max(1, bo), 0.04 * Math.max(1, bo)),
+    uTipWidthRatio: clampNumber(tipWidthRatio, 0.001, 2, 0.12),
+    uBranchWidthRatio: clampNumber(branchWidthRatio, 0.001, 4, 0.55),
     uTtlMin: clampNumber(ttlMinMs, 16, 10000, 350) / 1000,
     uTtlMax: clampNumber(ttlMaxMs, 16, 10000, 900) / 1000,
     uWanderSpeedMin: clampNumber(wanderSpeedMin, 0, 4, 0.05),
@@ -260,6 +280,12 @@ function createLightningFieldMaterial(params) {
       uBranchLengthMax: { value: values.uBranchLengthMax },
       uBranchAngleMin: { value: values.uBranchAngleMin },
       uBranchAngleMax: { value: values.uBranchAngleMax },
+      uWidthLengthMin: { value: values.uWidthLengthMin },
+      uWidthLengthMax: { value: values.uWidthLengthMax },
+      uBaseWidthMin: { value: values.uBaseWidthMin },
+      uBaseWidthMax: { value: values.uBaseWidthMax },
+      uTipWidthRatio: { value: values.uTipWidthRatio },
+      uBranchWidthRatio: { value: values.uBranchWidthRatio },
       uTtlMin: { value: values.uTtlMin },
       uTtlMax: { value: values.uTtlMax },
       uWanderSpeedMin: { value: values.uWanderSpeedMin },
@@ -311,6 +337,12 @@ function createLightningFieldMaterial(params) {
       uniform float uBranchLengthMax;
       uniform float uBranchAngleMin;
       uniform float uBranchAngleMax;
+      uniform float uWidthLengthMin;
+      uniform float uWidthLengthMax;
+      uniform float uBaseWidthMin;
+      uniform float uBaseWidthMax;
+      uniform float uTipWidthRatio;
+      uniform float uBranchWidthRatio;
       uniform float uTtlMin;
       uniform float uTtlMax;
       uniform float uWanderSpeedMin;
@@ -381,6 +413,19 @@ function createLightningFieldMaterial(params) {
         return length(pa - ba * h) - width;
       }
 
+      float taperedLineSdf(vec2 p, vec2 a, vec2 b, float baseWidth, float tipWidth, out float h) {
+        vec2 pa = p - a;
+        vec2 ba = b - a;
+        h = clamp(dot(pa, ba) / max(0.00001, dot(ba, ba)), 0.0, 1.0);
+        float width = mix(baseWidth, tipWidth, h);
+        return length(pa - ba * h) - max(0.0001 * uBo, width);
+      }
+
+      float lengthMappedBaseWidth(float len) {
+        float t = (len - uWidthLengthMin) / max(0.0001 * uBo, uWidthLengthMax - uWidthLengthMin);
+        return max(0.0001 * uBo, mix(uBaseWidthMin, uBaseWidthMax, t));
+      }
+
       float mixAngle(float a, float b, float amount) {
         float delta = atan(sin(b - a), cos(b - a));
         return a + delta * amount;
@@ -407,7 +452,9 @@ function createLightningFieldMaterial(params) {
         float tipAnchor = 1.0 - smoothstep(tipAnchorStart, len, clamp(uv.y, 0.0, len));
         float baseAnchor = smoothstep(0.0, uBo * 0.2, uv.y);
         uv.x += (macro * uMacroNoiseStrength + micro * uMicroNoiseStrength) * uBo * baseAnchor * tipAnchor;
-        float d = lineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), uLineWidth * 0.006, h);
+        float baseWidth = lengthMappedBaseWidth(len);
+        float tipWidth = max(0.0001 * uBo, baseWidth * uTipWidthRatio);
+        float d = taperedLineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), baseWidth, tipWidth, h);
         float line = 0.1 / max(max(d / max(1.0, uBo), 0.0), 0.0001);
         vec3 bolt = clamp(1.0 - exp(-(line * uBoltColor) * 0.02), 0.0, 1.0);
         bolt *= smoothstep(len, len * (1.0 - uTipFade), abs(uv.y));
@@ -431,7 +478,9 @@ function createLightningFieldMaterial(params) {
           float branchBaseAnchor = smoothstep(0.0, uBo * 0.12, branchUv.y);
           branchUv.x += (branchMacro * uMacroNoiseStrength + branchMicro * uMicroNoiseStrength) * uBo * branchBaseAnchor * branchTipAnchor;
           float branchH = 0.0;
-          float branchD = lineSdf(branchUv, vec2(0.0), vec2(0.0, branchLen), uLineWidth * 0.0045, branchH);
+          float branchBaseWidth = lengthMappedBaseWidth(branchLen) * uBranchWidthRatio;
+          float branchTipWidth = max(0.0001 * uBo, branchBaseWidth * uTipWidthRatio);
+          float branchD = taperedLineSdf(branchUv, vec2(0.0), vec2(0.0, branchLen), branchBaseWidth, branchTipWidth, branchH);
           float branchLine = 0.08 / max(max(branchD / max(1.0, uBo), 0.0), 0.0001);
           vec3 branchBolt = clamp(1.0 - exp(-(branchLine * uBoltColor) * 0.018), 0.0, 1.0);
           branchBolt *= smoothstep(branchLen, branchLen * 0.65, abs(branchUv.y));
@@ -623,6 +672,12 @@ export function createTesla1Runtime(options = {}) {
       branchLengthMax: bo * config.lightningShapeBranchLengthMaxBo,
       branchAngleMin: config.lightningShapeBranchAngleMinDeg,
       branchAngleMax: config.lightningShapeBranchAngleMaxDeg,
+      widthLengthMin: bo * config.lightningShapeWidthLengthMinBo,
+      widthLengthMax: bo * config.lightningShapeWidthLengthMaxBo,
+      baseWidthMin: bo * config.lightningShapeBaseWidthMinBo,
+      baseWidthMax: bo * config.lightningShapeBaseWidthMaxBo,
+      tipWidthRatio: config.lightningShapeTipWidthRatio,
+      branchWidthRatio: config.lightningShapeBranchWidthRatio,
       ttlMinMs: config.haloBoltTtlMinMs,
       ttlMaxMs: config.haloBoltTtlMaxMs,
       wanderSpeedMin: config.haloBoltWanderSpeedMin,

@@ -30,6 +30,8 @@ export function createTesla1AuthoringAdapter({
     const haloStrikeStunDamageMin = readNumber(els.tesla1HaloStrikeStunDamageMin, tesla1BehaviorDefault.haloStrikeStunDamageMin, 0, 10000);
     const fallbackShapeHz = tesla1PresetDefault.lightningShapeNoiseSpeed ?? 3;
     const lightningShapeNoiseSpeedMin = readNumber(els.tesla1LightningShapeNoiseSpeedMin, tesla1PresetDefault.lightningShapeNoiseSpeedMin ?? fallbackShapeHz, 0, 20);
+    const lightningShapeWidthLengthMinBo = readNumber(els.tesla1LightningShapeWidthLengthMinBo, tesla1PresetDefault.lightningShapeWidthLengthMinBo, 0.001, 1000);
+    const lightningShapeBaseWidthMinBo = readNumber(els.tesla1LightningShapeBaseWidthMinBo, tesla1PresetDefault.lightningShapeBaseWidthMinBo, 0.0001, 32);
     return Object.freeze({
       durationMs: readNumber(els.tesla1SpellDurationMs, tesla1PresetDefault.durationMs, 200, 60000),
       dominantBoltMinRangeBo: readNumber(els.tesla1MasterBoltMinRangeBo, tesla1PresetDefault.dominantBoltMinRangeBo, 0, 64),
@@ -80,6 +82,12 @@ export function createTesla1AuthoringAdapter({
       lightningShapeBranchLengthMaxBo: readNumber(els.tesla1LightningShapeBranchLengthMaxBo, tesla1PresetDefault.lightningShapeBranchLengthMaxBo, 0, 8),
       lightningShapeBranchAngleMinDeg: readNumber(els.tesla1LightningShapeBranchAngleMinDeg, tesla1PresetDefault.lightningShapeBranchAngleMinDeg, 0, 170),
       lightningShapeBranchAngleMaxDeg: readNumber(els.tesla1LightningShapeBranchAngleMaxDeg, tesla1PresetDefault.lightningShapeBranchAngleMaxDeg, 0, 170),
+      lightningShapeWidthLengthMinBo,
+      lightningShapeWidthLengthMaxBo: readNumber(els.tesla1LightningShapeWidthLengthMaxBo, tesla1PresetDefault.lightningShapeWidthLengthMaxBo, lightningShapeWidthLengthMinBo + 0.001, 1000),
+      lightningShapeBaseWidthMinBo,
+      lightningShapeBaseWidthMaxBo: readNumber(els.tesla1LightningShapeBaseWidthMaxBo, tesla1PresetDefault.lightningShapeBaseWidthMaxBo, lightningShapeBaseWidthMinBo, 32),
+      lightningShapeTipWidthRatio: readNumber(els.tesla1LightningShapeTipWidthRatio, tesla1PresetDefault.lightningShapeTipWidthRatio, 0.001, 2),
+      lightningShapeBranchWidthRatio: readNumber(els.tesla1LightningShapeBranchWidthRatio, tesla1PresetDefault.lightningShapeBranchWidthRatio, 0.001, 4),
       boltShaderIntensity: readNumber(els.tesla1BoltShaderIntensity, tesla1PresetDefault.boltShaderIntensity, 0, 20),
       boltShaderTipFade: readNumber(els.tesla1BoltShaderTipFade, tesla1PresetDefault.boltShaderTipFade, 0, 1),
       boltShaderFlickerSpeedHz: readNumber(els.tesla1BoltShaderFlickerSpeedHz, tesla1PresetDefault.boltShaderFlickerSpeedHz, 0, 60),
@@ -142,6 +150,12 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1LightningShapeBranchLengthMaxBo) els.tesla1LightningShapeBranchLengthMaxBo.value = String(source.lightningShapeBranchLengthMaxBo ?? 0.22);
     if (els.tesla1LightningShapeBranchAngleMinDeg) els.tesla1LightningShapeBranchAngleMinDeg.value = String(source.lightningShapeBranchAngleMinDeg ?? 35);
     if (els.tesla1LightningShapeBranchAngleMaxDeg) els.tesla1LightningShapeBranchAngleMaxDeg.value = String(source.lightningShapeBranchAngleMaxDeg ?? 80);
+    if (els.tesla1LightningShapeWidthLengthMinBo) els.tesla1LightningShapeWidthLengthMinBo.value = String(source.lightningShapeWidthLengthMinBo ?? 0.5);
+    if (els.tesla1LightningShapeWidthLengthMaxBo) els.tesla1LightningShapeWidthLengthMaxBo.value = String(source.lightningShapeWidthLengthMaxBo ?? 8);
+    if (els.tesla1LightningShapeBaseWidthMinBo) els.tesla1LightningShapeBaseWidthMinBo.value = String(source.lightningShapeBaseWidthMinBo ?? 0.003);
+    if (els.tesla1LightningShapeBaseWidthMaxBo) els.tesla1LightningShapeBaseWidthMaxBo.value = String(source.lightningShapeBaseWidthMaxBo ?? 0.04);
+    if (els.tesla1LightningShapeTipWidthRatio) els.tesla1LightningShapeTipWidthRatio.value = String(source.lightningShapeTipWidthRatio ?? 0.12);
+    if (els.tesla1LightningShapeBranchWidthRatio) els.tesla1LightningShapeBranchWidthRatio.value = String(source.lightningShapeBranchWidthRatio ?? 0.55);
     if (els.tesla1BoltShaderIntensity) els.tesla1BoltShaderIntensity.value = String(source.boltShaderIntensity ?? 6);
     if (els.tesla1BoltShaderTipFade) els.tesla1BoltShaderTipFade.value = String(source.boltShaderTipFade ?? 0.08);
     if (els.tesla1BoltShaderFlickerSpeedHz) els.tesla1BoltShaderFlickerSpeedHz.value = String(source.boltShaderFlickerSpeedHz ?? 4);
