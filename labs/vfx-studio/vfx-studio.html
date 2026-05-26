@@ -2710,6 +2710,11 @@
 	                <label for="tesla1HaloStrikeCooldownMaxMs">max</label><input id="tesla1HaloStrikeCooldownMaxMs" class="paramFieldInput" type="number" min="16" max="60000" step="10" value="1400" />
 	              </div>
 	              <div class="rgbaParamRow densityRangeRow">
+	                <span class="rgbaLabel">HANG TIME MS</span>
+	                <label for="tesla1HaloStrikeHangTimeMinMs">min</label><input id="tesla1HaloStrikeHangTimeMinMs" class="paramFieldInput" type="number" min="16" max="5000" step="10" value="250" />
+	                <label for="tesla1HaloStrikeHangTimeMaxMs">max</label><input id="tesla1HaloStrikeHangTimeMaxMs" class="paramFieldInput" type="number" min="16" max="5000" step="10" value="500" />
+	              </div>
+	              <div class="rgbaParamRow densityRangeRow">
 	                <span class="rgbaLabel">HIT RADIUS BO</span>
 	                <label for="tesla1HaloStrikeHitRadiusMinBo">min</label><input id="tesla1HaloStrikeHitRadiusMinBo" class="paramFieldInput" type="number" min="0.01" max="16" step="0.01" value="0.12" />
 	                <label for="tesla1HaloStrikeHitRadiusMaxBo">max</label><input id="tesla1HaloStrikeHitRadiusMaxBo" class="paramFieldInput" type="number" min="0.01" max="16" step="0.01" value="0.28" />
@@ -3437,6 +3442,8 @@
 	      tesla1HaloStrikeRangeMaxBo: $("tesla1HaloStrikeRangeMaxBo"),
 	      tesla1HaloStrikeCooldownMinMs: $("tesla1HaloStrikeCooldownMinMs"),
 	      tesla1HaloStrikeCooldownMaxMs: $("tesla1HaloStrikeCooldownMaxMs"),
+	      tesla1HaloStrikeHangTimeMinMs: $("tesla1HaloStrikeHangTimeMinMs"),
+	      tesla1HaloStrikeHangTimeMaxMs: $("tesla1HaloStrikeHangTimeMaxMs"),
 	      tesla1HaloStrikeHitRadiusMinBo: $("tesla1HaloStrikeHitRadiusMinBo"),
 	      tesla1HaloStrikeHitRadiusMaxBo: $("tesla1HaloStrikeHitRadiusMaxBo"),
 	      tesla1HaloStrikeDamageMin: $("tesla1HaloStrikeDamageMin"),

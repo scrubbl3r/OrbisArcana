@@ -67,6 +67,7 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
   const lightningShapeBranchAngleMinDeg = clampNumber(source.lightningShapeBranchAngleMinDeg, 0, 170, TESLA_1_PRESET_DEFAULT.lightningShapeBranchAngleMinDeg);
   const haloStrikeRangeMinBo = clampNumber(source.haloStrikeRangeMinBo, 0, 64, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeRangeMinBo);
   const haloStrikeCooldownMinMs = Math.round(clampNumber(source.haloStrikeCooldownMinMs, 16, 60000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeCooldownMinMs));
+  const haloStrikeHangTimeMinMs = Math.round(clampNumber(source.haloStrikeHangTimeMinMs, 16, 5000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeHangTimeMinMs));
   const haloStrikeHitRadiusMinBo = clampNumber(source.haloStrikeHitRadiusMinBo, 0.01, 16, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeHitRadiusMinBo);
   const haloStrikeDamageMin = clampNumber(source.haloStrikeDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeDamageMin);
   const haloStrikeStunDamageMin = clampNumber(source.haloStrikeStunDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeStunDamageMin);
@@ -115,6 +116,8 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     haloStrikeRangeMaxBo: clampNumber(source.haloStrikeRangeMaxBo, Math.max(0.01, haloStrikeRangeMinBo), 64, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeRangeMaxBo),
     haloStrikeCooldownMinMs,
     haloStrikeCooldownMaxMs: Math.round(clampNumber(source.haloStrikeCooldownMaxMs, haloStrikeCooldownMinMs, 60000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeCooldownMaxMs)),
+    haloStrikeHangTimeMinMs,
+    haloStrikeHangTimeMaxMs: Math.round(clampNumber(source.haloStrikeHangTimeMaxMs, haloStrikeHangTimeMinMs, 5000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeHangTimeMaxMs)),
     haloStrikeHitRadiusMinBo,
     haloStrikeHitRadiusMaxBo: clampNumber(source.haloStrikeHitRadiusMaxBo, haloStrikeHitRadiusMinBo, 16, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeHitRadiusMaxBo),
     haloStrikeDamageMin,
@@ -163,6 +166,7 @@ function buildLightningFieldUniformValues({
   haloStrikeSlot = -1,
   haloStrikeTarget = new THREE.Vector2(0, 0),
   haloStrikeSeed = 0,
+  haloStrikeTime = 0,
   time,
 }) {
   const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(boltCountMin) || 0)));
@@ -172,6 +176,7 @@ function buildLightningFieldUniformValues({
     uBoltCountMax: countMax,
     uBo: Math.max(1, bo),
     uTime: ((time % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS,
+    uHaloStrikeTime: ((haloStrikeTime % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS,
     uStartMin: startMin,
     uStartMax: Math.max(startMin, startMax),
     uEndMin: endMin,
@@ -233,6 +238,7 @@ function createLightningFieldMaterial(params) {
       uBoltCountMax: { value: values.uBoltCountMax },
       uBo: { value: values.uBo },
       uTime: { value: values.uTime },
+      uHaloStrikeTime: { value: values.uHaloStrikeTime },
       uStartMin: { value: values.uStartMin },
       uStartMax: { value: values.uStartMax },
       uEndMin: { value: values.uEndMin },
@@ -283,6 +289,7 @@ function createLightningFieldMaterial(params) {
       uniform int uBoltCountMax;
       uniform float uBo;
       uniform float uTime;
+      uniform float uHaloStrikeTime;
       uniform float uStartMin;
       uniform float uStartMax;
       uniform float uEndMin;
@@ -379,14 +386,14 @@ function createLightningFieldMaterial(params) {
         return a + delta * amount;
       }
 
-      vec3 proceduralBolt(vec2 p, float angle, float startR, float len, float seed) {
+      vec3 proceduralBolt(vec2 p, float angle, float startR, float len, float seed, float sampleTime) {
         vec2 uv = rotate2(angle) * p;
         uv.y -= startR;
         float h = 0.0;
         vec2 macroNoiseUv = uv / max(1.0, uBo) * uMacroNoiseScale;
         vec2 microNoiseUv = uv / max(1.0, uBo) * uMicroNoiseScale;
         float shapeHz = mix(uNoiseSpeedMin, max(uNoiseSpeedMin, uNoiseSpeedMax), randomFloat(vec2(seed, 173.0)));
-        float shapeClock = mod(uTime * shapeHz, TIME_RING);
+        float shapeClock = mod(sampleTime * shapeHz, TIME_RING);
         float shapeFrame = stableFrame(shapeClock);
         float nextShapeFrame = mod(shapeFrame + 1.0, TIME_RING);
         float shapeBlend = smoothstep(0.0, 1.0, fract(shapeClock));
@@ -414,7 +421,7 @@ function createLightningFieldMaterial(params) {
           float branchLen = mix(uBranchLengthMin, max(uBranchLengthMin, uBranchLengthMax), randomFloat(vec2(branchSeed, 337.0)));
           float branchAngle = side * mix(uBranchAngleMin, max(uBranchAngleMin, uBranchAngleMax), randomFloat(vec2(branchSeed, 347.0)));
           vec2 branchUv = rotate2(-branchAngle) * (uv - vec2(0.0, len * anchorT));
-          float branchNoiseFrame = stableFrame(uTime * max(1.0, uNoiseSpeedMin) + bi * 5.0);
+          float branchNoiseFrame = stableFrame(sampleTime * max(1.0, uNoiseSpeedMin) + bi * 5.0);
           vec2 branchMacroUv = branchUv / max(1.0, uBo) * uMacroNoiseScale;
           vec2 branchMicroUv = branchUv / max(1.0, uBo) * uMicroNoiseScale;
           float branchMacro = simpleNoise(branchMacroUv + snapshotOffset(branchSeed, branchNoiseFrame), 2.0) * 2.0 - 1.0;
@@ -432,7 +439,7 @@ function createLightningFieldMaterial(params) {
           bolt += branchBolt * 0.72;
         }
 
-        float flickerTime = mod(uTime, TIME_RING);
+        float flickerTime = mod(sampleTime, TIME_RING);
         float flicker = 1.0 - uFlickerDepth * (0.5 + 0.5 * sin(flickerTime * uFlickerHz * 6.2831853 + seed * 2.31));
         return bolt * flicker;
       }
@@ -489,13 +496,13 @@ function createLightningFieldMaterial(params) {
           float lengthRoll = (lengthSlot + randomFloat(vec2(seed, 191.0))) / lengthSlotCount;
           float endR = mix(uEndMin, uEndMax, lengthRoll);
           float len = max(0.001 * uBo, endR - startR);
-          color += proceduralBolt(p, angle, startR, len, seed) * uIntensity;
+          color += proceduralBolt(p, angle, startR, len, seed, uTime) * uIntensity;
         }
         if (uHaloStrikeActive == 1 && length(uHaloStrikeTarget) > uStartMin + 0.001 * uBo) {
           float strikeAngle = atan(uHaloStrikeTarget.x, uHaloStrikeTarget.y);
           float strikeStartR = max(uStartMin, 0.5 * uBo);
           float strikeLen = max(0.001 * uBo, length(uHaloStrikeTarget) - strikeStartR);
-          color += proceduralBolt(p, strikeAngle, strikeStartR, strikeLen, 900.0 + uHaloStrikeSeed) * uIntensity * 1.25;
+          color += proceduralBolt(p, strikeAngle, strikeStartR, strikeLen, 900.0 + uHaloStrikeSeed, uHaloStrikeTime) * uIntensity * 1.25;
         }
         color = 1.0 - exp(-color * 0.55);
         float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
@@ -530,6 +537,7 @@ export function createTesla1Runtime(options = {}) {
     nextAt: 0,
     seed: 0,
     slot: -1,
+    snapshotTime: 0,
     target: new THREE.Vector2(0, 0),
   };
 
@@ -629,6 +637,7 @@ export function createTesla1Runtime(options = {}) {
       haloStrikeSlot: strikeState.slot,
       haloStrikeTarget: strikeState.target,
       haloStrikeSeed: strikeState.seed,
+      haloStrikeTime: strikeState.snapshotTime,
       time,
     };
   }
@@ -649,14 +658,17 @@ export function createTesla1Runtime(options = {}) {
     }
     const seed = Math.floor((nowMs * 997) + strikeState.seed * 17 + 1) % 100000;
     const countMax = Math.max(1, Math.min(MAX_HALO_BOLTS, Math.round(config.haloBoltCountMax || 1)));
+    const snapshotTime = (nowMs - startedAtMs) / 1000;
+    const hangMs = randomBetween(config.haloStrikeHangTimeMinMs, config.haloStrikeHangTimeMaxMs);
     strikeState.seed = seed;
     strikeState.slot = Math.floor(Math.random() * countMax) % countMax;
+    strikeState.snapshotTime = snapshotTime;
     strikeState.target.copy(toLocalRuntimeTarget(target, bo));
     if (strikeState.target.lengthSq() <= 0.000001) {
       strikeState.activeUntil = 0;
       return;
     }
-    strikeState.activeUntil = (nowMs - startedAtMs) / 1000 + 0.16;
+    strikeState.activeUntil = snapshotTime + Math.max(0.016, hangMs / 1000);
     if (typeof onHaloStrike === "function") {
       onHaloStrike({
         atMs: nowMs,
@@ -737,6 +749,7 @@ export function createTesla1Runtime(options = {}) {
       nextAt: 0,
       seed: 0,
       slot: -1,
+      snapshotTime: 0,
       target: new THREE.Vector2(0, 0),
     };
     syncRuntime(activePayload);
