@@ -60,11 +60,11 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260526213000";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527100552s";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-orb-shell-ambient-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527100552";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-orb-shell-ambient-a";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
 import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527100552b";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
@@ -744,6 +744,32 @@ export function createGameStageDepth3dLayer({
     return Object.keys(layer).length ? Object.freeze(layer) : null;
   }
 
+  function resolveTesla1AmbientFlashMultiplier(nowMs = performance.now(), config = {}) {
+    if (!config || config.orbShellOverrideEnabled === false || config.orbShellOverrideEnabled === 0) return 1;
+    const readNumber = (value, fallback = 0) => {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : fallback;
+    };
+    const amount = Math.max(0, Math.min(4, readNumber(config.orbShellAmbientFlashAmount, TESLA_1_PRESET_DEFAULT.orbShellAmbientFlashAmount)));
+    const hz = Math.max(0, Math.min(60, readNumber(config.orbShellAmbientFlashHz, TESLA_1_PRESET_DEFAULT.orbShellAmbientFlashHz)));
+    if (amount <= 0 || hz <= 0 || config.haloFieldEnabled === false || config.haloFieldEnabled === 0) return 1;
+    const countMin = Math.max(0, Number(config.haloBoltCountMin) || 0);
+    const countMax = Math.max(countMin, Number(config.haloBoltCountMax) || countMin);
+    const startMin = Math.max(0, Number(config.haloFieldBoltStartMinBo) || 0);
+    const startMax = Math.max(startMin, Number(config.haloFieldBoltStartMaxBo) || startMin);
+    const endMin = Math.max(0, Number(config.haloFieldBoltEndMinBo) || 0);
+    const endMax = Math.max(endMin, Number(config.haloFieldBoltEndMaxBo) || endMin);
+    const shellRadius = Math.max(0.5, Number(config.haloFieldShellRadiusBo) || Number(TESLA_1_PRESET_DEFAULT.haloFieldShellRadiusBo) || 1);
+    const countFactor = Math.max(0.35, Math.min(1.5, Math.sqrt(((countMin + countMax) * 0.5) / 8)));
+    const lengthBo = Math.max(0.01, ((endMin + endMax) - (startMin + startMax)) * 0.5);
+    const lengthFactor = Math.max(0.25, Math.min(1.4, lengthBo / shellRadius));
+    const time = Math.max(0, Number(nowMs) || 0) / 1000;
+    const carrier = Math.sin(time * hz * Math.PI * 2);
+    const overtone = Math.sin(time * hz * Math.PI * 3.31 + 1.7);
+    const pulse = Math.pow(Math.max(0, Math.min(1, 0.5 + carrier * 0.38 + overtone * 0.12)), 2.4);
+    return 1 + (amount * countFactor * lengthFactor * pulse);
+  }
+
   function resolveTesla1OrbLightFlashEnergy({ kind = "halo", target = null, config = {} } = {}) {
     const safeConfig = config && typeof config === "object" ? config : {};
     const boltCountMin = Math.max(0, Number(safeConfig.haloBoltCountMin) || 0);
@@ -826,6 +852,7 @@ export function createGameStageDepth3dLayer({
         decayCurve: 2.4,
       });
     }
+    multiplier = Math.max(multiplier, resolveTesla1AmbientFlashMultiplier(nowMs, safeConfig));
     if (!orbShaderMixer || typeof orbShaderMixer.setLayer !== "function") return;
     const layer = resolveTesla1OrbLightLayer(safeConfig, multiplier);
     if (!layer) {

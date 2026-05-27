@@ -2014,6 +2014,8 @@
             <div class="paramFieldRow"><label for="tesla1OrbShellLuminanceBoost">Shell luminance</label><input id="tesla1OrbShellLuminanceBoost" class="paramFieldInput" type="number" min="0" max="12" step="0.05" value="2.2" /></div>
             <div class="paramFieldRow"><label for="tesla1OrbShellCenterAlpha">Shell center alpha</label><input id="tesla1OrbShellCenterAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.005" value="0.08" /></div>
             <div class="paramFieldRow"><label for="tesla1OrbShellGoldMix">Shell gold mix</label><input id="tesla1OrbShellGoldMix" class="paramFieldInput" type="number" min="0" max="2" step="0.01" value="0" /></div>
+            <div class="paramFieldRow"><label for="tesla1OrbShellAmbientFlashAmount">Ambient flash</label><input id="tesla1OrbShellAmbientFlashAmount" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="0.16" /></div>
+            <div class="paramFieldRow"><label for="tesla1OrbShellAmbientFlashHz">Ambient flash Hz</label><input id="tesla1OrbShellAmbientFlashHz" class="paramFieldInput" type="number" min="0" max="60" step="0.1" value="7.5" /></div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -2918,7 +2920,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260527-orb-shell-a"),
+      import("./vfx-studio-bootstrap.js?v=20260527-orb-shell-ambient-a"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2949,7 +2951,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260527-orb-shell-a";
+    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260527-orb-shell-ambient-a";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -2964,7 +2966,7 @@
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260527100552i";
-    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527100552";
+    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527-orb-shell-ambient-a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527100552b";
@@ -3473,6 +3475,8 @@
       tesla1OrbShellLuminanceBoost: $("tesla1OrbShellLuminanceBoost"),
       tesla1OrbShellCenterAlpha: $("tesla1OrbShellCenterAlpha"),
       tesla1OrbShellGoldMix: $("tesla1OrbShellGoldMix"),
+      tesla1OrbShellAmbientFlashAmount: $("tesla1OrbShellAmbientFlashAmount"),
+      tesla1OrbShellAmbientFlashHz: $("tesla1OrbShellAmbientFlashHz"),
       tesla1LightningShapeVisibleBtn: $("tesla1LightningShapeVisibleBtn"),
       tesla1LightningShapeMacroNoiseScale: $("tesla1LightningShapeMacroNoiseScale"),
       tesla1LightningShapeMacroNoiseStrength: $("tesla1LightningShapeMacroNoiseStrength"),

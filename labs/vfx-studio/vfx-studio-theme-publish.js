@@ -234,6 +234,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params) {
         "orbLightIntensity", "orbLightDistanceBo",
         "orbLightFlashIntensityMultiplier", "orbLightFlashDurationMinMs", "orbLightFlashDurationMaxMs", "orbLightFlashDecayCurve",
         "orbShellOverrideEnabled", "orbShellLuminanceBoost", "orbShellCenterAlpha", "orbShellGoldMix",
+        "orbShellAmbientFlashAmount", "orbShellAmbientFlashHz",
         "dominantBoltControlPointDiameterBo",
         "dominantBoltHeadingMemory", "dominantBoltMaxStepBo", "dominantBoltMinStepBo", "dominantBoltPathJitterBo",
         "dominantBoltMinRangeBo", "dominantBoltMaxRangeBo", "dominantBoltDetourRatioMax",

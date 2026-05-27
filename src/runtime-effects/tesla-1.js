@@ -109,6 +109,8 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     orbShellLuminanceBoost: clampNumber(source.orbShellLuminanceBoost, 0, 12, TESLA_1_PRESET_DEFAULT.orbShellLuminanceBoost),
     orbShellCenterAlpha: clampNumber(source.orbShellCenterAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.orbShellCenterAlpha),
     orbShellGoldMix: clampNumber(source.orbShellGoldMix, 0, 2, TESLA_1_PRESET_DEFAULT.orbShellGoldMix),
+    orbShellAmbientFlashAmount: clampNumber(source.orbShellAmbientFlashAmount, 0, 4, TESLA_1_PRESET_DEFAULT.orbShellAmbientFlashAmount),
+    orbShellAmbientFlashHz: clampNumber(source.orbShellAmbientFlashHz, 0, 60, TESLA_1_PRESET_DEFAULT.orbShellAmbientFlashHz),
     haloFieldEnabled: source.haloFieldEnabled !== false && source.haloFieldEnabled !== 0,
     haloFieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, TESLA_1_PRESET_DEFAULT.haloFieldShellRadiusBo),
     haloFieldBoltStartMinBo,

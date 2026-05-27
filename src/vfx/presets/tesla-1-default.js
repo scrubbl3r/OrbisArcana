@@ -14,6 +14,8 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "orbShellLuminanceBoost": 2.2,
   "orbShellCenterAlpha": 0.03,
   "orbShellGoldMix": 0,
+  "orbShellAmbientFlashAmount": 0.16,
+  "orbShellAmbientFlashHz": 7.5,
   "dominantBoltMinRangeBo": 5,
   "dominantBoltMaxRangeBo": 7,
   "dominantBoltDetourRatioMax": 1,
