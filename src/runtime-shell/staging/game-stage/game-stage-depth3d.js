@@ -722,13 +722,15 @@ export function createGameStageDepth3dLayer({
   function resolveTesla1OrbLightLayer(config = {}, intensityMultiplier = 1) {
     if (!config) return null;
     const baseIntensity = Math.max(0, Number(config.orbLightIntensity) || Number(TESLA_1_PRESET_DEFAULT.orbLightIntensity) || 0);
+    const flashMultiplier = Math.max(0, Number(intensityMultiplier) || 1);
     const readNumber = (value, fallback = 0) => {
       const numeric = Number(value);
       return Number.isFinite(numeric) ? numeric : fallback;
     };
     const layer = {};
     if (config.orbShellOverrideEnabled !== false && config.orbShellOverrideEnabled !== 0) {
-      layer.shellLuminanceBoost = Math.max(0, Math.min(12, readNumber(config.orbShellLuminanceBoost, TESLA_1_PRESET_DEFAULT.orbShellLuminanceBoost)));
+      const baseShellLuminance = readNumber(config.orbShellLuminanceBoost, TESLA_1_PRESET_DEFAULT.orbShellLuminanceBoost);
+      layer.shellLuminanceBoost = Math.max(0, Math.min(12, baseShellLuminance * flashMultiplier));
       layer.shellCenterAlpha = Math.max(0, Math.min(1, readNumber(config.orbShellCenterAlpha, TESLA_1_PRESET_DEFAULT.orbShellCenterAlpha)));
       layer.goldMix = Math.max(0, Math.min(2, readNumber(config.orbShellGoldMix, TESLA_1_PRESET_DEFAULT.orbShellGoldMix)));
     }
@@ -736,7 +738,7 @@ export function createGameStageDepth3dLayer({
       layer.pointLightColorR = Math.max(0, Math.min(1, (Number(config.orbLightColorR) || 0) / 255));
       layer.pointLightColorG = Math.max(0, Math.min(1, (Number(config.orbLightColorG) || 0) / 255));
       layer.pointLightColorB = Math.max(0, Math.min(1, (Number(config.orbLightColorB) || 0) / 255));
-      layer.pointLightIntensity = Math.max(0, Math.min(10000, baseIntensity * Math.max(0, Number(intensityMultiplier) || 1)));
+      layer.pointLightIntensity = Math.max(0, Math.min(10000, baseIntensity * flashMultiplier));
       layer.pointLightDistanceBO = Math.max(0, Math.min(1000, Number(config.orbLightDistanceBo) || Number(TESLA_1_PRESET_DEFAULT.orbLightDistanceBo) || 0));
     }
     return Object.keys(layer).length ? Object.freeze(layer) : null;
@@ -764,7 +766,10 @@ export function createGameStageDepth3dLayer({
   }
 
   function startTesla1OrbLightFlash({ kind = "halo", target = null, config = {}, atMs = performance.now() } = {}) {
-    if (!config || config.orbLightOverrideEnabled === false || config.orbLightOverrideEnabled === 0) return;
+    if (!config) return;
+    const hasLightLayer = config.orbLightOverrideEnabled !== false && config.orbLightOverrideEnabled !== 0;
+    const hasShellLayer = config.orbShellOverrideEnabled !== false && config.orbShellOverrideEnabled !== 0;
+    if (!hasLightLayer && !hasShellLayer) return;
     activeTesla1OrbLightConfig = config;
     const minMs = Math.max(8, Number(config.orbLightFlashDurationMinMs) || Number(TESLA_1_PRESET_DEFAULT.orbLightFlashDurationMinMs) || 35);
     const maxMs = Math.max(minMs, Number(config.orbLightFlashDurationMaxMs) || Number(TESLA_1_PRESET_DEFAULT.orbLightFlashDurationMaxMs) || minMs);
