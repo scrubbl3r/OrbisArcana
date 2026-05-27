@@ -8,7 +8,7 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
-import { createTesla1CoreGlowRuntime } from "../../../src/runtime-effects/tesla-1-core-glow.js?v=20260527-core-glow-a";
+import { createTesla1CoreGlowRuntime } from "../../../src/runtime-effects/tesla-1-core-glow.js?v=20260527-core-alpha-a";
 
 const ORB_RADIUS_BO = 0.5;
 const MAX_HALO_BOLTS = 32;
@@ -671,6 +671,7 @@ export function createTesla1Preview({
       coreGlowEnabled: readInputBoolean(els.tesla1CoreGlowEnabled, true),
       coreGlowRadiusBo: readInputNumber(els.tesla1CoreGlowRadiusBo, 0.64, 0.05, 4),
       coreGlowLuminance: readInputNumber(els.tesla1CoreGlowLuminance, 5.5, 0, 80),
+      coreGlowGlobalAlpha: readInputNumber(els.tesla1CoreGlowGlobalAlpha, 0.45, 0, 1),
       coreGlowCenterAlpha: readInputNumber(els.tesla1CoreGlowCenterAlpha, 0.42, 0, 1),
       coreGlowEdgeAlpha: readInputNumber(els.tesla1CoreGlowEdgeAlpha, 0.16, 0, 1),
       coreGlowEdgeSoftness: readInputNumber(els.tesla1CoreGlowEdgeSoftness, 2.8, 0.1, 12),
@@ -1138,6 +1139,7 @@ export function createTesla1Preview({
       els.tesla1CoreGlowEnabled,
       els.tesla1CoreGlowRadiusBo,
       els.tesla1CoreGlowLuminance,
+      els.tesla1CoreGlowGlobalAlpha,
       els.tesla1CoreGlowCenterAlpha,
       els.tesla1CoreGlowEdgeAlpha,
       els.tesla1CoreGlowEdgeSoftness,

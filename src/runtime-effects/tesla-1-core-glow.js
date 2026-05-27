@@ -15,6 +15,7 @@ function normalizeTesla1CoreGlowConfig(raw = {}) {
     enabled: source.coreGlowEnabled !== false && source.coreGlowEnabled !== 0,
     radiusBo: clampNumber(source.coreGlowRadiusBo, 0.05, 4, TESLA_1_PRESET_DEFAULT.coreGlowRadiusBo),
     luminance: clampNumber(source.coreGlowLuminance, 0, 80, TESLA_1_PRESET_DEFAULT.coreGlowLuminance),
+    globalAlpha: clampNumber(source.coreGlowGlobalAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.coreGlowGlobalAlpha),
     centerAlpha: clampNumber(source.coreGlowCenterAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.coreGlowCenterAlpha),
     edgeAlpha: clampNumber(source.coreGlowEdgeAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.coreGlowEdgeAlpha),
     edgeSoftness: clampNumber(source.coreGlowEdgeSoftness, 0.1, 12, TESLA_1_PRESET_DEFAULT.coreGlowEdgeSoftness),
@@ -43,6 +44,7 @@ function createTesla1CoreGlowMaterial({ config, bo }) {
       uPulse: { value: 0 },
       uColor: { value: new THREE.Color(cfg.colorR, cfg.colorG, cfg.colorB) },
       uLuminance: { value: cfg.luminance },
+      uGlobalAlpha: { value: cfg.globalAlpha },
       uCenterAlpha: { value: cfg.centerAlpha },
       uEdgeAlpha: { value: cfg.edgeAlpha },
       uEdgeSoftness: { value: cfg.edgeSoftness },
@@ -92,6 +94,7 @@ function createTesla1CoreGlowMaterial({ config, bo }) {
       uniform float uTime;
       uniform vec3 uColor;
       uniform float uLuminance;
+      uniform float uGlobalAlpha;
       uniform float uCenterAlpha;
       uniform float uEdgeAlpha;
       uniform float uEdgeSoftness;
@@ -112,7 +115,7 @@ function createTesla1CoreGlowMaterial({ config, bo }) {
         vec3 hot = vec3(1.0);
         vec3 fringe = mix(uColor, vec3(0.55, 0.78, 1.0), 0.35);
         vec3 color = mix(fringe, hot, clamp(center * 1.25, 0.0, 1.0));
-        float alpha = (uCenterAlpha * center + uEdgeAlpha * rim) * breathe * (1.0 + pulse * 0.35);
+        float alpha = (uCenterAlpha * center + uEdgeAlpha * rim) * uGlobalAlpha * breathe * (1.0 + pulse * 0.35);
         if (alpha <= 0.001) discard;
         gl_FragColor = vec4(color * uLuminance * pulseBoost, alpha);
       }
@@ -129,6 +132,7 @@ function updateTesla1CoreGlowMaterial(material, { config, bo, timeSec = 0, pulse
   uniforms.uPulse.value = Math.max(0, Number(pulseMultiplier) || 1) - 1;
   uniforms.uColor.value.setRGB(cfg.colorR, cfg.colorG, cfg.colorB);
   uniforms.uLuminance.value = cfg.luminance;
+  uniforms.uGlobalAlpha.value = cfg.globalAlpha;
   uniforms.uCenterAlpha.value = cfg.centerAlpha;
   uniforms.uEdgeAlpha.value = cfg.edgeAlpha;
   uniforms.uEdgeSoftness.value = cfg.edgeSoftness;

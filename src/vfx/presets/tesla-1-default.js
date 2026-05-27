@@ -13,6 +13,7 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "coreGlowEnabled": 1,
   "coreGlowRadiusBo": 0.64,
   "coreGlowLuminance": 5.5,
+  "coreGlowGlobalAlpha": 0.45,
   "coreGlowCenterAlpha": 0.42,
   "coreGlowEdgeAlpha": 0.16,
   "coreGlowEdgeSoftness": 2.8,

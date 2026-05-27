@@ -108,6 +108,7 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     coreGlowEnabled: source.coreGlowEnabled !== false && source.coreGlowEnabled !== 0,
     coreGlowRadiusBo: clampNumber(source.coreGlowRadiusBo, 0.05, 4, TESLA_1_PRESET_DEFAULT.coreGlowRadiusBo),
     coreGlowLuminance: clampNumber(source.coreGlowLuminance, 0, 80, TESLA_1_PRESET_DEFAULT.coreGlowLuminance),
+    coreGlowGlobalAlpha: clampNumber(source.coreGlowGlobalAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.coreGlowGlobalAlpha),
     coreGlowCenterAlpha: clampNumber(source.coreGlowCenterAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.coreGlowCenterAlpha),
     coreGlowEdgeAlpha: clampNumber(source.coreGlowEdgeAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.coreGlowEdgeAlpha),
     coreGlowEdgeSoftness: clampNumber(source.coreGlowEdgeSoftness, 0.1, 12, TESLA_1_PRESET_DEFAULT.coreGlowEdgeSoftness),
