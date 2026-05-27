@@ -230,6 +230,9 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params) {
       const isTesla1 = normalizedBaseEffect === "tesla-1";
       const keys = [
         "durationMs",
+        "orbLightOverrideEnabled", "orbLightColorR", "orbLightColorG", "orbLightColorB",
+        "orbLightIntensity", "orbLightDistanceBo",
+        "orbLightFlashIntensityMultiplier", "orbLightFlashDurationMinMs", "orbLightFlashDurationMaxMs", "orbLightFlashDecayCurve",
         "dominantBoltControlPointDiameterBo",
         "dominantBoltHeadingMemory", "dominantBoltMaxStepBo", "dominantBoltMinStepBo", "dominantBoltPathJitterBo",
         "dominantBoltMinRangeBo", "dominantBoltMaxRangeBo", "dominantBoltDetourRatioMax",

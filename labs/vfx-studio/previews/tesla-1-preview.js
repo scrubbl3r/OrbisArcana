@@ -56,6 +56,13 @@ function rgbColor(r = 255, g = 255, b = 255) {
   );
 }
 
+function rgbHex(r = 255, g = 255, b = 255) {
+  const cr = Math.round(clampNumber(r, 0, 255, 255));
+  const cg = Math.round(clampNumber(g, 0, 255, 255));
+  const cb = Math.round(clampNumber(b, 0, 255, 255));
+  return ((cr << 16) | (cg << 8) | cb) >>> 0;
+}
+
 function disposeObject(object) {
   if (!object) return;
   object.traverse((child) => {
@@ -636,6 +643,25 @@ export function createTesla1Preview({
     });
   }
 
+  function readOrbLightConfig() {
+    const enabled = readInputBoolean(els.tesla1OrbLightOverrideEnabled, true);
+    const flashDurationMinMs = Math.round(readInputNumber(els.tesla1OrbLightFlashDurationMinMs, 35, 8, 1000));
+    return Object.freeze({
+      enabled,
+      color: rgbHex(
+        els.tesla1OrbLightColorR && els.tesla1OrbLightColorR.value,
+        els.tesla1OrbLightColorG && els.tesla1OrbLightColorG.value,
+        els.tesla1OrbLightColorB && els.tesla1OrbLightColorB.value
+      ),
+      intensity: readInputNumber(els.tesla1OrbLightIntensity, 180, 0, 10000),
+      distanceBo: readInputNumber(els.tesla1OrbLightDistanceBo, 24, 0, 1000),
+      flashIntensityMultiplier: readInputNumber(els.tesla1OrbLightFlashIntensityMultiplier, 4, 1, 100),
+      flashDurationMinMs,
+      flashDurationMaxMs: Math.round(readInputNumber(els.tesla1OrbLightFlashDurationMaxMs, 90, flashDurationMinMs, 1000)),
+      flashDecayCurve: readInputNumber(els.tesla1OrbLightFlashDecayCurve, 2.4, 0.1, 8),
+    });
+  }
+
   function masterRoute(bo, time, master = readMasterBoltConfig()) {
     const minRange = master.minRange;
     const maxRange = master.maxRange;
@@ -966,7 +992,16 @@ export function createTesla1Preview({
     if (!els.previewRoot) return null;
     destroyInspector();
     const bo = readBo();
-    const activeConfig = ORB_3D_VISUAL_DEFAULTS;
+    const orbLightConfig = readOrbLightConfig();
+    const activeConfig = orbLightConfig.enabled
+      ? {
+          ...ORB_3D_VISUAL_DEFAULTS,
+          lightColor: orbLightConfig.color,
+          lightIntensity: orbLightConfig.intensity,
+          lightDistanceBO: orbLightConfig.distanceBo,
+          lightPastelMix: 0,
+        }
+      : ORB_3D_VISUAL_DEFAULTS;
     createdAt = performance.now();
     resetHaloStrikeState();
     resetMasterBoltState();
@@ -1059,6 +1094,16 @@ export function createTesla1Preview({
       els.tesla1MasterBoltMicroJitterMultiplier,
       els.tesla1MasterBoltBranchDensityMultiplier,
       els.tesla1MasterBoltBaseWidthMultiplier,
+      els.tesla1OrbLightOverrideEnabled,
+      els.tesla1OrbLightColorR,
+      els.tesla1OrbLightColorG,
+      els.tesla1OrbLightColorB,
+      els.tesla1OrbLightIntensity,
+      els.tesla1OrbLightDistanceBo,
+      els.tesla1OrbLightFlashIntensityMultiplier,
+      els.tesla1OrbLightFlashDurationMinMs,
+      els.tesla1OrbLightFlashDurationMaxMs,
+      els.tesla1OrbLightFlashDecayCurve,
       els.tesla1HaloFieldEnabled,
       els.tesla1HaloFieldShellRadiusBo,
       els.tesla1HaloFieldBoltStartMinBo,

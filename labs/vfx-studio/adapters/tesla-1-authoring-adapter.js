@@ -36,8 +36,19 @@ export function createTesla1AuthoringAdapter({
     const lightningShapeNoiseSpeedMin = readNumber(els.tesla1LightningShapeNoiseSpeedMin, tesla1PresetDefault.lightningShapeNoiseSpeedMin ?? fallbackShapeHz, 0, 20);
     const lightningShapeWidthLengthMinBo = readNumber(els.tesla1LightningShapeWidthLengthMinBo, tesla1PresetDefault.lightningShapeWidthLengthMinBo, 0.001, 1000);
     const lightningShapeBaseWidthMinBo = readNumber(els.tesla1LightningShapeBaseWidthMinBo, tesla1PresetDefault.lightningShapeBaseWidthMinBo, 0.0001, 32);
+    const orbLightFlashDurationMinMs = Math.round(readNumber(els.tesla1OrbLightFlashDurationMinMs, tesla1PresetDefault.orbLightFlashDurationMinMs, 8, 1000));
     return Object.freeze({
       durationMs: readNumber(els.tesla1SpellDurationMs, tesla1PresetDefault.durationMs, 200, 60000),
+      orbLightOverrideEnabled: els.tesla1OrbLightOverrideEnabled ? !!els.tesla1OrbLightOverrideEnabled.checked : tesla1PresetDefault.orbLightOverrideEnabled !== false,
+      orbLightColorR: Math.round(readNumber(els.tesla1OrbLightColorR, tesla1PresetDefault.orbLightColorR, 0, 255)),
+      orbLightColorG: Math.round(readNumber(els.tesla1OrbLightColorG, tesla1PresetDefault.orbLightColorG, 0, 255)),
+      orbLightColorB: Math.round(readNumber(els.tesla1OrbLightColorB, tesla1PresetDefault.orbLightColorB, 0, 255)),
+      orbLightIntensity: readNumber(els.tesla1OrbLightIntensity, tesla1PresetDefault.orbLightIntensity, 0, 10000),
+      orbLightDistanceBo: readNumber(els.tesla1OrbLightDistanceBo, tesla1PresetDefault.orbLightDistanceBo, 0, 1000),
+      orbLightFlashIntensityMultiplier: readNumber(els.tesla1OrbLightFlashIntensityMultiplier, tesla1PresetDefault.orbLightFlashIntensityMultiplier, 1, 100),
+      orbLightFlashDurationMinMs,
+      orbLightFlashDurationMaxMs: Math.round(readNumber(els.tesla1OrbLightFlashDurationMaxMs, tesla1PresetDefault.orbLightFlashDurationMaxMs, orbLightFlashDurationMinMs, 1000)),
+      orbLightFlashDecayCurve: readNumber(els.tesla1OrbLightFlashDecayCurve, tesla1PresetDefault.orbLightFlashDecayCurve, 0.1, 8),
       dominantBoltMinRangeBo,
       dominantBoltMaxRangeBo: readNumber(els.tesla1MasterBoltMaxRangeBo, tesla1PresetDefault.dominantBoltMaxRangeBo, Math.max(0.01, dominantBoltMinRangeBo), 64),
       dominantBoltTargetRadiusBo: readNumber(els.tesla1MasterBoltContactRadiusBo, tesla1PresetDefault.dominantBoltTargetRadiusBo, 0, 8),
@@ -121,6 +132,16 @@ export function createTesla1AuthoringAdapter({
     void options;
     const source = settings && typeof settings === "object" ? settings : defaultSettings();
     if (els.tesla1SpellDurationMs) els.tesla1SpellDurationMs.value = String(source.durationMs ?? 10000);
+    if (els.tesla1OrbLightOverrideEnabled) els.tesla1OrbLightOverrideEnabled.checked = source.orbLightOverrideEnabled !== false;
+    if (els.tesla1OrbLightColorR) els.tesla1OrbLightColorR.value = String(source.orbLightColorR ?? 128);
+    if (els.tesla1OrbLightColorG) els.tesla1OrbLightColorG.value = String(source.orbLightColorG ?? 190);
+    if (els.tesla1OrbLightColorB) els.tesla1OrbLightColorB.value = String(source.orbLightColorB ?? 255);
+    if (els.tesla1OrbLightIntensity) els.tesla1OrbLightIntensity.value = String(source.orbLightIntensity ?? 180);
+    if (els.tesla1OrbLightDistanceBo) els.tesla1OrbLightDistanceBo.value = String(source.orbLightDistanceBo ?? 24);
+    if (els.tesla1OrbLightFlashIntensityMultiplier) els.tesla1OrbLightFlashIntensityMultiplier.value = String(source.orbLightFlashIntensityMultiplier ?? 4);
+    if (els.tesla1OrbLightFlashDurationMinMs) els.tesla1OrbLightFlashDurationMinMs.value = String(source.orbLightFlashDurationMinMs ?? 35);
+    if (els.tesla1OrbLightFlashDurationMaxMs) els.tesla1OrbLightFlashDurationMaxMs.value = String(source.orbLightFlashDurationMaxMs ?? 90);
+    if (els.tesla1OrbLightFlashDecayCurve) els.tesla1OrbLightFlashDecayCurve.value = String(source.orbLightFlashDecayCurve ?? 2.4);
     if (els.tesla1MasterBoltMinRangeBo) els.tesla1MasterBoltMinRangeBo.value = String(source.dominantBoltMinRangeBo ?? 4);
     if (els.tesla1MasterBoltMaxRangeBo) els.tesla1MasterBoltMaxRangeBo.value = String(source.dominantBoltMaxRangeBo ?? 8);
     if (els.tesla1MasterBoltFrequencyMinMs) els.tesla1MasterBoltFrequencyMinMs.value = String(source.dominantBoltFrequencyMinMs ?? 900);
