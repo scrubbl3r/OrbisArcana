@@ -109,8 +109,7 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     orbShellLuminanceBoost: clampNumber(source.orbShellLuminanceBoost, 0, 12, TESLA_1_PRESET_DEFAULT.orbShellLuminanceBoost),
     orbShellCenterAlpha: clampNumber(source.orbShellCenterAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.orbShellCenterAlpha),
     orbShellGoldMix: clampNumber(source.orbShellGoldMix, 0, 2, TESLA_1_PRESET_DEFAULT.orbShellGoldMix),
-    orbShellAmbientFlashAmount: clampNumber(source.orbShellAmbientFlashAmount, 0, 4, TESLA_1_PRESET_DEFAULT.orbShellAmbientFlashAmount),
-    orbShellAmbientFlashHz: clampNumber(source.orbShellAmbientFlashHz, 0, 60, TESLA_1_PRESET_DEFAULT.orbShellAmbientFlashHz),
+    orbShellFieldBoltFlashAmount: clampNumber(source.orbShellFieldBoltFlashAmount, 0, 4, TESLA_1_PRESET_DEFAULT.orbShellFieldBoltFlashAmount),
     haloFieldEnabled: source.haloFieldEnabled !== false && source.haloFieldEnabled !== 0,
     haloFieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, TESLA_1_PRESET_DEFAULT.haloFieldShellRadiusBo),
     haloFieldBoltStartMinBo,
@@ -1145,6 +1144,10 @@ export function createTesla1Runtime(options = {}) {
   return Object.freeze({
     clear,
     destroy: clear,
+    getElapsedTimeSeconds(nowMs = typeof now === "function" ? now() : performance.now()) {
+      if (!group) return 0;
+      return Math.max(0, (Number(nowMs) - startedAtMs) / 1000);
+    },
     isActive() {
       return !!group;
     },

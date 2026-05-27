@@ -668,16 +668,29 @@ export function createTesla1Preview({
       luminanceBoost: readInputNumber(els.tesla1OrbShellLuminanceBoost, 2.2, 0, 12),
       centerAlpha: readInputNumber(els.tesla1OrbShellCenterAlpha, 0.08, 0, 1),
       goldMix: readInputNumber(els.tesla1OrbShellGoldMix, 0, 0, 2),
-      ambientFlashAmount: readInputNumber(els.tesla1OrbShellAmbientFlashAmount, 0.16, 0, 4),
-      ambientFlashHz: readInputNumber(els.tesla1OrbShellAmbientFlashHz, 7.5, 0, 60),
+      fieldBoltFlashAmount: readInputNumber(els.tesla1OrbShellFieldBoltFlashAmount, 0.16, 0, 4),
     });
   }
 
-  function resolveAmbientShellFlashMultiplier(time = 0) {
+  function tesla1Fract(value = 0) {
+    return value - Math.floor(value);
+  }
+
+  function tesla1ShaderRandomFloat(x = 0, y = 0) {
+    const sx = Math.sin(x * 123.45) * 345.21 + 12.57;
+    const sy = Math.sin(y * 546.23) * 345.21 + 12.57;
+    return tesla1Fract(sx * sy);
+  }
+
+  function resolveFieldBoltShellFlashMultiplier(time = 0) {
     const shell = readOrbShellConfig();
-    if (!shell.enabled || shell.ambientFlashAmount <= 0 || shell.ambientFlashHz <= 0) return 1;
+    if (!shell.enabled || shell.fieldBoltFlashAmount <= 0) return 1;
+    const haloEnabled = !els.tesla1HaloFieldEnabled || els.tesla1HaloFieldEnabled.checked;
+    const shaderEnabled = !els.tesla1BoltShaderEnabled || els.tesla1BoltShaderEnabled.checked;
+    if (!haloEnabled || !shaderEnabled) return 1;
     const countMin = Math.max(0, readInputNumber(els.tesla1HaloBoltCountMin, 4, 0, 256));
     const countMax = Math.max(countMin, readInputNumber(els.tesla1HaloBoltCountMax, 12, countMin, 256));
+    if (countMax <= 0) return 1;
     const startMin = readInputNumber(els.tesla1HaloFieldBoltStartMinBo, 0, 0, 32);
     const startMax = readInputNumber(els.tesla1HaloFieldBoltStartMaxBo, 0.15, startMin, 32);
     const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, Math.max(0.01, startMin), 32);
@@ -686,10 +699,31 @@ export function createTesla1Preview({
     const countFactor = Math.max(0.35, Math.min(1.5, Math.sqrt(((countMin + countMax) * 0.5) / 8)));
     const lengthBo = Math.max(0.01, ((endMin + endMax) - (startMin + startMax)) * 0.5);
     const lengthFactor = Math.max(0.25, Math.min(1.4, lengthBo / Math.max(0.5, shellRadius)));
-    const carrier = Math.sin(time * shell.ambientFlashHz * Math.PI * 2);
-    const overtone = Math.sin(time * shell.ambientFlashHz * Math.PI * 3.31 + 1.7);
-    const pulse = Math.pow(Math.max(0, Math.min(1, 0.5 + carrier * 0.38 + overtone * 0.12)), 2.4);
-    return 1 + (shell.ambientFlashAmount * countFactor * lengthFactor * pulse);
+    const ttlMin = Math.max(0.016, readInputNumber(els.tesla1HaloBoltTtlMinMs, 350, 16, 10000) / 1000);
+    const ttlMax = Math.max(ttlMin, readInputNumber(els.tesla1HaloBoltTtlMaxMs, 900, ttlMin * 1000, 10000) / 1000);
+    const ringTime = tesla1Fract(Math.max(0, Number(time) || 0) / TESLA_SHADER_TIME_RING_SECONDS) * TESLA_SHADER_TIME_RING_SECONDS;
+    const minCount = Math.min(countMin, countMax);
+    const optionalSlots = Math.max(0, countMax - minCount);
+    let pulseSum = 0;
+    let activeSlots = 0;
+    const slotCount = Math.min(MAX_HALO_BOLTS, Math.ceil(countMax));
+    for (let i = 0; i < slotCount; i += 1) {
+      const offset = tesla1ShaderRandomFloat(i, 9) * ttlMax;
+      const shiftedTime = ((ringTime + offset) % (ttlMax * TESLA_SHADER_TIME_RING_SECONDS) + (ttlMax * TESLA_SHADER_TIME_RING_SECONDS)) % (ttlMax * TESLA_SHADER_TIME_RING_SECONDS);
+      const coarseCycle = Math.floor(shiftedTime / ttlMax);
+      const ttl = ttlMin + (ttlMax - ttlMin) * tesla1ShaderRandomFloat(i * 17.7, coarseCycle + 41);
+      const ttlCycle = Math.floor(shiftedTime / Math.max(0.016, ttl));
+      const seed = i * 37.13 + ttlCycle * 19.7 + 11.7;
+      const optionalChance = optionalSlots > 0 ? 0.5 : 0;
+      if (i >= minCount && tesla1ShaderRandomFloat(seed, 23) > optionalChance) continue;
+      const age = ((shiftedTime % ttl) + ttl) % ttl;
+      const phase = Math.max(0, Math.min(1, age / ttl));
+      pulseSum += Math.pow(1 - phase, 3.2);
+      activeSlots += 1;
+    }
+    if (activeSlots <= 0) return 1;
+    const pulse = Math.min(1, pulseSum / Math.max(1, activeSlots));
+    return 1 + (shell.fieldBoltFlashAmount * countFactor * lengthFactor * pulse);
   }
 
   function masterRoute(bo, time, master = readMasterBoltConfig()) {
@@ -1054,7 +1088,7 @@ export function createTesla1Preview({
         const time = (performance.now() - createdAt) / 1000;
         if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = time;
         if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uShellLuminanceBoost) {
-          shellMaterial.uniforms.uShellLuminanceBoost.value = (Number(activeConfig.shellLuminanceBoost) || 1) * resolveAmbientShellFlashMultiplier(time);
+          shellMaterial.uniforms.uShellLuminanceBoost.value = (Number(activeConfig.shellLuminanceBoost) || 1) * resolveFieldBoltShellFlashMultiplier(time);
         }
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
         syncHaloLayer(bo);
@@ -1147,8 +1181,7 @@ export function createTesla1Preview({
       els.tesla1OrbShellLuminanceBoost,
       els.tesla1OrbShellCenterAlpha,
       els.tesla1OrbShellGoldMix,
-      els.tesla1OrbShellAmbientFlashAmount,
-      els.tesla1OrbShellAmbientFlashHz,
+      els.tesla1OrbShellFieldBoltFlashAmount,
       els.tesla1HaloFieldEnabled,
       els.tesla1HaloFieldShellRadiusBo,
       els.tesla1HaloFieldBoltStartMinBo,

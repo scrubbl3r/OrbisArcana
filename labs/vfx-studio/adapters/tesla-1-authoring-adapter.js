@@ -53,8 +53,7 @@ export function createTesla1AuthoringAdapter({
       orbShellLuminanceBoost: readNumber(els.tesla1OrbShellLuminanceBoost, tesla1PresetDefault.orbShellLuminanceBoost, 0, 12),
       orbShellCenterAlpha: readNumber(els.tesla1OrbShellCenterAlpha, tesla1PresetDefault.orbShellCenterAlpha, 0, 1),
       orbShellGoldMix: readNumber(els.tesla1OrbShellGoldMix, tesla1PresetDefault.orbShellGoldMix, 0, 2),
-      orbShellAmbientFlashAmount: readNumber(els.tesla1OrbShellAmbientFlashAmount, tesla1PresetDefault.orbShellAmbientFlashAmount, 0, 4),
-      orbShellAmbientFlashHz: readNumber(els.tesla1OrbShellAmbientFlashHz, tesla1PresetDefault.orbShellAmbientFlashHz, 0, 60),
+      orbShellFieldBoltFlashAmount: readNumber(els.tesla1OrbShellFieldBoltFlashAmount, tesla1PresetDefault.orbShellFieldBoltFlashAmount, 0, 4),
       dominantBoltMinRangeBo,
       dominantBoltMaxRangeBo: readNumber(els.tesla1MasterBoltMaxRangeBo, tesla1PresetDefault.dominantBoltMaxRangeBo, Math.max(0.01, dominantBoltMinRangeBo), 64),
       dominantBoltTargetRadiusBo: readNumber(els.tesla1MasterBoltContactRadiusBo, tesla1PresetDefault.dominantBoltTargetRadiusBo, 0, 8),
@@ -152,8 +151,7 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1OrbShellLuminanceBoost) els.tesla1OrbShellLuminanceBoost.value = String(source.orbShellLuminanceBoost ?? 2.2);
     if (els.tesla1OrbShellCenterAlpha) els.tesla1OrbShellCenterAlpha.value = String(source.orbShellCenterAlpha ?? 0.08);
     if (els.tesla1OrbShellGoldMix) els.tesla1OrbShellGoldMix.value = String(source.orbShellGoldMix ?? 0);
-    if (els.tesla1OrbShellAmbientFlashAmount) els.tesla1OrbShellAmbientFlashAmount.value = String(source.orbShellAmbientFlashAmount ?? 0.16);
-    if (els.tesla1OrbShellAmbientFlashHz) els.tesla1OrbShellAmbientFlashHz.value = String(source.orbShellAmbientFlashHz ?? 7.5);
+    if (els.tesla1OrbShellFieldBoltFlashAmount) els.tesla1OrbShellFieldBoltFlashAmount.value = String(source.orbShellFieldBoltFlashAmount ?? 0.16);
     if (els.tesla1MasterBoltMinRangeBo) els.tesla1MasterBoltMinRangeBo.value = String(source.dominantBoltMinRangeBo ?? 4);
     if (els.tesla1MasterBoltMaxRangeBo) els.tesla1MasterBoltMaxRangeBo.value = String(source.dominantBoltMaxRangeBo ?? 8);
     if (els.tesla1MasterBoltFrequencyMinMs) els.tesla1MasterBoltFrequencyMinMs.value = String(source.dominantBoltFrequencyMinMs ?? 900);

@@ -60,11 +60,11 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260526213000";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-orb-shell-ambient-a";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-orb-shell-field-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-orb-shell-ambient-a";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-orb-shell-field-a";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
 import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527100552b";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
@@ -744,17 +744,27 @@ export function createGameStageDepth3dLayer({
     return Object.keys(layer).length ? Object.freeze(layer) : null;
   }
 
-  function resolveTesla1AmbientFlashMultiplier(nowMs = performance.now(), config = {}) {
+  function tesla1Fract(value = 0) {
+    return value - Math.floor(value);
+  }
+
+  function tesla1ShaderRandomFloat(x = 0, y = 0) {
+    const sx = Math.sin(x * 123.45) * 345.21 + 12.57;
+    const sy = Math.sin(y * 546.23) * 345.21 + 12.57;
+    return tesla1Fract(sx * sy);
+  }
+
+  function resolveTesla1FieldBoltFlashMultiplier(nowMs = performance.now(), config = {}, elapsedSeconds = null) {
     if (!config || config.orbShellOverrideEnabled === false || config.orbShellOverrideEnabled === 0) return 1;
     const readNumber = (value, fallback = 0) => {
       const numeric = Number(value);
       return Number.isFinite(numeric) ? numeric : fallback;
     };
-    const amount = Math.max(0, Math.min(4, readNumber(config.orbShellAmbientFlashAmount, TESLA_1_PRESET_DEFAULT.orbShellAmbientFlashAmount)));
-    const hz = Math.max(0, Math.min(60, readNumber(config.orbShellAmbientFlashHz, TESLA_1_PRESET_DEFAULT.orbShellAmbientFlashHz)));
-    if (amount <= 0 || hz <= 0 || config.haloFieldEnabled === false || config.haloFieldEnabled === 0) return 1;
+    const amount = Math.max(0, Math.min(4, readNumber(config.orbShellFieldBoltFlashAmount, TESLA_1_PRESET_DEFAULT.orbShellFieldBoltFlashAmount)));
+    if (amount <= 0 || config.haloFieldEnabled === false || config.haloFieldEnabled === 0 || config.boltShaderEnabled === false || config.boltShaderEnabled === 0) return 1;
     const countMin = Math.max(0, Number(config.haloBoltCountMin) || 0);
     const countMax = Math.max(countMin, Number(config.haloBoltCountMax) || countMin);
+    if (countMax <= 0) return 1;
     const startMin = Math.max(0, Number(config.haloFieldBoltStartMinBo) || 0);
     const startMax = Math.max(startMin, Number(config.haloFieldBoltStartMaxBo) || startMin);
     const endMin = Math.max(0, Number(config.haloFieldBoltEndMinBo) || 0);
@@ -763,10 +773,33 @@ export function createGameStageDepth3dLayer({
     const countFactor = Math.max(0.35, Math.min(1.5, Math.sqrt(((countMin + countMax) * 0.5) / 8)));
     const lengthBo = Math.max(0.01, ((endMin + endMax) - (startMin + startMax)) * 0.5);
     const lengthFactor = Math.max(0.25, Math.min(1.4, lengthBo / shellRadius));
-    const time = Math.max(0, Number(nowMs) || 0) / 1000;
-    const carrier = Math.sin(time * hz * Math.PI * 2);
-    const overtone = Math.sin(time * hz * Math.PI * 3.31 + 1.7);
-    const pulse = Math.pow(Math.max(0, Math.min(1, 0.5 + carrier * 0.38 + overtone * 0.12)), 2.4);
+    const ttlMin = Math.max(0.016, (Number(config.haloBoltTtlMinMs) || Number(TESLA_1_PRESET_DEFAULT.haloBoltTtlMinMs) || 16) / 1000);
+    const ttlMax = Math.max(ttlMin, (Number(config.haloBoltTtlMaxMs) || Number(TESLA_1_PRESET_DEFAULT.haloBoltTtlMaxMs) || 16) / 1000);
+    const sourceTime = Number.isFinite(Number(elapsedSeconds))
+      ? Math.max(0, Number(elapsedSeconds))
+      : Math.max(0, Number(nowMs) || 0) / 1000;
+    const time = tesla1Fract(sourceTime / 32) * 32;
+    const minCount = Math.min(countMin, countMax);
+    const optionalSlots = Math.max(0, countMax - minCount);
+    let pulseSum = 0;
+    let activeSlots = 0;
+    const slotCount = Math.min(32, Math.ceil(countMax));
+    for (let i = 0; i < slotCount; i += 1) {
+      const offset = tesla1ShaderRandomFloat(i, 9) * ttlMax;
+      const shiftedTime = ((time + offset) % (ttlMax * 32) + (ttlMax * 32)) % (ttlMax * 32);
+      const coarseCycle = Math.floor(shiftedTime / ttlMax);
+      const ttl = ttlMin + (ttlMax - ttlMin) * tesla1ShaderRandomFloat(i * 17.7, coarseCycle + 41);
+      const ttlCycle = Math.floor(shiftedTime / Math.max(0.016, ttl));
+      const seed = i * 37.13 + ttlCycle * 19.7 + 11.7;
+      const optionalChance = optionalSlots > 0 ? 0.5 : 0;
+      if (i >= minCount && tesla1ShaderRandomFloat(seed, 23) > optionalChance) continue;
+      const age = ((shiftedTime % ttl) + ttl) % ttl;
+      const phase = Math.max(0, Math.min(1, age / ttl));
+      pulseSum += Math.pow(1 - phase, 3.2);
+      activeSlots += 1;
+    }
+    if (activeSlots <= 0) return 1;
+    const pulse = Math.min(1, pulseSum / Math.max(1, activeSlots));
     return 1 + (amount * countFactor * lengthFactor * pulse);
   }
 
@@ -852,7 +885,10 @@ export function createGameStageDepth3dLayer({
         decayCurve: 2.4,
       });
     }
-    multiplier = Math.max(multiplier, resolveTesla1AmbientFlashMultiplier(nowMs, safeConfig));
+    const fieldElapsedSeconds = tesla1Runtime && typeof tesla1Runtime.getElapsedTimeSeconds === "function"
+      ? tesla1Runtime.getElapsedTimeSeconds(nowMs)
+      : null;
+    multiplier = Math.max(multiplier, resolveTesla1FieldBoltFlashMultiplier(nowMs, safeConfig, fieldElapsedSeconds));
     if (!orbShaderMixer || typeof orbShaderMixer.setLayer !== "function") return;
     const layer = resolveTesla1OrbLightLayer(safeConfig, multiplier);
     if (!layer) {
