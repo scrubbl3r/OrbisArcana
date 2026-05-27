@@ -6,6 +6,7 @@ import { loadAuthoredLevelScene } from "../level/load-authored-level-scene.js?v=
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_BOUNDARY_BOX,
   AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_ANCHORS,
+  AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_LOOPS,
   AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX,
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelBox,
@@ -49,6 +50,7 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25, onCa
   });
   const sceneModel = state.sceneModel || null;
   const boundaryBox = resolveAuthoredLevelReadModelBox(state, AUTHORED_LEVEL_READ_MODEL_KEY_BOUNDARY_BOX);
+  const cameraBoundaryLoops = resolveAuthoredLevelReadModelArray(state, AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_LOOPS);
   const cameraBoundaryBox = resolveAuthoredLevelReadModelBox(state, AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX);
   const clampBounds = resolveStageCameraClampBounds({
     worldWidthPx: state.worldWidthPx,
@@ -92,6 +94,7 @@ function updateAuthoredStageCamera(refs, state, previewZoomFallback = 0.25, onCa
       clampInsetRightPx: cameraConfig.clampInsetRightPx,
       clampInsetTopPx: cameraConfig.clampInsetTopPx,
       clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
+      cameraBoundaryLoops: state.bootCamera ? [] : cameraBoundaryLoops,
     })
     : null;
   if (!frame) return;

@@ -23,6 +23,7 @@ const CHECKS = Object.freeze([
   Object.freeze({ command: ["node", "tools/levels/check-level-registry-contract.mjs"] }),
   Object.freeze({ command: ["node", "tools/levels/check-level-world-size-contract.mjs"] }),
   Object.freeze({ command: ["node", "tools/levels/check-svg-level-source-contract.mjs"] }),
+  Object.freeze({ command: ["node", "tools/levels/check-camera-corridor-contract.mjs"] }),
   Object.freeze({ command: ["node", "tools/levels/check-authored-level-overlay-contract.mjs"] }),
   ...SVG_INSPECTION_CHECKS,
 ]);

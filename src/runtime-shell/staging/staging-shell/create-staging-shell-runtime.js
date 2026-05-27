@@ -56,6 +56,7 @@ import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/
 import { loadAuthoredLevelScene } from "../../../game-runtime/level/load-authored-level-scene.js?v=20260514a";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_BOUNDARY_BOX,
+  AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_LOOPS,
   AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX,
   AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
   AUTHORED_LEVEL_READ_MODEL_KEY_LOOPS,
@@ -559,6 +560,11 @@ function shellResolvedCameraBoundaryBox(shellContext) {
   return resolveAuthoredLevelReadModelBox(runtime, AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX);
 }
 
+function shellResolvedCameraBoundaryLoops(shellContext) {
+  const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
+  return resolveAuthoredLevelReadModelArray(runtime, AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_LOOPS);
+}
+
 function shellActiveStageCameraClampBounds(shellContext) {
   return resolveStageCameraClampBounds({
     worldWidthPx: shellWorldWidth(shellContext),
@@ -720,6 +726,7 @@ function buildShellCameraResolveArgs(shellContext, args = {}) {
     clampInsetRightPx: cameraConfig.clampInsetRightPx,
     clampInsetTopPx: cameraConfig.clampInsetTopPx,
     clampInsetBottomPx: cameraConfig.clampInsetBottomPx,
+    cameraBoundaryLoops: shellResolvedCameraBoundaryLoops(shellContext),
     ...args,
   };
 }

@@ -16,6 +16,81 @@ function toOptionalFiniteNumber(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+function normalizeCorridorLoops(cameraBoundaryLoops = []) {
+  return (Array.isArray(cameraBoundaryLoops) ? cameraBoundaryLoops : [])
+    .map((loop) => (Array.isArray(loop && loop.worldPoints) ? loop.worldPoints : [])
+      .map((point) => ({
+        x: toOptionalFiniteNumber(point && point.xW),
+        y: toOptionalFiniteNumber(point && point.yW),
+      }))
+      .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y)))
+    .filter((points) => points.length >= 3);
+}
+
+function isPointInPolygon(point = {}, polygon = []) {
+  const x = toFiniteNumber(point.x, 0);
+  const y = toFiniteNumber(point.y, 0);
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+    const pi = polygon[i] || {};
+    const pj = polygon[j] || {};
+    const xi = toFiniteNumber(pi.x, 0);
+    const yi = toFiniteNumber(pi.y, 0);
+    const xj = toFiniteNumber(pj.x, 0);
+    const yj = toFiniteNumber(pj.y, 0);
+    const intersects = ((yi > y) !== (yj > y))
+      && (x < (((xj - xi) * (y - yi)) / ((yj - yi) || Number.EPSILON)) + xi);
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+function nearestPointOnSegment(point = {}, a = {}, b = {}) {
+  const px = toFiniteNumber(point.x, 0);
+  const py = toFiniteNumber(point.y, 0);
+  const ax = toFiniteNumber(a.x, 0);
+  const ay = toFiniteNumber(a.y, 0);
+  const bx = toFiniteNumber(b.x, ax);
+  const by = toFiniteNumber(b.y, ay);
+  const dx = bx - ax;
+  const dy = by - ay;
+  const lenSq = (dx * dx) + (dy * dy);
+  const t = lenSq > 0 ? clamp((((px - ax) * dx) + ((py - ay) * dy)) / lenSq, 0, 1) : 0;
+  const x = ax + (dx * t);
+  const y = ay + (dy * t);
+  return {
+    x,
+    y,
+    distanceSq: ((px - x) * (px - x)) + ((py - y) * (py - y)),
+  };
+}
+
+function resolveCameraCorridorCenter(center = {}, loops = []) {
+  if (!loops.length) return null;
+  for (const loop of loops) {
+    if (isPointInPolygon(center, loop)) {
+      return {
+        x: toFiniteNumber(center.x, 0),
+        y: toFiniteNumber(center.y, 0),
+        constrained: false,
+      };
+    }
+  }
+
+  let nearest = null;
+  for (const loop of loops) {
+    for (let i = 0; i < loop.length; i += 1) {
+      const a = loop[i];
+      const b = loop[(i + 1) % loop.length];
+      const candidate = nearestPointOnSegment(center, a, b);
+      if (!nearest || candidate.distanceSq < nearest.distanceSq) nearest = candidate;
+    }
+  }
+  return nearest
+    ? { x: nearest.x, y: nearest.y, constrained: true }
+    : null;
+}
+
 function resolveDeadzonePx(explicitPx, ratio, viewportPx) {
   const directPx = toFiniteNumber(explicitPx, -1);
   if (directPx >= 0) return directPx;
@@ -52,6 +127,7 @@ export function resolveCameraFrame({
   clampInsetRightPx = 0,
   clampInsetTopPx = 0,
   clampInsetBottomPx = 0,
+  cameraBoundaryLoops = [],
   target = null,
 } = {}) {
   const resolvedZoom = Math.max(0.01, toFiniteNumber(zoom, 1));
@@ -67,30 +143,40 @@ export function resolveCameraFrame({
   const safeClampRightXW = toFiniteNumber(clampRightXW, safeWorldWidthPx);
   const safeClampTopYW = toFiniteNumber(clampTopYW, 0);
   const safeClampBottomYW = toFiniteNumber(clampBottomYW, safeWorldHeightPx);
+  const cameraCorridorLoops = normalizeCorridorLoops(cameraBoundaryLoops);
+  const hasCameraCorridor = cameraCorridorLoops.length > 0;
   const safeClampInsetLeftW = Math.max(0, toFiniteNumber(clampInsetLeftPx, 0)) / resolvedZoom;
   const safeClampInsetRightW = Math.max(0, toFiniteNumber(clampInsetRightPx, 0)) / resolvedZoom;
   const safeClampInsetTopW = Math.max(0, toFiniteNumber(clampInsetTopPx, 0)) / resolvedZoom;
   const safeClampInsetBottomW = Math.max(0, toFiniteNumber(clampInsetBottomPx, 0)) / resolvedZoom;
+  const worldMinCamLeft = 0;
+  const worldMaxCamLeft = Math.max(0, safeWorldWidthPx - viewportWorldWidth);
+  const worldMinCamTop = 0;
+  const worldMaxCamTop = Math.max(0, safeWorldHeightPx - viewportWorldHeight);
   const minCamLeft = clamp(
     safeClampLeftXW - safeClampInsetLeftW,
-    0,
-    Math.max(0, safeWorldWidthPx - viewportWorldWidth)
+    worldMinCamLeft,
+    worldMaxCamLeft
   );
   const maxCamLeft = clamp(
     (safeClampRightXW + safeClampInsetRightW) - viewportWorldWidth,
     minCamLeft,
-    Math.max(0, safeWorldWidthPx - viewportWorldWidth)
+    worldMaxCamLeft
   );
   const minCamTop = clamp(
     safeClampTopYW - safeClampInsetTopW,
-    0,
-    Math.max(0, safeWorldHeightPx - viewportWorldHeight)
+    worldMinCamTop,
+    worldMaxCamTop
   );
   const maxCamTop = clamp(
     (safeClampBottomYW + safeClampInsetBottomW) - viewportWorldHeight,
     minCamTop,
-    Math.max(0, safeWorldHeightPx - viewportWorldHeight)
+    worldMaxCamTop
   );
+  const frameMinCamLeft = hasCameraCorridor ? worldMinCamLeft : minCamLeft;
+  const frameMaxCamLeft = hasCameraCorridor ? worldMaxCamLeft : maxCamLeft;
+  const frameMinCamTop = hasCameraCorridor ? worldMinCamTop : minCamTop;
+  const frameMaxCamTop = hasCameraCorridor ? worldMaxCamTop : maxCamTop;
   const safeTargetXW = toFiniteNumber(targetXW, 0);
   const safeTargetYW = toFiniteNumber(targetYW, 0);
   const safeFollowMode = String(followMode || "follow_target_center").trim().toLowerCase();
@@ -105,11 +191,11 @@ export function resolveCameraFrame({
   const hasCurrentCamLeft = camLeft != null && Number.isFinite(Number(camLeft));
   const hasCurrentCamTop = camTop != null && Number.isFinite(Number(camTop));
 
-  let resolvedCamLeft = clamp(toOptionalFiniteNumber(camLeft), 0, maxCamLeft);
-  let resolvedCamTop = clamp(toOptionalFiniteNumber(camTop), 0, maxCamTop);
+  let resolvedCamLeft = clamp(toOptionalFiniteNumber(camLeft), frameMinCamLeft, frameMaxCamLeft);
+  let resolvedCamTop = clamp(toOptionalFiniteNumber(camTop), frameMinCamTop, frameMaxCamTop);
   if (safeFollowMode === "fixed_frame") {
-    resolvedCamLeft = clamp(safeFixedFrameCenterXW - (viewportWorldWidth * safeScreenAnchorX), minCamLeft, maxCamLeft);
-    resolvedCamTop = clamp(safeFixedFrameCenterYW - (viewportWorldHeight * safeScreenAnchorY), minCamTop, maxCamTop);
+    resolvedCamLeft = clamp(safeFixedFrameCenterXW - (viewportWorldWidth * safeScreenAnchorX), frameMinCamLeft, frameMaxCamLeft);
+    resolvedCamTop = clamp(safeFixedFrameCenterYW - (viewportWorldHeight * safeScreenAnchorY), frameMinCamTop, frameMaxCamTop);
   } else if (safeFollowMode === "follow_target_soft") {
     const currentCenterXW = resolvedCamLeft + (viewportWorldWidth * safeScreenAnchorX);
     const currentCenterYW = resolvedCamTop + (viewportWorldHeight * safeScreenAnchorY);
@@ -130,21 +216,30 @@ export function resolveCameraFrame({
       nextCenterYW = safeTargetYW - zoneHalfH;
     }
 
-    const desiredCamLeft = clamp(nextCenterXW - (viewportWorldWidth * safeScreenAnchorX), minCamLeft, maxCamLeft);
-    const desiredCamTop = clamp(nextCenterYW - (viewportWorldHeight * safeScreenAnchorY), minCamTop, maxCamTop);
+    const desiredCamLeft = clamp(nextCenterXW - (viewportWorldWidth * safeScreenAnchorX), frameMinCamLeft, frameMaxCamLeft);
+    const desiredCamTop = clamp(nextCenterYW - (viewportWorldHeight * safeScreenAnchorY), frameMinCamTop, frameMaxCamTop);
     resolvedCamLeft = hasCurrentCamLeft
-      ? clamp(resolvedCamLeft + ((desiredCamLeft - resolvedCamLeft) * safeFollowLerpX), minCamLeft, maxCamLeft)
+      ? clamp(resolvedCamLeft + ((desiredCamLeft - resolvedCamLeft) * safeFollowLerpX), frameMinCamLeft, frameMaxCamLeft)
       : desiredCamLeft;
     resolvedCamTop = hasCurrentCamTop
-      ? clamp(resolvedCamTop + ((desiredCamTop - resolvedCamTop) * safeFollowLerpY), minCamTop, maxCamTop)
+      ? clamp(resolvedCamTop + ((desiredCamTop - resolvedCamTop) * safeFollowLerpY), frameMinCamTop, frameMaxCamTop)
       : desiredCamTop;
   } else {
-    resolvedCamLeft = clamp(safeTargetXW - (viewportWorldWidth * safeScreenAnchorX), minCamLeft, maxCamLeft);
-    resolvedCamTop = clamp(safeTargetYW - (viewportWorldHeight * safeScreenAnchorY), minCamTop, maxCamTop);
+    resolvedCamLeft = clamp(safeTargetXW - (viewportWorldWidth * safeScreenAnchorX), frameMinCamLeft, frameMaxCamLeft);
+    resolvedCamTop = clamp(safeTargetYW - (viewportWorldHeight * safeScreenAnchorY), frameMinCamTop, frameMaxCamTop);
   }
 
-  const centerXW = resolvedCamLeft + (viewportWorldWidth * safeScreenAnchorX);
-  const centerYW = resolvedCamTop + (viewportWorldHeight * safeScreenAnchorY);
+  let centerXW = resolvedCamLeft + (viewportWorldWidth * safeScreenAnchorX);
+  let centerYW = resolvedCamTop + (viewportWorldHeight * safeScreenAnchorY);
+  const corridorCenter = resolveCameraCorridorCenter({ x: centerXW, y: centerYW }, cameraCorridorLoops);
+  if (corridorCenter && corridorCenter.constrained) {
+    centerXW = corridorCenter.x;
+    centerYW = corridorCenter.y;
+    resolvedCamLeft = clamp(centerXW - (viewportWorldWidth * safeScreenAnchorX), worldMinCamLeft, worldMaxCamLeft);
+    resolvedCamTop = clamp(centerYW - (viewportWorldHeight * safeScreenAnchorY), worldMinCamTop, worldMaxCamTop);
+    centerXW = resolvedCamLeft + (viewportWorldWidth * safeScreenAnchorX);
+    centerYW = resolvedCamTop + (viewportWorldHeight * safeScreenAnchorY);
+  }
   const frame = target || {};
   frame.followMode = safeFollowMode;
   frame.zoom = resolvedZoom;
@@ -178,6 +273,7 @@ export function resolveCameraFrame({
   frame.clampInsetRightPx = toFiniteNumber(clampInsetRightPx, 0);
   frame.clampInsetTopPx = toFiniteNumber(clampInsetTopPx, 0);
   frame.clampInsetBottomPx = toFiniteNumber(clampInsetBottomPx, 0);
+  frame.cameraCorridorConstrained = Boolean(corridorCenter && corridorCenter.constrained);
   frame.fixedFrameCenterXW = safeFixedFrameCenterXW;
   frame.fixedFrameCenterYW = safeFixedFrameCenterYW;
   return target ? frame : Object.freeze(frame);
@@ -273,6 +369,7 @@ export function createCameraRuntime({
     clampInsetRightPx = 0,
     clampInsetTopPx = 0,
     clampInsetBottomPx = 0,
+    cameraBoundaryLoops = [],
     nowMs = now(),
     target = null,
   } = {}) {
@@ -307,6 +404,7 @@ export function createCameraRuntime({
       clampInsetRightPx,
       clampInsetTopPx,
       clampInsetBottomPx,
+      cameraBoundaryLoops,
       target,
     });
     state.get().lastResolvedFrame = frame;

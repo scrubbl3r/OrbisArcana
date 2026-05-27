@@ -1,6 +1,7 @@
 export const AUTHORED_LEVEL_READ_MODEL_KEY_LOOPS = "loops";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_SPAWN_POINTS = "spawnPoints";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_ANCHORS = "cameraAnchors";
+export const AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_LOOPS = "cameraBoundaryLoops";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_BOUNDARY_BOX = "boundaryBox";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_CAMERA_BOUNDARY_BOX = "cameraBoundaryBox";
 export const AUTHORED_LEVEL_READ_MODEL_KEY_WORLD_ITEMS = "worldItems";
