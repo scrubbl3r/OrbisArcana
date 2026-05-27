@@ -1601,6 +1601,8 @@ export function createGnatSwarm3dRuntime({
     let relayedAlerts = 0;
     let feedingCount = 0;
     let stunnedCount = 0;
+    let aliveCount = 0;
+    let deathVisualCount = 0;
     let burningCount = 0;
     let deadBurningCount = 0;
     let activeLiftLeach = 0;
@@ -1614,10 +1616,13 @@ export function createGnatSwarm3dRuntime({
         continue;
       }
       if (state.hp <= 0) {
-        if (resolveBurningRuntimeState(state, nowSec).active) deadBurningCount += 1;
+        const deadBurning = resolveBurningRuntimeState(state, nowSec).active;
+        if (deadBurning) deadBurningCount += 1;
+        if (deadBurning || nowSec < (Number(state.deathHideSec) || 0)) deathVisualCount += 1;
         updateDeathInstance(state, i, nowSec, dtSec);
         continue;
       }
+      aliveCount += 1;
       if (resolveBurningRuntimeState(state, nowSec).active) burningCount += 1;
       if (state.mode === "stunned") {
         if (nowSec >= state.stunUntilSec) {
@@ -1884,6 +1889,9 @@ export function createGnatSwarm3dRuntime({
       navCells: bounds.nav ? (bounds.nav.cols || 0) * (bounds.nav.rows || 0) : 0,
       navResolutionBo: bounds.nav ? bounds.nav.resolutionBo : null,
     });
+    if (aliveCount <= 0 && deathVisualCount <= 0 && fireCards.activeCount <= 0) {
+      disposeMesh();
+    }
   }
 
   function getTrace(camera = null) {
@@ -1919,7 +1927,7 @@ export function createGnatSwarm3dRuntime({
     releaseFeedingGnats,
     applyCombatEffect,
     getCombatTargets,
-    hasActiveVisuals: () => states.length > 0,
+    hasActiveVisuals: () => states.some((state) => state && (state.hp > 0 || state.deathStartedSec || resolveBurningRuntimeState(state, performance.now() / 1000).active)),
     getTrace,
     clear: disposeMesh,
     dispose() {
