@@ -1,4 +1,4 @@
-import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260527-halo-collide-a";
+import { renderAuthoredThreeStageSurface } from "../authored-three-stage-surface.js?v=20260527113628s";
 import { createGameStageRuntimeAdapter } from "./game-stage-runtime-adapter.js?v=20260526-enemy-reset";
 
 export function renderGameStage(root, {
