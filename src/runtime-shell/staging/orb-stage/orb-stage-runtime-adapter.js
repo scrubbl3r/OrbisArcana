@@ -1,4 +1,4 @@
-import { createGameStageRuntimeAdapter } from "../game-stage/game-stage-runtime-adapter.js?v=20260522-active-aoe-b";
+import { createGameStageRuntimeAdapter } from "../game-stage/game-stage-runtime-adapter.js?v=20260526-enemy-reset";
 
 const ORB_STAGE_ORB_DIAMETER_WORLD_UNITS = 72;
 

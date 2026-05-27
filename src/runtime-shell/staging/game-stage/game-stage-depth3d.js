@@ -182,6 +182,10 @@ export function createGameStageDepth3dLayer({
   let currentOrbAlive = true;
   let currentBoundarySegments = Object.freeze([]);
   let currentLevelNavContext = null;
+  let currentLevelNavGrid = null;
+  let currentEnemySpawns = Object.freeze([]);
+  let currentBoundaryLoops = Object.freeze([]);
+  let currentBoundaryBox = null;
   let combatEventBus = null;
   let lastGlobe3dTickMs = 0;
   let lastEnemy3dTickMs = 0;
@@ -474,6 +478,7 @@ export function createGameStageDepth3dLayer({
     },
     onOrbRevived: () => {
       currentOrbAlive = true;
+      resetEnemy3dRuntime({ reason: "orb_revived" });
     },
     scheduleFrame: renderLoop.scheduleAnimation,
     traceMark: perfTrace && typeof perfTrace.mark === "function"
@@ -877,6 +882,21 @@ export function createGameStageDepth3dLayer({
     }
   }
 
+  function resetEnemy3dRuntime({ reason = "reset" } = {}) {
+    gnatSwarm3dRuntime.load(currentEnemySpawns, {
+      boundaryLoops: currentBoundaryLoops,
+      boundaryBox: currentBoundaryBox,
+      navContext: currentLevelNavContext,
+      navGrid: currentLevelNavGrid,
+    });
+    lastEnemy3dTickMs = 0;
+    root.dataset.enemy3dResetReason = String(reason || "reset");
+    root.dataset.enemy3dSpawnCount = String(currentEnemySpawns.length);
+    root.dataset.enemy3dObjectCount = String(enemyGroup.children.length);
+    renderLoop.scheduleAnimation();
+    return { handled: true, reason };
+  }
+
   function cancelHealPulse({ clearLayer = true } = {}) {
     healPulseToken += 1;
     if (healPulseFrame && typeof cancelAnimationFrame === "function") {
@@ -1149,7 +1169,11 @@ export function createGameStageDepth3dLayer({
       const boundaryBox = sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null;
       const boundarySegments = buildBoundarySegmentsFromLoops(boundaryLoops);
       currentBoundarySegments = boundarySegments;
+      currentBoundaryLoops = Object.freeze([...boundaryLoops]);
+      currentBoundaryBox = boundaryBox || null;
+      currentEnemySpawns = Object.freeze([...enemySpawns]);
       currentLevelNavContext = null;
+      currentLevelNavGrid = null;
       currentOrbWorldPosition = null;
       currentOrbAlive = true;
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
@@ -1164,6 +1188,7 @@ export function createGameStageDepth3dLayer({
       });
       const levelNavContext = createLevelNavContext({ navGrid: levelNavGrid });
       currentLevelNavContext = levelNavContext;
+      currentLevelNavGrid = levelNavGrid;
       root.dataset.levelNavGridResolutionBo = String(LEVEL_NAV_GRID_RESOLUTION_BO);
       root.dataset.levelNavGridCells = levelNavGrid ? String(levelNavGrid.cols * levelNavGrid.rows) : "0";
       telemetry.setDepthLayerLabel(layers);
@@ -1490,6 +1515,10 @@ export function createGameStageDepth3dLayer({
       renderLoop.scheduleAnimation();
       renderLoop.renderFrame(renderLoop.getLastFrame() || {});
       return result || { handled: false };
+    },
+    resetEnemies(payload = {}) {
+      if (disposed) return { handled: false, skipped: "depth3d_disposed" };
+      return resetEnemy3dRuntime(payload);
     },
     renderFrame: renderLoop.renderFrame,
     dispose() {

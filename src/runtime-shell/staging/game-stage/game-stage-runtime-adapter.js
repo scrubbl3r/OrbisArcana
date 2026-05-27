@@ -88,6 +88,11 @@ export function createGameStageRuntimeAdapter({
         ? depth3dRuntime.setOrbFloatHoldVisual(payload)
         : { handled: false, skipped: "depth3d_runtime_missing" };
     },
+    resetEnemies(payload = {}) {
+      return depth3dRuntime && typeof depth3dRuntime.resetEnemies === "function"
+        ? depth3dRuntime.resetEnemies(payload)
+        : { handled: false, skipped: "depth3d_runtime_missing" };
+    },
     bindGlobe3dRuntime(args = {}) {
       if (depth3dRuntime && typeof depth3dRuntime.bindGlobe3dRuntime === "function") {
         depth3dRuntime.bindGlobe3dRuntime(args);
