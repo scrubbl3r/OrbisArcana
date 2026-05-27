@@ -40,7 +40,7 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "haloFieldBoltStartMinBo": 0,
   "haloFieldBoltStartMaxBo": 0,
   "haloFieldBoltEndMinBo": 0.08,
-  "haloFieldBoltEndMaxBo": 1.2,
+  "haloFieldBoltEndMaxBo": 1,
   "haloBoltCountMin": 8,
   "haloBoltCountMax": 12,
   "haloBoltTtlMinMs": 16,
