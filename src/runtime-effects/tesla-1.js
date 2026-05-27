@@ -46,6 +46,21 @@ function normalizeEnemyTarget(target = null) {
   });
 }
 
+function normalizeWorldTarget(target = null) {
+  if (!target || typeof target !== "object") return null;
+  const position = target.position && typeof target.position === "object" ? target.position : target;
+  const xW = Number(position.xW);
+  const yW = Number(position.yW);
+  if (!Number.isFinite(xW) || !Number.isFinite(yW)) return null;
+  return Object.freeze({
+    ...target,
+    id: target.id == null ? "" : String(target.id),
+    environment: target.environment === true,
+    position: Object.freeze({ xW, yW }),
+    distanceBo: Math.max(0, Number(target.distanceBo) || 0),
+  });
+}
+
 export function normalizeTesla1RuntimeConfig(raw = {}) {
   const rawSource = raw && typeof raw === "object" ? raw : {};
   const source = {
@@ -208,6 +223,9 @@ function buildLightningFieldUniformValues({
   haloStrikeTime = 0,
   masterBoltActive = 0,
   masterBoltTarget = new THREE.Vector2(0, 0),
+  masterBoltBendCount = 0,
+  masterBoltBend1 = new THREE.Vector2(0, 0),
+  masterBoltBend2 = new THREE.Vector2(0, 0),
   masterBoltSeed = 0,
   masterBoltTime = 0,
   masterMacroBendMultiplier = 1,
@@ -272,6 +290,9 @@ function buildLightningFieldUniformValues({
     uHaloStrikeSeed: clampNumber(haloStrikeSeed, 0, 999999, 0),
     uMasterBoltActive: masterBoltActive ? 1 : 0,
     uMasterBoltTarget: masterBoltTarget,
+    uMasterBoltBendCount: Math.round(clampNumber(masterBoltBendCount, 0, 2, 0)),
+    uMasterBoltBend1: masterBoltBend1,
+    uMasterBoltBend2: masterBoltBend2,
     uMasterBoltSeed: clampNumber(masterBoltSeed, 0, 999999, 0),
     uMasterMacroBendMultiplier: clampNumber(masterMacroBendMultiplier, 0, 8, 1),
     uMasterMacroScaleMultiplier: clampNumber(masterMacroScaleMultiplier, 0.05, 8, 1),
@@ -351,6 +372,9 @@ function createLightningFieldMaterial(params) {
       uHaloStrikeSeed: { value: values.uHaloStrikeSeed },
       uMasterBoltActive: { value: values.uMasterBoltActive },
       uMasterBoltTarget: { value: values.uMasterBoltTarget },
+      uMasterBoltBendCount: { value: values.uMasterBoltBendCount },
+      uMasterBoltBend1: { value: values.uMasterBoltBend1 },
+      uMasterBoltBend2: { value: values.uMasterBoltBend2 },
       uMasterBoltSeed: { value: values.uMasterBoltSeed },
       uMasterMacroBendMultiplier: { value: values.uMasterMacroBendMultiplier },
       uMasterMacroScaleMultiplier: { value: values.uMasterMacroScaleMultiplier },
@@ -419,6 +443,9 @@ function createLightningFieldMaterial(params) {
       uniform float uHaloStrikeSeed;
       uniform int uMasterBoltActive;
       uniform vec2 uMasterBoltTarget;
+      uniform int uMasterBoltBendCount;
+      uniform vec2 uMasterBoltBend1;
+      uniform vec2 uMasterBoltBend2;
       uniform float uMasterBoltSeed;
       uniform float uMasterMacroBendMultiplier;
       uniform float uMasterMacroScaleMultiplier;
@@ -567,6 +594,14 @@ function createLightningFieldMaterial(params) {
         return bolt * flicker;
       }
 
+      vec3 proceduralBoltSegment(vec2 p, vec2 a, vec2 b, float seed, float sampleTime, float macroNoiseScale, float macroNoiseStrength, float microNoiseStrength, float branchDensity, float baseWidthMultiplier) {
+        vec2 delta = b - a;
+        float len = length(delta);
+        if (len <= 0.001 * uBo) return vec3(0.0);
+        float angle = atan(delta.x, delta.y);
+        return proceduralBolt(p - a, angle, 0.0, len, seed, sampleTime, macroNoiseScale, macroNoiseStrength, microNoiseStrength, branchDensity, baseWidthMultiplier);
+      }
+
       void main() {
         vec2 p = vLocalPosition.xy;
         vec3 color = vec3(0.0);
@@ -628,14 +663,26 @@ function createLightningFieldMaterial(params) {
           color += proceduralBolt(p, strikeAngle, strikeStartR, strikeLen, 900.0 + uHaloStrikeSeed, uHaloStrikeTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity, 1.0) * uIntensity * 1.25;
         }
         if (uMasterBoltActive == 1 && length(uMasterBoltTarget) > uStartMin + 0.001 * uBo) {
-          float masterAngle = atan(uMasterBoltTarget.x, uMasterBoltTarget.y);
           float masterStartR = max(uStartMin, 0.5 * uBo);
-          float masterLen = max(0.001 * uBo, length(uMasterBoltTarget) - masterStartR);
           float masterMacroScale = max(0.1, uMacroNoiseScale * uMasterMacroScaleMultiplier);
           float masterMacroStrength = clamp(uMacroNoiseStrength * uMasterMacroBendMultiplier, 0.0, 2.0);
           float masterMicroStrength = clamp(uMicroNoiseStrength * uMasterMicroJitterMultiplier, 0.0, 2.0);
           float masterBranchDensity = clamp(uBranchDensity * uMasterBranchDensityMultiplier, 0.0, 1.0);
-          color += proceduralBolt(p, masterAngle, masterStartR, masterLen, 1400.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity, uMasterBaseWidthMultiplier) * uIntensity * 1.65;
+          vec2 firstMasterPoint = uMasterBoltBendCount > 0 ? uMasterBoltBend1 : uMasterBoltTarget;
+          vec2 masterStartDirection = length(firstMasterPoint) > 0.001 * uBo ? normalize(firstMasterPoint) : normalize(uMasterBoltTarget);
+          vec2 masterStart = masterStartDirection * masterStartR;
+          vec3 masterBolt = vec3(0.0);
+          if (uMasterBoltBendCount <= 0) {
+            masterBolt += proceduralBoltSegment(p, masterStart, uMasterBoltTarget, 1400.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity, uMasterBaseWidthMultiplier);
+          } else if (uMasterBoltBendCount == 1) {
+            masterBolt += proceduralBoltSegment(p, masterStart, uMasterBoltBend1, 1400.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity, uMasterBaseWidthMultiplier);
+            masterBolt += proceduralBoltSegment(p, uMasterBoltBend1, uMasterBoltTarget, 1417.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity, uMasterBaseWidthMultiplier);
+          } else {
+            masterBolt += proceduralBoltSegment(p, masterStart, uMasterBoltBend1, 1400.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity, uMasterBaseWidthMultiplier);
+            masterBolt += proceduralBoltSegment(p, uMasterBoltBend1, uMasterBoltBend2, 1417.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity, uMasterBaseWidthMultiplier);
+            masterBolt += proceduralBoltSegment(p, uMasterBoltBend2, uMasterBoltTarget, 1431.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity, uMasterBaseWidthMultiplier);
+          }
+          color += masterBolt * uIntensity * 1.65;
         }
         color = 1.0 - exp(-color * 0.55);
         float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
@@ -658,6 +705,8 @@ export function createTesla1Runtime(options = {}) {
     onHaloStrike = null,
     onMasterBolt = null,
     requestFrame = () => {},
+    resolveMasterBoltPath = null,
+    resolveMasterBoltSurfaceTarget = null,
     toRuntimePosition = ({ xW = 0, yW = 0, z = 0 } = {}) => ({ x: xW, y: yW, z }),
   } = options;
   let group = null;
@@ -680,6 +729,9 @@ export function createTesla1Runtime(options = {}) {
     seed: 0,
     snapshotTime: 0,
     target: new THREE.Vector2(0, 0),
+    bendCount: 0,
+    bend1: new THREE.Vector2(0, 0),
+    bend2: new THREE.Vector2(0, 0),
   };
 
   function clear() {
@@ -760,15 +812,31 @@ export function createTesla1Runtime(options = {}) {
     return strongest;
   }
 
-  function resolveRandomMasterBoltTarget({ bo, config }) {
+  function resolveRandomMasterBoltTarget({ from, bo, config }) {
     const range = randomBetween(config.dominantBoltMinRangeBo, config.dominantBoltMaxRangeBo);
     const angle = randomBetween(0, Math.PI * 2);
+    if (typeof resolveMasterBoltSurfaceTarget === "function") {
+      const surfaceTarget = normalizeWorldTarget(resolveMasterBoltSurfaceTarget({
+        angle,
+        bo,
+        config,
+        fromWorld: from,
+        rangeBo: range,
+      }));
+      if (surfaceTarget) {
+        return Object.freeze({
+          ...surfaceTarget,
+          environment: true,
+        });
+      }
+    }
+    const xW = (Number(from && from.xW) || 0) + Math.cos(angle) * range * Math.max(1, bo);
+    const yW = (Number(from && from.yW) || 0) + Math.sin(angle) * range * Math.max(1, bo);
     return Object.freeze({
       id: "environment:random-master-bolt",
       environment: true,
-      position: null,
+      position: Object.freeze({ xW, yW }),
       distanceBo: range,
-      localTarget: new THREE.Vector2(Math.cos(angle) * range * bo, Math.sin(angle) * range * bo),
     });
   }
 
@@ -783,6 +851,29 @@ export function createTesla1Runtime(options = {}) {
       (Number(runtimeTarget && runtimeTarget.x) || 0) - (Number(orbRuntime.x) || 0),
       (Number(runtimeTarget && runtimeTarget.y) || 0) - (Number(orbRuntime.y) || 0)
     );
+  }
+
+  function setMasterBoltBends(target, { from, bo, config } = {}) {
+    masterBoltState.bendCount = 0;
+    masterBoltState.bend1.set(0, 0);
+    masterBoltState.bend2.set(0, 0);
+    if (!target || target.environment || typeof resolveMasterBoltPath !== "function") return Object.freeze({ blocked: false });
+    const rawBends = resolveMasterBoltPath({
+      bo,
+      config,
+      fromWorld: from,
+      target,
+    });
+    const blocked = !!(rawBends && typeof rawBends === "object" && !Array.isArray(rawBends) && rawBends.blocked);
+    const rawBendList = Array.isArray(rawBends)
+      ? rawBends
+      : (rawBends && Array.isArray(rawBends.bends) ? rawBends.bends : []);
+    const bends = rawBendList.map(normalizeWorldTarget).filter(Boolean).slice(0, 2);
+    if (!bends.length) return Object.freeze({ blocked });
+    masterBoltState.bendCount = bends.length;
+    masterBoltState.bend1.copy(toLocalRuntimeTarget(bends[0], bo));
+    if (bends[1]) masterBoltState.bend2.copy(toLocalRuntimeTarget(bends[1], bo));
+    return Object.freeze({ blocked: false });
   }
 
   function resolveMaterialParams(config, bo, time) {
@@ -836,6 +927,9 @@ export function createTesla1Runtime(options = {}) {
       haloStrikeTime: time,
       masterBoltActive: time < masterBoltState.activeUntil,
       masterBoltTarget: masterBoltState.target,
+      masterBoltBendCount: masterBoltState.bendCount,
+      masterBoltBend1: masterBoltState.bend1,
+      masterBoltBend2: masterBoltState.bend2,
       masterBoltSeed: masterBoltState.seed,
       masterBoltTime: time,
       masterMacroBendMultiplier: config.dominantBoltMacroBendMultiplier,
@@ -896,15 +990,35 @@ export function createTesla1Runtime(options = {}) {
     const frequencyMs = randomBetween(config.dominantBoltFrequencyMinMs, config.dominantBoltFrequencyMaxMs);
     masterBoltState.nextAt = nowMs + Math.max(16, frequencyMs);
     const from = typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : {};
-    const target = resolveMasterBoltTarget({ from, bo, config }) || resolveRandomMasterBoltTarget({ bo, config });
+    let target = resolveMasterBoltTarget({ from, bo, config }) || resolveRandomMasterBoltTarget({ from, bo, config });
     const seed = Math.floor((nowMs * 571) + masterBoltState.seed * 31 + 7) % 100000;
     const snapshotTime = currentTime;
     masterBoltState.seed = seed;
     masterBoltState.snapshotTime = snapshotTime;
     if (target.localTarget && typeof target.localTarget.lengthSq === "function") masterBoltState.target.copy(target.localTarget);
     else masterBoltState.target.copy(toLocalRuntimeTarget(target, bo));
+    const pathStatus = setMasterBoltBends(target, { from, bo, config });
+    if (pathStatus && pathStatus.blocked && target && target.position && typeof resolveMasterBoltSurfaceTarget === "function") {
+      const angle = Math.atan2(target.position.yW - (Number(from && from.yW) || 0), target.position.xW - (Number(from && from.xW) || 0));
+      const rangeBo = Math.max(config.dominantBoltMinRangeBo, Math.min(config.dominantBoltMaxRangeBo, Number(target.distanceBo) || config.dominantBoltMaxRangeBo));
+      const surfaceTarget = normalizeWorldTarget(resolveMasterBoltSurfaceTarget({
+        angle,
+        bo,
+        config,
+        fromWorld: from,
+        rangeBo,
+      }));
+      if (surfaceTarget) {
+        target = Object.freeze({ ...surfaceTarget, environment: true });
+        masterBoltState.target.copy(toLocalRuntimeTarget(target, bo));
+        masterBoltState.bendCount = 0;
+        masterBoltState.bend1.set(0, 0);
+        masterBoltState.bend2.set(0, 0);
+      }
+    }
     if (masterBoltState.target.lengthSq() <= 0.000001) {
       masterBoltState.activeUntil = 0;
+      masterBoltState.bendCount = 0;
       return;
     }
     masterBoltState.activeUntil = snapshotTime + 0.22;
@@ -999,6 +1113,9 @@ export function createTesla1Runtime(options = {}) {
       seed: 0,
       snapshotTime: 0,
       target: new THREE.Vector2(0, 0),
+      bendCount: 0,
+      bend1: new THREE.Vector2(0, 0),
+      bend2: new THREE.Vector2(0, 0),
     };
     syncRuntime(activePayload);
     timer = setTimeout(clear, config.durationMs);

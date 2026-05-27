@@ -60,7 +60,7 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260526170238s";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260526184210s";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
@@ -181,6 +181,7 @@ export function createGameStageDepth3dLayer({
   let currentOrbWorldPosition = null;
   let currentOrbAlive = true;
   let currentBoundarySegments = Object.freeze([]);
+  let currentLevelNavContext = null;
   let combatEventBus = null;
   let lastGlobe3dTickMs = 0;
   let lastEnemy3dTickMs = 0;
@@ -267,6 +268,8 @@ export function createGameStageDepth3dLayer({
     getEnemyTargets: () => gnatSwarm3dRuntime.getCombatTargets(),
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => ({ ...TESLA_1_PRESET_DEFAULT, ...TESLA_1_BEHAVIOR_DEFAULT }),
+    resolveMasterBoltSurfaceTarget: resolveTesla1MasterBoltSurfaceTarget,
+    resolveMasterBoltPath: resolveTesla1MasterBoltPath,
     onHaloStrike: ({ target = null, damage = 0, hitRadiusBo = 0.12, stunDamage = 0, config = {}, atMs = performance.now() } = {}) => {
       const position = target && target.position ? target.position : null;
       if (!position || !currentOrbWorldPosition) return Object.freeze({ handled: false, affected: 0, reason: "missing_target" });
@@ -715,6 +718,110 @@ export function createGameStageDepth3dLayer({
     }
   }
 
+  function intersectRayWithBoundarySegment({ from, dirX, dirY, rangeWorld, segment }) {
+    if (!from || !segment || !segment.a || !segment.b) return null;
+    const ax = Number(segment.a.xW);
+    const ay = Number(segment.a.yW);
+    const bx = Number(segment.b.xW);
+    const by = Number(segment.b.yW);
+    if (![ax, ay, bx, by].every(Number.isFinite)) return null;
+    const sx = bx - ax;
+    const sy = by - ay;
+    const denom = dirX * sy - dirY * sx;
+    if (Math.abs(denom) < 0.000001) return null;
+    const qpx = ax - (Number(from.xW) || 0);
+    const qpy = ay - (Number(from.yW) || 0);
+    const t = (qpx * sy - qpy * sx) / denom;
+    const u = (qpx * dirY - qpy * dirX) / denom;
+    if (t < 0 || t > rangeWorld || u < 0 || u > 1) return null;
+    return {
+      distanceWorld: t,
+      position: {
+        xW: (Number(from.xW) || 0) + dirX * t,
+        yW: (Number(from.yW) || 0) + dirY * t,
+      },
+      segment,
+    };
+  }
+
+  function resolveTesla1MasterBoltSurfaceTarget({ fromWorld = null, angle = 0, rangeBo = 0, bo = baseOrbWorldUnits } = {}) {
+    if (!fromWorld) return null;
+    const safeBo = Math.max(1, Number(bo) || baseOrbWorldUnits);
+    const rangeWorld = Math.max(0.01, Number(rangeBo) || 0) * safeBo;
+    const dirX = Math.cos(Number(angle) || 0);
+    const dirY = Math.sin(Number(angle) || 0);
+    let nearest = null;
+    for (const segment of currentBoundarySegments) {
+      const hit = intersectRayWithBoundarySegment({ from: fromWorld, dirX, dirY, rangeWorld, segment });
+      if (!hit) continue;
+      if (!nearest || hit.distanceWorld < nearest.distanceWorld) nearest = hit;
+    }
+    if (nearest) {
+      return Object.freeze({
+        id: `environment:boundary:${nearest.segment && nearest.segment.index != null ? nearest.segment.index : "hit"}`,
+        environment: true,
+        surface: "boundary",
+        position: Object.freeze(nearest.position),
+        distanceBo: nearest.distanceWorld / safeBo,
+      });
+    }
+    return Object.freeze({
+      id: "environment:range-end",
+      environment: true,
+      surface: "range-end",
+      position: Object.freeze({
+        xW: (Number(fromWorld.xW) || 0) + dirX * rangeWorld,
+        yW: (Number(fromWorld.yW) || 0) + dirY * rangeWorld,
+      }),
+      distanceBo: rangeWorld / safeBo,
+    });
+  }
+
+  function resolveTesla1MasterBoltPath({ fromWorld = null, target = null, bo = baseOrbWorldUnits, config = {} } = {}) {
+    const targetPosition = target && target.position ? target.position : null;
+    if (!fromWorld || !targetPosition || !currentLevelNavContext) return Object.freeze([]);
+    const safeBo = Math.max(1, Number(bo) || baseOrbWorldUnits);
+    const toleranceBo = Math.max(0.05, Number(config.masterBoltPathBendToleranceBo) || 0.35);
+    const stepWorld = Math.max(1, toleranceBo * safeBo);
+    const start = typeof currentLevelNavContext.resolvePoint === "function"
+      ? currentLevelNavContext.resolvePoint(fromWorld, { fallback: fromWorld })
+      : fromWorld;
+    const end = typeof currentLevelNavContext.resolvePoint === "function"
+      ? currentLevelNavContext.resolvePoint(targetPosition, { fallback: targetPosition })
+      : targetPosition;
+    if (typeof currentLevelNavContext.segmentIsWalkable === "function"
+      && currentLevelNavContext.segmentIsWalkable(start, end, stepWorld)) {
+      return Object.freeze([]);
+    }
+    const path = typeof currentLevelNavContext.findPath === "function"
+      ? currentLevelNavContext.findPath(start, end)
+      : null;
+    if (Array.isArray(path) && path.length >= 2) {
+      const directDistance = Math.max(1, Math.hypot((end.xW || 0) - (start.xW || 0), (end.yW || 0) - (start.yW || 0)));
+      let pathDistance = 0;
+      for (let index = 1; index < path.length; index += 1) {
+        const previous = path[index - 1];
+        const current = path[index];
+        pathDistance += Math.hypot((current.xW || 0) - (previous.xW || 0), (current.yW || 0) - (previous.yW || 0));
+      }
+      const detourRatioMax = Math.max(1, Number(config.dominantBoltDetourRatioMax) || 1.4);
+      if (pathDistance / directDistance > detourRatioMax) {
+        return Object.freeze({ blocked: true, bends: Object.freeze([]) });
+      }
+    }
+    const mids = Array.isArray(path)
+      ? path.slice(1, -1).filter((point) => point && Number.isFinite(Number(point.xW)) && Number.isFinite(Number(point.yW)))
+      : [];
+    if (!mids.length) return Object.freeze({ blocked: true, bends: Object.freeze([]) });
+    if (mids.length === 1) return Object.freeze([Object.freeze({ xW: Number(mids[0].xW), yW: Number(mids[0].yW) })]);
+    const first = mids[Math.max(0, Math.min(mids.length - 1, Math.floor(mids.length / 3)))];
+    const second = mids[Math.max(0, Math.min(mids.length - 1, Math.floor(mids.length * 2 / 3)))];
+    return Object.freeze([
+      Object.freeze({ xW: Number(first.xW), yW: Number(first.yW) }),
+      Object.freeze({ xW: Number(second.xW), yW: Number(second.yW) }),
+    ]);
+  }
+
   function resolveOrbGroundContactRuntimeY() {
     if (!currentOrbWorldPosition || !currentBoundarySegments.length) return null;
     const orbRuntimePosition = orb3dActorRuntime.getPosition();
@@ -1102,6 +1209,7 @@ export function createGameStageDepth3dLayer({
       const boundaryBox = sceneModel && sceneModel.boundaryBox ? sceneModel.boundaryBox : null;
       const boundarySegments = buildBoundarySegmentsFromLoops(boundaryLoops);
       currentBoundarySegments = boundarySegments;
+      currentLevelNavContext = null;
       currentOrbWorldPosition = null;
       currentOrbAlive = true;
       worldWidthPx = Math.max(1, clampNumber(state && state.worldWidthPx, worldWidthPx));
@@ -1115,6 +1223,7 @@ export function createGameStageDepth3dLayer({
         resolutionBo: LEVEL_NAV_GRID_RESOLUTION_BO,
       });
       const levelNavContext = createLevelNavContext({ navGrid: levelNavGrid });
+      currentLevelNavContext = levelNavContext;
       root.dataset.levelNavGridResolutionBo = String(LEVEL_NAV_GRID_RESOLUTION_BO);
       root.dataset.levelNavGridCells = levelNavGrid ? String(levelNavGrid.cols * levelNavGrid.rows) : "0";
       telemetry.setDepthLayerLabel(layers);
