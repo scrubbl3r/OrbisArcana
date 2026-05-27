@@ -2004,6 +2004,7 @@
             <div class="paramFieldRow"><label for="tesla1OrbLightIntensity">Base intensity</label><input id="tesla1OrbLightIntensity" class="paramFieldInput" type="number" min="0" max="10000" step="10" value="180" /></div>
             <div class="paramFieldRow"><label for="tesla1OrbLightDistanceBo">Distance BO</label><input id="tesla1OrbLightDistanceBo" class="paramFieldInput" type="number" min="0" max="1000" step="0.5" value="24" /></div>
             <div class="paramFieldRow"><label for="tesla1OrbLightFlashIntensityMultiplier">Flash intensity x</label><input id="tesla1OrbLightFlashIntensityMultiplier" class="paramFieldInput" type="number" min="1" max="100" step="0.1" value="4" /></div>
+            <div class="paramFieldRow"><label for="tesla1OrbLightMasterFlashMultiplier">Master flash x</label><input id="tesla1OrbLightMasterFlashMultiplier" class="paramFieldInput" type="number" min="0" max="16" step="0.05" value="1.85" /></div>
             <div class="rgbaParamRow densityRangeRow">
               <span class="rgbaLabel">FLASH MS</span>
               <label for="tesla1OrbLightFlashDurationMinMs">min</label><input id="tesla1OrbLightFlashDurationMinMs" class="paramFieldInput" type="number" min="8" max="1000" step="1" value="35" />
@@ -2919,7 +2920,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260527-orb-shell-field-a"),
+      import("./vfx-studio-bootstrap.js?v=20260527-bolt-energy-flash-a"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -2950,7 +2951,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260527-orb-shell-field-a";
+    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260527-bolt-energy-flash-a";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -2965,7 +2966,7 @@
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260527100552i";
-    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527-orb-shell-field-a";
+    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527-bolt-energy-flash-a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527100552b";
@@ -3467,6 +3468,7 @@
       tesla1OrbLightIntensity: $("tesla1OrbLightIntensity"),
       tesla1OrbLightDistanceBo: $("tesla1OrbLightDistanceBo"),
       tesla1OrbLightFlashIntensityMultiplier: $("tesla1OrbLightFlashIntensityMultiplier"),
+      tesla1OrbLightMasterFlashMultiplier: $("tesla1OrbLightMasterFlashMultiplier"),
       tesla1OrbLightFlashDurationMinMs: $("tesla1OrbLightFlashDurationMinMs"),
       tesla1OrbLightFlashDurationMaxMs: $("tesla1OrbLightFlashDurationMaxMs"),
       tesla1OrbLightFlashDecayCurve: $("tesla1OrbLightFlashDecayCurve"),

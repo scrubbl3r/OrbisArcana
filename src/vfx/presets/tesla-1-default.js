@@ -7,6 +7,7 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "orbLightIntensity": 180,
   "orbLightDistanceBo": 24,
   "orbLightFlashIntensityMultiplier": 4,
+  "orbLightMasterFlashMultiplier": 1.85,
   "orbLightFlashDurationMinMs": 35,
   "orbLightFlashDurationMaxMs": 90,
   "orbLightFlashDecayCurve": 2.4,

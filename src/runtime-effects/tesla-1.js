@@ -102,6 +102,7 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     orbLightIntensity: clampNumber(source.orbLightIntensity, 0, 10000, TESLA_1_PRESET_DEFAULT.orbLightIntensity),
     orbLightDistanceBo: clampNumber(source.orbLightDistanceBo, 0, 1000, TESLA_1_PRESET_DEFAULT.orbLightDistanceBo),
     orbLightFlashIntensityMultiplier: clampNumber(source.orbLightFlashIntensityMultiplier, 1, 100, TESLA_1_PRESET_DEFAULT.orbLightFlashIntensityMultiplier),
+    orbLightMasterFlashMultiplier: clampNumber(source.orbLightMasterFlashMultiplier, 0, 16, TESLA_1_PRESET_DEFAULT.orbLightMasterFlashMultiplier),
     orbLightFlashDurationMinMs,
     orbLightFlashDurationMaxMs: Math.round(clampNumber(source.orbLightFlashDurationMaxMs, orbLightFlashDurationMinMs, 1000, TESLA_1_PRESET_DEFAULT.orbLightFlashDurationMaxMs)),
     orbLightFlashDecayCurve: clampNumber(source.orbLightFlashDecayCurve, 0.1, 8, TESLA_1_PRESET_DEFAULT.orbLightFlashDecayCurve),
@@ -898,6 +899,23 @@ export function createTesla1Runtime(options = {}) {
     return closestX * closestX + closestY * closestY < orbRadius * orbRadius * 0.98;
   }
 
+  function resolveMasterBoltVisualLengthBo(bo) {
+    const safeBo = Math.max(1, Number(bo) || 1);
+    const targetLen = Math.hypot(masterBoltState.target.x, masterBoltState.target.y);
+    if (targetLen <= 0.000001) return 0;
+    const orbRadius = safeBo * ORB_RADIUS_BO;
+    const start = masterBoltState.target.clone().multiplyScalar(orbRadius / Math.max(orbRadius, targetLen));
+    const points = [start];
+    if (masterBoltState.bendCount >= 1) points.push(masterBoltState.bend1);
+    if (masterBoltState.bendCount >= 2) points.push(masterBoltState.bend2);
+    points.push(masterBoltState.target);
+    let length = 0;
+    for (let i = 1; i < points.length; i += 1) {
+      length += points[i - 1].distanceTo(points[i]);
+    }
+    return Math.max(0, length / safeBo);
+  }
+
   function resolveMaterialParams(config, bo, time) {
     return {
       boltCountMin: config.haloBoltCountMin,
@@ -1050,6 +1068,7 @@ export function createTesla1Runtime(options = {}) {
         hitRadiusBo: config.masterBoltTipAoeRadiusBo,
         stunDamage: randomBetween(config.masterBoltStunDamageMin, config.masterBoltStunDamageMax),
         target,
+        visualLengthBo: resolveMasterBoltVisualLengthBo(bo),
       });
     }
   }

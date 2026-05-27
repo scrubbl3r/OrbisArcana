@@ -656,6 +656,7 @@ export function createTesla1Preview({
       intensity: readInputNumber(els.tesla1OrbLightIntensity, 180, 0, 10000),
       distanceBo: readInputNumber(els.tesla1OrbLightDistanceBo, 24, 0, 1000),
       flashIntensityMultiplier: readInputNumber(els.tesla1OrbLightFlashIntensityMultiplier, 4, 1, 100),
+      masterFlashMultiplier: readInputNumber(els.tesla1OrbLightMasterFlashMultiplier, 1.85, 0, 16),
       flashDurationMinMs,
       flashDurationMaxMs: Math.round(readInputNumber(els.tesla1OrbLightFlashDurationMaxMs, 90, flashDurationMinMs, 1000)),
       flashDecayCurve: readInputNumber(els.tesla1OrbLightFlashDecayCurve, 2.4, 0.1, 8),
@@ -682,6 +683,47 @@ export function createTesla1Preview({
     return tesla1Fract(sx * sy);
   }
 
+  function tesla1SignedPow(value = 0, exponent = 1) {
+    const amount = Math.pow(Math.abs(Number(value) || 0), Math.max(0.05, Number(exponent) || 1));
+    return value < 0 ? -amount : amount;
+  }
+
+  function readLightningVisualEnergyConfig() {
+    const widthLengthMin = readInputNumber(els.tesla1LightningShapeWidthLengthMinBo, 0.5, 0.001, 1000);
+    const baseWidthMin = readInputNumber(els.tesla1LightningShapeBaseWidthMinBo, 0.003, 0.0001, 32);
+    return Object.freeze({
+      boltShaderIntensity: readInputNumber(els.tesla1BoltShaderIntensity, 6, 0, 200),
+      lightningShapeWidthLengthMinBo: widthLengthMin,
+      lightningShapeWidthLengthMaxBo: readInputNumber(els.tesla1LightningShapeWidthLengthMaxBo, 8, widthLengthMin + 0.001, 1000),
+      lightningShapeBaseWidthMinBo: baseWidthMin,
+      lightningShapeBaseWidthMaxBo: readInputNumber(els.tesla1LightningShapeBaseWidthMaxBo, 0.04, baseWidthMin, 32),
+      lightningShapeWidthMagnitudeCurve: readInputNumber(els.tesla1LightningShapeWidthMagnitudeCurve, 1, 0.05, 8),
+      lightningShapeTipWidthRatio: readInputNumber(els.tesla1LightningShapeTipWidthRatio, 0.12, 0.001, 2),
+      lightningShapeBranchWidthRatio: readInputNumber(els.tesla1LightningShapeBranchWidthRatio, 0.55, 0.001, 4),
+      lightningShapeBranchDensity: readInputNumber(els.tesla1LightningShapeBranchDensity, 0.31, 0, 1),
+    });
+  }
+
+  function resolveBoltBaseWidthBo(lengthBo = 0, config = {}) {
+    const widthLengthMin = Math.max(0.001, Number(config.lightningShapeWidthLengthMinBo) || 0.5);
+    const widthLengthMax = Math.max(widthLengthMin + 0.001, Number(config.lightningShapeWidthLengthMaxBo) || 8);
+    const baseWidthMin = Math.max(0.0001, Number(config.lightningShapeBaseWidthMinBo) || 0.003);
+    const baseWidthMax = Math.max(baseWidthMin, Number(config.lightningShapeBaseWidthMaxBo) || 0.04);
+    const curve = Math.max(0.05, Number(config.lightningShapeWidthMagnitudeCurve) || 1);
+    const t = (Math.max(0, Number(lengthBo) || 0) - widthLengthMin) / Math.max(0.0001, widthLengthMax - widthLengthMin);
+    return Math.max(0.0001, baseWidthMin + ((baseWidthMax - baseWidthMin) * tesla1SignedPow(t, curve)));
+  }
+
+  function estimateBoltVisualEnergy(lengthBo = 0, config = {}) {
+    const safeLengthBo = Math.max(0, Number(lengthBo) || 0);
+    if (safeLengthBo <= 0) return 0;
+    const baseWidthBo = resolveBoltBaseWidthBo(safeLengthBo, config);
+    const averageWidthBo = baseWidthBo * ((1 + Math.max(0.001, Math.min(2, Number(config.lightningShapeTipWidthRatio) || 0.12))) * 0.5);
+    const branchBoost = 1 + (Math.max(0, Math.min(1, Number(config.lightningShapeBranchDensity) || 0)) * Math.max(0.001, Math.min(4, Number(config.lightningShapeBranchWidthRatio) || 0.55)) * 0.45);
+    const intensityBoost = Math.max(0.05, Math.min(3.5, (Number(config.boltShaderIntensity) || 6) / 6));
+    return Math.sqrt(Math.max(0, safeLengthBo * averageWidthBo * branchBoost * intensityBoost) / 0.007);
+  }
+
   function resolveFieldBoltShellFlashMultiplier(time = 0) {
     const shell = readOrbShellConfig();
     if (!shell.enabled || shell.fieldBoltFlashAmount <= 0) return 1;
@@ -696,9 +738,8 @@ export function createTesla1Preview({
     const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, Math.max(0.01, startMin), 32);
     const endMax = readInputNumber(els.tesla1HaloFieldBoltEndMaxBo, 1.6, endMin, 32);
     const shellRadius = readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32);
-    const countFactor = Math.max(0.35, Math.min(1.5, Math.sqrt(((countMin + countMax) * 0.5) / 8)));
-    const lengthBo = Math.max(0.01, ((endMin + endMax) - (startMin + startMax)) * 0.5);
-    const lengthFactor = Math.max(0.25, Math.min(1.4, lengthBo / Math.max(0.5, shellRadius)));
+    const energyConfig = readLightningVisualEnergyConfig();
+    const fieldLengthReferenceBo = Math.max(0.01, ((endMin + endMax) - (startMin + startMax)) * 0.5);
     const ttlMin = Math.max(0.016, readInputNumber(els.tesla1HaloBoltTtlMinMs, 350, 16, 10000) / 1000);
     const ttlMax = Math.max(ttlMin, readInputNumber(els.tesla1HaloBoltTtlMaxMs, 900, ttlMin * 1000, 10000) / 1000);
     const ringTime = tesla1Fract(Math.max(0, Number(time) || 0) / TESLA_SHADER_TIME_RING_SECONDS) * TESLA_SHADER_TIME_RING_SECONDS;
@@ -718,12 +759,22 @@ export function createTesla1Preview({
       if (i >= minCount && tesla1ShaderRandomFloat(seed, 23) > optionalChance) continue;
       const age = ((shiftedTime % ttl) + ttl) % ttl;
       const phase = Math.max(0, Math.min(1, age / ttl));
-      pulseSum += Math.pow(1 - phase, 3.2);
+      const lengthSlotCount = Math.max(1, minCount);
+      const lengthSlotOffset = Math.floor(tesla1ShaderRandomFloat(seed, 193) * lengthSlotCount);
+      const lengthSlot = (i + lengthSlotOffset) % lengthSlotCount;
+      const lengthRoll = (lengthSlot + tesla1ShaderRandomFloat(seed, 191)) / lengthSlotCount;
+      const endR = endMin + ((endMax - endMin) * lengthRoll);
+      const startR = startMin + ((startMax - startMin) * tesla1ShaderRandomFloat(seed, 7));
+      const lengthBo = Math.max(0.01, endR - startR);
+      const lifecyclePulse = Math.pow(1 - phase, 3.2);
+      const lengthBalance = Math.max(0.35, Math.min(1.6, lengthBo / fieldLengthReferenceBo));
+      pulseSum += lifecyclePulse * lengthBalance * estimateBoltVisualEnergy(lengthBo, energyConfig);
       activeSlots += 1;
     }
     if (activeSlots <= 0) return 1;
-    const pulse = Math.min(1, pulseSum / Math.max(1, activeSlots));
-    return 1 + (shell.fieldBoltFlashAmount * countFactor * lengthFactor * pulse);
+    const shellScale = Math.max(0.35, Math.min(1.4, fieldLengthReferenceBo / Math.max(0.5, shellRadius)));
+    const energy = Math.min(2.5, (pulseSum / 4) * shellScale);
+    return 1 + (shell.fieldBoltFlashAmount * energy);
   }
 
   function masterRoute(bo, time, master = readMasterBoltConfig()) {
@@ -1174,6 +1225,7 @@ export function createTesla1Preview({
       els.tesla1OrbLightIntensity,
       els.tesla1OrbLightDistanceBo,
       els.tesla1OrbLightFlashIntensityMultiplier,
+      els.tesla1OrbLightMasterFlashMultiplier,
       els.tesla1OrbLightFlashDurationMinMs,
       els.tesla1OrbLightFlashDurationMaxMs,
       els.tesla1OrbLightFlashDecayCurve,

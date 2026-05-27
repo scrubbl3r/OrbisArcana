@@ -60,11 +60,11 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260526213000";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-orb-shell-field-a";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-bolt-energy-flash-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-orb-shell-field-a";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-bolt-energy-flash-a";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
 import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527100552b";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
@@ -322,7 +322,7 @@ export function createGameStageDepth3dLayer({
       startTesla1OrbLightFlash({ kind: "halo", target, config, atMs });
       return Object.freeze({ damage: damageResult, stun: stunResult });
     },
-    onMasterBolt: ({ target = null, damage = 0, hitRadiusBo = 0.45, stunDamage = 0, config = {}, atMs = performance.now() } = {}) => {
+    onMasterBolt: ({ target = null, damage = 0, hitRadiusBo = 0.45, stunDamage = 0, config = {}, atMs = performance.now(), visualLengthBo = 0 } = {}) => {
       const position = target && target.position ? target.position : null;
       if (!position || !currentOrbWorldPosition) return Object.freeze({ handled: false, affected: 0, reason: "missing_target" });
       const radiusBo = Math.max(0.01, Number(hitRadiusBo) || 0.45);
@@ -358,7 +358,7 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dLastTesla1MasterHitRadiusBo = String(radiusBo);
       root.dataset.enemy3dLastTesla1MasterTarget = String(target.id || target.targetEntityId || "");
       root.dataset.enemy3dLastTesla1MasterDamageReason = String(damageResult && damageResult.trace && damageResult.trace.reason || "");
-      startTesla1OrbLightFlash({ kind: "master", target, config, atMs });
+      startTesla1OrbLightFlash({ kind: "master", target, config, atMs, visualLengthBo });
       return Object.freeze({ damage: damageResult, stun: stunResult });
     },
     toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
@@ -754,6 +754,37 @@ export function createGameStageDepth3dLayer({
     return tesla1Fract(sx * sy);
   }
 
+  function tesla1SignedPow(value = 0, exponent = 1) {
+    const amount = Math.pow(Math.abs(Number(value) || 0), Math.max(0.05, Number(exponent) || 1));
+    return value < 0 ? -amount : amount;
+  }
+
+  function resolveTesla1BoltBaseWidthBo(lengthBo = 0, config = {}, baseWidthMultiplier = 1) {
+    const widthLengthMin = Math.max(0.001, Number(config.lightningShapeWidthLengthMinBo) || 0.5);
+    const widthLengthMax = Math.max(widthLengthMin + 0.001, Number(config.lightningShapeWidthLengthMaxBo) || 8);
+    const baseWidthMin = Math.max(0.0001, Number(config.lightningShapeBaseWidthMinBo) || 0.003);
+    const baseWidthMax = Math.max(baseWidthMin, Number(config.lightningShapeBaseWidthMaxBo) || 0.04);
+    const curve = Math.max(0.05, Number(config.lightningShapeWidthMagnitudeCurve) || 1);
+    const t = (Math.max(0, Number(lengthBo) || 0) - widthLengthMin) / Math.max(0.0001, widthLengthMax - widthLengthMin);
+    const mapped = baseWidthMin + ((baseWidthMax - baseWidthMin) * tesla1SignedPow(t, curve));
+    return Math.max(0.0001, mapped * Math.max(0.05, Number(baseWidthMultiplier) || 1));
+  }
+
+  function estimateTesla1BoltVisualEnergy({ lengthBo = 0, config = {}, baseWidthMultiplier = 1, branchDensityMultiplier = 1, intensityMultiplier = 1 } = {}) {
+    const safeLengthBo = Math.max(0, Number(lengthBo) || 0);
+    if (safeLengthBo <= 0) return 0;
+    const baseWidthBo = resolveTesla1BoltBaseWidthBo(safeLengthBo, config, baseWidthMultiplier);
+    const tipWidthRatio = Math.max(0.001, Math.min(2, Number(config.lightningShapeTipWidthRatio) || 0.12));
+    const branchWidthRatio = Math.max(0.001, Math.min(4, Number(config.lightningShapeBranchWidthRatio) || 0.55));
+    const branchDensity = Math.max(0, Math.min(1, (Number(config.lightningShapeBranchDensity) || 0) * Math.max(0, Number(branchDensityMultiplier) || 1)));
+    const averageWidthBo = baseWidthBo * ((1 + tipWidthRatio) * 0.5);
+    const branchBoost = 1 + (branchDensity * branchWidthRatio * 0.45);
+    const shaderIntensity = Math.max(0, Number(config.boltShaderIntensity) || Number(TESLA_1_PRESET_DEFAULT.boltShaderIntensity) || 0);
+    const intensityBoost = Math.max(0.05, Math.min(3.5, shaderIntensity / Math.max(1, Number(TESLA_1_PRESET_DEFAULT.boltShaderIntensity) || 6)));
+    const brightAreaBo = safeLengthBo * averageWidthBo * branchBoost * intensityBoost * Math.max(0.05, Number(intensityMultiplier) || 1);
+    return Math.sqrt(Math.max(0, brightAreaBo) / 0.007);
+  }
+
   function resolveTesla1FieldBoltFlashMultiplier(nowMs = performance.now(), config = {}, elapsedSeconds = null) {
     if (!config || config.orbShellOverrideEnabled === false || config.orbShellOverrideEnabled === 0) return 1;
     const readNumber = (value, fallback = 0) => {
@@ -770,9 +801,7 @@ export function createGameStageDepth3dLayer({
     const endMin = Math.max(0, Number(config.haloFieldBoltEndMinBo) || 0);
     const endMax = Math.max(endMin, Number(config.haloFieldBoltEndMaxBo) || endMin);
     const shellRadius = Math.max(0.5, Number(config.haloFieldShellRadiusBo) || Number(TESLA_1_PRESET_DEFAULT.haloFieldShellRadiusBo) || 1);
-    const countFactor = Math.max(0.35, Math.min(1.5, Math.sqrt(((countMin + countMax) * 0.5) / 8)));
-    const lengthBo = Math.max(0.01, ((endMin + endMax) - (startMin + startMax)) * 0.5);
-    const lengthFactor = Math.max(0.25, Math.min(1.4, lengthBo / shellRadius));
+    const fieldLengthReferenceBo = Math.max(0.01, ((endMin + endMax) - (startMin + startMax)) * 0.5);
     const ttlMin = Math.max(0.016, (Number(config.haloBoltTtlMinMs) || Number(TESLA_1_PRESET_DEFAULT.haloBoltTtlMinMs) || 16) / 1000);
     const ttlMax = Math.max(ttlMin, (Number(config.haloBoltTtlMaxMs) || Number(TESLA_1_PRESET_DEFAULT.haloBoltTtlMaxMs) || 16) / 1000);
     const sourceTime = Number.isFinite(Number(elapsedSeconds))
@@ -795,36 +824,54 @@ export function createGameStageDepth3dLayer({
       if (i >= minCount && tesla1ShaderRandomFloat(seed, 23) > optionalChance) continue;
       const age = ((shiftedTime % ttl) + ttl) % ttl;
       const phase = Math.max(0, Math.min(1, age / ttl));
-      pulseSum += Math.pow(1 - phase, 3.2);
+      const lengthSlotCount = Math.max(1, minCount);
+      const lengthSlotOffset = Math.floor(tesla1ShaderRandomFloat(seed, 193) * lengthSlotCount);
+      const lengthSlot = (i + lengthSlotOffset) % lengthSlotCount;
+      const lengthRoll = (lengthSlot + tesla1ShaderRandomFloat(seed, 191)) / lengthSlotCount;
+      const endR = endMin + ((endMax - endMin) * lengthRoll);
+      const startR = startMin + ((startMax - startMin) * tesla1ShaderRandomFloat(seed, 7));
+      const lengthBo = Math.max(0.01, endR - startR);
+      const lifecyclePulse = Math.pow(1 - phase, 3.2);
+      const lengthBalance = Math.max(0.35, Math.min(1.6, lengthBo / fieldLengthReferenceBo));
+      pulseSum += lifecyclePulse * lengthBalance * estimateTesla1BoltVisualEnergy({ lengthBo, config });
       activeSlots += 1;
     }
     if (activeSlots <= 0) return 1;
-    const pulse = Math.min(1, pulseSum / Math.max(1, activeSlots));
-    return 1 + (amount * countFactor * lengthFactor * pulse);
+    const shellScale = Math.max(0.35, Math.min(1.4, fieldLengthReferenceBo / Math.max(0.5, shellRadius)));
+    const energy = Math.min(2.5, (pulseSum / 4) * shellScale);
+    return 1 + (amount * energy);
   }
 
-  function resolveTesla1OrbLightFlashEnergy({ kind = "halo", target = null, config = {} } = {}) {
+  function resolveTesla1OrbLightFlashEnergy({ kind = "halo", target = null, config = {}, visualLengthBo = 0 } = {}) {
     const safeConfig = config && typeof config === "object" ? config : {};
     const boltCountMin = Math.max(0, Number(safeConfig.haloBoltCountMin) || 0);
     const boltCountMax = Math.max(boltCountMin, Number(safeConfig.haloBoltCountMax) || boltCountMin);
     const averageBoltCount = Math.max(1, (boltCountMin + boltCountMax) * 0.5);
-    const countFactor = Math.max(0.35, Math.min(2.2, Math.sqrt(averageBoltCount / 8)));
+    const densityBoost = Math.max(0.35, Math.min(2.2, Math.sqrt(averageBoltCount / 8)));
     const fallbackLengthBo = kind === "master"
       ? (Number(safeConfig.dominantBoltMaxRangeBo) || 1)
       : Math.max(
           Number(safeConfig.haloStrikeRangeMaxBo) || 1,
           ((Number(safeConfig.haloFieldBoltEndMinBo) || 0) + (Number(safeConfig.haloFieldBoltEndMaxBo) || 0)) * 0.5
         );
-    const targetLengthBo = Math.max(0, Number(target && target.distanceBo) || fallbackLengthBo);
-    const lengthReferenceBo = Math.max(1, kind === "master"
-      ? (Number(safeConfig.dominantBoltMaxRangeBo) || fallbackLengthBo)
-      : (Number(safeConfig.haloStrikeRangeMaxBo) || fallbackLengthBo));
-    const lengthFactor = Math.max(0.35, Math.min(1.8, targetLengthBo / lengthReferenceBo));
-    const masterBonus = kind === "master" ? 1.85 : 1;
-    return Math.max(0.25, Math.min(5, countFactor * lengthFactor * masterBonus));
+    const targetLengthBo = Math.max(0, Number(visualLengthBo) || Number(target && target.distanceBo) || fallbackLengthBo);
+    const masterWidthMultiplier = kind === "master" ? Math.max(0.05, Number(safeConfig.dominantBoltBaseWidthMultiplier) || 1) : 1;
+    const masterBranchMultiplier = kind === "master" ? Math.max(0, Number(safeConfig.dominantBoltBranchDensityMultiplier) || 1) : 1;
+    const masterIntensityMultiplier = kind === "master" ? 1.65 : 1.25;
+    const visualEnergy = estimateTesla1BoltVisualEnergy({
+      lengthBo: targetLengthBo,
+      config: safeConfig,
+      baseWidthMultiplier: masterWidthMultiplier,
+      branchDensityMultiplier: masterBranchMultiplier,
+      intensityMultiplier: masterIntensityMultiplier,
+    });
+    const masterBonus = kind === "master"
+      ? Math.max(0, Math.min(16, Number(safeConfig.orbLightMasterFlashMultiplier) || Number(TESLA_1_PRESET_DEFAULT.orbLightMasterFlashMultiplier) || 1))
+      : 1;
+    return Math.max(0.25, Math.min(5, visualEnergy * densityBoost * masterBonus));
   }
 
-  function startTesla1OrbLightFlash({ kind = "halo", target = null, config = {}, atMs = performance.now() } = {}) {
+  function startTesla1OrbLightFlash({ kind = "halo", target = null, config = {}, atMs = performance.now(), visualLengthBo = 0 } = {}) {
     if (!config) return;
     const hasLightLayer = config.orbLightOverrideEnabled !== false && config.orbLightOverrideEnabled !== 0;
     const hasShellLayer = config.orbShellOverrideEnabled !== false && config.orbShellOverrideEnabled !== 0;
@@ -833,7 +880,7 @@ export function createGameStageDepth3dLayer({
     const minMs = Math.max(8, Number(config.orbLightFlashDurationMinMs) || Number(TESLA_1_PRESET_DEFAULT.orbLightFlashDurationMinMs) || 35);
     const maxMs = Math.max(minMs, Number(config.orbLightFlashDurationMaxMs) || Number(TESLA_1_PRESET_DEFAULT.orbLightFlashDurationMaxMs) || minMs);
     const durationMs = minMs + (Math.random() * (maxMs - minMs));
-    const energy = resolveTesla1OrbLightFlashEnergy({ kind, target, config });
+    const energy = resolveTesla1OrbLightFlashEnergy({ kind, target, config, visualLengthBo });
     const authoredPeak = Math.max(1, Number(config.orbLightFlashIntensityMultiplier) || Number(TESLA_1_PRESET_DEFAULT.orbLightFlashIntensityMultiplier) || 1);
     tesla1OrbLightFlash = Object.freeze({
       activeUntilMs: Number(atMs) + durationMs,

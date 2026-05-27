@@ -46,6 +46,7 @@ export function createTesla1AuthoringAdapter({
       orbLightIntensity: readNumber(els.tesla1OrbLightIntensity, tesla1PresetDefault.orbLightIntensity, 0, 10000),
       orbLightDistanceBo: readNumber(els.tesla1OrbLightDistanceBo, tesla1PresetDefault.orbLightDistanceBo, 0, 1000),
       orbLightFlashIntensityMultiplier: readNumber(els.tesla1OrbLightFlashIntensityMultiplier, tesla1PresetDefault.orbLightFlashIntensityMultiplier, 1, 100),
+      orbLightMasterFlashMultiplier: readNumber(els.tesla1OrbLightMasterFlashMultiplier, tesla1PresetDefault.orbLightMasterFlashMultiplier, 0, 16),
       orbLightFlashDurationMinMs,
       orbLightFlashDurationMaxMs: Math.round(readNumber(els.tesla1OrbLightFlashDurationMaxMs, tesla1PresetDefault.orbLightFlashDurationMaxMs, orbLightFlashDurationMinMs, 1000)),
       orbLightFlashDecayCurve: readNumber(els.tesla1OrbLightFlashDecayCurve, tesla1PresetDefault.orbLightFlashDecayCurve, 0.1, 8),
@@ -144,6 +145,7 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1OrbLightIntensity) els.tesla1OrbLightIntensity.value = String(source.orbLightIntensity ?? 180);
     if (els.tesla1OrbLightDistanceBo) els.tesla1OrbLightDistanceBo.value = String(source.orbLightDistanceBo ?? 24);
     if (els.tesla1OrbLightFlashIntensityMultiplier) els.tesla1OrbLightFlashIntensityMultiplier.value = String(source.orbLightFlashIntensityMultiplier ?? 4);
+    if (els.tesla1OrbLightMasterFlashMultiplier) els.tesla1OrbLightMasterFlashMultiplier.value = String(source.orbLightMasterFlashMultiplier ?? 1.85);
     if (els.tesla1OrbLightFlashDurationMinMs) els.tesla1OrbLightFlashDurationMinMs.value = String(source.orbLightFlashDurationMinMs ?? 35);
     if (els.tesla1OrbLightFlashDurationMaxMs) els.tesla1OrbLightFlashDurationMaxMs.value = String(source.orbLightFlashDurationMaxMs ?? 90);
     if (els.tesla1OrbLightFlashDecayCurve) els.tesla1OrbLightFlashDecayCurve.value = String(source.orbLightFlashDecayCurve ?? 2.4);

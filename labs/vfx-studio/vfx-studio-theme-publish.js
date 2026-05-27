@@ -232,7 +232,7 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params) {
         "durationMs",
         "orbLightOverrideEnabled", "orbLightColorR", "orbLightColorG", "orbLightColorB",
         "orbLightIntensity", "orbLightDistanceBo",
-        "orbLightFlashIntensityMultiplier", "orbLightFlashDurationMinMs", "orbLightFlashDurationMaxMs", "orbLightFlashDecayCurve",
+        "orbLightFlashIntensityMultiplier", "orbLightMasterFlashMultiplier", "orbLightFlashDurationMinMs", "orbLightFlashDurationMaxMs", "orbLightFlashDecayCurve",
         "orbShellOverrideEnabled", "orbShellLuminanceBoost", "orbShellCenterAlpha", "orbShellGoldMix",
         "orbShellFieldBoltFlashAmount",
         "dominantBoltControlPointDiameterBo",
