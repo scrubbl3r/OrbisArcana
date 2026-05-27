@@ -76,7 +76,7 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
   const haloBoltTurnTensionMin = clampNumber(source.haloBoltTurnTensionMin, 0, 1, TESLA_1_PRESET_DEFAULT.haloBoltTurnTensionMin);
   const haloBoltTurnDampingMin = clampNumber(source.haloBoltTurnDampingMin, 0, 1, TESLA_1_PRESET_DEFAULT.haloBoltTurnDampingMin);
   const haloFieldBoltStartMinBo = clampNumber(source.haloFieldBoltStartMinBo, 0, 32, TESLA_1_PRESET_DEFAULT.haloFieldBoltStartMinBo);
-  const haloFieldBoltEndMinBo = clampNumber(source.haloFieldBoltEndMinBo, Math.max(0.01, haloFieldBoltStartMinBo), 32, TESLA_1_PRESET_DEFAULT.haloFieldBoltEndMinBo);
+  const haloFieldBoltEndMinBo = clampNumber(source.haloFieldBoltEndMinBo, 0.01, 32, TESLA_1_PRESET_DEFAULT.haloFieldBoltEndMinBo);
   const lightningShapeNoiseSpeedMin = clampNumber(source.lightningShapeNoiseSpeedMin, 0, 20, TESLA_1_PRESET_DEFAULT.lightningShapeNoiseSpeedMin);
   const lightningShapeBranchLengthMinBo = clampNumber(source.lightningShapeBranchLengthMinBo, 0, 8, TESLA_1_PRESET_DEFAULT.lightningShapeBranchLengthMinBo);
   const lightningShapeBranchAngleMinDeg = clampNumber(source.lightningShapeBranchAngleMinDeg, 0, 170, TESLA_1_PRESET_DEFAULT.lightningShapeBranchAngleMinDeg);
@@ -675,8 +675,7 @@ function createLightningFieldMaterial(params) {
           float lengthSlotOffset = floor(randomFloat(vec2(seed, 193.0)) * lengthSlotCount);
           float lengthSlot = mod(fi + lengthSlotOffset, lengthSlotCount);
           float lengthRoll = (lengthSlot + randomFloat(vec2(seed, 191.0))) / lengthSlotCount;
-          float endR = mix(uEndMin, uEndMax, lengthRoll);
-          float len = max(0.001 * uBo, endR - startR);
+          float len = mix(uEndMin, uEndMax, lengthRoll);
           color += proceduralBolt(p, angle, startR, len, seed, uTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity, 1.0) * uIntensity;
         }
         if (uHaloStrikeActive == 1 && length(uHaloStrikeTarget) > uStartMin + 0.001 * uBo) {
@@ -922,8 +921,8 @@ export function createTesla1Runtime(options = {}) {
       boltCountMax: config.haloBoltCountMax,
       startMin: bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMinBo),
       startMax: bo * (ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo),
-      endMin: bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMinBo),
-      endMax: bo * (ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo),
+      endMin: bo * config.haloFieldBoltEndMinBo,
+      endMax: bo * config.haloFieldBoltEndMaxBo,
       bo,
       boltColor: rgbColor(config.boltShaderColorR, config.boltShaderColorG, config.boltShaderColorB),
       intensity: config.boltShaderEnabled ? config.boltShaderIntensity : 0,
@@ -1091,7 +1090,7 @@ export function createTesla1Runtime(options = {}) {
     updateMasterBoltState(config, bo, nowMs);
     const maxRangeBo = Math.max(
       config.haloFieldShellRadiusBo,
-      ORB_RADIUS_BO + config.haloFieldBoltEndMaxBo,
+      ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo + config.haloFieldBoltEndMaxBo,
       ORB_RADIUS_BO + config.haloFieldBoltStartMaxBo,
       ORB_RADIUS_BO + config.haloStrikeRangeMaxBo,
       ORB_RADIUS_BO + config.dominantBoltMaxRangeBo

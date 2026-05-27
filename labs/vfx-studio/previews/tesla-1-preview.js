@@ -534,9 +534,8 @@ function createLightningFieldMaterial(params) {
           float lengthSlotOffset = floor(randomFloat(vec2(seed, 193.0)) * lengthSlotCount);
           float lengthSlot = mod(fi + lengthSlotOffset, lengthSlotCount);
           float lengthRoll = (lengthSlot + randomFloat(vec2(seed, 191.0))) / lengthSlotCount;
-          float endR = mix(uEndMin, uEndMax, lengthRoll);
-          float len = max(0.001 * uBo, endR - startR);
-	          color += proceduralBolt(p, angle, startR, len, seed, uTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity, 1.0) * uIntensity;
+          float len = mix(uEndMin, uEndMax, lengthRoll);
+          color += proceduralBolt(p, angle, startR, len, seed, uTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity, 1.0) * uIntensity;
 	        }
 	        if (uHaloStrikeActive == 1 && length(uHaloStrikeTarget) > uStartMin + 0.001 * uBo) {
 	          float strikeAngle = atan(uHaloStrikeTarget.x, uHaloStrikeTarget.y);
@@ -735,7 +734,7 @@ export function createTesla1Preview({
     if (countMax <= 0) return 1;
     const startMin = readInputNumber(els.tesla1HaloFieldBoltStartMinBo, 0, 0, 32);
     const startMax = readInputNumber(els.tesla1HaloFieldBoltStartMaxBo, 0.15, startMin, 32);
-    const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, Math.max(0.01, startMin), 32);
+    const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, 0.01, 32);
     const endMax = readInputNumber(els.tesla1HaloFieldBoltEndMaxBo, 1.6, endMin, 32);
     const shellRadius = readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32);
     const energyConfig = readLightningVisualEnergyConfig();
@@ -763,9 +762,7 @@ export function createTesla1Preview({
       const lengthSlotOffset = Math.floor(tesla1ShaderRandomFloat(seed, 193) * lengthSlotCount);
       const lengthSlot = (i + lengthSlotOffset) % lengthSlotCount;
       const lengthRoll = (lengthSlot + tesla1ShaderRandomFloat(seed, 191)) / lengthSlotCount;
-      const endR = endMin + ((endMax - endMin) * lengthRoll);
-      const startR = startMin + ((startMax - startMin) * tesla1ShaderRandomFloat(seed, 7));
-      const lengthBo = Math.max(0.01, endR - startR);
+      const lengthBo = Math.max(0.01, endMin + ((endMax - endMin) * lengthRoll));
       const lifecyclePulse = Math.pow(1 - phase, 3.2);
       const lengthBalance = Math.max(0.35, Math.min(1.6, lengthBo / fieldLengthReferenceBo));
       pulseSum += lifecyclePulse * lengthBalance * estimateBoltVisualEnergy(lengthBo, energyConfig);
@@ -1015,7 +1012,7 @@ export function createTesla1Preview({
     const masterState = updateMasterBoltState({ bo, master, time });
     const startMin = readInputNumber(els.tesla1HaloFieldBoltStartMinBo, 0, 0, 32);
     const startMax = readInputNumber(els.tesla1HaloFieldBoltStartMaxBo, 0.15, startMin, 32);
-    const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, Math.max(0.01, startMin), 32);
+    const endMin = readInputNumber(els.tesla1HaloFieldBoltEndMinBo, 1.1, 0.01, 32);
     const endMax = readInputNumber(els.tesla1HaloFieldBoltEndMaxBo, 1.6, endMin, 32);
     if (!readInputBoolean(els.tesla1BoltShaderEnabled, true)) {
       clearLayer(shapeLayer);
@@ -1024,15 +1021,15 @@ export function createTesla1Preview({
       return;
     }
     const boltColor = rgbColor(els.tesla1BoltShaderColorR && els.tesla1BoltShaderColorR.value, els.tesla1BoltShaderColorG && els.tesla1BoltShaderColorG.value, els.tesla1BoltShaderColorB && els.tesla1BoltShaderColorB.value);
-    const maxRangeBo = Math.max(ORB_RADIUS_BO + endMax, ORB_RADIUS_BO + startMax, ORB_RADIUS_BO + master.maxRange, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
+    const maxRangeBo = Math.max(ORB_RADIUS_BO + startMax + endMax, ORB_RADIUS_BO + startMax, ORB_RADIUS_BO + master.maxRange, readInputNumber(els.tesla1HaloFieldShellRadiusBo, 1.5, 0.5, 32));
     const planeSize = bo * Math.max(2.5, maxRangeBo * 2.45);
     const materialParams = {
       boltCountMin: shape.boltCountMin,
       boltCountMax: shape.boltCountMax,
       startMin: bo * (ORB_RADIUS_BO + startMin),
       startMax: bo * (ORB_RADIUS_BO + startMax),
-      endMin: bo * (ORB_RADIUS_BO + endMin),
-      endMax: bo * (ORB_RADIUS_BO + endMax),
+      endMin: bo * endMin,
+      endMax: bo * endMax,
       bo,
       boltColor,
       intensity: readInputNumber(els.tesla1BoltShaderIntensity, 6, 0, 20),

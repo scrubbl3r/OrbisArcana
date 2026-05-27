@@ -21,7 +21,7 @@ import { createWorldGlobePreview } from "./previews/world-globe-preview.js?v=202
 import { createOrbTeleportPreview } from "./previews/orb-teleport-preview.js?v=20260425d";
 import { createOrbTeleport3dPreview } from "./previews/orb-teleport-3d-preview.js?v=20260501a";
 import { createFlameAoe3dPreview } from "./previews/flame-aoe-3d-preview.js?v=20260520aeo-diameter-a";
-import { createTesla1Preview } from "./previews/tesla-1-preview.js?v=20260527-bolt-energy-flash-a";
+import { createTesla1Preview } from "./previews/tesla-1-preview.js?v=20260527-halo-length-a";
 import { createBankOrb3dPreview } from "./previews/bank-orb-3d-preview.js?v=20260502a";
 
 export function createStudioPreviewRegistry({
