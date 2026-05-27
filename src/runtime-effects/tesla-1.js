@@ -22,6 +22,20 @@ function randomBetween(min = 0, max = 0) {
   return safeLo + Math.random() * (safeHi - safeLo);
 }
 
+function fract(value = 0) {
+  return value - Math.floor(value);
+}
+
+function shaderRandomFloat(x = 0, y = 0) {
+  const sx = Math.sin(x * 123.45) * 345.21 + 12.57;
+  const sy = Math.sin(y * 546.23) * 345.21 + 12.57;
+  return fract(sx * sy);
+}
+
+function stableFrame(value = 0) {
+  return ((Math.floor(value) % 64) + 64) % 64;
+}
+
 function rgbColor(r = 255, g = 255, b = 255) {
   return new THREE.Color(
     clampNumber(r, 0, 255, 255) / 255,
@@ -245,6 +259,7 @@ function buildLightningFieldUniformValues({
   masterBoltBend2 = new THREE.Vector2(0, 0),
   masterBoltSeed = 0,
   masterBoltTime = 0,
+  haloBoltLengthClamps = null,
   masterMacroBendMultiplier = 1,
   masterMacroScaleMultiplier = 1,
   masterMicroJitterMultiplier = 1,
@@ -305,6 +320,10 @@ function buildLightningFieldUniformValues({
     uHaloStrikeSlot: Math.round(clampNumber(haloStrikeSlot, -1, MAX_HALO_BOLTS - 1, -1)),
     uHaloStrikeTarget: haloStrikeTarget,
     uHaloStrikeSeed: clampNumber(haloStrikeSeed, 0, 999999, 0),
+    uHaloBoltLengthClamps: Array.from({ length: MAX_HALO_BOLTS }, (_, index) => {
+      const value = Array.isArray(haloBoltLengthClamps) ? Number(haloBoltLengthClamps[index]) : 0;
+      return Number.isFinite(value) && value > 0 ? value : 1000000;
+    }),
     uMasterBoltActive: masterBoltActive ? 1 : 0,
     uMasterBoltTarget: masterBoltTarget,
     uMasterBoltBendCount: Math.round(clampNumber(masterBoltBendCount, 0, 2, 0)),
@@ -387,6 +406,7 @@ function createLightningFieldMaterial(params) {
       uHaloStrikeSlot: { value: values.uHaloStrikeSlot },
       uHaloStrikeTarget: { value: values.uHaloStrikeTarget },
       uHaloStrikeSeed: { value: values.uHaloStrikeSeed },
+      uHaloBoltLengthClamps: { value: values.uHaloBoltLengthClamps },
       uMasterBoltActive: { value: values.uMasterBoltActive },
       uMasterBoltTarget: { value: values.uMasterBoltTarget },
       uMasterBoltBendCount: { value: values.uMasterBoltBendCount },
@@ -458,6 +478,7 @@ function createLightningFieldMaterial(params) {
       uniform int uHaloStrikeSlot;
       uniform vec2 uHaloStrikeTarget;
       uniform float uHaloStrikeSeed;
+      uniform float uHaloBoltLengthClamps[MAX_HALO_BOLTS];
       uniform int uMasterBoltActive;
       uniform vec2 uMasterBoltTarget;
       uniform int uMasterBoltBendCount;
@@ -675,7 +696,7 @@ function createLightningFieldMaterial(params) {
           float lengthSlotOffset = floor(randomFloat(vec2(seed, 193.0)) * lengthSlotCount);
           float lengthSlot = mod(fi + lengthSlotOffset, lengthSlotCount);
           float lengthRoll = (lengthSlot + randomFloat(vec2(seed, 191.0))) / lengthSlotCount;
-          float len = mix(uEndMin, uEndMax, lengthRoll);
+          float len = min(mix(uEndMin, uEndMax, lengthRoll), uHaloBoltLengthClamps[i]);
           color += proceduralBolt(p, angle, startR, len, seed, uTime, uMacroNoiseScale, uMacroNoiseStrength, uMicroNoiseStrength, uBranchDensity, 1.0) * uIntensity;
         }
         if (uHaloStrikeActive == 1 && length(uHaloStrikeTarget) > uStartMin + 0.001 * uBo) {
@@ -726,6 +747,7 @@ export function createTesla1Runtime(options = {}) {
     now = () => performance.now(),
     onHaloStrike = null,
     onMasterBolt = null,
+    resolveHaloBoltCollisionLength = null,
     requestFrame = () => {},
     resolveMasterBoltPath = null,
     toRuntimePosition = ({ xW = 0, yW = 0, z = 0 } = {}) => ({ x: xW, y: yW, z }),
@@ -916,6 +938,7 @@ export function createTesla1Runtime(options = {}) {
   }
 
   function resolveMaterialParams(config, bo, time) {
+    const haloBoltLengthClamps = resolveHaloBoltLengthClamps(config, bo, time);
     return {
       boltCountMin: config.haloBoltCountMin,
       boltCountMax: config.haloBoltCountMax,
@@ -964,6 +987,7 @@ export function createTesla1Runtime(options = {}) {
       haloStrikeTarget: strikeState.target,
       haloStrikeSeed: strikeState.seed,
       haloStrikeTime: time,
+      haloBoltLengthClamps,
       masterBoltActive: time < masterBoltState.activeUntil,
       masterBoltTarget: masterBoltState.target,
       masterBoltBendCount: masterBoltState.bendCount,
@@ -978,6 +1002,95 @@ export function createTesla1Runtime(options = {}) {
       masterBaseWidthMultiplier: config.dominantBoltBaseWidthMultiplier,
       time,
     };
+  }
+
+  function resolveHaloBoltLengthClamps(config, bo, time) {
+    const clamps = Array.from({ length: MAX_HALO_BOLTS }, () => 1000000);
+    if (typeof resolveHaloBoltCollisionLength !== "function") return clamps;
+    if (!config || config.haloFieldEnabled === false || config.haloFieldEnabled === 0 || config.boltShaderEnabled === false || config.boltShaderEnabled === 0) return clamps;
+    const countMin = Math.max(0, Math.min(MAX_HALO_BOLTS, Math.round(Number(config.haloBoltCountMin) || 0)));
+    const countMax = Math.max(countMin, Math.min(MAX_HALO_BOLTS, Math.round(Number(config.haloBoltCountMax) || countMin)));
+    if (countMax <= 0) return clamps;
+    const baseTtl = Math.max(0.016, (Number(config.haloBoltTtlMinMs) || 16) / 1000);
+    const maxTtl = Math.max(baseTtl, (Number(config.haloBoltTtlMaxMs) || 16) / 1000);
+    const optionalSlots = Math.max(0, countMax - countMin);
+    const startMinBo = ORB_RADIUS_BO + Math.max(0, Number(config.haloFieldBoltStartMinBo) || 0);
+    const startMaxBo = ORB_RADIUS_BO + Math.max(0, Number(config.haloFieldBoltStartMaxBo) || 0);
+    const endMinBo = Math.max(0.01, Number(config.haloFieldBoltEndMinBo) || 0.01);
+    const endMaxBo = Math.max(endMinBo, Number(config.haloFieldBoltEndMaxBo) || endMinBo);
+    const ringTime = ((time % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS;
+    for (let i = 0; i < countMax; i += 1) {
+      const offset = shaderRandomFloat(i, 9) * maxTtl;
+      const shiftedTime = ((ringTime + offset) % (maxTtl * TESLA_SHADER_TIME_RING_SECONDS) + (maxTtl * TESLA_SHADER_TIME_RING_SECONDS)) % (maxTtl * TESLA_SHADER_TIME_RING_SECONDS);
+      const coarseCycle = stableFrame(shiftedTime / maxTtl);
+      const ttl = baseTtl + (maxTtl - baseTtl) * shaderRandomFloat(i * 17.7, coarseCycle + 41);
+      const ttlCycle = stableFrame(shiftedTime / Math.max(0.016, ttl));
+      const seed = i * 37.13 + ttlCycle * 19.7 + 11.7;
+      const optionalChance = optionalSlots > 0 ? 0.5 : 0;
+      if (i >= countMin && shaderRandomFloat(seed, 23) > optionalChance) continue;
+      const direction = shaderRandomFloat(seed, 53) < 0.5 ? -1 : 1;
+      const wanderSpeed = randomBetweenConfig(config.haloBoltWanderSpeedMin, config.haloBoltWanderSpeedMax, shaderRandomFloat(seed, 71));
+      const rpsc = randomBetweenConfig(config.haloBoltRpscMin, config.haloBoltRpscMax, shaderRandomFloat(seed, 83));
+      const tension = randomBetweenConfig(config.haloBoltTurnTensionMin, config.haloBoltTurnTensionMax, shaderRandomFloat(seed, 107));
+      const damping = randomBetweenConfig(config.haloBoltTurnDampingMin, config.haloBoltTurnDampingMax, shaderRandomFloat(seed, 131));
+      const ttlAge = ((shiftedTime % ttl) + ttl) % ttl;
+      const phaseSeconds = resolveHaloBoltPhaseSeconds({ seed, ttlAge, direction, wanderSpeed, rpsc, tension, damping });
+      const randomAngle = shaderRandomFloat(seed, i + 3.17) * Math.PI * 2;
+      const evenAngle = (i + 0.5 * shaderRandomFloat(seed, 149)) / Math.max(1, countMax) * Math.PI * 2;
+      const angle = mixAngle(randomAngle, evenAngle, Math.max(0, Math.min(1, Number(config.haloBoltDispersion) || 0))) + phaseSeconds * Math.PI * 2;
+      const startBo = startMinBo + (startMaxBo - startMinBo) * shaderRandomFloat(seed, 7);
+      const lengthSlotCount = Math.max(1, countMin);
+      const lengthSlotOffset = Math.floor(shaderRandomFloat(seed, 193) * lengthSlotCount);
+      const lengthSlot = (i + lengthSlotOffset) % lengthSlotCount;
+      const lengthRoll = (lengthSlot + shaderRandomFloat(seed, 191)) / lengthSlotCount;
+      const lengthBo = endMinBo + (endMaxBo - endMinBo) * lengthRoll;
+      const directionRuntime = Object.freeze({ x: Math.sin(angle), y: Math.cos(angle) });
+      const directionWorld = Object.freeze({ xW: directionRuntime.x, yW: -directionRuntime.y });
+      const resolvedLengthBo = resolveHaloBoltCollisionLength({
+        angle,
+        bo,
+        directionRuntime,
+        directionWorld,
+        index: i,
+        lengthBo,
+        maxLengthBo: endMaxBo,
+        startBo,
+      });
+      const clampedLengthBo = Math.max(0.001, Math.min(lengthBo, Number(resolvedLengthBo) || lengthBo));
+      clamps[i] = clampedLengthBo * Math.max(1, Number(bo) || 1);
+    }
+    return clamps;
+  }
+
+  function randomBetweenConfig(min = 0, max = 0, amount = 0) {
+    const safeMin = Number.isFinite(Number(min)) ? Number(min) : 0;
+    const safeMax = Math.max(safeMin, Number.isFinite(Number(max)) ? Number(max) : safeMin);
+    return safeMin + (safeMax - safeMin) * Math.max(0, Math.min(1, Number(amount) || 0));
+  }
+
+  function resolveHaloBoltPhaseSeconds({ seed = 0, ttlAge = 0, direction = 1, wanderSpeed = 0, rpsc = 0, tension = 0, damping = 0 } = {}) {
+    let currentDirection = direction;
+    let velocity = currentDirection * wanderSpeed;
+    let phaseSeconds = 0;
+    let segmentStart = 0;
+    const tickSeconds = 0.125;
+    for (let s = 0; s < 48; s += 1) {
+      const segmentEnd = Math.min(ttlAge, (s + 1) * tickSeconds);
+      if (segmentEnd > segmentStart) {
+        velocity += (currentDirection * wanderSpeed - velocity) * tension;
+        velocity *= 1 - damping * tickSeconds;
+        phaseSeconds += velocity * (segmentEnd - segmentStart);
+      }
+      if (ttlAge <= segmentEnd) break;
+      if (shaderRandomFloat(seed, 97 + s) < rpsc * tickSeconds) currentDirection *= -1;
+      segmentStart = segmentEnd;
+    }
+    return phaseSeconds;
+  }
+
+  function mixAngle(a = 0, b = 0, amount = 0) {
+    const delta = Math.atan2(Math.sin(b - a), Math.cos(b - a));
+    return a + delta * amount;
   }
 
   function updateStrikeState(config, bo, nowMs) {

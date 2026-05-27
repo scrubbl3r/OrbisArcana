@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260527-tesla-light-a";
 import { COMBAT_EFFECT_DAMAGE, COMBAT_EFFECT_IMMUNITY, COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN, DAMAGE_TYPE_ELECTRIC, DAMAGE_TYPE_FIRE } from "../../../game-runtime/combat/combat-constants.js";
 import { EVT_COMBAT_IMMUNITY_CHANGED, EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
@@ -60,11 +61,11 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260526213000";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527113628s";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-halo-collide-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527113628";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-halo-collide-a";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
 import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527113628b";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
@@ -163,6 +164,7 @@ export function createGameStageDepth3dLayer({
     globeGroup: globe3dGroup,
     enemyGroup,
   } = sceneRuntime;
+  const tesla1HaloPropRaycaster = new THREE.Raycaster();
 
   let disposed = false;
   let worldWidthPx = 1;
@@ -284,6 +286,7 @@ export function createGameStageDepth3dLayer({
     getEnemyTargets: () => gnatSwarm3dRuntime.getCombatTargets(),
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => ({ ...TESLA_1_PRESET_DEFAULT, ...TESLA_1_BEHAVIOR_DEFAULT }),
+    resolveHaloBoltCollisionLength: resolveTesla1HaloBoltCollisionLength,
     resolveMasterBoltPath: resolveTesla1MasterBoltPath,
     onHaloStrike: ({ target = null, damage = 0, hitRadiusBo = 0.12, stunDamage = 0, config = {}, atMs = performance.now() } = {}) => {
       const position = target && target.position ? target.position : null;
@@ -963,6 +966,79 @@ export function createGameStageDepth3dLayer({
     if (wasActive && perfTrace && typeof perfTrace.mark === "function") {
       perfTrace.mark("flameAoe.gameStage.cleared", { reason });
     }
+  }
+
+  function resolveTesla1HaloBoltCollisionLength({
+    bo = baseOrbWorldUnits,
+    directionRuntime = null,
+    directionWorld = null,
+    lengthBo = 0,
+    startBo = 0,
+  } = {}) {
+    const safeBo = Math.max(1, Number(bo) || baseOrbWorldUnits);
+    const maxLengthBo = Math.max(0.001, Number(lengthBo) || 0);
+    let resolvedLengthBo = maxLengthBo;
+    if (currentOrbWorldPosition && directionWorld && currentLevelNavContext && typeof currentLevelNavContext.containsPoint === "function") {
+      const dx = Number(directionWorld.xW) || 0;
+      const dy = Number(directionWorld.yW) || 0;
+      const mag = Math.hypot(dx, dy) || 1;
+      const startWorld = {
+        xW: (Number(currentOrbWorldPosition.xW) || 0) + (dx / mag) * Math.max(0, Number(startBo) || 0) * safeBo,
+        yW: (Number(currentOrbWorldPosition.yW) || 0) + (dy / mag) * Math.max(0, Number(startBo) || 0) * safeBo,
+      };
+      const rangeWorld = maxLengthBo * safeBo;
+      const stepWorld = Math.max(1, Math.min(rangeWorld, safeBo * 0.1));
+      const steps = Math.max(1, Math.ceil(rangeWorld / stepWorld));
+      let lastGoodT = 0;
+      let firstBlockedT = null;
+      for (let index = 1; index <= steps; index += 1) {
+        const t = Math.min(1, index / steps);
+        const point = {
+          xW: startWorld.xW + (dx / mag) * rangeWorld * t,
+          yW: startWorld.yW + (dy / mag) * rangeWorld * t,
+        };
+        if (!currentLevelNavContext.containsPoint(point)) {
+          firstBlockedT = t;
+          break;
+        }
+        lastGoodT = t;
+      }
+      if (firstBlockedT != null) {
+        let lo = lastGoodT;
+        let hi = firstBlockedT;
+        for (let i = 0; i < 5; i += 1) {
+          const mid = (lo + hi) * 0.5;
+          const point = {
+            xW: startWorld.xW + (dx / mag) * rangeWorld * mid,
+            yW: startWorld.yW + (dy / mag) * rangeWorld * mid,
+          };
+          if (currentLevelNavContext.containsPoint(point)) lo = mid;
+          else hi = mid;
+        }
+        resolvedLengthBo = Math.min(resolvedLengthBo, Math.max(0.001, (lo * rangeWorld) / safeBo));
+      }
+    }
+    if (directionRuntime && propsGroup && propsGroup.children && propsGroup.children.length) {
+      const orbRuntime = orb3dActorRuntime.getPosition();
+      if (orbRuntime) {
+        const dx = Number(directionRuntime.x) || 0;
+        const dy = Number(directionRuntime.y) || 0;
+        const mag = Math.hypot(dx, dy) || 1;
+        const start = new THREE.Vector3(
+          (Number(orbRuntime.x) || 0) + (dx / mag) * Math.max(0, Number(startBo) || 0) * safeBo,
+          (Number(orbRuntime.y) || 0) + (dy / mag) * Math.max(0, Number(startBo) || 0) * safeBo,
+          Number(orbRuntime.z) || 0
+        );
+        const direction = new THREE.Vector3(dx / mag, dy / mag, 0);
+        tesla1HaloPropRaycaster.near = 0;
+        tesla1HaloPropRaycaster.far = maxLengthBo * safeBo;
+        tesla1HaloPropRaycaster.set(start, direction);
+        const hits = tesla1HaloPropRaycaster.intersectObjects(propsGroup.children, true);
+        const hit = hits.find((candidate) => candidate && Number(candidate.distance) > 0.001);
+        if (hit) resolvedLengthBo = Math.min(resolvedLengthBo, Math.max(0.001, hit.distance / safeBo));
+      }
+    }
+    return Math.max(0.001, Math.min(maxLengthBo, resolvedLengthBo));
   }
 
   function resolveTesla1MasterBoltPath({ fromWorld = null, target = null, bo = baseOrbWorldUnits, config = {} } = {}) {
