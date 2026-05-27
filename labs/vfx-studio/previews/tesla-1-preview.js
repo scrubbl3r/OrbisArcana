@@ -342,7 +342,7 @@ function createLightningFieldMaterial(params) {
       mat2 rotate2(float angle) {
         float c = cos(angle);
         float s = sin(angle);
-        return mat2(c, -s, s, c);
+        return mat2(c, s, -s, c);
       }
 
       float randomFloat(vec2 seed) {

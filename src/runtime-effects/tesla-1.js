@@ -459,7 +459,7 @@ function createLightningFieldMaterial(params) {
       mat2 rotate2(float angle) {
         float c = cos(angle);
         float s = sin(angle);
-        return mat2(c, -s, s, c);
+        return mat2(c, s, -s, c);
       }
 
       float randomFloat(vec2 seed) {
@@ -801,7 +801,12 @@ export function createTesla1Runtime(options = {}) {
       const surfaceDistanceBo = Math.max(0, centerDistanceBo - ORB_RADIUS_BO);
       if (surfaceDistanceBo > config.dominantBoltMaxRangeBo) continue;
       const hp = Math.max(0, Number(target.hp) || 0);
-      if (!strongest || hp > strongest.hp || (hp === strongest.hp && surfaceDistanceBo < strongest.distanceBo)) {
+      const sameHp = strongest && Math.abs(hp - strongest.hp) <= 0.000001;
+      const sameDistance = strongest && Math.abs(surfaceDistanceBo - strongest.distanceBo) <= 0.000001;
+      if (!strongest
+        || hp > strongest.hp
+        || (sameHp && surfaceDistanceBo < strongest.distanceBo)
+        || (sameHp && sameDistance && Math.random() < 0.5)) {
         strongest = Object.freeze({
           ...target,
           centerDistanceBo,
