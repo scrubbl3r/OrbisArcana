@@ -2071,6 +2071,11 @@
             <div class="paramFieldRow"><label for="tesla1BoltShaderTipFade">Tip fade</label><input id="tesla1BoltShaderTipFade" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.08" /></div>
             <div class="paramFieldRow"><label for="tesla1BoltShaderFlickerSpeedHz">Flicker speed Hz</label><input id="tesla1BoltShaderFlickerSpeedHz" class="paramFieldInput" type="number" min="0" max="60" step="0.01" value="4" /></div>
             <div class="paramFieldRow"><label for="tesla1BoltShaderFlickerDepth">Flicker depth</label><input id="tesla1BoltShaderFlickerDepth" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.5" /></div>
+            <div class="paramFieldRow"><label for="tesla1BoltShaderPlasmaCenterIntensity">Center plasma</label><input id="tesla1BoltShaderPlasmaCenterIntensity" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="0.22" /></div>
+            <div class="paramFieldRow"><label for="tesla1BoltShaderPlasmaCenterRadiusBo">Center plasma radius BO</label><input id="tesla1BoltShaderPlasmaCenterRadiusBo" class="paramFieldInput" type="number" min="0.01" max="64" step="0.05" value="1.65" /></div>
+            <div class="paramFieldRow"><label for="tesla1BoltShaderPlasmaBoltIntensity">Bolt plasma</label><input id="tesla1BoltShaderPlasmaBoltIntensity" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="0.32" /></div>
+            <div class="paramFieldRow"><label for="tesla1BoltShaderPlasmaBoltRadiusBo">Bolt plasma radius BO</label><input id="tesla1BoltShaderPlasmaBoltRadiusBo" class="paramFieldInput" type="number" min="0.001" max="16" step="0.005" value="0.18" /></div>
+            <div class="paramFieldRow"><label for="tesla1BoltShaderPlasmaCorePreserve">Core preserve</label><input id="tesla1BoltShaderPlasmaCorePreserve" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.78" /></div>
             <div class="rgbaParamRow rgbParamRow">
               <span class="rgbaLabel">BOLT RGB</span>
               <label for="tesla1BoltShaderColorR">r</label><input id="tesla1BoltShaderColorR" class="paramFieldInput" type="number" min="0" max="255" step="1" value="40" />
@@ -2920,14 +2925,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260527-halo-length-a"),
+      import("./vfx-studio-bootstrap.js?v=20260527-plasma-haze-a"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
       import("./vfx-studio-surfaces.js?v=20260524-tesla-c"),
-      import("./vfx-studio-theme-publish.js?v=20260524-tesla-j"),
+      import("./vfx-studio-theme-publish.js?v=20260527-plasma-haze-a"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2951,7 +2956,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260527-halo-length-a";
+    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260527-plasma-haze-a";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -2966,7 +2971,7 @@
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260527113628i";
-    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527113628";
+    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527-plasma-haze-a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527113628b";
@@ -3503,6 +3508,11 @@
       tesla1BoltShaderTipFade: $("tesla1BoltShaderTipFade"),
       tesla1BoltShaderFlickerSpeedHz: $("tesla1BoltShaderFlickerSpeedHz"),
       tesla1BoltShaderFlickerDepth: $("tesla1BoltShaderFlickerDepth"),
+      tesla1BoltShaderPlasmaCenterIntensity: $("tesla1BoltShaderPlasmaCenterIntensity"),
+      tesla1BoltShaderPlasmaCenterRadiusBo: $("tesla1BoltShaderPlasmaCenterRadiusBo"),
+      tesla1BoltShaderPlasmaBoltIntensity: $("tesla1BoltShaderPlasmaBoltIntensity"),
+      tesla1BoltShaderPlasmaBoltRadiusBo: $("tesla1BoltShaderPlasmaBoltRadiusBo"),
+      tesla1BoltShaderPlasmaCorePreserve: $("tesla1BoltShaderPlasmaCorePreserve"),
       tesla1BoltShaderColorR: $("tesla1BoltShaderColorR"),
       tesla1BoltShaderColorG: $("tesla1BoltShaderColorG"),
       tesla1BoltShaderColorB: $("tesla1BoltShaderColorB"),

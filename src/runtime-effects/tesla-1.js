@@ -135,6 +135,11 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     boltShaderTipFade: clampNumber(source.boltShaderTipFade, 0, 1, TESLA_1_PRESET_DEFAULT.boltShaderTipFade),
     boltShaderFlickerSpeedHz: clampNumber(source.boltShaderFlickerSpeedHz, 0, 60, TESLA_1_PRESET_DEFAULT.boltShaderFlickerSpeedHz),
     boltShaderFlickerDepth: clampNumber(source.boltShaderFlickerDepth, 0, 1, TESLA_1_PRESET_DEFAULT.boltShaderFlickerDepth),
+    boltShaderPlasmaCenterIntensity: clampNumber(source.boltShaderPlasmaCenterIntensity, 0, 4, TESLA_1_PRESET_DEFAULT.boltShaderPlasmaCenterIntensity),
+    boltShaderPlasmaCenterRadiusBo: clampNumber(source.boltShaderPlasmaCenterRadiusBo, 0.01, 64, TESLA_1_PRESET_DEFAULT.boltShaderPlasmaCenterRadiusBo),
+    boltShaderPlasmaBoltIntensity: clampNumber(source.boltShaderPlasmaBoltIntensity, 0, 4, TESLA_1_PRESET_DEFAULT.boltShaderPlasmaBoltIntensity),
+    boltShaderPlasmaBoltRadiusBo: clampNumber(source.boltShaderPlasmaBoltRadiusBo, 0.001, 16, TESLA_1_PRESET_DEFAULT.boltShaderPlasmaBoltRadiusBo),
+    boltShaderPlasmaCorePreserve: clampNumber(source.boltShaderPlasmaCorePreserve, 0, 1, TESLA_1_PRESET_DEFAULT.boltShaderPlasmaCorePreserve),
     boltShaderColorR: Math.round(clampNumber(source.boltShaderColorR, 0, 255, TESLA_1_PRESET_DEFAULT.boltShaderColorR)),
     boltShaderColorG: Math.round(clampNumber(source.boltShaderColorG, 0, 255, TESLA_1_PRESET_DEFAULT.boltShaderColorG)),
     boltShaderColorB: Math.round(clampNumber(source.boltShaderColorB, 0, 255, TESLA_1_PRESET_DEFAULT.boltShaderColorB)),
@@ -203,6 +208,11 @@ function buildLightningFieldUniformValues({
   tipFade,
   flickerHz,
   flickerDepth,
+  plasmaCenterIntensity,
+  plasmaCenterRadius,
+  plasmaBoltIntensity,
+  plasmaBoltRadius,
+  plasmaCorePreserve,
   macroNoiseScale,
   macroNoiseStrength,
   microNoiseScale,
@@ -271,6 +281,11 @@ function buildLightningFieldUniformValues({
     uTipFade: clampNumber(tipFade, 0, 1, 0.08),
     uFlickerHz: clampNumber(flickerHz, 0, 60, 4),
     uFlickerDepth: clampNumber(flickerDepth, 0, 1, 0.5),
+    uPlasmaCenterIntensity: clampNumber(plasmaCenterIntensity, 0, 4, 0.22),
+    uPlasmaCenterRadius: clampNumber(plasmaCenterRadius, 0.01 * Math.max(1, bo), 64 * Math.max(1, bo), 1.65 * Math.max(1, bo)),
+    uPlasmaBoltIntensity: clampNumber(plasmaBoltIntensity, 0, 4, 0.32),
+    uPlasmaBoltRadius: clampNumber(plasmaBoltRadius, 0.001 * Math.max(1, bo), 16 * Math.max(1, bo), 0.18 * Math.max(1, bo)),
+    uPlasmaCorePreserve: clampNumber(plasmaCorePreserve, 0, 1, 0.78),
     uMacroNoiseScale: clampNumber(macroNoiseScale, 0.1, 200, 20),
     uMacroNoiseStrength: clampNumber(macroNoiseStrength, 0, 0.5, 0.03),
     uMicroNoiseScale: clampNumber(microNoiseScale, 0.1, 300, 42),
@@ -353,6 +368,11 @@ function createLightningFieldMaterial(params) {
       uTipFade: { value: values.uTipFade },
       uFlickerHz: { value: values.uFlickerHz },
       uFlickerDepth: { value: values.uFlickerDepth },
+      uPlasmaCenterIntensity: { value: values.uPlasmaCenterIntensity },
+      uPlasmaCenterRadius: { value: values.uPlasmaCenterRadius },
+      uPlasmaBoltIntensity: { value: values.uPlasmaBoltIntensity },
+      uPlasmaBoltRadius: { value: values.uPlasmaBoltRadius },
+      uPlasmaCorePreserve: { value: values.uPlasmaCorePreserve },
       uMacroNoiseScale: { value: values.uMacroNoiseScale },
       uMacroNoiseStrength: { value: values.uMacroNoiseStrength },
       uMicroNoiseScale: { value: values.uMicroNoiseScale },
@@ -424,6 +444,11 @@ function createLightningFieldMaterial(params) {
       uniform float uTipFade;
       uniform float uFlickerHz;
       uniform float uFlickerDepth;
+      uniform float uPlasmaCenterIntensity;
+      uniform float uPlasmaCenterRadius;
+      uniform float uPlasmaBoltIntensity;
+      uniform float uPlasmaBoltRadius;
+      uniform float uPlasmaCorePreserve;
       uniform float uMacroNoiseScale;
       uniform float uMacroNoiseStrength;
       uniform float uMicroNoiseScale;
@@ -581,7 +606,12 @@ function createLightningFieldMaterial(params) {
         float d = taperedLineSdf(uv, vec2(0.0, 0.0), vec2(0.0, len), baseWidth, tipWidth, h);
         float line = 0.1 / max(max(d / max(1.0, uBo), 0.0), 0.0001);
         vec3 bolt = clamp(1.0 - exp(-(line * uBoltColor) * 0.02), 0.0, 1.0);
-        bolt *= smoothstep(len, len * (1.0 - uTipFade), abs(uv.y));
+        float tipMask = smoothstep(len, len * (1.0 - uTipFade), abs(uv.y));
+        bolt *= tipMask;
+        vec3 plasmaColor = vec3(0.045, 0.24, 1.0);
+        float boltPlasma = exp(-pow(max(d, 0.0) / max(0.0001 * uBo, uPlasmaBoltRadius), 1.35));
+        float corePreserve = smoothstep(-baseWidth * uPlasmaCorePreserve, baseWidth * 0.35, d);
+        bolt += plasmaColor * boltPlasma * tipMask * corePreserve * uPlasmaBoltIntensity;
 
         for (int branchIndex = 0; branchIndex < 3; branchIndex += 1) {
           float bi = float(branchIndex);
@@ -609,6 +639,9 @@ function createLightningFieldMaterial(params) {
           vec3 branchBolt = clamp(1.0 - exp(-(branchLine * uBoltColor) * 0.018), 0.0, 1.0);
           branchBolt *= smoothstep(branchLen, branchLen * 0.65, abs(branchUv.y));
           branchBolt *= smoothstep(0.02, 0.14, anchorT) * smoothstep(0.98, 0.78, anchorT);
+          float branchPlasma = exp(-pow(max(branchD, 0.0) / max(0.0001 * uBo, uPlasmaBoltRadius * 0.72), 1.25));
+          float branchCorePreserve = smoothstep(-branchBaseWidth * uPlasmaCorePreserve, branchBaseWidth * 0.35, branchD);
+          branchBolt += plasmaColor * branchPlasma * branchCorePreserve * uPlasmaBoltIntensity * 0.45;
           bolt += branchBolt * 0.72;
         }
 
@@ -627,7 +660,9 @@ function createLightningFieldMaterial(params) {
 
       void main() {
         vec2 p = vLocalPosition.xy;
-        vec3 color = vec3(0.0);
+        vec3 plasmaColor = vec3(0.045, 0.24, 1.0);
+        float centerFalloff = exp(-pow(length(p) / max(0.0001 * uBo, uPlasmaCenterRadius), 1.65));
+        vec3 color = plasmaColor * centerFalloff * uPlasmaCenterIntensity;
         float minCount = float(min(uBoltCountMin, uBoltCountMax));
         float maxCount = float(max(uBoltCountMin, uBoltCountMax));
         float optionalSlots = max(0.0, maxCount - minCount);
@@ -929,6 +964,11 @@ export function createTesla1Runtime(options = {}) {
       tipFade: config.boltShaderTipFade,
       flickerHz: config.boltShaderFlickerSpeedHz,
       flickerDepth: config.boltShaderFlickerDepth,
+      plasmaCenterIntensity: config.boltShaderPlasmaCenterIntensity,
+      plasmaCenterRadius: bo * config.boltShaderPlasmaCenterRadiusBo,
+      plasmaBoltIntensity: config.boltShaderPlasmaBoltIntensity,
+      plasmaBoltRadius: bo * config.boltShaderPlasmaBoltRadiusBo,
+      plasmaCorePreserve: config.boltShaderPlasmaCorePreserve,
       macroNoiseScale: config.lightningShapeMacroNoiseScale,
       macroNoiseStrength: config.lightningShapeMacroNoiseStrength,
       microNoiseScale: config.lightningShapeMicroNoiseScale,

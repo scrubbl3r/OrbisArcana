@@ -128,6 +128,11 @@ export function createTesla1AuthoringAdapter({
       boltShaderTipFade: readNumber(els.tesla1BoltShaderTipFade, tesla1PresetDefault.boltShaderTipFade, 0, 1),
       boltShaderFlickerSpeedHz: readNumber(els.tesla1BoltShaderFlickerSpeedHz, tesla1PresetDefault.boltShaderFlickerSpeedHz, 0, 60),
       boltShaderFlickerDepth: readNumber(els.tesla1BoltShaderFlickerDepth, tesla1PresetDefault.boltShaderFlickerDepth, 0, 1),
+      boltShaderPlasmaCenterIntensity: readNumber(els.tesla1BoltShaderPlasmaCenterIntensity, tesla1PresetDefault.boltShaderPlasmaCenterIntensity, 0, 4),
+      boltShaderPlasmaCenterRadiusBo: readNumber(els.tesla1BoltShaderPlasmaCenterRadiusBo, tesla1PresetDefault.boltShaderPlasmaCenterRadiusBo, 0.01, 64),
+      boltShaderPlasmaBoltIntensity: readNumber(els.tesla1BoltShaderPlasmaBoltIntensity, tesla1PresetDefault.boltShaderPlasmaBoltIntensity, 0, 4),
+      boltShaderPlasmaBoltRadiusBo: readNumber(els.tesla1BoltShaderPlasmaBoltRadiusBo, tesla1PresetDefault.boltShaderPlasmaBoltRadiusBo, 0.001, 16),
+      boltShaderPlasmaCorePreserve: readNumber(els.tesla1BoltShaderPlasmaCorePreserve, tesla1PresetDefault.boltShaderPlasmaCorePreserve, 0, 1),
       boltShaderColorR: Math.round(readNumber(els.tesla1BoltShaderColorR, tesla1PresetDefault.boltShaderColorR, 0, 255)),
       boltShaderColorG: Math.round(readNumber(els.tesla1BoltShaderColorG, tesla1PresetDefault.boltShaderColorG, 0, 255)),
       boltShaderColorB: Math.round(readNumber(els.tesla1BoltShaderColorB, tesla1PresetDefault.boltShaderColorB, 0, 255)),
@@ -227,6 +232,11 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1BoltShaderTipFade) els.tesla1BoltShaderTipFade.value = String(source.boltShaderTipFade ?? 0.08);
     if (els.tesla1BoltShaderFlickerSpeedHz) els.tesla1BoltShaderFlickerSpeedHz.value = String(source.boltShaderFlickerSpeedHz ?? 4);
     if (els.tesla1BoltShaderFlickerDepth) els.tesla1BoltShaderFlickerDepth.value = String(source.boltShaderFlickerDepth ?? 0.5);
+    if (els.tesla1BoltShaderPlasmaCenterIntensity) els.tesla1BoltShaderPlasmaCenterIntensity.value = String(source.boltShaderPlasmaCenterIntensity ?? 0.22);
+    if (els.tesla1BoltShaderPlasmaCenterRadiusBo) els.tesla1BoltShaderPlasmaCenterRadiusBo.value = String(source.boltShaderPlasmaCenterRadiusBo ?? 1.65);
+    if (els.tesla1BoltShaderPlasmaBoltIntensity) els.tesla1BoltShaderPlasmaBoltIntensity.value = String(source.boltShaderPlasmaBoltIntensity ?? 0.32);
+    if (els.tesla1BoltShaderPlasmaBoltRadiusBo) els.tesla1BoltShaderPlasmaBoltRadiusBo.value = String(source.boltShaderPlasmaBoltRadiusBo ?? 0.18);
+    if (els.tesla1BoltShaderPlasmaCorePreserve) els.tesla1BoltShaderPlasmaCorePreserve.value = String(source.boltShaderPlasmaCorePreserve ?? 0.78);
     if (els.tesla1BoltShaderColorR) els.tesla1BoltShaderColorR.value = String(source.boltShaderColorR ?? 40);
     if (els.tesla1BoltShaderColorG) els.tesla1BoltShaderColorG.value = String(source.boltShaderColorG ?? 90);
     if (els.tesla1BoltShaderColorB) els.tesla1BoltShaderColorB.value = String(source.boltShaderColorB ?? 255);
