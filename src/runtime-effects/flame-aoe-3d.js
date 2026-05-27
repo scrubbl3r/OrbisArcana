@@ -726,6 +726,8 @@ export function createFlameAoe3dRuntime({
   const liftCoreVelocity = new THREE.Vector3();
   const stretchDirection = new THREE.Vector3(0, 1, 0);
   const shaderMotion = new THREE.Vector3();
+  const springForce = new THREE.Vector3();
+  const dampingForce = new THREE.Vector3();
   let wakeGroundLift = 0;
 
   function measureTrace(name, fn) {
@@ -793,8 +795,8 @@ export function createFlameAoe3dRuntime({
       liftCoreOffset.copy(targetLiftCoreOffset);
       liftCoreVelocity.set(0, 0, 0);
     }
-    const springForce = targetLiftCoreOffset.clone().sub(liftCoreOffset).multiplyScalar(spring);
-    const dampingForce = liftCoreVelocity.clone().multiplyScalar(damping);
+    springForce.copy(targetLiftCoreOffset).sub(liftCoreOffset).multiplyScalar(spring);
+    dampingForce.copy(liftCoreVelocity).multiplyScalar(damping);
     liftCoreVelocity.addScaledVector(springForce.sub(dampingForce), safeDt);
     liftCoreOffset.addScaledVector(liftCoreVelocity, safeDt);
     liftCoreOffset.clampLength(bo * 0.08, maxStretch);

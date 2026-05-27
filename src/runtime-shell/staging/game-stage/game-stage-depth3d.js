@@ -20,7 +20,7 @@ import {
   buildDepthLayerMesh,
 } from "../../../game-runtime/level/depth-layer-3d-mesh.js?v=20260508b";
 import { createArtPlane3dRuntime } from "../../../game-runtime/level-graphics/art-plane-3d-runtime.js?v=20260508f";
-import { createStarField3dRuntime } from "../../../game-runtime/level-graphics/star-field-3d-runtime.js?v=20260508d";
+import { createStarField3dRuntime } from "../../../game-runtime/level-graphics/star-field-3d-runtime.js?v=20260526213000";
 import {
   AUTHORED_LEVEL_READ_MODEL_KEY_ART_SHAPES,
   AUTHORED_LEVEL_READ_MODEL_KEY_DEPTH_LAYERS,
@@ -30,10 +30,10 @@ import {
   resolveAuthoredLevelReadModelArray,
   resolveAuthoredLevelReadModelObject,
 } from "../../../game-runtime/level/authored-level-read-model.js";
-import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260526194510s";
+import { createGnatSwarm3dRuntime } from "../../../game-runtime/enemies/gnat-swarm-3d-runtime.js?v=20260526213000";
 import { buildBoundarySegmentsFromLoops } from "../../../game-runtime/collision/boundary-segments.js?v=20260520-inward-normals-a";
 import { closestPointOnSegment } from "../../../game-runtime/collision/circle-boundary-collision.js?v=20260518b";
-import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260522-fire-card-tail-a";
+import { createSurfaceFireCardSystem } from "../../../game-runtime/vfx/fire/surface-fire-card-system.js?v=20260526213000";
 import {
   buildLevelNavGrid,
   LEVEL_NAV_GRID_RESOLUTION_BO,
@@ -59,7 +59,7 @@ import {
 } from "../../../game-runtime/orb/orb-shader-heal-pulse-layer.js?v=20260517b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
-import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
+import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260526213000";
 import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260526205230s";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
@@ -70,7 +70,7 @@ import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
 import { createGameStageDepth3dEventBindings } from "./game-stage-depth3d-events.js?v=20260517p";
-import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=20260505h";
+import { createGameStageDepth3dBloom } from "./game-stage-depth3d-bloom.js?v=20260526213000";
 import {
   GAME_STAGE_DEPTH3D_TRACE_VERSION,
   publishDepth3dModuleVersion,
@@ -191,6 +191,8 @@ export function createGameStageDepth3dLayer({
   let lastEnemy3dTickMs = 0;
   let lastEnemyTelemetryAtMs = 0;
   let lastEnemyBurnTraceAtMs = 0;
+  let lastDepth3dTelemetryAtMs = 0;
+  let lastStarFieldVisibleObjectCount = null;
   let activeFlameAoeHazard = null;
   let boundGlobe3dSpawns = Object.freeze([]);
   const telemetry = createGameStageDepth3dTelemetry({
@@ -1123,7 +1125,11 @@ export function createGameStageDepth3dLayer({
       viewportWidthPx,
       viewportHeightPx,
     });
-    root.dataset.starFieldVisibleObjects = String(starField3dRuntime.getVisibleObjectCount());
+    const starVisibleObjects = starField3dRuntime.getVisibleObjectCount();
+    if (starVisibleObjects !== lastStarFieldVisibleObjectCount) {
+      lastStarFieldVisibleObjectCount = starVisibleObjects;
+      root.dataset.starFieldVisibleObjects = String(starVisibleObjects);
+    }
     const measure = perfTrace && typeof perfTrace.measure === "function"
       ? perfTrace.measure
       : null;
@@ -1159,8 +1165,11 @@ export function createGameStageDepth3dLayer({
       if (bloom) bloom.render();
       else renderer.render(scene, camera);
     }
-    syncSurfaceFireTelemetry();
-    syncBloomTelemetry();
+    if (frameNowMs - lastDepth3dTelemetryAtMs >= 250) {
+      lastDepth3dTelemetryAtMs = frameNowMs;
+      syncSurfaceFireTelemetry();
+      syncBloomTelemetry();
+    }
   }
 
   function loadProps(props = []) {

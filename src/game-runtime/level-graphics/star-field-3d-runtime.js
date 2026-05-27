@@ -299,12 +299,21 @@ export function createStarField3dRuntime({
       return;
     }
     const overscan = Math.max(0, clampNumber(config && config.cullOverscanW, 640));
-    applyCameraWindow(Object.freeze({
+    const nextCameraBox = {
       leftXW: clampNumber(camLeft, 0) - overscan,
       rightXW: clampNumber(camLeft, 0) + viewW + overscan,
       topYW: clampNumber(camTop, 0) - overscan,
       bottomYW: clampNumber(camTop, 0) + viewH + overscan,
-    }));
+    };
+    const refreshThreshold = Math.max(24, Math.min(overscan * 0.25, viewW * 0.05, viewH * 0.05));
+    if (lastCameraBox
+      && Math.abs(nextCameraBox.leftXW - lastCameraBox.leftXW) < refreshThreshold
+      && Math.abs(nextCameraBox.rightXW - lastCameraBox.rightXW) < refreshThreshold
+      && Math.abs(nextCameraBox.topYW - lastCameraBox.topYW) < refreshThreshold
+      && Math.abs(nextCameraBox.bottomYW - lastCameraBox.bottomYW) < refreshThreshold) {
+      return;
+    }
+    applyCameraWindow(nextCameraBox);
   }
 
   function load(starField = null) {

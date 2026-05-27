@@ -270,7 +270,7 @@ export function createSurfaceFireCardSystem({
       ttlMs: SURFACE_FIRE_TTL_MS,
       contacts: contacts.length,
       nearestBo: contacts.length ? Math.round((contacts[0].distancePx / bo) * 1000) / 1000 : null,
-      sample: fireCards.getTrace(camera).sample,
+      sample: typeof fireCards.getSampleTrace === "function" ? fireCards.getSampleTrace() : null,
     });
   }
 

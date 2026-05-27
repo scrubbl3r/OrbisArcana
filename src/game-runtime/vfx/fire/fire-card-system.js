@@ -256,6 +256,9 @@ export function createFireCardSystem({
     addTeardrop,
     endFrame,
     dispose,
+    getSampleTrace() {
+      return lastSample;
+    },
     getTrace(camera = null) {
       return Object.freeze({
         activeCount: writeIndex,

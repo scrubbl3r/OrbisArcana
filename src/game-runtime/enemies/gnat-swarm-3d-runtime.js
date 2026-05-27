@@ -1927,7 +1927,14 @@ export function createGnatSwarm3dRuntime({
     releaseFeedingGnats,
     applyCombatEffect,
     getCombatTargets,
-    hasActiveVisuals: () => states.some((state) => state && (state.hp > 0 || state.deathStartedSec || resolveBurningRuntimeState(state, performance.now() / 1000).active)),
+    hasActiveVisuals: () => {
+      const nowSec = performance.now() / 1000;
+      return states.some((state) => state && (
+        state.hp > 0
+        || nowSec < (Number(state.deathHideSec) || 0)
+        || resolveBurningRuntimeState(state, nowSec).active
+      ));
+    },
     getTrace,
     clear: disposeMesh,
     dispose() {

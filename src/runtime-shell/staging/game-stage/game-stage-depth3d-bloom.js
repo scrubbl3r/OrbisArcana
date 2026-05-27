@@ -63,6 +63,7 @@ export function createGameStageDepth3dBloom({
   const trace = createDepth3dBloomTrace({ renderer, scene, camera, config: resolvedConfig });
   publishDepth3dBloomTrace(trace);
   updateDepth3dBloomTraceScene(trace, scene, camera);
+  let nextSceneTraceAtMs = 0;
 
   return Object.freeze({
     bloomPass,
@@ -84,11 +85,16 @@ export function createGameStageDepth3dBloom({
         renderWidth: Math.max(1, Math.round(resolvedWidth * resolvedConfig.pixelRatio)),
         renderHeight: Math.max(1, Math.round(resolvedHeight * resolvedConfig.pixelRatio)),
       });
+      nextSceneTraceAtMs = 0;
     },
     render() {
       trace.renderCalls += 1;
-      trace.lastRenderAtMs = Math.round(performance.now());
-      updateDepth3dBloomTraceScene(trace, scene, camera);
+      const nowMs = performance.now();
+      trace.lastRenderAtMs = Math.round(nowMs);
+      if (nowMs >= nextSceneTraceAtMs) {
+        updateDepth3dBloomTraceScene(trace, scene, camera);
+        nextSceneTraceAtMs = nowMs + 250;
+      }
       composer.render();
     },
     dispose() {
