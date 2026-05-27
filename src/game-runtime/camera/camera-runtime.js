@@ -332,6 +332,7 @@ export function createCameraRuntime({
       return Object.freeze({
         xW: safeBaselineXW,
         yW: safeBaselineYW,
+        traveling: false,
       });
     }
     const durationMs = Math.max(1, toFiniteNumber(travel.durationMs, 1));
@@ -356,6 +357,7 @@ export function createCameraRuntime({
     return Object.freeze({
       xW: rawT >= 1 && fromXW != null && toXW != null ? toXW : resolvedXW,
       yW: rawT >= 1 ? toYW : resolvedYW,
+      traveling: true,
     });
   }
 
@@ -406,7 +408,7 @@ export function createCameraRuntime({
       worldWidthPx,
       worldHeightPx,
       zoom,
-      followMode,
+      followMode: effectiveTarget.traveling ? "follow_target_center" : followMode,
       camLeft: camLeft != null ? camLeft : (previousFrame && previousFrame.camLeft),
       camTop: camTop != null ? camTop : (previousFrame && previousFrame.camTop),
       fixedFrameCenterXW,
@@ -417,8 +419,8 @@ export function createCameraRuntime({
       deadzoneHeightPx,
       deadzoneWidthRatio,
       deadzoneHeightRatio,
-      followLerpX,
-      followLerpY,
+      followLerpX: effectiveTarget.traveling ? 1 : followLerpX,
+      followLerpY: effectiveTarget.traveling ? 1 : followLerpY,
       clampLeftXW,
       clampRightXW,
       clampTopYW,

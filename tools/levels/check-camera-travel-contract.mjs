@@ -89,4 +89,59 @@ const yOnlyFrame = camera.resolveFrame({
 assertNear(yOnlyFrame.targetXW, 300, "Y-only travel should preserve caller x target");
 assertNear(yOnlyFrame.targetYW, 150, "Y-only travel should still interpolate y");
 
+const softCamera = createCameraRuntime({ now: () => nowMs });
+softCamera.resolveFrame({
+  targetXW: 20,
+  targetYW: 40,
+  viewportWidthPx: 20,
+  viewportHeightPx: 20,
+  worldWidthPx: 400,
+  worldHeightPx: 400,
+  zoom: 1,
+  followMode: "follow_target_soft",
+  screenAnchorX: 0.5,
+  screenAnchorY: 0.5,
+  deadzoneWidthPx: 200,
+  deadzoneHeightPx: 200,
+  followLerpX: 0.1,
+  followLerpY: 0.1,
+  clampLeftXW: 0,
+  clampRightXW: 400,
+  clampTopYW: 0,
+  clampBottomYW: 400,
+});
+nowMs = 2000;
+softCamera.requestTravel({
+  fromXW: 20,
+  toXW: 120,
+  fromYW: 40,
+  toYW: 240,
+  durationMs: 1000,
+  easing: "linear",
+});
+nowMs = 3000;
+const softTravelEndFrame = softCamera.resolveFrame({
+  targetXW: 120,
+  targetYW: 240,
+  viewportWidthPx: 20,
+  viewportHeightPx: 20,
+  worldWidthPx: 400,
+  worldHeightPx: 400,
+  zoom: 1,
+  followMode: "follow_target_soft",
+  screenAnchorX: 0.5,
+  screenAnchorY: 0.5,
+  deadzoneWidthPx: 200,
+  deadzoneHeightPx: 200,
+  followLerpX: 0.1,
+  followLerpY: 0.1,
+  clampLeftXW: 0,
+  clampRightXW: 400,
+  clampTopYW: 0,
+  clampBottomYW: 400,
+});
+
+assertNear(softTravelEndFrame.centerXW, 120, "active travel should bypass soft-follow x lag at destination");
+assertNear(softTravelEndFrame.centerYW, 240, "active travel should bypass soft-follow y lag at destination");
+
 console.log("camera travel contract ok");
