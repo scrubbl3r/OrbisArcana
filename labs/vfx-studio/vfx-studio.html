@@ -2013,6 +2013,21 @@
           </div>
         </div>
         <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="tesla1CoreGlowControls">Core Glow</button>
+          <div id="tesla1CoreGlowControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="paramFieldRow"><label for="tesla1CoreGlowEnabled">Enabled</label><input id="tesla1CoreGlowEnabled" class="paramFieldInput" type="checkbox" checked /></div>
+            <div class="paramFieldRow"><label for="tesla1CoreGlowRadiusBo">Radius BO</label><input id="tesla1CoreGlowRadiusBo" class="paramFieldInput" type="number" min="0.05" max="4" step="0.01" value="0.64" /></div>
+            <div class="paramFieldRow"><label for="tesla1CoreGlowLuminance">Luminance</label><input id="tesla1CoreGlowLuminance" class="paramFieldInput" type="number" min="0" max="80" step="0.1" value="5.5" /></div>
+            <div class="paramFieldRow"><label for="tesla1CoreGlowCenterAlpha">Center alpha</label><input id="tesla1CoreGlowCenterAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.42" /></div>
+            <div class="paramFieldRow"><label for="tesla1CoreGlowEdgeAlpha">Edge alpha</label><input id="tesla1CoreGlowEdgeAlpha" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.16" /></div>
+            <div class="paramFieldRow"><label for="tesla1CoreGlowEdgeSoftness">Edge softness</label><input id="tesla1CoreGlowEdgeSoftness" class="paramFieldInput" type="number" min="0.1" max="12" step="0.05" value="2.8" /></div>
+            <div class="paramFieldRow"><label for="tesla1CoreGlowDisplacementBo">Displacement BO</label><input id="tesla1CoreGlowDisplacementBo" class="paramFieldInput" type="number" min="0" max="2" step="0.005" value="0.055" /></div>
+            <div class="paramFieldRow"><label for="tesla1CoreGlowNoiseScale">Noise scale</label><input id="tesla1CoreGlowNoiseScale" class="paramFieldInput" type="number" min="0.1" max="64" step="0.1" value="5.8" /></div>
+            <div class="paramFieldRow"><label for="tesla1CoreGlowNoiseSpeed">Noise speed</label><input id="tesla1CoreGlowNoiseSpeed" class="paramFieldInput" type="number" min="0" max="32" step="0.05" value="2.4" /></div>
+            <div class="paramFieldRow"><label for="tesla1CoreGlowPulseAmount">Pulse amount</label><input id="tesla1CoreGlowPulseAmount" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0.65" /></div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="tesla1LightningShapeControls">Lightning Shape</button>
             <button id="tesla1LightningShapeVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Lightning Shape visibility" title="Toggle Lightning Shape visibility"></button>
@@ -2945,7 +2960,7 @@
     import { createShockwaveAuthoringAdapter } from "./adapters/shockwave-authoring-adapter.js?v=20260425d";
     import { createTeleport3dAuthoringAdapter } from "./adapters/teleport-3d-authoring-adapter.js?v=20260501a";
     import { createTeleportAuthoringAdapter } from "./adapters/teleport-authoring-adapter.js?v=20260425d";
-    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260527-orb-light-a";
+    import { createTesla1AuthoringAdapter } from "./adapters/tesla-1-authoring-adapter.js?v=20260527-core-glow-a";
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
@@ -2960,7 +2975,7 @@
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
     } from "../../src/vfx/presets/index.js?v=20260526223339i";
-    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527-orb-light-a";
+    import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527-core-glow-a";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
     import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260526223339b";
@@ -3465,6 +3480,16 @@
       tesla1OrbLightFlashDurationMinMs: $("tesla1OrbLightFlashDurationMinMs"),
       tesla1OrbLightFlashDurationMaxMs: $("tesla1OrbLightFlashDurationMaxMs"),
       tesla1OrbLightFlashDecayCurve: $("tesla1OrbLightFlashDecayCurve"),
+      tesla1CoreGlowEnabled: $("tesla1CoreGlowEnabled"),
+      tesla1CoreGlowRadiusBo: $("tesla1CoreGlowRadiusBo"),
+      tesla1CoreGlowLuminance: $("tesla1CoreGlowLuminance"),
+      tesla1CoreGlowCenterAlpha: $("tesla1CoreGlowCenterAlpha"),
+      tesla1CoreGlowEdgeAlpha: $("tesla1CoreGlowEdgeAlpha"),
+      tesla1CoreGlowEdgeSoftness: $("tesla1CoreGlowEdgeSoftness"),
+      tesla1CoreGlowDisplacementBo: $("tesla1CoreGlowDisplacementBo"),
+      tesla1CoreGlowNoiseScale: $("tesla1CoreGlowNoiseScale"),
+      tesla1CoreGlowNoiseSpeed: $("tesla1CoreGlowNoiseSpeed"),
+      tesla1CoreGlowPulseAmount: $("tesla1CoreGlowPulseAmount"),
       tesla1LightningShapeVisibleBtn: $("tesla1LightningShapeVisibleBtn"),
       tesla1LightningShapeMacroNoiseScale: $("tesla1LightningShapeMacroNoiseScale"),
       tesla1LightningShapeMacroNoiseStrength: $("tesla1LightningShapeMacroNoiseStrength"),

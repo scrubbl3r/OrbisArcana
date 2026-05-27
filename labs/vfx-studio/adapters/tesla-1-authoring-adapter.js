@@ -49,6 +49,16 @@ export function createTesla1AuthoringAdapter({
       orbLightFlashDurationMinMs,
       orbLightFlashDurationMaxMs: Math.round(readNumber(els.tesla1OrbLightFlashDurationMaxMs, tesla1PresetDefault.orbLightFlashDurationMaxMs, orbLightFlashDurationMinMs, 1000)),
       orbLightFlashDecayCurve: readNumber(els.tesla1OrbLightFlashDecayCurve, tesla1PresetDefault.orbLightFlashDecayCurve, 0.1, 8),
+      coreGlowEnabled: els.tesla1CoreGlowEnabled ? !!els.tesla1CoreGlowEnabled.checked : tesla1PresetDefault.coreGlowEnabled !== false,
+      coreGlowRadiusBo: readNumber(els.tesla1CoreGlowRadiusBo, tesla1PresetDefault.coreGlowRadiusBo, 0.05, 4),
+      coreGlowLuminance: readNumber(els.tesla1CoreGlowLuminance, tesla1PresetDefault.coreGlowLuminance, 0, 80),
+      coreGlowCenterAlpha: readNumber(els.tesla1CoreGlowCenterAlpha, tesla1PresetDefault.coreGlowCenterAlpha, 0, 1),
+      coreGlowEdgeAlpha: readNumber(els.tesla1CoreGlowEdgeAlpha, tesla1PresetDefault.coreGlowEdgeAlpha, 0, 1),
+      coreGlowEdgeSoftness: readNumber(els.tesla1CoreGlowEdgeSoftness, tesla1PresetDefault.coreGlowEdgeSoftness, 0.1, 12),
+      coreGlowDisplacementBo: readNumber(els.tesla1CoreGlowDisplacementBo, tesla1PresetDefault.coreGlowDisplacementBo, 0, 2),
+      coreGlowNoiseScale: readNumber(els.tesla1CoreGlowNoiseScale, tesla1PresetDefault.coreGlowNoiseScale, 0.1, 64),
+      coreGlowNoiseSpeed: readNumber(els.tesla1CoreGlowNoiseSpeed, tesla1PresetDefault.coreGlowNoiseSpeed, 0, 32),
+      coreGlowPulseAmount: readNumber(els.tesla1CoreGlowPulseAmount, tesla1PresetDefault.coreGlowPulseAmount, 0, 8),
       dominantBoltMinRangeBo,
       dominantBoltMaxRangeBo: readNumber(els.tesla1MasterBoltMaxRangeBo, tesla1PresetDefault.dominantBoltMaxRangeBo, Math.max(0.01, dominantBoltMinRangeBo), 64),
       dominantBoltTargetRadiusBo: readNumber(els.tesla1MasterBoltContactRadiusBo, tesla1PresetDefault.dominantBoltTargetRadiusBo, 0, 8),
@@ -142,6 +152,16 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1OrbLightFlashDurationMinMs) els.tesla1OrbLightFlashDurationMinMs.value = String(source.orbLightFlashDurationMinMs ?? 35);
     if (els.tesla1OrbLightFlashDurationMaxMs) els.tesla1OrbLightFlashDurationMaxMs.value = String(source.orbLightFlashDurationMaxMs ?? 90);
     if (els.tesla1OrbLightFlashDecayCurve) els.tesla1OrbLightFlashDecayCurve.value = String(source.orbLightFlashDecayCurve ?? 2.4);
+    if (els.tesla1CoreGlowEnabled) els.tesla1CoreGlowEnabled.checked = source.coreGlowEnabled !== false;
+    if (els.tesla1CoreGlowRadiusBo) els.tesla1CoreGlowRadiusBo.value = String(source.coreGlowRadiusBo ?? 0.64);
+    if (els.tesla1CoreGlowLuminance) els.tesla1CoreGlowLuminance.value = String(source.coreGlowLuminance ?? 5.5);
+    if (els.tesla1CoreGlowCenterAlpha) els.tesla1CoreGlowCenterAlpha.value = String(source.coreGlowCenterAlpha ?? 0.42);
+    if (els.tesla1CoreGlowEdgeAlpha) els.tesla1CoreGlowEdgeAlpha.value = String(source.coreGlowEdgeAlpha ?? 0.16);
+    if (els.tesla1CoreGlowEdgeSoftness) els.tesla1CoreGlowEdgeSoftness.value = String(source.coreGlowEdgeSoftness ?? 2.8);
+    if (els.tesla1CoreGlowDisplacementBo) els.tesla1CoreGlowDisplacementBo.value = String(source.coreGlowDisplacementBo ?? 0.055);
+    if (els.tesla1CoreGlowNoiseScale) els.tesla1CoreGlowNoiseScale.value = String(source.coreGlowNoiseScale ?? 5.8);
+    if (els.tesla1CoreGlowNoiseSpeed) els.tesla1CoreGlowNoiseSpeed.value = String(source.coreGlowNoiseSpeed ?? 2.4);
+    if (els.tesla1CoreGlowPulseAmount) els.tesla1CoreGlowPulseAmount.value = String(source.coreGlowPulseAmount ?? 0.65);
     if (els.tesla1MasterBoltMinRangeBo) els.tesla1MasterBoltMinRangeBo.value = String(source.dominantBoltMinRangeBo ?? 4);
     if (els.tesla1MasterBoltMaxRangeBo) els.tesla1MasterBoltMaxRangeBo.value = String(source.dominantBoltMaxRangeBo ?? 8);
     if (els.tesla1MasterBoltFrequencyMinMs) els.tesla1MasterBoltFrequencyMinMs.value = String(source.dominantBoltFrequencyMinMs ?? 900);

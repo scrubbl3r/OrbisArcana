@@ -60,11 +60,12 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260526213000";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-tesla-light-a";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-core-glow-a";
+import { createTesla1CoreGlowRuntime } from "../../../runtime-effects/tesla-1-core-glow.js?v=20260527-core-glow-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-tesla-light-a";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-core-glow-a";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
 import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-1-behavior-default.js?v=20260526223339b";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
@@ -367,6 +368,12 @@ export function createGameStageDepth3dLayer({
       z,
     }),
     requestFrame: () => renderLoop.scheduleAnimation(),
+  });
+  const tesla1CoreGlowRuntime = createTesla1CoreGlowRuntime({
+    getOrbModel: () => orb3dActorRuntime.getModel(),
+    getBo: () => orb3dActorRuntime.getBo(),
+    onNeedsFrame: () => renderLoop.scheduleAnimation(),
+    renderOrder: 226,
   });
   const shockwave3dRuntime = createShockwave3dRuntime({
     getOrbModel: () => orb3dActorRuntime.getModel(),
@@ -784,10 +791,12 @@ export function createGameStageDepth3dLayer({
     if (orbShaderMixer && typeof orbShaderMixer.clearLayer === "function") {
       orbShaderMixer.clearLayer(TESLA1_ORB_SHADER_LAYER_ID, { source: "tesla1.clear" });
     }
+    if (tesla1CoreGlowRuntime && typeof tesla1CoreGlowRuntime.clear === "function") {
+      tesla1CoreGlowRuntime.clear();
+    }
   }
 
   function syncTesla1OrbLightLayer(nowMs = performance.now(), { config = null, force = false } = {}) {
-    if (!orbShaderMixer || typeof orbShaderMixer.setLayer !== "function") return;
     const active = tesla1Runtime && typeof tesla1Runtime.isActive === "function" && tesla1Runtime.isActive();
     if (!active && !force) {
       clearTesla1OrbLightLayer();
@@ -796,10 +805,6 @@ export function createGameStageDepth3dLayer({
     const safeConfig = config && typeof config === "object"
       ? config
       : (activeTesla1OrbLightConfig || { ...TESLA_1_PRESET_DEFAULT, ...TESLA_1_BEHAVIOR_DEFAULT });
-    if (safeConfig.orbLightOverrideEnabled === false || safeConfig.orbLightOverrideEnabled === 0) {
-      clearTesla1OrbLightLayer();
-      return;
-    }
     let multiplier = 1;
     if (tesla1OrbLightFlash.activeUntilMs > nowMs && tesla1OrbLightFlash.durationMs > 0) {
       const progress = Math.max(0, Math.min(1, (nowMs - tesla1OrbLightFlash.startedAtMs) / tesla1OrbLightFlash.durationMs));
@@ -815,9 +820,21 @@ export function createGameStageDepth3dLayer({
         decayCurve: 2.4,
       });
     }
+    if (tesla1CoreGlowRuntime && typeof tesla1CoreGlowRuntime.update === "function") {
+      tesla1CoreGlowRuntime.update(nowMs, { config: safeConfig, pulseMultiplier: multiplier });
+    }
+    if (!orbShaderMixer || typeof orbShaderMixer.setLayer !== "function") return;
+    if (safeConfig.orbLightOverrideEnabled === false || safeConfig.orbLightOverrideEnabled === 0) {
+      if (typeof orbShaderMixer.clearLayer === "function") {
+        orbShaderMixer.clearLayer(TESLA1_ORB_SHADER_LAYER_ID, { source: "tesla1.orbLightDisabled" });
+      }
+      return;
+    }
     const layer = resolveTesla1OrbLightLayer(safeConfig, multiplier);
     if (!layer) {
-      clearTesla1OrbLightLayer();
+      if (typeof orbShaderMixer.clearLayer === "function") {
+        orbShaderMixer.clearLayer(TESLA1_ORB_SHADER_LAYER_ID, { source: "tesla1.orbLightEmpty" });
+      }
       return;
     }
     orbShaderMixer.setLayer(TESLA1_ORB_SHADER_LAYER_ID, layer, { source: "tesla1.orbLight" });
@@ -1119,6 +1136,7 @@ export function createGameStageDepth3dLayer({
       || bubbleShield3dRuntime.isActive()
       || flameAoe3dRuntime.isActive()
       || tesla1Runtime.isActive()
+      || tesla1CoreGlowRuntime.isActive()
       || shockwave3dRuntime.isActive()
       || surfaceFireCardSystem.hasActiveVisuals()
       || gnatSwarm3dRuntime.hasActiveVisuals()
