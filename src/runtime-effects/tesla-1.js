@@ -92,8 +92,19 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
   const haloStrikeStunDamageMin = clampNumber(source.haloStrikeStunDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.haloStrikeStunDamageMin);
   const masterBoltDamageMin = clampNumber(source.masterBoltDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.masterBoltDamageMin);
   const masterBoltStunDamageMin = clampNumber(source.masterBoltStunDamageMin, 0, 10000, TESLA_1_BEHAVIOR_DEFAULT.masterBoltStunDamageMin);
+  const orbLightFlashDurationMinMs = Math.round(clampNumber(source.orbLightFlashDurationMinMs, 8, 1000, TESLA_1_PRESET_DEFAULT.orbLightFlashDurationMinMs));
   return Object.freeze({
     durationMs: Math.round(clampNumber(source.durationMs, 200, 60000, TESLA_1_PRESET_DEFAULT.durationMs)),
+    orbLightOverrideEnabled: source.orbLightOverrideEnabled !== false && source.orbLightOverrideEnabled !== 0,
+    orbLightColorR: Math.round(clampNumber(source.orbLightColorR, 0, 255, TESLA_1_PRESET_DEFAULT.orbLightColorR)),
+    orbLightColorG: Math.round(clampNumber(source.orbLightColorG, 0, 255, TESLA_1_PRESET_DEFAULT.orbLightColorG)),
+    orbLightColorB: Math.round(clampNumber(source.orbLightColorB, 0, 255, TESLA_1_PRESET_DEFAULT.orbLightColorB)),
+    orbLightIntensity: clampNumber(source.orbLightIntensity, 0, 10000, TESLA_1_PRESET_DEFAULT.orbLightIntensity),
+    orbLightDistanceBo: clampNumber(source.orbLightDistanceBo, 0, 1000, TESLA_1_PRESET_DEFAULT.orbLightDistanceBo),
+    orbLightFlashIntensityMultiplier: clampNumber(source.orbLightFlashIntensityMultiplier, 1, 100, TESLA_1_PRESET_DEFAULT.orbLightFlashIntensityMultiplier),
+    orbLightFlashDurationMinMs,
+    orbLightFlashDurationMaxMs: Math.round(clampNumber(source.orbLightFlashDurationMaxMs, orbLightFlashDurationMinMs, 1000, TESLA_1_PRESET_DEFAULT.orbLightFlashDurationMaxMs)),
+    orbLightFlashDecayCurve: clampNumber(source.orbLightFlashDecayCurve, 0.1, 8, TESLA_1_PRESET_DEFAULT.orbLightFlashDecayCurve),
     haloFieldEnabled: source.haloFieldEnabled !== false && source.haloFieldEnabled !== 0,
     haloFieldShellRadiusBo: clampNumber(source.haloFieldShellRadiusBo, 0.5, 32, TESLA_1_PRESET_DEFAULT.haloFieldShellRadiusBo),
     haloFieldBoltStartMinBo,

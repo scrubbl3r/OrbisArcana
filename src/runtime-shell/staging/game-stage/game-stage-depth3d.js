@@ -1,4 +1,4 @@
-import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260517e";
+import { createOrb3dActorRuntime } from "../../../game-runtime/orb/orb-3d-actor-runtime.js?v=20260527-tesla-light-a";
 import { COMBAT_EFFECT_DAMAGE, COMBAT_EFFECT_IMMUNITY, COMBAT_ENTITY_ORB, COMBAT_EFFECT_STUN, DAMAGE_TYPE_ELECTRIC, DAMAGE_TYPE_FIRE } from "../../../game-runtime/combat/combat-constants.js";
 import { EVT_COMBAT_IMMUNITY_CHANGED, EVT_COMBAT_STUN_APPLIED } from "../../../contracts/events.js";
 import {
@@ -50,7 +50,7 @@ import { createWorldGlobe3dRuntime } from "../../../game-runtime/world/world-glo
 import { ORB_GLOBE_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-globe-3d-default.js?v=20260504b";
 import { createOrbGlobe3dRuntime } from "../../../game-runtime/orb/orb-globe-3d-runtime.js?v=20260504f";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../game-runtime/orb/orb-3d-default.js?v=20260517a";
-import { createOrbShaderMixer } from "../../../game-runtime/orb/orb-shader-mixer.js?v=20260517a";
+import { createOrbShaderMixer } from "../../../game-runtime/orb/orb-shader-mixer.js?v=20260527-tesla-light-a";
 import { ORB_LIFECYCLE_3D_DEFAULTS } from "../../../game-runtime/orb/orb-lifecycle-3d-default.js?v=20260517g";
 import { createOrbLifecycle3dRuntime } from "../../../game-runtime/orb/orb-lifecycle-3d-runtime.js?v=20260517h";
 import {
@@ -60,11 +60,11 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260526213000";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260526223339s";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-tesla-light-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260526223339";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-tesla-light-a";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
 import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-1-behavior-default.js?v=20260526223339b";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
@@ -83,6 +83,7 @@ import { GNAT_SWARM_ENEMY_DEFAULT } from "../../../content/enemies/gnat-swarm.js
 const BO_WORLD_UNITS = LEVEL_DEPTH_FALLBACK_BO_WORLD_UNITS;
 const DEPTH_CAMERA_FOV_DEG = LEVEL_DEPTH_CAMERA_FOV_DEG;
 const WORLD_GLOBE_FOREGROUND_Z_BO = 0.08;
+const TESLA1_ORB_SHADER_LAYER_ID = "tesla1";
 
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
@@ -194,6 +195,15 @@ export function createGameStageDepth3dLayer({
   let lastDepth3dTelemetryAtMs = 0;
   let lastStarFieldVisibleObjectCount = null;
   let activeFlameAoeHazard = null;
+  let activeTesla1OrbLightConfig = null;
+  let tesla1OrbLightFlash = Object.freeze({
+    activeUntilMs: 0,
+    startedAtMs: 0,
+    durationMs: 0,
+    peakMultiplier: 1,
+    energy: 0,
+    decayCurve: 2.4,
+  });
   let boundGlobe3dSpawns = Object.freeze([]);
   const telemetry = createGameStageDepth3dTelemetry({
     root,
@@ -309,6 +319,7 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dLastTesla1HitRadiusBo = String(radiusBo);
       root.dataset.enemy3dLastTesla1Target = String(target.id || target.targetEntityId || "");
       root.dataset.enemy3dLastTesla1DamageReason = String(damageResult && damageResult.trace && damageResult.trace.reason || "");
+      startTesla1OrbLightFlash({ kind: "halo", target, config, atMs });
       return Object.freeze({ damage: damageResult, stun: stunResult });
     },
     onMasterBolt: ({ target = null, damage = 0, hitRadiusBo = 0.45, stunDamage = 0, config = {}, atMs = performance.now() } = {}) => {
@@ -347,6 +358,7 @@ export function createGameStageDepth3dLayer({
       root.dataset.enemy3dLastTesla1MasterHitRadiusBo = String(radiusBo);
       root.dataset.enemy3dLastTesla1MasterTarget = String(target.id || target.targetEntityId || "");
       root.dataset.enemy3dLastTesla1MasterDamageReason = String(damageResult && damageResult.trace && damageResult.trace.reason || "");
+      startTesla1OrbLightFlash({ kind: "master", target, config, atMs });
       return Object.freeze({ damage: damageResult, stun: stunResult });
     },
     toRuntimePosition: ({ xW = 0, yW = 0, z = 0 } = {}) => ({
@@ -707,10 +719,115 @@ export function createGameStageDepth3dLayer({
     return damageResult;
   }
 
+  function resolveTesla1OrbLightLayer(config = {}, intensityMultiplier = 1) {
+    if (!config || config.orbLightOverrideEnabled === false || config.orbLightOverrideEnabled === 0) return null;
+    const baseIntensity = Math.max(0, Number(config.orbLightIntensity) || Number(TESLA_1_PRESET_DEFAULT.orbLightIntensity) || 0);
+    return Object.freeze({
+      pointLightColorR: Math.max(0, Math.min(1, (Number(config.orbLightColorR) || 0) / 255)),
+      pointLightColorG: Math.max(0, Math.min(1, (Number(config.orbLightColorG) || 0) / 255)),
+      pointLightColorB: Math.max(0, Math.min(1, (Number(config.orbLightColorB) || 0) / 255)),
+      pointLightIntensity: Math.max(0, Math.min(10000, baseIntensity * Math.max(0, Number(intensityMultiplier) || 1))),
+      pointLightDistanceBO: Math.max(0, Math.min(1000, Number(config.orbLightDistanceBo) || Number(TESLA_1_PRESET_DEFAULT.orbLightDistanceBo) || 0)),
+    });
+  }
+
+  function resolveTesla1OrbLightFlashEnergy({ kind = "halo", target = null, config = {} } = {}) {
+    const safeConfig = config && typeof config === "object" ? config : {};
+    const boltCountMin = Math.max(0, Number(safeConfig.haloBoltCountMin) || 0);
+    const boltCountMax = Math.max(boltCountMin, Number(safeConfig.haloBoltCountMax) || boltCountMin);
+    const averageBoltCount = Math.max(1, (boltCountMin + boltCountMax) * 0.5);
+    const countFactor = Math.max(0.35, Math.min(2.2, Math.sqrt(averageBoltCount / 8)));
+    const fallbackLengthBo = kind === "master"
+      ? (Number(safeConfig.dominantBoltMaxRangeBo) || 1)
+      : Math.max(
+          Number(safeConfig.haloStrikeRangeMaxBo) || 1,
+          ((Number(safeConfig.haloFieldBoltEndMinBo) || 0) + (Number(safeConfig.haloFieldBoltEndMaxBo) || 0)) * 0.5
+        );
+    const targetLengthBo = Math.max(0, Number(target && target.distanceBo) || fallbackLengthBo);
+    const lengthReferenceBo = Math.max(1, kind === "master"
+      ? (Number(safeConfig.dominantBoltMaxRangeBo) || fallbackLengthBo)
+      : (Number(safeConfig.haloStrikeRangeMaxBo) || fallbackLengthBo));
+    const lengthFactor = Math.max(0.35, Math.min(1.8, targetLengthBo / lengthReferenceBo));
+    const masterBonus = kind === "master" ? 1.85 : 1;
+    return Math.max(0.25, Math.min(5, countFactor * lengthFactor * masterBonus));
+  }
+
+  function startTesla1OrbLightFlash({ kind = "halo", target = null, config = {}, atMs = performance.now() } = {}) {
+    if (!config || config.orbLightOverrideEnabled === false || config.orbLightOverrideEnabled === 0) return;
+    activeTesla1OrbLightConfig = config;
+    const minMs = Math.max(8, Number(config.orbLightFlashDurationMinMs) || Number(TESLA_1_PRESET_DEFAULT.orbLightFlashDurationMinMs) || 35);
+    const maxMs = Math.max(minMs, Number(config.orbLightFlashDurationMaxMs) || Number(TESLA_1_PRESET_DEFAULT.orbLightFlashDurationMaxMs) || minMs);
+    const durationMs = minMs + (Math.random() * (maxMs - minMs));
+    const energy = resolveTesla1OrbLightFlashEnergy({ kind, target, config });
+    const authoredPeak = Math.max(1, Number(config.orbLightFlashIntensityMultiplier) || Number(TESLA_1_PRESET_DEFAULT.orbLightFlashIntensityMultiplier) || 1);
+    tesla1OrbLightFlash = Object.freeze({
+      activeUntilMs: Number(atMs) + durationMs,
+      startedAtMs: Number(atMs) || performance.now(),
+      durationMs,
+      peakMultiplier: Math.max(1, Math.min(100, 1 + ((authoredPeak - 1) * energy))),
+      energy,
+      decayCurve: Math.max(0.1, Number(config.orbLightFlashDecayCurve) || Number(TESLA_1_PRESET_DEFAULT.orbLightFlashDecayCurve) || 2.4),
+    });
+    syncTesla1OrbLightLayer(Number(atMs) || performance.now(), { config, force: true });
+  }
+
+  function clearTesla1OrbLightLayer() {
+    activeTesla1OrbLightConfig = null;
+    tesla1OrbLightFlash = Object.freeze({
+      activeUntilMs: 0,
+      startedAtMs: 0,
+      durationMs: 0,
+      peakMultiplier: 1,
+      energy: 0,
+      decayCurve: 2.4,
+    });
+    if (orbShaderMixer && typeof orbShaderMixer.clearLayer === "function") {
+      orbShaderMixer.clearLayer(TESLA1_ORB_SHADER_LAYER_ID, { source: "tesla1.clear" });
+    }
+  }
+
+  function syncTesla1OrbLightLayer(nowMs = performance.now(), { config = null, force = false } = {}) {
+    if (!orbShaderMixer || typeof orbShaderMixer.setLayer !== "function") return;
+    const active = tesla1Runtime && typeof tesla1Runtime.isActive === "function" && tesla1Runtime.isActive();
+    if (!active && !force) {
+      clearTesla1OrbLightLayer();
+      return;
+    }
+    const safeConfig = config && typeof config === "object"
+      ? config
+      : (activeTesla1OrbLightConfig || { ...TESLA_1_PRESET_DEFAULT, ...TESLA_1_BEHAVIOR_DEFAULT });
+    if (safeConfig.orbLightOverrideEnabled === false || safeConfig.orbLightOverrideEnabled === 0) {
+      clearTesla1OrbLightLayer();
+      return;
+    }
+    let multiplier = 1;
+    if (tesla1OrbLightFlash.activeUntilMs > nowMs && tesla1OrbLightFlash.durationMs > 0) {
+      const progress = Math.max(0, Math.min(1, (nowMs - tesla1OrbLightFlash.startedAtMs) / tesla1OrbLightFlash.durationMs));
+      const decay = Math.pow(1 - progress, Math.max(0.1, Number(tesla1OrbLightFlash.decayCurve) || 2.4));
+      multiplier = 1 + ((Math.max(1, Number(tesla1OrbLightFlash.peakMultiplier) || 1) - 1) * decay);
+    } else if (tesla1OrbLightFlash.activeUntilMs) {
+      tesla1OrbLightFlash = Object.freeze({
+        activeUntilMs: 0,
+        startedAtMs: 0,
+        durationMs: 0,
+        peakMultiplier: 1,
+        energy: 0,
+        decayCurve: 2.4,
+      });
+    }
+    const layer = resolveTesla1OrbLightLayer(safeConfig, multiplier);
+    if (!layer) {
+      clearTesla1OrbLightLayer();
+      return;
+    }
+    orbShaderMixer.setLayer(TESLA1_ORB_SHADER_LAYER_ID, layer, { source: "tesla1.orbLight" });
+  }
+
   function clearTesla1Runtime(reason = "root_spell_transition") {
     if (!tesla1Runtime || typeof tesla1Runtime.clear !== "function") return;
     const wasActive = typeof tesla1Runtime.isActive === "function" && tesla1Runtime.isActive();
     tesla1Runtime.clear();
+    clearTesla1OrbLightLayer();
     if (wasActive && perfTrace && typeof perfTrace.mark === "function") {
       perfTrace.mark("tesla1.gameStage.cleared", { reason });
     }
@@ -1137,6 +1254,7 @@ export function createGameStageDepth3dLayer({
     if (measure) {
       measure("depth3d.orbUpdate", () => orb3dActorRuntime.update(frameNowMs / 1000));
       measure("depth3d.tesla1", () => tesla1Runtime.update(frameNowMs));
+      measure("depth3d.tesla1OrbLight", () => syncTesla1OrbLightLayer(frameNowMs));
       measure("depth3d.surfaceBurn", () => surfaceFireCardSystem.update({
         nowSec: frameNowMs / 1000,
         camera,
@@ -1153,6 +1271,7 @@ export function createGameStageDepth3dLayer({
     } else {
       orb3dActorRuntime.update(frameNowMs / 1000);
       tesla1Runtime.update(frameNowMs);
+      syncTesla1OrbLightLayer(frameNowMs);
       surfaceFireCardSystem.update({
         nowSec: frameNowMs / 1000,
         camera,
@@ -1463,6 +1582,8 @@ export function createGameStageDepth3dLayer({
       const result = tesla1Runtime.play({ ...incomingPayload, effect: "tesla-1" });
       root.dataset.enemy3dLastTesla1StageCallAt = String(Math.round(callAtMs));
       if (result && result.handled) {
+        activeTesla1OrbLightConfig = result.config || null;
+        syncTesla1OrbLightLayer(callAtMs, { config: result.config, force: true });
         renderLoop.scheduleAnimation();
         renderLoop.renderFrame(renderLoop.getLastFrame() || {});
       }

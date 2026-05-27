@@ -1,7 +1,7 @@
 import {
   buildOrbShaderBaseState,
   coerceOrbShaderLayerValues,
-} from "./orb-shader-state.js";
+} from "./orb-shader-state.js?v=20260527-tesla-light-a";
 
 export function createOrbShaderMixer({
   baseConfig = null,
@@ -84,4 +84,3 @@ export function createOrbShaderMixer({
     getTrace,
   });
 }
-

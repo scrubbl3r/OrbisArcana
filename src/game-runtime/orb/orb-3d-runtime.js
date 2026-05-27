@@ -82,6 +82,7 @@ export function createOrb3dRuntime({
   const scratchSpinCyan = new THREE.Color();
   const scratchSpinViolet = new THREE.Color();
   const scratchSpinGold = new THREE.Color();
+  const scratchPointLightColor = new THREE.Color(config.lightColor);
   let currentOpacity = 1;
   let currentTime = 0;
   const shaderState = {
@@ -90,6 +91,9 @@ export function createOrb3dRuntime({
     goldMix: clampNumber(config.goldMix, 0, 0, 2),
     pointLightIntensity: basePointLightIntensity,
     pointLightDistance: basePointLightDistance,
+    pointLightColorR: scratchPointLightColor.r,
+    pointLightColorG: scratchPointLightColor.g,
+    pointLightColorB: scratchPointLightColor.b,
   };
   let disposed = false;
 
@@ -105,6 +109,11 @@ export function createOrb3dRuntime({
     if (pointLight) {
       pointLight.intensity = shaderState.pointLightIntensity * currentOpacity;
       pointLight.distance = shaderState.pointLightDistance;
+      pointLight.color.setRGB(
+        clamp01(shaderState.pointLightColorR),
+        clamp01(shaderState.pointLightColorG),
+        clamp01(shaderState.pointLightColorB)
+      );
     }
   }
 
@@ -146,6 +155,7 @@ export function createOrb3dRuntime({
       shellMaterial.uniforms.uTime.value = currentTime;
     }
     updateOrbPointLight(pointLight, currentTime, { ...config, goldMix: shaderState.goldMix });
+    applyLightState();
     updateSpinColor(currentTime);
   }
 
@@ -218,6 +228,15 @@ export function createOrb3dRuntime({
         ? Math.max(0, Number(distanceBO) || 0) * Math.max(1, Number(bo) || 72)
         : clampNumber(nextState.lightDistance ?? nextState.pointLightDistance, shaderState.pointLightDistance, 0, Infinity);
     }
+    if (nextState.pointLightColorR != null || nextState.lightColorR != null) {
+      shaderState.pointLightColorR = clampNumber(nextState.pointLightColorR ?? nextState.lightColorR, shaderState.pointLightColorR, 0, 1);
+    }
+    if (nextState.pointLightColorG != null || nextState.lightColorG != null) {
+      shaderState.pointLightColorG = clampNumber(nextState.pointLightColorG ?? nextState.lightColorG, shaderState.pointLightColorG, 0, 1);
+    }
+    if (nextState.pointLightColorB != null || nextState.lightColorB != null) {
+      shaderState.pointLightColorB = clampNumber(nextState.pointLightColorB ?? nextState.lightColorB, shaderState.pointLightColorB, 0, 1);
+    }
     applyShaderUniformState();
     updateOrbPointLight(pointLight, currentTime, { ...config, goldMix: shaderState.goldMix });
     applyLightState();
@@ -251,6 +270,7 @@ export function createOrb3dRuntime({
             intensity: Number(pointLight.intensity) || 0,
             distance: Number(pointLight.distance) || 0,
             distanceBO: (Number(pointLight.distance) || 0) / resolvedBo,
+            color: pointLight.color ? `#${pointLight.color.getHexString()}` : "",
             visible: pointLight.visible !== false,
           }
         : null,

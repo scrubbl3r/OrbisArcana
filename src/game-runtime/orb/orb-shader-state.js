@@ -6,6 +6,9 @@ export const ORB_SHADER_STATE_KEYS = Object.freeze([
   "goldMix",
   "pointLightIntensity",
   "pointLightDistanceBO",
+  "pointLightColorR",
+  "pointLightColorG",
+  "pointLightColorB",
 ]);
 
 const KEY_LIMITS = Object.freeze({
@@ -14,6 +17,9 @@ const KEY_LIMITS = Object.freeze({
   goldMix: Object.freeze({ min: 0, max: 2 }),
   pointLightIntensity: Object.freeze({ min: 0, max: 10000 }),
   pointLightDistanceBO: Object.freeze({ min: 0, max: 1000 }),
+  pointLightColorR: Object.freeze({ min: 0, max: 1 }),
+  pointLightColorG: Object.freeze({ min: 0, max: 1 }),
+  pointLightColorB: Object.freeze({ min: 0, max: 1 }),
 });
 
 function clampNumber(value, fallback = 0, min = -Infinity, max = Infinity) {
@@ -38,6 +44,12 @@ function readShaderValue(source = {}, key = "") {
       return source.lightIntensity;
     case "pointLightDistanceBO":
       return source.lightDistanceBO;
+    case "pointLightColorR":
+      return source.lightColorR;
+    case "pointLightColorG":
+      return source.lightColorG;
+    case "pointLightColorB":
+      return source.lightColorB;
     default:
       return undefined;
   }
@@ -63,12 +75,18 @@ export function buildOrbShaderBaseState(config = ORB_3D_VISUAL_DEFAULTS) {
     goldMix: source.goldMix,
     pointLightIntensity: source.lightIntensity,
     pointLightDistanceBO: source.lightDistanceBO,
+    pointLightColorR: ((Number(source.lightColor) >>> 16) & 255) / 255,
+    pointLightColorG: ((Number(source.lightColor) >>> 8) & 255) / 255,
+    pointLightColorB: (Number(source.lightColor) & 255) / 255,
   }, {
     shellLuminanceBoost: ORB_3D_VISUAL_DEFAULTS.shellLuminanceBoost,
     shellCenterAlpha: ORB_3D_VISUAL_DEFAULTS.shellCenterAlpha,
     goldMix: ORB_3D_VISUAL_DEFAULTS.goldMix,
     pointLightIntensity: ORB_3D_VISUAL_DEFAULTS.lightIntensity,
     pointLightDistanceBO: ORB_3D_VISUAL_DEFAULTS.lightDistanceBO,
+    pointLightColorR: ((Number(ORB_3D_VISUAL_DEFAULTS.lightColor) >>> 16) & 255) / 255,
+    pointLightColorG: ((Number(ORB_3D_VISUAL_DEFAULTS.lightColor) >>> 8) & 255) / 255,
+    pointLightColorB: (Number(ORB_3D_VISUAL_DEFAULTS.lightColor) & 255) / 255,
   });
 }
 

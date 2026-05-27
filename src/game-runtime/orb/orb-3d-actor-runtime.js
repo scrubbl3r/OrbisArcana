@@ -1,4 +1,4 @@
-import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260517d";
+import { createOrb3dRuntime } from "./orb-3d-runtime.js?v=20260527-tesla-light-a";
 import {
   createOrbNod3dRuntime,
   createOrbNod3dSurfaceDisplacementConfig,
