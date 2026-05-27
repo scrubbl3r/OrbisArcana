@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260527165000";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 
@@ -789,16 +789,18 @@ function createWakeSdfMaterial(config) {
         float core = sdSphere(p, uWakeCoreOffset, uWakeCoreRadius);
         float trailRadius = max(0.001, mix(uWakeCoreRadius, uWakeOrbRadius, 0.55));
         float trail = sdCapsule(p, vec3(0.0), uWakeCoreOffset, trailRadius);
-        float d = smoothMin(smoothMin(orb, trail, uWakeBlend), core, uWakeBlend);
-        float body = 1.0 - smoothstep(0.0, max(0.001, uWakeSoftness), d);
-        float heightT = clamp(dot(p, normalize(uWakeCoreOffset + vec3(0.0, 0.0001, 0.0))) / max(0.001, length(uWakeCoreOffset)), 0.0, 1.0);
         vec3 flow = p / max(1.0, uWakeOrbRadius) * uWakeNoiseScale;
         flow.y -= uTime * uWakeNoiseSpeed;
         flow += uWakeMotionOffset * vec3(0.65, -0.35, 0.65);
         float field = fbm(flow);
+        float d = smoothMin(smoothMin(orb, trail, uWakeBlend), core, uWakeBlend);
+        float erodedDistance = d + (0.5 - field) * uWakeSoftness * 1.35;
+        float body = 1.0 - smoothstep(-uWakeSoftness * 0.45, max(0.001, uWakeSoftness * 0.95), erodedDistance);
+        float heightT = clamp(dot(p, normalize(uWakeCoreOffset + vec3(0.0, 0.0001, 0.0))) / max(0.001, length(uWakeCoreOffset)), 0.0, 1.0);
         float threshold = mix(0.72, 0.28, clamp(uWakeDensity, 0.0, 1.0));
         float flame = smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field);
-        float alpha = body * flame * (1.0 - smoothstep(0.86, 1.0, heightT));
+        float plumeMask = smoothstep(0.32, 0.62, heightT) * (1.0 - smoothstep(0.94, 1.0, heightT));
+        float alpha = body * flame * plumeMask;
         vec3 ember = vec3(1.0, 0.17, 0.02);
         vec3 hot = vec3(1.0, 0.78, 0.28);
         vec3 color = mix(ember, hot, smoothstep(threshold, 1.0, field));

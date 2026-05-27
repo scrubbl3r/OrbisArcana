@@ -1749,10 +1749,10 @@
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeModelControls">Wake Model</button>
-            <button id="flameAoe3dWakeVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Directional wake visibility" title="Toggle Directional wake visibility"></button>
+            <button id="flameAoe3dWakeVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="false" aria-label="Toggle Directional wake visibility" title="Toggle Directional wake visibility"></button>
           </div>
           <div id="flameAoe3dWakeModelControls" class="controlGroupBody paramFieldRows" hidden>
-            <input id="flameAoe3dWakeMeshEnabled" type="hidden" value="1" />
+            <input id="flameAoe3dWakeMeshEnabled" type="hidden" value="0" />
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeRadiusBo">Base radius BO</label>
               <input id="flameAoe3dWakeRadiusBo" class="paramFieldInput" type="number" min="0.50" max="2" step="0.01" value="0.50" />
@@ -1788,48 +1788,48 @@
         <div class="controlGroup" data-control-group>
           <div class="controlGroupHeaderRow">
             <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeSdfControls">Wake SDF</button>
-            <button id="flameAoe3dWakeSdfVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="false" aria-label="Toggle Wake SDF visibility" title="Toggle Wake SDF visibility"></button>
+            <button id="flameAoe3dWakeSdfVisibleBtn" class="controlGroupVisibilityBtn" type="button" aria-pressed="true" aria-label="Toggle Wake SDF visibility" title="Toggle Wake SDF visibility"></button>
           </div>
           <div id="flameAoe3dWakeSdfControls" class="controlGroupBody paramFieldRows" hidden>
-            <input id="flameAoe3dWakeSdfEnabled" type="hidden" value="0" />
+            <input id="flameAoe3dWakeSdfEnabled" type="hidden" value="1" />
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfRadiusBo">SDF base radius BO</label>
-              <input id="flameAoe3dWakeSdfRadiusBo" class="paramFieldInput" type="number" min="0.05" max="4" step="0.01" value="0.50" />
+              <input id="flameAoe3dWakeSdfRadiusBo" class="paramFieldInput" type="number" min="0.05" max="4" step="0.01" value="0.42" />
               <button id="flameAoe3dApplyWakeSdfRadiusBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfCoreRadiusBo">SDF core radius BO</label>
-              <input id="flameAoe3dWakeSdfCoreRadiusBo" class="paramFieldInput" type="number" min="0.02" max="3" step="0.01" value="0.25" />
+              <input id="flameAoe3dWakeSdfCoreRadiusBo" class="paramFieldInput" type="number" min="0.02" max="3" step="0.01" value="0.20" />
               <button id="flameAoe3dApplyWakeSdfCoreRadiusBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfBlendBo">SDF blend BO</label>
-              <input id="flameAoe3dWakeSdfBlendBo" class="paramFieldInput" type="number" min="0.001" max="2" step="0.01" value="0.22" />
+              <input id="flameAoe3dWakeSdfBlendBo" class="paramFieldInput" type="number" min="0.001" max="2" step="0.01" value="0.12" />
               <button id="flameAoe3dApplyWakeSdfBlendBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfSoftnessBo">SDF softness BO</label>
-              <input id="flameAoe3dWakeSdfSoftnessBo" class="paramFieldInput" type="number" min="0.001" max="2" step="0.01" value="0.16" />
+              <input id="flameAoe3dWakeSdfSoftnessBo" class="paramFieldInput" type="number" min="0.001" max="2" step="0.01" value="0.30" />
               <button id="flameAoe3dApplyWakeSdfSoftnessBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfDensity">SDF density</label>
-              <input id="flameAoe3dWakeSdfDensity" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.50" />
+              <input id="flameAoe3dWakeSdfDensity" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.64" />
               <button id="flameAoe3dApplyWakeSdfDensityBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfNoiseScale">SDF noise scale</label>
-              <input id="flameAoe3dWakeSdfNoiseScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="2.35" />
+              <input id="flameAoe3dWakeSdfNoiseScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="1.45" />
               <button id="flameAoe3dApplyWakeSdfNoiseScaleBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfNoiseSpeed">SDF noise speed</label>
-              <input id="flameAoe3dWakeSdfNoiseSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="0.86" />
+              <input id="flameAoe3dWakeSdfNoiseSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="1.80" />
               <button id="flameAoe3dApplyWakeSdfNoiseSpeedBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfNoiseContrast">SDF noise contrast</label>
-              <input id="flameAoe3dWakeSdfNoiseContrast" class="paramFieldInput" type="number" min="0.02" max="0.8" step="0.01" value="0.16" />
+              <input id="flameAoe3dWakeSdfNoiseContrast" class="paramFieldInput" type="number" min="0.02" max="0.8" step="0.01" value="0.24" />
               <button id="flameAoe3dApplyWakeSdfNoiseContrastBtn" class="toolBtn" type="button">Apply</button>
             </div>
           </div>
@@ -3010,7 +3010,7 @@
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
-    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
+    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260527165000";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ORB_NOD_3D_PRESET_DEFAULT,

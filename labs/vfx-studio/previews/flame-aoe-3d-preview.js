@@ -40,7 +40,7 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   auraNoiseSpeed: 0.24,
   auraFresnelPower: 1.35,
   auraColor: 0xff6a18,
-  wakeMeshEnabled: 1,
+  wakeMeshEnabled: 0,
   wakeLengthBo: 0.95,
   wakeRadiusBo: 0.5,
   wakeSubdivisions: 64,
@@ -75,15 +75,15 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSimplexLacunarity: 2.25,
   wakeSimplexGain: 0.48,
   wakeNoiseMix: 0.35,
-  wakeSdfEnabled: 0,
-  wakeSdfRadiusBo: 0.5,
-  wakeSdfCoreRadiusBo: 0.25,
-  wakeSdfBlendBo: 0.22,
-  wakeSdfSoftnessBo: 0.16,
-  wakeSdfDensity: 0.5,
-  wakeSdfNoiseScale: 2.35,
-  wakeSdfNoiseSpeed: 0.86,
-  wakeSdfNoiseContrast: 0.16,
+  wakeSdfEnabled: 1,
+  wakeSdfRadiusBo: 0.42,
+  wakeSdfCoreRadiusBo: 0.2,
+  wakeSdfBlendBo: 0.12,
+  wakeSdfSoftnessBo: 0.3,
+  wakeSdfDensity: 0.64,
+  wakeSdfNoiseScale: 1.45,
+  wakeSdfNoiseSpeed: 1.8,
+  wakeSdfNoiseContrast: 0.24,
   wakeGraph0Pct: 0,
   wakeGraph0R: 0,
   wakeGraph0G: 0,
@@ -1125,14 +1125,16 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float orb = sdSphere(p, vec3(0.0), uWakeOrbRadius);
         float core = sdSphere(p, uWakeCoreOffset, uWakeCoreRadius);
         float trail = sdCapsule(p, vec3(0.0), uWakeCoreOffset, mix(uWakeCoreRadius, uWakeOrbRadius, 0.55));
-        float d = smoothMin(smoothMin(orb, trail, uWakeBlend), core, uWakeBlend);
-        float body = 1.0 - smoothstep(0.0, max(0.001, uWakeSoftness), d);
-        float heightT = clamp(dot(p, normalize(uWakeCoreOffset + vec3(0.0, 0.0001, 0.0))) / max(0.001, length(uWakeCoreOffset)), 0.0, 1.0);
         vec3 flow = p / max(1.0, uWakeOrbRadius) * uWakeNoiseScale + vec3(0.0, -uTime * uWakeNoiseSpeed, 0.0);
         float field = fbm(flow);
+        float d = smoothMin(smoothMin(orb, trail, uWakeBlend), core, uWakeBlend);
+        float erodedDistance = d + (0.5 - field) * uWakeSoftness * 1.35;
+        float body = 1.0 - smoothstep(-uWakeSoftness * 0.45, max(0.001, uWakeSoftness * 0.95), erodedDistance);
+        float heightT = clamp(dot(p, normalize(uWakeCoreOffset + vec3(0.0, 0.0001, 0.0))) / max(0.001, length(uWakeCoreOffset)), 0.0, 1.0);
         float threshold = mix(0.72, 0.28, clamp(uWakeDensity, 0.0, 1.0));
         float flame = smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field);
-        float alpha = body * flame * (1.0 - smoothstep(0.86, 1.0, heightT));
+        float plumeMask = smoothstep(0.32, 0.62, heightT) * (1.0 - smoothstep(0.94, 1.0, heightT));
+        float alpha = body * flame * plumeMask;
         vec3 color = mix(vec3(1.0, 0.17, 0.02), vec3(1.0, 0.78, 0.28), smoothstep(threshold, 1.0, field));
         if (alpha <= 0.004) discard;
         gl_FragColor = vec4(color, alpha);
