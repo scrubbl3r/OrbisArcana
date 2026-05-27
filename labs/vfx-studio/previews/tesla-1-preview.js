@@ -8,7 +8,6 @@ import {
   updateOrbPointLight,
 } from "../../../src/game-runtime/orb/orb-3d-material.js?v=20260428a";
 import { ORB_3D_VISUAL_DEFAULTS } from "../../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
-import { createTesla1CoreGlowRuntime } from "../../../src/runtime-effects/tesla-1-core-glow.js?v=20260527-core-edge-a";
 
 const ORB_RADIUS_BO = 0.5;
 const MAX_HALO_BOLTS = 32;
@@ -571,7 +570,6 @@ export function createTesla1Preview({
   let shellMaterial = null;
   let orbLight = null;
   let model = null;
-  let coreGlowRuntime = null;
   let masterLayer = null;
   let haloLayer = null;
   let haloShellMesh = null;
@@ -611,8 +609,6 @@ export function createTesla1Preview({
   }
 
   function destroyInspector() {
-    if (coreGlowRuntime && typeof coreGlowRuntime.destroy === "function") coreGlowRuntime.destroy();
-    coreGlowRuntime = null;
     if (inspector && typeof inspector.cleanup === "function") inspector.cleanup();
     inspector = null;
     shellMaterial = null;
@@ -666,23 +662,12 @@ export function createTesla1Preview({
     });
   }
 
-  function readCoreGlowConfig() {
+  function readOrbShellConfig() {
     return Object.freeze({
-      coreGlowEnabled: readInputBoolean(els.tesla1CoreGlowEnabled, true),
-      coreGlowRadiusBo: readInputNumber(els.tesla1CoreGlowRadiusBo, 0.64, 0.05, 4),
-      coreGlowLuminance: readInputNumber(els.tesla1CoreGlowLuminance, 5.5, 0, 80),
-      coreGlowGlobalAlpha: readInputNumber(els.tesla1CoreGlowGlobalAlpha, 0.45, 0, 1),
-      coreGlowCenterAlpha: readInputNumber(els.tesla1CoreGlowCenterAlpha, 0.42, 0, 1),
-      coreGlowEdgeAlpha: readInputNumber(els.tesla1CoreGlowEdgeAlpha, 0.16, 0, 1),
-      coreGlowEdgeSoftness: readInputNumber(els.tesla1CoreGlowEdgeSoftness, 2.8, 0.1, 12),
-      coreGlowPerimeterSoftness: readInputNumber(els.tesla1CoreGlowPerimeterSoftness, 0.42, 0.001, 1),
-      coreGlowDisplacementBo: readInputNumber(els.tesla1CoreGlowDisplacementBo, 0.055, 0, 2),
-      coreGlowNoiseScale: readInputNumber(els.tesla1CoreGlowNoiseScale, 5.8, 0.1, 64),
-      coreGlowNoiseSpeed: readInputNumber(els.tesla1CoreGlowNoiseSpeed, 2.4, 0, 32),
-      coreGlowPulseAmount: readInputNumber(els.tesla1CoreGlowPulseAmount, 0.65, 0, 8),
-      orbLightColorR: readInputNumber(els.tesla1OrbLightColorR, 128, 0, 255),
-      orbLightColorG: readInputNumber(els.tesla1OrbLightColorG, 190, 0, 255),
-      orbLightColorB: readInputNumber(els.tesla1OrbLightColorB, 255, 0, 255),
+      enabled: readInputBoolean(els.tesla1OrbShellOverrideEnabled, true),
+      luminanceBoost: readInputNumber(els.tesla1OrbShellLuminanceBoost, 2.2, 0, 12),
+      centerAlpha: readInputNumber(els.tesla1OrbShellCenterAlpha, 0.08, 0, 1),
+      goldMix: readInputNumber(els.tesla1OrbShellGoldMix, 0, 0, 2),
     });
   }
 
@@ -1017,15 +1002,21 @@ export function createTesla1Preview({
     destroyInspector();
     const bo = readBo();
     const orbLightConfig = readOrbLightConfig();
-    const activeConfig = orbLightConfig.enabled
-      ? {
-          ...ORB_3D_VISUAL_DEFAULTS,
-          lightColor: orbLightConfig.color,
-          lightIntensity: orbLightConfig.intensity,
-          lightDistanceBO: orbLightConfig.distanceBo,
-          lightPastelMix: 0,
-        }
-      : ORB_3D_VISUAL_DEFAULTS;
+    const orbShellConfig = readOrbShellConfig();
+    const activeConfig = {
+      ...ORB_3D_VISUAL_DEFAULTS,
+      ...(orbLightConfig.enabled ? {
+        lightColor: orbLightConfig.color,
+        lightIntensity: orbLightConfig.intensity,
+        lightDistanceBO: orbLightConfig.distanceBo,
+        lightPastelMix: 0,
+      } : {}),
+      ...(orbShellConfig.enabled ? {
+        shellLuminanceBoost: orbShellConfig.luminanceBoost,
+        shellCenterAlpha: orbShellConfig.centerAlpha,
+        goldMix: orbShellConfig.goldMix,
+      } : {}),
+    };
     createdAt = performance.now();
     resetHaloStrikeState();
     resetMasterBoltState();
@@ -1042,7 +1033,6 @@ export function createTesla1Preview({
         const time = (performance.now() - createdAt) / 1000;
         if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = time;
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
-        if (coreGlowRuntime) coreGlowRuntime.update(performance.now(), { config: readCoreGlowConfig(), pulseMultiplier: 1 });
         syncHaloLayer(bo);
         syncShapeLayer(bo, time);
       },
@@ -1062,13 +1052,6 @@ export function createTesla1Preview({
       ringSegments: 192,
     });
     model = created.model;
-    coreGlowRuntime = createTesla1CoreGlowRuntime({
-      getOrbModel: () => model,
-      getBo: () => bo,
-      now: () => performance.now(),
-      onNeedsFrame: () => {},
-      renderOrder: 212,
-    });
     if (els.tesla1OrbVisibleBtn) model.visible = els.tesla1OrbVisibleBtn.getAttribute("aria-pressed") !== "false";
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
@@ -1085,7 +1068,6 @@ export function createTesla1Preview({
     inspector.scene.add(shapeLayer);
     inspector.scene.add(masterLayer);
     syncMasterLayer(bo, 0);
-    if (coreGlowRuntime) coreGlowRuntime.update(performance.now(), { config: readCoreGlowConfig(), pulseMultiplier: 1 });
     syncHaloLayer(bo);
     syncShapeLayer(bo, 0);
     inspector.render();
@@ -1137,18 +1119,10 @@ export function createTesla1Preview({
       els.tesla1OrbLightFlashDurationMinMs,
       els.tesla1OrbLightFlashDurationMaxMs,
       els.tesla1OrbLightFlashDecayCurve,
-      els.tesla1CoreGlowEnabled,
-      els.tesla1CoreGlowRadiusBo,
-      els.tesla1CoreGlowLuminance,
-      els.tesla1CoreGlowGlobalAlpha,
-      els.tesla1CoreGlowCenterAlpha,
-      els.tesla1CoreGlowEdgeAlpha,
-      els.tesla1CoreGlowEdgeSoftness,
-      els.tesla1CoreGlowPerimeterSoftness,
-      els.tesla1CoreGlowDisplacementBo,
-      els.tesla1CoreGlowNoiseScale,
-      els.tesla1CoreGlowNoiseSpeed,
-      els.tesla1CoreGlowPulseAmount,
+      els.tesla1OrbShellOverrideEnabled,
+      els.tesla1OrbShellLuminanceBoost,
+      els.tesla1OrbShellCenterAlpha,
+      els.tesla1OrbShellGoldMix,
       els.tesla1HaloFieldEnabled,
       els.tesla1HaloFieldShellRadiusBo,
       els.tesla1HaloFieldBoltStartMinBo,

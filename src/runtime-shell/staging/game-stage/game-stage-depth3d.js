@@ -60,12 +60,11 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260526213000";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-core-edge-a";
-import { createTesla1CoreGlowRuntime } from "../../../runtime-effects/tesla-1-core-glow.js?v=20260527-core-edge-a";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527-orb-shell-a";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
-import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-core-edge-a";
+import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527-orb-shell-a";
 import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260520235547";
 import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-1-behavior-default.js?v=20260526223339b";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
@@ -368,12 +367,6 @@ export function createGameStageDepth3dLayer({
       z,
     }),
     requestFrame: () => renderLoop.scheduleAnimation(),
-  });
-  const tesla1CoreGlowRuntime = createTesla1CoreGlowRuntime({
-    getOrbModel: () => orb3dActorRuntime.getModel(),
-    getBo: () => orb3dActorRuntime.getBo(),
-    onNeedsFrame: () => renderLoop.scheduleAnimation(),
-    renderOrder: 226,
   });
   const shockwave3dRuntime = createShockwave3dRuntime({
     getOrbModel: () => orb3dActorRuntime.getModel(),
@@ -727,15 +720,26 @@ export function createGameStageDepth3dLayer({
   }
 
   function resolveTesla1OrbLightLayer(config = {}, intensityMultiplier = 1) {
-    if (!config || config.orbLightOverrideEnabled === false || config.orbLightOverrideEnabled === 0) return null;
+    if (!config) return null;
     const baseIntensity = Math.max(0, Number(config.orbLightIntensity) || Number(TESLA_1_PRESET_DEFAULT.orbLightIntensity) || 0);
-    return Object.freeze({
-      pointLightColorR: Math.max(0, Math.min(1, (Number(config.orbLightColorR) || 0) / 255)),
-      pointLightColorG: Math.max(0, Math.min(1, (Number(config.orbLightColorG) || 0) / 255)),
-      pointLightColorB: Math.max(0, Math.min(1, (Number(config.orbLightColorB) || 0) / 255)),
-      pointLightIntensity: Math.max(0, Math.min(10000, baseIntensity * Math.max(0, Number(intensityMultiplier) || 1))),
-      pointLightDistanceBO: Math.max(0, Math.min(1000, Number(config.orbLightDistanceBo) || Number(TESLA_1_PRESET_DEFAULT.orbLightDistanceBo) || 0)),
-    });
+    const readNumber = (value, fallback = 0) => {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : fallback;
+    };
+    const layer = {};
+    if (config.orbShellOverrideEnabled !== false && config.orbShellOverrideEnabled !== 0) {
+      layer.shellLuminanceBoost = Math.max(0, Math.min(12, readNumber(config.orbShellLuminanceBoost, TESLA_1_PRESET_DEFAULT.orbShellLuminanceBoost)));
+      layer.shellCenterAlpha = Math.max(0, Math.min(1, readNumber(config.orbShellCenterAlpha, TESLA_1_PRESET_DEFAULT.orbShellCenterAlpha)));
+      layer.goldMix = Math.max(0, Math.min(2, readNumber(config.orbShellGoldMix, TESLA_1_PRESET_DEFAULT.orbShellGoldMix)));
+    }
+    if (config.orbLightOverrideEnabled !== false && config.orbLightOverrideEnabled !== 0) {
+      layer.pointLightColorR = Math.max(0, Math.min(1, (Number(config.orbLightColorR) || 0) / 255));
+      layer.pointLightColorG = Math.max(0, Math.min(1, (Number(config.orbLightColorG) || 0) / 255));
+      layer.pointLightColorB = Math.max(0, Math.min(1, (Number(config.orbLightColorB) || 0) / 255));
+      layer.pointLightIntensity = Math.max(0, Math.min(10000, baseIntensity * Math.max(0, Number(intensityMultiplier) || 1)));
+      layer.pointLightDistanceBO = Math.max(0, Math.min(1000, Number(config.orbLightDistanceBo) || Number(TESLA_1_PRESET_DEFAULT.orbLightDistanceBo) || 0));
+    }
+    return Object.keys(layer).length ? Object.freeze(layer) : null;
   }
 
   function resolveTesla1OrbLightFlashEnergy({ kind = "halo", target = null, config = {} } = {}) {
@@ -791,9 +795,6 @@ export function createGameStageDepth3dLayer({
     if (orbShaderMixer && typeof orbShaderMixer.clearLayer === "function") {
       orbShaderMixer.clearLayer(TESLA1_ORB_SHADER_LAYER_ID, { source: "tesla1.clear" });
     }
-    if (tesla1CoreGlowRuntime && typeof tesla1CoreGlowRuntime.clear === "function") {
-      tesla1CoreGlowRuntime.clear();
-    }
   }
 
   function syncTesla1OrbLightLayer(nowMs = performance.now(), { config = null, force = false } = {}) {
@@ -820,16 +821,7 @@ export function createGameStageDepth3dLayer({
         decayCurve: 2.4,
       });
     }
-    if (tesla1CoreGlowRuntime && typeof tesla1CoreGlowRuntime.update === "function") {
-      tesla1CoreGlowRuntime.update(nowMs, { config: safeConfig, pulseMultiplier: multiplier });
-    }
     if (!orbShaderMixer || typeof orbShaderMixer.setLayer !== "function") return;
-    if (safeConfig.orbLightOverrideEnabled === false || safeConfig.orbLightOverrideEnabled === 0) {
-      if (typeof orbShaderMixer.clearLayer === "function") {
-        orbShaderMixer.clearLayer(TESLA1_ORB_SHADER_LAYER_ID, { source: "tesla1.orbLightDisabled" });
-      }
-      return;
-    }
     const layer = resolveTesla1OrbLightLayer(safeConfig, multiplier);
     if (!layer) {
       if (typeof orbShaderMixer.clearLayer === "function") {
@@ -1136,7 +1128,6 @@ export function createGameStageDepth3dLayer({
       || bubbleShield3dRuntime.isActive()
       || flameAoe3dRuntime.isActive()
       || tesla1Runtime.isActive()
-      || tesla1CoreGlowRuntime.isActive()
       || shockwave3dRuntime.isActive()
       || surfaceFireCardSystem.hasActiveVisuals()
       || gnatSwarm3dRuntime.hasActiveVisuals()
