@@ -1285,8 +1285,18 @@ export function createFlameAoe3dPreview({
         wakeSdfBlendPx: bo * wakeConfig.wakeSdfBlendBo,
         wakeSdfSoftnessPx: bo * wakeConfig.wakeSdfSoftnessBo,
       });
-      const proxyRadius = Math.max(bo * wakeConfig.wakeSdfRadiusBo, wakeLiftPx + bo * wakeConfig.wakeSdfCoreRadiusBo + bo * wakeConfig.wakeSdfSoftnessBo);
-      wakeSdfMesh = new THREE.Mesh(new THREE.SphereGeometry(proxyRadius, 96, 48), wakeSdfMaterial);
+      wakeSdfMesh = new THREE.Mesh(
+        createWakeElasticShellGeometry({
+          baseRadius: bo * wakeConfig.wakeSdfRadiusBo,
+          liftOffset: wakeLiftPx,
+          liftRadius: bo * wakeConfig.wakeSdfCoreRadiusBo,
+          padding: bo * wakeConfig.wakeSdfSoftnessBo,
+          blendSoftness: bo * wakeConfig.wakeSdfBlendBo,
+          radialSegments: wakeConfig.wakeSubdivisions,
+          heightSegments: Math.max(8, Math.round(wakeConfig.wakeSubdivisions * 0.5)),
+        }),
+        wakeSdfMaterial
+      );
       wakeSdfMesh.name = "flame_aoe3d:wake_sdf_field";
       wakeSdfMesh.renderOrder = 11;
       wakeSdfMesh.visible = layerVisible(els.flameAoe3dWakeSdfVisibleBtn);

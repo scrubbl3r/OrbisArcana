@@ -941,6 +941,15 @@ export function createFlameAoe3dRuntime({
         blendSoftness: bo * clampNumber(activeConfig && activeConfig.wakeOrbHugRadiusBo, 0.01, 2, 0.22),
       });
     }
+    if (wakeSdfMesh && wakeSdfMesh.geometry) {
+      updateWakeElasticShellGeometry(wakeSdfMesh.geometry, {
+        baseRadius: bo * clampNumber(activeConfig && activeConfig.wakeSdfRadiusBo, 0.05, 4, 0.5),
+        liftOffset: liftCoreOffset,
+        liftRadius: bo * clampNumber(activeConfig && activeConfig.wakeSdfCoreRadiusBo, 0.02, 3, 0.25),
+        padding: bo * clampNumber(activeConfig && activeConfig.wakeSdfSoftnessBo, 0.001, 2, 0.16),
+        blendSoftness: bo * clampNumber(activeConfig && activeConfig.wakeSdfBlendBo, 0.001, 2, 0.22),
+      });
+    }
     shaderMotion.copy(liftCoreOffset).multiplyScalar(1 / bo);
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeMotionOffset) {
       wakeMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
@@ -1096,10 +1105,18 @@ export function createFlameAoe3dRuntime({
           wakeSdfBlendPx: bo * config.wakeSdfBlendBo,
           wakeSdfSoftnessPx: bo * config.wakeSdfSoftnessBo,
         });
-        const restLiftPx = bo * Math.max(0.08, config.wakeLiftBo + config.wakeStretchStrength);
-        const motionSlackPx = Math.max(bo * 0.5, restLiftPx * 0.35, bo * config.wakeLengthBo);
-        const proxyRadius = Math.max(bo * config.wakeSdfRadiusBo, restLiftPx + motionSlackPx + bo * config.wakeSdfCoreRadiusBo + bo * config.wakeSdfSoftnessBo);
-        const wakeSdf = new THREE.Mesh(new THREE.SphereGeometry(proxyRadius, 96, 48), wakeSdfMaterial);
+        const wakeSdf = new THREE.Mesh(
+          createWakeElasticShellGeometry({
+            baseRadius: bo * config.wakeSdfRadiusBo,
+            liftOffset: new THREE.Vector3(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0),
+            liftRadius: bo * config.wakeSdfCoreRadiusBo,
+            padding: bo * config.wakeSdfSoftnessBo,
+            blendSoftness: bo * config.wakeSdfBlendBo,
+            radialSegments: config.wakeSubdivisions,
+            heightSegments: Math.max(8, Math.round(config.wakeSubdivisions * 0.5)),
+          }),
+          wakeSdfMaterial
+        );
         wakeSdf.name = "flame_aoe3d:wake_sdf_field";
         wakeSdf.renderOrder = FLAME_AOE_RENDER_ORDER_BASE + 2;
         wakeSdfMesh = wakeSdf;
