@@ -758,6 +758,7 @@ export function createTesla1Runtime(options = {}) {
   let timer = 0;
   let startedAtMs = 0;
   let activePayload = Object.freeze({});
+  let haloBoltLengthClampCache = null;
   let strikeState = {
     activeUntil: 0,
     nextAt: 0,
@@ -781,6 +782,7 @@ export function createTesla1Runtime(options = {}) {
     if (timer) clearTimeout(timer);
     timer = 0;
     activePayload = Object.freeze({});
+    haloBoltLengthClampCache = null;
     if (group && group.parent) group.parent.remove(group);
     if (group) disposeThreeObject(group);
     group = null;
@@ -1019,6 +1021,23 @@ export function createTesla1Runtime(options = {}) {
     const endMinBo = Math.max(0.01, Number(config.haloFieldBoltEndMinBo) || 0.01);
     const endMaxBo = Math.max(endMinBo, Number(config.haloFieldBoltEndMaxBo) || endMinBo);
     const ringTime = ((time % TESLA_SHADER_TIME_RING_SECONDS) + TESLA_SHADER_TIME_RING_SECONDS) % TESLA_SHADER_TIME_RING_SECONDS;
+    const orbWorld = typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : null;
+    const safeBo = Math.max(1, Number(bo) || 1);
+    const cacheKey = [
+      Math.floor(ringTime * 12),
+      Math.round((Number(orbWorld && orbWorld.xW) || 0) / Math.max(1, safeBo * 0.25)),
+      Math.round((Number(orbWorld && orbWorld.yW) || 0) / Math.max(1, safeBo * 0.25)),
+      countMin,
+      countMax,
+      startMinBo.toFixed(3),
+      startMaxBo.toFixed(3),
+      endMinBo.toFixed(3),
+      endMaxBo.toFixed(3),
+      safeBo.toFixed(2),
+    ].join("|");
+    if (haloBoltLengthClampCache && haloBoltLengthClampCache.key === cacheKey) {
+      return haloBoltLengthClampCache.clamps;
+    }
     for (let i = 0; i < countMax; i += 1) {
       const offset = shaderRandomFloat(i, 9) * maxTtl;
       const shiftedTime = ((ringTime + offset) % (maxTtl * TESLA_SHADER_TIME_RING_SECONDS) + (maxTtl * TESLA_SHADER_TIME_RING_SECONDS)) % (maxTtl * TESLA_SHADER_TIME_RING_SECONDS);
@@ -1044,12 +1063,10 @@ export function createTesla1Runtime(options = {}) {
       const lengthSlot = (i + lengthSlotOffset) % lengthSlotCount;
       const lengthRoll = (lengthSlot + shaderRandomFloat(seed, 191)) / lengthSlotCount;
       const lengthBo = endMinBo + (endMaxBo - endMinBo) * lengthRoll;
-      const directionRuntime = Object.freeze({ x: Math.sin(angle), y: Math.cos(angle) });
-      const directionWorld = Object.freeze({ xW: directionRuntime.x, yW: -directionRuntime.y });
+      const directionWorld = Object.freeze({ xW: Math.sin(angle), yW: -Math.cos(angle) });
       const resolvedLengthBo = resolveHaloBoltCollisionLength({
         angle,
         bo,
-        directionRuntime,
         directionWorld,
         index: i,
         lengthBo,
@@ -1059,6 +1076,7 @@ export function createTesla1Runtime(options = {}) {
       const clampedLengthBo = Math.max(0.001, Math.min(lengthBo, Number(resolvedLengthBo) || lengthBo));
       clamps[i] = clampedLengthBo * Math.max(1, Number(bo) || 1);
     }
+    haloBoltLengthClampCache = Object.freeze({ key: cacheKey, clamps });
     return clamps;
   }
 
