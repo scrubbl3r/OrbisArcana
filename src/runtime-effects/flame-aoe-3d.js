@@ -53,6 +53,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
       g: source.auraG ?? fallback.auraG,
       b: source.auraB ?? fallback.auraB,
     }),
+    wakeMeshEnabled: source.wakeMeshEnabled === false || source.wakeMeshEnabled === 0 || source.wakeMeshEnabled === "0" ? 0 : 1,
     wakeLengthBo: clampNumber(source.wakeLengthBo, 0.05, 4, fallback.wakeLengthBo),
     wakeRadiusBo: clampNumber(source.wakeRadiusBo, 0.5, 2, fallback.wakeRadiusBo),
     wakeSubdivisions: clampInt(source.wakeSubdivisions, 12, 192, fallback.wakeSubdivisions),
@@ -88,6 +89,15 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSimplexGain: clampNumber(source.wakeSimplexGain, 0.1, 0.9, fallback.wakeSimplexGain),
     wakeNoiseMix: clampNumber(source.wakeNoiseMix, 0, 1, fallback.wakeNoiseMix),
     wakeGraphEnabled: source.wakeGraphEnabled === false || source.wakeGraphEnabled === 0 || source.wakeGraphEnabled === "0" ? 0 : 1,
+    wakeSdfEnabled: source.wakeSdfEnabled === true || source.wakeSdfEnabled === 1 || source.wakeSdfEnabled === "1" ? 1 : 0,
+    wakeSdfRadiusBo: clampNumber(source.wakeSdfRadiusBo, 0.05, 4, fallback.wakeSdfRadiusBo ?? fallback.wakeRadiusBo ?? 0.5),
+    wakeSdfCoreRadiusBo: clampNumber(source.wakeSdfCoreRadiusBo, 0.02, 3, fallback.wakeSdfCoreRadiusBo ?? fallback.wakeLiftCoreRadiusBo ?? 0.25),
+    wakeSdfBlendBo: clampNumber(source.wakeSdfBlendBo, 0.001, 2, fallback.wakeSdfBlendBo ?? fallback.wakeOrbHugRadiusBo ?? 0.22),
+    wakeSdfSoftnessBo: clampNumber(source.wakeSdfSoftnessBo, 0.001, 2, fallback.wakeSdfSoftnessBo ?? 0.16),
+    wakeSdfDensity: clampNumber(source.wakeSdfDensity, 0, 1, fallback.wakeSdfDensity ?? 0.5),
+    wakeSdfNoiseScale: clampNumber(source.wakeSdfNoiseScale, 0.1, 16, fallback.wakeSdfNoiseScale ?? fallback.wakeNoiseScale ?? 2.35),
+    wakeSdfNoiseSpeed: clampNumber(source.wakeSdfNoiseSpeed, 0, 8, fallback.wakeSdfNoiseSpeed ?? fallback.wakeNoiseSpeed ?? 0.86),
+    wakeSdfNoiseContrast: clampNumber(source.wakeSdfNoiseContrast, 0.02, 0.8, fallback.wakeSdfNoiseContrast ?? fallback.wakeNoiseContrast ?? 0.16),
   };
   for (let i = 0; i < 4; i += 1) {
     out[`wakeGraph${i}Pct`] = optionalNumber(source[`wakeGraph${i}Pct`] ?? fallback[`wakeGraph${i}Pct`], 0, 100);
@@ -695,6 +705,111 @@ function createWakeMaterial(config) {
   });
 }
 
+function createWakeSdfMaterial(config) {
+  return new THREE.ShaderMaterial({
+    name: "flame_aoe3d:wake_sdf_material",
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+    blending: THREE.NormalBlending,
+    side: THREE.DoubleSide,
+    uniforms: {
+      uTime: { value: 0 },
+      uWakeCoreOffset: { value: new THREE.Vector3(0, 1, 0) },
+      uWakeOrbRadius: { value: config.wakeSdfRadiusPx },
+      uWakeCoreRadius: { value: config.wakeSdfCoreRadiusPx },
+      uWakeBlend: { value: config.wakeSdfBlendPx },
+      uWakeSoftness: { value: config.wakeSdfSoftnessPx },
+      uWakeDensity: { value: config.wakeSdfDensity },
+      uWakeNoiseScale: { value: config.wakeSdfNoiseScale },
+      uWakeNoiseSpeed: { value: config.wakeSdfNoiseSpeed },
+      uWakeNoiseContrast: { value: config.wakeSdfNoiseContrast },
+      uWakeMotionOffset: { value: new THREE.Vector3() },
+    },
+    vertexShader: `
+      precision highp float;
+      varying vec3 vLocalPos;
+      void main() {
+        vLocalPos = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform float uTime;
+      uniform vec3 uWakeCoreOffset;
+      uniform float uWakeOrbRadius;
+      uniform float uWakeCoreRadius;
+      uniform float uWakeBlend;
+      uniform float uWakeSoftness;
+      uniform float uWakeDensity;
+      uniform float uWakeNoiseScale;
+      uniform float uWakeNoiseSpeed;
+      uniform float uWakeNoiseContrast;
+      uniform vec3 uWakeMotionOffset;
+      varying vec3 vLocalPos;
+      float hash31(vec3 p) {
+        p = fract(p * 0.1031);
+        p += dot(p, p.yzx + 33.33);
+        return fract((p.x + p.y) * p.z);
+      }
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(mix(hash31(i), hash31(i + vec3(1.0, 0.0, 0.0)), f.x), mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x), f.y), mix(mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x), mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x), f.y), f.z);
+      }
+      float fbm(vec3 p) {
+        float value = 0.0;
+        float amp = 0.56;
+        for (int i = 0; i < 5; i += 1) {
+          value += noise(p) * amp;
+          p = p * 2.03 + vec3(7.1, -11.4, 5.8);
+          amp *= 0.48;
+        }
+        return clamp(value, 0.0, 1.0);
+      }
+      float sdSphere(vec3 p, vec3 center, float radius) {
+        return length(p - center) - radius;
+      }
+      float sdCapsule(vec3 p, vec3 a, vec3 b, float radius) {
+        vec3 pa = p - a;
+        vec3 ba = b - a;
+        float h = clamp(dot(pa, ba) / max(0.0001, dot(ba, ba)), 0.0, 1.0);
+        return length(pa - ba * h) - radius;
+      }
+      float smoothMin(float a, float b, float radius) {
+        float k = max(0.0001, radius);
+        float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+        return mix(b, a, h) - k * h * (1.0 - h);
+      }
+      void main() {
+        vec3 p = vLocalPos;
+        float orb = sdSphere(p, vec3(0.0), uWakeOrbRadius);
+        float core = sdSphere(p, uWakeCoreOffset, uWakeCoreRadius);
+        float trailRadius = max(0.001, mix(uWakeCoreRadius, uWakeOrbRadius, 0.55));
+        float trail = sdCapsule(p, vec3(0.0), uWakeCoreOffset, trailRadius);
+        float d = smoothMin(smoothMin(orb, trail, uWakeBlend), core, uWakeBlend);
+        float body = 1.0 - smoothstep(0.0, max(0.001, uWakeSoftness), d);
+        float heightT = clamp(dot(p, normalize(uWakeCoreOffset + vec3(0.0, 0.0001, 0.0))) / max(0.001, length(uWakeCoreOffset)), 0.0, 1.0);
+        vec3 flow = p / max(1.0, uWakeOrbRadius) * uWakeNoiseScale;
+        flow.y -= uTime * uWakeNoiseSpeed;
+        flow += uWakeMotionOffset * vec3(0.65, -0.35, 0.65);
+        float field = fbm(flow);
+        float threshold = mix(0.72, 0.28, clamp(uWakeDensity, 0.0, 1.0));
+        float flame = smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field);
+        float alpha = body * flame * (1.0 - smoothstep(0.86, 1.0, heightT));
+        vec3 ember = vec3(1.0, 0.17, 0.02);
+        vec3 hot = vec3(1.0, 0.78, 0.28);
+        vec3 color = mix(ember, hot, smoothstep(threshold, 1.0, field));
+        color *= 0.65 + body * 0.75;
+        if (alpha <= 0.004) discard;
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+  });
+}
+
 export function createFlameAoe3dRuntime({
   getOrbModel = () => null,
   getOrbPosition = () => null,
@@ -711,7 +826,9 @@ export function createFlameAoe3dRuntime({
   let aoeAuraDiscMaterial = null;
   let auraMaterial = null;
   let wakeMaterial = null;
+  let wakeSdfMaterial = null;
   let wakeMesh = null;
+  let wakeSdfMesh = null;
   let wakePivot = null;
   let activeConfig = null;
   let startedAtMs = 0;
@@ -765,7 +882,7 @@ export function createFlameAoe3dRuntime({
   }
 
   function updateWakeMotion(dtSec) {
-    if (!wakeMesh) return;
+    if (!wakeMesh && !wakeSdfMesh) return;
     const bo = Math.max(1, Number(runtimeBo) || 72);
     const safeDt = Math.max(1 / 240, Math.min(0.12, Number(dtSec) || (1 / 60)));
     const baseLift = bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6);
@@ -843,6 +960,14 @@ export function createFlameAoe3dRuntime({
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeStretchDirection) {
       wakeMaterial.uniforms.uWakeStretchDirection.value.copy(stretchDirection);
     }
+    if (wakeSdfMaterial && wakeSdfMaterial.uniforms) {
+      if (wakeSdfMaterial.uniforms.uWakeMotionOffset) wakeSdfMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
+      if (wakeSdfMaterial.uniforms.uWakeCoreOffset) wakeSdfMaterial.uniforms.uWakeCoreOffset.value.copy(liftCoreOffset);
+      if (wakeSdfMaterial.uniforms.uWakeOrbRadius) wakeSdfMaterial.uniforms.uWakeOrbRadius.value = bo * clampNumber(activeConfig && activeConfig.wakeSdfRadiusBo, 0.05, 4, 0.5);
+      if (wakeSdfMaterial.uniforms.uWakeCoreRadius) wakeSdfMaterial.uniforms.uWakeCoreRadius.value = bo * clampNumber(activeConfig && activeConfig.wakeSdfCoreRadiusBo, 0.02, 3, 0.25);
+      if (wakeSdfMaterial.uniforms.uWakeBlend) wakeSdfMaterial.uniforms.uWakeBlend.value = bo * clampNumber(activeConfig && activeConfig.wakeSdfBlendBo, 0.001, 2, 0.22);
+      if (wakeSdfMaterial.uniforms.uWakeSoftness) wakeSdfMaterial.uniforms.uWakeSoftness.value = bo * clampNumber(activeConfig && activeConfig.wakeSdfSoftnessBo, 0.001, 2, 0.16);
+    }
   }
 
   function clear() {
@@ -853,7 +978,9 @@ export function createFlameAoe3dRuntime({
     aoeAuraDiscMaterial = null;
     auraMaterial = null;
     wakeMaterial = null;
+    wakeSdfMaterial = null;
     wakeMesh = null;
+    wakeSdfMesh = null;
     wakePivot = null;
     activeConfig = null;
     lastTickMs = 0;
@@ -883,6 +1010,7 @@ export function createFlameAoe3dRuntime({
     lastTickMs = Number(nowMs) || 0;
     if (auraMaterial && auraMaterial.uniforms && auraMaterial.uniforms.uTime) auraMaterial.uniforms.uTime.value = time;
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uTime) wakeMaterial.uniforms.uTime.value = time;
+    if (wakeSdfMaterial && wakeSdfMaterial.uniforms && wakeSdfMaterial.uniforms.uTime) wakeSdfMaterial.uniforms.uTime.value = time;
     measureTrace("flameAoe3d.wakeMotion", () => updateWakeMotion(dtSec));
     requestFrame();
     raf = requestAnimationFrame(tick);
@@ -931,35 +1059,54 @@ export function createFlameAoe3dRuntime({
       );
       aura.name = "flame_aoe3d:aura_shell";
       aura.renderOrder = FLAME_AOE_RENDER_ORDER_BASE;
-      wakeMaterial = createWakeMaterial({
-        ...config,
-        wakeDisplacePx: config.wakeDisplaceEnabled ? bo * config.wakeDisplaceBo : 0,
-        wakeLiftCoreRadiusPx: bo * config.wakeLiftCoreRadiusBo,
-        wakeOrbHugRadiusPx: bo * config.wakeOrbHugRadiusBo,
-        wakeEnvelopeBlendPx: bo * config.wakeEnvelopeBlendBo,
-      });
-      const wake = new THREE.Mesh(
-        createWakeElasticShellGeometry({
-          baseRadius: bo * Math.max(0.5, config.wakeRadiusBo),
-          liftOffset: new THREE.Vector3(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0),
-          liftRadius: bo * config.wakeLiftCoreRadiusBo,
-          padding: bo * config.wakeEnvelopeBlendBo,
-          blendSoftness: bo * config.wakeOrbHugRadiusBo,
-          radialSegments: config.wakeSubdivisions,
-          heightSegments: Math.max(8, Math.round(config.wakeSubdivisions * 0.5)),
-        }),
-        wakeMaterial
-      );
-      wake.name = "flame_aoe3d:elastic_flame_shell";
-      wake.renderOrder = FLAME_AOE_RENDER_ORDER_BASE + 1;
-      wakeMesh = wake;
       wakePivot = new THREE.Group();
       wakePivot.name = "flame_aoe3d:elastic_flame_shell_pivot";
       wakePivot.position.set(0, 0, 0);
-      wake.position.set(0, 0, 0);
+      if (config.wakeMeshEnabled) {
+        wakeMaterial = createWakeMaterial({
+          ...config,
+          wakeDisplacePx: config.wakeDisplaceEnabled ? bo * config.wakeDisplaceBo : 0,
+          wakeLiftCoreRadiusPx: bo * config.wakeLiftCoreRadiusBo,
+          wakeOrbHugRadiusPx: bo * config.wakeOrbHugRadiusBo,
+          wakeEnvelopeBlendPx: bo * config.wakeEnvelopeBlendBo,
+        });
+        const wake = new THREE.Mesh(
+          createWakeElasticShellGeometry({
+            baseRadius: bo * Math.max(0.5, config.wakeRadiusBo),
+            liftOffset: new THREE.Vector3(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0),
+            liftRadius: bo * config.wakeLiftCoreRadiusBo,
+            padding: bo * config.wakeEnvelopeBlendBo,
+            blendSoftness: bo * config.wakeOrbHugRadiusBo,
+            radialSegments: config.wakeSubdivisions,
+            heightSegments: Math.max(8, Math.round(config.wakeSubdivisions * 0.5)),
+          }),
+          wakeMaterial
+        );
+        wake.name = "flame_aoe3d:elastic_flame_shell";
+        wake.renderOrder = FLAME_AOE_RENDER_ORDER_BASE + 1;
+        wake.position.set(0, 0, 0);
+        wakeMesh = wake;
+        wakePivot.add(wake);
+      }
+      if (config.wakeSdfEnabled) {
+        wakeSdfMaterial = createWakeSdfMaterial({
+          ...config,
+          wakeSdfRadiusPx: bo * config.wakeSdfRadiusBo,
+          wakeSdfCoreRadiusPx: bo * config.wakeSdfCoreRadiusBo,
+          wakeSdfBlendPx: bo * config.wakeSdfBlendBo,
+          wakeSdfSoftnessPx: bo * config.wakeSdfSoftnessBo,
+        });
+        const restLiftPx = bo * Math.max(0.08, config.wakeLiftBo + config.wakeStretchStrength);
+        const motionSlackPx = Math.max(bo * 0.5, restLiftPx * 0.35, bo * config.wakeLengthBo);
+        const proxyRadius = Math.max(bo * config.wakeSdfRadiusBo, restLiftPx + motionSlackPx + bo * config.wakeSdfCoreRadiusBo + bo * config.wakeSdfSoftnessBo);
+        const wakeSdf = new THREE.Mesh(new THREE.SphereGeometry(proxyRadius, 96, 48), wakeSdfMaterial);
+        wakeSdf.name = "flame_aoe3d:wake_sdf_field";
+        wakeSdf.renderOrder = FLAME_AOE_RENDER_ORDER_BASE + 2;
+        wakeSdfMesh = wakeSdf;
+        wakePivot.add(wakeSdf);
+      }
       group.add(aoeAuraDisc);
       group.add(aura);
-      wakePivot.add(wake);
       group.add(wakePivot);
       orbModel.add(group);
       timer = setTimeout(clear, config.durationMs);

@@ -14,6 +14,7 @@ const FLAME_AOE_3D_FIELDS = Object.freeze([
   ["flameAoe3dAuraR", "auraR"],
   ["flameAoe3dAuraG", "auraG"],
   ["flameAoe3dAuraB", "auraB"],
+  ["flameAoe3dWakeMeshEnabled", "wakeMeshEnabled"],
   ["flameAoe3dWakeLengthBo", "wakeLengthBo"],
   ["flameAoe3dWakeRadiusBo", "wakeRadiusBo"],
   ["flameAoe3dWakeSubdivisions", "wakeSubdivisions"],
@@ -76,6 +77,15 @@ const FLAME_AOE_3D_FIELDS = Object.freeze([
   ["flameAoe3dWakeAlphaGradient3Pct", "wakeAlphaGradient3Pct"],
   ["flameAoe3dWakeAlphaGradient3A", "wakeAlphaGradient3A"],
   ["flameAoe3dWakeGraphEnabled", "wakeGraphEnabled"],
+  ["flameAoe3dWakeSdfEnabled", "wakeSdfEnabled"],
+  ["flameAoe3dWakeSdfRadiusBo", "wakeSdfRadiusBo"],
+  ["flameAoe3dWakeSdfCoreRadiusBo", "wakeSdfCoreRadiusBo"],
+  ["flameAoe3dWakeSdfBlendBo", "wakeSdfBlendBo"],
+  ["flameAoe3dWakeSdfSoftnessBo", "wakeSdfSoftnessBo"],
+  ["flameAoe3dWakeSdfDensity", "wakeSdfDensity"],
+  ["flameAoe3dWakeSdfNoiseScale", "wakeSdfNoiseScale"],
+  ["flameAoe3dWakeSdfNoiseSpeed", "wakeSdfNoiseSpeed"],
+  ["flameAoe3dWakeSdfNoiseContrast", "wakeSdfNoiseContrast"],
 ]);
 
 const FLAME_AOE_3D_DEFAULTS = Object.freeze({
@@ -94,6 +104,7 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
   auraR: 255,
   auraG: 106,
   auraB: 24,
+  wakeMeshEnabled: 1,
   wakeLengthBo: 0.95,
   wakeRadiusBo: 0.5,
   wakeSubdivisions: 64,
@@ -128,6 +139,15 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
   wakeSimplexLacunarity: 2.25,
   wakeSimplexGain: 0.48,
   wakeNoiseMix: 0.35,
+  wakeSdfEnabled: 0,
+  wakeSdfRadiusBo: 0.5,
+  wakeSdfCoreRadiusBo: 0.25,
+  wakeSdfBlendBo: 0.22,
+  wakeSdfSoftnessBo: 0.16,
+  wakeSdfDensity: 0.5,
+  wakeSdfNoiseScale: 2.35,
+  wakeSdfNoiseSpeed: 0.86,
+  wakeSdfNoiseContrast: 0.16,
   wakeGraph0Pct: 0,
   wakeGraph0R: 0,
   wakeGraph0G: 0,
@@ -216,6 +236,7 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
       auraR: roundedByte(els && els.flameAoe3dAuraR && els.flameAoe3dAuraR.value, FLAME_AOE_3D_DEFAULTS.auraR),
       auraG: roundedByte(els && els.flameAoe3dAuraG && els.flameAoe3dAuraG.value, FLAME_AOE_3D_DEFAULTS.auraG),
       auraB: roundedByte(els && els.flameAoe3dAuraB && els.flameAoe3dAuraB.value, FLAME_AOE_3D_DEFAULTS.auraB),
+      wakeMeshEnabled: (els && els.flameAoe3dWakeVisibleBtn && els.flameAoe3dWakeVisibleBtn.getAttribute("aria-pressed") === "false") ? 0 : 1,
       wakeLengthBo: fixedNumber(els && els.flameAoe3dWakeLengthBo && els.flameAoe3dWakeLengthBo.value, 2, FLAME_AOE_3D_DEFAULTS.wakeLengthBo),
       wakeRadiusBo: fixedNumber(els && els.flameAoe3dWakeRadiusBo && els.flameAoe3dWakeRadiusBo.value, 2, FLAME_AOE_3D_DEFAULTS.wakeRadiusBo),
       wakeSubdivisions: Math.round(clampNumber(els && els.flameAoe3dWakeSubdivisions && els.flameAoe3dWakeSubdivisions.value, 12, 192, FLAME_AOE_3D_DEFAULTS.wakeSubdivisions)),
@@ -250,6 +271,15 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
       wakeSimplexLacunarity: fixedNumber(els && els.flameAoe3dWakeSimplexLacunarity && els.flameAoe3dWakeSimplexLacunarity.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSimplexLacunarity),
       wakeSimplexGain: fixedNumber(els && els.flameAoe3dWakeSimplexGain && els.flameAoe3dWakeSimplexGain.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSimplexGain),
       wakeNoiseMix: fixedNumber(els && els.flameAoe3dWakeNoiseMix && els.flameAoe3dWakeNoiseMix.value, 2, FLAME_AOE_3D_DEFAULTS.wakeNoiseMix),
+      wakeSdfEnabled: (els && els.flameAoe3dWakeSdfVisibleBtn && els.flameAoe3dWakeSdfVisibleBtn.getAttribute("aria-pressed") === "true") ? 1 : 0,
+      wakeSdfRadiusBo: fixedNumber(els && els.flameAoe3dWakeSdfRadiusBo && els.flameAoe3dWakeSdfRadiusBo.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfRadiusBo),
+      wakeSdfCoreRadiusBo: fixedNumber(els && els.flameAoe3dWakeSdfCoreRadiusBo && els.flameAoe3dWakeSdfCoreRadiusBo.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfCoreRadiusBo),
+      wakeSdfBlendBo: fixedNumber(els && els.flameAoe3dWakeSdfBlendBo && els.flameAoe3dWakeSdfBlendBo.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfBlendBo),
+      wakeSdfSoftnessBo: fixedNumber(els && els.flameAoe3dWakeSdfSoftnessBo && els.flameAoe3dWakeSdfSoftnessBo.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfSoftnessBo),
+      wakeSdfDensity: fixedNumber(els && els.flameAoe3dWakeSdfDensity && els.flameAoe3dWakeSdfDensity.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfDensity),
+      wakeSdfNoiseScale: fixedNumber(els && els.flameAoe3dWakeSdfNoiseScale && els.flameAoe3dWakeSdfNoiseScale.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfNoiseScale),
+      wakeSdfNoiseSpeed: fixedNumber(els && els.flameAoe3dWakeSdfNoiseSpeed && els.flameAoe3dWakeSdfNoiseSpeed.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfNoiseSpeed),
+      wakeSdfNoiseContrast: fixedNumber(els && els.flameAoe3dWakeSdfNoiseContrast && els.flameAoe3dWakeSdfNoiseContrast.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfNoiseContrast),
       wakeGraph0Pct: optionalNumber(els && els.flameAoe3dWakeGraph0Pct && els.flameAoe3dWakeGraph0Pct.value, 0, 100),
       wakeGraph0R: optionalNumber(els && els.flameAoe3dWakeGraph0R && els.flameAoe3dWakeGraph0R.value, 0, 255),
       wakeGraph0G: optionalNumber(els && els.flameAoe3dWakeGraph0G && els.flameAoe3dWakeGraph0G.value, 0, 255),
@@ -298,6 +328,12 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
     });
     if (els.flameAoe3dWakeGraphVisibleBtn && settings.wakeGraphEnabled != null) {
       els.flameAoe3dWakeGraphVisibleBtn.setAttribute("aria-pressed", String(settings.wakeGraphEnabled) === "0" ? "false" : "true");
+    }
+    if (els.flameAoe3dWakeVisibleBtn && settings.wakeMeshEnabled != null) {
+      els.flameAoe3dWakeVisibleBtn.setAttribute("aria-pressed", String(settings.wakeMeshEnabled) === "0" ? "false" : "true");
+    }
+    if (els.flameAoe3dWakeSdfVisibleBtn && settings.wakeSdfEnabled != null) {
+      els.flameAoe3dWakeSdfVisibleBtn.setAttribute("aria-pressed", String(settings.wakeSdfEnabled) === "1" ? "true" : "false");
     }
     if (els.flameAoe3dWakeDisplaceVisibleBtn && settings.wakeDisplaceEnabled != null) {
       els.flameAoe3dWakeDisplaceVisibleBtn.setAttribute("aria-pressed", String(settings.wakeDisplaceEnabled) === "0" ? "false" : "true");
