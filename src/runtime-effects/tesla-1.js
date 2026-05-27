@@ -674,8 +674,7 @@ function createLightningFieldMaterial(params) {
           float masterMacroStrength = clamp(uMacroNoiseStrength * uMasterMacroBendMultiplier, 0.0, 2.0);
           float masterMicroStrength = clamp(uMicroNoiseStrength * uMasterMicroJitterMultiplier, 0.0, 2.0);
           float masterBranchDensity = clamp(uBranchDensity * uMasterBranchDensityMultiplier, 0.0, 1.0);
-          vec2 firstMasterPoint = uMasterBoltBendCount > 0 ? uMasterBoltBend1 : uMasterBoltTarget;
-          vec2 masterStartDirection = length(firstMasterPoint) > 0.001 * uBo ? normalize(firstMasterPoint) : normalize(uMasterBoltTarget);
+          vec2 masterStartDirection = normalize(uMasterBoltTarget);
           vec2 masterStart = masterStartDirection * masterStartR;
           vec3 masterBolt = vec3(0.0);
           if (uMasterBoltBendCount <= 0) {
@@ -800,10 +799,6 @@ export function createTesla1Runtime(options = {}) {
         (Number(from.yW) || 0) - target.position.yW
       ) / Math.max(1, bo);
       const surfaceDistanceBo = Math.max(0, centerDistanceBo - ORB_RADIUS_BO);
-      const contactSlopBo = Math.max(config.dominantBoltTargetRadiusBo, Number(target.radiusBo) || 0);
-      const isOrbContact = centerDistanceBo <= ORB_RADIUS_BO + contactSlopBo;
-      const isFeedingTarget = String(target.mode || "") === "feeding";
-      if (!isOrbContact && !isFeedingTarget && surfaceDistanceBo < config.dominantBoltMinRangeBo) continue;
       if (surfaceDistanceBo > config.dominantBoltMaxRangeBo) continue;
       const hp = Math.max(0, Number(target.hp) || 0);
       if (!strongest || hp > strongest.hp || (hp === strongest.hp && surfaceDistanceBo < strongest.distanceBo)) {
