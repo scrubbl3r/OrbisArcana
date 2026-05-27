@@ -60,7 +60,7 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260526173707s";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260526191825s";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
@@ -268,7 +268,6 @@ export function createGameStageDepth3dLayer({
     getEnemyTargets: () => gnatSwarm3dRuntime.getCombatTargets(),
     getBo: () => orb3dActorRuntime.getBo(),
     getConfig: () => ({ ...TESLA_1_PRESET_DEFAULT, ...TESLA_1_BEHAVIOR_DEFAULT }),
-    resolveMasterBoltSurfaceTarget: resolveTesla1MasterBoltSurfaceTarget,
     resolveMasterBoltPath: resolveTesla1MasterBoltPath,
     onHaloStrike: ({ target = null, damage = 0, hitRadiusBo = 0.12, stunDamage = 0, config = {}, atMs = performance.now() } = {}) => {
       const position = target && target.position ? target.position : null;
@@ -716,65 +715,6 @@ export function createGameStageDepth3dLayer({
     if (wasActive && perfTrace && typeof perfTrace.mark === "function") {
       perfTrace.mark("flameAoe.gameStage.cleared", { reason });
     }
-  }
-
-  function intersectRayWithBoundarySegment({ from, dirX, dirY, rangeWorld, segment }) {
-    if (!from || !segment || !segment.a || !segment.b) return null;
-    const ax = Number(segment.a.xW);
-    const ay = Number(segment.a.yW);
-    const bx = Number(segment.b.xW);
-    const by = Number(segment.b.yW);
-    if (![ax, ay, bx, by].every(Number.isFinite)) return null;
-    const sx = bx - ax;
-    const sy = by - ay;
-    const denom = dirX * sy - dirY * sx;
-    if (Math.abs(denom) < 0.000001) return null;
-    const qpx = ax - (Number(from.xW) || 0);
-    const qpy = ay - (Number(from.yW) || 0);
-    const t = (qpx * sy - qpy * sx) / denom;
-    const u = (qpx * dirY - qpy * dirX) / denom;
-    if (t < 0 || t > rangeWorld || u < 0 || u > 1) return null;
-    return {
-      distanceWorld: t,
-      position: {
-        xW: (Number(from.xW) || 0) + dirX * t,
-        yW: (Number(from.yW) || 0) + dirY * t,
-      },
-      segment,
-    };
-  }
-
-  function resolveTesla1MasterBoltSurfaceTarget({ fromWorld = null, angle = 0, rangeBo = 0, bo = baseOrbWorldUnits } = {}) {
-    if (!fromWorld) return null;
-    const safeBo = Math.max(1, Number(bo) || baseOrbWorldUnits);
-    const rangeWorld = Math.max(0.01, Number(rangeBo) || 0) * safeBo;
-    const dirX = Math.cos(Number(angle) || 0);
-    const dirY = Math.sin(Number(angle) || 0);
-    let nearest = null;
-    for (const segment of currentBoundarySegments) {
-      const hit = intersectRayWithBoundarySegment({ from: fromWorld, dirX, dirY, rangeWorld, segment });
-      if (!hit) continue;
-      if (!nearest || hit.distanceWorld < nearest.distanceWorld) nearest = hit;
-    }
-    if (nearest) {
-      return Object.freeze({
-        id: `environment:boundary:${nearest.segment && nearest.segment.index != null ? nearest.segment.index : "hit"}`,
-        environment: true,
-        surface: "boundary",
-        position: Object.freeze(nearest.position),
-        distanceBo: nearest.distanceWorld / safeBo,
-      });
-    }
-    return Object.freeze({
-      id: "environment:range-end",
-      environment: true,
-      surface: "range-end",
-      position: Object.freeze({
-        xW: (Number(fromWorld.xW) || 0) + dirX * rangeWorld,
-        yW: (Number(fromWorld.yW) || 0) + dirY * rangeWorld,
-      }),
-      distanceBo: rangeWorld / safeBo,
-    });
   }
 
   function resolveTesla1MasterBoltPath({ fromWorld = null, target = null, bo = baseOrbWorldUnits, config = {} } = {}) {

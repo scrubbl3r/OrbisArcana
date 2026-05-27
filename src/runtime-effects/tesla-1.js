@@ -687,6 +687,7 @@ function createLightningFieldMaterial(params) {
             masterBolt += proceduralBoltSegment(p, uMasterBoltBend1, uMasterBoltBend2, 1417.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity, uMasterBaseWidthMultiplier);
             masterBolt += proceduralBoltSegment(p, uMasterBoltBend2, uMasterBoltTarget, 1431.0 + uMasterBoltSeed, uMasterBoltTime, masterMacroScale, masterMacroStrength, masterMicroStrength, masterBranchDensity, uMasterBaseWidthMultiplier);
           }
+          masterBolt *= smoothstep(masterStartR * 0.92, masterStartR * 1.08, length(p));
           color += masterBolt * uIntensity * 1.65;
         }
         color = 1.0 - exp(-color * 0.55);
@@ -711,7 +712,6 @@ export function createTesla1Runtime(options = {}) {
     onMasterBolt = null,
     requestFrame = () => {},
     resolveMasterBoltPath = null,
-    resolveMasterBoltSurfaceTarget = null,
     toRuntimePosition = ({ xW = 0, yW = 0, z = 0 } = {}) => ({ x: xW, y: yW, z }),
   } = options;
   let group = null;
@@ -813,34 +813,6 @@ export function createTesla1Runtime(options = {}) {
     return strongest;
   }
 
-  function resolveRandomMasterBoltTarget({ from, bo, config }) {
-    const range = randomBetween(config.dominantBoltMinRangeBo, config.dominantBoltMaxRangeBo);
-    const angle = randomBetween(0, Math.PI * 2);
-    if (typeof resolveMasterBoltSurfaceTarget === "function") {
-      const surfaceTarget = normalizeWorldTarget(resolveMasterBoltSurfaceTarget({
-        angle,
-        bo,
-        config,
-        fromWorld: from,
-        rangeBo: range,
-      }));
-      if (surfaceTarget) {
-        return Object.freeze({
-          ...surfaceTarget,
-          environment: true,
-        });
-      }
-    }
-    const xW = (Number(from && from.xW) || 0) + Math.cos(angle) * range * Math.max(1, bo);
-    const yW = (Number(from && from.yW) || 0) + Math.sin(angle) * range * Math.max(1, bo);
-    return Object.freeze({
-      id: "environment:random-master-bolt",
-      environment: true,
-      position: Object.freeze({ xW, yW }),
-      distanceBo: range,
-    });
-  }
-
   function toLocalRuntimeTarget(target, bo) {
     const orbRuntime = typeof getOrbRuntimePosition === "function" ? getOrbRuntimePosition() : null;
     if (!target || !target.position || !orbRuntime) return new THREE.Vector2(0, 0);
@@ -875,6 +847,34 @@ export function createTesla1Runtime(options = {}) {
     masterBoltState.bend1.copy(toLocalRuntimeTarget(bends[0], bo));
     if (bends[1]) masterBoltState.bend2.copy(toLocalRuntimeTarget(bends[1], bo));
     return Object.freeze({ blocked: false });
+  }
+
+  function clearMasterBoltBends() {
+    masterBoltState.bendCount = 0;
+    masterBoltState.bend1.set(0, 0);
+    masterBoltState.bend2.set(0, 0);
+  }
+
+  function masterBoltFirstSegmentCrossesOrb(bo) {
+    if (masterBoltState.bendCount <= 0) return false;
+    const targetX = masterBoltState.target.x;
+    const targetY = masterBoltState.target.y;
+    const targetLen = Math.hypot(targetX, targetY);
+    const orbRadius = Math.max(1, bo) * ORB_RADIUS_BO;
+    if (targetLen <= orbRadius + 0.001) return false;
+    const startX = targetX / targetLen * orbRadius;
+    const startY = targetY / targetLen * orbRadius;
+    const bendX = masterBoltState.bend1.x;
+    const bendY = masterBoltState.bend1.y;
+    if ((bendX * targetX + bendY * targetY) < 0) return true;
+    const dx = bendX - startX;
+    const dy = bendY - startY;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq <= 0.000001) return false;
+    const h = Math.max(0.04, Math.min(1, -(startX * dx + startY * dy) / lenSq));
+    const closestX = startX + dx * h;
+    const closestY = startY + dy * h;
+    return closestX * closestX + closestY * closestY < orbRadius * orbRadius * 0.98;
   }
 
   function resolveMaterialParams(config, bo, time) {
@@ -991,7 +991,12 @@ export function createTesla1Runtime(options = {}) {
     const frequencyMs = randomBetween(config.dominantBoltFrequencyMinMs, config.dominantBoltFrequencyMaxMs);
     masterBoltState.nextAt = nowMs + Math.max(16, frequencyMs);
     const from = typeof getOrbWorldPosition === "function" ? getOrbWorldPosition() : {};
-    let target = resolveMasterBoltTarget({ from, bo, config }) || resolveRandomMasterBoltTarget({ from, bo, config });
+    const target = resolveMasterBoltTarget({ from, bo, config });
+    if (!target) {
+      masterBoltState.activeUntil = 0;
+      clearMasterBoltBends();
+      return;
+    }
     const seed = Math.floor((nowMs * 571) + masterBoltState.seed * 31 + 7) % 100000;
     const snapshotTime = currentTime;
     masterBoltState.seed = seed;
@@ -999,27 +1004,17 @@ export function createTesla1Runtime(options = {}) {
     if (target.localTarget && typeof target.localTarget.lengthSq === "function") masterBoltState.target.copy(target.localTarget);
     else masterBoltState.target.copy(toLocalRuntimeTarget(target, bo));
     const pathStatus = setMasterBoltBends(target, { from, bo, config });
-    if (pathStatus && pathStatus.blocked && target && target.position && typeof resolveMasterBoltSurfaceTarget === "function") {
-      const angle = Math.atan2(target.position.yW - (Number(from && from.yW) || 0), target.position.xW - (Number(from && from.xW) || 0));
-      const rangeBo = Math.max(config.dominantBoltMinRangeBo, Math.min(config.dominantBoltMaxRangeBo, Number(target.distanceBo) || config.dominantBoltMaxRangeBo));
-      const surfaceTarget = normalizeWorldTarget(resolveMasterBoltSurfaceTarget({
-        angle,
-        bo,
-        config,
-        fromWorld: from,
-        rangeBo,
-      }));
-      if (surfaceTarget) {
-        target = Object.freeze({ ...surfaceTarget, environment: true });
-        masterBoltState.target.copy(toLocalRuntimeTarget(target, bo));
-        masterBoltState.bendCount = 0;
-        masterBoltState.bend1.set(0, 0);
-        masterBoltState.bend2.set(0, 0);
-      }
+    if (pathStatus && pathStatus.blocked) {
+      masterBoltState.activeUntil = 0;
+      clearMasterBoltBends();
+      return;
+    }
+    if (masterBoltFirstSegmentCrossesOrb(bo)) {
+      clearMasterBoltBends();
     }
     if (masterBoltState.target.lengthSq() <= 0.000001) {
       masterBoltState.activeUntil = 0;
-      masterBoltState.bendCount = 0;
+      clearMasterBoltBends();
       return;
     }
     masterBoltState.activeUntil = snapshotTime + 0.22;
