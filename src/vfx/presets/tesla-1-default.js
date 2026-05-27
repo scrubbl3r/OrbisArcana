@@ -17,6 +17,7 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "coreGlowCenterAlpha": 0.42,
   "coreGlowEdgeAlpha": 0.16,
   "coreGlowEdgeSoftness": 2.8,
+  "coreGlowPerimeterSoftness": 0.42,
   "coreGlowDisplacementBo": 0.055,
   "coreGlowNoiseScale": 5.8,
   "coreGlowNoiseSpeed": 2.4,

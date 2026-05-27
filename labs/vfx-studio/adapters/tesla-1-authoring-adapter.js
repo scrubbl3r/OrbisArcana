@@ -56,6 +56,7 @@ export function createTesla1AuthoringAdapter({
       coreGlowCenterAlpha: readNumber(els.tesla1CoreGlowCenterAlpha, tesla1PresetDefault.coreGlowCenterAlpha, 0, 1),
       coreGlowEdgeAlpha: readNumber(els.tesla1CoreGlowEdgeAlpha, tesla1PresetDefault.coreGlowEdgeAlpha, 0, 1),
       coreGlowEdgeSoftness: readNumber(els.tesla1CoreGlowEdgeSoftness, tesla1PresetDefault.coreGlowEdgeSoftness, 0.1, 12),
+      coreGlowPerimeterSoftness: readNumber(els.tesla1CoreGlowPerimeterSoftness, tesla1PresetDefault.coreGlowPerimeterSoftness, 0.001, 1),
       coreGlowDisplacementBo: readNumber(els.tesla1CoreGlowDisplacementBo, tesla1PresetDefault.coreGlowDisplacementBo, 0, 2),
       coreGlowNoiseScale: readNumber(els.tesla1CoreGlowNoiseScale, tesla1PresetDefault.coreGlowNoiseScale, 0.1, 64),
       coreGlowNoiseSpeed: readNumber(els.tesla1CoreGlowNoiseSpeed, tesla1PresetDefault.coreGlowNoiseSpeed, 0, 32),
@@ -160,6 +161,7 @@ export function createTesla1AuthoringAdapter({
     if (els.tesla1CoreGlowCenterAlpha) els.tesla1CoreGlowCenterAlpha.value = String(source.coreGlowCenterAlpha ?? 0.42);
     if (els.tesla1CoreGlowEdgeAlpha) els.tesla1CoreGlowEdgeAlpha.value = String(source.coreGlowEdgeAlpha ?? 0.16);
     if (els.tesla1CoreGlowEdgeSoftness) els.tesla1CoreGlowEdgeSoftness.value = String(source.coreGlowEdgeSoftness ?? 2.8);
+    if (els.tesla1CoreGlowPerimeterSoftness) els.tesla1CoreGlowPerimeterSoftness.value = String(source.coreGlowPerimeterSoftness ?? 0.42);
     if (els.tesla1CoreGlowDisplacementBo) els.tesla1CoreGlowDisplacementBo.value = String(source.coreGlowDisplacementBo ?? 0.055);
     if (els.tesla1CoreGlowNoiseScale) els.tesla1CoreGlowNoiseScale.value = String(source.coreGlowNoiseScale ?? 5.8);
     if (els.tesla1CoreGlowNoiseSpeed) els.tesla1CoreGlowNoiseSpeed.value = String(source.coreGlowNoiseSpeed ?? 2.4);

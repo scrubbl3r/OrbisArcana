@@ -112,6 +112,7 @@ export function normalizeTesla1RuntimeConfig(raw = {}) {
     coreGlowCenterAlpha: clampNumber(source.coreGlowCenterAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.coreGlowCenterAlpha),
     coreGlowEdgeAlpha: clampNumber(source.coreGlowEdgeAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.coreGlowEdgeAlpha),
     coreGlowEdgeSoftness: clampNumber(source.coreGlowEdgeSoftness, 0.1, 12, TESLA_1_PRESET_DEFAULT.coreGlowEdgeSoftness),
+    coreGlowPerimeterSoftness: clampNumber(source.coreGlowPerimeterSoftness, 0.001, 1, TESLA_1_PRESET_DEFAULT.coreGlowPerimeterSoftness),
     coreGlowDisplacementBo: clampNumber(source.coreGlowDisplacementBo, 0, 2, TESLA_1_PRESET_DEFAULT.coreGlowDisplacementBo),
     coreGlowNoiseScale: clampNumber(source.coreGlowNoiseScale, 0.1, 64, TESLA_1_PRESET_DEFAULT.coreGlowNoiseScale),
     coreGlowNoiseSpeed: clampNumber(source.coreGlowNoiseSpeed, 0, 32, TESLA_1_PRESET_DEFAULT.coreGlowNoiseSpeed),

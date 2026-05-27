@@ -19,6 +19,7 @@ function normalizeTesla1CoreGlowConfig(raw = {}) {
     centerAlpha: clampNumber(source.coreGlowCenterAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.coreGlowCenterAlpha),
     edgeAlpha: clampNumber(source.coreGlowEdgeAlpha, 0, 1, TESLA_1_PRESET_DEFAULT.coreGlowEdgeAlpha),
     edgeSoftness: clampNumber(source.coreGlowEdgeSoftness, 0.1, 12, TESLA_1_PRESET_DEFAULT.coreGlowEdgeSoftness),
+    perimeterSoftness: clampNumber(source.coreGlowPerimeterSoftness, 0.001, 1, TESLA_1_PRESET_DEFAULT.coreGlowPerimeterSoftness),
     displacementBo: clampNumber(source.coreGlowDisplacementBo, 0, 2, TESLA_1_PRESET_DEFAULT.coreGlowDisplacementBo),
     noiseScale: clampNumber(source.coreGlowNoiseScale, 0.1, 64, TESLA_1_PRESET_DEFAULT.coreGlowNoiseScale),
     noiseSpeed: clampNumber(source.coreGlowNoiseSpeed, 0, 32, TESLA_1_PRESET_DEFAULT.coreGlowNoiseSpeed),
@@ -48,6 +49,7 @@ function createTesla1CoreGlowMaterial({ config, bo }) {
       uCenterAlpha: { value: cfg.centerAlpha },
       uEdgeAlpha: { value: cfg.edgeAlpha },
       uEdgeSoftness: { value: cfg.edgeSoftness },
+      uPerimeterSoftness: { value: cfg.perimeterSoftness },
       uDisplacementBo: { value: cfg.displacementBo },
       uNoiseScale: { value: cfg.noiseScale },
       uNoiseSpeed: { value: cfg.noiseSpeed },
@@ -98,6 +100,7 @@ function createTesla1CoreGlowMaterial({ config, bo }) {
       uniform float uCenterAlpha;
       uniform float uEdgeAlpha;
       uniform float uEdgeSoftness;
+      uniform float uPerimeterSoftness;
       uniform float uPulse;
       uniform float uPulseAmount;
       varying vec3 vWorldNormal;
@@ -109,13 +112,14 @@ function createTesla1CoreGlowMaterial({ config, bo }) {
         float facing = clamp(abs(dot(normalize(vWorldNormal), viewDir)), 0.0, 1.0);
         float center = pow(facing, max(0.1, uEdgeSoftness * 0.45));
         float rim = pow(1.0 - facing, max(0.1, uEdgeSoftness));
+        float perimeterFade = smoothstep(0.0, max(0.001, uPerimeterSoftness), facing);
         float breathe = 0.86 + 0.14 * sin(uTime * 5.7 + dot(normalize(vLocalPos + vec3(0.01)), vec3(2.1, -1.3, 1.7)));
         float pulse = max(0.0, uPulse);
         float pulseBoost = 1.0 + pulse * uPulseAmount;
         vec3 hot = vec3(1.0);
         vec3 fringe = mix(uColor, vec3(0.55, 0.78, 1.0), 0.35);
         vec3 color = mix(fringe, hot, clamp(center * 1.25, 0.0, 1.0));
-        float alpha = (uCenterAlpha * center + uEdgeAlpha * rim) * uGlobalAlpha * breathe * (1.0 + pulse * 0.35);
+        float alpha = (uCenterAlpha * center + uEdgeAlpha * rim) * perimeterFade * uGlobalAlpha * breathe * (1.0 + pulse * 0.35);
         if (alpha <= 0.001) discard;
         gl_FragColor = vec4(color * uLuminance * pulseBoost, alpha);
       }
@@ -136,6 +140,7 @@ function updateTesla1CoreGlowMaterial(material, { config, bo, timeSec = 0, pulse
   uniforms.uCenterAlpha.value = cfg.centerAlpha;
   uniforms.uEdgeAlpha.value = cfg.edgeAlpha;
   uniforms.uEdgeSoftness.value = cfg.edgeSoftness;
+  uniforms.uPerimeterSoftness.value = cfg.perimeterSoftness;
   uniforms.uDisplacementBo.value = cfg.displacementBo;
   uniforms.uNoiseScale.value = cfg.noiseScale;
   uniforms.uNoiseSpeed.value = cfg.noiseSpeed;
