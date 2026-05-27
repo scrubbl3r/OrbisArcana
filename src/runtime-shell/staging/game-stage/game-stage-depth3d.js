@@ -60,7 +60,7 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260526201140s";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260526203220s";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
@@ -316,7 +316,8 @@ export function createGameStageDepth3dLayer({
       const damageResult = gnatSwarm3dRuntime.applyCombatEffect({
         kind: COMBAT_EFFECT_DAMAGE,
         sourceEntityId: COMBAT_ENTITY_ORB,
-        targetEntityId: "enemy:gnat-swarm",
+        targetEntityId: target.targetEntityId || target.id || "enemy:gnat-swarm",
+        targetIndex: target.index,
         centerWorld: position,
         radiusBo,
         amount: Math.max(0, Number(damage) || 0),
@@ -328,7 +329,8 @@ export function createGameStageDepth3dLayer({
       const stunResult = gnatSwarm3dRuntime.applyCombatEffect({
         kind: COMBAT_EFFECT_STUN,
         sourceEntityId: COMBAT_ENTITY_ORB,
-        targetEntityId: "enemy:gnat-swarm",
+        targetEntityId: target.targetEntityId || target.id || "enemy:gnat-swarm",
+        targetIndex: target.index,
         centerWorld: position,
         radiusBo,
         amount: Math.max(0, Number(stunDamage) || 0),
@@ -728,16 +730,18 @@ export function createGameStageDepth3dLayer({
     const safeBo = Math.max(1, Number(bo) || baseOrbWorldUnits);
     const toleranceBo = Math.max(0.05, Number(config.masterBoltPathBendToleranceBo) || 0.35);
     const stepWorld = Math.max(1, toleranceBo * safeBo);
+    const canSee = (from, to) => typeof currentLevelNavContext.segmentIsWalkable === "function"
+      ? currentLevelNavContext.segmentIsWalkable(from, to, stepWorld)
+      : true;
+    if (canSee(fromWorld, targetPosition)) {
+      return Object.freeze([]);
+    }
     const start = typeof currentLevelNavContext.resolvePoint === "function"
       ? currentLevelNavContext.resolvePoint(fromWorld, { fallback: fromWorld })
       : fromWorld;
     const end = typeof currentLevelNavContext.resolvePoint === "function"
       ? currentLevelNavContext.resolvePoint(targetPosition, { fallback: targetPosition })
       : targetPosition;
-    if (typeof currentLevelNavContext.segmentIsWalkable === "function"
-      && currentLevelNavContext.segmentIsWalkable(start, end, stepWorld)) {
-      return Object.freeze([]);
-    }
     const path = typeof currentLevelNavContext.findPath === "function"
       ? currentLevelNavContext.findPath(start, end)
       : null;
@@ -758,9 +762,6 @@ export function createGameStageDepth3dLayer({
       ? path.filter((point) => point && Number.isFinite(Number(point.xW)) && Number.isFinite(Number(point.yW)))
       : [];
     if (route.length < 3) return Object.freeze({ blocked: true, bends: Object.freeze([]) });
-    const canSee = (from, to) => typeof currentLevelNavContext.segmentIsWalkable === "function"
-      ? currentLevelNavContext.segmentIsWalkable(from, to, stepWorld)
-      : true;
     const bends = [];
     let cursor = 0;
     while (cursor < route.length - 1) {
@@ -777,7 +778,7 @@ export function createGameStageDepth3dLayer({
       if (bends.length > 2) return Object.freeze({ blocked: true, bends: Object.freeze([]) });
       cursor = furthest;
     }
-    const visualRoute = [start, ...bends, end];
+    const visualRoute = [fromWorld, ...bends, targetPosition];
     for (let index = 1; index < visualRoute.length; index += 1) {
       if (!canSee(visualRoute[index - 1], visualRoute[index])) {
         return Object.freeze({ blocked: true, bends: Object.freeze([]) });
