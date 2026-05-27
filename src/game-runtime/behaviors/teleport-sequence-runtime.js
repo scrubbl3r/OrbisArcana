@@ -6,6 +6,11 @@ function readOrbY(state = null, fallback = 0) {
   return Number.isFinite(y) ? y : fallback;
 }
 
+function readOrbX(state = null, fallback = 0) {
+  const x = Number(state && state.xW);
+  return Number.isFinite(x) ? x : fallback;
+}
+
 function isHandled(result = null) {
   return !!(result && result.handled);
 }
@@ -54,6 +59,7 @@ export function createTeleportSequenceRuntime({
 
     const config = resolveConfig();
     const sourceState = getOrbRuntime();
+    const sourceXW = readOrbX(sourceState, 0);
     const sourceYW = readOrbY(sourceState, 0);
     let spawnIdleActivated = false;
     engageHold(sourceYW);
@@ -70,6 +76,7 @@ export function createTeleportSequenceRuntime({
         }
 
         const destinationState = getOrbRuntime();
+        const destinationXW = readOrbX(destinationState, sourceXW);
         const destinationYW = readOrbY(destinationState, sourceYW);
         if (config.completionMode === "spawn_idle") {
           const spawnResult = activateOrbSpawnIdleRuntime({
@@ -90,6 +97,8 @@ export function createTeleportSequenceRuntime({
         ) {
           try {
             return requestCameraTravel({
+              fromXW: sourceXW,
+              toXW: destinationXW,
               fromYW: sourceYW,
               toYW: destinationYW,
               durationMs,

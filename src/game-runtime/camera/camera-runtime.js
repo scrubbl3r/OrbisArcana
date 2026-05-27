@@ -12,6 +12,7 @@ function clamp(value, min, max) {
 }
 
 function toOptionalFiniteNumber(value) {
+  if (value == null || value === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }
@@ -300,6 +301,8 @@ export function createCameraRuntime({
   }
 
   function requestTravel({
+    fromXW = null,
+    toXW = null,
     fromYW = 0,
     toYW = 0,
     durationMs = 1500,
@@ -308,6 +311,8 @@ export function createCameraRuntime({
     clearTravel({ handled: false, canceled: true });
     return new Promise((resolve) => {
       state.get().activeTravel = {
+        fromXW: toOptionalFiniteNumber(fromXW),
+        toXW: toOptionalFiniteNumber(toXW),
         fromYW: toFiniteNumber(fromYW, 0),
         toYW: toFiniteNumber(toYW, 0),
         durationMs: Math.max(0, toFiniteNumber(durationMs, 1500)),
@@ -318,26 +323,44 @@ export function createCameraRuntime({
     });
   }
 
-  function resolveWorldY({ baselineYW = 0, nowMs = now() } = {}) {
+  function resolveWorldTarget({ baselineXW = 0, baselineYW = 0, nowMs = now() } = {}) {
     const runtimeState = state.get();
     const travel = runtimeState.activeTravel;
-    if (!travel) return toFiniteNumber(baselineYW, 0);
+    const safeBaselineXW = toFiniteNumber(baselineXW, 0);
+    const safeBaselineYW = toFiniteNumber(baselineYW, 0);
+    if (!travel) {
+      return Object.freeze({
+        xW: safeBaselineXW,
+        yW: safeBaselineYW,
+      });
+    }
     const durationMs = Math.max(1, toFiniteNumber(travel.durationMs, 1));
     const rawT = Math.max(0, Math.min(1, (toFiniteNumber(nowMs, 0) - toFiniteNumber(travel.startMs, 0)) / durationMs));
     const easedT = typeof travel.ease === "function" ? travel.ease(rawT) : rawT;
+    const fromXW = toOptionalFiniteNumber(travel.fromXW);
+    const toXW = toOptionalFiniteNumber(travel.toXW);
     const fromYW = toFiniteNumber(travel.fromYW, 0);
     const toYW = toFiniteNumber(travel.toYW, 0);
-    let resolvedYW = fromYW + ((toYW - fromYW) * easedT);
+    const resolvedXW = fromXW != null && toXW != null
+      ? fromXW + ((toXW - fromXW) * easedT)
+      : safeBaselineXW;
+    const resolvedYW = fromYW + ((toYW - fromYW) * easedT);
     if (rawT >= 1) {
-      resolvedYW = toYW;
       runtimeState.activeTravel = null;
       if (typeof travel.resolve === "function") {
         const resolve = travel.resolve;
         travel.resolve = null;
-        resolve({ handled: true, yW: resolvedYW });
+        resolve({ handled: true, xW: fromXW != null && toXW != null ? toXW : safeBaselineXW, yW: toYW });
       }
     }
-    return resolvedYW;
+    return Object.freeze({
+      xW: rawT >= 1 && fromXW != null && toXW != null ? toXW : resolvedXW,
+      yW: rawT >= 1 ? toYW : resolvedYW,
+    });
+  }
+
+  function resolveWorldY({ baselineYW = 0, nowMs = now() } = {}) {
+    return resolveWorldTarget({ baselineYW, nowMs }).yW;
   }
 
   function resolveFrame({
@@ -374,10 +397,10 @@ export function createCameraRuntime({
     target = null,
   } = {}) {
     const previousFrame = state.get().lastResolvedFrame;
-    const effectiveTargetYW = resolveWorldY({ baselineYW: targetYW, nowMs });
+    const effectiveTarget = resolveWorldTarget({ baselineXW: targetXW, baselineYW: targetYW, nowMs });
     const frame = resolveCameraFrame({
-      targetXW,
-      targetYW: effectiveTargetYW,
+      targetXW: effectiveTarget.xW,
+      targetYW: effectiveTarget.yW,
       viewportWidthPx,
       viewportHeightPx,
       worldWidthPx,
@@ -415,6 +438,7 @@ export function createCameraRuntime({
     getState: () => state.get(),
     reset,
     requestTravel,
+    resolveWorldTarget,
     resolveWorldY,
     resolveFrame,
     clearTravel,
