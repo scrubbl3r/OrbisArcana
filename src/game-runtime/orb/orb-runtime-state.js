@@ -23,6 +23,8 @@
  * @property {boolean} floatGraceSuppressInput
  * @property {boolean} floatGraceBreakOnLift
  * @property {boolean} floatGraceBreakOnMotion
+ * @property {number} floatGraceStartedAtMs
+ * @property {number} floatGraceMinBreakMs
  * @property {number} floatGraceAnchorY
  * @property {number} floatGracePhase
  * @property {boolean} teleportHoldActive
@@ -62,6 +64,8 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     floatGraceSuppressInput: false,
     floatGraceBreakOnLift: true,
     floatGraceBreakOnMotion: true,
+    floatGraceStartedAtMs: 0,
+    floatGraceMinBreakMs: 0,
     floatGraceAnchorY: 0,
     floatGracePhase: 0,
     teleportHoldActive: false,
@@ -106,6 +110,8 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     state.floatGraceSuppressInput = false;
     state.floatGraceBreakOnLift = true;
     state.floatGraceBreakOnMotion = true;
+    state.floatGraceStartedAtMs = 0;
+    state.floatGraceMinBreakMs = 0;
     state.floatGraceAnchorY = 0;
     state.floatGracePhase = 0;
     state.teleportHoldActive = false;

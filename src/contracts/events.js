@@ -36,7 +36,7 @@ export const EVT_SPELL_WINDOW_FLAT_SPIN_CLOSED = EVT_SPELL_WINDOW_SPIN_CLOSED;
  * @property {string} [axisWord] Deprecated legacy field from pre-SSOT runtime flow
  * @property {string} [wakeWindowSpell] Selected wake-window token id
  * @property {number} [atMs]
- * @property {{ttlMs?:number}} [grace] Optional authored interaction grace payload
+ * @property {{ttlMs?:number,minBreakMs?:number}} [grace] Optional authored interaction grace payload
  * @property {string} [trigger] Trigger source (for example `shake_detonation`)
  * @property {string} [phrase] Recognized phrase/display text
  * @property {number} [confidence] Recognition confidence (0..1)

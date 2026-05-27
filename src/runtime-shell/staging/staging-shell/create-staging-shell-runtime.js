@@ -10,7 +10,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260526185952s";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260526223339s";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -18,7 +18,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260526185952s";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260526223339s";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260525graviton";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260526185952s";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260526223339s";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
@@ -76,7 +76,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260526185952s";
+globalThis.__orbisStagingShellRuntimeVersion = "20260526223339s";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -252,6 +252,8 @@ function buildShellStageInitialState(phys = {}) {
     floatGraceSuppressInput: false,
     floatGraceBreakOnLift: true,
     floatGraceBreakOnMotion: true,
+    floatGraceStartedAtMs: 0,
+    floatGraceMinBreakMs: 0,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
     teleportHoldActive: false,
@@ -1115,6 +1117,8 @@ function resetShellOrbToGround(shellContext) {
     floatGraceSuppressInput: false,
     floatGraceBreakOnLift: true,
     floatGraceBreakOnMotion: true,
+    floatGraceStartedAtMs: 0,
+    floatGraceMinBreakMs: 0,
     teleportHoldAnchorY: yW,
     spawnHoldActive: !!spawnPoint,
     spawnHoldAnchorX: xW,
@@ -1236,6 +1240,8 @@ function tickShellStageRuntime(shellContext, dt) {
     state.floatGraceSuppressInput = false;
     state.floatGraceBreakOnLift = true;
     state.floatGraceBreakOnMotion = true;
+    state.floatGraceStartedAtMs = 0;
+    state.floatGraceMinBreakMs = 0;
   }
 
   if (state.teleportHoldActive) {
@@ -1631,6 +1637,8 @@ function startShellStageLoop(shellContext) {
         floatGraceSuppressInput: false,
         floatGraceBreakOnLift: true,
         floatGraceBreakOnMotion: true,
+        floatGraceStartedAtMs: 0,
+        floatGraceMinBreakMs: 0,
       });
     },
     groundCenterWorld: () => traceMeasure("world.groundCenter", () => shellGroundCenterWorld(shellContext)),
@@ -2245,6 +2253,8 @@ async function initShellReceiverHostRuntime(shellContext) {
           floatGraceSuppressInput: false,
           floatGraceBreakOnLift: true,
           floatGraceBreakOnMotion: true,
+          floatGraceStartedAtMs: 0,
+          floatGraceMinBreakMs: 0,
         });
       },
       resetOrbStrokeColor: () => shellClearColorize(shellContext),
@@ -3104,7 +3114,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260526185952s",
+  moduleCacheBustV = "20260526223339s",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

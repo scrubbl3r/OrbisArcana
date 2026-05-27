@@ -85,19 +85,19 @@ export const INTERACTION_GRAPH_V2 = {
       id: "shake_ud_cast",
       on: { shake: "UD" },
       trigger: { spell: "cast_loaded_ud" },
-      grace: {},
+      grace: { ttlMs: 800, minBreakMs: 150 },
     },
     {
       id: "shake_lr_cast",
       on: { shake: "LR" },
       trigger: { spell: "cast_loaded_lr" },
-      grace: {},
+      grace: { ttlMs: 800, minBreakMs: 150 },
     },
     {
       id: "shake_fb_cast",
       on: { shake: "FB" },
       trigger: { spell: "cast_loaded_fb" },
-      grace: {},
+      grace: { ttlMs: 800, minBreakMs: 150 },
     },
   ],
 };

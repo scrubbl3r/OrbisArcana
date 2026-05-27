@@ -650,7 +650,9 @@ export function createRuleEnginePreviewSystem({
           ruleId: String(rule && rule.id || ""),
           actionType: "event",
           actionId: id,
-          args,
+          args: action && action.grace && typeof action.grace === "object"
+            ? { ...args, grace: { ...action.grace } }
+            : args,
           atMs: Number(triggerMeta.atMs) || nowMs(),
         });
       }

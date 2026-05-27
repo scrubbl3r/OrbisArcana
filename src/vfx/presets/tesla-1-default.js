@@ -1,7 +1,7 @@
 export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "durationMs": 10000,
-  "dominantBoltMinRangeBo": 1,
-  "dominantBoltMaxRangeBo": 6,
+  "dominantBoltMinRangeBo": 5,
+  "dominantBoltMaxRangeBo": 7,
   "dominantBoltDetourRatioMax": 1,
   "dominantBoltFrequencyMinMs": 100,
   "dominantBoltFrequencyMaxMs": 1200,

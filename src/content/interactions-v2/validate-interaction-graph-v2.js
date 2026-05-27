@@ -21,7 +21,7 @@ const ALLOWED_RULE_KEYS = new Set([
 const ALLOWED_ON_KEYS = new Set(["word", "spell", "spin", "shake", "orb_state"]);
 const ALLOWED_OPEN_KEYS = new Set(["id", "words", "word", "spells", "ttlMs", "enabled"]);
 const ALLOWED_BIND_KEYS = new Set(["spell", "slot"]);
-const ALLOWED_GRACE_KEYS = new Set(["ttlMs"]);
+const ALLOWED_GRACE_KEYS = new Set(["ttlMs", "minBreakMs"]);
 const LEGACY_BIND_EVENT_IDS = new Set(["spell_load_ud", "spell_load_lr", "spell_load_fb"]);
 
 function asArray(v) {
@@ -213,6 +213,12 @@ export function validateInteractionGraphV2(interactionGraph) {
       const ttlMs = Number(rule.grace.ttlMs);
       if (!Number.isFinite(ttlMs) || ttlMs < 0) {
         errors.push(`${ruleContext}.grace.ttlMs must be a finite number >= 0 when present`);
+      }
+    }
+    if (isObject(rule?.grace) && Object.hasOwn(rule.grace, "minBreakMs")) {
+      const minBreakMs = Number(rule.grace.minBreakMs);
+      if (!Number.isFinite(minBreakMs) || minBreakMs < 0) {
+        errors.push(`${ruleContext}.grace.minBreakMs must be a finite number >= 0 when present`);
       }
     }
     if (Object.hasOwn(rule, "trigger") && hasLegacyBindTriggerAuthoring(rule.trigger)) {

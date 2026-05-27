@@ -748,11 +748,17 @@ function validateGrace(rule, ruleId, errors) {
     errors.push(`${ctx} must be an object`);
     return true;
   }
-  pushUnsupportedKeys(errors, ctx, grace, new Set(["ttlMs"]));
+  pushUnsupportedKeys(errors, ctx, grace, new Set(["ttlMs", "minBreakMs"]));
   if (Object.hasOwn(grace, "ttlMs")) {
     const n = asNonNegativeFiniteOrNull(grace.ttlMs);
     if (n == null) {
       errors.push(`${ctx}.ttlMs must be a finite number >= 0 when present`);
+    }
+  }
+  if (Object.hasOwn(grace, "minBreakMs")) {
+    const n = asNonNegativeFiniteOrNull(grace.minBreakMs);
+    if (n == null) {
+      errors.push(`${ctx}.minBreakMs must be a finite number >= 0 when present`);
     }
   }
   return true;

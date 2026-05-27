@@ -156,7 +156,10 @@ export function bindStagingRuntimeEvents({
       return;
     }
     if (actionType !== "event") return;
-    const args = (p && typeof p.args === "object" && p.args) ? p.args : {};
+    const argsRaw = (p && typeof p.args === "object" && p.args) ? p.args : {};
+    const args = (p && p.grace && typeof p.grace === "object" && !Array.isArray(p.grace) && !argsRaw.grace)
+      ? { ...argsRaw, grace: { ...p.grace } }
+      : argsRaw;
     const bindings = (ruleSchema && ruleSchema.eventRuntimeBindings && typeof ruleSchema.eventRuntimeBindings === "object")
       ? ruleSchema.eventRuntimeBindings
       : Object.create(null);

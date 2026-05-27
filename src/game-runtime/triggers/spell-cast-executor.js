@@ -18,7 +18,7 @@ import { resolveOrbGracePayload } from "../orb/orb-grace.js";
  * @typedef {Object} CreateSpellCastExecutorOptions
  * @property {Object<string, {handlerKey?:string}>} [castActionRegistryById]
  * @property {Object<string, Function>} [handlers] Receiver-local handler functions keyed by `handlerKey`.
- * @property {(grace:{ttlMs:number}) => void} [grantOrbGrace] Receiver hook for orb grace application.
+ * @property {(grace:{ttlMs:number,minBreakMs?:number}) => void} [grantOrbGrace] Receiver hook for orb grace application.
  * @property {() => {allowed?:boolean, reason?:string}|null} [getCastGateState] Domain gate consulted before handler dispatch.
  * @property {number} [defaultGraceTtlMs] Default authored grace duration when `grace: {}` is present.
  */

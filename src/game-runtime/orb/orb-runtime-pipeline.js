@@ -331,7 +331,10 @@ export function runOrbRuntimePipeline({
 
   if (graceActive) {
     const upwardIntent = (thrust > (g + 180)) || (state.v < -22);
-    if (graceBreakOnLift && upwardIntent && !graceSuppressInput) {
+    const graceStartedAtMs = Number(state.floatGraceStartedAtMs) || 0;
+    const graceMinBreakMs = Math.max(0, Number(state.floatGraceMinBreakMs) || 0);
+    const graceCanBreak = graceMinBreakMs <= 0 || !graceStartedAtMs || ((Number(nowMs) || 0) - graceStartedAtMs) >= graceMinBreakMs;
+    if (graceBreakOnLift && graceCanBreak && upwardIntent && !graceSuppressInput) {
       if (typeof clearFloatGrace === "function") clearFloatGrace();
     } else {
       const dragFactor = Math.max(0, -Number(signedFallDrag) || 0);

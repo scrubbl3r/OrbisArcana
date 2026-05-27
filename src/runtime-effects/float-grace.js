@@ -10,6 +10,8 @@ export function clearOrbGraceRuntime({
     floatGraceSuppressInput: false,
     floatGraceBreakOnLift: true,
     floatGraceBreakOnMotion: true,
+    floatGraceStartedAtMs: 0,
+    floatGraceMinBreakMs: 0,
   });
 }
 
@@ -28,6 +30,10 @@ export function grantOrbGraceRuntime({
   const dur = persistent ? 0 : Math.max(50, ttlCandidate || Number(durationMs) || Number(defaultTtlMs) || 2500);
   const orbRuntime = getOrbRuntime();
   patchOrbRuntime({
+    v: 0,
+    onGround: false,
+    descendMs: 0,
+    shieldDescentBlocked: false,
     floatGraceActive: true,
     floatGraceUntilMs: persistent ? 0 : Number(nowMs) + dur,
     floatGracePersistent: persistent,
@@ -35,6 +41,8 @@ export function grantOrbGraceRuntime({
     floatGraceSuppressInput: !!(grace && grace.suppressInput),
     floatGraceBreakOnLift: grace && grace.breakOnLift !== false,
     floatGraceBreakOnMotion: grace && grace.breakOnMotion !== false,
+    floatGraceStartedAtMs: Number(nowMs) || 0,
+    floatGraceMinBreakMs: Math.max(0, Number(grace && grace.minBreakMs) || 0),
     floatGraceAnchorY: Number(orbRuntime && orbRuntime.yW) || 0,
     floatGracePhase: (typeof random === "function" ? random() : Math.random()) * Math.PI * 2,
   });

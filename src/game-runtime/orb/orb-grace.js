@@ -23,6 +23,7 @@ export function resolveOrbGracePayload(rawGrace, { defaultTtlMs = 2500 } = {}) {
     : resolveOrbGraceDefaultTtlMs({ defaultTtlMs }, defaultTtlMs);
   return Object.freeze({
     ttlMs: persistent ? 0 : Math.max(50, ttlMs),
+    minBreakMs: Math.max(0, Number(source.minBreakMs) || 0),
     persistent,
     source: String(source.source || ""),
     suppressInput: source.suppressInput === true,
