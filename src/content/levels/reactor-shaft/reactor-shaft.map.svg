@@ -25,14 +25,14 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="0.67382812"
-     inkscape:cx="959.44348"
-     inkscape:cy="1466.2493"
+     inkscape:cx="1018.8058"
+     inkscape:cy="1596.8464"
      inkscape:window-width="1616"
      inkscape:window-height="887"
      inkscape:window-x="17"
-     inkscape:window-y="135"
+     inkscape:window-y="107"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer5"
+     inkscape:current-layer="svg1"
      showgrid="false">
     <inkscape:grid
        id="grid1"
@@ -89,18 +89,6 @@
        id="path1"
        sodipodi:nodetypes="cccccccccccccccc"
        inkscape:label="id:bounds_01" />
-  </g>
-  <g
-     inkscape:groupmode="layer"
-     id="layer8"
-     inkscape:label="bounds_cam"
-     style="display:inline;fill:none;stroke:#ff0000;stroke-opacity:1"
-     sodipodi:insensitive="true">
-    <path
-       id="path1-49"
-       style="display:inline;fill:none;stroke:#000000;stroke-opacity:1"
-       inkscape:label="id:bounds_01"
-       d="m 1022.3125,331 c -6.6302,274.64193 -13.2604,549.28385 -19.8906,823.9258 140.0638,-0.896 280.1276,-1.791 420.1914,-2.6875 11.9468,94.2091 23.8963,188.4179 35.8437,282.6269 -38.8587,0.2951 -77.7174,0.5854 -116.5761,0.8809 -1.6157,-56.694 -3.2276,-113.388 -4.8418,-170.082 -67.2748,-29.8503 -134.5495,-59.7006 -201.8243,-89.5508 -31.1677,70.0219 -62.3323,140.0453 -93.5019,210.0664 -47.30793,12.3522 -94.61705,24.6998 -141.92579,37.0488 -44.99155,-1.0131 -89.98311,-2.0257 -134.97461,-3.041 0,-107.1458 0,-214.2917 0,-321.4375 -149.33333,0 -298.66667,0 -448,0 0,192 0,384 0,576 485.41667,0 970.8333,0 1456.25,0 0,-449.0208 0,-898.04167 0,-1347.0625 -250.25,1.10417 -500.5,2.20833 -750.75,3.3125 z" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -264,6 +252,18 @@
        style="fill:#272727;fill-opacity:1;stroke:#5f5f5f;stroke-width:1.88976"
        inkscape:label="id:art_panel z=0bo material=flat color=#272727 opacity=1"
        d="M 31.214844,22.171875 V 2013.0547 H 2019.5898 V 22.171875 Z M 1709.0625,392 v 1218.75 h -1328.25 v -448 h 320 v 320 l 206.45703,4.666 180.36917,-47.0449 80.0761,-179.8203 106.5157,47.2383 5.4082,192.457 251.3808,-1.9434 -52.0312,-410.4394 -411.0039,2.625 16.8281,-695.7383 z" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer8"
+     inkscape:label="bounds_cam"
+     style="display:inline;fill:none;stroke:#ff0000;stroke-opacity:1">
+    <path
+       id="path1-49"
+       style="display:inline;fill:none;stroke:#000000;stroke-opacity:1"
+       inkscape:label="id:bounds_01"
+       d="m 1022.3125,331 -19.8906,823.9258 c 140.0638,-0.896 280.1276,-1.791 420.1914,-2.6875 11.9468,94.2091 23.8963,188.4179 35.8437,282.6269 -38.8587,0.2951 -77.7174,0.5854 -116.5761,0.8809 -1.6157,-56.694 -3.2276,-113.388 -4.8418,-170.082 -67.2748,-29.8503 -134.5495,-59.7006 -201.8243,-89.5508 -31.1677,70.0219 -62.3323,140.0453 -93.5019,210.0664 -47.30793,12.3522 -94.61705,24.6998 -141.92579,37.0488 -44.99155,-1.0131 -89.98311,-2.0257 -134.97461,-3.041 V 1098.75 h -448 v 616 h 1456.25 V 327.6875 c -250.25,1.10417 -500.5,2.20833 -750.75,3.3125 z"
+       sodipodi:nodetypes="cccccccccccccccc" />
   </g>
   <g
      inkscape:groupmode="layer"
