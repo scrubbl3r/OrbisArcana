@@ -1010,7 +1010,9 @@ export function createTesla1Runtime(options = {}) {
       return;
     }
     if (masterBoltFirstSegmentCrossesOrb(bo)) {
+      masterBoltState.activeUntil = 0;
       clearMasterBoltBends();
+      return;
     }
     if (masterBoltState.target.lengthSq() <= 0.000001) {
       masterBoltState.activeUntil = 0;

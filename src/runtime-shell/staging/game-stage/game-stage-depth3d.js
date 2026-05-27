@@ -60,7 +60,7 @@ import {
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
 import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260520235547s";
-import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260526185952s";
+import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260526201140s";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
 import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260520235547";
@@ -754,17 +754,37 @@ export function createGameStageDepth3dLayer({
         return Object.freeze({ blocked: true, bends: Object.freeze([]) });
       }
     }
-    const mids = Array.isArray(path)
-      ? path.slice(1, -1).filter((point) => point && Number.isFinite(Number(point.xW)) && Number.isFinite(Number(point.yW)))
+    const route = Array.isArray(path)
+      ? path.filter((point) => point && Number.isFinite(Number(point.xW)) && Number.isFinite(Number(point.yW)))
       : [];
-    if (!mids.length) return Object.freeze({ blocked: true, bends: Object.freeze([]) });
-    if (mids.length === 1) return Object.freeze([Object.freeze({ xW: Number(mids[0].xW), yW: Number(mids[0].yW) })]);
-    const first = mids[Math.max(0, Math.min(mids.length - 1, Math.floor(mids.length / 3)))];
-    const second = mids[Math.max(0, Math.min(mids.length - 1, Math.floor(mids.length * 2 / 3)))];
-    return Object.freeze([
-      Object.freeze({ xW: Number(first.xW), yW: Number(first.yW) }),
-      Object.freeze({ xW: Number(second.xW), yW: Number(second.yW) }),
-    ]);
+    if (route.length < 3) return Object.freeze({ blocked: true, bends: Object.freeze([]) });
+    const canSee = (from, to) => typeof currentLevelNavContext.segmentIsWalkable === "function"
+      ? currentLevelNavContext.segmentIsWalkable(from, to, stepWorld)
+      : true;
+    const bends = [];
+    let cursor = 0;
+    while (cursor < route.length - 1) {
+      let furthest = -1;
+      for (let next = route.length - 1; next > cursor; next -= 1) {
+        if (canSee(route[cursor], route[next])) {
+          furthest = next;
+          break;
+        }
+      }
+      if (furthest < 0 || furthest <= cursor) return Object.freeze({ blocked: true, bends: Object.freeze([]) });
+      if (furthest >= route.length - 1) break;
+      bends.push(route[furthest]);
+      if (bends.length > 2) return Object.freeze({ blocked: true, bends: Object.freeze([]) });
+      cursor = furthest;
+    }
+    const visualRoute = [start, ...bends, end];
+    for (let index = 1; index < visualRoute.length; index += 1) {
+      if (!canSee(visualRoute[index - 1], visualRoute[index])) {
+        return Object.freeze({ blocked: true, bends: Object.freeze([]) });
+      }
+    }
+    if (!bends.length) return Object.freeze([]);
+    return Object.freeze(bends.map((point) => Object.freeze({ xW: Number(point.xW), yW: Number(point.yW) })));
   }
 
   function resolveOrbGroundContactRuntimeY() {
