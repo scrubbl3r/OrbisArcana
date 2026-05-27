@@ -535,6 +535,12 @@ function createLightningFieldMaterial(params) {
       vec3 proceduralBolt(vec2 p, float angle, float startR, float len, float seed, float sampleTime, float macroNoiseScale, float macroNoiseStrength, float microNoiseStrength, float branchDensity, float baseWidthMultiplier) {
         vec2 uv = rotate2(angle) * p;
         uv.y -= startR;
+        float branchReach = branchDensity > 0.001 ? uBranchLengthMax : 0.0;
+        float broadReach = uBaseWidthMax * max(1.0, baseWidthMultiplier)
+          + (abs(macroNoiseStrength) + abs(microNoiseStrength)) * uBo * 1.5
+          + branchReach
+          + uBo * 0.25;
+        if (uv.y < -broadReach || uv.y > len + broadReach || abs(uv.x) > broadReach) return vec3(0.0);
         float h = 0.0;
         vec2 macroNoiseUv = uv / max(1.0, uBo) * macroNoiseScale;
         vec2 microNoiseUv = uv / max(1.0, uBo) * uMicroNoiseScale;
