@@ -35,7 +35,7 @@ export const TESLA_1_PRESET_DEFAULT = Object.freeze({
   "boltShaderPlasmaCenterIntensity": 0.22,
   "boltShaderPlasmaCenterRadiusBo": 1.65,
   "boltShaderPlasmaBoltIntensity": 0.32,
-  "boltShaderPlasmaBoltRadiusBo": 0.18,
+  "boltShaderPlasmaBoltRadiusBo": 0.07,
   "boltShaderPlasmaCorePreserve": 0.78,
   "boltShaderColorR": 40,
   "boltShaderColorG": 90,
