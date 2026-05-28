@@ -1070,7 +1070,9 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   });
   const trailRadii = Array.from({ length: WAKE_SDF_TRAIL_POINT_COUNT }, (_, index) => {
     const t = index / Math.max(1, WAKE_SDF_TRAIL_POINT_COUNT - 1);
-    return config.wakeSdfRadiusPx * (1 - t) + config.wakeSdfCoreRadiusPx * t;
+    const hip = Math.max(0, Math.sin(Math.PI * Math.min(1, t * 1.35))) * (1 - Math.min(1, Math.max(0, (t - 0.62) / 0.38)));
+    const kiteTaper = t * t * 0.24;
+    return Math.max(1, (config.wakeSdfRadiusPx * (1 - t) + config.wakeSdfCoreRadiusPx * t) * (1 + hip * 0.48 - kiteTaper));
   });
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:wake_sdf_preview_material",
@@ -1189,33 +1191,48 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float spineRadius = 1.0;
         vec2 tangent = vec2(0.0, 1.0);
         resolveSpineFrame(p, spineT, signedSide, spineDistance, spineRadius, tangent);
-        float edgeT = clamp(spineDistance / max(1.0, spineRadius), 0.0, 1.8);
+        float hipBulge = smoothstep(0.0, 0.22, spineT) * (1.0 - smoothstep(0.58, 0.92, spineT));
+        float tailNeedle = smoothstep(0.62, 1.0, spineT);
+        float edgeT = clamp(spineDistance / max(1.0, spineRadius), 0.0, 2.4);
+        float looseEdgeT = spineDistance / max(1.0, spineRadius * (1.0 + hipBulge * 0.58 - tailNeedle * 0.18));
         float motionSide = uWakeMotionOffset.x + uWakeMotionOffset.z * 0.45;
         float motionLift = uWakeMotionOffset.y;
         vec3 bodyFlow = vec3(
-          signedSide / max(1.0, spineRadius),
-          spineT * 2.35,
-          edgeT + dot(tangent, vec2(motionSide, motionLift)) * 0.18
-        ) * uWakeNoiseScale + vec3(motionSide * 1.25, -uTime * uWakeNoiseSpeed, 0.0);
+          signedSide / max(1.0, spineRadius * (1.0 + hipBulge * 0.38)),
+          spineT * 1.78,
+          looseEdgeT + dot(tangent, vec2(motionSide, motionLift)) * 0.22
+        ) * uWakeNoiseScale;
+        bodyFlow.y -= uTime * uWakeNoiseSpeed * 0.82;
+        bodyFlow.x += motionSide * 1.55 + sin(spineT * 6.283 + uTime * uWakeNoiseSpeed * 0.55) * 0.18;
+        vec2 greaseWarp = vec2(
+          fbm(bodyFlow + vec3(4.2, 11.7, -2.3)),
+          fbm(bodyFlow + vec3(-9.1, 3.4, 8.6))
+        ) - vec2(0.5);
+        bodyFlow.x += greaseWarp.x * (0.95 + hipBulge * 1.2);
+        bodyFlow.y += greaseWarp.y * 0.58;
         float bodyField = fbm(bodyFlow);
         vec3 lickFlow = vec3(
-          signedSide / max(1.0, spineRadius * 0.55),
-          spineT * 4.4 - uTime * uWakeNoiseSpeed * 1.65,
-          edgeT * 2.1 + length(uWakeMotionOffset.xz) * 0.65
+          signedSide / max(1.0, spineRadius * (0.5 + hipBulge * 0.18)),
+          spineT * 3.7 - uTime * uWakeNoiseSpeed * 1.35,
+          looseEdgeT * 1.6 + length(uWakeMotionOffset.xz) * 0.78
         ) * (uWakeNoiseScale * 2.35);
+        lickFlow.x += greaseWarp.x * 1.35 + motionSide * 0.8;
         float lickField = fbm(lickFlow + vec3(13.7, -5.1, 8.3));
-        float edgeErode = smoothstep(0.34, 1.0, edgeT) * smoothstep(0.16, 0.86, spineT);
-        float field = mix(bodyField, lickField, edgeErode * 0.42);
-        float erodedDistance = d + (0.5 - bodyField) * uWakeSoftness * 0.95 + (0.52 - lickField) * uWakeSoftness * edgeErode * 1.25;
-        float body = 1.0 - smoothstep(-uWakeSoftness * 0.45, max(0.001, uWakeSoftness * 0.95), erodedDistance);
+        float ribbonField = fbm(vec3(signedSide / max(1.0, spineRadius * 0.34) + greaseWarp.x * 1.8, spineT * 6.2 - uTime * uWakeNoiseSpeed * 1.75, looseEdgeT * 0.7));
+        float edgeErode = smoothstep(0.46, 1.25, looseEdgeT) * smoothstep(0.12, 0.9, spineT);
+        float field = mix(bodyField, lickField, edgeErode * 0.38);
+        field = mix(field, ribbonField, smoothstep(0.45, 1.0, spineT) * 0.22);
+        float erodedDistance = d + (0.5 - bodyField) * uWakeSoftness * (0.72 + tailNeedle * 0.35) + (0.52 - lickField) * uWakeSoftness * edgeErode * 1.45;
+        float body = 1.0 - smoothstep(-uWakeSoftness * (0.74 + hipBulge * 0.28), max(0.001, uWakeSoftness * 1.16), erodedDistance);
         float threshold = mix(0.72, 0.28, clamp(uWakeDensity, 0.0, 1.0));
         float flame = smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field);
-        float plumeMask = smoothstep(-0.06, 0.14, spineT) * (1.0 - smoothstep(1.28, 1.72, spineT));
+        float plumeMask = smoothstep(-0.08, 0.1, spineT) * (1.0 - smoothstep(1.38, 1.86, spineT));
         float outsideOrb = smoothstep(uOrbRadius - uWakeSoftness * 0.9, uOrbRadius + uWakeSoftness * 0.9, length(p));
         float lowerArcX = clamp(p.x, -uOrbRadius, uOrbRadius);
         float lowerArcY = -sqrt(max(0.0, uOrbRadius * uOrbRadius - lowerArcX * lowerArcX));
         float lowerOrbFeather = smoothstep(lowerArcY - uWakeSoftness * 1.4, lowerArcY + uWakeSoftness * 1.4, p.y);
-        float sideFade = 1.0 - smoothstep(1.08, 1.8, edgeT);
+        float sideLimit = mix(1.84, 1.22, tailNeedle) + hipBulge * 0.52;
+        float sideFade = 1.0 - smoothstep(sideLimit, sideLimit + 0.74, looseEdgeT);
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
         float alpha = body * flame * plumeMask * outsideOrb * lowerOrbFeather * sideFade * cardFade;
