@@ -1292,6 +1292,61 @@ function createWakeSdfCardGeometry(width, height) {
   return geometry;
 }
 
+function createWakeSdfPreviewDebugVisuals(bo, material) {
+  const group = new THREE.Group();
+  group.name = "flame_aoe3d:wake_sdf_preview_debug";
+  const orbRadius = bo * 0.5;
+  const sourcePositions = new Float32Array(WAKE_SDF_SOURCE_GRAPH.length * 3);
+  for (let i = 0; i < WAKE_SDF_SOURCE_GRAPH.length; i += 1) {
+    const source = WAKE_SDF_SOURCE_GRAPH[i];
+    sourcePositions[i * 3] = source[0] * orbRadius * 0.84;
+    sourcePositions[i * 3 + 1] = source[1] * orbRadius * 0.84;
+    sourcePositions[i * 3 + 2] = 1.5;
+  }
+  const sourceGeometry = new THREE.BufferGeometry();
+  sourceGeometry.setAttribute("position", new THREE.BufferAttribute(sourcePositions, 3));
+  const sourcePoints = new THREE.Points(sourceGeometry, new THREE.PointsMaterial({
+    color: 0x4de8ff,
+    size: 7,
+    sizeAttenuation: false,
+    depthTest: false,
+    depthWrite: false,
+    transparent: true,
+    opacity: 0.95,
+  }));
+  sourcePoints.renderOrder = 18;
+  group.add(sourcePoints);
+
+  const particles = material && material.uniforms && material.uniforms.uWakeControlParticles && material.uniforms.uWakeControlParticles.value || [];
+  const particlePositions = new Float32Array(WAKE_SDF_CONTROL_PARTICLE_COUNT * 3);
+  const particleColors = new Float32Array(WAKE_SDF_CONTROL_PARTICLE_COUNT * 3);
+  for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
+    const particle = particles[i] || new THREE.Vector4();
+    const heat = Math.max(0, Number(particle.w) || 0);
+    particlePositions[i * 3] = particle.x;
+    particlePositions[i * 3 + 1] = particle.y;
+    particlePositions[i * 3 + 2] = 2.5 + i * 0.002;
+    particleColors[i * 3] = Math.max(0.35, heat);
+    particleColors[i * 3 + 1] = 0.18 + heat * 0.72;
+    particleColors[i * 3 + 2] = 0.02;
+  }
+  const particleGeometry = new THREE.BufferGeometry();
+  particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
+  particleGeometry.setAttribute("color", new THREE.BufferAttribute(particleColors, 3));
+  const particlePoints = new THREE.Points(particleGeometry, new THREE.PointsMaterial({
+    size: 9,
+    sizeAttenuation: false,
+    depthTest: false,
+    depthWrite: false,
+    transparent: true,
+    opacity: 0.95,
+    vertexColors: true,
+  }));
+  particlePoints.renderOrder = 19;
+  group.add(particlePoints);
+  return group;
+}
+
 function resolveWakeSdfCardSize(bo, config) {
   const liftPx = bo * clampNumber(config && config.wakeSdfHeightBo, 0.1, 8, 1.15);
   const authoredSlackPx = bo * clampNumber(config && config.wakeLengthBo, 0, 4, 0);
@@ -1459,6 +1514,9 @@ export function createFlameAoe3dPreview({
       wakeSdfMesh.renderOrder = 11;
       wakeSdfMesh.visible = layerVisible(els.flameAoe3dWakeSdfVisibleBtn);
       model.add(wakeSdfMesh);
+      const wakeSdfDebug = createWakeSdfPreviewDebugVisuals(bo, wakeSdfMaterial);
+      wakeSdfDebug.visible = wakeSdfMesh.visible;
+      model.add(wakeSdfDebug);
     }
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);

@@ -959,6 +959,60 @@ function createWakeSdfCardGeometry(width, height) {
   return geometry;
 }
 
+function createWakeSdfDebugVisuals(bo) {
+  const group = new THREE.Group();
+  group.name = "flame_aoe3d:wake_sdf_particle_debug";
+  const orbRadius = bo * 0.5;
+  const sourcePositions = new Float32Array(WAKE_SDF_SOURCE_GRAPH.length * 3);
+  for (let i = 0; i < WAKE_SDF_SOURCE_GRAPH.length; i += 1) {
+    const source = WAKE_SDF_SOURCE_GRAPH[i];
+    sourcePositions[i * 3] = source[0] * orbRadius * 0.84;
+    sourcePositions[i * 3 + 1] = source[1] * orbRadius * 0.84;
+    sourcePositions[i * 3 + 2] = 1.5;
+  }
+  const sourceGeometry = new THREE.BufferGeometry();
+  sourceGeometry.setAttribute("position", new THREE.BufferAttribute(sourcePositions, 3));
+  const sourceMaterial = new THREE.PointsMaterial({
+    color: 0x4de8ff,
+    size: 7,
+    sizeAttenuation: false,
+    depthTest: false,
+    depthWrite: false,
+    transparent: true,
+    opacity: 0.95,
+  });
+  const sourcePoints = new THREE.Points(sourceGeometry, sourceMaterial);
+  sourcePoints.name = "flame_aoe3d:wake_sdf_source_graph_debug";
+  sourcePoints.renderOrder = FLAME_AOE_RENDER_ORDER_BASE + 8;
+  group.add(sourcePoints);
+
+  const particlePositions = new Float32Array(WAKE_SDF_CONTROL_PARTICLE_COUNT * 3);
+  const particleColors = new Float32Array(WAKE_SDF_CONTROL_PARTICLE_COUNT * 3);
+  const particleGeometry = new THREE.BufferGeometry();
+  particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
+  particleGeometry.setAttribute("color", new THREE.BufferAttribute(particleColors, 3));
+  const particleMaterial = new THREE.PointsMaterial({
+    size: 9,
+    sizeAttenuation: false,
+    depthTest: false,
+    depthWrite: false,
+    transparent: true,
+    opacity: 0.95,
+    vertexColors: true,
+  });
+  const particlePoints = new THREE.Points(particleGeometry, particleMaterial);
+  particlePoints.name = "flame_aoe3d:wake_sdf_control_particles_debug";
+  particlePoints.renderOrder = FLAME_AOE_RENDER_ORDER_BASE + 9;
+  group.add(particlePoints);
+
+  group.userData.debugBuffers = Object.freeze({
+    particlePositions,
+    particleColors,
+    particleGeometry,
+  });
+  return group;
+}
+
 function resolveWakeSdfCardSize(bo, config) {
   const liftPx = bo * clampNumber(config && config.wakeSdfHeightBo, 0.1, 8, 1.15);
   const authoredSlackPx = bo * clampNumber(config && config.wakeLengthBo, 0, 4, 0);
@@ -994,6 +1048,7 @@ export function createFlameAoe3dRuntime({
   let wakeSdfMaterial = null;
   let wakeMesh = null;
   let wakeSdfMesh = null;
+  let wakeSdfDebugGroup = null;
   let wakePivot = null;
   let activeConfig = null;
   let startedAtMs = 0;
@@ -1134,6 +1189,22 @@ export function createFlameAoe3dRuntime({
       if (uniformParticles[i]) uniformParticles[i].set(particle.position.x, particle.position.y, radius, heat);
       if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
     }
+    const debugBuffers = wakeSdfDebugGroup && wakeSdfDebugGroup.userData && wakeSdfDebugGroup.userData.debugBuffers;
+    if (debugBuffers && debugBuffers.particlePositions && debugBuffers.particleColors && debugBuffers.particleGeometry) {
+      for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
+        const particle = wakeSdfControlParticles[i];
+        const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
+        const heat = particle.heat * (1 - ageT);
+        debugBuffers.particlePositions[i * 3] = particle.position.x;
+        debugBuffers.particlePositions[i * 3 + 1] = particle.position.y;
+        debugBuffers.particlePositions[i * 3 + 2] = 2.5 + i * 0.002;
+        debugBuffers.particleColors[i * 3] = Math.max(0.35, heat);
+        debugBuffers.particleColors[i * 3 + 1] = 0.18 + heat * 0.72;
+        debugBuffers.particleColors[i * 3 + 2] = 0.02;
+      }
+      debugBuffers.particleGeometry.attributes.position.needsUpdate = true;
+      debugBuffers.particleGeometry.attributes.color.needsUpdate = true;
+    }
   }
 
   function updateWakeMotion(dtSec) {
@@ -1242,6 +1313,7 @@ export function createFlameAoe3dRuntime({
     wakeSdfMaterial = null;
     wakeMesh = null;
     wakeSdfMesh = null;
+    wakeSdfDebugGroup = null;
     wakePivot = null;
     activeConfig = null;
     lastTickMs = 0;
@@ -1376,6 +1448,8 @@ export function createFlameAoe3dRuntime({
         wakeSdf.renderOrder = FLAME_AOE_RENDER_ORDER_BASE + 2;
         wakeSdfMesh = wakeSdf;
         wakePivot.add(wakeSdf);
+        wakeSdfDebugGroup = createWakeSdfDebugVisuals(bo);
+        wakePivot.add(wakeSdfDebugGroup);
       }
       group.add(aoeAuraDisc);
       group.add(aura);
