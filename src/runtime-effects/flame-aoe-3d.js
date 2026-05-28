@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260527180600";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260527182400";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
@@ -831,11 +831,13 @@ function createWakeSdfMaterial(config) {
         float flame = smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field);
         float plumeMask = smoothstep(-0.18, 0.18, rawHeightT);
         float outsideOrb = smoothstep(uOrbRadius - uWakeSoftness * 0.9, uOrbRadius + uWakeSoftness * 0.9, length(p));
-        float lowerPoleFeather = smoothstep(-uOrbRadius - uWakeSoftness * 1.4, -uOrbRadius + uWakeSoftness * 1.4, p.y);
+        float lowerArcX = clamp(p.x, -uOrbRadius, uOrbRadius);
+        float lowerArcY = -sqrt(max(0.0, uOrbRadius * uOrbRadius - lowerArcX * lowerArcX));
+        float lowerOrbFeather = smoothstep(lowerArcY - uWakeSoftness * 1.4, lowerArcY + uWakeSoftness * 1.4, p.y);
         float sideFade = 1.0 - smoothstep(uWakeOrbRadius * 2.1, uWakeOrbRadius * 3.4, abs(p.x - tip.x * heightT));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
-        float alpha = body * flame * plumeMask * outsideOrb * lowerPoleFeather * sideFade * cardFade;
+        float alpha = body * flame * plumeMask * outsideOrb * lowerOrbFeather * sideFade * cardFade;
         vec3 ember = vec3(1.0, 0.17, 0.02);
         vec3 hot = vec3(1.0, 0.78, 0.28);
         vec3 color = mix(ember, hot, smoothstep(threshold, 1.0, field));
