@@ -5,6 +5,22 @@ import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
 const WAKE_SDF_FIELD_EMITTER_COUNT = 9;
+const WAKE_SDF_CONTROL_PARTICLE_COUNT = 32;
+const WAKE_SDF_SOURCE_GRAPH = Object.freeze([
+  [0, 0],
+  [-0.42, 0],
+  [0.42, 0],
+  [0, 0.42],
+  [0, -0.42],
+  [-0.36, 0.36],
+  [0.36, 0.36],
+  [-0.36, -0.36],
+  [0.36, -0.36],
+  [-0.72, 0.08],
+  [0.72, 0.08],
+  [-0.12, 0.72],
+  [0.12, -0.72],
+]);
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -734,6 +750,14 @@ function createWakeSdfMaterial(config) {
     const heat = index < 3 ? 1.0 : 0.95 - t * 0.35;
     return new THREE.Vector4(x, y, Math.max(1, radius), heat);
   });
+  const controlParticles = Array.from({ length: WAKE_SDF_CONTROL_PARTICLE_COUNT }, (_, index) => {
+    const source = WAKE_SDF_SOURCE_GRAPH[index % WAKE_SDF_SOURCE_GRAPH.length];
+    const t = index / Math.max(1, WAKE_SDF_CONTROL_PARTICLE_COUNT - 1);
+    const x = source[0] * orbRadiusPx * 0.8;
+    const y = source[1] * orbRadiusPx * 0.8 + t * orbRadiusPx * 0.72;
+    return new THREE.Vector4(x, y, orbRadiusPx * (0.18 + (1 - t) * 0.18), 1 - t * 0.72);
+  });
+  const controlVelocities = Array.from({ length: WAKE_SDF_CONTROL_PARTICLE_COUNT }, () => new THREE.Vector2(0, 1));
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:wake_sdf_material",
     transparent: true,
@@ -756,6 +780,8 @@ function createWakeSdfMaterial(config) {
       uWakeTrailPoints: { value: trailPoints },
       uWakeTrailRadii: { value: trailRadii },
       uWakeFieldEmitters: { value: fieldEmitters },
+      uWakeControlParticles: { value: controlParticles },
+      uWakeControlVelocities: { value: controlVelocities },
     },
     vertexShader: `
       precision highp float;
@@ -771,6 +797,7 @@ function createWakeSdfMaterial(config) {
       precision highp float;
       #define WAKE_POINT_COUNT ${WAKE_SDF_TRAIL_POINT_COUNT}
       #define FIELD_EMITTER_COUNT ${WAKE_SDF_FIELD_EMITTER_COUNT}
+      #define CONTROL_PARTICLE_COUNT ${WAKE_SDF_CONTROL_PARTICLE_COUNT}
       uniform float uTime;
       uniform float uOrbRadius;
       uniform float uWakeOrbRadius;
@@ -785,6 +812,8 @@ function createWakeSdfMaterial(config) {
       uniform vec2 uWakeTrailPoints[WAKE_POINT_COUNT];
       uniform float uWakeTrailRadii[WAKE_POINT_COUNT];
       uniform vec4 uWakeFieldEmitters[FIELD_EMITTER_COUNT];
+      uniform vec4 uWakeControlParticles[CONTROL_PARTICLE_COUNT];
+      uniform vec2 uWakeControlVelocities[CONTROL_PARTICLE_COUNT];
       varying vec2 vWakePos;
       varying vec2 vWakeUv;
       float hash31(vec3 p) {
@@ -880,87 +909,41 @@ function createWakeSdfMaterial(config) {
       }
       void main() {
         vec2 p = vWakePos;
-        float spineT = 0.0;
-        float signedSide = 0.0;
-        float spineDistance = 0.0;
-        float spineRadius = 1.0;
-        vec2 tangent = vec2(0.0, 1.0);
-        resolveSpineFrame(p, spineT, signedSide, spineDistance, spineRadius, tangent);
-        float hipBulge = smoothstep(0.0, 0.22, spineT) * (1.0 - smoothstep(0.58, 0.92, spineT));
-        float tailNeedle = smoothstep(0.62, 1.0, spineT);
-        float edgeT = clamp(spineDistance / max(1.0, spineRadius), 0.0, 2.4);
-        float looseEdgeT = spineDistance / max(1.0, spineRadius * (1.0 + hipBulge * 0.58 - tailNeedle * 0.18));
-        float motionSide = uWakeMotionOffset.x + uWakeMotionOffset.z * 0.45;
-        float motionLift = uWakeMotionOffset.y;
-        float emitterDensity = 0.0;
-        float emitterHeat = 0.0;
-        vec2 emitterFlow = vec2(0.0, 1.0);
-        sampleEmitterField(p, emitterDensity, emitterHeat, emitterFlow);
-        float leanPx = clamp(motionSide, -1.35, 1.35) * uOrbRadius;
-        float rootBelly = sdEllipse(p, vec2(leanPx * 0.16, -uOrbRadius * 0.76), vec2(uOrbRadius * 1.34, uOrbRadius * 0.7));
-        float lowerCup = sdEllipse(p, vec2(leanPx * 0.08, -uOrbRadius * 0.42), vec2(uOrbRadius * 1.04, uOrbRadius * 0.48));
-        float leftShoulder = sdEllipse(p, vec2(-uOrbRadius * 0.7 + leanPx * 0.12, -uOrbRadius * 0.18), vec2(uOrbRadius * (0.54 + max(-motionSide, 0.0) * 0.22), uOrbRadius * 0.76));
-        float rightShoulder = sdEllipse(p, vec2(uOrbRadius * 0.7 + leanPx * 0.12, -uOrbRadius * 0.18), vec2(uOrbRadius * (0.54 + max(motionSide, 0.0) * 0.22), uOrbRadius * 0.76));
-        float shoulder = smoothMin(leftShoulder, rightShoulder, uWakeBlend * 1.45);
-        float d = smoothMin(rootBelly, lowerCup, uWakeBlend * 1.7);
-        d = smoothMin(d, shoulder, uWakeBlend * 1.25);
-        for (int i = 0; i < WAKE_POINT_COUNT - 1; i += 1) {
-          float segmentT = float(i) / float(WAKE_POINT_COUNT - 1);
-          float segment = sdTaperedCapsule(p, uWakeTrailPoints[i], uWakeTrailPoints[i + 1], uWakeTrailRadii[i] * (1.16 - segmentT * 0.1), uWakeTrailRadii[i + 1]);
-          d = smoothMin(d, segment, uWakeBlend * mix(1.42, 0.86, segmentT));
+        float density = 0.0;
+        float heat = 0.0;
+        vec2 flow = vec2(0.0, 1.0);
+        float flowWeight = 0.0001;
+        for (int i = 0; i < CONTROL_PARTICLE_COUNT; i += 1) {
+          vec4 particle = uWakeControlParticles[i];
+          vec2 delta = p - particle.xy;
+          float radius = max(1.0, particle.z);
+          float ageHeat = max(0.0, particle.w);
+          float normDist = length(delta) / radius;
+          float influence = (1.0 - smoothstep(0.22, 1.28, normDist)) * ageHeat;
+          float core = (1.0 - smoothstep(0.0, 0.62, normDist)) * ageHeat;
+          density += influence;
+          heat += core;
+          flow += uWakeControlVelocities[i] * influence;
+          flowWeight += influence;
         }
-        for (int i = 1; i < WAKE_POINT_COUNT; i += 1) {
-          float t = float(i) / float(WAKE_POINT_COUNT - 1);
-          float lobe = sdEllipse(p, uWakeTrailPoints[i], vec2(uWakeTrailRadii[i] * mix(1.28, 0.52, t), uWakeTrailRadii[i] * mix(1.04, 1.24, t)));
-          d = smoothMin(d, lobe, uWakeBlend * mix(1.12, 0.58, t));
-        }
-        vec3 bodyFlow = vec3(
-          signedSide / max(1.0, spineRadius * (1.0 + hipBulge * 0.38)),
-          spineT * 1.78,
-          looseEdgeT + dot(tangent, vec2(motionSide, motionLift)) * 0.22
-        ) * uWakeNoiseScale;
-        bodyFlow.y -= uTime * uWakeNoiseSpeed * 0.82;
-        bodyFlow.x += motionSide * 1.55 + sin(spineT * 6.283 + uTime * uWakeNoiseSpeed * 0.55) * 0.18;
-        vec2 greaseWarp = vec2(
-          fbm(bodyFlow + vec3(4.2, 11.7, -2.3)),
-          fbm(bodyFlow + vec3(-9.1, 3.4, 8.6))
-        ) - vec2(0.5);
-        bodyFlow.x += greaseWarp.x * (0.95 + hipBulge * 1.2);
-        bodyFlow.y += greaseWarp.y * 0.58;
-        bodyFlow.xy += emitterFlow * emitterDensity * 0.42;
-        float bodyField = fbm(bodyFlow);
-        vec3 lickFlow = vec3(
-          signedSide / max(1.0, spineRadius * (0.5 + hipBulge * 0.18)),
-          spineT * 3.7 - uTime * uWakeNoiseSpeed * 1.35,
-          looseEdgeT * 1.6 + length(uWakeMotionOffset.xz) * 0.78
-        ) * (uWakeNoiseScale * 2.35);
-        lickFlow.x += greaseWarp.x * 1.35 + motionSide * 0.8;
-        float lickField = fbm(lickFlow + vec3(13.7, -5.1, 8.3));
-        float ribbonField = fbm(vec3(signedSide / max(1.0, spineRadius * 0.34) + greaseWarp.x * 1.8, spineT * 6.2 - uTime * uWakeNoiseSpeed * 1.75, looseEdgeT * 0.7));
-        float edgeErode = smoothstep(0.46, 1.25, looseEdgeT) * smoothstep(0.12, 0.9, spineT);
-        float field = mix(bodyField, lickField, edgeErode * 0.38);
-        field = mix(field, ribbonField, smoothstep(0.45, 1.0, spineT) * 0.22);
-        field = mix(field, max(field, emitterHeat), clamp(emitterDensity * 0.24, 0.0, 0.42));
-        float erodedDistance = d + (0.5 - bodyField) * uWakeSoftness * (0.72 + tailNeedle * 0.35) + (0.52 - lickField) * uWakeSoftness * edgeErode * 1.45;
-        float body = 1.0 - smoothstep(-uWakeSoftness * (0.74 + hipBulge * 0.28), max(0.001, uWakeSoftness * 1.16), erodedDistance);
-        float emitterBody = smoothstep(0.08, 0.74, emitterDensity);
-        body = max(body * 0.62, emitterBody);
+        density = clamp(density * 0.42, 0.0, 1.4);
+        heat = clamp(heat * 0.62, 0.0, 1.25);
+        flow = normalize(flow / flowWeight + vec2(uWakeMotionOffset.x * 0.2, 0.72));
+        vec3 bodyFlow = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeNoiseScale;
+        bodyFlow.xy += flow * (uTime * uWakeNoiseSpeed * 0.28);
+        bodyFlow.z = uTime * uWakeNoiseSpeed * 0.35 + density * 1.7;
+        float field = fbm(bodyFlow);
+        float flame = smoothstep(0.18, 0.84, density) * smoothstep(0.22, 0.82, field + heat * 0.28);
         float threshold = mix(0.72, 0.28, clamp(uWakeDensity, 0.0, 1.0));
-        float flame = smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field);
-        float plumeMask = smoothstep(-0.08, 0.1, spineT) * (1.0 - smoothstep(1.38, 1.86, spineT));
-        float outsideOrb = smoothstep(uOrbRadius - uWakeSoftness * 0.9, uOrbRadius + uWakeSoftness * 0.9, length(p));
-        float lowerArcX = clamp(p.x, -uOrbRadius, uOrbRadius);
-        float lowerArcY = -sqrt(max(0.0, uOrbRadius * uOrbRadius - lowerArcX * lowerArcX));
-        float lowerOrbFeather = smoothstep(lowerArcY - uWakeSoftness * 1.4, lowerArcY + uWakeSoftness * 1.4, p.y);
-        float sideLimit = mix(1.84, 1.22, tailNeedle) + hipBulge * 0.52;
-        float sideFade = 1.0 - smoothstep(sideLimit, sideLimit + 0.74, looseEdgeT);
+        flame *= smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field + density * 0.18);
+        float orbOcclusion = smoothstep(uOrbRadius * 0.72, uOrbRadius * 1.02, length(p));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
-        float alpha = body * flame * plumeMask * outsideOrb * lowerOrbFeather * mix(sideFade, 1.0, emitterDensity * 0.34) * cardFade;
+        float alpha = flame * orbOcclusion * cardFade;
         vec3 ember = vec3(1.0, 0.17, 0.02);
         vec3 hot = vec3(1.0, 0.78, 0.28);
-        vec3 color = mix(ember, hot, smoothstep(threshold, 1.0, field));
-        color *= 0.65 + body * 0.75;
+        vec3 color = mix(ember, hot, smoothstep(0.16, 0.92, heat + field * 0.35));
+        color *= 0.55 + density * 0.95;
         if (alpha <= 0.004) discard;
         gl_FragColor = vec4(color, alpha);
       }
@@ -1030,6 +1013,17 @@ export function createFlameAoe3dRuntime({
   const wakeSdfTrailPoints = Array.from({ length: WAKE_SDF_TRAIL_POINT_COUNT }, () => new THREE.Vector2());
   const wakeSdfTargetPoints = Array.from({ length: WAKE_SDF_TRAIL_POINT_COUNT }, () => new THREE.Vector2());
   const wakeSdfTrailRadii = Array.from({ length: WAKE_SDF_TRAIL_POINT_COUNT }, () => 1);
+  const wakeSdfControlParticles = Array.from({ length: WAKE_SDF_CONTROL_PARTICLE_COUNT }, () => ({
+    position: new THREE.Vector2(),
+    velocity: new THREE.Vector2(),
+    age: 0,
+    life: 1,
+    radius: 1,
+    heat: 0,
+    sourceIndex: 0,
+  }));
+  let wakeSdfParticleCursor = 0;
+  let wakeSdfRandomSeed = 0x5f3759df;
   let wakeGroundLift = 0;
 
   function measureTrace(name, fn) {
@@ -1066,6 +1060,38 @@ export function createFlameAoe3dRuntime({
     return Math.max(0, Math.min(bo * 0.08, (groundY - wakeBottomY) * 0.5));
   }
 
+  function nextWakeSdfRandom() {
+    wakeSdfRandomSeed = (wakeSdfRandomSeed * 1664525 + 1013904223) >>> 0;
+    return wakeSdfRandomSeed / 4294967296;
+  }
+
+  function respawnWakeSdfControlParticle(index, bo, initialAge = 0) {
+    const particle = wakeSdfControlParticles[index];
+    if (!particle) return;
+    const visualOrbRadius = bo * 0.5;
+    const sourceIndex = (wakeSdfParticleCursor + index) % WAKE_SDF_SOURCE_GRAPH.length;
+    const source = WAKE_SDF_SOURCE_GRAPH[sourceIndex] || WAKE_SDF_SOURCE_GRAPH[0];
+    const localMotion = new THREE.Vector2(orbFrameDelta.x + orbFrameDelta.z * 0.45, orbFrameDelta.y);
+    const speed = localMotion.length();
+    const motionDir = speed > 0.001 ? localMotion.clone().multiplyScalar(1 / speed) : new THREE.Vector2(0, -0.35);
+    const sourceDir = new THREE.Vector2(source[0], source[1]);
+    if (sourceDir.lengthSq() > 0.0001) sourceDir.normalize();
+    const trailingBias = clampNumber(0.5 + sourceDir.dot(motionDir.clone().multiplyScalar(-1)) * 0.5, 0.22, 1.0, 0.55);
+    const jitterAngle = nextWakeSdfRandom() * Math.PI * 2;
+    const jitterRadius = visualOrbRadius * (0.04 + nextWakeSdfRandom() * 0.1);
+    const jitter = new THREE.Vector2(Math.cos(jitterAngle), Math.sin(jitterAngle)).multiplyScalar(jitterRadius);
+    particle.position.set(source[0] * visualOrbRadius * 0.84, source[1] * visualOrbRadius * 0.84).add(jitter);
+    particle.velocity
+      .copy(localMotion)
+      .multiplyScalar(-0.42 - trailingBias * 0.38)
+      .add(new THREE.Vector2((nextWakeSdfRandom() - 0.5) * bo * 0.16, bo * (0.22 + nextWakeSdfRandom() * 0.12)));
+    particle.life = 0.48 + trailingBias * 0.48 + nextWakeSdfRandom() * 0.18;
+    particle.age = Math.min(particle.life * 0.92, Math.max(0, initialAge));
+    particle.radius = bo * (0.08 + trailingBias * 0.1 + nextWakeSdfRandom() * 0.04);
+    particle.heat = 0.34 + trailingBias * 0.72;
+    particle.sourceIndex = sourceIndex;
+  }
+
   function resetWakeSdfSpine(liftOffset, bo) {
     const liftY = Math.max(bo * 0.08, Number(liftOffset && liftOffset.y) || bo);
     const orbRadius = bo * 0.5;
@@ -1074,59 +1100,39 @@ export function createFlameAoe3dRuntime({
       wakeSdfTrailPoints[i].set(0, -orbRadius + liftY * t);
       wakeSdfTargetPoints[i].copy(wakeSdfTrailPoints[i]);
     }
+    wakeSdfRandomSeed = 0x5f3759df;
+    for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
+      const stagger = (i / WAKE_SDF_CONTROL_PARTICLE_COUNT) * 0.82;
+      respawnWakeSdfControlParticle(i, bo, stagger);
+    }
   }
 
   function updateWakeSdfSpine(bo, safeDt) {
     const uniforms = wakeSdfMaterial && wakeSdfMaterial.uniforms;
-    if (!uniforms || !uniforms.uWakeTrailPoints || !uniforms.uWakeTrailRadii) return;
-    const orbRadius = bo * clampNumber(activeConfig && activeConfig.wakeSdfRadiusBo, 0.05, 4, 0.42);
-    const visualOrbRadius = bo * 0.5;
-    const coreRadius = bo * clampNumber(activeConfig && activeConfig.wakeSdfCoreRadiusBo, 0.02, 3, 0.2);
-    const lateral = liftCoreOffset.x + liftCoreOffset.z * 0.45;
-    const liftY = Math.max(bo * 0.08, liftCoreOffset.y);
-    const motionCurl = (orbFrameDelta.x + orbFrameDelta.z * 0.45) * 0.72;
-    const motionMag = Math.hypot(orbFrameDelta.x, orbFrameDelta.y, orbFrameDelta.z);
-    for (let i = 0; i < WAKE_SDF_TRAIL_POINT_COUNT; i += 1) {
-      const t = i / Math.max(1, WAKE_SDF_TRAIL_POINT_COUNT - 1);
-      const stage = t * t * (1.0 + t * 0.35);
-      const belly = Math.sin(t * Math.PI);
-      const curl = belly * (lateral * 0.42 + motionCurl * (0.42 + t * 0.86));
-      const tailDrag = motionCurl * t * t * 0.36;
-      const x = lateral * stage + curl + tailDrag;
-      const y = -visualOrbRadius + liftY * (t + t * t * 0.08) - Math.abs(lateral) * 0.1 * belly - motionMag * 0.045 * t;
-      wakeSdfTargetPoints[i].set(x, y);
-      const followRate = 30 - (t * 22);
-      wakeSdfTrailPoints[i].lerp(wakeSdfTargetPoints[i], 1 - Math.exp(-safeDt * followRate));
-      const hip = Math.max(0, Math.sin(Math.PI * Math.min(1, t * 1.35))) * (1 - Math.min(1, Math.max(0, (t - 0.62) / 0.38)));
-      const kiteTaper = t * t * 0.24;
-      wakeSdfTrailRadii[i] = Math.max(1, (orbRadius * (1 - t) + coreRadius * t) * (1 + hip * 0.48 - kiteTaper));
+    if (!uniforms || !uniforms.uWakeControlParticles || !uniforms.uWakeControlVelocities) return;
+    if (wakeSdfControlParticles.every((particle) => particle.heat <= 0)) {
+      for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) respawnWakeSdfControlParticle(i, bo, i * 0.02);
     }
-    wakeSdfTrailPoints[0].set(0, -visualOrbRadius);
-    const uniformPoints = uniforms.uWakeTrailPoints.value;
-    const uniformRadii = uniforms.uWakeTrailRadii.value;
-    for (let i = 0; i < WAKE_SDF_TRAIL_POINT_COUNT; i += 1) {
-      if (uniformPoints[i]) uniformPoints[i].copy(wakeSdfTrailPoints[i]);
-      uniformRadii[i] = wakeSdfTrailRadii[i];
-    }
-    const emitters = uniforms.uWakeFieldEmitters && uniforms.uWakeFieldEmitters.value;
-    if (emitters) {
-      const leftHeat = 0.94 + Math.max(-lateral / Math.max(1, bo), 0) * 0.2;
-      const rightHeat = 0.94 + Math.max(lateral / Math.max(1, bo), 0) * 0.2;
-      const setEmitter = (index, x, y, radius, heat) => {
-        if (!emitters[index]) return;
-        emitters[index].set(x, y, Math.max(1, radius), Math.max(0, heat));
-      };
-      setEmitter(0, -visualOrbRadius * 0.46 + lateral * 0.08, -visualOrbRadius * 0.72, visualOrbRadius * 0.58, leftHeat);
-      setEmitter(1, lateral * 0.1, -visualOrbRadius * 0.62, visualOrbRadius * 0.82, 1.12);
-      setEmitter(2, visualOrbRadius * 0.46 + lateral * 0.08, -visualOrbRadius * 0.72, visualOrbRadius * 0.58, rightHeat);
-      setEmitter(3, -visualOrbRadius * 0.76 + lateral * 0.24, -visualOrbRadius * 0.12 + liftY * 0.09, visualOrbRadius * (0.46 + Math.max(-lateral / Math.max(1, bo), 0) * 0.14), leftHeat * 0.86);
-      setEmitter(4, visualOrbRadius * 0.76 + lateral * 0.24, -visualOrbRadius * 0.12 + liftY * 0.09, visualOrbRadius * (0.46 + Math.max(lateral / Math.max(1, bo), 0) * 0.14), rightHeat * 0.86);
-      for (let i = 0; i < 4; i += 1) {
-        const trailIndex = Math.min(WAKE_SDF_TRAIL_POINT_COUNT - 1, i + 1);
-        const t = trailIndex / Math.max(1, WAKE_SDF_TRAIL_POINT_COUNT - 1);
-        const point = wakeSdfTrailPoints[trailIndex];
-        setEmitter(5 + i, point.x, point.y, wakeSdfTrailRadii[trailIndex] * (1.1 - t * 0.18), 0.88 - t * 0.34);
+    const uniformParticles = uniforms.uWakeControlParticles.value;
+    const uniformVelocities = uniforms.uWakeControlVelocities.value;
+    wakeSdfParticleCursor = (wakeSdfParticleCursor + 1) % WAKE_SDF_CONTROL_PARTICLE_COUNT;
+    respawnWakeSdfControlParticle(wakeSdfParticleCursor, bo, 0);
+    const drag = Math.exp(-safeDt * 1.85);
+    const buoyancy = bo * 0.34;
+    for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
+      const particle = wakeSdfControlParticles[i];
+      particle.age += safeDt;
+      if (particle.age >= particle.life) {
+        respawnWakeSdfControlParticle(i, bo, 0);
       }
+      particle.velocity.multiplyScalar(drag);
+      particle.velocity.y += buoyancy * safeDt;
+      particle.position.addScaledVector(particle.velocity, safeDt);
+      const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
+      const heat = particle.heat * (1 - ageT);
+      const radius = particle.radius * (1 + ageT * 1.45);
+      if (uniformParticles[i]) uniformParticles[i].set(particle.position.x, particle.position.y, radius, heat);
+      if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
     }
   }
 
