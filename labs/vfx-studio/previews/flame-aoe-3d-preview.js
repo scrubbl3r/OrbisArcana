@@ -1151,14 +1151,15 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         }
         vec2 tip = uWakeTrailPoints[WAKE_POINT_COUNT - 1];
         float wakeHeight = max(1.0, tip.y - uWakeTrailPoints[0].y);
-        float heightT = clamp((p.y - uWakeTrailPoints[0].y) / wakeHeight, 0.0, 1.0);
+        float rawHeightT = (p.y - uWakeTrailPoints[0].y) / wakeHeight;
+        float heightT = clamp(rawHeightT, -0.35, 1.85);
         vec3 flow = vec3(p / max(1.0, uWakeOrbRadius), heightT) * uWakeNoiseScale + vec3(0.0, -uTime * uWakeNoiseSpeed, 0.0);
         float field = fbm(flow);
         float erodedDistance = d + (0.5 - field) * uWakeSoftness * 1.35;
         float body = 1.0 - smoothstep(-uWakeSoftness * 0.45, max(0.001, uWakeSoftness * 0.95), erodedDistance);
         float threshold = mix(0.72, 0.28, clamp(uWakeDensity, 0.0, 1.0));
         float flame = smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field);
-        float plumeMask = smoothstep(0.04, 0.26, heightT) * (1.0 - smoothstep(0.96, 1.0, heightT));
+        float plumeMask = smoothstep(-0.18, 0.18, rawHeightT);
         float sideFade = 1.0 - smoothstep(uWakeOrbRadius * 2.1, uWakeOrbRadius * 3.4, abs(p.x - tip.x * heightT));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
@@ -1175,7 +1176,6 @@ function createWakeSdfCardGeometry(width, height) {
   const safeWidth = Math.max(1, Number(width) || 1);
   const safeHeight = Math.max(1, Number(height) || 1);
   const geometry = new THREE.PlaneGeometry(safeWidth, safeHeight, 1, 1);
-  geometry.translate(0, safeHeight * 0.42, 0);
   return geometry;
 }
 
@@ -1189,9 +1189,12 @@ function resolveWakeSdfCardSize(bo, config) {
   const radiusPx = bo * clampNumber(config && config.wakeSdfRadiusBo, 0.05, 4, 0.42);
   const corePx = bo * clampNumber(config && config.wakeSdfCoreRadiusBo, 0.02, 3, 0.2);
   const softnessPx = bo * clampNumber(config && config.wakeSdfSoftnessBo, 0.001, 2, 0.3);
+  const devEnvelopePx = bo * 8;
+  const dynamicEnvelopePx = (liftPx + motionSlackPx + radiusPx + corePx + softnessPx) * 2.8;
+  const fieldSizePx = Math.max(devEnvelopePx, dynamicEnvelopePx);
   return {
-    width: Math.max(bo * 4.8, (motionSlackPx * 2.8) + (radiusPx + softnessPx) * 3.2),
-    height: Math.max(bo * 3.2, liftPx + motionSlackPx * 0.65 + corePx * 2.8 + softnessPx * 3.2),
+    width: fieldSizePx,
+    height: fieldSizePx,
   };
 }
 
