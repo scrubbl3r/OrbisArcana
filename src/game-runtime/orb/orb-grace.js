@@ -26,6 +26,8 @@ export function resolveOrbGracePayload(rawGrace, { defaultTtlMs = 2500 } = {}) {
     minBreakMs: Math.max(0, Number(source.minBreakMs) || 0),
     persistent,
     source: String(source.source || ""),
+    clearPolicy: String(source.clearPolicy || ""),
+    lockSource: String(source.lockSource || ""),
     suppressInput: source.suppressInput === true,
     breakOnLift: source.breakOnLift !== false,
     breakOnMotion: source.breakOnMotion !== false,

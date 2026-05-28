@@ -45,7 +45,7 @@ export const INTERACTION_GRAPH_V2 = {
     {
       id: "orbis_graviton_cast",
       on: { word: "graviton" },
-      trigger: { spell: "float" },
+      trigger: { spell: { id: "float", args: { sourceWordId: "graviton" } } },
       grace: {},
     },
     // ORB SPIN ABILITY WINDOW

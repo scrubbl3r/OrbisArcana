@@ -141,6 +141,8 @@ export function createOrbStageActionBridge({
         floatGraceUntilMs: resolvedGrace.persistent ? 0 : now + Math.max(50, Number(resolvedGrace.ttlMs) || defaultTtlMs),
         floatGracePersistent: !!resolvedGrace.persistent,
         floatGraceSource: String(resolvedGrace.source || ""),
+        floatGraceClearPolicy: String(resolvedGrace.clearPolicy || ""),
+        floatGraceLockSource: String(resolvedGrace.lockSource || ""),
         floatGraceSuppressInput: !!resolvedGrace.suppressInput,
         floatGraceBreakOnLift: resolvedGrace.breakOnLift !== false,
         floatGraceBreakOnMotion: resolvedGrace.breakOnMotion !== false,

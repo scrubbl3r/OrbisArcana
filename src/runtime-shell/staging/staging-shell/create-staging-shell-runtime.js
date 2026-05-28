@@ -249,6 +249,8 @@ function buildShellStageInitialState(phys = {}) {
     floatGraceUntilMs: 0,
     floatGracePersistent: false,
     floatGraceSource: "",
+    floatGraceClearPolicy: "",
+    floatGraceLockSource: "",
     floatGraceSuppressInput: false,
     floatGraceBreakOnLift: true,
     floatGraceBreakOnMotion: true,
@@ -1114,6 +1116,8 @@ function resetShellOrbToGround(shellContext) {
     floatGracePhase: 0,
     floatGracePersistent: false,
     floatGraceSource: "",
+    floatGraceClearPolicy: "",
+    floatGraceLockSource: "",
     floatGraceSuppressInput: false,
     floatGraceBreakOnLift: true,
     floatGraceBreakOnMotion: true,
@@ -1237,6 +1241,8 @@ function tickShellStageRuntime(shellContext, dt) {
     state.floatGraceUntilMs = 0;
     state.floatGracePersistent = false;
     state.floatGraceSource = "";
+    state.floatGraceClearPolicy = "";
+    state.floatGraceLockSource = "";
     state.floatGraceSuppressInput = false;
     state.floatGraceBreakOnLift = true;
     state.floatGraceBreakOnMotion = true;
@@ -1634,6 +1640,8 @@ function startShellStageLoop(shellContext) {
         floatGraceUntilMs: 0,
         floatGracePersistent: false,
         floatGraceSource: "",
+        floatGraceClearPolicy: "",
+        floatGraceLockSource: "",
         floatGraceSuppressInput: false,
         floatGraceBreakOnLift: true,
         floatGraceBreakOnMotion: true,
@@ -2074,6 +2082,19 @@ function shellGrantOrbGrace(shellContext, grace = {}) {
   const runtime = shellContext && shellContext.runtime ? shellContext.runtime : null;
   const orbStageActions = getShellOrbStageActions(shellContext);
   if (!orbStageActions || typeof orbStageActions.grantOrbGrace !== "function") return;
+  const orbState = runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
+    ? runtime.orbRuntimeState.get()
+    : null;
+  if (
+    orbState &&
+    orbState.floatGraceActive &&
+    orbState.floatGracePersistent &&
+    String(orbState.floatGraceClearPolicy || "") === "source_toggle_only" &&
+    String(orbState.floatGraceLockSource || "") &&
+    String(grace && grace.lockSource || "") !== String(orbState.floatGraceLockSource || "")
+  ) {
+    return;
+  }
   orbStageActions.grantOrbGrace({
     grace,
     grantOrbGraceRuntime:
@@ -2250,6 +2271,8 @@ async function initShellReceiverHostRuntime(shellContext) {
           floatGraceUntilMs: 0,
           floatGracePersistent: false,
           floatGraceSource: "",
+          floatGraceClearPolicy: "",
+          floatGraceLockSource: "",
           floatGraceSuppressInput: false,
           floatGraceBreakOnLift: true,
           floatGraceBreakOnMotion: true,

@@ -25,7 +25,7 @@ export const CAST_ACTION_REGISTRY = Object.freeze([
   Object.freeze({
     id: "float",
     handlerKey: "toggle_float",
-    globeCost: 1,
+    globeCost: 0,
   }),
   Object.freeze({
     id: "orb_spin",

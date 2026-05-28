@@ -5,6 +5,8 @@ import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=2026
 
 export const FLOAT_GRACE_PROFILE = Object.freeze({
   source: "float",
+  clearPolicy: "source_toggle_only",
+  lockSource: "graviton",
   persistent: true,
   suppressInput: true,
   breakOnLift: false,
@@ -31,6 +33,26 @@ export function createShellSpellActionRuntime({
   }
 
   let lastHealCastAtMs = 0;
+
+  function clearFloatGraceState(orbRuntimeState, payload = {}) {
+    if (!orbRuntimeState || typeof orbRuntimeState.patch !== "function") return;
+    orbRuntimeState.patch({
+      floatGraceActive: false,
+      floatGraceUntilMs: 0,
+      floatGracePersistent: false,
+      floatGraceSource: "",
+      floatGraceClearPolicy: "",
+      floatGraceLockSource: "",
+      floatGraceSuppressInput: false,
+      floatGraceBreakOnLift: true,
+      floatGraceBreakOnMotion: true,
+      floatGraceStartedAtMs: 0,
+      floatGraceMinBreakMs: 0,
+    });
+    if (typeof shellActions.setOrbFloatHoldVisual === "function") {
+      shellActions.setOrbFloatHoldVisual({ active: false, atMs: Number(payload && payload.atMs) || performance.now() });
+    }
+  }
 
   const shellSpellActionHandlers = createSpellActionHandlersImported({
     eventBus,
@@ -73,21 +95,29 @@ export function createShellSpellActionRuntime({
       }
       const state = orbRuntimeState.get();
       if (!state) return false;
-      if (state.floatGraceActive && state.floatGracePersistent && String(state.floatGraceSource || "") === "float") {
-        orbRuntimeState.patch({
-          floatGraceActive: false,
-          floatGraceUntilMs: 0,
-          floatGracePersistent: false,
-          floatGraceSource: "",
-          floatGraceSuppressInput: false,
-          floatGraceBreakOnLift: true,
-          floatGraceBreakOnMotion: true,
-          floatGraceStartedAtMs: 0,
-          floatGraceMinBreakMs: 0,
-        });
-        if (typeof shellActions.setOrbFloatHoldVisual === "function") {
-          shellActions.setOrbFloatHoldVisual({ active: false, atMs: Number(payload && payload.atMs) || performance.now() });
-        }
+      const lockSource = String(state.floatGraceLockSource || "");
+      const clearPolicy = String(state.floatGraceClearPolicy || "");
+      const sourceWordId = String(
+        (payload && (payload.sourceWordId || payload.wordId || payload.spellId)) ||
+        (lockSource || "graviton")
+      ).trim().toLowerCase();
+      if (
+        state.floatGraceActive &&
+        state.floatGracePersistent &&
+        String(state.floatGraceSource || "") === "float" &&
+        (!clearPolicy || clearPolicy !== "source_toggle_only" || !lockSource || sourceWordId === lockSource)
+      ) {
+        clearFloatGraceState(orbRuntimeState, payload);
+        return true;
+      }
+      if (
+        state.floatGraceActive &&
+        state.floatGracePersistent &&
+        String(state.floatGraceSource || "") === "float" &&
+        clearPolicy === "source_toggle_only" &&
+        lockSource &&
+        sourceWordId !== lockSource
+      ) {
         return true;
       }
       const yW = Number.isFinite(Number(state.yW)) ? Number(state.yW) : 0;
@@ -113,6 +143,8 @@ export function createShellSpellActionRuntime({
         floatGraceUntilMs: Number(floatGrace && floatGrace.ttlMs) || 0,
         floatGracePersistent: !!(floatGrace && floatGrace.persistent),
         floatGraceSource: String(floatGrace && floatGrace.source || ""),
+        floatGraceClearPolicy: String(floatGrace && floatGrace.clearPolicy || ""),
+        floatGraceLockSource: String(floatGrace && floatGrace.lockSource || ""),
         floatGraceSuppressInput: !!(floatGrace && floatGrace.suppressInput),
         floatGraceBreakOnLift: floatGrace ? floatGrace.breakOnLift !== false : true,
         floatGraceBreakOnMotion: floatGrace ? floatGrace.breakOnMotion !== false : true,
@@ -133,7 +165,7 @@ export function createShellSpellActionRuntime({
       });
       if (typeof shellActions.setOrbFloatHoldVisual === "function") {
         shellActions.setOrbFloatHoldVisual({
-          active: false,
+          active: true,
           atMs: Number(payload && payload.atMs) || performance.now(),
           phase,
         });
