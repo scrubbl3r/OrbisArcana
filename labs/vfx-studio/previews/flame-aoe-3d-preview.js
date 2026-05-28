@@ -1135,6 +1135,11 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         return clamp(value, 0.0, 1.0);
       }
       float sdCircle(vec2 p, vec2 center, float radius) { return length(p - center) - radius; }
+      float sdEllipse(vec2 p, vec2 center, vec2 radius) {
+        vec2 safeRadius = max(radius, vec2(1.0));
+        vec2 q = (p - center) / safeRadius;
+        return (length(q) - 1.0) * min(safeRadius.x, safeRadius.y);
+      }
       float sdTaperedCapsule(vec2 p, vec2 a, vec2 b, float radiusA, float radiusB) {
         vec2 pa = p - a; vec2 ba = b - a;
         float h = clamp(dot(pa, ba) / max(0.0001, dot(ba, ba)), 0.0, 1.0);
@@ -1176,15 +1181,6 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       }
       void main() {
         vec2 p = vWakePos;
-        float d = sdCircle(p, uWakeTrailPoints[0], uWakeTrailRadii[0] * 0.78);
-        for (int i = 0; i < WAKE_POINT_COUNT - 1; i += 1) {
-          float segment = sdTaperedCapsule(p, uWakeTrailPoints[i], uWakeTrailPoints[i + 1], uWakeTrailRadii[i], uWakeTrailRadii[i + 1]);
-          d = smoothMin(d, segment, uWakeBlend);
-        }
-        for (int i = 1; i < WAKE_POINT_COUNT; i += 1) {
-          float lobe = sdCircle(p, uWakeTrailPoints[i], uWakeTrailRadii[i] * mix(1.08, 0.72, float(i) / float(WAKE_POINT_COUNT - 1)));
-          d = smoothMin(d, lobe, uWakeBlend * 0.72);
-        }
         float spineT = 0.0;
         float signedSide = 0.0;
         float spineDistance = 0.0;
@@ -1197,6 +1193,24 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float looseEdgeT = spineDistance / max(1.0, spineRadius * (1.0 + hipBulge * 0.58 - tailNeedle * 0.18));
         float motionSide = uWakeMotionOffset.x + uWakeMotionOffset.z * 0.45;
         float motionLift = uWakeMotionOffset.y;
+        float leanPx = clamp(motionSide, -1.35, 1.35) * uOrbRadius;
+        float rootBelly = sdEllipse(p, vec2(leanPx * 0.16, -uOrbRadius * 0.76), vec2(uOrbRadius * 1.34, uOrbRadius * 0.7));
+        float lowerCup = sdEllipse(p, vec2(leanPx * 0.08, -uOrbRadius * 0.42), vec2(uOrbRadius * 1.04, uOrbRadius * 0.48));
+        float leftShoulder = sdEllipse(p, vec2(-uOrbRadius * 0.7 + leanPx * 0.12, -uOrbRadius * 0.18), vec2(uOrbRadius * (0.54 + max(-motionSide, 0.0) * 0.22), uOrbRadius * 0.76));
+        float rightShoulder = sdEllipse(p, vec2(uOrbRadius * 0.7 + leanPx * 0.12, -uOrbRadius * 0.18), vec2(uOrbRadius * (0.54 + max(motionSide, 0.0) * 0.22), uOrbRadius * 0.76));
+        float shoulder = smoothMin(leftShoulder, rightShoulder, uWakeBlend * 1.45);
+        float d = smoothMin(rootBelly, lowerCup, uWakeBlend * 1.7);
+        d = smoothMin(d, shoulder, uWakeBlend * 1.25);
+        for (int i = 0; i < WAKE_POINT_COUNT - 1; i += 1) {
+          float segmentT = float(i) / float(WAKE_POINT_COUNT - 1);
+          float segment = sdTaperedCapsule(p, uWakeTrailPoints[i], uWakeTrailPoints[i + 1], uWakeTrailRadii[i] * (1.16 - segmentT * 0.1), uWakeTrailRadii[i + 1]);
+          d = smoothMin(d, segment, uWakeBlend * mix(1.42, 0.86, segmentT));
+        }
+        for (int i = 1; i < WAKE_POINT_COUNT; i += 1) {
+          float t = float(i) / float(WAKE_POINT_COUNT - 1);
+          float lobe = sdEllipse(p, uWakeTrailPoints[i], vec2(uWakeTrailRadii[i] * mix(1.28, 0.52, t), uWakeTrailRadii[i] * mix(1.04, 1.24, t)));
+          d = smoothMin(d, lobe, uWakeBlend * mix(1.12, 0.58, t));
+        }
         vec3 bodyFlow = vec3(
           signedSide / max(1.0, spineRadius * (1.0 + hipBulge * 0.38)),
           spineT * 1.78,
