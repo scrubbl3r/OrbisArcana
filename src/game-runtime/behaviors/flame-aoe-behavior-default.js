@@ -1,7 +1,7 @@
 export const FLAME_AOE_BEHAVIOR_DEFAULT = Object.freeze({
   enabled: true,
   visualProfile: "spellfire",
-  durationMs: 10000,
+  durationMs: 60000,
   hitRadiusBo: 2.50,
   wakeReachScale: 1.00,
   igniteDamage: 0.10,
