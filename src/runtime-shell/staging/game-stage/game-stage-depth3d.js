@@ -59,7 +59,7 @@ import {
 } from "../../../game-runtime/orb/orb-shader-heal-pulse-layer.js?v=20260517b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
-import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260527193000s";
+import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260527194500s";
 import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527122742s";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
@@ -608,9 +608,11 @@ export function createGameStageDepth3dLayer({
     const hitRadiusBo = Math.max(0.05, Number(behaviorConfig.hitRadiusBo) || Number(FLAME_AOE_BEHAVIOR_DEFAULT.hitRadiusBo) || 4.5);
     const wakeHeightBo = Math.max(
       hitRadiusBo,
-      (Number(visualConfig.wakeLiftBo) || 0)
-        + (Number(visualConfig.wakeLiftCoreRadiusBo) || 0)
-        + (Number(visualConfig.wakeStretchStrength) || 0)
+      Number(visualConfig.wakeSdfHeightBo) || (
+        (Number(visualConfig.wakeLiftBo) || 0)
+          + (Number(visualConfig.wakeLiftCoreRadiusBo) || 0)
+          + (Number(visualConfig.wakeStretchStrength) || 0)
+      )
     ) * Math.max(0, Number(behaviorConfig.wakeReachScale) || 0);
     const tickMs = Math.max(50, Number(behaviorConfig.roastTickMs) || 250);
     return Object.freeze({
@@ -1639,7 +1641,11 @@ export function createGameStageDepth3dLayer({
         return { handled: false, skipped: "flame_aoe3d_runtime_missing" };
       }
       clearTesla1Runtime("flame_aoe3d_started");
-      const flamePayload = payload && typeof payload === "object" ? payload : {};
+      const flamePayload = {
+        ...(payload && typeof payload === "object" ? payload : {}),
+        wakeMeshEnabled: 0,
+        wakeSdfEnabled: 1,
+      };
       const hasOrbModel = orb3dActorRuntime.hasModel();
       const result = hasOrbModel
         ? flameAoe3dRuntime.play(flamePayload)
