@@ -836,9 +836,25 @@ function createWakeSdfCardGeometry(width, height) {
   const safeWidth = Math.max(1, Number(width) || 1);
   const safeHeight = Math.max(1, Number(height) || 1);
   const geometry = new THREE.PlaneGeometry(safeWidth, safeHeight, 1, 1);
-  geometry.translate(0, safeHeight * 0.34, 0);
+  geometry.translate(0, safeHeight * 0.42, 0);
   geometry.userData.wakeSdfCard = Object.freeze({ width: safeWidth, height: safeHeight });
   return geometry;
+}
+
+function resolveWakeSdfCardSize(bo, config) {
+  const liftPx = bo * (
+    clampNumber(config && config.wakeLiftBo, 0, 4, 0.45)
+    + clampNumber(config && config.wakeStretchStrength, 0, 4, 0.24)
+  );
+  const authoredSlackPx = bo * clampNumber(config && config.wakeLengthBo, 0, 4, 0);
+  const motionSlackPx = Math.max(bo * 0.5, liftPx * 0.35, authoredSlackPx);
+  const radiusPx = bo * clampNumber(config && config.wakeSdfRadiusBo, 0.05, 4, 0.42);
+  const corePx = bo * clampNumber(config && config.wakeSdfCoreRadiusBo, 0.02, 3, 0.2);
+  const softnessPx = bo * clampNumber(config && config.wakeSdfSoftnessBo, 0.001, 2, 0.3);
+  return {
+    width: Math.max(bo * 4.8, (motionSlackPx * 2.8) + (radiusPx + softnessPx) * 3.2),
+    height: Math.max(bo * 3.2, liftPx + motionSlackPx * 0.65 + corePx * 2.8 + softnessPx * 3.2),
+  };
 }
 
 export function createFlameAoe3dRuntime({
@@ -1173,10 +1189,9 @@ export function createFlameAoe3dRuntime({
         });
         resetWakeSdfSpine(new THREE.Vector3(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0), bo);
         updateWakeSdfSpine(bo, 1 / 60);
-        const cardWidth = bo * Math.max(2.2, (config.wakeSdfRadiusBo * 5.2) + (config.wakeLengthBo * 0.7));
-        const cardHeight = bo * Math.max(2.2, config.wakeLiftBo + config.wakeStretchStrength + config.wakeSdfCoreRadiusBo * 2.4 + config.wakeSdfSoftnessBo * 2);
+        const cardSize = resolveWakeSdfCardSize(bo, config);
         const wakeSdf = new THREE.Mesh(
-          createWakeSdfCardGeometry(cardWidth, cardHeight),
+          createWakeSdfCardGeometry(cardSize.width, cardSize.height),
           wakeSdfMaterial
         );
         wakeSdf.name = "flame_aoe3d:wake_sdf_field";
