@@ -183,6 +183,7 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
 const FLAME_AOE_3D_BEHAVIOR_DEFAULTS = Object.freeze({
   enabled: true,
   visualProfile: "spellfire",
+  durationMs: 10000,
   hitRadiusBo: 4.5,
   wakeReachScale: 1,
   igniteDamage: 1,
@@ -311,6 +312,7 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
       wakeAlphaGradient3A: optionalNumber(els && els.flameAoe3dWakeAlphaGradient3A && els.flameAoe3dWakeAlphaGradient3A.value, 0, 1),
       wakeGraphEnabled: (els && els.flameAoe3dWakeGraphEnabled && String(els.flameAoe3dWakeGraphEnabled.value) === "0") ? 0 : 1,
       visualProfile: String(behaviorDefaults.visualProfile || "spellfire"),
+      durationMs: Math.round(clampNumber(els && els.flameAoe3dDurationMs && els.flameAoe3dDurationMs.value, 200, 60000, behaviorDefaults.durationMs)),
       hitRadiusBo: fixedNumber(els && els.flameAoe3dHitRadiusBo && els.flameAoe3dHitRadiusBo.value, 2, behaviorDefaults.hitRadiusBo),
       wakeReachScale: fixedNumber(els && els.flameAoe3dWakeReachScale && els.flameAoe3dWakeReachScale.value, 2, behaviorDefaults.wakeReachScale),
       igniteDamage: fixedNumber(els && els.flameAoe3dIgniteDamage && els.flameAoe3dIgniteDamage.value, 2, behaviorDefaults.igniteDamage),
@@ -340,6 +342,7 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
       els.flameAoe3dWakeDisplaceVisibleBtn.setAttribute("aria-pressed", String(settings.wakeDisplaceEnabled) === "0" ? "false" : "true");
     }
     [
+      ["flameAoe3dDurationMs", "durationMs"],
       ["flameAoe3dHitRadiusBo", "hitRadiusBo"],
       ["flameAoe3dWakeReachScale", "wakeReachScale"],
       ["flameAoe3dIgniteDamage", "igniteDamage"],
@@ -356,6 +359,7 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
 
   function readBehaviorPreviewConfig(els) {
     return Object.freeze({
+      durationMs: Math.round(clampNumber(els && els.flameAoe3dDurationMs && els.flameAoe3dDurationMs.value, 200, 60000, behaviorDefaults.durationMs)),
       hitRadiusBo: fixedNumber(els && els.flameAoe3dHitRadiusBo && els.flameAoe3dHitRadiusBo.value, 2, behaviorDefaults.hitRadiusBo),
       wakeReachScale: fixedNumber(els && els.flameAoe3dWakeReachScale && els.flameAoe3dWakeReachScale.value, 2, behaviorDefaults.wakeReachScale),
       igniteDamage: fixedNumber(els && els.flameAoe3dIgniteDamage && els.flameAoe3dIgniteDamage.value, 2, behaviorDefaults.igniteDamage),
@@ -369,7 +373,7 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
   function updateBehaviorReadout(els) {
     if (!els || !els.flameAoe3dBehaviorReadout) return;
     const cfg = readBehaviorPreviewConfig(els);
-    els.flameAoe3dBehaviorReadout.textContent = `Hit radius ${cfg.hitRadiusBo} BO, wake reach x${cfg.wakeReachScale}. Ignite ${cfg.igniteDamage} damage, burn ${cfg.igniteBurnDps}/s for ${cfg.igniteDurationMs}ms. Roast ${cfg.roastDps}/s while inside.`;
+    els.flameAoe3dBehaviorReadout.textContent = `Duration ${cfg.durationMs}ms. Hit radius ${cfg.hitRadiusBo} BO, wake reach x${cfg.wakeReachScale}. Ignite ${cfg.igniteDamage} damage, burn ${cfg.igniteBurnDps}/s for ${cfg.igniteDurationMs}ms. Roast ${cfg.roastDps}/s while inside.`;
   }
 
   return Object.freeze({

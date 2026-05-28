@@ -2764,6 +2764,11 @@
           <div id="flameAoe3dBehaviorReadout" class="behaviorReadout" aria-live="polite"></div>
           <div class="paramFieldRows">
             <div class="paramFieldRow">
+              <label for="flameAoe3dDurationMs">Duration ms</label>
+              <input id="flameAoe3dDurationMs" class="paramFieldInput" type="number" min="200" max="60000" value="10000" step="50" />
+              <button class="toolBtn" type="button" disabled>Apply</button>
+            </div>
+            <div class="paramFieldRow">
               <label for="flameAoe3dHitRadiusBo">Hit radius BO</label>
               <input id="flameAoe3dHitRadiusBo" class="paramFieldInput" type="number" min="0.05" max="8" value="4.5" step="0.05" />
               <button class="toolBtn" type="button" disabled>Apply</button>
@@ -2975,14 +2980,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260528140500"),
+      import("./vfx-studio-bootstrap.js?v=20260528143000"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
       import("./vfx-studio-surfaces.js?v=20260524-tesla-c"),
-      import("./vfx-studio-theme-publish.js?v=20260527-plasma-haze-a"),
+      import("./vfx-studio-theme-publish.js?v=20260528143000"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2990,7 +2995,7 @@
     import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506c";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260527190500";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260528143000";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260517a";
@@ -3023,7 +3028,7 @@
     } from "../../src/vfx/presets/index.js?v=20260527211500i";
     import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527122742";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
-    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260527201820";
+    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260528143000";
     import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527122742b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
@@ -3506,6 +3511,7 @@
       applyFlameAoe3dBehaviorBtn: $("applyFlameAoe3dBehaviorBtn"),
       previewFlameAoe3dBehaviorBtn: $("previewFlameAoe3dBehaviorBtn"),
       flameAoe3dBehaviorReadout: $("flameAoe3dBehaviorReadout"),
+      flameAoe3dDurationMs: $("flameAoe3dDurationMs"),
       flameAoe3dHitRadiusBo: $("flameAoe3dHitRadiusBo"),
       flameAoe3dWakeReachScale: $("flameAoe3dWakeReachScale"),
       flameAoe3dIgniteDamage: $("flameAoe3dIgniteDamage"),
