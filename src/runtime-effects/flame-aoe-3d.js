@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260527171041";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260527174200";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
@@ -54,7 +54,9 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
       g: source.auraG ?? fallback.auraG,
       b: source.auraB ?? fallback.auraB,
     }),
-    wakeMeshEnabled: source.wakeMeshEnabled === false || source.wakeMeshEnabled === 0 || source.wakeMeshEnabled === "0" ? 0 : 1,
+    wakeMeshEnabled: source.wakeMeshEnabled == null
+      ? (fallback.wakeMeshEnabled === false || fallback.wakeMeshEnabled === 0 || fallback.wakeMeshEnabled === "0" ? 0 : 1)
+      : (source.wakeMeshEnabled === false || source.wakeMeshEnabled === 0 || source.wakeMeshEnabled === "0" ? 0 : 1),
     wakeLengthBo: clampNumber(source.wakeLengthBo, 0.05, 4, fallback.wakeLengthBo),
     wakeRadiusBo: clampNumber(source.wakeRadiusBo, 0.5, 2, fallback.wakeRadiusBo),
     wakeSubdivisions: clampInt(source.wakeSubdivisions, 12, 192, fallback.wakeSubdivisions),
@@ -90,7 +92,9 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSimplexGain: clampNumber(source.wakeSimplexGain, 0.1, 0.9, fallback.wakeSimplexGain),
     wakeNoiseMix: clampNumber(source.wakeNoiseMix, 0, 1, fallback.wakeNoiseMix),
     wakeGraphEnabled: source.wakeGraphEnabled === false || source.wakeGraphEnabled === 0 || source.wakeGraphEnabled === "0" ? 0 : 1,
-    wakeSdfEnabled: source.wakeSdfEnabled === true || source.wakeSdfEnabled === 1 || source.wakeSdfEnabled === "1" ? 1 : 0,
+    wakeSdfEnabled: source.wakeSdfEnabled == null
+      ? (fallback.wakeSdfEnabled === true || fallback.wakeSdfEnabled === 1 || fallback.wakeSdfEnabled === "1" ? 1 : 0)
+      : (source.wakeSdfEnabled === true || source.wakeSdfEnabled === 1 || source.wakeSdfEnabled === "1" ? 1 : 0),
     wakeSdfRadiusBo: clampNumber(source.wakeSdfRadiusBo, 0.05, 4, fallback.wakeSdfRadiusBo ?? fallback.wakeRadiusBo ?? 0.5),
     wakeSdfCoreRadiusBo: clampNumber(source.wakeSdfCoreRadiusBo, 0.02, 3, fallback.wakeSdfCoreRadiusBo ?? fallback.wakeLiftCoreRadiusBo ?? 0.25),
     wakeSdfBlendBo: clampNumber(source.wakeSdfBlendBo, 0.001, 2, fallback.wakeSdfBlendBo ?? fallback.wakeOrbHugRadiusBo ?? 0.22),

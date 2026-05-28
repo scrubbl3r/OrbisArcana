@@ -14,6 +14,7 @@ export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "auraR": 255,
   "auraG": 106,
   "auraB": 24,
+  "wakeMeshEnabled": 0,
   "wakeLengthBo": 0,
   "wakeRadiusBo": 0.58,
   "wakeSubdivisions": 64,
@@ -77,5 +78,14 @@ export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "wakeGraph3B": 0,
   "wakeGraph3A": 1,
   "wakeAlphaGradient3Pct": "",
-  "wakeAlphaGradient3A": ""
+  "wakeAlphaGradient3A": "",
+  "wakeSdfEnabled": 1,
+  "wakeSdfRadiusBo": 0.42,
+  "wakeSdfCoreRadiusBo": 0.2,
+  "wakeSdfBlendBo": 0.12,
+  "wakeSdfSoftnessBo": 0.3,
+  "wakeSdfDensity": 0.64,
+  "wakeSdfNoiseScale": 1.45,
+  "wakeSdfNoiseSpeed": 1.8,
+  "wakeSdfNoiseContrast": 0.24
 });
