@@ -98,7 +98,7 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSdfParticleRadiusBo: 0.16,
   wakeSdfVelocityInherit: 1.52,
   wakeSdfMotionDrag: 0.82,
-  wakeSdfUpdraftBo: 0.2,
+  wakeSdfLiftBias: 0.2,
   wakeSdfJitterBo: 0.04,
   wakeSdfHeatDecay: 1,
   wakeSdfDebugPoints: 1,
@@ -261,7 +261,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfParticleRadiusBo: clampNumber(els.flameAoe3dWakeSdfParticleRadiusBo && els.flameAoe3dWakeSdfParticleRadiusBo.value, 0.02, 1.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfParticleRadiusBo),
     wakeSdfVelocityInherit: clampNumber(els.flameAoe3dWakeSdfVelocityInherit && els.flameAoe3dWakeSdfVelocityInherit.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfVelocityInherit),
     wakeSdfMotionDrag: clampNumber(els.flameAoe3dWakeSdfMotionDrag && els.flameAoe3dWakeSdfMotionDrag.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfMotionDrag),
-    wakeSdfUpdraftBo: clampNumber(els.flameAoe3dWakeSdfUpdraftBo && els.flameAoe3dWakeSdfUpdraftBo.value, -2, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfUpdraftBo),
+    wakeSdfLiftBias: clampNumber(els.flameAoe3dWakeSdfLiftBias && els.flameAoe3dWakeSdfLiftBias.value, -2, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfLiftBias),
     wakeSdfJitterBo: clampNumber(els.flameAoe3dWakeSdfJitterBo && els.flameAoe3dWakeSdfJitterBo.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfJitterBo),
     wakeSdfHeatDecay: clampNumber(els.flameAoe3dWakeSdfHeatDecay && els.flameAoe3dWakeSdfHeatDecay.value, 0.1, 6, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfHeatDecay),
     wakeSdfRadiusBo: clampNumber(els.flameAoe3dWakeSdfRadiusBo && els.flameAoe3dWakeSdfRadiusBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRadiusBo),
@@ -343,7 +343,7 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfParticleRadiusBo) els.flameAoe3dWakeSdfParticleRadiusBo.value = String(Number(cfg.wakeSdfParticleRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSdfVelocityInherit) els.flameAoe3dWakeSdfVelocityInherit.value = String(Number(cfg.wakeSdfVelocityInherit).toFixed(2));
   if (els.flameAoe3dWakeSdfMotionDrag) els.flameAoe3dWakeSdfMotionDrag.value = String(Number(cfg.wakeSdfMotionDrag).toFixed(2));
-  if (els.flameAoe3dWakeSdfUpdraftBo) els.flameAoe3dWakeSdfUpdraftBo.value = String(Number(cfg.wakeSdfUpdraftBo).toFixed(2));
+  if (els.flameAoe3dWakeSdfLiftBias) els.flameAoe3dWakeSdfLiftBias.value = String(Number(cfg.wakeSdfLiftBias).toFixed(2));
   if (els.flameAoe3dWakeSdfJitterBo) els.flameAoe3dWakeSdfJitterBo.value = String(Number(cfg.wakeSdfJitterBo).toFixed(2));
   if (els.flameAoe3dWakeSdfHeatDecay) els.flameAoe3dWakeSdfHeatDecay.value = String(Number(cfg.wakeSdfHeatDecay).toFixed(2));
   if (els.flameAoe3dWakeSdfRadiusBo) els.flameAoe3dWakeSdfRadiusBo.value = String(Number(cfg.wakeSdfRadiusBo).toFixed(2));
@@ -1395,6 +1395,11 @@ function createWakeSdfPreviewDebugVisuals(bo, material) {
   }));
   particlePoints.renderOrder = 19;
   group.add(particlePoints);
+  group.userData.debugBuffers = Object.freeze({
+    particlePositions,
+    particleColors,
+    particleGeometry,
+  });
   return group;
 }
 
@@ -1425,6 +1430,7 @@ export function createFlameAoe3dPreview({
   let auraShellMaterial = null;
   let wakeMaterial = null;
   let wakeSdfMaterial = null;
+  let wakeSdfDebugGroup = null;
   let orbShellMesh = null;
   let aoeAuraDiscMesh = null;
   let auraShellMesh = null;
@@ -1433,9 +1439,21 @@ export function createFlameAoe3dPreview({
   let orbLight = null;
   let model = null;
   let createdAt = 0;
+  let lastFrameMs = 0;
   let activeConfig = ORB_MATERIAL_CONFIG;
   let auraConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
   let wakeConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
+  const wakeSdfPreviewParticles = Array.from({ length: WAKE_SDF_CONTROL_PARTICLE_COUNT }, () => ({
+    position: new THREE.Vector2(),
+    velocity: new THREE.Vector2(),
+    age: 0,
+    life: 1,
+    radius: 1,
+    heat: 0,
+  }));
+  let wakeSdfPreviewParticleCursor = 0;
+  let wakeSdfPreviewSpawnAccumulator = 0;
+  let wakeSdfPreviewRandomSeed = 0x51f15e;
 
   function readBo() {
     const visualState = typeof getOrbBaseVisualState === "function" ? getOrbBaseVisualState() : null;
@@ -1450,6 +1468,7 @@ export function createFlameAoe3dPreview({
     auraShellMaterial = null;
     wakeMaterial = null;
     wakeSdfMaterial = null;
+    wakeSdfDebugGroup = null;
     orbShellMesh = null;
     aoeAuraDiscMesh = null;
     auraShellMesh = null;
@@ -1459,10 +1478,95 @@ export function createFlameAoe3dPreview({
     model = null;
   }
 
+  function nextWakeSdfPreviewRandom() {
+    wakeSdfPreviewRandomSeed = (wakeSdfPreviewRandomSeed * 1664525 + 1013904223) >>> 0;
+    return wakeSdfPreviewRandomSeed / 4294967296;
+  }
+
+  function respawnWakeSdfPreviewParticle(index, bo, initialAge = 0) {
+    const particle = wakeSdfPreviewParticles[index];
+    if (!particle) return;
+    const config = wakeConfig || FLAME_AOE_3D_PREVIEW_DEFAULTS;
+    const visualOrbRadius = bo * 0.5;
+    const particleLifeSec = clampNumber(config.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
+    const particleRadiusBo = clampNumber(config.wakeSdfParticleRadiusBo, 0.02, 1.5, 0.16);
+    const liftBias = clampNumber(config.wakeSdfLiftBias, -2, 4, 0.2);
+    const jitterBo = clampNumber(config.wakeSdfJitterBo, 0, 1, 0.04);
+    const source = WAKE_SDF_SOURCE_GRAPH[(wakeSdfPreviewParticleCursor + index) % WAKE_SDF_SOURCE_GRAPH.length] || WAKE_SDF_SOURCE_GRAPH[0];
+    const jitterAngle = nextWakeSdfPreviewRandom() * Math.PI * 2;
+    const jitterRadius = bo * jitterBo * (0.5 + nextWakeSdfPreviewRandom());
+    particle.position
+      .set(source[0] * visualOrbRadius * 0.84, source[1] * visualOrbRadius * 0.84)
+      .add(new THREE.Vector2(Math.cos(jitterAngle), Math.sin(jitterAngle)).multiplyScalar(jitterRadius));
+    particle.velocity.set(
+      (nextWakeSdfPreviewRandom() - 0.5) * bo * jitterBo * 4.5,
+      bo * liftBias * (0.7 + nextWakeSdfPreviewRandom() * 0.4)
+    );
+    particle.life = particleLifeSec;
+    particle.age = Math.min(particle.life * 0.92, Math.max(0, initialAge));
+    particle.radius = bo * particleRadiusBo * (0.82 + nextWakeSdfPreviewRandom() * 0.36);
+    particle.heat = 0.7 + nextWakeSdfPreviewRandom() * 0.35;
+  }
+
+  function resetWakeSdfPreviewParticles(bo) {
+    wakeSdfPreviewRandomSeed = 0x51f15e;
+    wakeSdfPreviewSpawnAccumulator = 0;
+    for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
+      const lifeSec = clampNumber(wakeConfig && wakeConfig.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
+      respawnWakeSdfPreviewParticle(i, bo, (i / WAKE_SDF_CONTROL_PARTICLE_COUNT) * lifeSec);
+    }
+  }
+
+  function updateWakeSdfPreviewParticles(bo, dtSec) {
+    const uniforms = wakeSdfMaterial && wakeSdfMaterial.uniforms;
+    if (!uniforms || !uniforms.uWakeControlParticles || !uniforms.uWakeControlVelocities) return;
+    const safeDt = Math.max(1 / 240, Math.min(0.12, Number(dtSec) || 1 / 60));
+    const spawnInterval = 1 / clampNumber(wakeConfig && wakeConfig.wakeSdfSpawnRate, 1, 240, 43);
+    wakeSdfPreviewSpawnAccumulator += safeDt;
+    let spawnCount = 0;
+    while (wakeSdfPreviewSpawnAccumulator >= spawnInterval && spawnCount < 4) {
+      wakeSdfPreviewSpawnAccumulator -= spawnInterval;
+      wakeSdfPreviewParticleCursor = (wakeSdfPreviewParticleCursor + 1) % WAKE_SDF_CONTROL_PARTICLE_COUNT;
+      respawnWakeSdfPreviewParticle(wakeSdfPreviewParticleCursor, bo, 0);
+      spawnCount += 1;
+    }
+    const drag = Math.exp(-safeDt * clampNumber(wakeConfig && wakeConfig.wakeSdfMotionDrag, 0, 8, 0.82));
+    const heatDecay = clampNumber(wakeConfig && wakeConfig.wakeSdfHeatDecay, 0.1, 6, 1);
+    const uniformParticles = uniforms.uWakeControlParticles.value;
+    const uniformVelocities = uniforms.uWakeControlVelocities.value;
+    for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
+      const particle = wakeSdfPreviewParticles[i];
+      particle.age += safeDt;
+      if (particle.age >= particle.life) respawnWakeSdfPreviewParticle(i, bo, 0);
+      particle.velocity.multiplyScalar(drag);
+      particle.position.addScaledVector(particle.velocity, safeDt);
+      const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
+      const heat = particle.heat * Math.pow(1 - ageT, heatDecay);
+      const radius = particle.radius * (1 + ageT * 1.45);
+      if (uniformParticles[i]) uniformParticles[i].set(particle.position.x, particle.position.y, radius, heat);
+      if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
+    }
+    const debugBuffers = wakeSdfDebugGroup && wakeSdfDebugGroup.userData && wakeSdfDebugGroup.userData.debugBuffers;
+    if (!debugBuffers || !debugBuffers.particlePositions || !debugBuffers.particleColors || !debugBuffers.particleGeometry) return;
+    for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
+      const particle = wakeSdfPreviewParticles[i];
+      const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
+      debugBuffers.particlePositions[i * 3] = particle.position.x;
+      debugBuffers.particlePositions[i * 3 + 1] = particle.position.y;
+      debugBuffers.particlePositions[i * 3 + 2] = 2.5 + i * 0.002;
+      debugBuffers.particleColors[i * 3] = ageT < 0.5 ? 1.0 : 0.05;
+      debugBuffers.particleColors[i * 3 + 1] = ageT < 0.5 ? 0.0 : 1.0;
+      debugBuffers.particleColors[i * 3 + 2] = 1.0;
+    }
+    debugBuffers.particleGeometry.attributes.position.needsUpdate = true;
+    debugBuffers.particleGeometry.attributes.color.needsUpdate = true;
+  }
+
   function ensureScene() {
     if (inspector || !els.previewRoot) return;
     const bo = readBo();
     createdAt = performance.now();
+    lastFrameMs = createdAt;
     activeConfig = (typeof getOrb3dVisualSettings === "function" && getOrb3dVisualSettings()) || ORB_MATERIAL_CONFIG;
     auraConfig = readFlameAuraConfig(els);
     wakeConfig = readFlameWakeConfig(els);
@@ -1477,11 +1581,15 @@ export function createFlameAoe3dPreview({
       maxDistanceBo: 28,
       bloom: ORB_BLOOM_CONFIG.enabled ? ORB_BLOOM_CONFIG : null,
       onFrame: () => {
-        const time = (performance.now() - createdAt) / 1000;
+        const nowMs = performance.now();
+        const dtSec = lastFrameMs ? (nowMs - lastFrameMs) / 1000 : 1 / 60;
+        lastFrameMs = nowMs;
+        const time = (nowMs - createdAt) / 1000;
         if (shellMaterial && shellMaterial.uniforms && shellMaterial.uniforms.uTime) shellMaterial.uniforms.uTime.value = time;
         if (auraShellMaterial && auraShellMaterial.uniforms && auraShellMaterial.uniforms.uTime) auraShellMaterial.uniforms.uTime.value = time;
         if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uTime) wakeMaterial.uniforms.uTime.value = time;
         if (wakeSdfMaterial && wakeSdfMaterial.uniforms && wakeSdfMaterial.uniforms.uTime) wakeSdfMaterial.uniforms.uTime.value = time;
+        if (wakeSdfMaterial) updateWakeSdfPreviewParticles(bo, dtSec);
         if (orbLight) updateOrbPointLight(orbLight, time, activeConfig);
       },
     });
@@ -1567,10 +1675,12 @@ export function createFlameAoe3dPreview({
       wakeSdfMesh.visible = layerVisible(els.flameAoe3dWakeSdfVisibleBtn);
       model.add(wakeSdfMesh);
       if (wakeConfig.wakeSdfDebugPoints) {
-        const wakeSdfDebug = createWakeSdfPreviewDebugVisuals(bo, wakeSdfMaterial);
-        wakeSdfDebug.visible = wakeSdfMesh.visible;
-        model.add(wakeSdfDebug);
+        wakeSdfDebugGroup = createWakeSdfPreviewDebugVisuals(bo, wakeSdfMaterial);
+        wakeSdfDebugGroup.visible = wakeSdfMesh.visible;
+        model.add(wakeSdfDebugGroup);
       }
+      resetWakeSdfPreviewParticles(bo);
+      updateWakeSdfPreviewParticles(bo, 1 / 60);
     }
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
@@ -1585,6 +1695,7 @@ export function createFlameAoe3dPreview({
     if (auraShellMesh) auraShellMesh.visible = layerVisible(els.flameAoe3dAuraVisibleBtn);
     if (wakeMesh) wakeMesh.visible = layerVisible(els.flameAoe3dWakeVisibleBtn);
     if (wakeSdfMesh) wakeSdfMesh.visible = layerVisible(els.flameAoe3dWakeSdfVisibleBtn);
+    if (wakeSdfDebugGroup) wakeSdfDebugGroup.visible = !!wakeSdfMesh && wakeSdfMesh.visible;
     if (inspector && typeof inspector.render === "function") inspector.render();
   }
 
