@@ -1061,9 +1061,10 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 }
 
 function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  const orbRadiusPx = Math.max(1, Number(config.orbRadiusPx) || Number(config.wakeSdfRadiusPx) || 1);
   const trailPoints = Array.from({ length: WAKE_SDF_TRAIL_POINT_COUNT }, (_, index) => {
     const t = index / Math.max(1, WAKE_SDF_TRAIL_POINT_COUNT - 1);
-    return new THREE.Vector2(0, (config.wakeLiftPx || 1) * t);
+    return new THREE.Vector2(0, -orbRadiusPx + (config.wakeLiftPx || 1) * t);
   });
   const trailRadii = Array.from({ length: WAKE_SDF_TRAIL_POINT_COUNT }, (_, index) => {
     const t = index / Math.max(1, WAKE_SDF_TRAIL_POINT_COUNT - 1);
@@ -1078,6 +1079,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
     side: THREE.DoubleSide,
     uniforms: {
       uTime: { value: 0 },
+      uOrbRadius: { value: orbRadiusPx },
       uWakeOrbRadius: { value: config.wakeSdfRadiusPx },
       uWakeCoreRadius: { value: config.wakeSdfCoreRadiusPx },
       uWakeBlend: { value: config.wakeSdfBlendPx },
@@ -1104,6 +1106,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       precision highp float;
       #define WAKE_POINT_COUNT ${WAKE_SDF_TRAIL_POINT_COUNT}
       uniform float uTime;
+      uniform float uOrbRadius;
       uniform float uWakeOrbRadius;
       uniform float uWakeCoreRadius;
       uniform float uWakeBlend;
@@ -1160,10 +1163,12 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float threshold = mix(0.72, 0.28, clamp(uWakeDensity, 0.0, 1.0));
         float flame = smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field);
         float plumeMask = smoothstep(-0.18, 0.18, rawHeightT);
+        float outsideOrb = smoothstep(uOrbRadius - uWakeSoftness * 0.9, uOrbRadius + uWakeSoftness * 0.9, length(p));
+        float lowerPoleFeather = smoothstep(-uOrbRadius - uWakeSoftness * 1.4, -uOrbRadius + uWakeSoftness * 1.4, p.y);
         float sideFade = 1.0 - smoothstep(uWakeOrbRadius * 2.1, uWakeOrbRadius * 3.4, abs(p.x - tip.x * heightT));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
-        float alpha = body * flame * plumeMask * sideFade * cardFade;
+        float alpha = body * flame * plumeMask * outsideOrb * lowerPoleFeather * sideFade * cardFade;
         vec3 color = mix(vec3(1.0, 0.17, 0.02), vec3(1.0, 0.78, 0.28), smoothstep(threshold, 1.0, field));
         if (alpha <= 0.004) discard;
         gl_FragColor = vec4(color, alpha);
@@ -1341,6 +1346,7 @@ export function createFlameAoe3dPreview({
         wakeSdfCoreRadiusPx: bo * wakeConfig.wakeSdfCoreRadiusBo,
         wakeSdfBlendPx: bo * wakeConfig.wakeSdfBlendBo,
         wakeSdfSoftnessPx: bo * wakeConfig.wakeSdfSoftnessBo,
+        orbRadiusPx: bo * 0.5,
       });
       const cardSize = resolveWakeSdfCardSize(bo, wakeConfig);
       wakeSdfMesh = new THREE.Mesh(createWakeSdfCardGeometry(cardSize.width, cardSize.height), wakeSdfMaterial);

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260527174200";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260527180600";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
@@ -711,9 +711,10 @@ function createWakeMaterial(config) {
 }
 
 function createWakeSdfMaterial(config) {
+  const orbRadiusPx = Math.max(1, Number(config.orbRadiusPx) || Number(config.wakeSdfRadiusPx) || 1);
   const trailPoints = Array.from({ length: WAKE_SDF_TRAIL_POINT_COUNT }, (_, index) => {
     const t = index / Math.max(1, WAKE_SDF_TRAIL_POINT_COUNT - 1);
-    return new THREE.Vector2(0, (config.wakeSdfLiftPx || 1) * t);
+    return new THREE.Vector2(0, -orbRadiusPx + (config.wakeSdfLiftPx || 1) * t);
   });
   const trailRadii = Array.from({ length: WAKE_SDF_TRAIL_POINT_COUNT }, (_, index) => {
     const t = index / Math.max(1, WAKE_SDF_TRAIL_POINT_COUNT - 1);
@@ -728,6 +729,7 @@ function createWakeSdfMaterial(config) {
     side: THREE.DoubleSide,
     uniforms: {
       uTime: { value: 0 },
+      uOrbRadius: { value: orbRadiusPx },
       uWakeOrbRadius: { value: config.wakeSdfRadiusPx },
       uWakeCoreRadius: { value: config.wakeSdfCoreRadiusPx },
       uWakeBlend: { value: config.wakeSdfBlendPx },
@@ -754,6 +756,7 @@ function createWakeSdfMaterial(config) {
       precision highp float;
       #define WAKE_POINT_COUNT ${WAKE_SDF_TRAIL_POINT_COUNT}
       uniform float uTime;
+      uniform float uOrbRadius;
       uniform float uWakeOrbRadius;
       uniform float uWakeCoreRadius;
       uniform float uWakeBlend;
@@ -827,10 +830,12 @@ function createWakeSdfMaterial(config) {
         float threshold = mix(0.72, 0.28, clamp(uWakeDensity, 0.0, 1.0));
         float flame = smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field);
         float plumeMask = smoothstep(-0.18, 0.18, rawHeightT);
+        float outsideOrb = smoothstep(uOrbRadius - uWakeSoftness * 0.9, uOrbRadius + uWakeSoftness * 0.9, length(p));
+        float lowerPoleFeather = smoothstep(-uOrbRadius - uWakeSoftness * 1.4, -uOrbRadius + uWakeSoftness * 1.4, p.y);
         float sideFade = 1.0 - smoothstep(uWakeOrbRadius * 2.1, uWakeOrbRadius * 3.4, abs(p.x - tip.x * heightT));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
-        float alpha = body * flame * plumeMask * sideFade * cardFade;
+        float alpha = body * flame * plumeMask * outsideOrb * lowerPoleFeather * sideFade * cardFade;
         vec3 ember = vec3(1.0, 0.17, 0.02);
         vec3 hot = vec3(1.0, 0.78, 0.28);
         vec3 color = mix(ember, hot, smoothstep(threshold, 1.0, field));
@@ -945,9 +950,10 @@ export function createFlameAoe3dRuntime({
 
   function resetWakeSdfSpine(liftOffset, bo) {
     const liftY = Math.max(bo * 0.08, Number(liftOffset && liftOffset.y) || bo);
+    const orbRadius = bo * 0.5;
     for (let i = 0; i < WAKE_SDF_TRAIL_POINT_COUNT; i += 1) {
       const t = i / Math.max(1, WAKE_SDF_TRAIL_POINT_COUNT - 1);
-      wakeSdfTrailPoints[i].set(0, liftY * t);
+      wakeSdfTrailPoints[i].set(0, -orbRadius + liftY * t);
       wakeSdfTargetPoints[i].copy(wakeSdfTrailPoints[i]);
     }
   }
@@ -956,6 +962,7 @@ export function createFlameAoe3dRuntime({
     const uniforms = wakeSdfMaterial && wakeSdfMaterial.uniforms;
     if (!uniforms || !uniforms.uWakeTrailPoints || !uniforms.uWakeTrailRadii) return;
     const orbRadius = bo * clampNumber(activeConfig && activeConfig.wakeSdfRadiusBo, 0.05, 4, 0.42);
+    const visualOrbRadius = bo * 0.5;
     const coreRadius = bo * clampNumber(activeConfig && activeConfig.wakeSdfCoreRadiusBo, 0.02, 3, 0.2);
     const lateral = liftCoreOffset.x + liftCoreOffset.z * 0.45;
     const liftY = Math.max(bo * 0.08, liftCoreOffset.y);
@@ -965,13 +972,13 @@ export function createFlameAoe3dRuntime({
       const stage = t * t;
       const curl = Math.sin(t * Math.PI) * (lateral * 0.35 + motionCurl * (0.35 + t * 0.55));
       const x = lateral * stage + curl;
-      const y = liftY * t - Math.abs(lateral) * 0.08 * Math.sin(t * Math.PI);
+      const y = -visualOrbRadius + liftY * t - Math.abs(lateral) * 0.08 * Math.sin(t * Math.PI);
       wakeSdfTargetPoints[i].set(x, y);
       const followRate = 26 - (t * 15);
       wakeSdfTrailPoints[i].lerp(wakeSdfTargetPoints[i], 1 - Math.exp(-safeDt * followRate));
       wakeSdfTrailRadii[i] = Math.max(1, orbRadius * (1 - t) + coreRadius * t);
     }
-    wakeSdfTrailPoints[0].set(0, 0);
+    wakeSdfTrailPoints[0].set(0, -visualOrbRadius);
     const uniformPoints = uniforms.uWakeTrailPoints.value;
     const uniformRadii = uniforms.uWakeTrailRadii.value;
     for (let i = 0; i < WAKE_SDF_TRAIL_POINT_COUNT; i += 1) {
@@ -1063,6 +1070,7 @@ export function createFlameAoe3dRuntime({
     if (wakeSdfMaterial && wakeSdfMaterial.uniforms) {
       if (wakeSdfMaterial.uniforms.uWakeMotionOffset) wakeSdfMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
       if (wakeSdfMaterial.uniforms.uWakeOrbRadius) wakeSdfMaterial.uniforms.uWakeOrbRadius.value = bo * clampNumber(activeConfig && activeConfig.wakeSdfRadiusBo, 0.05, 4, 0.5);
+      if (wakeSdfMaterial.uniforms.uOrbRadius) wakeSdfMaterial.uniforms.uOrbRadius.value = bo * 0.5;
       if (wakeSdfMaterial.uniforms.uWakeCoreRadius) wakeSdfMaterial.uniforms.uWakeCoreRadius.value = bo * clampNumber(activeConfig && activeConfig.wakeSdfCoreRadiusBo, 0.02, 3, 0.25);
       if (wakeSdfMaterial.uniforms.uWakeBlend) wakeSdfMaterial.uniforms.uWakeBlend.value = bo * clampNumber(activeConfig && activeConfig.wakeSdfBlendBo, 0.001, 2, 0.22);
       if (wakeSdfMaterial.uniforms.uWakeSoftness) wakeSdfMaterial.uniforms.uWakeSoftness.value = bo * clampNumber(activeConfig && activeConfig.wakeSdfSoftnessBo, 0.001, 2, 0.16);
@@ -1198,6 +1206,7 @@ export function createFlameAoe3dRuntime({
           wakeSdfBlendPx: bo * config.wakeSdfBlendBo,
           wakeSdfSoftnessPx: bo * config.wakeSdfSoftnessBo,
           wakeSdfLiftPx: bo * (config.wakeLiftBo + config.wakeStretchStrength),
+          orbRadiusPx: bo * 0.5,
         });
         resetWakeSdfSpine(new THREE.Vector3(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0), bo);
         updateWakeSdfSpine(bo, 1 / 60);
