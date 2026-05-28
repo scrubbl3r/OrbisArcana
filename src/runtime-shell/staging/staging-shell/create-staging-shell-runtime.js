@@ -10,7 +10,7 @@ import {
   forceDevStagingShakeLampOff,
   setDevStagingLamp,
 } from "../dev-staging/dev-staging-lamps.js";
-import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260527194500s";
+import { renderOrbStage } from "../orb-stage/orb-stage.js?v=20260527201820s";
 import { getLevelById } from "../../../content/levels/registry.js";
 import {
   LEVEL_CAMERA_FOLLOW_MODE_FALLBACK,
@@ -18,7 +18,7 @@ import {
   LEVEL_CAMERA_MODE_GAMEPLAY,
 } from "../../../game-runtime/level/normalize-level-definition.js";
 import { resolveLevelWorldSize } from "../../../game-runtime/level/resolve-level-world-size.js";
-import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260527191225s";
+import { createOrbStageReceiverVfxDefaults, initOrbStageReceiverVfxRuntime } from "../orb-stage/orb-stage-vfx-runtime.js?v=20260527201820s";
 import { createOrbStageActionBridge } from "../orb-stage/orb-stage-action-bridge.js?v=20260507g";
 import { loadStagingInitModules } from "../load-staging-init-modules.js?v=20260525graviton";
 import { createReceiverStabilityVisualController } from "../../receiver/stability-visuals.js";
@@ -43,9 +43,10 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260527194500s";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260527201820s";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
+import { createOrbStateMixer, ORB_STATE_IDS } from "../../../game-runtime/orb/orb-state-mixer.js";
 import { createCameraInputPanelController } from "../../../ui/dev-console/camera-input/camera-input-panel-controller.js?v=20260421i";
 import { createCameraInputOrbBridge } from "./camera-input-orb-bridge.js?v=20260501e";
 import {
@@ -76,7 +77,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260527194500s";
+globalThis.__orbisStagingShellRuntimeVersion = "20260527201820s";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -258,6 +259,7 @@ function buildShellStageInitialState(phys = {}) {
     floatGraceMinBreakMs: 0,
     floatGraceAnchorY: yW,
     floatGracePhase: 0,
+    orbStates: Object.create(null),
     teleportHoldActive: false,
     teleportHoldAnchorY: yW,
     spawnHoldActive: false,
@@ -364,6 +366,7 @@ function initializeShellStageRuntime(shellContext) {
     initialState.spawnHoldStartedAtMs = performance.now();
   }
   const orbRuntimeState = createOrbRuntimeState({ initialState });
+  const orbStateMixer = createOrbStateMixer({ orbRuntimeState });
   const cameraRuntime = runtime && runtime.cameraRuntime ? runtime.cameraRuntime : null;
   if (cameraRuntime && typeof cameraRuntime.reset === "function") {
     cameraRuntime.reset();
@@ -393,11 +396,13 @@ function initializeShellStageRuntime(shellContext) {
     impact,
     statusConfig,
     orbRuntimeState,
+    orbStateMixer,
     initialState,
     localEventBus: (typeof createEventBus === "function") ? createEventBus() : null,
     worldSystem: null,
   };
   runtime.orbRuntimeState = orbRuntimeState;
+  runtime.orbStateMixer = orbStateMixer;
   bindShellStageControls(shellContext);
 }
 
@@ -1123,6 +1128,7 @@ function resetShellOrbToGround(shellContext) {
     floatGraceBreakOnMotion: true,
     floatGraceStartedAtMs: 0,
     floatGraceMinBreakMs: 0,
+    orbStates: Object.create(null),
     teleportHoldAnchorY: yW,
     spawnHoldActive: !!spawnPoint,
     spawnHoldAnchorX: xW,
@@ -1630,11 +1636,28 @@ function startShellStageLoop(shellContext) {
       const state = runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
         ? runtime.orbRuntimeState.get()
         : null;
+      const orbStateMixer = runtime && runtime.orbStateMixer;
+      if (orbStateMixer && typeof orbStateMixer.isFloatLocked === "function" && orbStateMixer.isFloatLocked()) {
+        return true;
+      }
       return !!(state && state.floatGraceActive && (
         state.floatGracePersistent || Number(state.floatGraceUntilMs) > Number(frameNowMs || 0)
       ));
     },
-    clearFloatGrace: () => {
+    clearFloatGrace: (request = {}) => {
+      const orbStateMixer = runtime && runtime.orbStateMixer;
+      if (orbStateMixer && typeof orbStateMixer.clearByLifecycle === "function") {
+        orbStateMixer.clearByLifecycle(String(request && request.reason || ""), request);
+      }
+      if (
+        orbStateMixer &&
+        typeof orbStateMixer.isFloatLocked === "function" &&
+        orbStateMixer.isFloatLocked() &&
+        typeof orbStateMixer.canClear === "function" &&
+        !orbStateMixer.canClear(ORB_STATE_IDS.GRAVITON_FLOAT_LOCK, { reason: "lift_break" })
+      ) {
+        return;
+      }
       patchShellOrbRuntime(shellContext, {
         floatGraceActive: false,
         floatGraceUntilMs: 0,
@@ -2085,6 +2108,14 @@ function shellGrantOrbGrace(shellContext, grace = {}) {
   const orbState = runtime && runtime.orbRuntimeState && typeof runtime.orbRuntimeState.get === "function"
     ? runtime.orbRuntimeState.get()
     : null;
+  const orbStateMixer = runtime && runtime.orbStateMixer;
+  if (
+    orbStateMixer &&
+    typeof orbStateMixer.shouldPreserveAgainstGrace === "function" &&
+    orbStateMixer.shouldPreserveAgainstGrace(grace)
+  ) {
+    return;
+  }
   if (
     orbState &&
     orbState.floatGraceActive &&
@@ -2265,7 +2296,20 @@ async function initShellReceiverHostRuntime(shellContext) {
       },
       executeWordCastAction: (castActionId, context = {}) => executeShellWordCastAction(shellContext, castActionId, context),
       grantOrbGrace: (grace) => shellGrantOrbGrace(shellContext, grace),
-      clearFloatGrace: () => {
+    clearFloatGrace: (request = {}) => {
+      const orbStateMixer = runtime && runtime.orbStateMixer;
+      if (orbStateMixer && typeof orbStateMixer.clearByLifecycle === "function") {
+        orbStateMixer.clearByLifecycle(String(request && request.reason || ""), request);
+      }
+      if (
+          orbStateMixer &&
+          typeof orbStateMixer.isFloatLocked === "function" &&
+          orbStateMixer.isFloatLocked() &&
+          typeof orbStateMixer.canClear === "function" &&
+          !orbStateMixer.canClear(ORB_STATE_IDS.GRAVITON_FLOAT_LOCK, { reason: "runtime_clear" })
+        ) {
+          return;
+        }
         patchShellOrbRuntime(shellContext, {
           floatGraceActive: false,
           floatGraceUntilMs: 0,
@@ -3137,7 +3181,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260527194500s",
+  moduleCacheBustV = "20260527201820s",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

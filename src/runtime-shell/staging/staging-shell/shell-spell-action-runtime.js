@@ -1,5 +1,6 @@
 import { getOrbCastGateState as getSharedOrbCastGateState } from "../../../game-runtime/orb/orb-cast-policy.js";
 import { resolveOrbGraceDefaultTtlMs, resolveOrbGracePayload } from "../../../game-runtime/orb/orb-grace.js";
+import { ORB_STATE_IDS } from "../../../game-runtime/orb/orb-state-mixer.js";
 import { EVT_VOICE_SPELL_REJECTED } from "../../../contracts/events.js";
 import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
 
@@ -52,6 +53,13 @@ export function createShellSpellActionRuntime({
     if (typeof shellActions.setOrbFloatHoldVisual === "function") {
       shellActions.setOrbFloatHoldVisual({ active: false, atMs: Number(payload && payload.atMs) || performance.now() });
     }
+    const orbStateMixer = runtime && runtime.orbStateMixer;
+    if (orbStateMixer && typeof orbStateMixer.deactivate === "function") {
+      orbStateMixer.deactivate(ORB_STATE_IDS.GRAVITON_FLOAT_LOCK, {
+        sourceWordId: "graviton",
+        reason: "float_clear",
+      });
+    }
   }
 
   const shellSpellActionHandlers = createSpellActionHandlersImported({
@@ -95,12 +103,27 @@ export function createShellSpellActionRuntime({
       }
       const state = orbRuntimeState.get();
       if (!state) return false;
-      const lockSource = String(state.floatGraceLockSource || "");
-      const clearPolicy = String(state.floatGraceClearPolicy || "");
+      const orbStateMixer = runtime && runtime.orbStateMixer;
       const sourceWordId = String(
         (payload && (payload.sourceWordId || payload.wordId || payload.spellId)) ||
-        (lockSource || "graviton")
+        "graviton"
       ).trim().toLowerCase();
+      if (
+        orbStateMixer &&
+        typeof orbStateMixer.isFloatLocked === "function" &&
+        orbStateMixer.isFloatLocked()
+      ) {
+        if (
+          typeof orbStateMixer.canClear !== "function" ||
+          !orbStateMixer.canClear(ORB_STATE_IDS.GRAVITON_FLOAT_LOCK, { sourceWordId })
+        ) {
+          return true;
+        }
+        clearFloatGraceState(orbRuntimeState, payload);
+        return true;
+      }
+      const lockSource = String(state.floatGraceLockSource || "");
+      const clearPolicy = String(state.floatGraceClearPolicy || "");
       if (
         state.floatGraceActive &&
         state.floatGracePersistent &&
@@ -137,6 +160,13 @@ export function createShellSpellActionRuntime({
         : yW;
       const phase = Math.random() * Math.PI * 2;
       const floatGrace = resolveOrbGracePayload(FLOAT_GRACE_PROFILE);
+      if (orbStateMixer && typeof orbStateMixer.activate === "function") {
+        orbStateMixer.activate(ORB_STATE_IDS.GRAVITON_FLOAT_LOCK, {
+          sourceWordId: "graviton",
+          owner: "graviton",
+          atMs: Number(payload && payload.atMs) || performance.now(),
+        });
+      }
       orbRuntimeState.patch({
         yW: anchorY,
         floatGraceActive: true,

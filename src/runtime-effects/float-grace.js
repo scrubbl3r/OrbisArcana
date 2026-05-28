@@ -14,6 +14,7 @@ export function clearOrbGraceRuntime({
     floatGraceBreakOnMotion: true,
     floatGraceStartedAtMs: 0,
     floatGraceMinBreakMs: 0,
+    orbStates: Object.create(null),
   });
 }
 

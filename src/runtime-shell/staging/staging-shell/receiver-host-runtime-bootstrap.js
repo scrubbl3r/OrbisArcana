@@ -277,8 +277,8 @@ export async function bootstrapShellReceiverHostRuntimeAssembly({
         ? shellHooks.playOrbNod(payload)
         : { handled: false }
     ),
-    clearFloatGrace: () => {
-      if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace();
+    clearFloatGrace: (request = {}) => {
+      if (shellHooks && typeof shellHooks.clearFloatGrace === "function") shellHooks.clearFloatGrace(request);
     },
     clearOrbDeathRuntimeVfx: () => {
       if (shellHooks && typeof shellHooks.clearOrbDeathRuntimeVfx === "function") shellHooks.clearOrbDeathRuntimeVfx();

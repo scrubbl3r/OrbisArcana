@@ -29,6 +29,7 @@
  * @property {number} floatGraceMinBreakMs
  * @property {number} floatGraceAnchorY
  * @property {number} floatGracePhase
+ * @property {Object<string, Object>} orbStates
  * @property {boolean} teleportHoldActive
  * @property {number} teleportHoldAnchorY
  * @property {boolean} spawnHoldActive
@@ -72,6 +73,7 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     floatGraceMinBreakMs: 0,
     floatGraceAnchorY: 0,
     floatGracePhase: 0,
+    orbStates: Object.create(null),
     teleportHoldActive: false,
     teleportHoldAnchorY: 0,
     spawnHoldActive: false,
@@ -120,6 +122,7 @@ export function createOrbRuntimeState({ initialState = {} } = {}) {
     state.floatGraceMinBreakMs = 0;
     state.floatGraceAnchorY = 0;
     state.floatGracePhase = 0;
+    state.orbStates = Object.create(null);
     state.teleportHoldActive = false;
     state.teleportHoldAnchorY = 0;
     state.spawnHoldActive = false;

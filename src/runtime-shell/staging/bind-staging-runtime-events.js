@@ -57,14 +57,14 @@ export function bindStagingRuntimeEvents({
 
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_DIED, () => {
     setOrbInputSuppressed(true);
-    clearFloatGrace();
+    clearFloatGrace({ reason: "death", force: true });
     clearOrbDeathRuntimeVfx();
     scheduleDeathOverlay();
     updateDebugReadout();
   });
   eventBus.on(RECEIVER_EVENTS.EVT_ORB_REVIVED, () => {
     setOrbInputSuppressed(false);
-    clearFloatGrace();
+    clearFloatGrace({ reason: "revive", force: true });
     clearDeathOverlaySchedule();
     closeDeathOverlay();
     if (worldSystem) worldSystem.reset(performance.now());
