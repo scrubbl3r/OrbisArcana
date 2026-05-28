@@ -1,17 +1,18 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260528161233";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260528163000";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
 const WAKE_SDF_FIELD_EMITTER_COUNT = 9;
 const WAKE_SDF_CONTROL_PARTICLE_COUNT = 64;
+const WAKE_SDF_SOURCE_GRAPH_RADIUS = 0.82;
 
 function createWakeSdfSourceGraph(count = 25) {
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
   return Object.freeze(Array.from({ length: count }, (_, index) => {
     const t = count <= 1 ? 0 : (index + 0.5) / count;
-    const radius = Math.sqrt(t) * 0.82;
+    const radius = Math.sqrt(t) * WAKE_SDF_SOURCE_GRAPH_RADIUS;
     const angle = index * goldenAngle;
     return Object.freeze([Math.cos(angle) * radius, Math.sin(angle) * radius]);
   }));
@@ -112,6 +113,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfHeightBo: clampNumber(source.wakeSdfHeightBo, 0.1, 8, fallback.wakeSdfHeightBo ?? (fallback.wakeLiftBo ?? 0.45) + (fallback.wakeStretchStrength ?? 0.24)),
     wakeSdfParticleLifeMs: Math.round(clampNumber(source.wakeSdfParticleLifeMs, 100, 8000, fallback.wakeSdfParticleLifeMs ?? 1500)),
     wakeSdfSpawnRate: clampNumber(source.wakeSdfSpawnRate, 1, 240, fallback.wakeSdfSpawnRate ?? 43),
+    wakeSdfSpawnAreaBo: clampNumber(source.wakeSdfSpawnAreaBo, 0.1, 2, fallback.wakeSdfSpawnAreaBo ?? 1),
     wakeSdfParticleRadiusBo: clampNumber(source.wakeSdfParticleRadiusBo, 0.02, 1.5, fallback.wakeSdfParticleRadiusBo ?? 0.16),
     wakeSdfLiftBias: clampNumber(source.wakeSdfLiftBias ?? source.wakeSdfUpdraftBo, -2, 4, fallback.wakeSdfLiftBias ?? fallback.wakeSdfUpdraftBo ?? 0.2),
     wakeSdfJitterBo: clampNumber(source.wakeSdfJitterBo, 0, 1, fallback.wakeSdfJitterBo ?? 0.04),
@@ -1162,9 +1164,9 @@ export function createFlameAoe3dRuntime({
   function respawnWakeSdfControlParticle(index, bo, initialAge = 0) {
     const particle = wakeSdfControlParticles[index];
     if (!particle) return;
-    const visualOrbRadius = bo * 0.5;
     const config = activeConfig || FLAME_AOE_3D_PRESET_DEFAULT;
     const particleLifeSec = clampNumber(config.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
+    const spawnRadius = bo * clampNumber(config.wakeSdfSpawnAreaBo, 0.1, 2, 1) * 0.5;
     const particleRadiusBo = clampNumber(config.wakeSdfParticleRadiusBo, 0.02, 1.5, 0.16);
     const liftBias = clampNumber(config.wakeSdfLiftBias, -2, 4, 0.2);
     const jitterBo = clampNumber(config.wakeSdfJitterBo, 0, 1, 0.04);
@@ -1175,7 +1177,10 @@ export function createFlameAoe3dRuntime({
     const jitter = new THREE.Vector2(Math.cos(jitterAngle), Math.sin(jitterAngle)).multiplyScalar(jitterRadius);
     const origin = resolveWakeSdfWorldOrigin();
     particle.position
-      .set(source[0] * visualOrbRadius * 0.84, source[1] * visualOrbRadius * 0.84)
+      .set(
+        (source[0] / WAKE_SDF_SOURCE_GRAPH_RADIUS) * spawnRadius,
+        (source[1] / WAKE_SDF_SOURCE_GRAPH_RADIUS) * spawnRadius
+      )
       .add(jitter)
       .add(origin);
     particle.velocity.set(

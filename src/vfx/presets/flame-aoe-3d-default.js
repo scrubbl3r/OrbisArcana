@@ -52,6 +52,7 @@ export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "wakeSdfHeightBo": 1.5,
   "wakeSdfParticleLifeMs": 1000,
   "wakeSdfSpawnRate": 35,
+  "wakeSdfSpawnAreaBo": 1,
   "wakeSdfParticleRadiusBo": 0.1,
   "wakeSdfLiftBias": 0.8,
   "wakeSdfJitterBo": 0.1,

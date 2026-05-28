@@ -12,12 +12,13 @@ import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
 const WAKE_SDF_FIELD_EMITTER_COUNT = 9;
 const WAKE_SDF_CONTROL_PARTICLE_COUNT = 64;
+const WAKE_SDF_SOURCE_GRAPH_RADIUS = 0.82;
 
 function createWakeSdfSourceGraph(count = 25) {
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
   return Object.freeze(Array.from({ length: count }, (_, index) => {
     const t = count <= 1 ? 0 : (index + 0.5) / count;
-    const radius = Math.sqrt(t) * 0.82;
+    const radius = Math.sqrt(t) * WAKE_SDF_SOURCE_GRAPH_RADIUS;
     const angle = index * goldenAngle;
     return Object.freeze([Math.cos(angle) * radius, Math.sin(angle) * radius]);
   }));
@@ -95,6 +96,7 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSdfHeightBo: 1.15,
   wakeSdfParticleLifeMs: 1500,
   wakeSdfSpawnRate: 43,
+  wakeSdfSpawnAreaBo: 1,
   wakeSdfParticleRadiusBo: 0.16,
   wakeSdfLiftBias: 0.2,
   wakeSdfJitterBo: 0.04,
@@ -256,6 +258,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfHeightBo: clampNumber(els.flameAoe3dWakeSdfHeightBo && els.flameAoe3dWakeSdfHeightBo.value, 0.1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfHeightBo),
     wakeSdfParticleLifeMs: Math.round(clampNumber(els.flameAoe3dWakeSdfParticleLifeMs && els.flameAoe3dWakeSdfParticleLifeMs.value, 100, 8000, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfParticleLifeMs)),
     wakeSdfSpawnRate: clampNumber(els.flameAoe3dWakeSdfSpawnRate && els.flameAoe3dWakeSdfSpawnRate.value, 1, 240, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfSpawnRate),
+    wakeSdfSpawnAreaBo: clampNumber(els.flameAoe3dWakeSdfSpawnAreaBo && els.flameAoe3dWakeSdfSpawnAreaBo.value, 0.1, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfSpawnAreaBo),
     wakeSdfParticleRadiusBo: clampNumber(els.flameAoe3dWakeSdfParticleRadiusBo && els.flameAoe3dWakeSdfParticleRadiusBo.value, 0.02, 1.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfParticleRadiusBo),
     wakeSdfLiftBias: clampNumber(els.flameAoe3dWakeSdfLiftBias && els.flameAoe3dWakeSdfLiftBias.value, -2, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfLiftBias),
     wakeSdfJitterBo: clampNumber(els.flameAoe3dWakeSdfJitterBo && els.flameAoe3dWakeSdfJitterBo.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfJitterBo),
@@ -336,6 +339,7 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfHeightBo) els.flameAoe3dWakeSdfHeightBo.value = String(Number(cfg.wakeSdfHeightBo).toFixed(2));
   if (els.flameAoe3dWakeSdfParticleLifeMs) els.flameAoe3dWakeSdfParticleLifeMs.value = String(Math.round(cfg.wakeSdfParticleLifeMs));
   if (els.flameAoe3dWakeSdfSpawnRate) els.flameAoe3dWakeSdfSpawnRate.value = String(Number(cfg.wakeSdfSpawnRate).toFixed(0));
+  if (els.flameAoe3dWakeSdfSpawnAreaBo) els.flameAoe3dWakeSdfSpawnAreaBo.value = String(Number(cfg.wakeSdfSpawnAreaBo).toFixed(2));
   if (els.flameAoe3dWakeSdfParticleRadiusBo) els.flameAoe3dWakeSdfParticleRadiusBo.value = String(Number(cfg.wakeSdfParticleRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSdfLiftBias) els.flameAoe3dWakeSdfLiftBias.value = String(Number(cfg.wakeSdfLiftBias).toFixed(2));
   if (els.flameAoe3dWakeSdfJitterBo) els.flameAoe3dWakeSdfJitterBo.value = String(Number(cfg.wakeSdfJitterBo).toFixed(2));
@@ -1481,8 +1485,8 @@ export function createFlameAoe3dPreview({
     const particle = wakeSdfPreviewParticles[index];
     if (!particle) return;
     const config = wakeConfig || FLAME_AOE_3D_PREVIEW_DEFAULTS;
-    const visualOrbRadius = bo * 0.5;
     const particleLifeSec = clampNumber(config.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
+    const spawnRadius = bo * clampNumber(config.wakeSdfSpawnAreaBo, 0.1, 2, 1) * 0.5;
     const particleRadiusBo = clampNumber(config.wakeSdfParticleRadiusBo, 0.02, 1.5, 0.16);
     const liftBias = clampNumber(config.wakeSdfLiftBias, -2, 4, 0.2);
     const jitterBo = clampNumber(config.wakeSdfJitterBo, 0, 1, 0.04);
@@ -1490,7 +1494,10 @@ export function createFlameAoe3dPreview({
     const jitterAngle = nextWakeSdfPreviewRandom() * Math.PI * 2;
     const jitterRadius = bo * jitterBo * (0.5 + nextWakeSdfPreviewRandom());
     particle.position
-      .set(source[0] * visualOrbRadius * 0.84, source[1] * visualOrbRadius * 0.84)
+      .set(
+        (source[0] / WAKE_SDF_SOURCE_GRAPH_RADIUS) * spawnRadius,
+        (source[1] / WAKE_SDF_SOURCE_GRAPH_RADIUS) * spawnRadius
+      )
       .add(new THREE.Vector2(Math.cos(jitterAngle), Math.sin(jitterAngle)).multiplyScalar(jitterRadius));
     particle.velocity.set(
       (nextWakeSdfPreviewRandom() - 0.5) * bo * jitterBo * 4.5,
