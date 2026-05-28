@@ -1,12 +1,11 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260527211500";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260528145500";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
 const WAKE_SDF_FIELD_EMITTER_COUNT = 9;
 const WAKE_SDF_CONTROL_PARTICLE_COUNT = 64;
-const WAKE_SDF_CONTROL_PARTICLE_LIFE_SEC = 1.5;
 
 function createWakeSdfSourceGraph(count = 25) {
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
@@ -111,6 +110,17 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
       ? (fallback.wakeSdfEnabled === true || fallback.wakeSdfEnabled === 1 || fallback.wakeSdfEnabled === "1" ? 1 : 0)
       : (source.wakeSdfEnabled === true || source.wakeSdfEnabled === 1 || source.wakeSdfEnabled === "1" ? 1 : 0),
     wakeSdfHeightBo: clampNumber(source.wakeSdfHeightBo, 0.1, 8, fallback.wakeSdfHeightBo ?? (fallback.wakeLiftBo ?? 0.45) + (fallback.wakeStretchStrength ?? 0.24)),
+    wakeSdfParticleLifeMs: Math.round(clampNumber(source.wakeSdfParticleLifeMs, 100, 8000, fallback.wakeSdfParticleLifeMs ?? 1500)),
+    wakeSdfSpawnRate: clampNumber(source.wakeSdfSpawnRate, 1, 240, fallback.wakeSdfSpawnRate ?? 43),
+    wakeSdfParticleRadiusBo: clampNumber(source.wakeSdfParticleRadiusBo, 0.02, 1.5, fallback.wakeSdfParticleRadiusBo ?? 0.16),
+    wakeSdfVelocityInherit: clampNumber(source.wakeSdfVelocityInherit, 0, 4, fallback.wakeSdfVelocityInherit ?? 1.52),
+    wakeSdfMotionDrag: clampNumber(source.wakeSdfMotionDrag, 0, 8, fallback.wakeSdfMotionDrag ?? 0.82),
+    wakeSdfUpdraftBo: clampNumber(source.wakeSdfUpdraftBo, -2, 4, fallback.wakeSdfUpdraftBo ?? 0.2),
+    wakeSdfJitterBo: clampNumber(source.wakeSdfJitterBo, 0, 1, fallback.wakeSdfJitterBo ?? 0.04),
+    wakeSdfHeatDecay: clampNumber(source.wakeSdfHeatDecay, 0.1, 6, fallback.wakeSdfHeatDecay ?? 1),
+    wakeSdfDebugPoints: source.wakeSdfDebugPoints == null
+      ? (fallback.wakeSdfDebugPoints === false || fallback.wakeSdfDebugPoints === 0 || fallback.wakeSdfDebugPoints === "0" ? 0 : 1)
+      : (source.wakeSdfDebugPoints === false || source.wakeSdfDebugPoints === 0 || source.wakeSdfDebugPoints === "0" ? 0 : 1),
     wakeSdfRadiusBo: clampNumber(source.wakeSdfRadiusBo, 0.05, 4, fallback.wakeSdfRadiusBo ?? fallback.wakeRadiusBo ?? 0.5),
     wakeSdfCoreRadiusBo: clampNumber(source.wakeSdfCoreRadiusBo, 0.02, 3, fallback.wakeSdfCoreRadiusBo ?? fallback.wakeLiftCoreRadiusBo ?? 0.25),
     wakeSdfBlendBo: clampNumber(source.wakeSdfBlendBo, 0.001, 2, fallback.wakeSdfBlendBo ?? fallback.wakeOrbHugRadiusBo ?? 0.22),
@@ -753,7 +763,8 @@ function createWakeSdfMaterial(config) {
     const t = index / Math.max(1, WAKE_SDF_CONTROL_PARTICLE_COUNT - 1);
     const x = source[0] * orbRadiusPx * 0.8;
     const y = source[1] * orbRadiusPx * 0.8 + t * orbRadiusPx * 0.72;
-    return new THREE.Vector4(x, y, orbRadiusPx * (0.18 + (1 - t) * 0.18), 1 - t * 0.72);
+    const particleRadiusPx = Math.max(1, Number(config.wakeSdfParticleRadiusPx) || orbRadiusPx * 0.16);
+    return new THREE.Vector4(x, y, particleRadiusPx * (0.72 + (1 - t) * 0.48), 1 - t * 0.72);
   });
   const controlVelocities = Array.from({ length: WAKE_SDF_CONTROL_PARTICLE_COUNT }, () => new THREE.Vector2(0, 1));
   return new THREE.ShaderMaterial({
@@ -1150,6 +1161,12 @@ export function createFlameAoe3dRuntime({
     const particle = wakeSdfControlParticles[index];
     if (!particle) return;
     const visualOrbRadius = bo * 0.5;
+    const config = activeConfig || FLAME_AOE_3D_PRESET_DEFAULT;
+    const particleLifeSec = clampNumber(config.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
+    const particleRadiusBo = clampNumber(config.wakeSdfParticleRadiusBo, 0.02, 1.5, 0.16);
+    const velocityInherit = clampNumber(config.wakeSdfVelocityInherit, 0, 4, 1.52);
+    const updraftBo = clampNumber(config.wakeSdfUpdraftBo, -2, 4, 0.2);
+    const jitterBo = clampNumber(config.wakeSdfJitterBo, 0, 1, 0.04);
     const sourceIndex = (wakeSdfParticleCursor + index) % WAKE_SDF_SOURCE_GRAPH.length;
     const source = WAKE_SDF_SOURCE_GRAPH[sourceIndex] || WAKE_SDF_SOURCE_GRAPH[0];
     const localMotion = wakeSdfMotionVelocity;
@@ -1159,16 +1176,16 @@ export function createFlameAoe3dRuntime({
     if (sourceDir.lengthSq() > 0.0001) sourceDir.normalize();
     const trailingBias = clampNumber(0.5 + sourceDir.dot(motionDir.clone().multiplyScalar(-1)) * 0.5, 0.22, 1.0, 0.55);
     const jitterAngle = nextWakeSdfRandom() * Math.PI * 2;
-    const jitterRadius = visualOrbRadius * (0.03 + nextWakeSdfRandom() * 0.08);
+    const jitterRadius = bo * jitterBo * (0.5 + nextWakeSdfRandom());
     const jitter = new THREE.Vector2(Math.cos(jitterAngle), Math.sin(jitterAngle)).multiplyScalar(jitterRadius);
     particle.position.set(source[0] * visualOrbRadius * 0.84, source[1] * visualOrbRadius * 0.84).add(jitter);
     particle.velocity
       .copy(localMotion)
-      .multiplyScalar(-1.15 - trailingBias * 0.95)
-      .add(new THREE.Vector2((nextWakeSdfRandom() - 0.5) * bo * 0.18, bo * (0.14 + nextWakeSdfRandom() * 0.08)));
-    particle.life = WAKE_SDF_CONTROL_PARTICLE_LIFE_SEC;
+      .multiplyScalar(-(0.82 + trailingBias * 0.55) * velocityInherit)
+      .add(new THREE.Vector2((nextWakeSdfRandom() - 0.5) * bo * jitterBo * 4.5, bo * updraftBo * (0.7 + nextWakeSdfRandom() * 0.4)));
+    particle.life = particleLifeSec;
     particle.age = Math.min(particle.life * 0.92, Math.max(0, initialAge));
-    particle.radius = bo * (0.08 + trailingBias * 0.1 + nextWakeSdfRandom() * 0.04);
+    particle.radius = bo * particleRadiusBo * (0.72 + trailingBias * 0.48 + nextWakeSdfRandom() * 0.25);
     particle.heat = 0.34 + trailingBias * 0.72;
     particle.sourceIndex = sourceIndex;
   }
@@ -1183,8 +1200,9 @@ export function createFlameAoe3dRuntime({
     }
     wakeSdfRandomSeed = 0x5f3759df;
     wakeSdfSpawnAccumulator = 0;
+    const particleLifeSec = clampNumber(activeConfig && activeConfig.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
-      const stagger = (i / WAKE_SDF_CONTROL_PARTICLE_COUNT) * WAKE_SDF_CONTROL_PARTICLE_LIFE_SEC;
+      const stagger = (i / WAKE_SDF_CONTROL_PARTICLE_COUNT) * particleLifeSec;
       respawnWakeSdfControlParticle(i, bo, stagger);
     }
   }
@@ -1197,7 +1215,7 @@ export function createFlameAoe3dRuntime({
     }
     const uniformParticles = uniforms.uWakeControlParticles.value;
     const uniformVelocities = uniforms.uWakeControlVelocities.value;
-    const spawnInterval = WAKE_SDF_CONTROL_PARTICLE_LIFE_SEC / WAKE_SDF_CONTROL_PARTICLE_COUNT;
+    const spawnInterval = 1 / clampNumber(activeConfig && activeConfig.wakeSdfSpawnRate, 1, 240, 43);
     wakeSdfSpawnAccumulator += safeDt;
     let spawnCount = 0;
     while (wakeSdfSpawnAccumulator >= spawnInterval && spawnCount < 4) {
@@ -1206,8 +1224,9 @@ export function createFlameAoe3dRuntime({
       respawnWakeSdfControlParticle(wakeSdfParticleCursor, bo, 0);
       spawnCount += 1;
     }
-    const drag = Math.exp(-safeDt * 0.82);
-    const buoyancy = bo * 0.2;
+    const drag = Math.exp(-safeDt * clampNumber(activeConfig && activeConfig.wakeSdfMotionDrag, 0, 8, 0.82));
+    const buoyancy = bo * clampNumber(activeConfig && activeConfig.wakeSdfUpdraftBo, -2, 4, 0.2);
+    const heatDecay = clampNumber(activeConfig && activeConfig.wakeSdfHeatDecay, 0.1, 6, 1);
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
       const particle = wakeSdfControlParticles[i];
       particle.age += safeDt;
@@ -1218,7 +1237,7 @@ export function createFlameAoe3dRuntime({
       particle.velocity.y += buoyancy * safeDt;
       particle.position.addScaledVector(particle.velocity, safeDt);
       const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
-      const heat = particle.heat * (1 - ageT);
+      const heat = particle.heat * Math.pow(1 - ageT, heatDecay);
       const radius = particle.radius * (1 + ageT * 1.45);
       if (uniformParticles[i]) uniformParticles[i].set(particle.position.x, particle.position.y, radius, heat);
       if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
@@ -1228,7 +1247,6 @@ export function createFlameAoe3dRuntime({
       for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
         const particle = wakeSdfControlParticles[i];
         const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
-        const heat = particle.heat * (1 - ageT);
         debugBuffers.particlePositions[i * 3] = particle.position.x;
         debugBuffers.particlePositions[i * 3 + 1] = particle.position.y;
         debugBuffers.particlePositions[i * 3 + 2] = 2.5 + i * 0.002;
@@ -1469,6 +1487,7 @@ export function createFlameAoe3dRuntime({
           wakeSdfCoreRadiusPx: bo * config.wakeSdfCoreRadiusBo,
           wakeSdfBlendPx: bo * config.wakeSdfBlendBo,
           wakeSdfSoftnessPx: bo * config.wakeSdfSoftnessBo,
+          wakeSdfParticleRadiusPx: bo * config.wakeSdfParticleRadiusBo,
           wakeSdfLiftPx: bo * config.wakeSdfHeightBo,
           orbRadiusPx: bo * 0.5,
         });
@@ -1483,8 +1502,10 @@ export function createFlameAoe3dRuntime({
         wakeSdf.renderOrder = FLAME_AOE_RENDER_ORDER_BASE + 2;
         wakeSdfMesh = wakeSdf;
         wakePivot.add(wakeSdf);
-        wakeSdfDebugGroup = createWakeSdfDebugVisuals(bo);
-        wakePivot.add(wakeSdfDebugGroup);
+        if (config.wakeSdfDebugPoints) {
+          wakeSdfDebugGroup = createWakeSdfDebugVisuals(bo);
+          wakePivot.add(wakeSdfDebugGroup);
+        }
       }
       group.add(aoeAuraDisc);
       group.add(aura);

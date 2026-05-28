@@ -1793,24 +1793,49 @@
           <div id="flameAoe3dWakeSdfControls" class="controlGroupBody paramFieldRows" hidden>
             <input id="flameAoe3dWakeSdfEnabled" type="hidden" value="1" />
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeSdfHeightBo">Plume height BO</label>
+              <label for="flameAoe3dWakeSdfHeightBo">Field height BO</label>
               <input id="flameAoe3dWakeSdfHeightBo" class="paramFieldInput" type="number" min="0.1" max="8" step="0.01" value="1.15" />
               <button id="flameAoe3dApplyWakeSdfHeightBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeSdfRadiusBo">Plume radius BO</label>
-              <input id="flameAoe3dWakeSdfRadiusBo" class="paramFieldInput" type="number" min="0.05" max="4" step="0.01" value="0.42" />
-              <button id="flameAoe3dApplyWakeSdfRadiusBtn" class="toolBtn" type="button">Apply</button>
+              <label for="flameAoe3dWakeSdfParticleLifeMs">Particle life ms</label>
+              <input id="flameAoe3dWakeSdfParticleLifeMs" class="paramFieldInput" type="number" min="100" max="8000" step="25" value="1500" />
+              <button id="flameAoe3dApplyWakeSdfParticleLifeBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeSdfCoreRadiusBo">Tip radius BO</label>
-              <input id="flameAoe3dWakeSdfCoreRadiusBo" class="paramFieldInput" type="number" min="0.02" max="3" step="0.01" value="0.20" />
-              <button id="flameAoe3dApplyWakeSdfCoreRadiusBtn" class="toolBtn" type="button">Apply</button>
+              <label for="flameAoe3dWakeSdfSpawnRate">Spawn rate / sec</label>
+              <input id="flameAoe3dWakeSdfSpawnRate" class="paramFieldInput" type="number" min="1" max="240" step="1" value="43" />
+              <button id="flameAoe3dApplyWakeSdfSpawnRateBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeSdfSoftnessBo">Edge softness BO</label>
-              <input id="flameAoe3dWakeSdfSoftnessBo" class="paramFieldInput" type="number" min="0.001" max="2" step="0.01" value="0.30" />
-              <button id="flameAoe3dApplyWakeSdfSoftnessBtn" class="toolBtn" type="button">Apply</button>
+              <label for="flameAoe3dWakeSdfParticleRadiusBo">Particle radius BO</label>
+              <input id="flameAoe3dWakeSdfParticleRadiusBo" class="paramFieldInput" type="number" min="0.02" max="1.5" step="0.01" value="0.16" />
+              <button id="flameAoe3dApplyWakeSdfParticleRadiusBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfVelocityInherit">Velocity inherit</label>
+              <input id="flameAoe3dWakeSdfVelocityInherit" class="paramFieldInput" type="number" min="0" max="4" step="0.01" value="1.52" />
+              <button id="flameAoe3dApplyWakeSdfVelocityInheritBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfMotionDrag">Motion drag</label>
+              <input id="flameAoe3dWakeSdfMotionDrag" class="paramFieldInput" type="number" min="0" max="8" step="0.01" value="0.82" />
+              <button id="flameAoe3dApplyWakeSdfMotionDragBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfUpdraftBo">Updraft BO</label>
+              <input id="flameAoe3dWakeSdfUpdraftBo" class="paramFieldInput" type="number" min="-2" max="4" step="0.01" value="0.20" />
+              <button id="flameAoe3dApplyWakeSdfUpdraftBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfJitterBo">Jitter BO</label>
+              <input id="flameAoe3dWakeSdfJitterBo" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.04" />
+              <button id="flameAoe3dApplyWakeSdfJitterBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfHeatDecay">Heat decay</label>
+              <input id="flameAoe3dWakeSdfHeatDecay" class="paramFieldInput" type="number" min="0.1" max="6" step="0.01" value="1.00" />
+              <button id="flameAoe3dApplyWakeSdfHeatDecayBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfDensity">Body density</label>
@@ -1831,6 +1856,11 @@
               <label for="flameAoe3dWakeSdfNoiseContrast">Body noise contrast</label>
               <input id="flameAoe3dWakeSdfNoiseContrast" class="paramFieldInput" type="number" min="0.02" max="0.8" step="0.01" value="0.24" />
               <button id="flameAoe3dApplyWakeSdfNoiseContrastBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfDebugPoints">Debug points</label>
+              <input id="flameAoe3dWakeSdfDebugPoints" class="paramFieldInput" type="number" min="0" max="1" step="1" value="1" />
+              <button id="flameAoe3dApplyWakeSdfDebugPointsBtn" class="toolBtn" type="button">Apply</button>
             </div>
           </div>
         </div>
@@ -2980,14 +3010,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260528143000"),
+      import("./vfx-studio-bootstrap.js?v=20260528145500"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
       import("./vfx-studio-surfaces.js?v=20260524-tesla-c"),
-      import("./vfx-studio-theme-publish.js?v=20260528143000"),
+      import("./vfx-studio-theme-publish.js?v=20260528145500"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -2995,7 +3025,7 @@
     import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506c";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260528143000";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260528145500";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260517a";
@@ -3015,7 +3045,7 @@
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
-    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260527211500";
+    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260528145500";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ORB_NOD_3D_PRESET_DEFAULT,
@@ -3025,10 +3055,10 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260527211500i";
+    } from "../../src/vfx/presets/index.js?v=20260528145500i";
     import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527122742";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
-    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260528143000";
+    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260528145500";
     import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527122742b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
@@ -3720,6 +3750,22 @@
       flameAoe3dWakeSdfEnabled: $("flameAoe3dWakeSdfEnabled"),
       flameAoe3dWakeSdfHeightBo: $("flameAoe3dWakeSdfHeightBo"),
       flameAoe3dApplyWakeSdfHeightBtn: $("flameAoe3dApplyWakeSdfHeightBtn"),
+      flameAoe3dWakeSdfParticleLifeMs: $("flameAoe3dWakeSdfParticleLifeMs"),
+      flameAoe3dApplyWakeSdfParticleLifeBtn: $("flameAoe3dApplyWakeSdfParticleLifeBtn"),
+      flameAoe3dWakeSdfSpawnRate: $("flameAoe3dWakeSdfSpawnRate"),
+      flameAoe3dApplyWakeSdfSpawnRateBtn: $("flameAoe3dApplyWakeSdfSpawnRateBtn"),
+      flameAoe3dWakeSdfParticleRadiusBo: $("flameAoe3dWakeSdfParticleRadiusBo"),
+      flameAoe3dApplyWakeSdfParticleRadiusBtn: $("flameAoe3dApplyWakeSdfParticleRadiusBtn"),
+      flameAoe3dWakeSdfVelocityInherit: $("flameAoe3dWakeSdfVelocityInherit"),
+      flameAoe3dApplyWakeSdfVelocityInheritBtn: $("flameAoe3dApplyWakeSdfVelocityInheritBtn"),
+      flameAoe3dWakeSdfMotionDrag: $("flameAoe3dWakeSdfMotionDrag"),
+      flameAoe3dApplyWakeSdfMotionDragBtn: $("flameAoe3dApplyWakeSdfMotionDragBtn"),
+      flameAoe3dWakeSdfUpdraftBo: $("flameAoe3dWakeSdfUpdraftBo"),
+      flameAoe3dApplyWakeSdfUpdraftBtn: $("flameAoe3dApplyWakeSdfUpdraftBtn"),
+      flameAoe3dWakeSdfJitterBo: $("flameAoe3dWakeSdfJitterBo"),
+      flameAoe3dApplyWakeSdfJitterBtn: $("flameAoe3dApplyWakeSdfJitterBtn"),
+      flameAoe3dWakeSdfHeatDecay: $("flameAoe3dWakeSdfHeatDecay"),
+      flameAoe3dApplyWakeSdfHeatDecayBtn: $("flameAoe3dApplyWakeSdfHeatDecayBtn"),
       flameAoe3dWakeSdfRadiusBo: $("flameAoe3dWakeSdfRadiusBo"),
       flameAoe3dApplyWakeSdfRadiusBtn: $("flameAoe3dApplyWakeSdfRadiusBtn"),
       flameAoe3dWakeSdfCoreRadiusBo: $("flameAoe3dWakeSdfCoreRadiusBo"),
@@ -3734,6 +3780,8 @@
       flameAoe3dApplyWakeSdfNoiseSpeedBtn: $("flameAoe3dApplyWakeSdfNoiseSpeedBtn"),
       flameAoe3dWakeSdfNoiseContrast: $("flameAoe3dWakeSdfNoiseContrast"),
       flameAoe3dApplyWakeSdfNoiseContrastBtn: $("flameAoe3dApplyWakeSdfNoiseContrastBtn"),
+      flameAoe3dWakeSdfDebugPoints: $("flameAoe3dWakeSdfDebugPoints"),
+      flameAoe3dApplyWakeSdfDebugPointsBtn: $("flameAoe3dApplyWakeSdfDebugPointsBtn"),
       flameAoe3dWakeGraph0Pct: $("flameAoe3dWakeGraph0Pct"),
       flameAoe3dWakeGraph0R: $("flameAoe3dWakeGraph0R"),
       flameAoe3dWakeGraph0G: $("flameAoe3dWakeGraph0G"),

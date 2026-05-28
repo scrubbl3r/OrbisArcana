@@ -93,6 +93,15 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeNoiseMix: 0.35,
   wakeSdfEnabled: 1,
   wakeSdfHeightBo: 1.15,
+  wakeSdfParticleLifeMs: 1500,
+  wakeSdfSpawnRate: 43,
+  wakeSdfParticleRadiusBo: 0.16,
+  wakeSdfVelocityInherit: 1.52,
+  wakeSdfMotionDrag: 0.82,
+  wakeSdfUpdraftBo: 0.2,
+  wakeSdfJitterBo: 0.04,
+  wakeSdfHeatDecay: 1,
+  wakeSdfDebugPoints: 1,
   wakeSdfRadiusBo: 0.42,
   wakeSdfCoreRadiusBo: 0.2,
   wakeSdfBlendBo: 0.12,
@@ -247,6 +256,14 @@ function readFlameWakeConfig(els = {}) {
     wakeNoiseMix: clampNumber(els.flameAoe3dWakeNoiseMix && els.flameAoe3dWakeNoiseMix.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseMix),
     wakeSdfEnabled: els.flameAoe3dWakeSdfVisibleBtn && layerVisible(els.flameAoe3dWakeSdfVisibleBtn) ? 1 : 0,
     wakeSdfHeightBo: clampNumber(els.flameAoe3dWakeSdfHeightBo && els.flameAoe3dWakeSdfHeightBo.value, 0.1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfHeightBo),
+    wakeSdfParticleLifeMs: Math.round(clampNumber(els.flameAoe3dWakeSdfParticleLifeMs && els.flameAoe3dWakeSdfParticleLifeMs.value, 100, 8000, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfParticleLifeMs)),
+    wakeSdfSpawnRate: clampNumber(els.flameAoe3dWakeSdfSpawnRate && els.flameAoe3dWakeSdfSpawnRate.value, 1, 240, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfSpawnRate),
+    wakeSdfParticleRadiusBo: clampNumber(els.flameAoe3dWakeSdfParticleRadiusBo && els.flameAoe3dWakeSdfParticleRadiusBo.value, 0.02, 1.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfParticleRadiusBo),
+    wakeSdfVelocityInherit: clampNumber(els.flameAoe3dWakeSdfVelocityInherit && els.flameAoe3dWakeSdfVelocityInherit.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfVelocityInherit),
+    wakeSdfMotionDrag: clampNumber(els.flameAoe3dWakeSdfMotionDrag && els.flameAoe3dWakeSdfMotionDrag.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfMotionDrag),
+    wakeSdfUpdraftBo: clampNumber(els.flameAoe3dWakeSdfUpdraftBo && els.flameAoe3dWakeSdfUpdraftBo.value, -2, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfUpdraftBo),
+    wakeSdfJitterBo: clampNumber(els.flameAoe3dWakeSdfJitterBo && els.flameAoe3dWakeSdfJitterBo.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfJitterBo),
+    wakeSdfHeatDecay: clampNumber(els.flameAoe3dWakeSdfHeatDecay && els.flameAoe3dWakeSdfHeatDecay.value, 0.1, 6, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfHeatDecay),
     wakeSdfRadiusBo: clampNumber(els.flameAoe3dWakeSdfRadiusBo && els.flameAoe3dWakeSdfRadiusBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRadiusBo),
     wakeSdfCoreRadiusBo: clampNumber(els.flameAoe3dWakeSdfCoreRadiusBo && els.flameAoe3dWakeSdfCoreRadiusBo.value, 0.02, 3, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfCoreRadiusBo),
     wakeSdfBlendBo: FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfBlendBo,
@@ -255,6 +272,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfNoiseScale: clampNumber(els.flameAoe3dWakeSdfNoiseScale && els.flameAoe3dWakeSdfNoiseScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseScale),
     wakeSdfNoiseSpeed: clampNumber(els.flameAoe3dWakeSdfNoiseSpeed && els.flameAoe3dWakeSdfNoiseSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseSpeed),
     wakeSdfNoiseContrast: clampNumber(els.flameAoe3dWakeSdfNoiseContrast && els.flameAoe3dWakeSdfNoiseContrast.value, 0.02, 0.8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseContrast),
+    wakeSdfDebugPoints: Math.round(clampNumber(els.flameAoe3dWakeSdfDebugPoints && els.flameAoe3dWakeSdfDebugPoints.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDebugPoints)),
     ...readWakeGraphConfig(els),
   });
 }
@@ -320,6 +338,14 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfVisibleBtn) els.flameAoe3dWakeSdfVisibleBtn.setAttribute("aria-pressed", wakeSdfEnabled ? "true" : "false");
   if (els.flameAoe3dWakeSdfEnabled) els.flameAoe3dWakeSdfEnabled.value = wakeSdfEnabled ? "1" : "0";
   if (els.flameAoe3dWakeSdfHeightBo) els.flameAoe3dWakeSdfHeightBo.value = String(Number(cfg.wakeSdfHeightBo).toFixed(2));
+  if (els.flameAoe3dWakeSdfParticleLifeMs) els.flameAoe3dWakeSdfParticleLifeMs.value = String(Math.round(cfg.wakeSdfParticleLifeMs));
+  if (els.flameAoe3dWakeSdfSpawnRate) els.flameAoe3dWakeSdfSpawnRate.value = String(Number(cfg.wakeSdfSpawnRate).toFixed(0));
+  if (els.flameAoe3dWakeSdfParticleRadiusBo) els.flameAoe3dWakeSdfParticleRadiusBo.value = String(Number(cfg.wakeSdfParticleRadiusBo).toFixed(2));
+  if (els.flameAoe3dWakeSdfVelocityInherit) els.flameAoe3dWakeSdfVelocityInherit.value = String(Number(cfg.wakeSdfVelocityInherit).toFixed(2));
+  if (els.flameAoe3dWakeSdfMotionDrag) els.flameAoe3dWakeSdfMotionDrag.value = String(Number(cfg.wakeSdfMotionDrag).toFixed(2));
+  if (els.flameAoe3dWakeSdfUpdraftBo) els.flameAoe3dWakeSdfUpdraftBo.value = String(Number(cfg.wakeSdfUpdraftBo).toFixed(2));
+  if (els.flameAoe3dWakeSdfJitterBo) els.flameAoe3dWakeSdfJitterBo.value = String(Number(cfg.wakeSdfJitterBo).toFixed(2));
+  if (els.flameAoe3dWakeSdfHeatDecay) els.flameAoe3dWakeSdfHeatDecay.value = String(Number(cfg.wakeSdfHeatDecay).toFixed(2));
   if (els.flameAoe3dWakeSdfRadiusBo) els.flameAoe3dWakeSdfRadiusBo.value = String(Number(cfg.wakeSdfRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSdfCoreRadiusBo) els.flameAoe3dWakeSdfCoreRadiusBo.value = String(Number(cfg.wakeSdfCoreRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSdfSoftnessBo) els.flameAoe3dWakeSdfSoftnessBo.value = String(Number(cfg.wakeSdfSoftnessBo).toFixed(2));
@@ -327,6 +353,7 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfNoiseScale) els.flameAoe3dWakeSdfNoiseScale.value = String(Number(cfg.wakeSdfNoiseScale).toFixed(2));
   if (els.flameAoe3dWakeSdfNoiseSpeed) els.flameAoe3dWakeSdfNoiseSpeed.value = String(Number(cfg.wakeSdfNoiseSpeed).toFixed(2));
   if (els.flameAoe3dWakeSdfNoiseContrast) els.flameAoe3dWakeSdfNoiseContrast.value = String(Number(cfg.wakeSdfNoiseContrast).toFixed(2));
+  if (els.flameAoe3dWakeSdfDebugPoints) els.flameAoe3dWakeSdfDebugPoints.value = String(Math.round(clampNumber(cfg.wakeSdfDebugPoints, 0, 1, 1)));
   for (let i = 0; i < 4; i += 1) {
     ["Pct", "R", "G", "B", "A"].forEach((suffix) => {
       const el = els[`flameAoe3dWakeGraph${i}${suffix}`];
@@ -1102,7 +1129,8 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
     const t = index / Math.max(1, WAKE_SDF_CONTROL_PARTICLE_COUNT - 1);
     const x = source[0] * orbRadiusPx * 0.8;
     const y = source[1] * orbRadiusPx * 0.8 + t * orbRadiusPx * 0.72;
-    return new THREE.Vector4(x, y, orbRadiusPx * (0.18 + (1 - t) * 0.18), 1 - t * 0.72);
+    const particleRadiusPx = Math.max(1, Number(config.wakeSdfParticleRadiusPx) || orbRadiusPx * 0.16);
+    return new THREE.Vector4(x, y, particleRadiusPx * (0.72 + (1 - t) * 0.48), 1 - t * 0.72);
   });
   const controlVelocities = Array.from({ length: WAKE_SDF_CONTROL_PARTICLE_COUNT }, () => new THREE.Vector2(0, 1));
   return new THREE.ShaderMaterial({
@@ -1529,6 +1557,7 @@ export function createFlameAoe3dPreview({
         wakeSdfCoreRadiusPx: bo * wakeConfig.wakeSdfCoreRadiusBo,
         wakeSdfBlendPx: bo * wakeConfig.wakeSdfBlendBo,
         wakeSdfSoftnessPx: bo * wakeConfig.wakeSdfSoftnessBo,
+        wakeSdfParticleRadiusPx: bo * wakeConfig.wakeSdfParticleRadiusBo,
         orbRadiusPx: bo * 0.5,
       });
       const cardSize = resolveWakeSdfCardSize(bo, wakeConfig);
@@ -1537,9 +1566,11 @@ export function createFlameAoe3dPreview({
       wakeSdfMesh.renderOrder = 11;
       wakeSdfMesh.visible = layerVisible(els.flameAoe3dWakeSdfVisibleBtn);
       model.add(wakeSdfMesh);
-      const wakeSdfDebug = createWakeSdfPreviewDebugVisuals(bo, wakeSdfMaterial);
-      wakeSdfDebug.visible = wakeSdfMesh.visible;
-      model.add(wakeSdfDebug);
+      if (wakeConfig.wakeSdfDebugPoints) {
+        const wakeSdfDebug = createWakeSdfPreviewDebugVisuals(bo, wakeSdfMaterial);
+        wakeSdfDebug.visible = wakeSdfMesh.visible;
+        model.add(wakeSdfDebug);
+      }
     }
     orbLight = createOrbPointLight({ bo, config: activeConfig });
     updateOrbPointLight(orbLight, 0, activeConfig);
