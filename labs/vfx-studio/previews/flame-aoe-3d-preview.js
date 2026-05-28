@@ -96,8 +96,6 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSdfParticleLifeMs: 1500,
   wakeSdfSpawnRate: 43,
   wakeSdfParticleRadiusBo: 0.16,
-  wakeSdfVelocityInherit: 1.52,
-  wakeSdfMotionDrag: 0.82,
   wakeSdfLiftBias: 0.2,
   wakeSdfJitterBo: 0.04,
   wakeSdfHeatDecay: 1,
@@ -259,8 +257,6 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfParticleLifeMs: Math.round(clampNumber(els.flameAoe3dWakeSdfParticleLifeMs && els.flameAoe3dWakeSdfParticleLifeMs.value, 100, 8000, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfParticleLifeMs)),
     wakeSdfSpawnRate: clampNumber(els.flameAoe3dWakeSdfSpawnRate && els.flameAoe3dWakeSdfSpawnRate.value, 1, 240, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfSpawnRate),
     wakeSdfParticleRadiusBo: clampNumber(els.flameAoe3dWakeSdfParticleRadiusBo && els.flameAoe3dWakeSdfParticleRadiusBo.value, 0.02, 1.5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfParticleRadiusBo),
-    wakeSdfVelocityInherit: clampNumber(els.flameAoe3dWakeSdfVelocityInherit && els.flameAoe3dWakeSdfVelocityInherit.value, 0, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfVelocityInherit),
-    wakeSdfMotionDrag: clampNumber(els.flameAoe3dWakeSdfMotionDrag && els.flameAoe3dWakeSdfMotionDrag.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfMotionDrag),
     wakeSdfLiftBias: clampNumber(els.flameAoe3dWakeSdfLiftBias && els.flameAoe3dWakeSdfLiftBias.value, -2, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfLiftBias),
     wakeSdfJitterBo: clampNumber(els.flameAoe3dWakeSdfJitterBo && els.flameAoe3dWakeSdfJitterBo.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfJitterBo),
     wakeSdfHeatDecay: clampNumber(els.flameAoe3dWakeSdfHeatDecay && els.flameAoe3dWakeSdfHeatDecay.value, 0.1, 6, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfHeatDecay),
@@ -341,8 +337,6 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfParticleLifeMs) els.flameAoe3dWakeSdfParticleLifeMs.value = String(Math.round(cfg.wakeSdfParticleLifeMs));
   if (els.flameAoe3dWakeSdfSpawnRate) els.flameAoe3dWakeSdfSpawnRate.value = String(Number(cfg.wakeSdfSpawnRate).toFixed(0));
   if (els.flameAoe3dWakeSdfParticleRadiusBo) els.flameAoe3dWakeSdfParticleRadiusBo.value = String(Number(cfg.wakeSdfParticleRadiusBo).toFixed(2));
-  if (els.flameAoe3dWakeSdfVelocityInherit) els.flameAoe3dWakeSdfVelocityInherit.value = String(Number(cfg.wakeSdfVelocityInherit).toFixed(2));
-  if (els.flameAoe3dWakeSdfMotionDrag) els.flameAoe3dWakeSdfMotionDrag.value = String(Number(cfg.wakeSdfMotionDrag).toFixed(2));
   if (els.flameAoe3dWakeSdfLiftBias) els.flameAoe3dWakeSdfLiftBias.value = String(Number(cfg.wakeSdfLiftBias).toFixed(2));
   if (els.flameAoe3dWakeSdfJitterBo) els.flameAoe3dWakeSdfJitterBo.value = String(Number(cfg.wakeSdfJitterBo).toFixed(2));
   if (els.flameAoe3dWakeSdfHeatDecay) els.flameAoe3dWakeSdfHeatDecay.value = String(Number(cfg.wakeSdfHeatDecay).toFixed(2));
@@ -1530,7 +1524,6 @@ export function createFlameAoe3dPreview({
       respawnWakeSdfPreviewParticle(wakeSdfPreviewParticleCursor, bo, 0);
       spawnCount += 1;
     }
-    const drag = Math.exp(-safeDt * clampNumber(wakeConfig && wakeConfig.wakeSdfMotionDrag, 0, 8, 0.82));
     const heatDecay = clampNumber(wakeConfig && wakeConfig.wakeSdfHeatDecay, 0.1, 6, 1);
     const uniformParticles = uniforms.uWakeControlParticles.value;
     const uniformVelocities = uniforms.uWakeControlVelocities.value;
@@ -1538,7 +1531,6 @@ export function createFlameAoe3dPreview({
       const particle = wakeSdfPreviewParticles[i];
       particle.age += safeDt;
       if (particle.age >= particle.life) respawnWakeSdfPreviewParticle(i, bo, 0);
-      particle.velocity.multiplyScalar(drag);
       particle.position.addScaledVector(particle.velocity, safeDt);
       const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
       const heat = particle.heat * Math.pow(1 - ageT, heatDecay);
