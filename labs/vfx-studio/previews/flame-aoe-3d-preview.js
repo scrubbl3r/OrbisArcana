@@ -11,22 +11,19 @@ import { ORB_3D_VISUAL_DEFAULTS as ORB_MATERIAL_CONFIG } from "../../../src/game
 
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
 const WAKE_SDF_FIELD_EMITTER_COUNT = 9;
-const WAKE_SDF_CONTROL_PARTICLE_COUNT = 32;
-const WAKE_SDF_SOURCE_GRAPH = Object.freeze([
-  [0, 0],
-  [-0.42, 0],
-  [0.42, 0],
-  [0, 0.42],
-  [0, -0.42],
-  [-0.36, 0.36],
-  [0.36, 0.36],
-  [-0.36, -0.36],
-  [0.36, -0.36],
-  [-0.72, 0.08],
-  [0.72, 0.08],
-  [-0.12, 0.72],
-  [0.12, -0.72],
-]);
+const WAKE_SDF_CONTROL_PARTICLE_COUNT = 64;
+
+function createWakeSdfSourceGraph(count = 25) {
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  return Object.freeze(Array.from({ length: count }, (_, index) => {
+    const t = count <= 1 ? 0 : (index + 0.5) / count;
+    const radius = Math.sqrt(t) * 0.82;
+    const angle = index * goldenAngle;
+    return Object.freeze([Math.cos(angle) * radius, Math.sin(angle) * radius]);
+  }));
+}
+
+const WAKE_SDF_SOURCE_GRAPH = createWakeSdfSourceGraph();
 
 function frameCameraToSsotOrbSize(inspector, root, bo) {
   if (!inspector || !inspector.camera || !root) return;
@@ -1327,14 +1324,15 @@ function createWakeSdfPreviewDebugVisuals(bo, material) {
   sourceGeometry.setAttribute("position", new THREE.BufferAttribute(sourcePositions, 3));
   const sourcePoints = new THREE.Points(sourceGeometry, new THREE.PointsMaterial({
     color: 0x00f6ff,
-    size: 4,
+    size: 3,
     sizeAttenuation: false,
     depthTest: false,
     depthWrite: false,
     map: getWakeSdfPreviewDebugPointTexture(),
     alphaTest: 0.2,
-    transparent: true,
+    transparent: false,
     opacity: 1,
+    toneMapped: false,
   }));
   sourcePoints.renderOrder = 18;
   group.add(sourcePoints);
@@ -1348,22 +1346,23 @@ function createWakeSdfPreviewDebugVisuals(bo, material) {
     particlePositions[i * 3] = particle.x;
     particlePositions[i * 3 + 1] = particle.y;
     particlePositions[i * 3 + 2] = 2.5 + i * 0.002;
-    particleColors[i * 3] = 1.0 - ageT * 0.85;
-    particleColors[i * 3 + 1] = 0.08 + ageT * 0.92;
-    particleColors[i * 3 + 2] = 1.0 - ageT * 0.95;
+    particleColors[i * 3] = ageT < 0.5 ? 1.0 : 0.05;
+    particleColors[i * 3 + 1] = ageT < 0.5 ? 0.0 : 1.0;
+    particleColors[i * 3 + 2] = 1.0;
   }
   const particleGeometry = new THREE.BufferGeometry();
   particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
   particleGeometry.setAttribute("color", new THREE.BufferAttribute(particleColors, 3));
   const particlePoints = new THREE.Points(particleGeometry, new THREE.PointsMaterial({
-    size: 5,
+    size: 3.25,
     sizeAttenuation: false,
     depthTest: false,
     depthWrite: false,
     map: getWakeSdfPreviewDebugPointTexture(),
     alphaTest: 0.2,
-    transparent: true,
+    transparent: false,
     opacity: 1,
+    toneMapped: false,
     vertexColors: true,
   }));
   particlePoints.renderOrder = 19;

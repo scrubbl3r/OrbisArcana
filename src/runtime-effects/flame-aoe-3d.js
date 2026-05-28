@@ -5,22 +5,20 @@ import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
 const WAKE_SDF_FIELD_EMITTER_COUNT = 9;
-const WAKE_SDF_CONTROL_PARTICLE_COUNT = 32;
-const WAKE_SDF_SOURCE_GRAPH = Object.freeze([
-  [0, 0],
-  [-0.42, 0],
-  [0.42, 0],
-  [0, 0.42],
-  [0, -0.42],
-  [-0.36, 0.36],
-  [0.36, 0.36],
-  [-0.36, -0.36],
-  [0.36, -0.36],
-  [-0.72, 0.08],
-  [0.72, 0.08],
-  [-0.12, 0.72],
-  [0.12, -0.72],
-]);
+const WAKE_SDF_CONTROL_PARTICLE_COUNT = 64;
+const WAKE_SDF_CONTROL_PARTICLE_LIFE_SEC = 1.5;
+
+function createWakeSdfSourceGraph(count = 25) {
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  return Object.freeze(Array.from({ length: count }, (_, index) => {
+    const t = count <= 1 ? 0 : (index + 0.5) / count;
+    const radius = Math.sqrt(t) * 0.82;
+    const angle = index * goldenAngle;
+    return Object.freeze([Math.cos(angle) * radius, Math.sin(angle) * radius]);
+  }));
+}
+
+const WAKE_SDF_SOURCE_GRAPH = createWakeSdfSourceGraph();
 
 function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -994,14 +992,15 @@ function createWakeSdfDebugVisuals(bo) {
   sourceGeometry.setAttribute("position", new THREE.BufferAttribute(sourcePositions, 3));
   const sourceMaterial = new THREE.PointsMaterial({
     color: 0x00f6ff,
-    size: 4,
+    size: 3,
     sizeAttenuation: false,
     depthTest: false,
     depthWrite: false,
     map: getWakeSdfDebugPointTexture(),
     alphaTest: 0.2,
-    transparent: true,
+    transparent: false,
     opacity: 1,
+    toneMapped: false,
   });
   const sourcePoints = new THREE.Points(sourceGeometry, sourceMaterial);
   sourcePoints.name = "flame_aoe3d:wake_sdf_source_graph_debug";
@@ -1014,14 +1013,15 @@ function createWakeSdfDebugVisuals(bo) {
   particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
   particleGeometry.setAttribute("color", new THREE.BufferAttribute(particleColors, 3));
   const particleMaterial = new THREE.PointsMaterial({
-    size: 5,
+    size: 3.25,
     sizeAttenuation: false,
     depthTest: false,
     depthWrite: false,
     map: getWakeSdfDebugPointTexture(),
     alphaTest: 0.2,
-    transparent: true,
+    transparent: false,
     opacity: 1,
+    toneMapped: false,
     vertexColors: true,
   });
   const particlePoints = new THREE.Points(particleGeometry, particleMaterial);
@@ -1087,6 +1087,7 @@ export function createFlameAoe3dRuntime({
   const liftCoreVelocity = new THREE.Vector3();
   const stretchDirection = new THREE.Vector3(0, 1, 0);
   const shaderMotion = new THREE.Vector3();
+  const wakeSdfMotionVelocity = new THREE.Vector2();
   const springForce = new THREE.Vector3();
   const dampingForce = new THREE.Vector3();
   const wakeSdfTrailPoints = Array.from({ length: WAKE_SDF_TRAIL_POINT_COUNT }, () => new THREE.Vector2());
@@ -1102,6 +1103,7 @@ export function createFlameAoe3dRuntime({
     sourceIndex: 0,
   }));
   let wakeSdfParticleCursor = 0;
+  let wakeSdfSpawnAccumulator = 0;
   let wakeSdfRandomSeed = 0x5f3759df;
   let wakeGroundLift = 0;
 
@@ -1150,21 +1152,21 @@ export function createFlameAoe3dRuntime({
     const visualOrbRadius = bo * 0.5;
     const sourceIndex = (wakeSdfParticleCursor + index) % WAKE_SDF_SOURCE_GRAPH.length;
     const source = WAKE_SDF_SOURCE_GRAPH[sourceIndex] || WAKE_SDF_SOURCE_GRAPH[0];
-    const localMotion = new THREE.Vector2(orbFrameDelta.x + orbFrameDelta.z * 0.45, orbFrameDelta.y);
+    const localMotion = wakeSdfMotionVelocity;
     const speed = localMotion.length();
     const motionDir = speed > 0.001 ? localMotion.clone().multiplyScalar(1 / speed) : new THREE.Vector2(0, -0.35);
     const sourceDir = new THREE.Vector2(source[0], source[1]);
     if (sourceDir.lengthSq() > 0.0001) sourceDir.normalize();
     const trailingBias = clampNumber(0.5 + sourceDir.dot(motionDir.clone().multiplyScalar(-1)) * 0.5, 0.22, 1.0, 0.55);
     const jitterAngle = nextWakeSdfRandom() * Math.PI * 2;
-    const jitterRadius = visualOrbRadius * (0.04 + nextWakeSdfRandom() * 0.1);
+    const jitterRadius = visualOrbRadius * (0.03 + nextWakeSdfRandom() * 0.08);
     const jitter = new THREE.Vector2(Math.cos(jitterAngle), Math.sin(jitterAngle)).multiplyScalar(jitterRadius);
     particle.position.set(source[0] * visualOrbRadius * 0.84, source[1] * visualOrbRadius * 0.84).add(jitter);
     particle.velocity
       .copy(localMotion)
       .multiplyScalar(-1.15 - trailingBias * 0.95)
       .add(new THREE.Vector2((nextWakeSdfRandom() - 0.5) * bo * 0.18, bo * (0.14 + nextWakeSdfRandom() * 0.08)));
-    particle.life = 0.95 + trailingBias * 0.85 + nextWakeSdfRandom() * 0.3;
+    particle.life = WAKE_SDF_CONTROL_PARTICLE_LIFE_SEC;
     particle.age = Math.min(particle.life * 0.92, Math.max(0, initialAge));
     particle.radius = bo * (0.08 + trailingBias * 0.1 + nextWakeSdfRandom() * 0.04);
     particle.heat = 0.34 + trailingBias * 0.72;
@@ -1180,8 +1182,9 @@ export function createFlameAoe3dRuntime({
       wakeSdfTargetPoints[i].copy(wakeSdfTrailPoints[i]);
     }
     wakeSdfRandomSeed = 0x5f3759df;
+    wakeSdfSpawnAccumulator = 0;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
-      const stagger = (i / WAKE_SDF_CONTROL_PARTICLE_COUNT) * 0.82;
+      const stagger = (i / WAKE_SDF_CONTROL_PARTICLE_COUNT) * WAKE_SDF_CONTROL_PARTICLE_LIFE_SEC;
       respawnWakeSdfControlParticle(i, bo, stagger);
     }
   }
@@ -1194,8 +1197,15 @@ export function createFlameAoe3dRuntime({
     }
     const uniformParticles = uniforms.uWakeControlParticles.value;
     const uniformVelocities = uniforms.uWakeControlVelocities.value;
-    wakeSdfParticleCursor = (wakeSdfParticleCursor + 1) % WAKE_SDF_CONTROL_PARTICLE_COUNT;
-    respawnWakeSdfControlParticle(wakeSdfParticleCursor, bo, 0);
+    const spawnInterval = WAKE_SDF_CONTROL_PARTICLE_LIFE_SEC / WAKE_SDF_CONTROL_PARTICLE_COUNT;
+    wakeSdfSpawnAccumulator += safeDt;
+    let spawnCount = 0;
+    while (wakeSdfSpawnAccumulator >= spawnInterval && spawnCount < 4) {
+      wakeSdfSpawnAccumulator -= spawnInterval;
+      wakeSdfParticleCursor = (wakeSdfParticleCursor + 1) % WAKE_SDF_CONTROL_PARTICLE_COUNT;
+      respawnWakeSdfControlParticle(wakeSdfParticleCursor, bo, 0);
+      spawnCount += 1;
+    }
     const drag = Math.exp(-safeDt * 0.82);
     const buoyancy = bo * 0.2;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
@@ -1222,9 +1232,9 @@ export function createFlameAoe3dRuntime({
         debugBuffers.particlePositions[i * 3] = particle.position.x;
         debugBuffers.particlePositions[i * 3 + 1] = particle.position.y;
         debugBuffers.particlePositions[i * 3 + 2] = 2.5 + i * 0.002;
-        debugBuffers.particleColors[i * 3] = 1.0 - ageT * 0.85;
-        debugBuffers.particleColors[i * 3 + 1] = 0.08 + ageT * 0.92;
-        debugBuffers.particleColors[i * 3 + 2] = 1.0 - ageT * 0.95;
+        debugBuffers.particleColors[i * 3] = ageT < 0.5 ? 1.0 : 0.05;
+        debugBuffers.particleColors[i * 3 + 1] = ageT < 0.5 ? 0.0 : 1.0;
+        debugBuffers.particleColors[i * 3 + 2] = 1.0;
       }
       debugBuffers.particleGeometry.attributes.position.needsUpdate = true;
       debugBuffers.particleGeometry.attributes.color.needsUpdate = true;
@@ -1261,6 +1271,7 @@ export function createFlameAoe3dRuntime({
     } else {
       orbFrameDelta.copy(position).sub(lastPosition).clampLength(0, motionSlack);
       lastPosition.copy(position);
+      wakeSdfMotionVelocity.set(orbFrameDelta.x + orbFrameDelta.z * 0.45, orbFrameDelta.y).multiplyScalar(1 / safeDt);
       liftCoreOffset.addScaledVector(orbFrameDelta, -lagInfluence);
     }
     if (stiffness01 >= 0.999) {

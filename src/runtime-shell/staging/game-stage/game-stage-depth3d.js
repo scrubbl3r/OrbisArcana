@@ -59,7 +59,7 @@ import {
 } from "../../../game-runtime/orb/orb-shader-heal-pulse-layer.js?v=20260517b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
-import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260528130500s";
+import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260528140500s";
 import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527122742s";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
