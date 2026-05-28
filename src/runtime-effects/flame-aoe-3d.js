@@ -114,6 +114,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     out[`wakeAlphaGradient${i}Pct`] = optionalNumber(source[`wakeAlphaGradient${i}Pct`] ?? fallback[`wakeAlphaGradient${i}Pct`], 0, 100);
     out[`wakeAlphaGradient${i}A`] = optionalNumber(source[`wakeAlphaGradient${i}A`] ?? fallback[`wakeAlphaGradient${i}A`], 0, 1);
   }
+  if (out.wakeSdfEnabled) out.wakeMeshEnabled = 0;
   return Object.freeze(out);
 }
 
@@ -1151,7 +1152,10 @@ export function createFlameAoe3dRuntime({
         lastPosition.copy(initialPosition);
         motionInitialized = true;
       }
-      liftCoreOffset.set(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0);
+      const initialWakeLiftBo = config.wakeSdfEnabled
+        ? config.wakeSdfHeightBo
+        : (config.wakeLiftBo + config.wakeStretchStrength);
+      liftCoreOffset.set(0, bo * initialWakeLiftBo, 0);
       targetLiftCoreOffset.copy(liftCoreOffset);
       liftCoreVelocity.set(0, 0, 0);
       wakeGroundLift = 0;
@@ -1177,7 +1181,7 @@ export function createFlameAoe3dRuntime({
       wakePivot = new THREE.Group();
       wakePivot.name = "flame_aoe3d:elastic_flame_shell_pivot";
       wakePivot.position.set(0, 0, 0);
-      if (config.wakeMeshEnabled) {
+      if (config.wakeMeshEnabled && !config.wakeSdfEnabled) {
         wakeMaterial = createWakeMaterial({
           ...config,
           wakeDisplacePx: config.wakeDisplaceEnabled ? bo * config.wakeDisplaceBo : 0,
@@ -1213,7 +1217,7 @@ export function createFlameAoe3dRuntime({
           wakeSdfLiftPx: bo * config.wakeSdfHeightBo,
           orbRadiusPx: bo * 0.5,
         });
-        resetWakeSdfSpine(new THREE.Vector3(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0), bo);
+        resetWakeSdfSpine(new THREE.Vector3(0, bo * config.wakeSdfHeightBo, 0), bo);
         updateWakeSdfSpine(bo, 1 / 60);
         const cardSize = resolveWakeSdfCardSize(bo, config);
         const wakeSdf = new THREE.Mesh(
