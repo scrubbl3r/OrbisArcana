@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260527182400";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260527190500";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
@@ -95,6 +95,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfEnabled: source.wakeSdfEnabled == null
       ? (fallback.wakeSdfEnabled === true || fallback.wakeSdfEnabled === 1 || fallback.wakeSdfEnabled === "1" ? 1 : 0)
       : (source.wakeSdfEnabled === true || source.wakeSdfEnabled === 1 || source.wakeSdfEnabled === "1" ? 1 : 0),
+    wakeSdfHeightBo: clampNumber(source.wakeSdfHeightBo, 0.1, 8, fallback.wakeSdfHeightBo ?? (fallback.wakeLiftBo ?? 0.45) + (fallback.wakeStretchStrength ?? 0.24)),
     wakeSdfRadiusBo: clampNumber(source.wakeSdfRadiusBo, 0.05, 4, fallback.wakeSdfRadiusBo ?? fallback.wakeRadiusBo ?? 0.5),
     wakeSdfCoreRadiusBo: clampNumber(source.wakeSdfCoreRadiusBo, 0.02, 3, fallback.wakeSdfCoreRadiusBo ?? fallback.wakeLiftCoreRadiusBo ?? 0.25),
     wakeSdfBlendBo: clampNumber(source.wakeSdfBlendBo, 0.001, 2, fallback.wakeSdfBlendBo ?? fallback.wakeOrbHugRadiusBo ?? 0.22),
@@ -858,10 +859,7 @@ function createWakeSdfCardGeometry(width, height) {
 }
 
 function resolveWakeSdfCardSize(bo, config) {
-  const liftPx = bo * (
-    clampNumber(config && config.wakeLiftBo, 0, 4, 0.45)
-    + clampNumber(config && config.wakeStretchStrength, 0, 4, 0.24)
-  );
+  const liftPx = bo * clampNumber(config && config.wakeSdfHeightBo, 0.1, 8, 1.15);
   const authoredSlackPx = bo * clampNumber(config && config.wakeLengthBo, 0, 4, 0);
   const motionSlackPx = Math.max(bo * 0.5, liftPx * 0.35, authoredSlackPx);
   const radiusPx = bo * clampNumber(config && config.wakeSdfRadiusBo, 0.05, 4, 0.42);
@@ -993,8 +991,13 @@ export function createFlameAoe3dRuntime({
     if (!wakeMesh && !wakeSdfMesh) return;
     const bo = Math.max(1, Number(runtimeBo) || 72);
     const safeDt = Math.max(1 / 240, Math.min(0.12, Number(dtSec) || (1 / 60)));
-    const baseLift = bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6);
-    const buoyLift = bo * clampNumber(activeConfig && activeConfig.wakeStretchStrength, 0, 4, 0);
+    const sdfHeightBo = clampNumber(activeConfig && activeConfig.wakeSdfHeightBo, 0.1, 8, (activeConfig && activeConfig.wakeLiftBo || 0.45) + (activeConfig && activeConfig.wakeStretchStrength || 0.24));
+    const baseLift = wakeSdfMesh && !wakeMesh
+      ? bo * sdfHeightBo
+      : bo * clampNumber(activeConfig && activeConfig.wakeLiftBo, 0, 4, 0.6);
+    const buoyLift = wakeSdfMesh && !wakeMesh
+      ? 0
+      : bo * clampNumber(activeConfig && activeConfig.wakeStretchStrength, 0, 4, 0);
     const stiffness01 = clampNumber(activeConfig && activeConfig.wakeLeanAmount, 0, 100, 50) / 100;
     const damping01 = clampNumber(activeConfig && activeConfig.wakeLeanLag, 0, 100, 50) / 100;
     const spring = stiffness01 * stiffness01 * 220;
@@ -1207,7 +1210,7 @@ export function createFlameAoe3dRuntime({
           wakeSdfCoreRadiusPx: bo * config.wakeSdfCoreRadiusBo,
           wakeSdfBlendPx: bo * config.wakeSdfBlendBo,
           wakeSdfSoftnessPx: bo * config.wakeSdfSoftnessBo,
-          wakeSdfLiftPx: bo * (config.wakeLiftBo + config.wakeStretchStrength),
+          wakeSdfLiftPx: bo * config.wakeSdfHeightBo,
           orbRadiusPx: bo * 0.5,
         });
         resetWakeSdfSpine(new THREE.Vector3(0, bo * (config.wakeLiftBo + config.wakeStretchStrength), 0), bo);

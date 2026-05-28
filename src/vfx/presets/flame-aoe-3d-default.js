@@ -80,6 +80,7 @@ export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "wakeAlphaGradient3Pct": "",
   "wakeAlphaGradient3A": "",
   "wakeSdfEnabled": 1,
+  "wakeSdfHeightBo": 1.15,
   "wakeSdfRadiusBo": 0.42,
   "wakeSdfCoreRadiusBo": 0.2,
   "wakeSdfBlendBo": 0.12,

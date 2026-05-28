@@ -78,6 +78,7 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSimplexGain: 0.48,
   wakeNoiseMix: 0.35,
   wakeSdfEnabled: 1,
+  wakeSdfHeightBo: 1.15,
   wakeSdfRadiusBo: 0.42,
   wakeSdfCoreRadiusBo: 0.2,
   wakeSdfBlendBo: 0.12,
@@ -231,6 +232,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSimplexGain: clampNumber(els.flameAoe3dWakeSimplexGain && els.flameAoe3dWakeSimplexGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexGain),
     wakeNoiseMix: clampNumber(els.flameAoe3dWakeNoiseMix && els.flameAoe3dWakeNoiseMix.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseMix),
     wakeSdfEnabled: els.flameAoe3dWakeSdfVisibleBtn && layerVisible(els.flameAoe3dWakeSdfVisibleBtn) ? 1 : 0,
+    wakeSdfHeightBo: clampNumber(els.flameAoe3dWakeSdfHeightBo && els.flameAoe3dWakeSdfHeightBo.value, 0.1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfHeightBo),
     wakeSdfRadiusBo: clampNumber(els.flameAoe3dWakeSdfRadiusBo && els.flameAoe3dWakeSdfRadiusBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRadiusBo),
     wakeSdfCoreRadiusBo: clampNumber(els.flameAoe3dWakeSdfCoreRadiusBo && els.flameAoe3dWakeSdfCoreRadiusBo.value, 0.02, 3, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfCoreRadiusBo),
     wakeSdfBlendBo: FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfBlendBo,
@@ -303,6 +305,7 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   const wakeSdfEnabled = cfg.wakeSdfEnabled === true || cfg.wakeSdfEnabled === 1 || cfg.wakeSdfEnabled === "1";
   if (els.flameAoe3dWakeSdfVisibleBtn) els.flameAoe3dWakeSdfVisibleBtn.setAttribute("aria-pressed", wakeSdfEnabled ? "true" : "false");
   if (els.flameAoe3dWakeSdfEnabled) els.flameAoe3dWakeSdfEnabled.value = wakeSdfEnabled ? "1" : "0";
+  if (els.flameAoe3dWakeSdfHeightBo) els.flameAoe3dWakeSdfHeightBo.value = String(Number(cfg.wakeSdfHeightBo).toFixed(2));
   if (els.flameAoe3dWakeSdfRadiusBo) els.flameAoe3dWakeSdfRadiusBo.value = String(Number(cfg.wakeSdfRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSdfCoreRadiusBo) els.flameAoe3dWakeSdfCoreRadiusBo.value = String(Number(cfg.wakeSdfCoreRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSdfSoftnessBo) els.flameAoe3dWakeSdfSoftnessBo.value = String(Number(cfg.wakeSdfSoftnessBo).toFixed(2));
@@ -1186,10 +1189,7 @@ function createWakeSdfCardGeometry(width, height) {
 }
 
 function resolveWakeSdfCardSize(bo, config) {
-  const liftPx = bo * (
-    clampNumber(config && config.wakeLiftBo, 0, 4, 0.45)
-    + clampNumber(config && config.wakeStretchStrength, 0, 4, 0.24)
-  );
+  const liftPx = bo * clampNumber(config && config.wakeSdfHeightBo, 0.1, 8, 1.15);
   const authoredSlackPx = bo * clampNumber(config && config.wakeLengthBo, 0, 4, 0);
   const motionSlackPx = Math.max(bo * 0.5, liftPx * 0.35, authoredSlackPx);
   const radiusPx = bo * clampNumber(config && config.wakeSdfRadiusBo, 0.05, 4, 0.42);
@@ -1339,7 +1339,7 @@ export function createFlameAoe3dPreview({
       model.add(wakeMesh);
     }
     if (wakeConfig.wakeSdfEnabled) {
-      const wakeLiftPx = bo * (wakeConfig.wakeLiftBo + wakeConfig.wakeStretchStrength);
+      const wakeLiftPx = bo * wakeConfig.wakeSdfHeightBo;
       wakeSdfMaterial = createWakeSdfMaterial({
         ...wakeConfig,
         wakeLiftPx,
