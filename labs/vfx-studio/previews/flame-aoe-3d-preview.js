@@ -233,7 +233,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfEnabled: els.flameAoe3dWakeSdfVisibleBtn && layerVisible(els.flameAoe3dWakeSdfVisibleBtn) ? 1 : 0,
     wakeSdfRadiusBo: clampNumber(els.flameAoe3dWakeSdfRadiusBo && els.flameAoe3dWakeSdfRadiusBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRadiusBo),
     wakeSdfCoreRadiusBo: clampNumber(els.flameAoe3dWakeSdfCoreRadiusBo && els.flameAoe3dWakeSdfCoreRadiusBo.value, 0.02, 3, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfCoreRadiusBo),
-    wakeSdfBlendBo: clampNumber(els.flameAoe3dWakeSdfBlendBo && els.flameAoe3dWakeSdfBlendBo.value, 0.001, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfBlendBo),
+    wakeSdfBlendBo: FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfBlendBo,
     wakeSdfSoftnessBo: clampNumber(els.flameAoe3dWakeSdfSoftnessBo && els.flameAoe3dWakeSdfSoftnessBo.value, 0.001, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfSoftnessBo),
     wakeSdfDensity: clampNumber(els.flameAoe3dWakeSdfDensity && els.flameAoe3dWakeSdfDensity.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDensity),
     wakeSdfNoiseScale: clampNumber(els.flameAoe3dWakeSdfNoiseScale && els.flameAoe3dWakeSdfNoiseScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseScale),
@@ -305,7 +305,6 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfEnabled) els.flameAoe3dWakeSdfEnabled.value = wakeSdfEnabled ? "1" : "0";
   if (els.flameAoe3dWakeSdfRadiusBo) els.flameAoe3dWakeSdfRadiusBo.value = String(Number(cfg.wakeSdfRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSdfCoreRadiusBo) els.flameAoe3dWakeSdfCoreRadiusBo.value = String(Number(cfg.wakeSdfCoreRadiusBo).toFixed(2));
-  if (els.flameAoe3dWakeSdfBlendBo) els.flameAoe3dWakeSdfBlendBo.value = String(Number(cfg.wakeSdfBlendBo).toFixed(2));
   if (els.flameAoe3dWakeSdfSoftnessBo) els.flameAoe3dWakeSdfSoftnessBo.value = String(Number(cfg.wakeSdfSoftnessBo).toFixed(2));
   if (els.flameAoe3dWakeSdfDensity) els.flameAoe3dWakeSdfDensity.value = String(Number(cfg.wakeSdfDensity).toFixed(2));
   if (els.flameAoe3dWakeSdfNoiseScale) els.flameAoe3dWakeSdfNoiseScale.value = String(Number(cfg.wakeSdfNoiseScale).toFixed(2));
