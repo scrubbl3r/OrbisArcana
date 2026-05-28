@@ -59,13 +59,13 @@ import {
 } from "../../../game-runtime/orb/orb-shader-heal-pulse-layer.js?v=20260517b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
-import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260528152728s";
+import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260528153500s";
 import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527122742s";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260528152728";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../../vfx/presets/flame-aoe-3d-default.js?v=20260528153500";
 import { TESLA_1_PRESET_DEFAULT } from "../../../vfx/presets/tesla-1-default.js?v=20260527122742";
-import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260528152728";
+import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260528153500";
 import { TESLA_1_BEHAVIOR_DEFAULT } from "../../../game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527122742b";
 import { SHOCKWAVE_3D_PRESET_DEFAULT } from "../../../vfx/presets/shockwave-3d-default.js?v=20260506a";
 import { HEAL_PRESET_DEFAULT } from "../../../vfx/presets/heal-default.js?v=20260517b";
@@ -604,7 +604,7 @@ export function createGameStageDepth3dLayer({
       ...FLAME_AOE_BEHAVIOR_DEFAULT,
       ...(payload.behavior && typeof payload.behavior === "object" ? payload.behavior : {}),
     };
-    const durationMs = Math.max(50, Number(payload.durationMs || behaviorConfig.durationMs || visualConfig.durationMs) || 1000);
+    const durationMs = Math.max(50, Number(behaviorConfig.durationMs || payload.durationMs || visualConfig.durationMs) || 1000);
     const hitRadiusBo = Math.max(0.05, Number(behaviorConfig.hitRadiusBo) || Number(FLAME_AOE_BEHAVIOR_DEFAULT.hitRadiusBo) || 4.5);
     const wakeHeightBo = Math.max(
       hitRadiusBo,
@@ -1646,6 +1646,14 @@ export function createGameStageDepth3dLayer({
         wakeMeshEnabled: 0,
         wakeSdfEnabled: 1,
       };
+      const behaviorConfig = {
+        ...FLAME_AOE_BEHAVIOR_DEFAULT,
+        ...(flamePayload.behavior && typeof flamePayload.behavior === "object" ? flamePayload.behavior : {}),
+      };
+      const behaviorDurationMs = Number(behaviorConfig.durationMs);
+      if (Number.isFinite(behaviorDurationMs) && behaviorDurationMs > 0) {
+        flamePayload.durationMs = behaviorDurationMs;
+      }
       const hasOrbModel = orb3dActorRuntime.hasModel();
       const result = hasOrbModel
         ? flameAoe3dRuntime.play(flamePayload)
