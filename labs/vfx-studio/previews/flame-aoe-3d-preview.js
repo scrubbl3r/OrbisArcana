@@ -1292,6 +1292,26 @@ function createWakeSdfCardGeometry(width, height) {
   return geometry;
 }
 
+let wakeSdfPreviewDebugPointTexture = null;
+function getWakeSdfPreviewDebugPointTexture() {
+  if (wakeSdfPreviewDebugPointTexture) return wakeSdfPreviewDebugPointTexture;
+  const canvas = document.createElement("canvas");
+  canvas.width = 32;
+  canvas.height = 32;
+  const ctx = canvas.getContext("2d");
+  const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 15);
+  gradient.addColorStop(0.0, "rgba(255,255,255,1)");
+  gradient.addColorStop(0.58, "rgba(255,255,255,1)");
+  gradient.addColorStop(1.0, "rgba(255,255,255,0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(16, 16, 15, 0, Math.PI * 2);
+  ctx.fill();
+  wakeSdfPreviewDebugPointTexture = new THREE.CanvasTexture(canvas);
+  wakeSdfPreviewDebugPointTexture.needsUpdate = true;
+  return wakeSdfPreviewDebugPointTexture;
+}
+
 function createWakeSdfPreviewDebugVisuals(bo, material) {
   const group = new THREE.Group();
   group.name = "flame_aoe3d:wake_sdf_preview_debug";
@@ -1306,13 +1326,15 @@ function createWakeSdfPreviewDebugVisuals(bo, material) {
   const sourceGeometry = new THREE.BufferGeometry();
   sourceGeometry.setAttribute("position", new THREE.BufferAttribute(sourcePositions, 3));
   const sourcePoints = new THREE.Points(sourceGeometry, new THREE.PointsMaterial({
-    color: 0x4de8ff,
-    size: 7,
+    color: 0x00f6ff,
+    size: 4,
     sizeAttenuation: false,
     depthTest: false,
     depthWrite: false,
+    map: getWakeSdfPreviewDebugPointTexture(),
+    alphaTest: 0.2,
     transparent: true,
-    opacity: 0.95,
+    opacity: 1,
   }));
   sourcePoints.renderOrder = 18;
   group.add(sourcePoints);
@@ -1322,24 +1344,26 @@ function createWakeSdfPreviewDebugVisuals(bo, material) {
   const particleColors = new Float32Array(WAKE_SDF_CONTROL_PARTICLE_COUNT * 3);
   for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
     const particle = particles[i] || new THREE.Vector4();
-    const heat = Math.max(0, Number(particle.w) || 0);
+    const ageT = i / Math.max(1, WAKE_SDF_CONTROL_PARTICLE_COUNT - 1);
     particlePositions[i * 3] = particle.x;
     particlePositions[i * 3 + 1] = particle.y;
     particlePositions[i * 3 + 2] = 2.5 + i * 0.002;
-    particleColors[i * 3] = Math.max(0.35, heat);
-    particleColors[i * 3 + 1] = 0.18 + heat * 0.72;
-    particleColors[i * 3 + 2] = 0.02;
+    particleColors[i * 3] = 1.0 - ageT * 0.85;
+    particleColors[i * 3 + 1] = 0.08 + ageT * 0.92;
+    particleColors[i * 3 + 2] = 1.0 - ageT * 0.95;
   }
   const particleGeometry = new THREE.BufferGeometry();
   particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
   particleGeometry.setAttribute("color", new THREE.BufferAttribute(particleColors, 3));
   const particlePoints = new THREE.Points(particleGeometry, new THREE.PointsMaterial({
-    size: 9,
+    size: 5,
     sizeAttenuation: false,
     depthTest: false,
     depthWrite: false,
+    map: getWakeSdfPreviewDebugPointTexture(),
+    alphaTest: 0.2,
     transparent: true,
-    opacity: 0.95,
+    opacity: 1,
     vertexColors: true,
   }));
   particlePoints.renderOrder = 19;

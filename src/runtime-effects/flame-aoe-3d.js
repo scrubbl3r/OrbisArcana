@@ -959,6 +959,26 @@ function createWakeSdfCardGeometry(width, height) {
   return geometry;
 }
 
+let wakeSdfDebugPointTexture = null;
+function getWakeSdfDebugPointTexture() {
+  if (wakeSdfDebugPointTexture) return wakeSdfDebugPointTexture;
+  const canvas = document.createElement("canvas");
+  canvas.width = 32;
+  canvas.height = 32;
+  const ctx = canvas.getContext("2d");
+  const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 15);
+  gradient.addColorStop(0.0, "rgba(255,255,255,1)");
+  gradient.addColorStop(0.58, "rgba(255,255,255,1)");
+  gradient.addColorStop(1.0, "rgba(255,255,255,0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(16, 16, 15, 0, Math.PI * 2);
+  ctx.fill();
+  wakeSdfDebugPointTexture = new THREE.CanvasTexture(canvas);
+  wakeSdfDebugPointTexture.needsUpdate = true;
+  return wakeSdfDebugPointTexture;
+}
+
 function createWakeSdfDebugVisuals(bo) {
   const group = new THREE.Group();
   group.name = "flame_aoe3d:wake_sdf_particle_debug";
@@ -973,13 +993,15 @@ function createWakeSdfDebugVisuals(bo) {
   const sourceGeometry = new THREE.BufferGeometry();
   sourceGeometry.setAttribute("position", new THREE.BufferAttribute(sourcePositions, 3));
   const sourceMaterial = new THREE.PointsMaterial({
-    color: 0x4de8ff,
-    size: 7,
+    color: 0x00f6ff,
+    size: 4,
     sizeAttenuation: false,
     depthTest: false,
     depthWrite: false,
+    map: getWakeSdfDebugPointTexture(),
+    alphaTest: 0.2,
     transparent: true,
-    opacity: 0.95,
+    opacity: 1,
   });
   const sourcePoints = new THREE.Points(sourceGeometry, sourceMaterial);
   sourcePoints.name = "flame_aoe3d:wake_sdf_source_graph_debug";
@@ -992,12 +1014,14 @@ function createWakeSdfDebugVisuals(bo) {
   particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
   particleGeometry.setAttribute("color", new THREE.BufferAttribute(particleColors, 3));
   const particleMaterial = new THREE.PointsMaterial({
-    size: 9,
+    size: 5,
     sizeAttenuation: false,
     depthTest: false,
     depthWrite: false,
+    map: getWakeSdfDebugPointTexture(),
+    alphaTest: 0.2,
     transparent: true,
-    opacity: 0.95,
+    opacity: 1,
     vertexColors: true,
   });
   const particlePoints = new THREE.Points(particleGeometry, particleMaterial);
@@ -1138,9 +1162,9 @@ export function createFlameAoe3dRuntime({
     particle.position.set(source[0] * visualOrbRadius * 0.84, source[1] * visualOrbRadius * 0.84).add(jitter);
     particle.velocity
       .copy(localMotion)
-      .multiplyScalar(-0.42 - trailingBias * 0.38)
-      .add(new THREE.Vector2((nextWakeSdfRandom() - 0.5) * bo * 0.16, bo * (0.22 + nextWakeSdfRandom() * 0.12)));
-    particle.life = 0.48 + trailingBias * 0.48 + nextWakeSdfRandom() * 0.18;
+      .multiplyScalar(-1.15 - trailingBias * 0.95)
+      .add(new THREE.Vector2((nextWakeSdfRandom() - 0.5) * bo * 0.18, bo * (0.14 + nextWakeSdfRandom() * 0.08)));
+    particle.life = 0.95 + trailingBias * 0.85 + nextWakeSdfRandom() * 0.3;
     particle.age = Math.min(particle.life * 0.92, Math.max(0, initialAge));
     particle.radius = bo * (0.08 + trailingBias * 0.1 + nextWakeSdfRandom() * 0.04);
     particle.heat = 0.34 + trailingBias * 0.72;
@@ -1172,8 +1196,8 @@ export function createFlameAoe3dRuntime({
     const uniformVelocities = uniforms.uWakeControlVelocities.value;
     wakeSdfParticleCursor = (wakeSdfParticleCursor + 1) % WAKE_SDF_CONTROL_PARTICLE_COUNT;
     respawnWakeSdfControlParticle(wakeSdfParticleCursor, bo, 0);
-    const drag = Math.exp(-safeDt * 1.85);
-    const buoyancy = bo * 0.34;
+    const drag = Math.exp(-safeDt * 0.82);
+    const buoyancy = bo * 0.2;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
       const particle = wakeSdfControlParticles[i];
       particle.age += safeDt;
@@ -1198,9 +1222,9 @@ export function createFlameAoe3dRuntime({
         debugBuffers.particlePositions[i * 3] = particle.position.x;
         debugBuffers.particlePositions[i * 3 + 1] = particle.position.y;
         debugBuffers.particlePositions[i * 3 + 2] = 2.5 + i * 0.002;
-        debugBuffers.particleColors[i * 3] = Math.max(0.35, heat);
-        debugBuffers.particleColors[i * 3 + 1] = 0.18 + heat * 0.72;
-        debugBuffers.particleColors[i * 3 + 2] = 0.02;
+        debugBuffers.particleColors[i * 3] = 1.0 - ageT * 0.85;
+        debugBuffers.particleColors[i * 3 + 1] = 0.08 + ageT * 0.92;
+        debugBuffers.particleColors[i * 3 + 2] = 1.0 - ageT * 0.95;
       }
       debugBuffers.particleGeometry.attributes.position.needsUpdate = true;
       debugBuffers.particleGeometry.attributes.color.needsUpdate = true;
