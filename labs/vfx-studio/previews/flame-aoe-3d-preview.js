@@ -1093,8 +1093,10 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
     vertexShader: `
       precision highp float;
       varying vec2 vWakePos;
+      varying vec2 vWakeUv;
       void main() {
         vWakePos = position.xy;
+        vWakeUv = uv;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `,
@@ -1114,6 +1116,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform vec2 uWakeTrailPoints[WAKE_POINT_COUNT];
       uniform float uWakeTrailRadii[WAKE_POINT_COUNT];
       varying vec2 vWakePos;
+      varying vec2 vWakeUv;
       float hash31(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
       float noise(vec3 p) {
         vec3 i = floor(p); vec3 f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -1157,7 +1160,9 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float flame = smoothstep(threshold - uWakeNoiseContrast, threshold + uWakeNoiseContrast, field);
         float plumeMask = smoothstep(0.04, 0.26, heightT) * (1.0 - smoothstep(0.96, 1.0, heightT));
         float sideFade = 1.0 - smoothstep(uWakeOrbRadius * 2.1, uWakeOrbRadius * 3.4, abs(p.x - tip.x * heightT));
-        float alpha = body * flame * plumeMask * sideFade;
+        vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
+        float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
+        float alpha = body * flame * plumeMask * sideFade * cardFade;
         vec3 color = mix(vec3(1.0, 0.17, 0.02), vec3(1.0, 0.78, 0.28), smoothstep(threshold, 1.0, field));
         if (alpha <= 0.004) discard;
         gl_FragColor = vec4(color, alpha);
