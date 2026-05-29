@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260528170844";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260528173500";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
@@ -126,9 +126,14 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfBlendBo: clampNumber(source.wakeSdfBlendBo, 0.001, 2, fallback.wakeSdfBlendBo ?? fallback.wakeOrbHugRadiusBo ?? 0.22),
     wakeSdfSoftnessBo: clampNumber(source.wakeSdfSoftnessBo, 0.001, 2, fallback.wakeSdfSoftnessBo ?? 0.16),
     wakeSdfDensity: clampNumber(source.wakeSdfDensity, 0, 1, fallback.wakeSdfDensity ?? 0.5),
-    wakeSdfNoiseScale: clampNumber(source.wakeSdfNoiseScale, 0.1, 16, fallback.wakeSdfNoiseScale ?? fallback.wakeNoiseScale ?? 2.35),
-    wakeSdfNoiseSpeed: clampNumber(source.wakeSdfNoiseSpeed, 0, 8, fallback.wakeSdfNoiseSpeed ?? fallback.wakeNoiseSpeed ?? 0.86),
-    wakeSdfNoiseContrast: clampNumber(source.wakeSdfNoiseContrast, 0.02, 0.8, fallback.wakeSdfNoiseContrast ?? fallback.wakeNoiseContrast ?? 0.16),
+    wakeSdfPerlinScale: clampNumber(source.wakeSdfPerlinScale ?? source.wakeSdfNoiseScale, 0.1, 16, fallback.wakeSdfPerlinScale ?? fallback.wakeNoiseScale ?? 2.35),
+    wakeSdfPerlinSpeed: clampNumber(source.wakeSdfPerlinSpeed ?? source.wakeSdfNoiseSpeed, 0, 8, fallback.wakeSdfPerlinSpeed ?? fallback.wakeNoiseSpeed ?? 0.86),
+    wakeSdfPerlinDensityBottom: clampNumber(source.wakeSdfPerlinDensityBottom, 0, 1, fallback.wakeSdfPerlinDensityBottom ?? fallback.wakeNoiseDensityBottom ?? 0.52),
+    wakeSdfPerlinDensityTop: clampNumber(source.wakeSdfPerlinDensityTop, 0, 1, fallback.wakeSdfPerlinDensityTop ?? fallback.wakeNoiseDensityTop ?? 0.52),
+    wakeSdfPerlinContrast: clampNumber(source.wakeSdfPerlinContrast ?? source.wakeSdfNoiseContrast, 0.02, 0.6, fallback.wakeSdfPerlinContrast ?? fallback.wakeNoiseContrast ?? 0.16),
+    wakeSdfPerlinOctaves: clampInt(source.wakeSdfPerlinOctaves, 1, 8, fallback.wakeSdfPerlinOctaves ?? fallback.wakeNoiseOctaves ?? 5),
+    wakeSdfPerlinLacunarity: clampNumber(source.wakeSdfPerlinLacunarity, 1.1, 4, fallback.wakeSdfPerlinLacunarity ?? fallback.wakeNoiseLacunarity ?? 2.08),
+    wakeSdfPerlinGain: clampNumber(source.wakeSdfPerlinGain, 0.1, 0.9, fallback.wakeSdfPerlinGain ?? fallback.wakeNoiseGain ?? 0.52),
   };
   for (let i = 0; i < 4; i += 1) {
     out[`wakeGraph${i}Pct`] = optionalNumber(source[`wakeGraph${i}Pct`] ?? fallback[`wakeGraph${i}Pct`], 0, 100);
@@ -782,9 +787,14 @@ function createWakeSdfMaterial(config) {
       uWakeBlend: { value: config.wakeSdfBlendPx },
       uWakeSoftness: { value: config.wakeSdfSoftnessPx },
       uWakeDensity: { value: config.wakeSdfDensity },
-      uWakeNoiseScale: { value: config.wakeSdfNoiseScale },
-      uWakeNoiseSpeed: { value: config.wakeSdfNoiseSpeed },
-      uWakeNoiseContrast: { value: config.wakeSdfNoiseContrast },
+      uWakeSdfPerlinScale: { value: config.wakeSdfPerlinScale },
+      uWakeSdfPerlinSpeed: { value: config.wakeSdfPerlinSpeed },
+      uWakeSdfPerlinDensityBottom: { value: config.wakeSdfPerlinDensityBottom },
+      uWakeSdfPerlinDensityTop: { value: config.wakeSdfPerlinDensityTop },
+      uWakeSdfPerlinContrast: { value: config.wakeSdfPerlinContrast },
+      uWakeSdfPerlinOctaves: { value: config.wakeSdfPerlinOctaves },
+      uWakeSdfPerlinLacunarity: { value: config.wakeSdfPerlinLacunarity },
+      uWakeSdfPerlinGain: { value: config.wakeSdfPerlinGain },
       uWakeMotionOffset: { value: new THREE.Vector3() },
       uWakeTrailPoints: { value: trailPoints },
       uWakeTrailRadii: { value: trailRadii },
@@ -814,9 +824,14 @@ function createWakeSdfMaterial(config) {
       uniform float uWakeBlend;
       uniform float uWakeSoftness;
       uniform float uWakeDensity;
-      uniform float uWakeNoiseScale;
-      uniform float uWakeNoiseSpeed;
-      uniform float uWakeNoiseContrast;
+      uniform float uWakeSdfPerlinScale;
+      uniform float uWakeSdfPerlinSpeed;
+      uniform float uWakeSdfPerlinDensityBottom;
+      uniform float uWakeSdfPerlinDensityTop;
+      uniform float uWakeSdfPerlinContrast;
+      uniform float uWakeSdfPerlinOctaves;
+      uniform float uWakeSdfPerlinLacunarity;
+      uniform float uWakeSdfPerlinGain;
       uniform vec3 uWakeMotionOffset;
       uniform vec2 uWakeTrailPoints[WAKE_POINT_COUNT];
       uniform float uWakeTrailRadii[WAKE_POINT_COUNT];
@@ -839,10 +854,11 @@ function createWakeSdfMaterial(config) {
       float fbm(vec3 p) {
         float value = 0.0;
         float amp = 0.56;
-        for (int i = 0; i < 5; i += 1) {
+        for (int i = 0; i < 8; i += 1) {
+          if (float(i) >= uWakeSdfPerlinOctaves) break;
           value += noise(p) * amp;
-          p = p * 2.03 + vec3(7.1, -11.4, 5.8);
-          amp *= 0.48;
+          p = p * uWakeSdfPerlinLacunarity + vec3(7.1, -11.4, 5.8);
+          amp *= uWakeSdfPerlinGain;
         }
         return clamp(value, 0.0, 1.0);
       }
@@ -937,15 +953,17 @@ function createWakeSdfMaterial(config) {
         density = clamp(density * 0.32, 0.0, 2.0);
         heat = clamp(heat * 0.28, 0.0, 1.25);
         flow = normalize(flow / flowWeight + vec2(uWakeMotionOffset.x * 0.2, 0.72));
-        vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeNoiseScale;
-        noisePos.xy += flow * (uTime * uWakeNoiseSpeed * 0.34);
-        noisePos.z = uTime * uWakeNoiseSpeed * 0.22;
+        float verticalT = clamp((p.y / max(1.0, uOrbRadius) + 1.0) * 0.5, 0.0, 1.0);
+        float perlinDensity = mix(uWakeSdfPerlinDensityBottom, uWakeSdfPerlinDensityTop, verticalT);
+        vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeSdfPerlinScale;
+        noisePos.xy += flow * (uTime * uWakeSdfPerlinSpeed * 0.34);
+        noisePos.z = uTime * uWakeSdfPerlinSpeed * 0.22;
         float field = fbm(noisePos);
         float threshold = mix(1.18, 0.38, clamp(uWakeDensity, 0.0, 1.0));
         float softness = max(0.025, uWakeSoftness / max(1.0, uOrbRadius) * 0.55);
-        float noisyDensity = density + (field - 0.5) * uWakeNoiseContrast * 0.85;
+        float noisyDensity = density + (field - 0.5) * uWakeSdfPerlinContrast * perlinDensity * 0.85;
         float sdfBody = smoothstep(threshold, threshold + softness, noisyDensity);
-        float flameTexture = smoothstep(0.18, 0.92, field + density * 0.14 + heat * 0.12);
+        float flameTexture = smoothstep(0.18, 0.92, field * perlinDensity + density * 0.14 + heat * 0.12);
         float flame = sdfBody * mix(0.42, 1.0, flameTexture);
         float orbOcclusion = smoothstep(uOrbRadius * 0.72, uOrbRadius * 1.02, length(p));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);

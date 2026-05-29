@@ -107,9 +107,14 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSdfBlendBo: 0.12,
   wakeSdfSoftnessBo: 0.3,
   wakeSdfDensity: 0.64,
-  wakeSdfNoiseScale: 1.45,
-  wakeSdfNoiseSpeed: 1.8,
-  wakeSdfNoiseContrast: 0.24,
+  wakeSdfPerlinScale: 2.35,
+  wakeSdfPerlinSpeed: 0.86,
+  wakeSdfPerlinDensityBottom: 0.52,
+  wakeSdfPerlinDensityTop: 0.52,
+  wakeSdfPerlinContrast: 0.16,
+  wakeSdfPerlinOctaves: 5,
+  wakeSdfPerlinLacunarity: 2.08,
+  wakeSdfPerlinGain: 0.52,
   wakeGraph0Pct: 0,
   wakeGraph0R: 0,
   wakeGraph0G: 0,
@@ -268,9 +273,14 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfBlendBo: FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfBlendBo,
     wakeSdfSoftnessBo: clampNumber(els.flameAoe3dWakeSdfSoftnessBo && els.flameAoe3dWakeSdfSoftnessBo.value, 0.001, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfSoftnessBo),
     wakeSdfDensity: clampNumber(els.flameAoe3dWakeSdfDensity && els.flameAoe3dWakeSdfDensity.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDensity),
-    wakeSdfNoiseScale: clampNumber(els.flameAoe3dWakeSdfNoiseScale && els.flameAoe3dWakeSdfNoiseScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseScale),
-    wakeSdfNoiseSpeed: clampNumber(els.flameAoe3dWakeSdfNoiseSpeed && els.flameAoe3dWakeSdfNoiseSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseSpeed),
-    wakeSdfNoiseContrast: clampNumber(els.flameAoe3dWakeSdfNoiseContrast && els.flameAoe3dWakeSdfNoiseContrast.value, 0.02, 0.8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseContrast),
+    wakeSdfPerlinScale: clampNumber(els.flameAoe3dWakeSdfPerlinScale && els.flameAoe3dWakeSdfPerlinScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinScale),
+    wakeSdfPerlinSpeed: clampNumber(els.flameAoe3dWakeSdfPerlinSpeed && els.flameAoe3dWakeSdfPerlinSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinSpeed),
+    wakeSdfPerlinDensityBottom: clampNumber(els.flameAoe3dWakeSdfPerlinDensityBottom && els.flameAoe3dWakeSdfPerlinDensityBottom.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinDensityBottom),
+    wakeSdfPerlinDensityTop: clampNumber(els.flameAoe3dWakeSdfPerlinDensityTop && els.flameAoe3dWakeSdfPerlinDensityTop.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinDensityTop),
+    wakeSdfPerlinContrast: clampNumber(els.flameAoe3dWakeSdfPerlinContrast && els.flameAoe3dWakeSdfPerlinContrast.value, 0.02, 0.6, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinContrast),
+    wakeSdfPerlinOctaves: Math.round(clampNumber(els.flameAoe3dWakeSdfPerlinOctaves && els.flameAoe3dWakeSdfPerlinOctaves.value, 1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinOctaves)),
+    wakeSdfPerlinLacunarity: clampNumber(els.flameAoe3dWakeSdfPerlinLacunarity && els.flameAoe3dWakeSdfPerlinLacunarity.value, 1.1, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinLacunarity),
+    wakeSdfPerlinGain: clampNumber(els.flameAoe3dWakeSdfPerlinGain && els.flameAoe3dWakeSdfPerlinGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinGain),
     wakeSdfDebugPoints: Math.round(clampNumber(els.flameAoe3dWakeSdfDebugPoints && els.flameAoe3dWakeSdfDebugPoints.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDebugPoints)),
     ...readWakeGraphConfig(els),
   });
@@ -348,9 +358,14 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfCoreRadiusBo) els.flameAoe3dWakeSdfCoreRadiusBo.value = String(Number(cfg.wakeSdfCoreRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSdfSoftnessBo) els.flameAoe3dWakeSdfSoftnessBo.value = String(Number(cfg.wakeSdfSoftnessBo).toFixed(2));
   if (els.flameAoe3dWakeSdfDensity) els.flameAoe3dWakeSdfDensity.value = String(Number(cfg.wakeSdfDensity).toFixed(2));
-  if (els.flameAoe3dWakeSdfNoiseScale) els.flameAoe3dWakeSdfNoiseScale.value = String(Number(cfg.wakeSdfNoiseScale).toFixed(2));
-  if (els.flameAoe3dWakeSdfNoiseSpeed) els.flameAoe3dWakeSdfNoiseSpeed.value = String(Number(cfg.wakeSdfNoiseSpeed).toFixed(2));
-  if (els.flameAoe3dWakeSdfNoiseContrast) els.flameAoe3dWakeSdfNoiseContrast.value = String(Number(cfg.wakeSdfNoiseContrast).toFixed(2));
+  if (els.flameAoe3dWakeSdfPerlinScale) els.flameAoe3dWakeSdfPerlinScale.value = String(Number(cfg.wakeSdfPerlinScale).toFixed(2));
+  if (els.flameAoe3dWakeSdfPerlinSpeed) els.flameAoe3dWakeSdfPerlinSpeed.value = String(Number(cfg.wakeSdfPerlinSpeed).toFixed(2));
+  if (els.flameAoe3dWakeSdfPerlinDensityBottom) els.flameAoe3dWakeSdfPerlinDensityBottom.value = String(Number(cfg.wakeSdfPerlinDensityBottom).toFixed(2));
+  if (els.flameAoe3dWakeSdfPerlinDensityTop) els.flameAoe3dWakeSdfPerlinDensityTop.value = String(Number(cfg.wakeSdfPerlinDensityTop).toFixed(2));
+  if (els.flameAoe3dWakeSdfPerlinContrast) els.flameAoe3dWakeSdfPerlinContrast.value = String(Number(cfg.wakeSdfPerlinContrast).toFixed(2));
+  if (els.flameAoe3dWakeSdfPerlinOctaves) els.flameAoe3dWakeSdfPerlinOctaves.value = String(Math.round(Number(cfg.wakeSdfPerlinOctaves)));
+  if (els.flameAoe3dWakeSdfPerlinLacunarity) els.flameAoe3dWakeSdfPerlinLacunarity.value = String(Number(cfg.wakeSdfPerlinLacunarity).toFixed(2));
+  if (els.flameAoe3dWakeSdfPerlinGain) els.flameAoe3dWakeSdfPerlinGain.value = String(Number(cfg.wakeSdfPerlinGain).toFixed(2));
   if (els.flameAoe3dWakeSdfDebugPoints) els.flameAoe3dWakeSdfDebugPoints.value = String(Math.round(clampNumber(cfg.wakeSdfDebugPoints, 0, 1, 1)));
   for (let i = 0; i < 4; i += 1) {
     ["Pct", "R", "G", "B", "A"].forEach((suffix) => {
@@ -1146,9 +1161,14 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeBlend: { value: config.wakeSdfBlendPx },
       uWakeSoftness: { value: config.wakeSdfSoftnessPx },
       uWakeDensity: { value: config.wakeSdfDensity },
-      uWakeNoiseScale: { value: config.wakeSdfNoiseScale },
-      uWakeNoiseSpeed: { value: config.wakeSdfNoiseSpeed },
-      uWakeNoiseContrast: { value: config.wakeSdfNoiseContrast },
+      uWakeSdfPerlinScale: { value: config.wakeSdfPerlinScale },
+      uWakeSdfPerlinSpeed: { value: config.wakeSdfPerlinSpeed },
+      uWakeSdfPerlinDensityBottom: { value: config.wakeSdfPerlinDensityBottom },
+      uWakeSdfPerlinDensityTop: { value: config.wakeSdfPerlinDensityTop },
+      uWakeSdfPerlinContrast: { value: config.wakeSdfPerlinContrast },
+      uWakeSdfPerlinOctaves: { value: config.wakeSdfPerlinOctaves },
+      uWakeSdfPerlinLacunarity: { value: config.wakeSdfPerlinLacunarity },
+      uWakeSdfPerlinGain: { value: config.wakeSdfPerlinGain },
       uWakeMotionOffset: { value: new THREE.Vector3() },
       uWakeTrailPoints: { value: trailPoints },
       uWakeTrailRadii: { value: trailRadii },
@@ -1178,9 +1198,14 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeBlend;
       uniform float uWakeSoftness;
       uniform float uWakeDensity;
-      uniform float uWakeNoiseScale;
-      uniform float uWakeNoiseSpeed;
-      uniform float uWakeNoiseContrast;
+      uniform float uWakeSdfPerlinScale;
+      uniform float uWakeSdfPerlinSpeed;
+      uniform float uWakeSdfPerlinDensityBottom;
+      uniform float uWakeSdfPerlinDensityTop;
+      uniform float uWakeSdfPerlinContrast;
+      uniform float uWakeSdfPerlinOctaves;
+      uniform float uWakeSdfPerlinLacunarity;
+      uniform float uWakeSdfPerlinGain;
       uniform vec3 uWakeMotionOffset;
       uniform vec2 uWakeTrailPoints[WAKE_POINT_COUNT];
       uniform float uWakeTrailRadii[WAKE_POINT_COUNT];
@@ -1196,7 +1221,12 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       }
       float fbm(vec3 p) {
         float value = 0.0; float amp = 0.56;
-        for (int i = 0; i < 5; i += 1) { value += noise(p) * amp; p = p * 2.03 + vec3(7.1, -11.4, 5.8); amp *= 0.48; }
+        for (int i = 0; i < 8; i += 1) {
+          if (float(i) >= uWakeSdfPerlinOctaves) break;
+          value += noise(p) * amp;
+          p = p * uWakeSdfPerlinLacunarity + vec3(7.1, -11.4, 5.8);
+          amp *= uWakeSdfPerlinGain;
+        }
         return clamp(value, 0.0, 1.0);
       }
       float sdCircle(vec2 p, vec2 center, float radius) { return length(p - center) - radius; }
@@ -1287,15 +1317,17 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         density = clamp(density * 0.32, 0.0, 2.0);
         heat = clamp(heat * 0.28, 0.0, 1.25);
         flow = normalize(flow / flowWeight + vec2(uWakeMotionOffset.x * 0.2, 0.72));
-        vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeNoiseScale;
-        noisePos.xy += flow * (uTime * uWakeNoiseSpeed * 0.34);
-        noisePos.z = uTime * uWakeNoiseSpeed * 0.22;
+        float verticalT = clamp((p.y / max(1.0, uOrbRadius) + 1.0) * 0.5, 0.0, 1.0);
+        float perlinDensity = mix(uWakeSdfPerlinDensityBottom, uWakeSdfPerlinDensityTop, verticalT);
+        vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeSdfPerlinScale;
+        noisePos.xy += flow * (uTime * uWakeSdfPerlinSpeed * 0.34);
+        noisePos.z = uTime * uWakeSdfPerlinSpeed * 0.22;
         float field = fbm(noisePos);
         float threshold = mix(1.18, 0.38, clamp(uWakeDensity, 0.0, 1.0));
         float softness = max(0.025, uWakeSoftness / max(1.0, uOrbRadius) * 0.55);
-        float noisyDensity = density + (field - 0.5) * uWakeNoiseContrast * 0.85;
+        float noisyDensity = density + (field - 0.5) * uWakeSdfPerlinContrast * perlinDensity * 0.85;
         float sdfBody = smoothstep(threshold, threshold + softness, noisyDensity);
-        float flameTexture = smoothstep(0.18, 0.92, field + density * 0.14 + heat * 0.12);
+        float flameTexture = smoothstep(0.18, 0.92, field * perlinDensity + density * 0.14 + heat * 0.12);
         float flame = sdfBody * mix(0.42, 1.0, flameTexture);
         float orbOcclusion = smoothstep(uOrbRadius * 0.72, uOrbRadius * 1.02, length(p));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);

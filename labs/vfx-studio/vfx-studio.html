@@ -1853,19 +1853,42 @@
           <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeSdfNoiseControls">Noise SDF</button>
           <div id="flameAoe3dWakeSdfNoiseControls" class="controlGroupBody paramFieldRows" hidden>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeSdfNoiseScale">Noise scale</label>
-              <input id="flameAoe3dWakeSdfNoiseScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="1.45" />
-              <button id="flameAoe3dApplyWakeSdfNoiseScaleBtn" class="toolBtn" type="button">Apply</button>
+              <label for="flameAoe3dWakeSdfPerlinScale">Perlin scale</label>
+              <input id="flameAoe3dWakeSdfPerlinScale" class="paramFieldInput" type="number" min="0.1" max="16" step="0.05" value="2.00" />
+              <button id="flameAoe3dApplyWakeSdfPerlinScaleBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeSdfNoiseSpeed">Noise speed</label>
-              <input id="flameAoe3dWakeSdfNoiseSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="1.80" />
-              <button id="flameAoe3dApplyWakeSdfNoiseSpeedBtn" class="toolBtn" type="button">Apply</button>
+              <label for="flameAoe3dWakeSdfPerlinSpeed">Perlin speed</label>
+              <input id="flameAoe3dWakeSdfPerlinSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="7.00" />
+              <button id="flameAoe3dApplyWakeSdfPerlinSpeedBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="rgbaParamRow densityRangeRow">
+              <span class="rgbaLabel">Perlin density</span>
+              <label for="flameAoe3dWakeSdfPerlinDensityBottom">bottom</label>
+              <input id="flameAoe3dWakeSdfPerlinDensityBottom" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.90" />
+              <label for="flameAoe3dWakeSdfPerlinDensityTop">top</label>
+              <input id="flameAoe3dWakeSdfPerlinDensityTop" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.00" />
+              <button id="flameAoe3dApplyWakeSdfPerlinDensityBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeSdfNoiseContrast">Noise contrast</label>
-              <input id="flameAoe3dWakeSdfNoiseContrast" class="paramFieldInput" type="number" min="0.02" max="0.8" step="0.01" value="0.24" />
-              <button id="flameAoe3dApplyWakeSdfNoiseContrastBtn" class="toolBtn" type="button">Apply</button>
+              <label for="flameAoe3dWakeSdfPerlinContrast">Perlin contrast</label>
+              <input id="flameAoe3dWakeSdfPerlinContrast" class="paramFieldInput" type="number" min="0.02" max="0.6" step="0.01" value="0.30" />
+              <button id="flameAoe3dApplyWakeSdfPerlinContrastBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfPerlinOctaves">Perlin octaves</label>
+              <input id="flameAoe3dWakeSdfPerlinOctaves" class="paramFieldInput" type="number" min="1" max="8" step="1" value="4" />
+              <button id="flameAoe3dApplyWakeSdfPerlinOctavesBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfPerlinLacunarity">Perlin lacunarity</label>
+              <input id="flameAoe3dWakeSdfPerlinLacunarity" class="paramFieldInput" type="number" min="1.1" max="4" step="0.01" value="1.10" />
+              <button id="flameAoe3dApplyWakeSdfPerlinLacunarityBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfPerlinGain">Perlin gain</label>
+              <input id="flameAoe3dWakeSdfPerlinGain" class="paramFieldInput" type="number" min="0.1" max="0.9" step="0.01" value="0.25" />
+              <button id="flameAoe3dApplyWakeSdfPerlinGainBtn" class="toolBtn" type="button">Apply</button>
             </div>
           </div>
         </div>
@@ -3015,14 +3038,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260528170000"),
+      import("./vfx-studio-bootstrap.js?v=20260528173500"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
       import("./vfx-studio-surfaces.js?v=20260524-tesla-c"),
-      import("./vfx-studio-theme-publish.js?v=20260528170000"),
+      import("./vfx-studio-theme-publish.js?v=20260528173500"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -3030,7 +3053,7 @@
     import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506c";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260528170000";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260528173500";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260517a";
@@ -3050,7 +3073,7 @@
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
-    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260528170844";
+    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260528173500";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ORB_NOD_3D_PRESET_DEFAULT,
@@ -3060,10 +3083,10 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260528170844i";
+    } from "../../src/vfx/presets/index.js?v=20260528173500i";
     import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527122742";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
-    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260528170844";
+    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260528173500";
     import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527122742b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
@@ -3777,12 +3800,21 @@
       flameAoe3dApplyWakeSdfSoftnessBtn: $("flameAoe3dApplyWakeSdfSoftnessBtn"),
       flameAoe3dWakeSdfDensity: $("flameAoe3dWakeSdfDensity"),
       flameAoe3dApplyWakeSdfDensityBtn: $("flameAoe3dApplyWakeSdfDensityBtn"),
-      flameAoe3dWakeSdfNoiseScale: $("flameAoe3dWakeSdfNoiseScale"),
-      flameAoe3dApplyWakeSdfNoiseScaleBtn: $("flameAoe3dApplyWakeSdfNoiseScaleBtn"),
-      flameAoe3dWakeSdfNoiseSpeed: $("flameAoe3dWakeSdfNoiseSpeed"),
-      flameAoe3dApplyWakeSdfNoiseSpeedBtn: $("flameAoe3dApplyWakeSdfNoiseSpeedBtn"),
-      flameAoe3dWakeSdfNoiseContrast: $("flameAoe3dWakeSdfNoiseContrast"),
-      flameAoe3dApplyWakeSdfNoiseContrastBtn: $("flameAoe3dApplyWakeSdfNoiseContrastBtn"),
+      flameAoe3dWakeSdfPerlinScale: $("flameAoe3dWakeSdfPerlinScale"),
+      flameAoe3dApplyWakeSdfPerlinScaleBtn: $("flameAoe3dApplyWakeSdfPerlinScaleBtn"),
+      flameAoe3dWakeSdfPerlinSpeed: $("flameAoe3dWakeSdfPerlinSpeed"),
+      flameAoe3dApplyWakeSdfPerlinSpeedBtn: $("flameAoe3dApplyWakeSdfPerlinSpeedBtn"),
+      flameAoe3dWakeSdfPerlinDensityBottom: $("flameAoe3dWakeSdfPerlinDensityBottom"),
+      flameAoe3dWakeSdfPerlinDensityTop: $("flameAoe3dWakeSdfPerlinDensityTop"),
+      flameAoe3dApplyWakeSdfPerlinDensityBtn: $("flameAoe3dApplyWakeSdfPerlinDensityBtn"),
+      flameAoe3dWakeSdfPerlinContrast: $("flameAoe3dWakeSdfPerlinContrast"),
+      flameAoe3dApplyWakeSdfPerlinContrastBtn: $("flameAoe3dApplyWakeSdfPerlinContrastBtn"),
+      flameAoe3dWakeSdfPerlinOctaves: $("flameAoe3dWakeSdfPerlinOctaves"),
+      flameAoe3dApplyWakeSdfPerlinOctavesBtn: $("flameAoe3dApplyWakeSdfPerlinOctavesBtn"),
+      flameAoe3dWakeSdfPerlinLacunarity: $("flameAoe3dWakeSdfPerlinLacunarity"),
+      flameAoe3dApplyWakeSdfPerlinLacunarityBtn: $("flameAoe3dApplyWakeSdfPerlinLacunarityBtn"),
+      flameAoe3dWakeSdfPerlinGain: $("flameAoe3dWakeSdfPerlinGain"),
+      flameAoe3dApplyWakeSdfPerlinGainBtn: $("flameAoe3dApplyWakeSdfPerlinGainBtn"),
       flameAoe3dWakeSdfDebugPoints: $("flameAoe3dWakeSdfDebugPoints"),
       flameAoe3dApplyWakeSdfDebugPointsBtn: $("flameAoe3dApplyWakeSdfDebugPointsBtn"),
       flameAoe3dWakeGraph0Pct: $("flameAoe3dWakeGraph0Pct"),

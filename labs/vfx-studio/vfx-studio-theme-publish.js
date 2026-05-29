@@ -296,7 +296,9 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params) {
         "wakeNoiseScale", "wakeNoiseSpeed", "wakeNoiseDensityBottom", "wakeNoiseDensityTop", "wakeNoiseContrast", "wakeNoiseOctaves", "wakeNoiseLacunarity", "wakeNoiseGain",
         "wakeSimplexScale", "wakeSimplexSpeed", "wakeSimplexDensityBottom", "wakeSimplexDensityTop", "wakeSimplexContrast", "wakeSimplexOctaves", "wakeSimplexLacunarity", "wakeSimplexGain",
         "wakeSdfEnabled", "wakeSdfHeightBo", "wakeSdfParticleLifeMs", "wakeSdfSpawnRate", "wakeSdfSpawnAreaBo", "wakeSdfParticleRadiusBo",
-        "wakeSdfLiftBias", "wakeSdfJitterBo", "wakeSdfHeatDecay", "wakeSdfDensity", "wakeSdfSoftnessBo", "wakeSdfNoiseScale", "wakeSdfNoiseSpeed", "wakeSdfNoiseContrast", "wakeSdfDebugPoints",
+        "wakeSdfLiftBias", "wakeSdfJitterBo", "wakeSdfHeatDecay", "wakeSdfDensity", "wakeSdfSoftnessBo",
+        "wakeSdfPerlinScale", "wakeSdfPerlinSpeed", "wakeSdfPerlinDensityBottom", "wakeSdfPerlinDensityTop", "wakeSdfPerlinContrast", "wakeSdfPerlinOctaves", "wakeSdfPerlinLacunarity", "wakeSdfPerlinGain",
+        "wakeSdfDebugPoints",
         "wakeNoiseMix", "wakeGraphEnabled",
       ];
       const optionalKeys = [];
