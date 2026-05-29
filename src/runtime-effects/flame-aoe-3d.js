@@ -134,7 +134,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfPerlinGain: clampNumber(source.wakeSdfPerlinGain, 0.1, 0.9, fallback.wakeSdfPerlinGain ?? fallback.wakeNoiseGain ?? 0.52),
     wakeSdfNoiseBlackPoint: clampNumber(source.wakeSdfNoiseBlackPoint, 0, 1, fallback.wakeSdfNoiseBlackPoint ?? 0.18),
     wakeSdfNoiseWhitePoint: clampNumber(source.wakeSdfNoiseWhitePoint, 0, 1, fallback.wakeSdfNoiseWhitePoint ?? 0.86),
-    wakeSdfRenderMode: clampInt(source.wakeSdfRenderMode, 0, 3, fallback.wakeSdfRenderMode ?? 0),
+    wakeSdfRenderMode: clampInt(source.wakeSdfRenderMode, 0, 5, fallback.wakeSdfRenderMode ?? 0),
   };
   for (let i = 0; i < 4; i += 1) {
     out[`wakeGraph${i}Pct`] = optionalNumber(source[`wakeGraph${i}Pct`] ?? fallback[`wakeGraph${i}Pct`], 0, 100);
@@ -1027,20 +1027,27 @@ function createWakeSdfMaterial(config) {
         float orbOcclusion = smoothstep(uOrbRadius * 0.72, uOrbRadius * 1.02, length(p));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
+        float alpha = flame * mapped.a * orbOcclusion * cardFade;
         if (uWakeSdfRenderMode == 1) {
-          gl_FragColor = vec4(vec3(noiseValue), cardFade);
+          gl_FragColor = vec4(vec3(field), 1.0);
           return;
         }
         if (uWakeSdfRenderMode == 2) {
-          float densityView = clamp(density / max(0.0001, threshold + softness * 3.0), 0.0, 1.0);
-          gl_FragColor = vec4(vec3(densityView), cardFade);
+          gl_FragColor = vec4(vec3(noiseValue), 1.0);
           return;
         }
         if (uWakeSdfRenderMode == 3) {
-          gl_FragColor = vec4(vec3(fireValue), cardFade);
+          gl_FragColor = vec4(vec3(sdfBody), 1.0);
           return;
         }
-        float alpha = flame * mapped.a * orbOcclusion * cardFade;
+        if (uWakeSdfRenderMode == 4) {
+          gl_FragColor = vec4(vec3(fireValue), 1.0);
+          return;
+        }
+        if (uWakeSdfRenderMode == 5) {
+          gl_FragColor = vec4(vec3(alpha), 1.0);
+          return;
+        }
         vec3 color = mapped.rgb * (0.7 + sdfBody * 0.62 + edge * 0.38);
         if (alpha <= 0.004) discard;
         gl_FragColor = vec4(color, alpha);
