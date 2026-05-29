@@ -1315,14 +1315,15 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         return mix(mix(mix(hash31(i), hash31(i + vec3(1.0, 0.0, 0.0)), f.x), mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), f.x), f.y), mix(mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), f.x), mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), f.x), f.y), f.z);
       }
       float fbm(vec3 p) {
-        float value = 0.0; float amp = 0.56;
+        float value = 0.0; float amp = 0.56; float ampTotal = 0.0;
         for (int i = 0; i < 8; i += 1) {
           if (float(i) >= uWakeSdfPerlinOctaves) break;
           value += noise(p) * amp;
+          ampTotal += amp;
           p = p * uWakeSdfPerlinLacunarity + vec3(7.1, -11.4, 5.8);
           amp *= uWakeSdfPerlinGain;
         }
-        return clamp(value, 0.0, 1.0);
+        return clamp(value / max(0.0001, ampTotal), 0.0, 1.0);
       }
       float sdCircle(vec2 p, vec2 center, float radius) { return length(p - center) - radius; }
       float sdEllipse(vec2 p, vec2 center, vec2 radius) {

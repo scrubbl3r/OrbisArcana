@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260529105717";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260529113500";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
@@ -888,13 +888,15 @@ function createWakeSdfMaterial(config) {
       float fbm(vec3 p) {
         float value = 0.0;
         float amp = 0.56;
+        float ampTotal = 0.0;
         for (int i = 0; i < 8; i += 1) {
           if (float(i) >= uWakeSdfPerlinOctaves) break;
           value += noise(p) * amp;
+          ampTotal += amp;
           p = p * uWakeSdfPerlinLacunarity + vec3(7.1, -11.4, 5.8);
           amp *= uWakeSdfPerlinGain;
         }
-        return clamp(value, 0.0, 1.0);
+        return clamp(value / max(0.0001, ampTotal), 0.0, 1.0);
       }
       float sdCircle(vec2 p, vec2 center, float radius) {
         return length(p - center) - radius;
