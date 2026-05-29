@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260528180530";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260529103000";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
@@ -132,6 +132,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfPerlinOctaves: clampInt(source.wakeSdfPerlinOctaves, 1, 8, fallback.wakeSdfPerlinOctaves ?? fallback.wakeNoiseOctaves ?? 5),
     wakeSdfPerlinLacunarity: clampNumber(source.wakeSdfPerlinLacunarity, 1.1, 4, fallback.wakeSdfPerlinLacunarity ?? fallback.wakeNoiseLacunarity ?? 2.08),
     wakeSdfPerlinGain: clampNumber(source.wakeSdfPerlinGain, 0.1, 0.9, fallback.wakeSdfPerlinGain ?? fallback.wakeNoiseGain ?? 0.52),
+    wakeSdfRenderMode: clampInt(source.wakeSdfRenderMode, 0, 3, fallback.wakeSdfRenderMode ?? 0),
   };
   for (let i = 0; i < 4; i += 1) {
     out[`wakeGraph${i}Pct`] = optionalNumber(source[`wakeGraph${i}Pct`] ?? fallback[`wakeGraph${i}Pct`], 0, 100);
@@ -816,6 +817,7 @@ function createWakeSdfMaterial(config) {
       uWakeSdfPerlinOctaves: { value: config.wakeSdfPerlinOctaves },
       uWakeSdfPerlinLacunarity: { value: config.wakeSdfPerlinLacunarity },
       uWakeSdfPerlinGain: { value: config.wakeSdfPerlinGain },
+      uWakeSdfRenderMode: { value: config.wakeSdfRenderMode },
       uWakeSdfGraphCount: { value: Math.max(0, Math.min(4, graphStops.length)) },
       uWakeSdfGraphStops: { value: graphStopValues },
       uWakeSdfGraphColors: { value: graphColors },
@@ -854,6 +856,7 @@ function createWakeSdfMaterial(config) {
       uniform float uWakeSdfPerlinOctaves;
       uniform float uWakeSdfPerlinLacunarity;
       uniform float uWakeSdfPerlinGain;
+      uniform int uWakeSdfRenderMode;
       uniform int uWakeSdfGraphCount;
       uniform float uWakeSdfGraphStops[4];
       uniform vec4 uWakeSdfGraphColors[4];
@@ -1015,6 +1018,19 @@ function createWakeSdfMaterial(config) {
         float orbOcclusion = smoothstep(uOrbRadius * 0.72, uOrbRadius * 1.02, length(p));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
+        if (uWakeSdfRenderMode == 1) {
+          gl_FragColor = vec4(vec3(field), cardFade);
+          return;
+        }
+        if (uWakeSdfRenderMode == 2) {
+          float densityView = clamp(density / max(0.0001, threshold + softness * 3.0), 0.0, 1.0);
+          gl_FragColor = vec4(vec3(densityView), cardFade);
+          return;
+        }
+        if (uWakeSdfRenderMode == 3) {
+          gl_FragColor = vec4(vec3(fireValue), cardFade);
+          return;
+        }
         float alpha = flame * mapped.a * orbOcclusion * cardFade;
         vec3 color = mapped.rgb * (0.7 + sdfBody * 0.62 + edge * 0.38);
         if (alpha <= 0.004) discard;

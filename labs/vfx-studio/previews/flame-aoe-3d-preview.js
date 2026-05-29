@@ -113,6 +113,7 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSdfPerlinOctaves: 5,
   wakeSdfPerlinLacunarity: 2.08,
   wakeSdfPerlinGain: 0.52,
+  wakeSdfRenderMode: 0,
   wakeSdfGraph0Pct: 0,
   wakeSdfGraph0R: 0,
   wakeSdfGraph0G: 0,
@@ -319,6 +320,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfPerlinOctaves: Math.round(clampNumber(els.flameAoe3dWakeSdfPerlinOctaves && els.flameAoe3dWakeSdfPerlinOctaves.value, 1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinOctaves)),
     wakeSdfPerlinLacunarity: clampNumber(els.flameAoe3dWakeSdfPerlinLacunarity && els.flameAoe3dWakeSdfPerlinLacunarity.value, 1.1, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinLacunarity),
     wakeSdfPerlinGain: clampNumber(els.flameAoe3dWakeSdfPerlinGain && els.flameAoe3dWakeSdfPerlinGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinGain),
+    wakeSdfRenderMode: Math.round(clampNumber(els.flameAoe3dWakeSdfRenderMode && els.flameAoe3dWakeSdfRenderMode.value, 0, 3, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRenderMode)),
     wakeSdfDebugPoints: Math.round(clampNumber(els.flameAoe3dWakeSdfDebugPoints && els.flameAoe3dWakeSdfDebugPoints.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDebugPoints)),
     ...readSdfGraphConfig(els),
     ...readWakeGraphConfig(els),
@@ -403,6 +405,7 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfPerlinOctaves) els.flameAoe3dWakeSdfPerlinOctaves.value = String(Math.round(Number(cfg.wakeSdfPerlinOctaves)));
   if (els.flameAoe3dWakeSdfPerlinLacunarity) els.flameAoe3dWakeSdfPerlinLacunarity.value = String(Number(cfg.wakeSdfPerlinLacunarity).toFixed(2));
   if (els.flameAoe3dWakeSdfPerlinGain) els.flameAoe3dWakeSdfPerlinGain.value = String(Number(cfg.wakeSdfPerlinGain).toFixed(2));
+  if (els.flameAoe3dWakeSdfRenderMode) els.flameAoe3dWakeSdfRenderMode.value = String(Math.round(clampNumber(cfg.wakeSdfRenderMode, 0, 3, 0)));
   if (els.flameAoe3dWakeSdfDebugPoints) els.flameAoe3dWakeSdfDebugPoints.value = String(Math.round(clampNumber(cfg.wakeSdfDebugPoints, 0, 1, 1)));
   for (let i = 0; i < 4; i += 1) {
     ["Pct", "R", "G", "B", "A"].forEach((suffix) => {
@@ -443,6 +446,9 @@ function bindInputCommits(root, apply) {
     });
     field.addEventListener("change", apply);
     field.addEventListener("blur", apply);
+  });
+  root.querySelectorAll("select.paramFieldInput").forEach((field) => {
+    field.addEventListener("change", apply);
   });
 }
 
@@ -1242,6 +1248,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeSdfPerlinOctaves: { value: config.wakeSdfPerlinOctaves },
       uWakeSdfPerlinLacunarity: { value: config.wakeSdfPerlinLacunarity },
       uWakeSdfPerlinGain: { value: config.wakeSdfPerlinGain },
+      uWakeSdfRenderMode: { value: config.wakeSdfRenderMode },
       uWakeSdfGraphCount: { value: Math.max(0, Math.min(4, graphStops.length)) },
       uWakeSdfGraphStops: { value: graphStopValues },
       uWakeSdfGraphColors: { value: graphColors },
@@ -1280,6 +1287,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeSdfPerlinOctaves;
       uniform float uWakeSdfPerlinLacunarity;
       uniform float uWakeSdfPerlinGain;
+      uniform int uWakeSdfRenderMode;
       uniform int uWakeSdfGraphCount;
       uniform float uWakeSdfGraphStops[4];
       uniform vec4 uWakeSdfGraphColors[4];
@@ -1431,6 +1439,19 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float orbOcclusion = smoothstep(uOrbRadius * 0.72, uOrbRadius * 1.02, length(p));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
+        if (uWakeSdfRenderMode == 1) {
+          gl_FragColor = vec4(vec3(field), cardFade);
+          return;
+        }
+        if (uWakeSdfRenderMode == 2) {
+          float densityView = clamp(density / max(0.0001, threshold + softness * 3.0), 0.0, 1.0);
+          gl_FragColor = vec4(vec3(densityView), cardFade);
+          return;
+        }
+        if (uWakeSdfRenderMode == 3) {
+          gl_FragColor = vec4(vec3(fireValue), cardFade);
+          return;
+        }
         float alpha = flame * mapped.a * orbOcclusion * cardFade;
         vec3 color = mapped.rgb * (0.7 + sdfBody * 0.62 + edge * 0.38);
         if (alpha <= 0.004) discard;

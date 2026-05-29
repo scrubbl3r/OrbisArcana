@@ -1920,6 +1920,16 @@
               <input id="flameAoe3dWakeSdfPerlinGain" class="paramFieldInput" type="number" min="0.1" max="0.9" step="0.01" value="0.25" />
               <button id="flameAoe3dApplyWakeSdfPerlinGainBtn" class="toolBtn" type="button">Apply</button>
             </div>
+            <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfRenderMode">Viewing mode</label>
+              <select id="flameAoe3dWakeSdfRenderMode" class="paramFieldInput">
+                <option value="0">Flame</option>
+                <option value="1">Noise</option>
+                <option value="2">Density</option>
+                <option value="3">Graph input</option>
+              </select>
+              <button id="flameAoe3dApplyWakeSdfRenderModeBtn" class="toolBtn" type="button">Apply</button>
+            </div>
           </div>
         </div>
         <div class="controlGroup" data-control-group>
@@ -3104,14 +3114,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260528180500"),
+      import("./vfx-studio-bootstrap.js?v=20260529103000"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
       import("./vfx-studio-surfaces.js?v=20260524-tesla-c"),
-      import("./vfx-studio-theme-publish.js?v=20260528180500"),
+      import("./vfx-studio-theme-publish.js?v=20260529103000"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -3119,7 +3129,7 @@
     import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506c";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260528180500";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260529103000";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260517a";
@@ -3139,7 +3149,7 @@
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
-    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260528180530";
+    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260529103000";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ORB_NOD_3D_PRESET_DEFAULT,
@@ -3149,7 +3159,7 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260528180530i";
+    } from "../../src/vfx/presets/index.js?v=20260529103000i";
     import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527122742";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
     import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260528180530";
@@ -3878,6 +3888,8 @@
       flameAoe3dApplyWakeSdfPerlinLacunarityBtn: $("flameAoe3dApplyWakeSdfPerlinLacunarityBtn"),
       flameAoe3dWakeSdfPerlinGain: $("flameAoe3dWakeSdfPerlinGain"),
       flameAoe3dApplyWakeSdfPerlinGainBtn: $("flameAoe3dApplyWakeSdfPerlinGainBtn"),
+      flameAoe3dWakeSdfRenderMode: $("flameAoe3dWakeSdfRenderMode"),
+      flameAoe3dApplyWakeSdfRenderModeBtn: $("flameAoe3dApplyWakeSdfRenderModeBtn"),
       flameAoe3dWakeSdfDebugPoints: $("flameAoe3dWakeSdfDebugPoints"),
       flameAoe3dApplyWakeSdfDebugPointsBtn: $("flameAoe3dApplyWakeSdfDebugPointsBtn"),
       flameAoe3dWakeSdfGraph0Pct: $("flameAoe3dWakeSdfGraph0Pct"),
