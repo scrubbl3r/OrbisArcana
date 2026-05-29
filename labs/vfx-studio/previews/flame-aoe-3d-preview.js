@@ -1488,13 +1488,13 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
           return;
         }
         if (uWakeSdfRenderMode == 8) {
-          gl_FragColor = vec4(vec3(noiseValue * sdfBody), 1.0);
+          gl_FragColor = vec4(vec3(noiseValue), sdfBody * cardFade);
           return;
         }
         if (uWakeSdfRenderMode == 9) {
           float flowMask = smoothstep(0.04, 0.65, density);
           vec3 flowColor = vec3(particleFlow * 0.5 + 0.5, particleFlowStrength);
-          gl_FragColor = vec4(flowColor * flowMask, 1.0);
+          gl_FragColor = vec4(flowColor, flowMask * cardFade);
           return;
         }
         vec3 color = mapped.rgb * (0.7 + sdfBody * 0.62 + edge * 0.38);
