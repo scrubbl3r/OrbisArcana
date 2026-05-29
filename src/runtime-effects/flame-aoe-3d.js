@@ -1017,8 +1017,10 @@ function createWakeSdfMaterial(config) {
         vec2 blendedFlow = normalize(mix(sourceFlow, particleFlow, flowBlend));
         vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeSdfPerlinScale;
         float time = uTime * uWakeSdfPerlinSpeed;
-        vec2 lateral = vec2(-blendedFlow.y, blendedFlow.x) * sin(p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
-        noisePos.xy -= blendedFlow * (time * 0.42 + surfaceDistance * 0.08);
+        vec2 lateral = vec2(-sourceFlow.y, sourceFlow.x) * sin(p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
+        vec2 particleWarp = (particleFlow - sourceFlow) * flowBlend * 0.58;
+        noisePos.xy -= sourceFlow * (time * 0.42 + surfaceDistance * 0.08);
+        noisePos.xy += particleWarp;
         noisePos.xy += lateral;
         noisePos.z = 0.37;
         float field = fbm(noisePos);
