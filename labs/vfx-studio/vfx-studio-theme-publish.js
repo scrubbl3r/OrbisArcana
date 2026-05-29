@@ -297,13 +297,14 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params) {
         "wakeSimplexScale", "wakeSimplexSpeed", "wakeSimplexDensityBottom", "wakeSimplexDensityTop", "wakeSimplexContrast", "wakeSimplexOctaves", "wakeSimplexLacunarity", "wakeSimplexGain",
         "wakeSdfEnabled", "wakeSdfHeightBo", "wakeSdfParticleLifeMs", "wakeSdfSpawnRate", "wakeSdfSpawnAreaBo", "wakeSdfParticleRadiusBo",
         "wakeSdfLiftBias", "wakeSdfJitterBo", "wakeSdfHeatDecay", "wakeSdfDensity", "wakeSdfSoftnessBo",
-        "wakeSdfPerlinScale", "wakeSdfPerlinSpeed", "wakeSdfPerlinDensityBottom", "wakeSdfPerlinDensityTop", "wakeSdfPerlinContrast", "wakeSdfPerlinOctaves", "wakeSdfPerlinLacunarity", "wakeSdfPerlinGain",
+        "wakeSdfPerlinScale", "wakeSdfPerlinSpeed", "wakeSdfPerlinContrast", "wakeSdfPerlinOctaves", "wakeSdfPerlinLacunarity", "wakeSdfPerlinGain",
         "wakeSdfDebugPoints",
         "wakeNoiseMix", "wakeGraphEnabled",
       ];
       const optionalKeys = [];
       for (let i = 0; i < 4; i += 1) {
         optionalKeys.push(
+          `wakeSdfGraph${i}Pct`, `wakeSdfGraph${i}R`, `wakeSdfGraph${i}G`, `wakeSdfGraph${i}B`, `wakeSdfGraph${i}A`,
           `wakeGraph${i}Pct`, `wakeGraph${i}R`, `wakeGraph${i}G`, `wakeGraph${i}B`, `wakeGraph${i}A`,
           `wakeAlphaGradient${i}Pct`, `wakeAlphaGradient${i}A`
         );

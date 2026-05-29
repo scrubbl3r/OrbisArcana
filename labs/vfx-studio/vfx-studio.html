@@ -1862,14 +1862,6 @@
               <input id="flameAoe3dWakeSdfPerlinSpeed" class="paramFieldInput" type="number" min="0" max="8" step="0.05" value="7.00" />
               <button id="flameAoe3dApplyWakeSdfPerlinSpeedBtn" class="toolBtn" type="button">Apply</button>
             </div>
-            <div class="rgbaParamRow densityRangeRow">
-              <span class="rgbaLabel">Perlin density</span>
-              <label for="flameAoe3dWakeSdfPerlinDensityBottom">bottom</label>
-              <input id="flameAoe3dWakeSdfPerlinDensityBottom" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.90" />
-              <label for="flameAoe3dWakeSdfPerlinDensityTop">top</label>
-              <input id="flameAoe3dWakeSdfPerlinDensityTop" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.00" />
-              <button id="flameAoe3dApplyWakeSdfPerlinDensityBtn" class="toolBtn" type="button">Apply</button>
-            </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfPerlinContrast">Perlin contrast</label>
               <input id="flameAoe3dWakeSdfPerlinContrast" class="paramFieldInput" type="number" min="0.02" max="0.6" step="0.01" value="0.30" />
@@ -1889,6 +1881,42 @@
               <label for="flameAoe3dWakeSdfPerlinGain">Perlin gain</label>
               <input id="flameAoe3dWakeSdfPerlinGain" class="paramFieldInput" type="number" min="0.1" max="0.9" step="0.01" value="0.25" />
               <button id="flameAoe3dApplyWakeSdfPerlinGainBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+          </div>
+        </div>
+        <div class="controlGroup" data-control-group>
+          <button class="controlGroupHeader" type="button" data-control-toggle aria-expanded="false" aria-controls="flameAoe3dWakeSdfGraphControls">SDF RGBA Graph</button>
+          <div id="flameAoe3dWakeSdfGraphControls" class="controlGroupBody paramFieldRows" hidden>
+            <div class="rgbaParamRow wakeGraphRow">
+              <label for="flameAoe3dWakeSdfGraph0Pct">%</label><input id="flameAoe3dWakeSdfGraph0Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="0" />
+              <label for="flameAoe3dWakeSdfGraph0R">r</label><input id="flameAoe3dWakeSdfGraph0R" class="paramFieldInput" type="number" min="0" max="255" step="1" value="0" />
+              <label for="flameAoe3dWakeSdfGraph0G">g</label><input id="flameAoe3dWakeSdfGraph0G" class="paramFieldInput" type="number" min="0" max="255" step="1" value="0" />
+              <label for="flameAoe3dWakeSdfGraph0B">b</label><input id="flameAoe3dWakeSdfGraph0B" class="paramFieldInput" type="number" min="0" max="255" step="1" value="0" />
+              <label for="flameAoe3dWakeSdfGraph0A">a</label><input id="flameAoe3dWakeSdfGraph0A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0" />
+            </div>
+            <div class="rgbaParamRow wakeGraphRow">
+              <label for="flameAoe3dWakeSdfGraph1Pct">%</label><input id="flameAoe3dWakeSdfGraph1Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="34" />
+              <label for="flameAoe3dWakeSdfGraph1R">r</label><input id="flameAoe3dWakeSdfGraph1R" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+              <label for="flameAoe3dWakeSdfGraph1G">g</label><input id="flameAoe3dWakeSdfGraph1G" class="paramFieldInput" type="number" min="0" max="255" step="1" value="22" />
+              <label for="flameAoe3dWakeSdfGraph1B">b</label><input id="flameAoe3dWakeSdfGraph1B" class="paramFieldInput" type="number" min="0" max="255" step="1" value="0" />
+              <label for="flameAoe3dWakeSdfGraph1A">a</label><input id="flameAoe3dWakeSdfGraph1A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.68" />
+            </div>
+            <div class="rgbaParamRow wakeGraphRow">
+              <label for="flameAoe3dWakeSdfGraph2Pct">%</label><input id="flameAoe3dWakeSdfGraph2Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="68" />
+              <label for="flameAoe3dWakeSdfGraph2R">r</label><input id="flameAoe3dWakeSdfGraph2R" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+              <label for="flameAoe3dWakeSdfGraph2G">g</label><input id="flameAoe3dWakeSdfGraph2G" class="paramFieldInput" type="number" min="0" max="255" step="1" value="148" />
+              <label for="flameAoe3dWakeSdfGraph2B">b</label><input id="flameAoe3dWakeSdfGraph2B" class="paramFieldInput" type="number" min="0" max="255" step="1" value="10" />
+              <label for="flameAoe3dWakeSdfGraph2A">a</label><input id="flameAoe3dWakeSdfGraph2A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="0.92" />
+            </div>
+            <div class="rgbaParamRow wakeGraphRow">
+              <label for="flameAoe3dWakeSdfGraph3Pct">%</label><input id="flameAoe3dWakeSdfGraph3Pct" class="paramFieldInput" type="number" min="0" max="100" step="1" value="100" />
+              <label for="flameAoe3dWakeSdfGraph3R">r</label><input id="flameAoe3dWakeSdfGraph3R" class="paramFieldInput" type="number" min="0" max="255" step="1" value="255" />
+              <label for="flameAoe3dWakeSdfGraph3G">g</label><input id="flameAoe3dWakeSdfGraph3G" class="paramFieldInput" type="number" min="0" max="255" step="1" value="232" />
+              <label for="flameAoe3dWakeSdfGraph3B">b</label><input id="flameAoe3dWakeSdfGraph3B" class="paramFieldInput" type="number" min="0" max="255" step="1" value="120" />
+              <label for="flameAoe3dWakeSdfGraph3A">a</label><input id="flameAoe3dWakeSdfGraph3A" class="paramFieldInput" type="number" min="0" max="1" step="0.01" value="1" />
+            </div>
+            <div class="row">
+              <button id="flameAoe3dApplyWakeSdfGraphBtn" class="toolBtn" type="button">Apply</button>
             </div>
           </div>
         </div>
@@ -3038,14 +3066,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260528173500"),
+      import("./vfx-studio-bootstrap.js?v=20260528180500"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
       import("./vfx-studio-surfaces.js?v=20260524-tesla-c"),
-      import("./vfx-studio-theme-publish.js?v=20260528173500"),
+      import("./vfx-studio-theme-publish.js?v=20260528180500"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -3053,7 +3081,7 @@
     import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506c";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260528173500";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260528180500";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260517a";
@@ -3073,7 +3101,7 @@
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
-    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260528173530";
+    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260528180530";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ORB_NOD_3D_PRESET_DEFAULT,
@@ -3083,10 +3111,10 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260528173530i";
+    } from "../../src/vfx/presets/index.js?v=20260528180530i";
     import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527122742";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
-    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260528173530";
+    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260528180530";
     import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527122742b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
@@ -3804,9 +3832,6 @@
       flameAoe3dApplyWakeSdfPerlinScaleBtn: $("flameAoe3dApplyWakeSdfPerlinScaleBtn"),
       flameAoe3dWakeSdfPerlinSpeed: $("flameAoe3dWakeSdfPerlinSpeed"),
       flameAoe3dApplyWakeSdfPerlinSpeedBtn: $("flameAoe3dApplyWakeSdfPerlinSpeedBtn"),
-      flameAoe3dWakeSdfPerlinDensityBottom: $("flameAoe3dWakeSdfPerlinDensityBottom"),
-      flameAoe3dWakeSdfPerlinDensityTop: $("flameAoe3dWakeSdfPerlinDensityTop"),
-      flameAoe3dApplyWakeSdfPerlinDensityBtn: $("flameAoe3dApplyWakeSdfPerlinDensityBtn"),
       flameAoe3dWakeSdfPerlinContrast: $("flameAoe3dWakeSdfPerlinContrast"),
       flameAoe3dApplyWakeSdfPerlinContrastBtn: $("flameAoe3dApplyWakeSdfPerlinContrastBtn"),
       flameAoe3dWakeSdfPerlinOctaves: $("flameAoe3dWakeSdfPerlinOctaves"),
@@ -3817,6 +3842,27 @@
       flameAoe3dApplyWakeSdfPerlinGainBtn: $("flameAoe3dApplyWakeSdfPerlinGainBtn"),
       flameAoe3dWakeSdfDebugPoints: $("flameAoe3dWakeSdfDebugPoints"),
       flameAoe3dApplyWakeSdfDebugPointsBtn: $("flameAoe3dApplyWakeSdfDebugPointsBtn"),
+      flameAoe3dWakeSdfGraph0Pct: $("flameAoe3dWakeSdfGraph0Pct"),
+      flameAoe3dWakeSdfGraph0R: $("flameAoe3dWakeSdfGraph0R"),
+      flameAoe3dWakeSdfGraph0G: $("flameAoe3dWakeSdfGraph0G"),
+      flameAoe3dWakeSdfGraph0B: $("flameAoe3dWakeSdfGraph0B"),
+      flameAoe3dWakeSdfGraph0A: $("flameAoe3dWakeSdfGraph0A"),
+      flameAoe3dWakeSdfGraph1Pct: $("flameAoe3dWakeSdfGraph1Pct"),
+      flameAoe3dWakeSdfGraph1R: $("flameAoe3dWakeSdfGraph1R"),
+      flameAoe3dWakeSdfGraph1G: $("flameAoe3dWakeSdfGraph1G"),
+      flameAoe3dWakeSdfGraph1B: $("flameAoe3dWakeSdfGraph1B"),
+      flameAoe3dWakeSdfGraph1A: $("flameAoe3dWakeSdfGraph1A"),
+      flameAoe3dWakeSdfGraph2Pct: $("flameAoe3dWakeSdfGraph2Pct"),
+      flameAoe3dWakeSdfGraph2R: $("flameAoe3dWakeSdfGraph2R"),
+      flameAoe3dWakeSdfGraph2G: $("flameAoe3dWakeSdfGraph2G"),
+      flameAoe3dWakeSdfGraph2B: $("flameAoe3dWakeSdfGraph2B"),
+      flameAoe3dWakeSdfGraph2A: $("flameAoe3dWakeSdfGraph2A"),
+      flameAoe3dWakeSdfGraph3Pct: $("flameAoe3dWakeSdfGraph3Pct"),
+      flameAoe3dWakeSdfGraph3R: $("flameAoe3dWakeSdfGraph3R"),
+      flameAoe3dWakeSdfGraph3G: $("flameAoe3dWakeSdfGraph3G"),
+      flameAoe3dWakeSdfGraph3B: $("flameAoe3dWakeSdfGraph3B"),
+      flameAoe3dWakeSdfGraph3A: $("flameAoe3dWakeSdfGraph3A"),
+      flameAoe3dApplyWakeSdfGraphBtn: $("flameAoe3dApplyWakeSdfGraphBtn"),
       flameAoe3dWakeGraph0Pct: $("flameAoe3dWakeGraph0Pct"),
       flameAoe3dWakeGraph0R: $("flameAoe3dWakeGraph0R"),
       flameAoe3dWakeGraph0G: $("flameAoe3dWakeGraph0G"),

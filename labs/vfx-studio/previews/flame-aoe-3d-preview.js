@@ -109,12 +109,30 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSdfDensity: 0.64,
   wakeSdfPerlinScale: 2.35,
   wakeSdfPerlinSpeed: 0.86,
-  wakeSdfPerlinDensityBottom: 0.52,
-  wakeSdfPerlinDensityTop: 0.52,
   wakeSdfPerlinContrast: 0.16,
   wakeSdfPerlinOctaves: 5,
   wakeSdfPerlinLacunarity: 2.08,
   wakeSdfPerlinGain: 0.52,
+  wakeSdfGraph0Pct: 0,
+  wakeSdfGraph0R: 0,
+  wakeSdfGraph0G: 0,
+  wakeSdfGraph0B: 0,
+  wakeSdfGraph0A: 0,
+  wakeSdfGraph1Pct: 34,
+  wakeSdfGraph1R: 255,
+  wakeSdfGraph1G: 22,
+  wakeSdfGraph1B: 0,
+  wakeSdfGraph1A: 0.68,
+  wakeSdfGraph2Pct: 68,
+  wakeSdfGraph2R: 255,
+  wakeSdfGraph2G: 148,
+  wakeSdfGraph2B: 10,
+  wakeSdfGraph2A: 0.92,
+  wakeSdfGraph3Pct: 100,
+  wakeSdfGraph3R: 255,
+  wakeSdfGraph3G: 232,
+  wakeSdfGraph3B: 120,
+  wakeSdfGraph3A: 1,
   wakeGraph0Pct: 0,
   wakeGraph0R: 0,
   wakeGraph0G: 0,
@@ -206,6 +224,28 @@ function readWakeGraphConfig(els = {}) {
   return out;
 }
 
+function readSdfGraphConfig(els = {}) {
+  const out = {};
+  for (let i = 0; i < 4; i += 1) {
+    const fallbackPct = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeSdfGraph${i}Pct`];
+    const fallbackR = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeSdfGraph${i}R`];
+    const fallbackG = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeSdfGraph${i}G`];
+    const fallbackB = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeSdfGraph${i}B`];
+    const fallbackA = FLAME_AOE_3D_PREVIEW_DEFAULTS[`wakeSdfGraph${i}A`];
+    const pctEl = els[`flameAoe3dWakeSdfGraph${i}Pct`];
+    const rEl = els[`flameAoe3dWakeSdfGraph${i}R`];
+    const gEl = els[`flameAoe3dWakeSdfGraph${i}G`];
+    const bEl = els[`flameAoe3dWakeSdfGraph${i}B`];
+    const aEl = els[`flameAoe3dWakeSdfGraph${i}A`];
+    out[`wakeSdfGraph${i}Pct`] = readOptionalNumber(pctEl ? pctEl.value : fallbackPct, 0, 100);
+    out[`wakeSdfGraph${i}R`] = readOptionalNumber(rEl ? rEl.value : fallbackR, 0, 255);
+    out[`wakeSdfGraph${i}G`] = readOptionalNumber(gEl ? gEl.value : fallbackG, 0, 255);
+    out[`wakeSdfGraph${i}B`] = readOptionalNumber(bEl ? bEl.value : fallbackB, 0, 255);
+    out[`wakeSdfGraph${i}A`] = readOptionalNumber(aEl ? aEl.value : fallbackA, 0, 1);
+  }
+  return out;
+}
+
 function readFlameAuraConfig(els = {}) {
   return Object.freeze({
     aoeAuraDiameterBo: clampNumber(els.flameAoe3dAoeAuraDiameterBo && els.flameAoe3dAoeAuraDiameterBo.value, 0.05, 20, FLAME_AOE_3D_PREVIEW_DEFAULTS.aoeAuraDiameterBo),
@@ -275,13 +315,12 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfDensity: clampNumber(els.flameAoe3dWakeSdfDensity && els.flameAoe3dWakeSdfDensity.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDensity),
     wakeSdfPerlinScale: clampNumber(els.flameAoe3dWakeSdfPerlinScale && els.flameAoe3dWakeSdfPerlinScale.value, 0.1, 16, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinScale),
     wakeSdfPerlinSpeed: clampNumber(els.flameAoe3dWakeSdfPerlinSpeed && els.flameAoe3dWakeSdfPerlinSpeed.value, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinSpeed),
-    wakeSdfPerlinDensityBottom: clampNumber(els.flameAoe3dWakeSdfPerlinDensityBottom && els.flameAoe3dWakeSdfPerlinDensityBottom.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinDensityBottom),
-    wakeSdfPerlinDensityTop: clampNumber(els.flameAoe3dWakeSdfPerlinDensityTop && els.flameAoe3dWakeSdfPerlinDensityTop.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinDensityTop),
     wakeSdfPerlinContrast: clampNumber(els.flameAoe3dWakeSdfPerlinContrast && els.flameAoe3dWakeSdfPerlinContrast.value, 0.02, 0.6, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinContrast),
     wakeSdfPerlinOctaves: Math.round(clampNumber(els.flameAoe3dWakeSdfPerlinOctaves && els.flameAoe3dWakeSdfPerlinOctaves.value, 1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinOctaves)),
     wakeSdfPerlinLacunarity: clampNumber(els.flameAoe3dWakeSdfPerlinLacunarity && els.flameAoe3dWakeSdfPerlinLacunarity.value, 1.1, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinLacunarity),
     wakeSdfPerlinGain: clampNumber(els.flameAoe3dWakeSdfPerlinGain && els.flameAoe3dWakeSdfPerlinGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinGain),
     wakeSdfDebugPoints: Math.round(clampNumber(els.flameAoe3dWakeSdfDebugPoints && els.flameAoe3dWakeSdfDebugPoints.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDebugPoints)),
+    ...readSdfGraphConfig(els),
     ...readWakeGraphConfig(els),
   });
 }
@@ -360,13 +399,19 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfDensity) els.flameAoe3dWakeSdfDensity.value = String(Number(cfg.wakeSdfDensity).toFixed(2));
   if (els.flameAoe3dWakeSdfPerlinScale) els.flameAoe3dWakeSdfPerlinScale.value = String(Number(cfg.wakeSdfPerlinScale).toFixed(2));
   if (els.flameAoe3dWakeSdfPerlinSpeed) els.flameAoe3dWakeSdfPerlinSpeed.value = String(Number(cfg.wakeSdfPerlinSpeed).toFixed(2));
-  if (els.flameAoe3dWakeSdfPerlinDensityBottom) els.flameAoe3dWakeSdfPerlinDensityBottom.value = String(Number(cfg.wakeSdfPerlinDensityBottom).toFixed(2));
-  if (els.flameAoe3dWakeSdfPerlinDensityTop) els.flameAoe3dWakeSdfPerlinDensityTop.value = String(Number(cfg.wakeSdfPerlinDensityTop).toFixed(2));
   if (els.flameAoe3dWakeSdfPerlinContrast) els.flameAoe3dWakeSdfPerlinContrast.value = String(Number(cfg.wakeSdfPerlinContrast).toFixed(2));
   if (els.flameAoe3dWakeSdfPerlinOctaves) els.flameAoe3dWakeSdfPerlinOctaves.value = String(Math.round(Number(cfg.wakeSdfPerlinOctaves)));
   if (els.flameAoe3dWakeSdfPerlinLacunarity) els.flameAoe3dWakeSdfPerlinLacunarity.value = String(Number(cfg.wakeSdfPerlinLacunarity).toFixed(2));
   if (els.flameAoe3dWakeSdfPerlinGain) els.flameAoe3dWakeSdfPerlinGain.value = String(Number(cfg.wakeSdfPerlinGain).toFixed(2));
   if (els.flameAoe3dWakeSdfDebugPoints) els.flameAoe3dWakeSdfDebugPoints.value = String(Math.round(clampNumber(cfg.wakeSdfDebugPoints, 0, 1, 1)));
+  for (let i = 0; i < 4; i += 1) {
+    ["Pct", "R", "G", "B", "A"].forEach((suffix) => {
+      const el = els[`flameAoe3dWakeSdfGraph${i}${suffix}`];
+      if (!el) return;
+      const value = cfg[`wakeSdfGraph${i}${suffix}`];
+      el.value = value == null ? "" : String(value);
+    });
+  }
   for (let i = 0; i < 4; i += 1) {
     ["Pct", "R", "G", "B", "A"].forEach((suffix) => {
       const el = els[`flameAoe3dWakeGraph${i}${suffix}`];
@@ -677,6 +722,24 @@ function getWakeGraphStops(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 
 function getWakeGraphStopCount(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   return getWakeGraphStops(config).length;
+}
+
+function getWakeSdfGraphStops(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  const graphStops = [];
+  for (let i = 0; i < 4; i += 1) {
+    const pct = readOptionalNumber(config[`wakeSdfGraph${i}Pct`], 0, 100);
+    const r = readOptionalNumber(config[`wakeSdfGraph${i}R`], 0, 255);
+    const g = readOptionalNumber(config[`wakeSdfGraph${i}G`], 0, 255);
+    const b = readOptionalNumber(config[`wakeSdfGraph${i}B`], 0, 255);
+    const a = readOptionalNumber(config[`wakeSdfGraph${i}A`], 0, 1);
+    if ([pct, r, g, b, a].some((v) => v === "")) continue;
+    graphStops.push({
+      pct: pct / 100,
+      color: new THREE.Vector4(r / 255, g / 255, b / 255, a),
+    });
+  }
+  graphStops.sort((a, b) => a.pct - b.pct);
+  return graphStops;
 }
 
 function getWakeAlphaGradientStops(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
@@ -1117,6 +1180,18 @@ function createWakeMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
 }
 
 function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
+  const graphStops = getWakeSdfGraphStops(config);
+  const graphStopValues = [0, 1, 1, 1];
+  const graphColors = [
+    new THREE.Vector4(0, 0, 0, 0),
+    new THREE.Vector4(1, 0.08, 0, 0.65),
+    new THREE.Vector4(1, 0.58, 0.04, 0.9),
+    new THREE.Vector4(1, 0.88, 0.42, 1),
+  ];
+  graphStops.slice(0, 4).forEach((stop, index) => {
+    graphStopValues[index] = stop.pct;
+    graphColors[index] = stop.color;
+  });
   const orbRadiusPx = Math.max(1, Number(config.orbRadiusPx) || Number(config.wakeSdfRadiusPx) || 1);
   const trailPoints = Array.from({ length: WAKE_SDF_TRAIL_POINT_COUNT }, (_, index) => {
     const t = index / Math.max(1, WAKE_SDF_TRAIL_POINT_COUNT - 1);
@@ -1163,12 +1238,13 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeDensity: { value: config.wakeSdfDensity },
       uWakeSdfPerlinScale: { value: config.wakeSdfPerlinScale },
       uWakeSdfPerlinSpeed: { value: config.wakeSdfPerlinSpeed },
-      uWakeSdfPerlinDensityBottom: { value: config.wakeSdfPerlinDensityBottom },
-      uWakeSdfPerlinDensityTop: { value: config.wakeSdfPerlinDensityTop },
       uWakeSdfPerlinContrast: { value: config.wakeSdfPerlinContrast },
       uWakeSdfPerlinOctaves: { value: config.wakeSdfPerlinOctaves },
       uWakeSdfPerlinLacunarity: { value: config.wakeSdfPerlinLacunarity },
       uWakeSdfPerlinGain: { value: config.wakeSdfPerlinGain },
+      uWakeSdfGraphCount: { value: Math.max(0, Math.min(4, graphStops.length)) },
+      uWakeSdfGraphStops: { value: graphStopValues },
+      uWakeSdfGraphColors: { value: graphColors },
       uWakeMotionOffset: { value: new THREE.Vector3() },
       uWakeTrailPoints: { value: trailPoints },
       uWakeTrailRadii: { value: trailRadii },
@@ -1200,12 +1276,13 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeDensity;
       uniform float uWakeSdfPerlinScale;
       uniform float uWakeSdfPerlinSpeed;
-      uniform float uWakeSdfPerlinDensityBottom;
-      uniform float uWakeSdfPerlinDensityTop;
       uniform float uWakeSdfPerlinContrast;
       uniform float uWakeSdfPerlinOctaves;
       uniform float uWakeSdfPerlinLacunarity;
       uniform float uWakeSdfPerlinGain;
+      uniform int uWakeSdfGraphCount;
+      uniform float uWakeSdfGraphStops[4];
+      uniform vec4 uWakeSdfGraphColors[4];
       uniform vec3 uWakeMotionOffset;
       uniform vec2 uWakeTrailPoints[WAKE_POINT_COUNT];
       uniform float uWakeTrailRadii[WAKE_POINT_COUNT];
@@ -1244,6 +1321,24 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float k = max(0.0001, radius);
         float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
         return mix(b, a, h) - k * h * (1.0 - h);
+      }
+      vec4 sampleSdfGraph(float value) {
+        float t = clamp(value, 0.0, 1.0);
+        if (uWakeSdfGraphCount <= 0) return vec4(mix(vec3(0.9, 0.05, 0.0), vec3(1.0, 0.78, 0.28), t), t);
+        if (uWakeSdfGraphCount == 1) return uWakeSdfGraphColors[0];
+        vec4 result = uWakeSdfGraphColors[0];
+        if (t <= uWakeSdfGraphStops[0]) return result;
+        for (int i = 0; i < 3; i += 1) {
+          if (i >= uWakeSdfGraphCount - 1) break;
+          float left = uWakeSdfGraphStops[i];
+          float right = max(left + 0.0001, uWakeSdfGraphStops[i + 1]);
+          result = uWakeSdfGraphColors[i + 1];
+          if (t <= right) {
+            result = mix(uWakeSdfGraphColors[i], uWakeSdfGraphColors[i + 1], clamp((t - left) / (right - left), 0.0, 1.0));
+            break;
+          }
+        }
+        return result;
       }
       void resolveSpineFrame(vec2 p, out float spineT, out float signedSide, out float spineDistance, out float spineRadius, out vec2 tangent) {
         float bestDistance = 1000000.0;
@@ -1317,24 +1412,27 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         density = clamp(density * 0.32, 0.0, 2.0);
         heat = clamp(heat * 0.28, 0.0, 1.25);
         flow = normalize(flow / flowWeight + vec2(uWakeMotionOffset.x * 0.2, 0.72));
-        float verticalT = clamp((p.y / max(1.0, uOrbRadius) + 1.0) * 0.5, 0.0, 1.0);
-        float perlinDensity = mix(uWakeSdfPerlinDensityBottom, uWakeSdfPerlinDensityTop, verticalT);
         vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeSdfPerlinScale;
-        noisePos.xy += flow * (uTime * uWakeSdfPerlinSpeed * 0.34);
-        noisePos.z = uTime * uWakeSdfPerlinSpeed * 0.22;
+        float time = uTime * uWakeSdfPerlinSpeed;
+        vec2 drift = flow * (sin(time * 0.37) * 0.18 + time * 0.12);
+        drift += vec2(sin(time * 0.23 + p.y * 0.011), cos(time * 0.19 + p.x * 0.013)) * 0.22;
+        noisePos.xy += drift;
+        noisePos.z = sin(time * 0.17) * 1.7 + cos(time * 0.11) * 1.1;
         float field = fbm(noisePos);
         float threshold = mix(1.18, 0.38, clamp(uWakeDensity, 0.0, 1.0));
         float softness = max(0.025, uWakeSoftness / max(1.0, uOrbRadius) * 0.55);
-        float noisyDensity = density + (field - 0.5) * uWakeSdfPerlinContrast * perlinDensity * 0.85;
+        float noisyDensity = density + (field - 0.5) * uWakeSdfPerlinContrast * 0.85;
         float sdfBody = smoothstep(threshold, threshold + softness, noisyDensity);
-        float flameTexture = smoothstep(0.18, 0.92, field * perlinDensity + density * 0.14 + heat * 0.12);
+        float flameTexture = smoothstep(0.18, 0.92, field + density * 0.14 + heat * 0.12);
         float flame = sdfBody * mix(0.42, 1.0, flameTexture);
+        float edge = smoothstep(threshold, threshold + softness * 1.4, noisyDensity) - smoothstep(threshold + softness * 1.3, threshold + softness * 2.9, noisyDensity);
+        float fireValue = clamp(flameTexture * 0.7 + heat * 0.18 + edge * 0.22, 0.0, 1.0);
+        vec4 mapped = sampleSdfGraph(fireValue);
         float orbOcclusion = smoothstep(uOrbRadius * 0.72, uOrbRadius * 1.02, length(p));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
-        float alpha = flame * orbOcclusion * cardFade;
-        vec3 color = mix(vec3(1.0, 0.17, 0.02), vec3(1.0, 0.78, 0.28), smoothstep(0.18, 0.96, flameTexture + heat * 0.22));
-        color *= 0.62 + sdfBody * 0.82;
+        float alpha = flame * mapped.a * orbOcclusion * cardFade;
+        vec3 color = mapped.rgb * (0.7 + sdfBody * 0.62 + edge * 0.38);
         if (alpha <= 0.004) discard;
         gl_FragColor = vec4(color, alpha);
       }
