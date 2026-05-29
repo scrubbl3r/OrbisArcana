@@ -3,7 +3,7 @@ export { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "./bubble-shield-3d-default.js?v
 export { SHOCKWAVE_PRESET_DEFAULT } from "./shockwave-default.js";
 export { SHOCKWAVE_3D_PRESET_DEFAULT } from "./shockwave-3d-default.js?v=20260506a";
 export { FLAME_AOE_PRESET_DEFAULT } from "./flame-aoe-default.js";
-export { FLAME_AOE_3D_PRESET_DEFAULT } from "./flame-aoe-3d-default.js?v=20260529161846";
+export { FLAME_AOE_3D_PRESET_DEFAULT } from "./flame-aoe-3d-default.js?v=20260529165820";
 export { HEAL_PRESET_DEFAULT } from "./heal-default.js?v=20260517b";
 export { ELECTRIC_AOE_PRESET_DEFAULT } from "./electric-aoe-default.js";
 export { TESLA_1_PRESET_DEFAULT } from "./tesla-1-default.js";
