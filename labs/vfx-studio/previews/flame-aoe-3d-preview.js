@@ -113,6 +113,8 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSdfPerlinOctaves: 5,
   wakeSdfPerlinLacunarity: 2.08,
   wakeSdfPerlinGain: 0.52,
+  wakeSdfNoiseBlackPoint: 0.18,
+  wakeSdfNoiseWhitePoint: 0.86,
   wakeSdfRenderMode: 0,
   wakeSdfGraph0Pct: 0,
   wakeSdfGraph0R: 0,
@@ -320,6 +322,8 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfPerlinOctaves: Math.round(clampNumber(els.flameAoe3dWakeSdfPerlinOctaves && els.flameAoe3dWakeSdfPerlinOctaves.value, 1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinOctaves)),
     wakeSdfPerlinLacunarity: clampNumber(els.flameAoe3dWakeSdfPerlinLacunarity && els.flameAoe3dWakeSdfPerlinLacunarity.value, 1.1, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinLacunarity),
     wakeSdfPerlinGain: clampNumber(els.flameAoe3dWakeSdfPerlinGain && els.flameAoe3dWakeSdfPerlinGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinGain),
+    wakeSdfNoiseBlackPoint: clampNumber(els.flameAoe3dWakeSdfNoiseBlackPoint && els.flameAoe3dWakeSdfNoiseBlackPoint.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseBlackPoint),
+    wakeSdfNoiseWhitePoint: clampNumber(els.flameAoe3dWakeSdfNoiseWhitePoint && els.flameAoe3dWakeSdfNoiseWhitePoint.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseWhitePoint),
     wakeSdfRenderMode: Math.round(clampNumber(els.flameAoe3dWakeSdfRenderMode && els.flameAoe3dWakeSdfRenderMode.value, 0, 3, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRenderMode)),
     wakeSdfDebugPoints: Math.round(clampNumber(els.flameAoe3dWakeSdfDebugPoints && els.flameAoe3dWakeSdfDebugPoints.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDebugPoints)),
     ...readSdfGraphConfig(els),
@@ -405,6 +409,8 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfPerlinOctaves) els.flameAoe3dWakeSdfPerlinOctaves.value = String(Math.round(Number(cfg.wakeSdfPerlinOctaves)));
   if (els.flameAoe3dWakeSdfPerlinLacunarity) els.flameAoe3dWakeSdfPerlinLacunarity.value = String(Number(cfg.wakeSdfPerlinLacunarity).toFixed(2));
   if (els.flameAoe3dWakeSdfPerlinGain) els.flameAoe3dWakeSdfPerlinGain.value = String(Number(cfg.wakeSdfPerlinGain).toFixed(2));
+  if (els.flameAoe3dWakeSdfNoiseBlackPoint) els.flameAoe3dWakeSdfNoiseBlackPoint.value = String(Number(cfg.wakeSdfNoiseBlackPoint).toFixed(2));
+  if (els.flameAoe3dWakeSdfNoiseWhitePoint) els.flameAoe3dWakeSdfNoiseWhitePoint.value = String(Number(cfg.wakeSdfNoiseWhitePoint).toFixed(2));
   if (els.flameAoe3dWakeSdfRenderMode) els.flameAoe3dWakeSdfRenderMode.value = String(Math.round(clampNumber(cfg.wakeSdfRenderMode, 0, 3, 0)));
   if (els.flameAoe3dWakeSdfDebugPoints) els.flameAoe3dWakeSdfDebugPoints.value = String(Math.round(clampNumber(cfg.wakeSdfDebugPoints, 0, 1, 1)));
   for (let i = 0; i < 4; i += 1) {
@@ -1248,6 +1254,8 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeSdfPerlinOctaves: { value: config.wakeSdfPerlinOctaves },
       uWakeSdfPerlinLacunarity: { value: config.wakeSdfPerlinLacunarity },
       uWakeSdfPerlinGain: { value: config.wakeSdfPerlinGain },
+      uWakeSdfNoiseBlackPoint: { value: config.wakeSdfNoiseBlackPoint },
+      uWakeSdfNoiseWhitePoint: { value: config.wakeSdfNoiseWhitePoint },
       uWakeSdfRenderMode: { value: config.wakeSdfRenderMode },
       uWakeSdfGraphCount: { value: Math.max(0, Math.min(4, graphStops.length)) },
       uWakeSdfGraphStops: { value: graphStopValues },
@@ -1287,6 +1295,8 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeSdfPerlinOctaves;
       uniform float uWakeSdfPerlinLacunarity;
       uniform float uWakeSdfPerlinGain;
+      uniform float uWakeSdfNoiseBlackPoint;
+      uniform float uWakeSdfNoiseWhitePoint;
       uniform int uWakeSdfRenderMode;
       uniform int uWakeSdfGraphCount;
       uniform float uWakeSdfGraphStops[4];
@@ -1431,16 +1441,17 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float softness = max(0.025, uWakeSoftness / max(1.0, uOrbRadius) * 0.55);
         float noisyDensity = density + (field - 0.5) * uWakeSdfPerlinContrast * 0.85;
         float sdfBody = smoothstep(threshold, threshold + softness, noisyDensity);
-        float flameTexture = smoothstep(0.18, 0.92, field + density * 0.14 + heat * 0.12);
-        float flame = sdfBody * mix(0.42, 1.0, flameTexture);
         float edge = smoothstep(threshold, threshold + softness * 1.4, noisyDensity) - smoothstep(threshold + softness * 1.3, threshold + softness * 2.9, noisyDensity);
-        float fireValue = clamp(flameTexture * 0.7 + heat * 0.18 + edge * 0.22, 0.0, 1.0);
+        float whitePoint = max(uWakeSdfNoiseBlackPoint + 0.001, uWakeSdfNoiseWhitePoint);
+        float noiseValue = clamp((field - uWakeSdfNoiseBlackPoint) / (whitePoint - uWakeSdfNoiseBlackPoint), 0.0, 1.0);
+        float flame = sdfBody * mix(0.35, 1.0, noiseValue);
+        float fireValue = clamp(noiseValue * 0.88 + heat * 0.04 + edge * 0.08, 0.0, 1.0);
         vec4 mapped = sampleSdfGraph(fireValue);
         float orbOcclusion = smoothstep(uOrbRadius * 0.72, uOrbRadius * 1.02, length(p));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
         if (uWakeSdfRenderMode == 1) {
-          gl_FragColor = vec4(vec3(field), cardFade);
+          gl_FragColor = vec4(vec3(noiseValue), cardFade);
           return;
         }
         if (uWakeSdfRenderMode == 2) {

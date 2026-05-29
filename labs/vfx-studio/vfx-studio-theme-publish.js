@@ -297,7 +297,8 @@ export function buildLivePresetModuleForBaseEffect(baseEffect, params) {
         "wakeSimplexScale", "wakeSimplexSpeed", "wakeSimplexDensityBottom", "wakeSimplexDensityTop", "wakeSimplexContrast", "wakeSimplexOctaves", "wakeSimplexLacunarity", "wakeSimplexGain",
         "wakeSdfEnabled", "wakeSdfHeightBo", "wakeSdfParticleLifeMs", "wakeSdfSpawnRate", "wakeSdfSpawnAreaBo", "wakeSdfParticleRadiusBo",
         "wakeSdfLiftBias", "wakeSdfJitterBo", "wakeSdfHeatDecay", "wakeSdfDensity", "wakeSdfSoftnessBo",
-        "wakeSdfPerlinScale", "wakeSdfPerlinSpeed", "wakeSdfPerlinContrast", "wakeSdfPerlinOctaves", "wakeSdfPerlinLacunarity", "wakeSdfPerlinGain", "wakeSdfRenderMode",
+        "wakeSdfPerlinScale", "wakeSdfPerlinSpeed", "wakeSdfPerlinContrast", "wakeSdfPerlinOctaves", "wakeSdfPerlinLacunarity", "wakeSdfPerlinGain",
+        "wakeSdfNoiseBlackPoint", "wakeSdfNoiseWhitePoint", "wakeSdfRenderMode",
         "wakeSdfDebugPoints",
         "wakeNoiseMix", "wakeGraphEnabled",
       ];
