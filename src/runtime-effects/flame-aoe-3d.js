@@ -134,7 +134,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfPerlinGain: clampNumber(source.wakeSdfPerlinGain, 0.1, 0.9, fallback.wakeSdfPerlinGain ?? fallback.wakeNoiseGain ?? 0.52),
     wakeSdfNoiseBlackPoint: clampNumber(source.wakeSdfNoiseBlackPoint, 0, 1, fallback.wakeSdfNoiseBlackPoint ?? 0.18),
     wakeSdfNoiseWhitePoint: clampNumber(source.wakeSdfNoiseWhitePoint, 0, 1, fallback.wakeSdfNoiseWhitePoint ?? 0.86),
-    wakeSdfRenderMode: clampInt(source.wakeSdfRenderMode, 0, 7, fallback.wakeSdfRenderMode ?? 0),
+    wakeSdfRenderMode: clampInt(source.wakeSdfRenderMode, 0, 9, fallback.wakeSdfRenderMode ?? 0),
   };
   for (let i = 0; i < 4; i += 1) {
     out[`wakeGraph${i}Pct`] = optionalNumber(source[`wakeGraph${i}Pct`] ?? fallback[`wakeGraph${i}Pct`], 0, 100);
@@ -990,6 +990,8 @@ function createWakeSdfMaterial(config) {
         vec2 p = vWakePos;
         float density = 0.0;
         float heat = 0.0;
+        vec2 particleFlowSum = vec2(0.0);
+        float particleFlowWeight = 0.0001;
         for (int i = 0; i < CONTROL_PARTICLE_COUNT; i += 1) {
           vec4 particle = uWakeControlParticles[i];
           vec2 delta = p - particle.xy;
@@ -999,9 +1001,13 @@ function createWakeSdfMaterial(config) {
           float influence = ageHeat * radiusSq / (dot(delta, delta) + radiusSq);
           density += influence;
           heat += influence * ageHeat;
+          particleFlowSum += uWakeControlVelocities[i] * influence;
+          particleFlowWeight += influence;
         }
         density = clamp(density * 0.32, 0.0, 2.0);
         heat = clamp(heat * 0.28, 0.0, 1.25);
+        vec2 particleFlow = normalize(particleFlowSum / particleFlowWeight + vec2(uWakeMotionOffset.x * 0.28, 0.72));
+        float particleFlowStrength = clamp(particleFlowWeight * 0.22, 0.0, 1.0);
         float orbDistance = length(p);
         float surfaceDistance = max(0.0, orbDistance - uOrbRadius) / max(1.0, uOrbRadius);
         float surfaceBirth = 1.0 - smoothstep(0.0, 2.35, surfaceDistance);
@@ -1055,6 +1061,16 @@ function createWakeSdfMaterial(config) {
         }
         if (uWakeSdfRenderMode == 7) {
           gl_FragColor = vec4(sourceFlow * 0.5 + 0.5, clamp(surfaceBirth, 0.0, 1.0), 1.0);
+          return;
+        }
+        if (uWakeSdfRenderMode == 8) {
+          gl_FragColor = vec4(vec3(noiseValue * sdfBody), 1.0);
+          return;
+        }
+        if (uWakeSdfRenderMode == 9) {
+          float flowMask = smoothstep(0.04, 0.65, density);
+          vec3 flowColor = vec3(particleFlow * 0.5 + 0.5, particleFlowStrength);
+          gl_FragColor = vec4(flowColor * flowMask, 1.0);
           return;
         }
         vec3 color = mapped.rgb * (0.7 + sdfBody * 0.62 + edge * 0.38);

@@ -361,7 +361,7 @@ export function createFlameAoe3dAuthoringAdapter({ flameAoe3dBehaviorDefault = {
       wakeSdfPerlinGain: fixedNumber(els && els.flameAoe3dWakeSdfPerlinGain && els.flameAoe3dWakeSdfPerlinGain.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfPerlinGain),
       wakeSdfNoiseBlackPoint: fixedNumber(els && els.flameAoe3dWakeSdfNoiseBlackPoint && els.flameAoe3dWakeSdfNoiseBlackPoint.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfNoiseBlackPoint),
       wakeSdfNoiseWhitePoint: fixedNumber(els && els.flameAoe3dWakeSdfNoiseWhitePoint && els.flameAoe3dWakeSdfNoiseWhitePoint.value, 2, FLAME_AOE_3D_DEFAULTS.wakeSdfNoiseWhitePoint),
-      wakeSdfRenderMode: Math.round(clampNumber(els && els.flameAoe3dWakeSdfRenderMode && els.flameAoe3dWakeSdfRenderMode.value, 0, 7, FLAME_AOE_3D_DEFAULTS.wakeSdfRenderMode)),
+      wakeSdfRenderMode: Math.round(clampNumber(els && els.flameAoe3dWakeSdfRenderMode && els.flameAoe3dWakeSdfRenderMode.value, 0, 9, FLAME_AOE_3D_DEFAULTS.wakeSdfRenderMode)),
       wakeSdfGraph0Pct: optionalNumber(els && els.flameAoe3dWakeSdfGraph0Pct && els.flameAoe3dWakeSdfGraph0Pct.value, 0, 100),
       wakeSdfGraph0R: optionalNumber(els && els.flameAoe3dWakeSdfGraph0R && els.flameAoe3dWakeSdfGraph0R.value, 0, 255),
       wakeSdfGraph0G: optionalNumber(els && els.flameAoe3dWakeSdfGraph0G && els.flameAoe3dWakeSdfGraph0G.value, 0, 255),
