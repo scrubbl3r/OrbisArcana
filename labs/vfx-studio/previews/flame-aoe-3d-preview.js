@@ -324,7 +324,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfPerlinGain: clampNumber(els.flameAoe3dWakeSdfPerlinGain && els.flameAoe3dWakeSdfPerlinGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinGain),
     wakeSdfNoiseBlackPoint: clampNumber(els.flameAoe3dWakeSdfNoiseBlackPoint && els.flameAoe3dWakeSdfNoiseBlackPoint.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseBlackPoint),
     wakeSdfNoiseWhitePoint: clampNumber(els.flameAoe3dWakeSdfNoiseWhitePoint && els.flameAoe3dWakeSdfNoiseWhitePoint.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseWhitePoint),
-    wakeSdfRenderMode: Math.round(clampNumber(els.flameAoe3dWakeSdfRenderMode && els.flameAoe3dWakeSdfRenderMode.value, 0, 9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRenderMode)),
+    wakeSdfRenderMode: Math.round(clampNumber(els.flameAoe3dWakeSdfRenderMode && els.flameAoe3dWakeSdfRenderMode.value, 0, 10, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRenderMode)),
     wakeSdfDebugPoints: Math.round(clampNumber(els.flameAoe3dWakeSdfDebugPoints && els.flameAoe3dWakeSdfDebugPoints.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDebugPoints)),
     ...readSdfGraphConfig(els),
     ...readWakeGraphConfig(els),
@@ -411,7 +411,7 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfPerlinGain) els.flameAoe3dWakeSdfPerlinGain.value = String(Number(cfg.wakeSdfPerlinGain).toFixed(2));
   if (els.flameAoe3dWakeSdfNoiseBlackPoint) els.flameAoe3dWakeSdfNoiseBlackPoint.value = String(Number(cfg.wakeSdfNoiseBlackPoint).toFixed(2));
   if (els.flameAoe3dWakeSdfNoiseWhitePoint) els.flameAoe3dWakeSdfNoiseWhitePoint.value = String(Number(cfg.wakeSdfNoiseWhitePoint).toFixed(2));
-  if (els.flameAoe3dWakeSdfRenderMode) els.flameAoe3dWakeSdfRenderMode.value = String(Math.round(clampNumber(cfg.wakeSdfRenderMode, 0, 9, 0)));
+  if (els.flameAoe3dWakeSdfRenderMode) els.flameAoe3dWakeSdfRenderMode.value = String(Math.round(clampNumber(cfg.wakeSdfRenderMode, 0, 10, 0)));
   if (els.flameAoe3dWakeSdfDebugPoints) els.flameAoe3dWakeSdfDebugPoints.value = String(Math.round(clampNumber(cfg.wakeSdfDebugPoints, 0, 1, 1)));
   for (let i = 0; i < 4; i += 1) {
     ["Pct", "R", "G", "B", "A"].forEach((suffix) => {
@@ -1436,10 +1436,13 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float surfaceDistance = max(0.0, orbDistance - uOrbRadius) / max(1.0, uOrbRadius);
         float surfaceBirth = 1.0 - smoothstep(0.0, 2.35, surfaceDistance);
         vec2 sourceFlow = normalize(vec2(uWakeMotionOffset.x * 1.25, 1.0));
+        float flowMask = smoothstep(0.04, 0.65, density);
+        float flowBlend = flowMask * smoothstep(0.18, 1.45, surfaceDistance) * 0.24;
+        vec2 blendedFlow = normalize(mix(sourceFlow, particleFlow, flowBlend));
         vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeSdfPerlinScale;
         float time = uTime * uWakeSdfPerlinSpeed;
-        vec2 lateral = vec2(-sourceFlow.y, sourceFlow.x) * sin(p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
-        noisePos.xy -= sourceFlow * (time * 0.42 + surfaceDistance * 0.08);
+        vec2 lateral = vec2(-blendedFlow.y, blendedFlow.x) * sin(p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
+        noisePos.xy -= blendedFlow * (time * 0.42 + surfaceDistance * 0.08);
         noisePos.xy += lateral;
         noisePos.z = 0.37;
         float field = fbm(noisePos);
@@ -1492,8 +1495,12 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
           return;
         }
         if (uWakeSdfRenderMode == 9) {
-          float flowMask = smoothstep(0.04, 0.65, density);
           vec3 flowColor = vec3(particleFlow * 0.5 + 0.5, particleFlowStrength);
+          gl_FragColor = vec4(flowColor, flowMask * cardFade);
+          return;
+        }
+        if (uWakeSdfRenderMode == 10) {
+          vec3 flowColor = vec3(blendedFlow * 0.5 + 0.5, flowBlend / 0.24);
           gl_FragColor = vec4(flowColor, flowMask * cardFade);
           return;
         }
