@@ -189,7 +189,7 @@ const FLAME_AOE_3D_DEFAULTS = Object.freeze({
   wakeSdfDensity: 0.64,
   wakeSdfPerlinScale: 2.35,
   wakeSdfPerlinSpeed: 0.86,
-  wakeSdfPerlinContrast: 0.16,
+  wakeSdfPerlinContrast: 0.5,
   wakeSdfPerlinOctaves: 5,
   wakeSdfPerlinLacunarity: 2.08,
   wakeSdfPerlinGain: 0.52,

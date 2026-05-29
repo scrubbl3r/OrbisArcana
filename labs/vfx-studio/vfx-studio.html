@@ -1902,7 +1902,7 @@
             </div>
             <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfPerlinContrast">Perlin contrast</label>
-              <input id="flameAoe3dWakeSdfPerlinContrast" class="paramFieldInput" type="number" min="0.02" max="0.6" step="0.01" value="0.30" />
+              <input id="flameAoe3dWakeSdfPerlinContrast" class="paramFieldInput" type="number" min="0" max="2" step="0.05" value="0.50" />
               <button id="flameAoe3dApplyWakeSdfPerlinContrastBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
@@ -3127,7 +3127,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260529125500"),
+      import("./vfx-studio-bootstrap.js?v=20260529131000"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -3142,7 +3142,7 @@
     import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506c";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260529125500";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260529131000";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260517a";

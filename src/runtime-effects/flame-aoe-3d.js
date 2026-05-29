@@ -128,7 +128,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfDensity: clampNumber(source.wakeSdfDensity, 0, 1, fallback.wakeSdfDensity ?? 0.5),
     wakeSdfPerlinScale: clampNumber(source.wakeSdfPerlinScale ?? source.wakeSdfNoiseScale, 0.1, 16, fallback.wakeSdfPerlinScale ?? fallback.wakeNoiseScale ?? 2.35),
     wakeSdfPerlinSpeed: clampNumber(source.wakeSdfPerlinSpeed ?? source.wakeSdfNoiseSpeed, 0, 8, fallback.wakeSdfPerlinSpeed ?? fallback.wakeNoiseSpeed ?? 0.86),
-    wakeSdfPerlinContrast: clampNumber(source.wakeSdfPerlinContrast ?? source.wakeSdfNoiseContrast, 0.02, 0.6, fallback.wakeSdfPerlinContrast ?? fallback.wakeNoiseContrast ?? 0.16),
+    wakeSdfPerlinContrast: clampNumber(source.wakeSdfPerlinContrast ?? source.wakeSdfNoiseContrast, 0, 2, fallback.wakeSdfPerlinContrast ?? fallback.wakeNoiseContrast ?? 0.5),
     wakeSdfPerlinOctaves: clampInt(source.wakeSdfPerlinOctaves, 1, 8, fallback.wakeSdfPerlinOctaves ?? fallback.wakeNoiseOctaves ?? 5),
     wakeSdfPerlinLacunarity: clampNumber(source.wakeSdfPerlinLacunarity, 1.1, 4, fallback.wakeSdfPerlinLacunarity ?? fallback.wakeNoiseLacunarity ?? 2.08),
     wakeSdfPerlinGain: clampNumber(source.wakeSdfPerlinGain, 0.1, 0.9, fallback.wakeSdfPerlinGain ?? fallback.wakeNoiseGain ?? 0.52),
@@ -1014,13 +1014,15 @@ function createWakeSdfMaterial(config) {
         noisePos.xy += drift;
         noisePos.z = sin(time * 0.17) * 1.7 + cos(time * 0.11) * 1.1;
         float field = fbm(noisePos);
+        float valueContrast = max(0.01, uWakeSdfPerlinContrast * 2.0);
+        float contrastedField = clamp((field - 0.5) * valueContrast + 0.5, 0.0, 1.0);
         float threshold = mix(1.18, 0.38, clamp(uWakeDensity, 0.0, 1.0));
         float softness = max(0.025, uWakeSoftness / max(1.0, uOrbRadius) * 0.55);
-        float noisyDensity = density + (field - 0.5) * uWakeSdfPerlinContrast * 0.85;
+        float noisyDensity = density + (field - 0.5) * 0.18;
         float sdfBody = smoothstep(threshold, threshold + softness, noisyDensity);
         float edge = smoothstep(threshold, threshold + softness * 1.4, noisyDensity) - smoothstep(threshold + softness * 1.3, threshold + softness * 2.9, noisyDensity);
         float whitePoint = max(uWakeSdfNoiseBlackPoint + 0.001, uWakeSdfNoiseWhitePoint);
-        float noiseValue = clamp((field - uWakeSdfNoiseBlackPoint) / (whitePoint - uWakeSdfNoiseBlackPoint), 0.0, 1.0);
+        float noiseValue = clamp((contrastedField - uWakeSdfNoiseBlackPoint) / (whitePoint - uWakeSdfNoiseBlackPoint), 0.0, 1.0);
         float flame = sdfBody * mix(0.35, 1.0, noiseValue);
         float fireValue = clamp(noiseValue * 0.88 + heat * 0.04 + edge * 0.08, 0.0, 1.0);
         vec4 mapped = sampleSdfGraph(fireValue);
