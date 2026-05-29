@@ -324,7 +324,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfPerlinGain: clampNumber(els.flameAoe3dWakeSdfPerlinGain && els.flameAoe3dWakeSdfPerlinGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinGain),
     wakeSdfNoiseBlackPoint: clampNumber(els.flameAoe3dWakeSdfNoiseBlackPoint && els.flameAoe3dWakeSdfNoiseBlackPoint.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseBlackPoint),
     wakeSdfNoiseWhitePoint: clampNumber(els.flameAoe3dWakeSdfNoiseWhitePoint && els.flameAoe3dWakeSdfNoiseWhitePoint.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseWhitePoint),
-    wakeSdfRenderMode: Math.round(clampNumber(els.flameAoe3dWakeSdfRenderMode && els.flameAoe3dWakeSdfRenderMode.value, 0, 5, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRenderMode)),
+    wakeSdfRenderMode: Math.round(clampNumber(els.flameAoe3dWakeSdfRenderMode && els.flameAoe3dWakeSdfRenderMode.value, 0, 6, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRenderMode)),
     wakeSdfDebugPoints: Math.round(clampNumber(els.flameAoe3dWakeSdfDebugPoints && els.flameAoe3dWakeSdfDebugPoints.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDebugPoints)),
     ...readSdfGraphConfig(els),
     ...readWakeGraphConfig(els),
@@ -411,7 +411,7 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfPerlinGain) els.flameAoe3dWakeSdfPerlinGain.value = String(Number(cfg.wakeSdfPerlinGain).toFixed(2));
   if (els.flameAoe3dWakeSdfNoiseBlackPoint) els.flameAoe3dWakeSdfNoiseBlackPoint.value = String(Number(cfg.wakeSdfNoiseBlackPoint).toFixed(2));
   if (els.flameAoe3dWakeSdfNoiseWhitePoint) els.flameAoe3dWakeSdfNoiseWhitePoint.value = String(Number(cfg.wakeSdfNoiseWhitePoint).toFixed(2));
-  if (els.flameAoe3dWakeSdfRenderMode) els.flameAoe3dWakeSdfRenderMode.value = String(Math.round(clampNumber(cfg.wakeSdfRenderMode, 0, 5, 0)));
+  if (els.flameAoe3dWakeSdfRenderMode) els.flameAoe3dWakeSdfRenderMode.value = String(Math.round(clampNumber(cfg.wakeSdfRenderMode, 0, 6, 0)));
   if (els.flameAoe3dWakeSdfDebugPoints) els.flameAoe3dWakeSdfDebugPoints.value = String(Math.round(clampNumber(cfg.wakeSdfDebugPoints, 0, 1, 1)));
   for (let i = 0; i < 4; i += 1) {
     ["Pct", "R", "G", "B", "A"].forEach((suffix) => {
@@ -1472,6 +1472,10 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
           gl_FragColor = vec4(vec3(alpha), 1.0);
           return;
         }
+        if (uWakeSdfRenderMode == 6) {
+          gl_FragColor = vec4(vec3(vWakeUv.x), 1.0);
+          return;
+        }
         vec3 color = mapped.rgb * (0.7 + sdfBody * 0.62 + edge * 0.38);
         if (alpha <= 0.004) discard;
         gl_FragColor = vec4(color, alpha);
@@ -1750,7 +1754,7 @@ export function createFlameAoe3dPreview({
       cameraPositionBo: Object.freeze({ x: 0.92, y: 0.16, z: 3.25 }),
       minDistanceBo: 0.85,
       maxDistanceBo: 28,
-      bloom: ORB_BLOOM_CONFIG.enabled ? ORB_BLOOM_CONFIG : null,
+      bloom: ORB_BLOOM_CONFIG.enabled && wakeConfig.wakeSdfRenderMode === 0 ? ORB_BLOOM_CONFIG : null,
       onFrame: () => {
         const nowMs = performance.now();
         const dtSec = lastFrameMs ? (nowMs - lastFrameMs) / 1000 : 1 / 60;

@@ -134,7 +134,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfPerlinGain: clampNumber(source.wakeSdfPerlinGain, 0.1, 0.9, fallback.wakeSdfPerlinGain ?? fallback.wakeNoiseGain ?? 0.52),
     wakeSdfNoiseBlackPoint: clampNumber(source.wakeSdfNoiseBlackPoint, 0, 1, fallback.wakeSdfNoiseBlackPoint ?? 0.18),
     wakeSdfNoiseWhitePoint: clampNumber(source.wakeSdfNoiseWhitePoint, 0, 1, fallback.wakeSdfNoiseWhitePoint ?? 0.86),
-    wakeSdfRenderMode: clampInt(source.wakeSdfRenderMode, 0, 5, fallback.wakeSdfRenderMode ?? 0),
+    wakeSdfRenderMode: clampInt(source.wakeSdfRenderMode, 0, 6, fallback.wakeSdfRenderMode ?? 0),
   };
   for (let i = 0; i < 4; i += 1) {
     out[`wakeGraph${i}Pct`] = optionalNumber(source[`wakeGraph${i}Pct`] ?? fallback[`wakeGraph${i}Pct`], 0, 100);
@@ -1046,6 +1046,10 @@ function createWakeSdfMaterial(config) {
         }
         if (uWakeSdfRenderMode == 5) {
           gl_FragColor = vec4(vec3(alpha), 1.0);
+          return;
+        }
+        if (uWakeSdfRenderMode == 6) {
+          gl_FragColor = vec4(vec3(vWakeUv.x), 1.0);
           return;
         }
         vec3 color = mapped.rgb * (0.7 + sdfBody * 0.62 + edge * 0.38);
