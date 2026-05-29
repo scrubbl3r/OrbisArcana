@@ -602,7 +602,45 @@
       grid-template-columns: auto auto minmax(86px, 1fr) auto minmax(86px, 1fr);
     }
     .rgbaParamRow.wakeGraphRow{
-      grid-template-columns: auto minmax(64px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto minmax(54px, 1fr) auto;
+      grid-template-columns: repeat(5, minmax(58px, 1fr));
+      gap:4px 8px;
+      align-items:end;
+      padding:6px 0;
+    }
+    .rgbaParamRow.wakeGraphRow label{
+      align-self:end;
+      line-height:1;
+    }
+    .rgbaParamRow.wakeGraphRow input{
+      min-width:0;
+      min-height:32px;
+      padding:5px 6px;
+    }
+    .rgbaParamRow.wakeGraphRow label:nth-of-type(1),
+    .rgbaParamRow.wakeGraphRow input:nth-of-type(1){
+      grid-column:1;
+    }
+    .rgbaParamRow.wakeGraphRow label:nth-of-type(2),
+    .rgbaParamRow.wakeGraphRow input:nth-of-type(2){
+      grid-column:2;
+    }
+    .rgbaParamRow.wakeGraphRow label:nth-of-type(3),
+    .rgbaParamRow.wakeGraphRow input:nth-of-type(3){
+      grid-column:3;
+    }
+    .rgbaParamRow.wakeGraphRow label:nth-of-type(4),
+    .rgbaParamRow.wakeGraphRow input:nth-of-type(4){
+      grid-column:4;
+    }
+    .rgbaParamRow.wakeGraphRow label:nth-of-type(5),
+    .rgbaParamRow.wakeGraphRow input:nth-of-type(5){
+      grid-column:5;
+    }
+    .rgbaParamRow.wakeGraphRow label{
+      grid-row:1;
+    }
+    .rgbaParamRow.wakeGraphRow input{
+      grid-row:2;
     }
     .rgbaParamRow.wakeAlphaGradientRow{
       grid-template-columns: auto minmax(86px, 1fr) auto minmax(86px, 1fr);
