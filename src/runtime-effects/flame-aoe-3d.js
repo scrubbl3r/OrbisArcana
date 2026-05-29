@@ -1008,10 +1008,10 @@ function createWakeSdfMaterial(config) {
         vec2 sourceFlow = normalize(vec2(uWakeMotionOffset.x * 1.25, 1.0));
         vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeSdfPerlinScale;
         float time = uTime * uWakeSdfPerlinSpeed;
-        vec2 lateral = vec2(-sourceFlow.y, sourceFlow.x) * sin(time * 0.47 + p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
+        vec2 lateral = vec2(-sourceFlow.y, sourceFlow.x) * sin(p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
         noisePos.xy -= sourceFlow * (time * 0.42 + surfaceDistance * 0.08);
         noisePos.xy += lateral;
-        noisePos.z = time * 0.28 + sin(time * 0.17) * 0.28;
+        noisePos.z = 0.37;
         float field = fbm(noisePos);
         float valueContrast = max(0.01, uWakeSdfPerlinContrast * 2.0);
         float contrastedField = clamp((field - 0.5) * valueContrast + 0.5, 0.0, 1.0);
