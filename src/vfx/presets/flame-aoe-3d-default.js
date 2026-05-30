@@ -68,7 +68,7 @@ export const FLAME_AOE_3D_PRESET_DEFAULT = Object.freeze({
   "wakeSdfNoiseBlackPoint": 0,
   "wakeSdfNoiseWhitePoint": 1,
   "wakeSdfRenderMode": 0,
-  "wakeSdfDebugPoints": 0,
+  "wakeSdfDebugPoints": 1,
   "wakeNoiseMix": 0.25,
   "wakeGraphEnabled": 1,
   "wakeSdfGraph0Pct": 0,
