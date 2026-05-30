@@ -991,6 +991,7 @@ function createWakeSdfMaterial(config) {
         float density = 0.0;
         float heat = 0.0;
         vec2 particleFlowSum = vec2(0.0);
+        vec2 particleWarpSum = vec2(0.0);
         float particleFlowWeight = 0.0001;
         for (int i = 0; i < CONTROL_PARTICLE_COUNT; i += 1) {
           vec4 particle = uWakeControlParticles[i];
@@ -1002,23 +1003,27 @@ function createWakeSdfMaterial(config) {
           density += influence;
           heat += influence * ageHeat;
           particleFlowSum += uWakeControlVelocities[i] * influence;
+          vec2 localDir = delta / radius;
+          vec2 curlDir = vec2(-localDir.y, localDir.x);
+          particleWarpSum += (curlDir * 0.55 + localDir * 0.18 + uWakeControlVelocities[i] * 0.35) * influence;
           particleFlowWeight += influence;
         }
         density = clamp(density * 0.32, 0.0, 2.0);
         heat = clamp(heat * 0.28, 0.0, 1.25);
         vec2 particleFlow = normalize(particleFlowSum / particleFlowWeight + vec2(uWakeMotionOffset.x * 0.28, 0.72));
+        vec2 localParticleWarp = particleWarpSum / particleFlowWeight;
         float particleFlowStrength = clamp(particleFlowWeight * 0.22, 0.0, 1.0);
         float orbDistance = length(p);
         float surfaceDistance = max(0.0, orbDistance - uOrbRadius) / max(1.0, uOrbRadius);
         float surfaceBirth = 1.0 - smoothstep(0.0, 2.35, surfaceDistance);
         vec2 sourceFlow = normalize(vec2(uWakeMotionOffset.x * 1.25, 1.0));
         float flowMask = smoothstep(0.04, 0.65, density);
-        float flowBlend = flowMask * smoothstep(0.18, 1.45, surfaceDistance) * 0.24;
+        float flowBlend = flowMask * smoothstep(0.18, 1.45, surfaceDistance) * 0.75;
         vec2 blendedFlow = normalize(mix(sourceFlow, particleFlow, flowBlend));
         vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeSdfPerlinScale;
         float time = uTime * uWakeSdfPerlinSpeed;
         vec2 lateral = vec2(-sourceFlow.y, sourceFlow.x) * sin(p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
-        vec2 particleWarp = particleFlow * flowBlend * 0.72;
+        vec2 particleWarp = localParticleWarp * flowBlend * 1.15;
         noisePos.xy -= sourceFlow * (time * 0.42 + surfaceDistance * 0.08);
         noisePos.xy += particleWarp;
         noisePos.xy += lateral;
@@ -1078,7 +1083,7 @@ function createWakeSdfMaterial(config) {
           return;
         }
         if (uWakeSdfRenderMode == 10) {
-          vec3 flowColor = vec3(blendedFlow * 0.5 + 0.5, flowBlend / 0.24);
+          vec3 flowColor = vec3(blendedFlow * 0.5 + 0.5, flowBlend / 0.75);
           gl_FragColor = vec4(flowColor, flowMask * cardFade);
           return;
         }
