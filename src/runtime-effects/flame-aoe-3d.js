@@ -989,7 +989,7 @@ function createWakeSdfMaterial(config) {
         }
         density = clamp(density * 0.72, 0.0, 1.65);
         heat = clamp(heat * 0.86, 0.0, 1.45);
-        flow = normalize(flow / weightTotal + vec2(uWakeMotionOffset.x * 0.28, 0.82));
+        flow = normalize(flow / weightTotal + vec2(0.0, 0.82));
       }
       void main() {
         vec2 p = vWakePos;
@@ -1019,7 +1019,7 @@ function createWakeSdfMaterial(config) {
         }
         density = clamp(density * 0.32, 0.0, 2.0);
         heat = clamp(heat * 0.28, 0.0, 1.25);
-        vec2 particleFlow = normalize(particleFlowSum / particleFlowWeight + vec2(uWakeMotionOffset.x * 0.28, 0.72));
+        vec2 particleFlow = normalize(particleFlowSum / particleFlowWeight + vec2(0.0, 0.72));
         vec2 localParticleWarp = particleWarpSum;
         float localParticleWarpLength = length(localParticleWarp);
         if (localParticleWarpLength > 1.15) localParticleWarp *= 1.15 / localParticleWarpLength;
@@ -1027,7 +1027,7 @@ function createWakeSdfMaterial(config) {
         float orbDistance = length(p);
         float surfaceDistance = max(0.0, orbDistance - uOrbRadius) / max(1.0, uOrbRadius);
         float surfaceBirth = 1.0 - smoothstep(0.0, 2.35, surfaceDistance);
-        vec2 sourceFlow = normalize(vec2(uWakeMotionOffset.x * 1.25, 1.0));
+        vec2 sourceFlow = vec2(0.0, 1.0);
         float flowMask = smoothstep(0.04, 0.65, density);
         float flowBlend = flowMask * smoothstep(0.18, 1.45, surfaceDistance) * 0.75;
         vec2 blendedFlow = normalize(mix(sourceFlow, particleFlow, flowBlend));
