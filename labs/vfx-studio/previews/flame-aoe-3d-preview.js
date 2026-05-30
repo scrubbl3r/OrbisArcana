@@ -1261,6 +1261,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeSdfGraphStops: { value: graphStopValues },
       uWakeSdfGraphColors: { value: graphColors },
       uWakeMotionOffset: { value: new THREE.Vector3() },
+      uWakeSourceFlow: { value: new THREE.Vector2(0, 1) },
       uWakeTrailPoints: { value: trailPoints },
       uWakeTrailRadii: { value: trailRadii },
       uWakeFieldEmitters: { value: fieldEmitters },
@@ -1303,6 +1304,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeSdfGraphStops[4];
       uniform vec4 uWakeSdfGraphColors[4];
       uniform vec3 uWakeMotionOffset;
+      uniform vec2 uWakeSourceFlow;
       uniform vec2 uWakeTrailPoints[WAKE_POINT_COUNT];
       uniform float uWakeTrailRadii[WAKE_POINT_COUNT];
       uniform vec4 uWakeFieldEmitters[FIELD_EMITTER_COUNT];
@@ -1449,7 +1451,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float orbDistance = length(p);
         float surfaceDistance = max(0.0, orbDistance - uOrbRadius) / max(1.0, uOrbRadius);
         float surfaceBirth = 1.0 - smoothstep(0.0, 2.35, surfaceDistance);
-        vec2 sourceFlow = normalize(vec2(uWakeMotionOffset.x * 1.25, 1.0));
+        vec2 sourceFlow = normalize(uWakeSourceFlow + vec2(0.0, 0.0001));
         float flowMask = smoothstep(0.04, 0.65, density);
         float flowBlend = flowMask * smoothstep(0.18, 1.45, surfaceDistance) * 0.75;
         vec2 blendedFlow = normalize(mix(sourceFlow, particleFlow, flowBlend));

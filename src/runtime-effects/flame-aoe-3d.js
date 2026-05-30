@@ -826,6 +826,7 @@ function createWakeSdfMaterial(config) {
       uWakeSdfGraphStops: { value: graphStopValues },
       uWakeSdfGraphColors: { value: graphColors },
       uWakeMotionOffset: { value: new THREE.Vector3() },
+      uWakeSourceFlow: { value: new THREE.Vector2(0, 1) },
       uWakeTrailPoints: { value: trailPoints },
       uWakeTrailRadii: { value: trailRadii },
       uWakeFieldEmitters: { value: fieldEmitters },
@@ -868,6 +869,7 @@ function createWakeSdfMaterial(config) {
       uniform float uWakeSdfGraphStops[4];
       uniform vec4 uWakeSdfGraphColors[4];
       uniform vec3 uWakeMotionOffset;
+      uniform vec2 uWakeSourceFlow;
       uniform vec2 uWakeTrailPoints[WAKE_POINT_COUNT];
       uniform float uWakeTrailRadii[WAKE_POINT_COUNT];
       uniform vec4 uWakeFieldEmitters[FIELD_EMITTER_COUNT];
@@ -1025,7 +1027,7 @@ function createWakeSdfMaterial(config) {
         float orbDistance = length(p);
         float surfaceDistance = max(0.0, orbDistance - uOrbRadius) / max(1.0, uOrbRadius);
         float surfaceBirth = 1.0 - smoothstep(0.0, 2.35, surfaceDistance);
-        vec2 sourceFlow = normalize(vec2(uWakeMotionOffset.x * 1.25, 1.0));
+        vec2 sourceFlow = normalize(uWakeSourceFlow + vec2(0.0, 0.0001));
         float flowMask = smoothstep(0.04, 0.65, density);
         float flowBlend = flowMask * smoothstep(0.18, 1.45, surfaceDistance) * 0.75;
         vec2 blendedFlow = normalize(mix(sourceFlow, particleFlow, flowBlend));
@@ -1245,6 +1247,7 @@ export function createFlameAoe3dRuntime({
   const liftCoreVelocity = new THREE.Vector3();
   const stretchDirection = new THREE.Vector3(0, 1, 0);
   const shaderMotion = new THREE.Vector3();
+  const wakeSdfSourceFlow = new THREE.Vector2(0, 1);
   const springForce = new THREE.Vector3();
   const dampingForce = new THREE.Vector3();
   const wakeSdfCurrentOrigin = new THREE.Vector2();
@@ -1484,6 +1487,9 @@ export function createFlameAoe3dRuntime({
     }
     if (wakeSdfMesh && wakeSdfMaterial) updateWakeSdfSpine(bo, safeDt);
     shaderMotion.copy(liftCoreOffset).multiplyScalar(1 / bo);
+    wakeSdfSourceFlow
+      .set(stretchDirection.x + stretchDirection.z * 0.45, Math.max(0.35, stretchDirection.y))
+      .normalize();
     if (wakeMaterial && wakeMaterial.uniforms && wakeMaterial.uniforms.uWakeMotionOffset) {
       wakeMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
     }
@@ -1504,6 +1510,7 @@ export function createFlameAoe3dRuntime({
     }
     if (wakeSdfMaterial && wakeSdfMaterial.uniforms) {
       if (wakeSdfMaterial.uniforms.uWakeMotionOffset) wakeSdfMaterial.uniforms.uWakeMotionOffset.value.copy(shaderMotion);
+      if (wakeSdfMaterial.uniforms.uWakeSourceFlow) wakeSdfMaterial.uniforms.uWakeSourceFlow.value.copy(wakeSdfSourceFlow);
       if (wakeSdfMaterial.uniforms.uWakeOrbRadius) wakeSdfMaterial.uniforms.uWakeOrbRadius.value = bo * clampNumber(activeConfig && activeConfig.wakeSdfRadiusBo, 0.05, 4, 0.5);
       if (wakeSdfMaterial.uniforms.uOrbRadius) wakeSdfMaterial.uniforms.uOrbRadius.value = bo * 0.5;
       if (wakeSdfMaterial.uniforms.uWakeCoreRadius) wakeSdfMaterial.uniforms.uWakeCoreRadius.value = bo * clampNumber(activeConfig && activeConfig.wakeSdfCoreRadiusBo, 0.02, 3, 0.25);
@@ -1536,6 +1543,7 @@ export function createFlameAoe3dRuntime({
     liftCoreVelocity.set(0, 0, 0);
     stretchDirection.set(0, 1, 0);
     shaderMotion.set(0, 0, 0);
+    wakeSdfSourceFlow.set(0, 1);
     wakeSdfTrailPoints.forEach((point) => point.set(0, 0));
     wakeSdfTargetPoints.forEach((point) => point.set(0, 0));
     wakeSdfTrailRadii.fill(1);
