@@ -1014,10 +1014,7 @@ function createWakeSdfMaterial(config) {
         }
         density = clamp(density * 0.32, 0.0, 2.0);
         heat = clamp(heat * 0.28, 0.0, 1.25);
-        vec2 liveParticleVelocity = particleFlowSum / particleFlowWeight;
-        float liveParticleLift = clamp(liveParticleVelocity.y, 0.0, 3.0);
-        float particleLiftScroll = 0.24 + liveParticleLift * 0.44;
-        vec2 particleFlow = normalize(liveParticleVelocity + vec2(uWakeMotionOffset.x * 0.28, 0.72));
+        vec2 particleFlow = normalize(particleFlowSum / particleFlowWeight + vec2(uWakeMotionOffset.x * 0.28, 0.72));
         vec2 localParticleWarp = particleWarpSum;
         float localParticleWarpLength = length(localParticleWarp);
         if (localParticleWarpLength > 1.15) localParticleWarp *= 1.15 / localParticleWarpLength;
@@ -1033,7 +1030,7 @@ function createWakeSdfMaterial(config) {
         float time = uTime * uWakeSdfPerlinSpeed;
         vec2 lateral = vec2(-sourceFlow.y, sourceFlow.x) * sin(p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
         vec2 particleWarp = localParticleWarp * 0.72;
-        noisePos.xy -= sourceFlow * (time * particleLiftScroll + surfaceDistance * 0.08);
+        noisePos.xy -= sourceFlow * (time * 0.42 + surfaceDistance * 0.08);
         noisePos.xy += particleWarp;
         noisePos.xy += lateral;
         noisePos.z = 0.37;
