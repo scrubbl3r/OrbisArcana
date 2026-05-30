@@ -1003,9 +1003,12 @@ function createWakeSdfMaterial(config) {
           density += influence;
           heat += influence * ageHeat;
           particleFlowSum += uWakeControlVelocities[i] * influence;
-          vec2 localDir = delta / radius;
-          vec2 curlDir = vec2(-localDir.y, localDir.x);
-          particleWarpSum += (curlDir * 0.55 + localDir * 0.18 + uWakeControlVelocities[i] * 0.35) * influence;
+          vec2 particleVelocity = uWakeControlVelocities[i];
+          vec2 flowDir = normalize(particleVelocity + vec2(0.0, 0.001));
+          vec2 sideDir = vec2(-flowDir.y, flowDir.x);
+          float localSide = clamp(dot(delta / radius, sideDir), -1.0, 1.0);
+          float handedness = mod(float(i), 2.0) * 2.0 - 1.0;
+          particleWarpSum += (particleVelocity * 0.48 + sideDir * localSide * handedness * 0.38) * influence;
           particleFlowWeight += influence;
         }
         density = clamp(density * 0.32, 0.0, 2.0);
