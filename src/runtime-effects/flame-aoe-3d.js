@@ -1407,21 +1407,22 @@ export function createFlameAoe3dRuntime({
       const ageWeight = 0.35 + ageT * 0.65;
       const velocityXBo = particle.velocity.x / Math.max(1, bo);
       const velocityYBo = particle.velocity.y / Math.max(1, bo);
-      const localXBo = localX / Math.max(1, bo);
-      const localYBo = localY / Math.max(1, bo);
       const flowWeightItem = heatWeight * ageWeight;
-      flowX += (localXBo * 0.55 + velocityXBo * 0.45) * flowWeightItem;
-      flowY += (Math.max(-0.2, localYBo) * 0.30 + Math.max(0, velocityYBo) * 0.45 + 0.35) * flowWeightItem;
+      flowX += velocityXBo * flowWeightItem;
+      flowY += (Math.max(0, velocityYBo) + 0.7) * flowWeightItem;
       flowWeight += flowWeightItem;
       liftSum += Math.max(0, velocityYBo) * heatWeight;
       liftWeight += heatWeight;
     }
-    wakeSdfNoiseFlowTarget.set(flowX / flowWeight, flowY / flowWeight);
+    wakeSdfNoiseFlowTarget.set(
+      clampNumber(flowX / flowWeight, -0.55, 0.55, 0),
+      Math.max(0.35, flowY / flowWeight)
+    );
     if (wakeSdfNoiseFlowTarget.lengthSq() < 0.0001) wakeSdfNoiseFlowTarget.set(0, 1);
     wakeSdfNoiseFlowTarget.normalize();
     const liveLift = clampNumber(liftSum / liftWeight, 0, 3, 0);
-    const targetNoiseFlowSpeed = clampNumber(0.30 + liveLift * 0.08 + Math.min(1.5, Math.hypot(flowX / flowWeight, flowY / flowWeight)) * 0.04, 0.24, 0.68, 0.42);
-    const flowEase = 1 - Math.exp(-safeDt * 5);
+    const targetNoiseFlowSpeed = clampNumber(0.36 + liveLift * 0.16, 0.28, 0.92, 0.42);
+    const flowEase = 1 - Math.exp(-safeDt * 3.2);
     wakeSdfNoiseFlowDir.lerp(wakeSdfNoiseFlowTarget, flowEase).normalize();
     wakeSdfNoiseFlowSpeed += (targetNoiseFlowSpeed - wakeSdfNoiseFlowSpeed) * flowEase;
     if (uniforms.uWakeNoiseFlowDir) uniforms.uWakeNoiseFlowDir.value.copy(wakeSdfNoiseFlowDir);
