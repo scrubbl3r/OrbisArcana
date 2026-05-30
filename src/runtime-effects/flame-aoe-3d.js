@@ -831,6 +831,7 @@ function createWakeSdfMaterial(config) {
       uWakeFieldEmitters: { value: fieldEmitters },
       uWakeControlParticles: { value: controlParticles },
       uWakeControlVelocities: { value: controlVelocities },
+      uWakeParticleLiftScroll: { value: 0.42 },
     },
     vertexShader: `
       precision highp float;
@@ -872,6 +873,7 @@ function createWakeSdfMaterial(config) {
       uniform vec4 uWakeFieldEmitters[FIELD_EMITTER_COUNT];
       uniform vec4 uWakeControlParticles[CONTROL_PARTICLE_COUNT];
       uniform vec2 uWakeControlVelocities[CONTROL_PARTICLE_COUNT];
+      uniform float uWakeParticleLiftScroll;
       varying vec2 vWakePos;
       varying vec2 vWakeUv;
       float hash31(vec3 p) {
@@ -1015,8 +1017,6 @@ function createWakeSdfMaterial(config) {
         density = clamp(density * 0.32, 0.0, 2.0);
         heat = clamp(heat * 0.28, 0.0, 1.25);
         vec2 liveParticleVelocity = particleFlowSum / particleFlowWeight;
-        float liveParticleLift = clamp(liveParticleVelocity.y, 0.0, 3.0);
-        float particleLiftScroll = 0.24 + liveParticleLift * 0.44;
         vec2 particleFlow = normalize(liveParticleVelocity + vec2(uWakeMotionOffset.x * 0.28, 0.72));
         vec2 localParticleWarp = particleWarpSum;
         float localParticleWarpLength = length(localParticleWarp);
@@ -1032,11 +1032,11 @@ function createWakeSdfMaterial(config) {
         vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeSdfPerlinScale;
         float time = uTime * uWakeSdfPerlinSpeed;
         vec2 lateral = vec2(-sourceFlow.y, sourceFlow.x) * sin(p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
-        float warpStability = 1.0 / (1.0 + particleLiftScroll * 1.85);
+        float warpStability = 1.0 / (1.0 + uWakeParticleLiftScroll * 1.85);
         vec2 particleWarp = localParticleWarp * 0.72 * warpStability;
         float particleWarpLength = length(particleWarp);
         if (particleWarpLength > 0.26) particleWarp *= 0.26 / particleWarpLength;
-        noisePos.xy -= sourceFlow * (time * particleLiftScroll + surfaceDistance * 0.08);
+        noisePos.xy -= sourceFlow * (time * uWakeParticleLiftScroll + surfaceDistance * 0.08);
         noisePos.xy += particleWarp;
         noisePos.xy += lateral;
         noisePos.z = 0.37;
@@ -1377,6 +1377,8 @@ export function createFlameAoe3dRuntime({
     }
     const heatDecay = clampNumber(activeConfig && activeConfig.wakeSdfHeatDecay, 0.1, 6, 1);
     const origin = resolveWakeSdfWorldOrigin();
+    let liftSum = 0;
+    let liftWeight = 0.0001;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
       const particle = wakeSdfControlParticles[i];
       particle.age += safeDt;
@@ -1391,6 +1393,12 @@ export function createFlameAoe3dRuntime({
       const localY = particle.position.y - origin.y;
       if (uniformParticles[i]) uniformParticles[i].set(localX, localY, radius, heat);
       if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
+      liftSum += Math.max(0, particle.velocity.y / Math.max(1, bo)) * Math.max(0, heat);
+      liftWeight += Math.max(0, heat);
+    }
+    if (uniforms.uWakeParticleLiftScroll) {
+      const liveLift = clampNumber(liftSum / liftWeight, 0, 3, 0);
+      uniforms.uWakeParticleLiftScroll.value = 0.24 + liveLift * 0.44;
     }
     const debugBuffers = wakeSdfDebugGroup && wakeSdfDebugGroup.userData && wakeSdfDebugGroup.userData.debugBuffers;
     if (debugBuffers && debugBuffers.particlePositions && debugBuffers.particleColors && debugBuffers.particleGeometry) {
