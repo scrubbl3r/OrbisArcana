@@ -1032,10 +1032,7 @@ function createWakeSdfMaterial(config) {
         vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeSdfPerlinScale;
         float time = uTime * uWakeSdfPerlinSpeed;
         vec2 lateral = vec2(-sourceFlow.y, sourceFlow.x) * sin(p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
-        float warpStability = 1.0 / (1.0 + particleLiftScroll * 1.85);
-        vec2 particleWarp = localParticleWarp * 0.72 * warpStability;
-        float particleWarpLength = length(particleWarp);
-        if (particleWarpLength > 0.26) particleWarp *= 0.26 / particleWarpLength;
+        vec2 particleWarp = localParticleWarp * 0.72;
         noisePos.xy -= sourceFlow * (time * particleLiftScroll + surfaceDistance * 0.08);
         noisePos.xy += particleWarp;
         noisePos.xy += lateral;
