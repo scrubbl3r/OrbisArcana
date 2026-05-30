@@ -115,6 +115,7 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSdfPerlinGain: 0.52,
   wakeSdfNoiseBlackPoint: 0.18,
   wakeSdfNoiseWhitePoint: 0.86,
+  wakeSdfNoiseBias: 0,
   wakeSdfRenderMode: 0,
   wakeSdfGraph0Pct: 0,
   wakeSdfGraph0R: 0,
@@ -324,6 +325,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfPerlinGain: clampNumber(els.flameAoe3dWakeSdfPerlinGain && els.flameAoe3dWakeSdfPerlinGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinGain),
     wakeSdfNoiseBlackPoint: clampNumber(els.flameAoe3dWakeSdfNoiseBlackPoint && els.flameAoe3dWakeSdfNoiseBlackPoint.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseBlackPoint),
     wakeSdfNoiseWhitePoint: clampNumber(els.flameAoe3dWakeSdfNoiseWhitePoint && els.flameAoe3dWakeSdfNoiseWhitePoint.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseWhitePoint),
+    wakeSdfNoiseBias: clampNumber(els.flameAoe3dWakeSdfNoiseBias && els.flameAoe3dWakeSdfNoiseBias.value, -1, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfNoiseBias),
     wakeSdfRenderMode: Math.round(clampNumber(els.flameAoe3dWakeSdfRenderMode && els.flameAoe3dWakeSdfRenderMode.value, 0, 10, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRenderMode)),
     wakeSdfDebugPoints: Math.round(clampNumber(els.flameAoe3dWakeSdfDebugPoints && els.flameAoe3dWakeSdfDebugPoints.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDebugPoints)),
     ...readSdfGraphConfig(els),
@@ -411,6 +413,7 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfPerlinGain) els.flameAoe3dWakeSdfPerlinGain.value = String(Number(cfg.wakeSdfPerlinGain).toFixed(2));
   if (els.flameAoe3dWakeSdfNoiseBlackPoint) els.flameAoe3dWakeSdfNoiseBlackPoint.value = String(Number(cfg.wakeSdfNoiseBlackPoint).toFixed(2));
   if (els.flameAoe3dWakeSdfNoiseWhitePoint) els.flameAoe3dWakeSdfNoiseWhitePoint.value = String(Number(cfg.wakeSdfNoiseWhitePoint).toFixed(2));
+  if (els.flameAoe3dWakeSdfNoiseBias) els.flameAoe3dWakeSdfNoiseBias.value = String(Number(cfg.wakeSdfNoiseBias).toFixed(2));
   if (els.flameAoe3dWakeSdfRenderMode) els.flameAoe3dWakeSdfRenderMode.value = String(Math.round(clampNumber(cfg.wakeSdfRenderMode, 0, 10, 0)));
   if (els.flameAoe3dWakeSdfDebugPoints) els.flameAoe3dWakeSdfDebugPoints.value = String(Math.round(clampNumber(cfg.wakeSdfDebugPoints, 0, 1, 1)));
   for (let i = 0; i < 4; i += 1) {
@@ -1256,6 +1259,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeSdfPerlinGain: { value: config.wakeSdfPerlinGain },
       uWakeSdfNoiseBlackPoint: { value: config.wakeSdfNoiseBlackPoint },
       uWakeSdfNoiseWhitePoint: { value: config.wakeSdfNoiseWhitePoint },
+      uWakeSdfNoiseBias: { value: config.wakeSdfNoiseBias },
       uWakeSdfRenderMode: { value: config.wakeSdfRenderMode },
       uWakeSdfGraphCount: { value: Math.max(0, Math.min(4, graphStops.length)) },
       uWakeSdfGraphStops: { value: graphStopValues },
@@ -1297,6 +1301,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform float uWakeSdfPerlinGain;
       uniform float uWakeSdfNoiseBlackPoint;
       uniform float uWakeSdfNoiseWhitePoint;
+      uniform float uWakeSdfNoiseBias;
       uniform int uWakeSdfRenderMode;
       uniform int uWakeSdfGraphCount;
       uniform float uWakeSdfGraphStops[4];
@@ -1468,6 +1473,9 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float edge = smoothstep(threshold, threshold + softness * 1.4, noisyDensity) - smoothstep(threshold + softness * 1.3, threshold + softness * 2.9, noisyDensity);
         float whitePoint = max(uWakeSdfNoiseBlackPoint + 0.001, uWakeSdfNoiseWhitePoint);
         float noiseValue = clamp((contrastedField - uWakeSdfNoiseBlackPoint) / (whitePoint - uWakeSdfNoiseBlackPoint), 0.0, 1.0);
+        float biasAmount = clamp(uWakeSdfNoiseBias, -1.0, 1.0);
+        float biasExponent = biasAmount < 0.0 ? mix(1.0, 3.0, -biasAmount) : mix(1.0, 0.35, biasAmount);
+        noiseValue = pow(noiseValue, biasExponent);
         float flame = sdfBody * mix(0.35, 1.0, noiseValue);
         float fireValue = clamp(noiseValue * 0.88 + heat * 0.04 + edge * 0.08, 0.0, 1.0);
         vec4 mapped = sampleSdfGraph(fireValue);

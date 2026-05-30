@@ -1931,6 +1931,11 @@
               <button id="flameAoe3dApplyWakeSdfNoiseWhitePointBtn" class="toolBtn" type="button">Apply</button>
             </div>
             <div class="paramFieldRow">
+              <label for="flameAoe3dWakeSdfNoiseBias">Noise bias</label>
+              <input id="flameAoe3dWakeSdfNoiseBias" class="paramFieldInput" type="number" min="-1" max="1" step="0.01" value="0.00" />
+              <button id="flameAoe3dApplyWakeSdfNoiseBiasBtn" class="toolBtn" type="button">Apply</button>
+            </div>
+            <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfRenderMode">Viewing mode</label>
               <select id="flameAoe3dWakeSdfRenderMode" class="paramFieldInput">
                 <option value="0">Flame</option>
@@ -3131,7 +3136,7 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260529180500"),
+      import("./vfx-studio-bootstrap.js?v=20260530090500"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
@@ -3146,7 +3151,7 @@
     import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506c";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260529180500";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260530090500";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260517a";
@@ -3166,7 +3171,7 @@
     import { createWorldGlobe3dAuthoringAdapter } from "./adapters/world-globe-3d-authoring-adapter.js?v=20260502b";
     import { createWorldGlobeAuthoringAdapter } from "./adapters/world-globe-authoring-adapter.js?v=20260425d";
     import { FLAME_AOE_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-default.js?v=20260425d";
-    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260529194431";
+    import { FLAME_AOE_3D_PRESET_DEFAULT } from "../../src/vfx/presets/flame-aoe-3d-default.js?v=20260530090500";
     import {
       SHOCKWAVE_PRESET_DEFAULT,
       ORB_NOD_3D_PRESET_DEFAULT,
@@ -3176,10 +3181,10 @@
       ORB_SPAWN_PRESET_DEFAULT,
       TELEPORT_PRESET_DEFAULT,
       HEAL_PRESET_DEFAULT
-    } from "../../src/vfx/presets/index.js?v=20260529194431i";
+    } from "../../src/vfx/presets/index.js?v=20260530090500i";
     import { TESLA_1_PRESET_DEFAULT } from "../../src/vfx/presets/tesla-1-default.js?v=20260527122742";
     import { TELEPORT_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/teleport-behavior-default.js?v=20260417a";
-    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260529194431";
+    import { FLAME_AOE_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/flame-aoe-behavior-default.js?v=20260530090500";
     import { TESLA_1_BEHAVIOR_DEFAULT } from "../../src/game-runtime/behaviors/tesla-1-behavior-default.js?v=20260527122742b";
     import { ORB_BASE_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-base-default.js?v=20260411a";
     import { ORB_3D_VISUAL_DEFAULTS } from "../../src/game-runtime/orb/orb-3d-default.js?v=20260517a";
@@ -3909,6 +3914,8 @@
       flameAoe3dApplyWakeSdfNoiseBlackPointBtn: $("flameAoe3dApplyWakeSdfNoiseBlackPointBtn"),
       flameAoe3dWakeSdfNoiseWhitePoint: $("flameAoe3dWakeSdfNoiseWhitePoint"),
       flameAoe3dApplyWakeSdfNoiseWhitePointBtn: $("flameAoe3dApplyWakeSdfNoiseWhitePointBtn"),
+      flameAoe3dWakeSdfNoiseBias: $("flameAoe3dWakeSdfNoiseBias"),
+      flameAoe3dApplyWakeSdfNoiseBiasBtn: $("flameAoe3dApplyWakeSdfNoiseBiasBtn"),
       flameAoe3dWakeSdfRenderMode: $("flameAoe3dWakeSdfRenderMode"),
       flameAoe3dApplyWakeSdfRenderModeBtn: $("flameAoe3dApplyWakeSdfRenderModeBtn"),
       flameAoe3dWakeSdfDebugPoints: $("flameAoe3dWakeSdfDebugPoints"),

@@ -134,6 +134,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfPerlinGain: clampNumber(source.wakeSdfPerlinGain, 0.1, 0.9, fallback.wakeSdfPerlinGain ?? fallback.wakeNoiseGain ?? 0.52),
     wakeSdfNoiseBlackPoint: clampNumber(source.wakeSdfNoiseBlackPoint, 0, 1, fallback.wakeSdfNoiseBlackPoint ?? 0.18),
     wakeSdfNoiseWhitePoint: clampNumber(source.wakeSdfNoiseWhitePoint, 0, 1, fallback.wakeSdfNoiseWhitePoint ?? 0.86),
+    wakeSdfNoiseBias: clampNumber(source.wakeSdfNoiseBias, -1, 1, fallback.wakeSdfNoiseBias ?? 0),
     wakeSdfRenderMode: clampInt(source.wakeSdfRenderMode, 0, 10, fallback.wakeSdfRenderMode ?? 0),
   };
   for (let i = 0; i < 4; i += 1) {
@@ -821,6 +822,7 @@ function createWakeSdfMaterial(config) {
       uWakeSdfPerlinGain: { value: config.wakeSdfPerlinGain },
       uWakeSdfNoiseBlackPoint: { value: config.wakeSdfNoiseBlackPoint },
       uWakeSdfNoiseWhitePoint: { value: config.wakeSdfNoiseWhitePoint },
+      uWakeSdfNoiseBias: { value: config.wakeSdfNoiseBias },
       uWakeSdfRenderMode: { value: config.wakeSdfRenderMode },
       uWakeSdfGraphCount: { value: Math.max(0, Math.min(4, graphStops.length)) },
       uWakeSdfGraphStops: { value: graphStopValues },
@@ -862,6 +864,7 @@ function createWakeSdfMaterial(config) {
       uniform float uWakeSdfPerlinGain;
       uniform float uWakeSdfNoiseBlackPoint;
       uniform float uWakeSdfNoiseWhitePoint;
+      uniform float uWakeSdfNoiseBias;
       uniform int uWakeSdfRenderMode;
       uniform int uWakeSdfGraphCount;
       uniform float uWakeSdfGraphStops[4];
@@ -1044,6 +1047,9 @@ function createWakeSdfMaterial(config) {
         float edge = smoothstep(threshold, threshold + softness * 1.4, noisyDensity) - smoothstep(threshold + softness * 1.3, threshold + softness * 2.9, noisyDensity);
         float whitePoint = max(uWakeSdfNoiseBlackPoint + 0.001, uWakeSdfNoiseWhitePoint);
         float noiseValue = clamp((contrastedField - uWakeSdfNoiseBlackPoint) / (whitePoint - uWakeSdfNoiseBlackPoint), 0.0, 1.0);
+        float biasAmount = clamp(uWakeSdfNoiseBias, -1.0, 1.0);
+        float biasExponent = biasAmount < 0.0 ? mix(1.0, 3.0, -biasAmount) : mix(1.0, 0.35, biasAmount);
+        noiseValue = pow(noiseValue, biasExponent);
         float flame = sdfBody * mix(0.35, 1.0, noiseValue);
         float fireValue = clamp(noiseValue * 0.88 + heat * 0.04 + edge * 0.08, 0.0, 1.0);
         vec4 mapped = sampleSdfGraph(fireValue);
