@@ -43,7 +43,7 @@ import {
   STAGING_DEV_STAGE_VISIBILITY,
   STAGING_SHELL_MODE,
 } from "./staging-shell-mode-controller.js?v=20260421a";
-import { renderGameStage } from "../game-stage/game-stage.js?v=20260530194500";
+import { renderGameStage } from "../game-stage/game-stage.js?v=20260530200000";
 import { createCameraRuntime } from "../../../game-runtime/camera/camera-runtime.js";
 import { resolveOrbSpinColor } from "../../../game-runtime/orb/orb-spin-color.js?v=20260502b";
 import { createOrbStateMixer, ORB_STATE_IDS } from "../../../game-runtime/orb/orb-state-mixer.js";
@@ -77,7 +77,7 @@ import {
   shellGroundLineScreenY as resolveShellGroundLineScreenY,
 } from "./shell-ground-line.js";
 
-globalThis.__orbisStagingShellRuntimeVersion = "20260530194500";
+globalThis.__orbisStagingShellRuntimeVersion = "20260530200000";
 
 export const STAGING_SHELL_STATUS = Object.freeze({
   booting: "booting",
@@ -3181,7 +3181,7 @@ async function initShellPairingRuntime(shellContext) {
 
 export async function createStagingShellRuntime({
   rootDocument = document,
-  moduleCacheBustV = "20260530194500",
+  moduleCacheBustV = "20260530200000",
   bootStatus = null,
 } = {}) {
   const docEl = rootDocument.documentElement;

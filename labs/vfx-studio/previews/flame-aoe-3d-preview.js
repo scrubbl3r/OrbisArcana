@@ -1283,6 +1283,8 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
     return new THREE.Vector4(x, y, particleRadiusPx * (0.72 + (1 - t) * 0.48), 1 - t * 0.72);
   });
   const controlVelocities = Array.from({ length: WAKE_SDF_CONTROL_PARTICLE_COUNT }, () => new THREE.Vector2(0, 1));
+  const controlParticleAlphas = new Float32Array(WAKE_SDF_CONTROL_PARTICLE_COUNT);
+  controlParticleAlphas.fill(1);
   return new THREE.ShaderMaterial({
     name: "flame_aoe3d:wake_sdf_preview_material",
     transparent: true,
@@ -1317,6 +1319,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeFieldEmitters: { value: fieldEmitters },
       uWakeControlParticles: { value: controlParticles },
       uWakeControlVelocities: { value: controlVelocities },
+      uWakeControlParticleAlphas: { value: controlParticleAlphas },
       uWakeNoiseFlowDir: { value: new THREE.Vector2(0, 1) },
       uWakeNoiseFlowOffset: { value: new THREE.Vector2(0, 0) },
       uWakeNoiseFlowSpeed: { value: 0.42 },
@@ -1362,6 +1365,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform vec4 uWakeFieldEmitters[FIELD_EMITTER_COUNT];
       uniform vec4 uWakeControlParticles[CONTROL_PARTICLE_COUNT];
       uniform vec2 uWakeControlVelocities[CONTROL_PARTICLE_COUNT];
+      uniform float uWakeControlParticleAlphas[CONTROL_PARTICLE_COUNT];
       uniform vec2 uWakeNoiseFlowDir;
       uniform vec2 uWakeNoiseFlowOffset;
       uniform float uWakeNoiseFlowSpeed;
@@ -1475,15 +1479,20 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         vec2 particleFlowSum = vec2(0.0);
         vec2 particleWarpSum = vec2(0.0);
         float particleFlowWeight = 0.0001;
+        float particleAlphaSum = 0.0;
+        float particleAlphaWeight = 0.0001;
         for (int i = 0; i < CONTROL_PARTICLE_COUNT; i += 1) {
           vec4 particle = uWakeControlParticles[i];
           vec2 delta = p - particle.xy;
           float radius = max(1.0, particle.z);
           float ageHeat = max(0.0, particle.w);
+          float particleAlpha = clamp(uWakeControlParticleAlphas[i], 0.0, 1.0);
           float radiusSq = radius * radius;
           float influence = ageHeat * radiusSq / (dot(delta, delta) + radiusSq);
           density += influence;
           heat += influence * ageHeat;
+          particleAlphaSum += influence * particleAlpha;
+          particleAlphaWeight += influence;
           particleFlowSum += uWakeControlVelocities[i] * influence;
           vec2 particleVelocity = uWakeControlVelocities[i];
           vec2 flowDir = normalize(particleVelocity + vec2(0.0, 0.001));
@@ -1531,10 +1540,11 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float flame = sdfBody * mix(0.35, 1.0, noiseValue);
         float fireValue = clamp(noiseValue * 0.88 + heat * 0.04 + edge * 0.08, 0.0, 1.0);
         vec4 mapped = sampleSdfGraph(fireValue);
+        float particleAlphaMask = clamp(particleAlphaSum / particleAlphaWeight, 0.0, 1.0);
         float orbOcclusion = smoothstep(uOrbRadius * 0.72, uOrbRadius * 1.02, length(p));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
-        float alpha = flame * mapped.a * orbOcclusion * cardFade;
+        float alpha = flame * mapped.a * particleAlphaMask * orbOcclusion * cardFade;
         if (uWakeSdfRenderMode == 1) {
           gl_FragColor = vec4(vec3(field), 1.0);
           return;
@@ -1834,6 +1844,7 @@ export function createFlameAoe3dPreview({
     const heatDecay = clampNumber(wakeConfig && wakeConfig.wakeSdfHeatDecay, 0.1, 6, 1);
     const uniformParticles = uniforms.uWakeControlParticles.value;
     const uniformVelocities = uniforms.uWakeControlVelocities.value;
+    const uniformParticleAlphas = uniforms.uWakeControlParticleAlphas && uniforms.uWakeControlParticleAlphas.value;
     const noiseFlowOriginY = -bo * 0.5;
     wakeSdfNoiseFlowCentroid.set(0, 0);
     let centroidCount = 0;
@@ -1844,12 +1855,13 @@ export function createFlameAoe3dPreview({
       particle.position.addScaledVector(particle.velocity, safeDt);
       const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
       const alphaTtl = resolveWakeSdfParticleAlpha(ageT, wakeConfig || {});
-      const heat = particle.heat * Math.pow(1 - ageT, heatDecay) * alphaTtl;
+      const heat = particle.heat * Math.pow(1 - ageT, heatDecay);
       const radius = particle.radius * (1 + ageT * 1.45);
       particle.localX = particle.position.x;
       particle.localY = particle.position.y;
       if (uniformParticles[i]) uniformParticles[i].set(particle.position.x, particle.position.y, radius, heat);
       if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
+      if (uniformParticleAlphas) uniformParticleAlphas[i] = alphaTtl;
       wakeSdfNoiseFlowCentroid.x += particle.position.x;
       wakeSdfNoiseFlowCentroid.y += particle.position.y - noiseFlowOriginY;
       centroidCount += 1;
