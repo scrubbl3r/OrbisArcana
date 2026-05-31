@@ -1832,7 +1832,7 @@ export function createFlameAoe3dPreview({
           if (particle.prevLocalX != null && particle.prevLocalY != null) {
             const deltaX = particle.localX - particle.prevLocalX;
             const deltaY = particle.localY - particle.prevLocalY;
-            const speedBo = ((deltaX * wakeSdfNoiseFlowSampleDir.x) + (deltaY * wakeSdfNoiseFlowSampleDir.y)) / Math.max(1, bo) / sampleElapsed;
+            const speedBo = Math.hypot(deltaX, deltaY) / Math.max(1, bo) / sampleElapsed;
             wakeSdfNoiseFlowSampleSpeedSum += Math.max(0, speedBo);
             wakeSdfNoiseFlowSampleSpeedCount += 1;
           }
@@ -1840,7 +1840,7 @@ export function createFlameAoe3dPreview({
           particle.prevLocalY = particle.localY;
         }
         if (wakeSdfNoiseFlowSampleSpeedCount > 0) {
-          wakeSdfNoiseFlowSampleSpeed = clampNumber(wakeSdfNoiseFlowSampleSpeedSum / wakeSdfNoiseFlowSampleSpeedCount, 0.08, 1.15, 0.42);
+          wakeSdfNoiseFlowSampleSpeed = clampNumber(wakeSdfNoiseFlowSampleSpeedSum / wakeSdfNoiseFlowSampleSpeedCount, 0.08, 1.65, 0.42);
         }
       }
       wakeSdfNoiseFlowSampleCentroidSum.set(0, 0);
