@@ -32,6 +32,26 @@ function clampInt(value, min, max, fallback) {
   return Math.round(clampNumber(value, min, max, fallback));
 }
 
+function resolveWakeSdfAutoReachBo(config = {}) {
+  const particleLifeSec = clampNumber(config.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
+  const spawnRadiusBo = clampNumber(config.wakeSdfSpawnAreaBo, 0.1, 2, 1) * 0.5;
+  const liftBo = Math.abs(clampNumber(config.wakeSdfLiftBias ?? config.wakeSdfUpdraftBo, -2, 4, 0.2));
+  const jitterBo = clampNumber(config.wakeSdfJitterBo, 0, 1, 0.04);
+  const particleRadiusBo = clampNumber(config.wakeSdfParticleRadiusBo, 0.02, 1.5, 0.16) * 2.45;
+  const radiusBo = clampNumber(config.wakeSdfRadiusBo ?? config.wakeRadiusBo, 0.05, 4, 0.42);
+  const coreBo = clampNumber(config.wakeSdfCoreRadiusBo, 0.02, 3, 0.2);
+  const blendBo = clampNumber(config.wakeSdfBlendBo, 0.001, 2, 0.12);
+  const softnessBo = clampNumber(config.wakeSdfSoftnessBo, 0.001, 2, 0.3);
+  const authoredSlackBo = clampNumber(config.wakeLengthBo, 0, 4, 0);
+  const particleTravelBo = particleLifeSec * (liftBo + jitterBo * 2.25);
+  return clampNumber(
+    spawnRadiusBo + particleTravelBo + particleRadiusBo + radiusBo + coreBo + blendBo + softnessBo + authoredSlackBo + 0.75,
+    1.5,
+    12,
+    3
+  );
+}
+
 function optionalNumber(value, min, max) {
   if (value == null || String(value).trim() === "") return "";
   const n = Number(value);
@@ -111,7 +131,7 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfEnabled: source.wakeSdfEnabled == null
       ? (fallback.wakeSdfEnabled === true || fallback.wakeSdfEnabled === 1 || fallback.wakeSdfEnabled === "1" ? 1 : 0)
       : (source.wakeSdfEnabled === true || source.wakeSdfEnabled === 1 || source.wakeSdfEnabled === "1" ? 1 : 0),
-    wakeSdfHeightBo: clampNumber(source.wakeSdfHeightBo, 0.1, 8, fallback.wakeSdfHeightBo ?? (fallback.wakeLiftBo ?? 0.45) + (fallback.wakeStretchStrength ?? 0.24)),
+    wakeSdfHeightBo: clampNumber(source.wakeSdfHeightBo, 0.1, 8, fallback.wakeSdfHeightBo),
     wakeSdfParticleLifeMs: Math.round(clampNumber(source.wakeSdfParticleLifeMs, 100, 8000, fallback.wakeSdfParticleLifeMs ?? 1500)),
     wakeSdfSpawnRate: clampNumber(source.wakeSdfSpawnRate, 1, 240, fallback.wakeSdfSpawnRate ?? 43),
     wakeSdfSpawnAreaBo: clampNumber(source.wakeSdfSpawnAreaBo, 0.1, 2, fallback.wakeSdfSpawnAreaBo ?? 1),
@@ -1202,15 +1222,8 @@ function createWakeSdfDebugVisuals(bo) {
 }
 
 function resolveWakeSdfCardSize(bo, config) {
-  const liftPx = bo * clampNumber(config && config.wakeSdfHeightBo, 0.1, 8, 1.15);
-  const authoredSlackPx = bo * clampNumber(config && config.wakeLengthBo, 0, 4, 0);
-  const motionSlackPx = Math.max(bo * 0.5, liftPx * 0.35, authoredSlackPx);
-  const radiusPx = bo * clampNumber(config && config.wakeSdfRadiusBo, 0.05, 4, 0.42);
-  const corePx = bo * clampNumber(config && config.wakeSdfCoreRadiusBo, 0.02, 3, 0.2);
-  const softnessPx = bo * clampNumber(config && config.wakeSdfSoftnessBo, 0.001, 2, 0.3);
-  const devEnvelopePx = bo * 12;
-  const dynamicEnvelopePx = (liftPx + motionSlackPx + radiusPx + corePx + softnessPx) * 3.6;
-  const fieldSizePx = Math.max(devEnvelopePx, dynamicEnvelopePx);
+  const reachBo = resolveWakeSdfAutoReachBo(config || {});
+  const fieldSizePx = bo * clampNumber(reachBo * 2.4, 4, 28, 7);
   return {
     width: fieldSizePx,
     height: fieldSizePx,

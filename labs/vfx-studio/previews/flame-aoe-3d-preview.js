@@ -175,6 +175,26 @@ function clampNumber(value, min, max, fallback) {
   return Math.max(min, Math.min(max, Number.isFinite(n) ? n : f));
 }
 
+function resolveWakeSdfAutoReachBo(config = {}) {
+  const particleLifeSec = clampNumber(config.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
+  const spawnRadiusBo = clampNumber(config.wakeSdfSpawnAreaBo, 0.1, 2, 1) * 0.5;
+  const liftBo = Math.abs(clampNumber(config.wakeSdfLiftBias ?? config.wakeSdfUpdraftBo, -2, 4, 0.2));
+  const jitterBo = clampNumber(config.wakeSdfJitterBo, 0, 1, 0.04);
+  const particleRadiusBo = clampNumber(config.wakeSdfParticleRadiusBo, 0.02, 1.5, 0.16) * 2.45;
+  const radiusBo = clampNumber(config.wakeSdfRadiusBo ?? config.wakeRadiusBo, 0.05, 4, 0.42);
+  const coreBo = clampNumber(config.wakeSdfCoreRadiusBo, 0.02, 3, 0.2);
+  const blendBo = clampNumber(config.wakeSdfBlendBo, 0.001, 2, 0.12);
+  const softnessBo = clampNumber(config.wakeSdfSoftnessBo, 0.001, 2, 0.3);
+  const authoredSlackBo = clampNumber(config.wakeLengthBo, 0, 4, 0);
+  const particleTravelBo = particleLifeSec * (liftBo + jitterBo * 2.25);
+  return clampNumber(
+    spawnRadiusBo + particleTravelBo + particleRadiusBo + radiusBo + coreBo + blendBo + softnessBo + authoredSlackBo + 0.75,
+    1.5,
+    12,
+    3
+  );
+}
+
 function readByte(els, key, fallback) {
   return Math.round(clampNumber(els && els[key] && els[key].value, 0, 255, fallback));
 }
@@ -268,7 +288,7 @@ function readFlameAuraConfig(els = {}) {
 }
 
 function readFlameWakeConfig(els = {}) {
-  return Object.freeze({
+  const config = {
     wakeMeshEnabled: layerVisible(els.flameAoe3dWakeVisibleBtn) ? 1 : 0,
     wakeLengthBo: clampNumber(els.flameAoe3dWakeLengthBo && els.flameAoe3dWakeLengthBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeLengthBo),
     wakeRadiusBo: clampNumber(els.flameAoe3dWakeRadiusBo && els.flameAoe3dWakeRadiusBo.value, 0.5, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeRadiusBo),
@@ -305,7 +325,7 @@ function readFlameWakeConfig(els = {}) {
     wakeSimplexGain: clampNumber(els.flameAoe3dWakeSimplexGain && els.flameAoe3dWakeSimplexGain.value, 0.1, 0.9, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSimplexGain),
     wakeNoiseMix: clampNumber(els.flameAoe3dWakeNoiseMix && els.flameAoe3dWakeNoiseMix.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeNoiseMix),
     wakeSdfEnabled: els.flameAoe3dWakeSdfVisibleBtn && layerVisible(els.flameAoe3dWakeSdfVisibleBtn) ? 1 : 0,
-    wakeSdfHeightBo: clampNumber(els.flameAoe3dWakeSdfHeightBo && els.flameAoe3dWakeSdfHeightBo.value, 0.1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfHeightBo),
+    wakeSdfHeightBo: FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfHeightBo,
     wakeSdfParticleLifeMs: Math.round(clampNumber(els.flameAoe3dWakeSdfParticleLifeMs && els.flameAoe3dWakeSdfParticleLifeMs.value, 100, 8000, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfParticleLifeMs)),
     wakeSdfSpawnRate: clampNumber(els.flameAoe3dWakeSdfSpawnRate && els.flameAoe3dWakeSdfSpawnRate.value, 1, 240, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfSpawnRate),
     wakeSdfSpawnAreaBo: clampNumber(els.flameAoe3dWakeSdfSpawnAreaBo && els.flameAoe3dWakeSdfSpawnAreaBo.value, 0.1, 2, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfSpawnAreaBo),
@@ -331,7 +351,8 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfDebugPoints: Math.round(clampNumber(els.flameAoe3dWakeSdfDebugPoints && els.flameAoe3dWakeSdfDebugPoints.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfDebugPoints)),
     ...readSdfGraphConfig(els),
     ...readWakeGraphConfig(els),
-  });
+  };
+  return Object.freeze(config);
 }
 
 function hydrateFlameAuraFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
@@ -394,7 +415,6 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   const wakeSdfEnabled = cfg.wakeSdfEnabled === true || cfg.wakeSdfEnabled === 1 || cfg.wakeSdfEnabled === "1";
   if (els.flameAoe3dWakeSdfVisibleBtn) els.flameAoe3dWakeSdfVisibleBtn.setAttribute("aria-pressed", wakeSdfEnabled ? "true" : "false");
   if (els.flameAoe3dWakeSdfEnabled) els.flameAoe3dWakeSdfEnabled.value = wakeSdfEnabled ? "1" : "0";
-  if (els.flameAoe3dWakeSdfHeightBo) els.flameAoe3dWakeSdfHeightBo.value = String(Number(cfg.wakeSdfHeightBo).toFixed(2));
   if (els.flameAoe3dWakeSdfParticleLifeMs) els.flameAoe3dWakeSdfParticleLifeMs.value = String(Math.round(cfg.wakeSdfParticleLifeMs));
   if (els.flameAoe3dWakeSdfSpawnRate) els.flameAoe3dWakeSdfSpawnRate.value = String(Number(cfg.wakeSdfSpawnRate).toFixed(0));
   if (els.flameAoe3dWakeSdfSpawnAreaBo) els.flameAoe3dWakeSdfSpawnAreaBo.value = String(Number(cfg.wakeSdfSpawnAreaBo).toFixed(2));
@@ -1633,15 +1653,8 @@ function createWakeSdfPreviewDebugVisuals(bo, material) {
 }
 
 function resolveWakeSdfCardSize(bo, config) {
-  const liftPx = bo * clampNumber(config && config.wakeSdfHeightBo, 0.1, 8, 1.15);
-  const authoredSlackPx = bo * clampNumber(config && config.wakeLengthBo, 0, 4, 0);
-  const motionSlackPx = Math.max(bo * 0.5, liftPx * 0.35, authoredSlackPx);
-  const radiusPx = bo * clampNumber(config && config.wakeSdfRadiusBo, 0.05, 4, 0.42);
-  const corePx = bo * clampNumber(config && config.wakeSdfCoreRadiusBo, 0.02, 3, 0.2);
-  const softnessPx = bo * clampNumber(config && config.wakeSdfSoftnessBo, 0.001, 2, 0.3);
-  const devEnvelopePx = bo * 12;
-  const dynamicEnvelopePx = (liftPx + motionSlackPx + radiusPx + corePx + softnessPx) * 3.6;
-  const fieldSizePx = Math.max(devEnvelopePx, dynamicEnvelopePx);
+  const reachBo = resolveWakeSdfAutoReachBo(config || {});
+  const fieldSizePx = bo * clampNumber(reachBo * 2.4, 4, 28, 7);
   return {
     width: fieldSizePx,
     height: fieldSizePx,

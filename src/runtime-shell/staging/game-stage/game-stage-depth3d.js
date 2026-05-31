@@ -59,7 +59,7 @@ import {
 } from "../../../game-runtime/orb/orb-shader-heal-pulse-layer.js?v=20260517b";
 import { createTeleport3dRuntime } from "../../../runtime-effects/teleport-3d.js?v=20260501a";
 import { createBubbleShield3dRuntime } from "../../../runtime-effects/bubble-shield-3d.js?v=20260506d";
-import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260530190515s";
+import { createFlameAoe3dRuntime } from "../../../runtime-effects/flame-aoe-3d.js?v=20260530193000";
 import { createTesla1Runtime } from "../../../runtime-effects/tesla-1.js?v=20260527122742s";
 import { createShockwave3dRuntime } from "../../../runtime-effects/shockwave-3d.js?v=20260506a";
 import { BUBBLE_SHIELD_3D_PRESET_DEFAULT } from "../../../vfx/presets/bubble-shield-3d-default.js?v=20260506d";
@@ -88,6 +88,32 @@ const TESLA1_ORB_SHADER_LAYER_ID = "tesla1";
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function clampRange(value, min, max, fallback) {
+  const n = Number(value);
+  const safe = Number.isFinite(n) ? n : fallback;
+  return Math.max(min, Math.min(max, safe));
+}
+
+function resolveFlameWakeSdfAutoReachBo(config = {}) {
+  const particleLifeSec = clampRange(config.wakeSdfParticleLifeMs, 100, 8000, 800) / 1000;
+  const spawnRadiusBo = clampRange(config.wakeSdfSpawnAreaBo, 0.1, 2, 1) * 0.5;
+  const liftBo = Math.abs(clampRange(config.wakeSdfLiftBias ?? config.wakeSdfUpdraftBo, -2, 4, 0.2));
+  const jitterBo = clampRange(config.wakeSdfJitterBo, 0, 1, 0.04);
+  const particleRadiusBo = clampRange(config.wakeSdfParticleRadiusBo, 0.02, 1.5, 0.16) * 2.45;
+  const radiusBo = clampRange(config.wakeSdfRadiusBo ?? config.wakeRadiusBo, 0.05, 4, 0.42);
+  const coreBo = clampRange(config.wakeSdfCoreRadiusBo, 0.02, 3, 0.2);
+  const blendBo = clampRange(config.wakeSdfBlendBo, 0.001, 2, 0.12);
+  const softnessBo = clampRange(config.wakeSdfSoftnessBo, 0.001, 2, 0.3);
+  const authoredSlackBo = clampRange(config.wakeLengthBo, 0, 4, 0);
+  const particleTravelBo = particleLifeSec * (liftBo + jitterBo * 2.25);
+  return clampRange(
+    spawnRadiusBo + particleTravelBo + particleRadiusBo + radiusBo + coreBo + blendBo + softnessBo + authoredSlackBo + 0.75,
+    1.5,
+    12,
+    3
+  );
 }
 
 function resolveSceneModel(authoredScene = null) {
@@ -606,13 +632,16 @@ export function createGameStageDepth3dLayer({
     };
     const durationMs = Math.max(50, Number(behaviorConfig.durationMs || payload.durationMs || visualConfig.durationMs) || 1000);
     const hitRadiusBo = Math.max(0.05, Number(behaviorConfig.hitRadiusBo) || Number(FLAME_AOE_BEHAVIOR_DEFAULT.hitRadiusBo) || 4.5);
+    const wakeSdfEnabled = visualConfig.wakeSdfEnabled === true || visualConfig.wakeSdfEnabled === 1 || visualConfig.wakeSdfEnabled === "1";
     const wakeHeightBo = Math.max(
       hitRadiusBo,
-      Number(visualConfig.wakeSdfHeightBo) || (
-        (Number(visualConfig.wakeLiftBo) || 0)
-          + (Number(visualConfig.wakeLiftCoreRadiusBo) || 0)
-          + (Number(visualConfig.wakeStretchStrength) || 0)
-      )
+      wakeSdfEnabled
+        ? resolveFlameWakeSdfAutoReachBo(visualConfig)
+        : (
+          (Number(visualConfig.wakeLiftBo) || 0)
+            + (Number(visualConfig.wakeLiftCoreRadiusBo) || 0)
+            + (Number(visualConfig.wakeStretchStrength) || 0)
+        )
     ) * Math.max(0, Number(behaviorConfig.wakeReachScale) || 0);
     const tickMs = Math.max(50, Number(behaviorConfig.roastTickMs) || 250);
     return Object.freeze({

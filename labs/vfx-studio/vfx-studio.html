@@ -1831,11 +1831,6 @@
           <div id="flameAoe3dWakeSdfControls" class="controlGroupBody paramFieldRows" hidden>
             <input id="flameAoe3dWakeSdfEnabled" type="hidden" value="1" />
             <div class="paramFieldRow">
-              <label for="flameAoe3dWakeSdfHeightBo">Card height BO</label>
-              <input id="flameAoe3dWakeSdfHeightBo" class="paramFieldInput" type="number" min="0.1" max="8" step="0.01" value="1.15" />
-              <button id="flameAoe3dApplyWakeSdfHeightBtn" class="toolBtn" type="button">Apply</button>
-            </div>
-            <div class="paramFieldRow">
               <label for="flameAoe3dWakeSdfParticleLifeMs">Particle life ms</label>
               <input id="flameAoe3dWakeSdfParticleLifeMs" class="paramFieldInput" type="number" min="100" max="8000" step="25" value="1500" />
               <button id="flameAoe3dApplyWakeSdfParticleLifeBtn" class="toolBtn" type="button">Apply</button>
@@ -3136,14 +3131,14 @@
     ] = await Promise.all([
       import("../shell/lab-workspaces.js?v=20260425a"),
       import("./vfx-studio-shell.js?v=20260425d"),
-      import("./vfx-studio-bootstrap.js?v=20260530171500"),
+      import("./vfx-studio-bootstrap.js?v=20260530193000"),
       import("./vfx-studio-state.js?v=20260519134000"),
       import("./vfx-studio-categories.js?v=20260425d"),
       import("./vfx-studio-bindings.js?v=20260425d"),
       import("./vfx-studio-publish.js?v=20260425d"),
       import("./vfx-studio-publish-orchestrator.js?v=20260521-electric-publish-a"),
       import("./vfx-studio-surfaces.js?v=20260524-tesla-c"),
-      import("./vfx-studio-theme-publish.js?v=20260529113500"),
+      import("./vfx-studio-theme-publish.js?v=20260530193000"),
     ]).catch((err) => {
       showLabBootError(err && err.stack ? err.stack : String(err || "studio module import failed"));
       throw err;
@@ -3151,7 +3146,7 @@
     import { createBubbleShield3dAuthoringAdapter } from "./adapters/bubble-shield-3d-authoring-adapter.js?v=20260506c";
     import { createBubbleShieldAuthoringAdapter } from "./adapters/bubble-shield-authoring-adapter.js?v=20260425d";
     import { createBankOrb3dAuthoringAdapter } from "./adapters/bank-orb-3d-authoring-adapter.js?v=20260502a";
-    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260530171500";
+    import { createFlameAoe3dAuthoringAdapter } from "./adapters/flame-aoe-3d-authoring-adapter.js?v=20260530193000";
     import { createFlameAoeAuthoringAdapter } from "./adapters/flame-aoe-authoring-adapter.js?v=20260425d";
     import { createHealAuthoringAdapter } from "./adapters/heal-authoring-adapter.js?v=20260517c";
     import { createOrb3dAuthoringAdapter } from "./adapters/orb-3d-authoring-adapter.js?v=20260517a";
@@ -3874,8 +3869,6 @@
       flameAoe3dWakeMeshEnabled: $("flameAoe3dWakeMeshEnabled"),
       flameAoe3dWakeSdfVisibleBtn: $("flameAoe3dWakeSdfVisibleBtn"),
       flameAoe3dWakeSdfEnabled: $("flameAoe3dWakeSdfEnabled"),
-      flameAoe3dWakeSdfHeightBo: $("flameAoe3dWakeSdfHeightBo"),
-      flameAoe3dApplyWakeSdfHeightBtn: $("flameAoe3dApplyWakeSdfHeightBtn"),
       flameAoe3dWakeSdfParticleLifeMs: $("flameAoe3dWakeSdfParticleLifeMs"),
       flameAoe3dApplyWakeSdfParticleLifeBtn: $("flameAoe3dApplyWakeSdfParticleLifeBtn"),
       flameAoe3dWakeSdfSpawnRate: $("flameAoe3dWakeSdfSpawnRate"),
