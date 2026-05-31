@@ -1257,9 +1257,10 @@ export function createFlameAoe3dRuntime({
   const wakeSdfNoiseFlowSampleCentroidSum = new THREE.Vector2();
   let wakeSdfNoiseFlowSpeed = 0.42;
   let wakeSdfNoiseFlowSampleSpeed = 0.42;
+  let wakeSdfNoiseFlowSampleSpeedSum = 0;
+  let wakeSdfNoiseFlowSampleSpeedCount = 0;
   let wakeSdfNoiseFlowSampleCount = 0;
   let wakeSdfNoiseFlowSampleElapsed = WAKE_SDF_NOISE_FLOW_SAMPLE_SEC;
-  let wakeSdfNoiseFlowLastSampleDistance = null;
   let wakeSdfNoiseFlowPhase = 0;
   const springForce = new THREE.Vector3();
   const dampingForce = new THREE.Vector3();
@@ -1275,6 +1276,10 @@ export function createFlameAoe3dRuntime({
     radius: 1,
     heat: 0,
     sourceIndex: 0,
+    localX: 0,
+    localY: 0,
+    prevLocalX: null,
+    prevLocalY: null,
   }));
   let wakeSdfParticleCursor = 0;
   let wakeSdfSpawnAccumulator = 0;
@@ -1355,6 +1360,10 @@ export function createFlameAoe3dRuntime({
     particle.radius = bo * particleRadiusBo * (0.82 + nextWakeSdfRandom() * 0.36);
     particle.heat = 0.7 + nextWakeSdfRandom() * 0.35;
     particle.sourceIndex = sourceIndex;
+    particle.localX = 0;
+    particle.localY = 0;
+    particle.prevLocalX = null;
+    particle.prevLocalY = null;
   }
 
   function resetWakeSdfSpine(liftOffset, bo) {
@@ -1408,6 +1417,8 @@ export function createFlameAoe3dRuntime({
       const radius = particle.radius * (1 + ageT * 1.45);
       const localX = particle.position.x - origin.x;
       const localY = particle.position.y - origin.y;
+      particle.localX = localX;
+      particle.localY = localY;
       if (uniformParticles[i]) uniformParticles[i].set(localX, localY, radius, heat);
       if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
       wakeSdfNoiseFlowCentroid.x += localX;
@@ -1425,11 +1436,23 @@ export function createFlameAoe3dRuntime({
       const sampleDistance = wakeSdfNoiseFlowCentroid.length();
       if (sampleDistance > bo * 0.04) {
         wakeSdfNoiseFlowSampleDir.copy(wakeSdfNoiseFlowCentroid).normalize();
-        if (wakeSdfNoiseFlowLastSampleDistance != null) {
-          const distanceDeltaBo = (sampleDistance - wakeSdfNoiseFlowLastSampleDistance) / Math.max(1, bo);
-          wakeSdfNoiseFlowSampleSpeed = clampNumber(Math.max(0, distanceDeltaBo / sampleElapsed), 0.08, 1.15, 0.42);
+        wakeSdfNoiseFlowSampleSpeedSum = 0;
+        wakeSdfNoiseFlowSampleSpeedCount = 0;
+        for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
+          const particle = wakeSdfControlParticles[i];
+          if (particle.prevLocalX != null && particle.prevLocalY != null) {
+            const deltaX = particle.localX - particle.prevLocalX;
+            const deltaY = particle.localY - particle.prevLocalY;
+            const speedBo = ((deltaX * wakeSdfNoiseFlowSampleDir.x) + (deltaY * wakeSdfNoiseFlowSampleDir.y)) / Math.max(1, bo) / sampleElapsed;
+            wakeSdfNoiseFlowSampleSpeedSum += Math.max(0, speedBo);
+            wakeSdfNoiseFlowSampleSpeedCount += 1;
+          }
+          particle.prevLocalX = particle.localX;
+          particle.prevLocalY = particle.localY;
         }
-        wakeSdfNoiseFlowLastSampleDistance = sampleDistance;
+        if (wakeSdfNoiseFlowSampleSpeedCount > 0) {
+          wakeSdfNoiseFlowSampleSpeed = clampNumber(wakeSdfNoiseFlowSampleSpeedSum / wakeSdfNoiseFlowSampleSpeedCount, 0.08, 1.15, 0.42);
+        }
       }
       wakeSdfNoiseFlowSampleCentroidSum.set(0, 0);
       wakeSdfNoiseFlowSampleCount = 0;
@@ -1586,9 +1609,10 @@ export function createFlameAoe3dRuntime({
     wakeSdfNoiseFlowCentroid.set(0, 1);
     wakeSdfNoiseFlowSpeed = 0.42;
     wakeSdfNoiseFlowSampleSpeed = 0.42;
+    wakeSdfNoiseFlowSampleSpeedSum = 0;
+    wakeSdfNoiseFlowSampleSpeedCount = 0;
     wakeSdfNoiseFlowSampleCount = 0;
     wakeSdfNoiseFlowSampleElapsed = WAKE_SDF_NOISE_FLOW_SAMPLE_SEC;
-    wakeSdfNoiseFlowLastSampleDistance = null;
     wakeSdfNoiseFlowPhase = 0;
     wakeSdfTrailPoints.forEach((point) => point.set(0, 0));
     wakeSdfTargetPoints.forEach((point) => point.set(0, 0));

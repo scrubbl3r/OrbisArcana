@@ -1678,9 +1678,10 @@ export function createFlameAoe3dPreview({
   const wakeSdfNoiseFlowSampleCentroidSum = new THREE.Vector2();
   let wakeSdfNoiseFlowSpeed = 0.42;
   let wakeSdfNoiseFlowSampleSpeed = 0.42;
+  let wakeSdfNoiseFlowSampleSpeedSum = 0;
+  let wakeSdfNoiseFlowSampleSpeedCount = 0;
   let wakeSdfNoiseFlowSampleCount = 0;
   let wakeSdfNoiseFlowSampleElapsed = WAKE_SDF_NOISE_FLOW_SAMPLE_SEC;
-  let wakeSdfNoiseFlowLastSampleDistance = null;
   let wakeSdfNoiseFlowPhase = 0;
   const wakeSdfPreviewParticles = Array.from({ length: WAKE_SDF_CONTROL_PARTICLE_COUNT }, () => ({
     position: new THREE.Vector2(),
@@ -1689,6 +1690,10 @@ export function createFlameAoe3dPreview({
     life: 1,
     radius: 1,
     heat: 0,
+    localX: 0,
+    localY: 0,
+    prevLocalX: null,
+    prevLocalY: null,
   }));
   let wakeSdfPreviewParticleCursor = 0;
   let wakeSdfPreviewSpawnAccumulator = 0;
@@ -1748,6 +1753,10 @@ export function createFlameAoe3dPreview({
     particle.age = Math.min(particle.life * 0.92, Math.max(0, initialAge));
     particle.radius = bo * particleRadiusBo * (0.82 + nextWakeSdfPreviewRandom() * 0.36);
     particle.heat = 0.7 + nextWakeSdfPreviewRandom() * 0.35;
+    particle.localX = 0;
+    particle.localY = 0;
+    particle.prevLocalX = null;
+    particle.prevLocalY = null;
   }
 
   function resetWakeSdfPreviewParticles(bo) {
@@ -1759,9 +1768,10 @@ export function createFlameAoe3dPreview({
     wakeSdfNoiseFlowCentroid.set(0, 1);
     wakeSdfNoiseFlowSpeed = 0.42;
     wakeSdfNoiseFlowSampleSpeed = 0.42;
+    wakeSdfNoiseFlowSampleSpeedSum = 0;
+    wakeSdfNoiseFlowSampleSpeedCount = 0;
     wakeSdfNoiseFlowSampleCount = 0;
     wakeSdfNoiseFlowSampleElapsed = WAKE_SDF_NOISE_FLOW_SAMPLE_SEC;
-    wakeSdfNoiseFlowLastSampleDistance = null;
     wakeSdfNoiseFlowPhase = 0;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
       const lifeSec = clampNumber(wakeConfig && wakeConfig.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
@@ -1796,6 +1806,8 @@ export function createFlameAoe3dPreview({
       const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
       const heat = particle.heat * Math.pow(1 - ageT, heatDecay);
       const radius = particle.radius * (1 + ageT * 1.45);
+      particle.localX = particle.position.x;
+      particle.localY = particle.position.y;
       if (uniformParticles[i]) uniformParticles[i].set(particle.position.x, particle.position.y, radius, heat);
       if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
       wakeSdfNoiseFlowCentroid.x += particle.position.x;
@@ -1813,11 +1825,23 @@ export function createFlameAoe3dPreview({
       const sampleDistance = wakeSdfNoiseFlowCentroid.length();
       if (sampleDistance > bo * 0.04) {
         wakeSdfNoiseFlowSampleDir.copy(wakeSdfNoiseFlowCentroid).normalize();
-        if (wakeSdfNoiseFlowLastSampleDistance != null) {
-          const distanceDeltaBo = (sampleDistance - wakeSdfNoiseFlowLastSampleDistance) / Math.max(1, bo);
-          wakeSdfNoiseFlowSampleSpeed = clampNumber(Math.max(0, distanceDeltaBo / sampleElapsed), 0.08, 1.15, 0.42);
+        wakeSdfNoiseFlowSampleSpeedSum = 0;
+        wakeSdfNoiseFlowSampleSpeedCount = 0;
+        for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
+          const particle = wakeSdfPreviewParticles[i];
+          if (particle.prevLocalX != null && particle.prevLocalY != null) {
+            const deltaX = particle.localX - particle.prevLocalX;
+            const deltaY = particle.localY - particle.prevLocalY;
+            const speedBo = ((deltaX * wakeSdfNoiseFlowSampleDir.x) + (deltaY * wakeSdfNoiseFlowSampleDir.y)) / Math.max(1, bo) / sampleElapsed;
+            wakeSdfNoiseFlowSampleSpeedSum += Math.max(0, speedBo);
+            wakeSdfNoiseFlowSampleSpeedCount += 1;
+          }
+          particle.prevLocalX = particle.localX;
+          particle.prevLocalY = particle.localY;
         }
-        wakeSdfNoiseFlowLastSampleDistance = sampleDistance;
+        if (wakeSdfNoiseFlowSampleSpeedCount > 0) {
+          wakeSdfNoiseFlowSampleSpeed = clampNumber(wakeSdfNoiseFlowSampleSpeedSum / wakeSdfNoiseFlowSampleSpeedCount, 0.08, 1.15, 0.42);
+        }
       }
       wakeSdfNoiseFlowSampleCentroidSum.set(0, 0);
       wakeSdfNoiseFlowSampleCount = 0;
