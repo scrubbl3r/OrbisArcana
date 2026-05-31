@@ -320,7 +320,7 @@ export async function loadReceiverInitModules() {
     import("../ui/theme/apply-game-theme-css-vars.js"),
     import("../ui/dev-console/apply-dev-console-theme-css-vars.js"),
     import(`../game-runtime/input/input-frame-pipeline.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
-    import("../vfx/presets/index.js?v=20260530194500"),
+    import("../vfx/presets/index.js?v=20260530201500"),
     import(`../content/spells/cast-action-registry.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import(`../content/spells/runtime-spells.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),
     import(`../content/spells/validate-spell-runtime-routing.js?v=${RECEIVER_BOOTSTRAP_MODULE_CACHE_BUST_V}`),

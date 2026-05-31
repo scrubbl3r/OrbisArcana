@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260530194500";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260530201500";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
@@ -32,21 +32,11 @@ function clampInt(value, min, max, fallback) {
   return Math.round(clampNumber(value, min, max, fallback));
 }
 
-function smoothstep01(t) {
-  const x = clampNumber(t, 0, 1, 0);
-  return x * x * (3 - 2 * x);
-}
-
 function resolveWakeSdfParticleAlpha(ageT, config = {}) {
-  const fadeStart = clampNumber(config.wakeSdfAlphaFadeStart, 0, 1, 0.82);
-  const authoredEnd = clampNumber(config.wakeSdfAlphaFadeEnd, 0, 1, 1);
-  const fadeEnd = authoredEnd > fadeStart ? authoredEnd : 1;
-  const fadeCurve = clampNumber(config.wakeSdfAlphaFadeCurve, 0.1, 8, 3);
-  const span = Math.max(0.0001, fadeEnd - fadeStart);
-  if (ageT <= fadeStart) return 1;
-  if (ageT >= fadeEnd) return 0;
-  const fadeT = smoothstep01((ageT - fadeStart) / span);
-  return Math.pow(1 - fadeT, fadeCurve);
+  const startAlpha = clampNumber(config.wakeSdfAlphaFadeStart, 0, 1, 1);
+  const endAlpha = clampNumber(config.wakeSdfAlphaFadeEnd, 0, 1, 0);
+  const t = clampNumber(ageT, 0, 1, 0);
+  return startAlpha + (endAlpha - startAlpha) * t;
 }
 
 function resolveWakeSdfAutoReachBo(config = {}) {
@@ -156,9 +146,8 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfLiftBias: clampNumber(source.wakeSdfLiftBias ?? source.wakeSdfUpdraftBo, -2, 4, fallback.wakeSdfLiftBias ?? fallback.wakeSdfUpdraftBo ?? 0.2),
     wakeSdfJitterBo: clampNumber(source.wakeSdfJitterBo, 0, 1, fallback.wakeSdfJitterBo ?? 0.04),
     wakeSdfHeatDecay: clampNumber(source.wakeSdfHeatDecay, 0.1, 6, fallback.wakeSdfHeatDecay ?? 1),
-    wakeSdfAlphaFadeStart: clampNumber(source.wakeSdfAlphaFadeStart, 0, 1, fallback.wakeSdfAlphaFadeStart ?? 0.82),
-    wakeSdfAlphaFadeEnd: clampNumber(source.wakeSdfAlphaFadeEnd, 0, 1, fallback.wakeSdfAlphaFadeEnd ?? 1),
-    wakeSdfAlphaFadeCurve: clampNumber(source.wakeSdfAlphaFadeCurve, 0.1, 8, fallback.wakeSdfAlphaFadeCurve ?? 3),
+    wakeSdfAlphaFadeStart: clampNumber(source.wakeSdfAlphaFadeStart, 0, 1, fallback.wakeSdfAlphaFadeStart ?? 1),
+    wakeSdfAlphaFadeEnd: clampNumber(source.wakeSdfAlphaFadeEnd, 0, 1, fallback.wakeSdfAlphaFadeEnd ?? 0),
     wakeSdfDebugPoints: source.wakeSdfDebugPoints == null
       ? (fallback.wakeSdfDebugPoints === false || fallback.wakeSdfDebugPoints === 0 || fallback.wakeSdfDebugPoints === "0" ? 0 : 1)
       : (source.wakeSdfDebugPoints === false || source.wakeSdfDebugPoints === 0 || source.wakeSdfDebugPoints === "0" ? 0 : 1),
@@ -1048,7 +1037,7 @@ function createWakeSdfMaterial(config) {
         vec2 particleWarpSum = vec2(0.0);
         float particleFlowWeight = 0.0001;
         float particleAlphaSum = 0.0;
-        float particleAlphaWeight = 0.0001;
+        float particleAlphaWeight = 0.0;
         for (int i = 0; i < CONTROL_PARTICLE_COUNT; i += 1) {
           vec4 particle = uWakeControlParticles[i];
           vec2 delta = p - particle.xy;
@@ -1057,10 +1046,11 @@ function createWakeSdfMaterial(config) {
           float particleAlpha = clamp(uWakeControlParticleAlphas[i], 0.0, 1.0);
           float radiusSq = radius * radius;
           float influence = ageHeat * radiusSq / (dot(delta, delta) + radiusSq);
+          float alphaInfluence = (1.0 - smoothstep(0.0, 1.85, length(delta) / radius)) * ageHeat;
           density += influence;
           heat += influence * ageHeat;
-          particleAlphaSum += influence * particleAlpha;
-          particleAlphaWeight += influence;
+          particleAlphaSum += alphaInfluence * particleAlpha;
+          particleAlphaWeight += alphaInfluence;
           particleFlowSum += uWakeControlVelocities[i] * influence;
           vec2 particleVelocity = uWakeControlVelocities[i];
           vec2 flowDir = normalize(particleVelocity + vec2(0.0, 0.001));
@@ -1108,7 +1098,7 @@ function createWakeSdfMaterial(config) {
         float flame = sdfBody * mix(0.35, 1.0, noiseValue);
         float fireValue = clamp(noiseValue * 0.88 + heat * 0.04 + edge * 0.08, 0.0, 1.0);
         vec4 mapped = sampleSdfGraph(fireValue);
-        float particleAlphaMask = clamp(particleAlphaSum / particleAlphaWeight, 0.0, 1.0);
+        float particleAlphaMask = particleAlphaWeight > 0.0001 ? clamp(particleAlphaSum / particleAlphaWeight, 0.0, 1.0) : 0.0;
         float orbOcclusion = smoothstep(uOrbRadius * 0.72, uOrbRadius * 1.02, length(p));
         vec2 edgeDistance = min(vWakeUv, 1.0 - vWakeUv);
         float cardFade = smoothstep(0.0, 0.08, min(edgeDistance.x, edgeDistance.y));
@@ -1130,7 +1120,7 @@ function createWakeSdfMaterial(config) {
           return;
         }
         if (uWakeSdfRenderMode == 5) {
-          gl_FragColor = vec4(vec3(alpha), 1.0);
+          gl_FragColor = vec4(vec3(particleAlphaMask), 1.0);
           return;
         }
         if (uWakeSdfRenderMode == 6) {
