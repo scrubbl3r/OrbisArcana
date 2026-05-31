@@ -7,6 +7,7 @@ const WAKE_SDF_TRAIL_POINT_COUNT = 5;
 const WAKE_SDF_FIELD_EMITTER_COUNT = 9;
 const WAKE_SDF_CONTROL_PARTICLE_COUNT = 64;
 const WAKE_SDF_SOURCE_GRAPH_RADIUS = 0.82;
+const WAKE_SDF_NOISE_FLOW_SAMPLE_SEC = 0.12;
 
 function createWakeSdfSourceGraph(count = 25) {
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
@@ -1250,10 +1251,17 @@ export function createFlameAoe3dRuntime({
   const stretchDirection = new THREE.Vector3(0, 1, 0);
   const shaderMotion = new THREE.Vector3();
   const wakeSdfNoiseFlowDir = new THREE.Vector2(0, 1);
+  const wakeSdfNoiseFlowMeasuredDir = new THREE.Vector2(0, 1);
+  const wakeSdfNoiseFlowSampleDir = new THREE.Vector2(0, 1);
+  const wakeSdfNoiseFlowSampleDirSum = new THREE.Vector2();
   const wakeSdfNoiseFlowCentroid = new THREE.Vector2(0, 1);
   const wakeSdfOriginVelocity = new THREE.Vector2();
   const wakeSdfRadialDir = new THREE.Vector2();
   let wakeSdfNoiseFlowSpeed = 0.42;
+  let wakeSdfNoiseFlowSampleSpeed = 0.42;
+  let wakeSdfNoiseFlowSampleSpeedSum = 0;
+  let wakeSdfNoiseFlowSampleWeight = 0;
+  let wakeSdfNoiseFlowSampleElapsed = WAKE_SDF_NOISE_FLOW_SAMPLE_SEC;
   const springForce = new THREE.Vector3();
   const dampingForce = new THREE.Vector3();
   const wakeSdfCurrentOrigin = new THREE.Vector2();
@@ -1424,14 +1432,38 @@ export function createFlameAoe3dRuntime({
     }
     wakeSdfNoiseFlowCentroid.multiplyScalar(1 / flowWeight);
     if (wakeSdfNoiseFlowCentroid.lengthSq() > 0.0001) {
-      wakeSdfNoiseFlowDir.copy(wakeSdfNoiseFlowCentroid).normalize();
+      wakeSdfNoiseFlowMeasuredDir.copy(wakeSdfNoiseFlowCentroid).normalize();
     } else {
-      wakeSdfNoiseFlowDir.set(0, 1);
+      wakeSdfNoiseFlowMeasuredDir.copy(wakeSdfNoiseFlowSampleDir);
     }
     const liveSeparationSpeed = clampNumber(separationSpeedSum / separationSpeedWeight, 0, 4, 0);
     const targetNoiseFlowSpeed = clampNumber(liveSeparationSpeed, 0.08, 1.15, 0.42);
-    const flowEase = 1 - Math.exp(-safeDt * 5.5);
-    wakeSdfNoiseFlowSpeed += (targetNoiseFlowSpeed - wakeSdfNoiseFlowSpeed) * flowEase;
+    wakeSdfNoiseFlowSampleDirSum.addScaledVector(wakeSdfNoiseFlowMeasuredDir, flowWeight);
+    wakeSdfNoiseFlowSampleSpeedSum += targetNoiseFlowSpeed * flowWeight;
+    wakeSdfNoiseFlowSampleWeight += flowWeight;
+    wakeSdfNoiseFlowSampleElapsed += safeDt;
+    if (wakeSdfNoiseFlowSampleElapsed >= WAKE_SDF_NOISE_FLOW_SAMPLE_SEC) {
+      if (wakeSdfNoiseFlowSampleDirSum.lengthSq() > 0.0001) {
+        wakeSdfNoiseFlowSampleDir.copy(wakeSdfNoiseFlowSampleDirSum).normalize();
+      }
+      if (wakeSdfNoiseFlowSampleWeight > 0.0001) {
+        wakeSdfNoiseFlowSampleSpeed = clampNumber(
+          wakeSdfNoiseFlowSampleSpeedSum / wakeSdfNoiseFlowSampleWeight,
+          0.08,
+          1.15,
+          0.42
+        );
+      }
+      wakeSdfNoiseFlowSampleDirSum.set(0, 0);
+      wakeSdfNoiseFlowSampleSpeedSum = 0;
+      wakeSdfNoiseFlowSampleWeight = 0;
+      wakeSdfNoiseFlowSampleElapsed = 0;
+    }
+    const flowEase = 1 - Math.exp(-safeDt * 7.5);
+    wakeSdfNoiseFlowDir.lerp(wakeSdfNoiseFlowSampleDir, flowEase);
+    if (wakeSdfNoiseFlowDir.lengthSq() > 0.0001) wakeSdfNoiseFlowDir.normalize();
+    else wakeSdfNoiseFlowDir.set(0, 1);
+    wakeSdfNoiseFlowSpeed += (wakeSdfNoiseFlowSampleSpeed - wakeSdfNoiseFlowSpeed) * flowEase;
     if (uniforms.uWakeNoiseFlowDir) uniforms.uWakeNoiseFlowDir.value.copy(wakeSdfNoiseFlowDir);
     if (uniforms.uWakeNoiseFlowSpeed) uniforms.uWakeNoiseFlowSpeed.value = wakeSdfNoiseFlowSpeed;
     const debugBuffers = wakeSdfDebugGroup && wakeSdfDebugGroup.userData && wakeSdfDebugGroup.userData.debugBuffers;
@@ -1571,10 +1603,17 @@ export function createFlameAoe3dRuntime({
     stretchDirection.set(0, 1, 0);
     shaderMotion.set(0, 0, 0);
     wakeSdfNoiseFlowDir.set(0, 1);
+    wakeSdfNoiseFlowMeasuredDir.set(0, 1);
+    wakeSdfNoiseFlowSampleDir.set(0, 1);
+    wakeSdfNoiseFlowSampleDirSum.set(0, 0);
     wakeSdfNoiseFlowCentroid.set(0, 1);
     wakeSdfOriginVelocity.set(0, 0);
     wakeSdfRadialDir.set(0, 1);
     wakeSdfNoiseFlowSpeed = 0.42;
+    wakeSdfNoiseFlowSampleSpeed = 0.42;
+    wakeSdfNoiseFlowSampleSpeedSum = 0;
+    wakeSdfNoiseFlowSampleWeight = 0;
+    wakeSdfNoiseFlowSampleElapsed = WAKE_SDF_NOISE_FLOW_SAMPLE_SEC;
     wakeSdfTrailPoints.forEach((point) => point.set(0, 0));
     wakeSdfTargetPoints.forEach((point) => point.set(0, 0));
     wakeSdfTrailRadii.fill(1);
