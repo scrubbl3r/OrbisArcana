@@ -185,7 +185,8 @@ function smoothstep01(t) {
 
 function resolveWakeSdfParticleAlpha(ageT, config = {}) {
   const fadeStart = clampNumber(config.wakeSdfAlphaFadeStart, 0, 1, 0.82);
-  const fadeEnd = clampNumber(config.wakeSdfAlphaFadeEnd, 0, 1, 1);
+  const authoredEnd = clampNumber(config.wakeSdfAlphaFadeEnd, 0, 1, 1);
+  const fadeEnd = authoredEnd > fadeStart ? authoredEnd : 1;
   const fadeCurve = clampNumber(config.wakeSdfAlphaFadeCurve, 0.1, 8, 3);
   const span = Math.max(0.0001, fadeEnd - fadeStart);
   if (ageT <= fadeStart) return 1;
