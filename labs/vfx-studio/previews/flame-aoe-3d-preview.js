@@ -1272,6 +1272,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uWakeControlParticles: { value: controlParticles },
       uWakeControlVelocities: { value: controlVelocities },
       uWakeNoiseFlowDir: { value: new THREE.Vector2(0, 1) },
+      uWakeNoiseFlowPhase: { value: 0 },
       uWakeNoiseFlowSpeed: { value: 0.42 },
     },
     vertexShader: `
@@ -1316,6 +1317,7 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
       uniform vec4 uWakeControlParticles[CONTROL_PARTICLE_COUNT];
       uniform vec2 uWakeControlVelocities[CONTROL_PARTICLE_COUNT];
       uniform vec2 uWakeNoiseFlowDir;
+      uniform float uWakeNoiseFlowPhase;
       uniform float uWakeNoiseFlowSpeed;
       varying vec2 vWakePos;
       varying vec2 vWakeUv;
@@ -1461,10 +1463,9 @@ function createWakeSdfMaterial(config = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
         float flowBlend = flowMask * smoothstep(0.18, 1.45, surfaceDistance) * 0.75;
         vec2 blendedFlow = normalize(mix(sourceFlow, particleFlow, flowBlend));
         vec3 noisePos = vec3(p / max(1.0, uOrbRadius), 0.0) * uWakeSdfPerlinScale;
-        float time = uTime * uWakeSdfPerlinSpeed;
         vec2 lateral = vec2(-sourceFlow.y, sourceFlow.x) * sin(p.x / max(1.0, uOrbRadius) * 1.8 + surfaceDistance * 1.2) * 0.05;
         vec2 particleWarp = localParticleWarp * 0.72;
-        noisePos.xy -= sourceFlow * (time * uWakeNoiseFlowSpeed + surfaceDistance * 0.08);
+        noisePos.xy -= sourceFlow * (uWakeNoiseFlowPhase + surfaceDistance * 0.08);
         noisePos.xy += particleWarp;
         noisePos.xy += lateral;
         noisePos.z = 0.37;
@@ -1680,6 +1681,7 @@ export function createFlameAoe3dPreview({
   let wakeSdfNoiseFlowSampleCount = 0;
   let wakeSdfNoiseFlowSampleElapsed = WAKE_SDF_NOISE_FLOW_SAMPLE_SEC;
   let wakeSdfNoiseFlowLastSampleDistance = null;
+  let wakeSdfNoiseFlowPhase = 0;
   const wakeSdfPreviewParticles = Array.from({ length: WAKE_SDF_CONTROL_PARTICLE_COUNT }, () => ({
     position: new THREE.Vector2(),
     velocity: new THREE.Vector2(),
@@ -1760,6 +1762,7 @@ export function createFlameAoe3dPreview({
     wakeSdfNoiseFlowSampleCount = 0;
     wakeSdfNoiseFlowSampleElapsed = WAKE_SDF_NOISE_FLOW_SAMPLE_SEC;
     wakeSdfNoiseFlowLastSampleDistance = null;
+    wakeSdfNoiseFlowPhase = 0;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
       const lifeSec = clampNumber(wakeConfig && wakeConfig.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
       respawnWakeSdfPreviewParticle(i, bo, (i / WAKE_SDF_CONTROL_PARTICLE_COUNT) * lifeSec);
@@ -1824,7 +1827,9 @@ export function createFlameAoe3dPreview({
     if (wakeSdfNoiseFlowDir.lengthSq() > 0.0001) wakeSdfNoiseFlowDir.normalize();
     else wakeSdfNoiseFlowDir.set(0, 1);
     wakeSdfNoiseFlowSpeed += (wakeSdfNoiseFlowSampleSpeed - wakeSdfNoiseFlowSpeed) * flowEase;
+    wakeSdfNoiseFlowPhase += safeDt * wakeSdfNoiseFlowSpeed * clampNumber(wakeConfig && wakeConfig.wakeSdfPerlinSpeed, 0, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfPerlinSpeed);
     if (uniforms.uWakeNoiseFlowDir) uniforms.uWakeNoiseFlowDir.value.copy(wakeSdfNoiseFlowDir);
+    if (uniforms.uWakeNoiseFlowPhase) uniforms.uWakeNoiseFlowPhase.value = wakeSdfNoiseFlowPhase;
     if (uniforms.uWakeNoiseFlowSpeed) uniforms.uWakeNoiseFlowSpeed.value = wakeSdfNoiseFlowSpeed;
     const debugBuffers = wakeSdfDebugGroup && wakeSdfDebugGroup.userData && wakeSdfDebugGroup.userData.debugBuffers;
     if (!debugBuffers || !debugBuffers.particlePositions || !debugBuffers.particleColors || !debugBuffers.particleGeometry) return;
