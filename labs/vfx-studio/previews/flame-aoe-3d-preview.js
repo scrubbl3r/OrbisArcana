@@ -102,6 +102,9 @@ const FLAME_AOE_3D_PREVIEW_DEFAULTS = Object.freeze({
   wakeSdfLiftBias: 0.2,
   wakeSdfJitterBo: 0.04,
   wakeSdfHeatDecay: 1,
+  wakeSdfAlphaFadeStart: 0.82,
+  wakeSdfAlphaFadeEnd: 1,
+  wakeSdfAlphaFadeCurve: 3,
   wakeSdfDebugPoints: 1,
   wakeSdfRadiusBo: 0.42,
   wakeSdfCoreRadiusBo: 0.2,
@@ -173,6 +176,22 @@ function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   const f = Number.isFinite(Number(fallback)) ? Number(fallback) : min;
   return Math.max(min, Math.min(max, Number.isFinite(n) ? n : f));
+}
+
+function smoothstep01(t) {
+  const x = clampNumber(t, 0, 1, 0);
+  return x * x * (3 - 2 * x);
+}
+
+function resolveWakeSdfParticleAlpha(ageT, config = {}) {
+  const fadeStart = clampNumber(config.wakeSdfAlphaFadeStart, 0, 1, 0.82);
+  const fadeEnd = clampNumber(config.wakeSdfAlphaFadeEnd, 0, 1, 1);
+  const fadeCurve = clampNumber(config.wakeSdfAlphaFadeCurve, 0.1, 8, 3);
+  const span = Math.max(0.0001, fadeEnd - fadeStart);
+  if (ageT <= fadeStart) return 1;
+  if (ageT >= fadeEnd) return 0;
+  const fadeT = smoothstep01((ageT - fadeStart) / span);
+  return Math.pow(1 - fadeT, fadeCurve);
 }
 
 function resolveWakeSdfAutoReachBo(config = {}) {
@@ -333,6 +352,9 @@ function readFlameWakeConfig(els = {}) {
     wakeSdfLiftBias: clampNumber(els.flameAoe3dWakeSdfLiftBias && els.flameAoe3dWakeSdfLiftBias.value, -2, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfLiftBias),
     wakeSdfJitterBo: clampNumber(els.flameAoe3dWakeSdfJitterBo && els.flameAoe3dWakeSdfJitterBo.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfJitterBo),
     wakeSdfHeatDecay: clampNumber(els.flameAoe3dWakeSdfHeatDecay && els.flameAoe3dWakeSdfHeatDecay.value, 0.1, 6, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfHeatDecay),
+    wakeSdfAlphaFadeStart: clampNumber(els.flameAoe3dWakeSdfAlphaFadeStart && els.flameAoe3dWakeSdfAlphaFadeStart.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfAlphaFadeStart),
+    wakeSdfAlphaFadeEnd: clampNumber(els.flameAoe3dWakeSdfAlphaFadeEnd && els.flameAoe3dWakeSdfAlphaFadeEnd.value, 0, 1, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfAlphaFadeEnd),
+    wakeSdfAlphaFadeCurve: clampNumber(els.flameAoe3dWakeSdfAlphaFadeCurve && els.flameAoe3dWakeSdfAlphaFadeCurve.value, 0.1, 8, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfAlphaFadeCurve),
     wakeSdfRadiusBo: clampNumber(els.flameAoe3dWakeSdfRadiusBo && els.flameAoe3dWakeSdfRadiusBo.value, 0.05, 4, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfRadiusBo),
     wakeSdfCoreRadiusBo: clampNumber(els.flameAoe3dWakeSdfCoreRadiusBo && els.flameAoe3dWakeSdfCoreRadiusBo.value, 0.02, 3, FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfCoreRadiusBo),
     wakeSdfBlendBo: FLAME_AOE_3D_PREVIEW_DEFAULTS.wakeSdfBlendBo,
@@ -422,6 +444,9 @@ function hydrateFlameWakeFields(els = {}, cfg = FLAME_AOE_3D_PREVIEW_DEFAULTS) {
   if (els.flameAoe3dWakeSdfLiftBias) els.flameAoe3dWakeSdfLiftBias.value = String(Number(cfg.wakeSdfLiftBias).toFixed(2));
   if (els.flameAoe3dWakeSdfJitterBo) els.flameAoe3dWakeSdfJitterBo.value = String(Number(cfg.wakeSdfJitterBo).toFixed(2));
   if (els.flameAoe3dWakeSdfHeatDecay) els.flameAoe3dWakeSdfHeatDecay.value = String(Number(cfg.wakeSdfHeatDecay).toFixed(2));
+  if (els.flameAoe3dWakeSdfAlphaFadeStart) els.flameAoe3dWakeSdfAlphaFadeStart.value = String(Number(cfg.wakeSdfAlphaFadeStart).toFixed(2));
+  if (els.flameAoe3dWakeSdfAlphaFadeEnd) els.flameAoe3dWakeSdfAlphaFadeEnd.value = String(Number(cfg.wakeSdfAlphaFadeEnd).toFixed(2));
+  if (els.flameAoe3dWakeSdfAlphaFadeCurve) els.flameAoe3dWakeSdfAlphaFadeCurve.value = String(Number(cfg.wakeSdfAlphaFadeCurve).toFixed(2));
   if (els.flameAoe3dWakeSdfRadiusBo) els.flameAoe3dWakeSdfRadiusBo.value = String(Number(cfg.wakeSdfRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSdfCoreRadiusBo) els.flameAoe3dWakeSdfCoreRadiusBo.value = String(Number(cfg.wakeSdfCoreRadiusBo).toFixed(2));
   if (els.flameAoe3dWakeSdfSoftnessBo) els.flameAoe3dWakeSdfSoftnessBo.value = String(Number(cfg.wakeSdfSoftnessBo).toFixed(2));
@@ -1817,7 +1842,8 @@ export function createFlameAoe3dPreview({
       if (particle.age >= particle.life) respawnWakeSdfPreviewParticle(i, bo, 0);
       particle.position.addScaledVector(particle.velocity, safeDt);
       const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
-      const heat = particle.heat * Math.pow(1 - ageT, heatDecay);
+      const alphaTtl = resolveWakeSdfParticleAlpha(ageT, wakeConfig || {});
+      const heat = particle.heat * Math.pow(1 - ageT, heatDecay) * alphaTtl;
       const radius = particle.radius * (1 + ageT * 1.45);
       particle.localX = particle.position.x;
       particle.localY = particle.position.y;

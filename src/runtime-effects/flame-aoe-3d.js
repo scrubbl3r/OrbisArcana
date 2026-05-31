@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { disposeThreeObject } from "../game-runtime/rendering/three/three-object-utils.js";
-import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260530190515";
+import { FLAME_AOE_3D_PRESET_DEFAULT } from "../vfx/presets/flame-aoe-3d-default.js?v=20260530194500";
 
 const FLAME_AOE_RENDER_ORDER_BASE = 120;
 const WAKE_SDF_TRAIL_POINT_COUNT = 5;
@@ -30,6 +30,22 @@ function clampNumber(value, min, max, fallback) {
 
 function clampInt(value, min, max, fallback) {
   return Math.round(clampNumber(value, min, max, fallback));
+}
+
+function smoothstep01(t) {
+  const x = clampNumber(t, 0, 1, 0);
+  return x * x * (3 - 2 * x);
+}
+
+function resolveWakeSdfParticleAlpha(ageT, config = {}) {
+  const fadeStart = clampNumber(config.wakeSdfAlphaFadeStart, 0, 1, 0.82);
+  const fadeEnd = clampNumber(config.wakeSdfAlphaFadeEnd, 0, 1, 1);
+  const fadeCurve = clampNumber(config.wakeSdfAlphaFadeCurve, 0.1, 8, 3);
+  const span = Math.max(0.0001, fadeEnd - fadeStart);
+  if (ageT <= fadeStart) return 1;
+  if (ageT >= fadeEnd) return 0;
+  const fadeT = smoothstep01((ageT - fadeStart) / span);
+  return Math.pow(1 - fadeT, fadeCurve);
 }
 
 function resolveWakeSdfAutoReachBo(config = {}) {
@@ -139,6 +155,9 @@ export function normalizeFlameAoe3dRuntimeConfig(raw = {}) {
     wakeSdfLiftBias: clampNumber(source.wakeSdfLiftBias ?? source.wakeSdfUpdraftBo, -2, 4, fallback.wakeSdfLiftBias ?? fallback.wakeSdfUpdraftBo ?? 0.2),
     wakeSdfJitterBo: clampNumber(source.wakeSdfJitterBo, 0, 1, fallback.wakeSdfJitterBo ?? 0.04),
     wakeSdfHeatDecay: clampNumber(source.wakeSdfHeatDecay, 0.1, 6, fallback.wakeSdfHeatDecay ?? 1),
+    wakeSdfAlphaFadeStart: clampNumber(source.wakeSdfAlphaFadeStart, 0, 1, fallback.wakeSdfAlphaFadeStart ?? 0.82),
+    wakeSdfAlphaFadeEnd: clampNumber(source.wakeSdfAlphaFadeEnd, 0, 1, fallback.wakeSdfAlphaFadeEnd ?? 1),
+    wakeSdfAlphaFadeCurve: clampNumber(source.wakeSdfAlphaFadeCurve, 0.1, 8, fallback.wakeSdfAlphaFadeCurve ?? 3),
     wakeSdfDebugPoints: source.wakeSdfDebugPoints == null
       ? (fallback.wakeSdfDebugPoints === false || fallback.wakeSdfDebugPoints === 0 || fallback.wakeSdfDebugPoints === "0" ? 0 : 1)
       : (source.wakeSdfDebugPoints === false || source.wakeSdfDebugPoints === 0 || source.wakeSdfDebugPoints === "0" ? 0 : 1),
@@ -1426,7 +1445,8 @@ export function createFlameAoe3dRuntime({
       }
       particle.position.addScaledVector(particle.velocity, safeDt);
       const ageT = clampNumber(particle.age / Math.max(0.001, particle.life), 0, 1, 0);
-      const heat = particle.heat * Math.pow(1 - ageT, heatDecay);
+      const alphaTtl = resolveWakeSdfParticleAlpha(ageT, activeConfig || {});
+      const heat = particle.heat * Math.pow(1 - ageT, heatDecay) * alphaTtl;
       const radius = particle.radius * (1 + ageT * 1.45);
       const localX = particle.position.x - origin.x;
       const localY = particle.position.y - origin.y;
