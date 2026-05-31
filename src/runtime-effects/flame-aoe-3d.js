@@ -1393,6 +1393,7 @@ export function createFlameAoe3dRuntime({
     }
     const heatDecay = clampNumber(activeConfig && activeConfig.wakeSdfHeatDecay, 0.1, 6, 1);
     const origin = resolveWakeSdfWorldOrigin();
+    const noiseFlowOriginY = -bo * 0.5;
     wakeSdfNoiseFlowCentroid.set(0, 0);
     let centroidCount = 0;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
@@ -1410,7 +1411,7 @@ export function createFlameAoe3dRuntime({
       if (uniformParticles[i]) uniformParticles[i].set(localX, localY, radius, heat);
       if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
       wakeSdfNoiseFlowCentroid.x += localX;
-      wakeSdfNoiseFlowCentroid.y += localY;
+      wakeSdfNoiseFlowCentroid.y += localY - noiseFlowOriginY;
       centroidCount += 1;
     }
     if (centroidCount > 0) wakeSdfNoiseFlowCentroid.multiplyScalar(1 / centroidCount);

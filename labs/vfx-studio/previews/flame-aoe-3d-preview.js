@@ -1785,6 +1785,7 @@ export function createFlameAoe3dPreview({
     const heatDecay = clampNumber(wakeConfig && wakeConfig.wakeSdfHeatDecay, 0.1, 6, 1);
     const uniformParticles = uniforms.uWakeControlParticles.value;
     const uniformVelocities = uniforms.uWakeControlVelocities.value;
+    const noiseFlowOriginY = -bo * 0.5;
     wakeSdfNoiseFlowCentroid.set(0, 0);
     let centroidCount = 0;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
@@ -1798,7 +1799,7 @@ export function createFlameAoe3dPreview({
       if (uniformParticles[i]) uniformParticles[i].set(particle.position.x, particle.position.y, radius, heat);
       if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
       wakeSdfNoiseFlowCentroid.x += particle.position.x;
-      wakeSdfNoiseFlowCentroid.y += particle.position.y;
+      wakeSdfNoiseFlowCentroid.y += particle.position.y - noiseFlowOriginY;
       centroidCount += 1;
     }
     if (centroidCount > 0) wakeSdfNoiseFlowCentroid.multiplyScalar(1 / centroidCount);
