@@ -1672,16 +1672,14 @@ export function createFlameAoe3dPreview({
   let auraConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
   let wakeConfig = FLAME_AOE_3D_PREVIEW_DEFAULTS;
   const wakeSdfNoiseFlowDir = new THREE.Vector2(0, 1);
-  const wakeSdfNoiseFlowMeasuredDir = new THREE.Vector2(0, 1);
   const wakeSdfNoiseFlowSampleDir = new THREE.Vector2(0, 1);
-  const wakeSdfNoiseFlowSampleDirSum = new THREE.Vector2();
   const wakeSdfNoiseFlowCentroid = new THREE.Vector2(0, 1);
-  const wakeSdfRadialDir = new THREE.Vector2();
+  const wakeSdfNoiseFlowSampleCentroidSum = new THREE.Vector2();
   let wakeSdfNoiseFlowSpeed = 0.42;
   let wakeSdfNoiseFlowSampleSpeed = 0.42;
-  let wakeSdfNoiseFlowSampleSpeedSum = 0;
-  let wakeSdfNoiseFlowSampleWeight = 0;
+  let wakeSdfNoiseFlowSampleCount = 0;
   let wakeSdfNoiseFlowSampleElapsed = WAKE_SDF_NOISE_FLOW_SAMPLE_SEC;
+  let wakeSdfNoiseFlowLastSampleDistance = null;
   const wakeSdfPreviewParticles = Array.from({ length: WAKE_SDF_CONTROL_PARTICLE_COUNT }, () => ({
     position: new THREE.Vector2(),
     velocity: new THREE.Vector2(),
@@ -1754,16 +1752,14 @@ export function createFlameAoe3dPreview({
     wakeSdfPreviewRandomSeed = 0x51f15e;
     wakeSdfPreviewSpawnAccumulator = 0;
     wakeSdfNoiseFlowDir.set(0, 1);
-    wakeSdfNoiseFlowMeasuredDir.set(0, 1);
     wakeSdfNoiseFlowSampleDir.set(0, 1);
-    wakeSdfNoiseFlowSampleDirSum.set(0, 0);
+    wakeSdfNoiseFlowSampleCentroidSum.set(0, 0);
     wakeSdfNoiseFlowCentroid.set(0, 1);
-    wakeSdfRadialDir.set(0, 1);
     wakeSdfNoiseFlowSpeed = 0.42;
     wakeSdfNoiseFlowSampleSpeed = 0.42;
-    wakeSdfNoiseFlowSampleSpeedSum = 0;
-    wakeSdfNoiseFlowSampleWeight = 0;
+    wakeSdfNoiseFlowSampleCount = 0;
     wakeSdfNoiseFlowSampleElapsed = WAKE_SDF_NOISE_FLOW_SAMPLE_SEC;
+    wakeSdfNoiseFlowLastSampleDistance = null;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
       const lifeSec = clampNumber(wakeConfig && wakeConfig.wakeSdfParticleLifeMs, 100, 8000, 1500) / 1000;
       respawnWakeSdfPreviewParticle(i, bo, (i / WAKE_SDF_CONTROL_PARTICLE_COUNT) * lifeSec);
@@ -1787,9 +1783,7 @@ export function createFlameAoe3dPreview({
     const uniformParticles = uniforms.uWakeControlParticles.value;
     const uniformVelocities = uniforms.uWakeControlVelocities.value;
     wakeSdfNoiseFlowCentroid.set(0, 0);
-    let flowWeight = 0.0001;
-    let separationSpeedSum = 0;
-    let separationSpeedWeight = 0.0001;
+    let centroidCount = 0;
     for (let i = 0; i < WAKE_SDF_CONTROL_PARTICLE_COUNT; i += 1) {
       const particle = wakeSdfPreviewParticles[i];
       particle.age += safeDt;
@@ -1800,46 +1794,29 @@ export function createFlameAoe3dPreview({
       const radius = particle.radius * (1 + ageT * 1.45);
       if (uniformParticles[i]) uniformParticles[i].set(particle.position.x, particle.position.y, radius, heat);
       if (uniformVelocities[i]) uniformVelocities[i].copy(particle.velocity).multiplyScalar(1 / Math.max(1, bo));
-      const heatWeight = Math.max(0, heat);
-      wakeSdfNoiseFlowCentroid.x += particle.position.x * heatWeight;
-      wakeSdfNoiseFlowCentroid.y += particle.position.y * heatWeight;
-      flowWeight += heatWeight;
-      wakeSdfRadialDir.copy(particle.position);
-      const distance = wakeSdfRadialDir.length();
-      if (distance > bo * 0.04 && heatWeight > 0) {
-        wakeSdfRadialDir.multiplyScalar(1 / distance);
-        const radialSpeedBo = particle.velocity.dot(wakeSdfRadialDir) / Math.max(1, bo);
-        separationSpeedSum += Math.max(0, radialSpeedBo) * heatWeight;
-        separationSpeedWeight += heatWeight;
-      }
+      wakeSdfNoiseFlowCentroid.x += particle.position.x;
+      wakeSdfNoiseFlowCentroid.y += particle.position.y;
+      centroidCount += 1;
     }
-    wakeSdfNoiseFlowCentroid.multiplyScalar(1 / flowWeight);
-    if (wakeSdfNoiseFlowCentroid.lengthSq() > 0.0001) {
-      wakeSdfNoiseFlowMeasuredDir.copy(wakeSdfNoiseFlowCentroid).normalize();
-    } else {
-      wakeSdfNoiseFlowMeasuredDir.copy(wakeSdfNoiseFlowSampleDir);
-    }
-    const liveSeparationSpeed = clampNumber(separationSpeedSum / separationSpeedWeight, 0, 4, 0);
-    const targetNoiseFlowSpeed = clampNumber(liveSeparationSpeed, 0.08, 1.15, 0.42);
-    wakeSdfNoiseFlowSampleDirSum.addScaledVector(wakeSdfNoiseFlowMeasuredDir, flowWeight);
-    wakeSdfNoiseFlowSampleSpeedSum += targetNoiseFlowSpeed * flowWeight;
-    wakeSdfNoiseFlowSampleWeight += flowWeight;
+    if (centroidCount > 0) wakeSdfNoiseFlowCentroid.multiplyScalar(1 / centroidCount);
+    wakeSdfNoiseFlowSampleCentroidSum.add(wakeSdfNoiseFlowCentroid);
+    wakeSdfNoiseFlowSampleCount += 1;
     wakeSdfNoiseFlowSampleElapsed += safeDt;
     if (wakeSdfNoiseFlowSampleElapsed >= WAKE_SDF_NOISE_FLOW_SAMPLE_SEC) {
-      if (wakeSdfNoiseFlowSampleDirSum.lengthSq() > 0.0001) {
-        wakeSdfNoiseFlowSampleDir.copy(wakeSdfNoiseFlowSampleDirSum).normalize();
+      const sampleElapsed = Math.max(0.001, wakeSdfNoiseFlowSampleElapsed);
+      const sampleCount = Math.max(1, wakeSdfNoiseFlowSampleCount);
+      wakeSdfNoiseFlowCentroid.copy(wakeSdfNoiseFlowSampleCentroidSum).multiplyScalar(1 / sampleCount);
+      const sampleDistance = wakeSdfNoiseFlowCentroid.length();
+      if (sampleDistance > bo * 0.04) {
+        wakeSdfNoiseFlowSampleDir.copy(wakeSdfNoiseFlowCentroid).normalize();
+        if (wakeSdfNoiseFlowLastSampleDistance != null) {
+          const distanceDeltaBo = (sampleDistance - wakeSdfNoiseFlowLastSampleDistance) / Math.max(1, bo);
+          wakeSdfNoiseFlowSampleSpeed = clampNumber(Math.max(0, distanceDeltaBo / sampleElapsed), 0.08, 1.15, 0.42);
+        }
+        wakeSdfNoiseFlowLastSampleDistance = sampleDistance;
       }
-      if (wakeSdfNoiseFlowSampleWeight > 0.0001) {
-        wakeSdfNoiseFlowSampleSpeed = clampNumber(
-          wakeSdfNoiseFlowSampleSpeedSum / wakeSdfNoiseFlowSampleWeight,
-          0.08,
-          1.15,
-          0.42
-        );
-      }
-      wakeSdfNoiseFlowSampleDirSum.set(0, 0);
-      wakeSdfNoiseFlowSampleSpeedSum = 0;
-      wakeSdfNoiseFlowSampleWeight = 0;
+      wakeSdfNoiseFlowSampleCentroidSum.set(0, 0);
+      wakeSdfNoiseFlowSampleCount = 0;
       wakeSdfNoiseFlowSampleElapsed = 0;
     }
     const flowEase = 1 - Math.exp(-safeDt * 7.5);
