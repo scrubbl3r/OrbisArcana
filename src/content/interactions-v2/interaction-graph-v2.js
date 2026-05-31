@@ -15,6 +15,7 @@ export const INTERACTION_GRAPH_V2 = {
       { id: "root.salubrium", words: ["salubrium"], ttlMs: 1500 },
       { id: "root.graviton", words: ["graviton"], ttlMs: 1500 },
       { id: "root.electrum", words: ["electrum"], ttlMs: 1500 },
+      { id: "root.pyro", words: ["pyro"], ttlMs: 1500 },
     ],
   },
   groups: {
@@ -68,17 +69,12 @@ export const INTERACTION_GRAPH_V2 = {
       trigger: { spell: "tesla_1" },
       grace: {},
     },
-    // PYRO AOE CHAIN
+    // PYRO AOE
     {
-      id: "spin_y_opens_pyro",
-      on: { spin: "y" },
-      open: { id: "chain.spin_y_seed", words: ["pyro"], ttlMs: 1500 },
-    },
-    {
-      id: "spin_y_pyro_bind_flame_aoe_fb",
+      id: "pyro_cast_flame_aoe",
       on: { word: "pyro" },
-      requires: "chain.spin_y_seed",
-      bind: { spell: "aoe_flame", slot: "FB" },
+      trigger: { spell: "aoe_flame" },
+      grace: {},
     },
     // SHOCKWAVE
     {
